@@ -64,7 +64,7 @@ class AnyMovable {
  public:
   explicit AnyMovable() = default;
 
-  template <typename T, typename = std::enable_if<!std::is_same_v<std::decay_t<T>, AnyMovable>>>
+  template <typename T, typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, AnyMovable>>>
   explicit AnyMovable(T&& value)
       : storage_{std::make_unique<Storage<std::decay_t<T>>>(std::forward<T>(value))},
         type_info_{&typeid(value)} {}

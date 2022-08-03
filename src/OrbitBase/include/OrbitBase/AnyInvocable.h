@@ -60,7 +60,7 @@ class AnyInvocable<R(Args...)> {
   std::unique_ptr<Base> storage_;
 
  public:
-  template <typename F, typename = std::enable_if<!std::is_same_v<std::decay_t<F>, AnyInvocable>>>
+  template <typename F, typename = std::enable_if_t<!std::is_same_v<std::decay_t<F>, AnyInvocable>>>
   constexpr explicit AnyInvocable(F&& func)
       : storage_{std::make_unique<Storage<std::decay_t<F>>>(std::forward<F>(func))} {}
 

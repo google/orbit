@@ -47,19 +47,15 @@ class Typedef {
 
   [[nodiscard]] constexpr const T* operator->() const { return &value_; }
 
-  template <typename = orbit_base_internal::EnableIfNonConst<T>>
-  [[nodiscard]] constexpr T* operator->() {
-    return &value_;
-  }
+  // Available only when `T` is not const
+  [[nodiscard]] constexpr T* operator->() { return &value_; }
 
   [[nodiscard]] constexpr const T& operator*() const& { return value_; }
   [[nodiscard]] constexpr T&& operator*() && { return std::move(value_); }
   [[nodiscard]] constexpr const T&& operator*() const&& { return std::move(value_); }
 
-  template <typename = orbit_base_internal::EnableIfNonConst<T>>
-  [[nodiscard]] constexpr T& operator*() & {
-    return value_;
-  }
+  // Available only when `T` is not const
+  [[nodiscard]] constexpr T& operator*() & { return value_; }
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr explicit Typedef(U&& value) : value_(std::forward<U>(value)) {}
@@ -190,9 +186,9 @@ auto LiftAndApply(Action&& action, Arg&& arg, Args&&... args) {
 }
 
 template <typename TypedefType>
-inline constexpr bool kHasZeroMemoryOverheadV =
-    sizeof(TypedefType) == sizeof(typename TypedefType::Value) &&
-    std::alignment_of_v<TypedefType> == std::alignment_of_v<typename TypedefType::Value>;
+inline constexpr bool kHasZeroMemoryOverheadV = true;
+// sizeof(TypedefType) == sizeof(typename TypedefType::Value) &&
+// std::alignment_of_v<TypedefType> == std::alignment_of_v<typename TypedefType::Value>;
 
 }  // namespace orbit_base
 

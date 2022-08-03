@@ -36,7 +36,7 @@ namespace orbit_base {
 //             [](const auto & s) { return s.value; }, std::greater<>{});
 // ```
 template <typename RandomIt, typename Projection, typename Comparator = std::less<>,
-          typename = std::enable_if<
+          typename = std::enable_if_t<
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void sort(RandomIt first, RandomIt last, Projection projection = {}, Comparator comparator = {}) {
   std::sort(first, last,
@@ -45,7 +45,7 @@ void sort(RandomIt first, RandomIt last, Projection projection = {}, Comparator 
 
 // Stable counterpart of orbit_base::sort
 template <typename RandomIt, typename Projection, typename Comparator = std::less<>,
-          typename = std::enable_if<
+          typename = std::enable_if_t<
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void stable_sort(RandomIt first, RandomIt last, Projection projection = {},
                  Comparator comparator = {}) {
