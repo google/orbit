@@ -165,6 +165,13 @@ auto operator*(Vector&& vector, Scalar&& scalar) {
       *std::forward<Vector>(vector) * std::forward<Scalar>(scalar));
 }
 
+template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_t<Vector>,
+          typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
+          typename = std::enable_if_t<std::is_base_of_v<TimesScalarTag<Scalar>, Tag>>>
+auto operator*(Scalar&& scalar, Vector&& vector) {
+  return std::forward<Vector>(vector) * std::forward<Scalar>(scalar);
+}
+
 // Say, we have a pair of typedefs.
 // ```
 // const MyType<int> kFirstWrapped(1);

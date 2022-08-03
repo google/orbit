@@ -389,16 +389,33 @@ using WrapperWithTimesScalar = Typedef<WrapperWithTimesScalarTag<Scalar>, T>;
 
 TEST(Typedef, WrapperWithTimesScalarIntTimesFloat) {
   WrapperWithTimesScalar<int, double> wrapped(2);
-  WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * 0.5;
-  EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * 0.5;
+    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
+  }
+
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = 0.5 * wrapped;
+    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
+  }
 }
 
 TEST(Typedef, WrapperWithTimesScalarMoveOnly) {
-  WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
-  auto times = std::make_unique<int>(kBValue);
-  WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
-      std::move(wrapped) * std::move(times);
-  EXPECT_EQ(result->value, kAValue * kBValue);
+  {
+    auto times = std::make_unique<int>(kBValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+        std::move(wrapped) * std::move(times);
+    EXPECT_EQ(result->value, kAValue * kBValue);
+  }
+
+  {
+    auto times = std::make_unique<int>(kBValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+        std::move(times) * std::move(wrapped);
+    EXPECT_EQ(result->value, kAValue * kBValue);
+  }
 }
 
 }  // namespace orbit_base
