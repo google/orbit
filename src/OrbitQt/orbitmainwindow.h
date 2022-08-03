@@ -50,7 +50,6 @@
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
-#include "StatusListener.h"
 #include "orbitglwidget.h"
 
 namespace Ui {
@@ -270,9 +269,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   QIcon icon_keyboard_arrow_left_;
   QIcon icon_keyboard_arrow_right_;
-
-  // Status listener
-  std::shared_ptr<StatusListener> status_listener_;
 
   struct TabWidgetLayout {
     std::vector<std::pair<QWidget*, QString>> tabs_and_titles;

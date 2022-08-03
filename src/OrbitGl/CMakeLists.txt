@@ -62,7 +62,6 @@ target_sources(
          SchedulingStats.h
          ShortenStringWithEllipsis.h
          SimpleTimings.h
-         StatusListener.h
          SystemMemoryTrack.h
          TextRenderer.h
          TextRendererInterface.h
@@ -227,7 +226,6 @@ target_sources(OrbitGlTests PRIVATE
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
                PrimitiveAssemblerTest.cpp
-               ScopedStatusTest.cpp
                SimpleTimingsTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp

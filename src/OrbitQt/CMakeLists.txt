@@ -52,7 +52,6 @@ target_sources(
           HistogramWidget.cpp
           MultipleOfSpinBox.cpp
           MultipleOfValidator.cpp
-          StatusListenerImpl.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
           orbitdataviewpanel.cpp
@@ -120,7 +119,6 @@ target_sources(OrbitQtTests
                 CallTreeViewItemModelTest.cpp
                 HistogramWidgetTest.cpp
                 MultipleOfValidatorTest.cpp
-                StatusListenerImplTest.cpp
                 TutorialOverlayTest.cpp
                 TrackTypeItemModelTest.cpp)
 
