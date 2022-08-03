@@ -32,6 +32,7 @@ class CaptureServiceBase {
     kExceededMaxDurationLimit,
     kGuestOrcStop,
     kGuestOrcConnectionFailure,
+    kUploadFailure,
   };
 
   [[nodiscard]] CaptureInitializationResult InitializeCapture(
