@@ -367,6 +367,10 @@ struct MoveOnlyInt {
     return MoveOnlyInt(a.value + b.value);
   }
 
+  [[nodiscard]] friend MoveOnlyInt operator*(const MoveOnlyInt& a, std::unique_ptr<int> times) {
+    return MoveOnlyInt(a.value * (*times));
+  }
+
   int value;
 };
 
@@ -376,4 +380,42 @@ TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
 
   EXPECT_EQ((std::move(a_wrapped) + std::move(b_wrapped))->value, kAValue + kBValue);
 }
+
+template <typename Scalar>
+struct WrapperWithTimesScalarTag : TimesScalarTag<Scalar> {};
+
+template <typename T, typename Scalar>
+using WrapperWithTimesScalar = Typedef<WrapperWithTimesScalarTag<Scalar>, T>;
+
+TEST(Typedef, WrapperWithTimesScalarIntTimesFloat) {
+  WrapperWithTimesScalar<int, double> wrapped(2);
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * 0.5;
+    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
+  }
+
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = 0.5 * wrapped;
+    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
+  }
+}
+
+TEST(Typedef, WrapperWithTimesScalarMoveOnly) {
+  {
+    auto times = std::make_unique<int>(kBValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+        std::move(wrapped) * std::move(times);
+    EXPECT_EQ(result->value, kAValue * kBValue);
+  }
+
+  {
+    auto times = std::make_unique<int>(kBValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
+    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+        std::move(times) * std::move(wrapped);
+    EXPECT_EQ(result->value, kAValue * kBValue);
+  }
+}
+
 }  // namespace orbit_base
