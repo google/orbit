@@ -484,10 +484,10 @@ TEST(ProcessData, GetUniqueModulesPathAndBuildIds) {
   process.UpdateModuleInfos(module_infos);
   process.AddOrUpdateModuleInfo(module_info_3);
 
-  auto keys = process.GetUniqueModulesPathAndBuildId();
-  ASSERT_EQ(keys.size(), 2);
-  EXPECT_THAT(keys, testing::ElementsAre(testing::Pair(file_path_1, build_id_1),
-                                         testing::Pair(file_path_2, build_id_2)));
+  auto module_ids = process.GetUniqueModuleIdentifiers();
+  ASSERT_EQ(module_ids.size(), 2);
+  EXPECT_THAT(module_ids, testing::ElementsAre(ModuleIdentifier{file_path_1, build_id_1},
+                                               ModuleIdentifier{file_path_2, build_id_2}));
 }
 
 TEST(ProcessData, RemapModule) {

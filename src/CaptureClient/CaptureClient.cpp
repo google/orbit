@@ -62,8 +62,8 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
   std::map<uint64_t, orbit_client_data::ModuleInMemory> modules_in_memory_map =
       process_data.GetMemoryMapCopy();
   for (const auto& [unused_start_address, module_in_memory] : modules_in_memory_map) {
-    const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(
-        module_in_memory.file_path(), module_in_memory.build_id());
+    const ModuleData* module_data =
+        module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id());
     if (module_data == nullptr) {
       continue;
     }
@@ -122,8 +122,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
   for (const auto& [function_id, function] : options.selected_functions) {
     InstrumentedFunction* instrumented_function = capture_options.add_instrumented_functions();
     instrumented_function->set_file_path(function.module_path());
-    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
-                                                                        function.module_build_id());
+    const ModuleData* module = module_manager.GetModuleByModuleIdentifier(function.module_id());
     ORBIT_CHECK(module != nullptr);
     instrumented_function->set_file_offset(function.ComputeFileOffset(*module));
     instrumented_function->set_file_build_id(function.module_build_id());
@@ -140,8 +139,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
         capture_options.add_functions_to_record_additional_stack_on();
 
     function_to_record_stack_on->set_file_path(function.module_path());
-    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
-                                                                        function.module_build_id());
+    const ModuleData* module = module_manager.GetModuleByModuleIdentifier(function.module_id());
     ORBIT_CHECK(module != nullptr);
     function_to_record_stack_on->set_file_offset(function.ComputeFileOffset(*module));
   }

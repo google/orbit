@@ -6,6 +6,7 @@
 #define CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_
 
 #include "CaptureData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "FunctionInfo.h"
 #include "ModuleManager.h"
 #include "ProcessData.h"
@@ -22,9 +23,9 @@ const std::string kUnknownFunctionOrModuleName{"???"};
     const ModuleManager& module_manager, const CaptureData& capture_data,
     uint64_t absolute_address);
 
-[[nodiscard]] const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
-    const ModuleManager& module_manager, const std::string& module_path,
-    const std::string& build_id, uint64_t virtual_address);
+[[nodiscard]] const FunctionInfo* FindFunctionByModuleIdentifierAndVirtualAddress(
+    const ModuleManager& module_manager, const ModuleIdentifier& module_id,
+    uint64_t virtual_address);
 
 [[nodiscard]] const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
                                                         const CaptureData& capture_data,

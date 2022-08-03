@@ -44,6 +44,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientFlags/ClientFlags.h"
 #include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
@@ -54,6 +55,7 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
 using orbit_metrics_uploader::OrbitLogEvent;
 
@@ -512,20 +514,20 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
 
 static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
                                                       const std::vector<QModelIndex>& indices) {
-  std::set<std::pair<std::string, std::string>> unique_module_paths_and_build_ids;
+  absl::flat_hash_set<ModuleIdentifier> unique_module_ids;
   for (const auto& index : indices) {
-    QModelIndex model_index =
+    const QModelIndex model_index =
         index.model()->index(index.row(), CallTreeViewItemModel::kModule, index.parent());
-    std::string module_path =
+    const std::string module_path =
         model_index.data(CallTreeViewItemModel::kModulePathRole).toString().toStdString();
-    std::string module_build_id =
+    const std::string module_build_id =
         model_index.data(CallTreeViewItemModel::kModuleBuildIdRole).toString().toStdString();
-    unique_module_paths_and_build_ids.emplace(module_path, module_build_id);
+    unique_module_ids.emplace(ModuleIdentifier{module_path, module_build_id});
   }
 
   std::vector<ModuleData*> modules;
-  for (const auto& [module_path, module_build_id] : unique_module_paths_and_build_ids) {
-    ModuleData* module = app->GetMutableModuleByPathAndBuildId(module_path, module_build_id);
+  for (const ModuleIdentifier& module_id : unique_module_ids) {
+    ModuleData* module = app->GetMutableModuleByModuleIdentifier(module_id);
     if (module != nullptr) {
       modules.emplace_back(module);
     }

@@ -41,6 +41,7 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
@@ -117,6 +118,7 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
@@ -982,8 +984,7 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_DISASSEMBLY_SHOW};
 
   ORBIT_CHECK(process_ != nullptr);
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
-                                                                        function.module_build_id());
+  const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
   ORBIT_CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   std::optional<uint64_t> absolute_address = function.GetAbsoluteAddress(*process_, *module);
@@ -1040,8 +1041,7 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
   ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SOURCE_CODE_SHOW};
 
-  const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
-                                                                        function.module_build_id());
+  const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
@@ -1470,8 +1470,8 @@ static void FindAndAddFunctionToStopUnwindingAt(
   std::vector<orbit_client_data::ModuleInMemory> modules =
       process.FindModulesByFilename(module_name);
   for (const auto& module_in_memory : modules) {
-    const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(
-        module_in_memory.file_path(), module_in_memory.build_id());
+    const ModuleData* module_data =
+        module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id());
 
     const FunctionInfo* function_to_stop_unwinding_at =
         module_data->FindFunctionFromPrettyName(function_name);
@@ -1928,11 +1928,11 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
 
 orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const ModuleData* module) {
-  return RetrieveModuleAndLoadSymbols(module->file_path(), module->build_id());
+  return RetrieveModuleAndLoadSymbols(module->module_id());
 }
 
 orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
-    const std::string& module_path, const std::string& build_id) {
+    const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
@@ -1940,13 +1940,11 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
   // the download.
   ScopedMetric metric(metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
-  const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
+  const ModuleData* const module_data = GetModuleByModuleIdentifier(module_id);
   if (module_data == nullptr) {
     metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_id.file_path)}};
   }
-
-  const auto module_id = std::make_pair(module_data->file_path(), module_data->build_id());
 
   modules_with_symbol_loading_error_.erase(module_id);
 
@@ -1957,23 +1955,19 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
     return it->second;
   }
 
-  orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> load_result = orbit_base::UnwrapFuture(
-      RetrieveModule(module_path, build_id)
-          .ThenIfSuccess(main_thread_executor_,
-                         [this, module_path, build_id](
-                             const CanceledOr<std::filesystem::path>& load_result_or_canceled)
-                             -> Future<ErrorMessageOr<CanceledOr<void>>> {
-                           if (orbit_base::IsCanceled(load_result_or_canceled)) {
-                             return {orbit_base::Canceled{}};
-                           }
-                           const auto& local_file_path{
-                               std::get<std::filesystem::path>(load_result_or_canceled)};
-                           orbit_base::ImmediateExecutor executor;
-                           return LoadSymbols(local_file_path, module_path, build_id)
-                               .ThenIfSuccess(&executor, []() -> CanceledOr<void> {
-                                 return CanceledOr<void>{};
-                               });
-                         }));
+  orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> load_result =
+      orbit_base::UnwrapFuture(RetrieveModule(module_id).ThenIfSuccess(
+          main_thread_executor_,
+          [this, module_id](const CanceledOr<std::filesystem::path>& load_result_or_canceled)
+              -> Future<ErrorMessageOr<CanceledOr<void>>> {
+            if (orbit_base::IsCanceled(load_result_or_canceled)) {
+              return {orbit_base::Canceled{}};
+            }
+            const auto& local_file_path{std::get<std::filesystem::path>(load_result_or_canceled)};
+            orbit_base::ImmediateExecutor executor;
+            return LoadSymbols(local_file_path, module_id)
+                .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
+          }));
 
   load_result.Then(main_thread_executor_,
                    [this, metric = std::move(metric),
@@ -1993,15 +1987,13 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
 }
 
 orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModule(
-    const std::string& module_path, const std::string& build_id) {
+    const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
-  const ModuleData* module_data = GetModuleByPathAndBuildId(module_path, build_id);
+  const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
 
   if (module_data == nullptr) {
-    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_id.file_path)}};
   }
-
-  auto module_id = std::make_pair(module_path, build_id);
 
   const auto it = symbol_files_currently_being_retrieved_.find(module_id);
   if (it != symbol_files_currently_being_retrieved_.end()) {
@@ -2014,7 +2006,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
   // TODO(b/177304549): [new UI] maybe come up with a better indicator whether orbit is connected
   // than process_manager != nullptr
   if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr ||
-      download_disabled_modules_.contains(module_path)) {
+      download_disabled_modules_.contains(module_id.file_path)) {
     orbit_base::ImmediateExecutor executor;
     return local_symbols_future.ThenIfSuccess(
         &executor, [](const std::filesystem::path& result) -> CanceledOr<std::filesystem::path> {
@@ -2029,7 +2021,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
               -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
             if (local_symbols_path.has_value()) return {local_symbols_path.value()};
 
-            return RetrieveModuleFromRemote(module_id.first)
+            return RetrieveModuleFromRemote(module_id.file_path)
                 .Then(main_thread_executor_,
                       [module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<CanceledOr<std::filesystem::path>>& remote_result)
@@ -2039,8 +2031,8 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
                         return {ErrorMessage{
                             absl::StrFormat("Did not find symbols locally or on remote for module "
                                             "\"%s\" with build_id=\"%s\": %s\n%s",
-                                            module_id.first, module_id.second, local_error_message,
-                                            remote_result.error().message())}};
+                                            module_id.file_path, module_id.build_id,
+                                            local_error_message, remote_result.error().message())}};
                       });
           }));
 
@@ -2056,15 +2048,16 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
     const ModuleData* module_data) {
-  return RetrieveModuleWithDebugInfo(module_data->file_path(), module_data->build_id());
+  return RetrieveModuleWithDebugInfo(module_data->module_id());
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
-    const std::string& module_path, const std::string& build_id) {
-  auto loaded_module = RetrieveModule(module_path, build_id);
+    const ModuleIdentifier& module_id) {
+  auto loaded_module = RetrieveModule(module_id);
   return loaded_module.ThenIfSuccess(
       main_thread_executor_,
-      [this, module_path](const CanceledOr<std::filesystem::path>& local_file_path_or_canceled)
+      [this, module_path = module_id.file_path](
+          const CanceledOr<std::filesystem::path>& local_file_path_or_canceled)
           -> ErrorMessageOr<std::filesystem::path> {
         if (orbit_base::IsCanceled(local_file_path_or_canceled)) {
           return ErrorMessage{"User canceled loading"};
@@ -2173,12 +2166,10 @@ Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::FindModuleLocally(
   });
 }
 
-void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
-                          const std::string& module_build_id,
+void OrbitApp::AddSymbols(const ModuleIdentifier& module_id,
                           const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   ORBIT_SCOPE_FUNCTION;
-  ModuleData* module_data =
-      GetMutableModuleByPathAndBuildId(module_file_path.string(), module_build_id);
+  ModuleData* module_data = GetMutableModuleByModuleIdentifier(module_id);
   module_data->AddSymbols(module_symbols);
 
   const ProcessData* selected_process = GetTargetProcess();
@@ -2194,29 +2185,25 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
-    const std::filesystem::path& symbols_path, const std::string& module_file_path,
-    const std::string& module_build_id) {
+    const std::filesystem::path& symbols_path, const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
 
   auto load_symbols_from_file =
-      thread_pool_->Schedule([this, symbols_path, module_file_path, module_build_id]() {
-        const ModuleData* module_data =
-            GetModuleByPathAndBuildId(module_file_path, module_build_id);
+      thread_pool_->Schedule([this, symbols_path, module_id]() {
+        const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
         orbit_object_utils::ObjectFileInfo object_file_info{
             module_data->load_bias(), module_data->executable_segment_offset()};
         return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
       });
 
-  auto add_symbols =
-      [this, module_file_path, module_build_id](
-          const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
-      -> ErrorMessageOr<void> {
+  auto add_symbols = [this, module_id](const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>&
+                                           symbols_result) mutable -> ErrorMessageOr<void> {
     if (symbols_result.has_error()) return symbols_result.error();
 
-    AddSymbols(module_file_path, module_build_id, symbols_result.value());
+    AddSymbols(module_id, symbols_result.value());
 
     ORBIT_LOG("Successfully loaded %d symbols for \"%s\"",
-              symbols_result.value().symbol_infos_size(), module_file_path);
+              symbols_result.value().symbol_infos_size(), module_id.file_path);
     return outcome::success();
   };
 
@@ -2231,7 +2218,7 @@ ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
   std::vector<const ModuleData*> result;
   for (const auto& build_id : build_ids) {
     const ModuleData* module_data =
-        module_manager_->GetModuleByPathAndBuildId(module_path.string(), build_id);
+        GetModuleByModuleIdentifier(ModuleIdentifier{module_path.string(), build_id});
     if (module_data == nullptr) {
       ORBIT_ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
                   module_path.string());
@@ -2567,9 +2554,9 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetTargetProcess());
 
   functions_data_view_->ClearFunctions();
-  auto module_keys = GetTargetProcess()->GetUniqueModulesPathAndBuildId();
-  for (const auto& [file_path, build_id] : module_keys) {
-    ModuleData* module = module_manager_->GetMutableModuleByPathAndBuildId(file_path, build_id);
+auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
+  for (const ModuleIdentifier& module_id : module_ids) {
+    ModuleData* module = GetMutableModuleByModuleIdentifier(module_id);
     if (module->is_loaded()) {
       functions_data_view_->AddFunctions(module->GetFunctions());
     }
@@ -2601,8 +2588,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
 
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-    const ModuleData* module =
-        module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
+    const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
     // (A) deselect functions when the module is not loaded by the process anymore
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
       data_manager_->DeselectFunction(func);
@@ -2616,8 +2602,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
   for (const FunctionInfo& func :
        data_manager_->user_defined_capture_data().frame_track_functions()) {
-    const ModuleData* module =
-        module_manager_->GetModuleByPathAndBuildId(func.module_path(), func.module_build_id());
+    const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
@@ -3375,7 +3360,7 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
 
   if (IsModuleDownloading(module)) return SymbolLoadingState::kDownloading;
 
-  auto module_id = std::make_pair(module->file_path(), module->build_id());
+  ModuleIdentifier module_id = module->module_id();
   if (symbols_currently_loading_.contains(module_id)) {
     return SymbolLoadingState::kLoading;
   }
@@ -3397,8 +3382,7 @@ bool OrbitApp::IsSymbolLoadingInProgressForModule(
     const orbit_client_data::ModuleData* module) const {
   ORBIT_CHECK(module != nullptr);
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
-  return symbols_currently_loading_.contains(
-      std::make_pair(module->file_path(), module->build_id()));
+  return symbols_currently_loading_.contains(module->module_id());
 }
 
 void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> modules,

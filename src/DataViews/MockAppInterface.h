@@ -14,6 +14,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -76,10 +77,10 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(const orbit_client_data::ProcessData*, GetTargetProcess, (), (const, override));
 
-  MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByPathAndBuildId,
-              (const std::string&, const std::string&), (const, override));
-  MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByPathAndBuildId,
-              (const std::string&, const std::string&), (override));
+  MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModuleIdentifier,
+              (const orbit_client_data::ModuleIdentifier&), (const, override));
+  MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModuleIdentifier,
+              (const orbit_client_data::ModuleIdentifier&), (override));
   MOCK_METHOD(orbit_base::Future<void>, LoadSymbolsManually,
               (absl::Span<const orbit_client_data::ModuleData* const>), (override));
 

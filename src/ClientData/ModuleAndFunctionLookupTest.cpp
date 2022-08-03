@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
@@ -19,14 +20,15 @@ namespace orbit_client_data {
 TEST(ModuleAndFunctionLookup, FindFunctionByModulePathBuildIdAndVirtualAddress) {
   constexpr const char* kModuleFilePath = "/path/to/module";
   constexpr const char* kModuleBuildId = "build_id";
+  const ModuleIdentifier kModuleId{kModuleFilePath, kModuleBuildId};
 
   constexpr const char* kFunctionName = "foo()";
   constexpr uint64_t kFunctionVirtualAddress = 0x3000;
 
   ModuleManager module_manager;
 
-  const FunctionInfo* function_info = FindFunctionByModulePathBuildIdAndVirtualAddress(
-      module_manager, kModuleFilePath, kModuleBuildId, kFunctionVirtualAddress);
+  const FunctionInfo* function_info = FindFunctionByModuleIdentifierAndVirtualAddress(
+      module_manager, kModuleId, kFunctionVirtualAddress);
   EXPECT_EQ(function_info, nullptr);
 
   ModuleInfo module_info;
@@ -35,20 +37,19 @@ TEST(ModuleAndFunctionLookup, FindFunctionByModulePathBuildIdAndVirtualAddress) 
 
   std::ignore = module_manager.AddOrUpdateModules({module_info});
 
-  function_info = FindFunctionByModulePathBuildIdAndVirtualAddress(
-      module_manager, kModuleFilePath, kModuleBuildId, kFunctionVirtualAddress);
+  function_info = FindFunctionByModuleIdentifierAndVirtualAddress(module_manager, kModuleId,
+                                                                  kFunctionVirtualAddress);
   EXPECT_EQ(function_info, nullptr);
 
   ModuleSymbols module_symbols;
   SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
   symbol_info->set_demangled_name(kFunctionName);
   symbol_info->set_address(kFunctionVirtualAddress);
-  ModuleData* module_data =
-      module_manager.GetMutableModuleByPathAndBuildId(kModuleFilePath, kModuleBuildId);
+  ModuleData* module_data = module_manager.GetMutableModuleByModuleIdentifier(kModuleId);
   module_data->AddSymbols(module_symbols);
 
-  function_info = FindFunctionByModulePathBuildIdAndVirtualAddress(
-      module_manager, kModuleFilePath, kModuleBuildId, kFunctionVirtualAddress);
+  function_info = FindFunctionByModuleIdentifierAndVirtualAddress(module_manager, kModuleId,
+                                                                  kFunctionVirtualAddress);
   ASSERT_NE(function_info, nullptr);
   EXPECT_EQ(function_info->pretty_name(), kFunctionName);
   EXPECT_EQ(function_info->address(), kFunctionVirtualAddress);

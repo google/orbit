@@ -11,6 +11,7 @@
 
 #include "ClientData/CallstackType.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -59,7 +60,7 @@ class SamplingReportDataView : public DataView {
   void DoFilter() override;
   const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
-  [[nodiscard]] std::optional<std::pair<std::string, std::string>> GetModulePathAndBuildIdFromRow(
+  [[nodiscard]] std::optional<orbit_client_data::ModuleIdentifier> GetModuleIdentifierFromRow(
       int row) const;
 
  private:

@@ -40,6 +40,7 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
@@ -206,8 +207,7 @@ const FunctionInfo* SamplingReportDataView::GetFunctionInfoFromRow(int row) {
   return sampled_function.function;
 }
 
-std::optional<std::pair<std::string, std::string>>
-SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
+std::optional<ModuleIdentifier> SamplingReportDataView::GetModuleIdentifierFromRow(int row) const {
   const ProcessData* process = app_->GetCaptureData().process();
   ORBIT_CHECK(process != nullptr);
 
@@ -219,7 +219,7 @@ SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
     return std::nullopt;
   }
 
-  return std::make_pair(result.value().file_path(), result.value().build_id());
+  return result.value().module_id();
 }
 
 DataView::ActionStatus SamplingReportDataView::GetActionStatus(
@@ -268,12 +268,10 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
 }
 
 ModuleData* SamplingReportDataView::GetModuleDataFromRow(int row) const {
-  std::optional<std::pair<std::string, std::string>> module_path_and_build_id =
-      GetModulePathAndBuildIdFromRow(row);
-  if (!module_path_and_build_id.has_value()) return nullptr;
+  std::optional<ModuleIdentifier> module_id_opt = GetModuleIdentifierFromRow(row);
+  if (!module_id_opt.has_value()) return nullptr;
 
-  return app_->GetMutableModuleByPathAndBuildId(module_path_and_build_id.value().first,
-                                                module_path_and_build_id.value().second);
+  return app_->GetMutableModuleByModuleIdentifier(module_id_opt.value());
 }
 
 void SamplingReportDataView::UpdateSelectedIndicesAndFunctionIds(

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
@@ -27,7 +28,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
-    auto module_id = std::make_pair(module_info.file_path(), module_info.build_id());
+    auto module_id = ModuleIdentifier{module_info.file_path(), module_info.build_id()};
     auto module_it = module_map_.find(module_id);
     if (module_it == module_map_.end()) {
       const bool success = module_map_.try_emplace(module_id, module_info).second;
@@ -50,7 +51,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
   std::vector<ModuleData*> not_updated_modules;
 
   for (const auto& module_info : module_infos) {
-    auto module_id = std::make_pair(module_info.file_path(), module_info.build_id());
+    auto module_id = ModuleIdentifier{module_info.file_path(), module_info.build_id()};
     auto module_it = module_map_.find(module_id);
     if (module_it == module_map_.end()) {
       const bool success = module_map_.try_emplace(module_id, module_info).second;
@@ -70,7 +71,7 @@ const ModuleData* ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress(
     const ModuleInMemory& module_in_memory, uint64_t absolute_address) const {
   absl::MutexLock lock(&mutex_);
   auto it =
-      module_map_.find(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+      module_map_.find(ModuleIdentifier{module_in_memory.file_path(), module_in_memory.build_id()});
   if (it == module_map_.end()) return nullptr;
 
   // The valid absolute address should be >=
@@ -87,7 +88,7 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
     const ModuleInMemory& module_in_memory, uint64_t absolute_address) {
   absl::MutexLock lock(&mutex_);
   auto it =
-      module_map_.find(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+      module_map_.find(ModuleIdentifier{module_in_memory.file_path(), module_in_memory.build_id()});
   if (it == module_map_.end()) return nullptr;
 
   // The valid absolute address should be >=
@@ -100,21 +101,20 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   return &it->second;
 }
 
-const ModuleData* ModuleManager::GetModuleByPathAndBuildId(const std::string& path,
-                                                           const std::string& build_id) const {
+const ModuleData* ModuleManager::GetModuleByModuleIdentifier(
+    const ModuleIdentifier& module_id) const {
   absl::MutexLock lock(&mutex_);
 
-  auto it = module_map_.find(std::make_pair(path, build_id));
+  auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return &it->second;
 }
 
-ModuleData* ModuleManager::GetMutableModuleByPathAndBuildId(const std::string& path,
-                                                            const std::string& build_id) {
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(const ModuleIdentifier& module_id) {
   absl::MutexLock lock(&mutex_);
 
-  auto it = module_map_.find(std::make_pair(path, build_id));
+  auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return &it->second;
@@ -123,7 +123,7 @@ ModuleData* ModuleManager::GetMutableModuleByPathAndBuildId(const std::string& p
 std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
   absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;
-  for (const auto& [unused_pair, module_data] : module_map_) {
+  for (const auto& [unused_module_id, module_data] : module_map_) {
     result.push_back(&module_data);
   }
   return result;
@@ -133,9 +133,8 @@ std::vector<const ModuleData*> ModuleManager::GetModulesByFilename(
     const std::string& filename) const {
   absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;
-  for (const auto& [path_build_id_pair, module_data] : module_map_) {
-    const std::string& file_path = path_build_id_pair.first;
-    if (std::filesystem::path(file_path).filename().string() == filename) {
+  for (const auto& [module_id, module_data] : module_map_) {
+    if (std::filesystem::path(module_id.file_path).filename().string() == filename) {
       result.push_back(&module_data);
     }
   }

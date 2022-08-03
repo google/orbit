@@ -56,8 +56,8 @@ TEST(Disassembler, DisassembleWithSymbols) {
 
   orbit_client_data::ModuleManager module_manager{};
   (void)module_manager.AddOrUpdateModules({module_info});
-  orbit_client_data::ModuleData* module_data =
-      module_manager.GetMutableModuleByPathAndBuildId(kFilePath, kBuildId);
+  orbit_client_data::ModuleData* module_data = module_manager.GetMutableModuleByModuleIdentifier(
+      orbit_client_data::ModuleIdentifier{kFilePath, kBuildId});
 
   orbit_grpc_protos::ModuleSymbols symbols;
   orbit_grpc_protos::SymbolInfo* symbol = symbols.add_symbol_infos();

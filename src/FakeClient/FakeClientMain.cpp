@@ -227,7 +227,9 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   orbit_grpc_protos::ModuleSymbols module_symbols;
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
-  module_manager->GetMutableModuleByPathAndBuildId(file_path, build_id)->AddSymbols(module_symbols);
+  module_manager
+      ->GetMutableModuleByModuleIdentifier(orbit_client_data::ModuleIdentifier{file_path, build_id})
+      ->AddSymbols(module_symbols);
 }
 
 uint32_t ReadPidFromFile(const std::string& file_path) {

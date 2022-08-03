@@ -30,6 +30,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
@@ -51,6 +52,7 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
@@ -501,9 +503,10 @@ void LiveFunctionsDataView::OnDataChanged() {
     const FunctionInfo* function_info_from_capture_data;
 
     function_info_from_capture_data =
-        orbit_client_data::FindFunctionByModulePathBuildIdAndVirtualAddress(
-            *module_manager, instrumented_function.file_path(),
-            instrumented_function.file_build_id(),
+        orbit_client_data::FindFunctionByModuleIdentifierAndVirtualAddress(
+            *module_manager,
+            ModuleIdentifier{instrumented_function.file_path(),
+                             instrumented_function.file_build_id()},
             instrumented_function.function_virtual_address());
 
     // This could happen because module has not yet been updated, it also
@@ -577,8 +580,8 @@ std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {
 
 std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrumentedFunction(
     const InstrumentedFunction& instrumented_function) {
-  const ModuleData* module_data = app_->GetModuleByPathAndBuildId(
-      instrumented_function.file_path(), instrumented_function.file_build_id());
+  const ModuleData* module_data = app_->GetModuleByModuleIdentifier(
+      ModuleIdentifier{instrumented_function.file_path(), instrumented_function.file_build_id()});
   if (module_data == nullptr) {
     return std::nullopt;
   }

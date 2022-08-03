@@ -78,10 +78,10 @@ std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
                                                                                  absolute_address);
 }
 
-const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
-    const ModuleManager& module_manager, const std::string& module_path,
-    const std::string& build_id, uint64_t virtual_address) {
-  const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(module_path, build_id);
+const FunctionInfo* FindFunctionByModuleIdentifierAndVirtualAddress(
+    const ModuleManager& module_manager, const ModuleIdentifier& module_id,
+    uint64_t virtual_address) {
+  const ModuleData* module_data = module_manager.GetModuleByModuleIdentifier(module_id);
   if (module_data == nullptr) {
     return nullptr;
   }
