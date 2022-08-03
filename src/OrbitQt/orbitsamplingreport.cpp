@@ -139,6 +139,9 @@ void OrbitSamplingReport::Deinitialize() {
   ui_->CallstackTreeView->Deinitialize();
   orbit_data_views_.clear();
   ui_->tabWidget->clear();
+  if (sampling_report_) {
+    sampling_report_->ClearReport();
+  }
   sampling_report_.reset();
 }
 
@@ -199,9 +202,9 @@ void OrbitSamplingReport::OnLeaveInspectionButtonClicked() {
 }
 
 void OrbitSamplingReport::SetInspection(orbit_data_views::DataView* callstack_data_view,
-                                        const std::shared_ptr<SamplingReport>& report) {
+                                        std::unique_ptr<SamplingReport> report) {
   Deinitialize();
-  Initialize(callstack_data_view, report);
+  Initialize(callstack_data_view, std::move(report));
   connect(ui_->inspectionNoticeButton, &QPushButton::clicked, this,
           &OrbitSamplingReport::OnLeaveInspectionButtonClicked);
   ui_->inspectionNoticeWidget->show();

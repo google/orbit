@@ -94,7 +94,9 @@ void OrbitTreeView::Initialize(orbit_data_views::DataView* data_view, SelectionT
     const QFont fixed_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     setFont(fixed_font);
   }
-  // Manually trigger a resize event on Initialization.
+  // After a round of Deinitialize() and Initialize(), the table column sizes get reset and
+  // resizeEvent doesn't get called again. Manually trigger the event here to make sure they get set
+  // properly.
   QResizeEvent event = QResizeEvent(size(), QSize{-1, -1});
   resizeEvent(&event);
 }

@@ -2874,7 +2874,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                       bool origin_is_multiple_threads) {
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
-  auto report = std::make_shared<SamplingReport>(
+  std::unique_ptr<SamplingReport> report = std::make_unique<SamplingReport>(
       this, &GetCaptureData().selection_callstack_data(),
       &GetCaptureData().selection_post_processed_sampling_data(), metrics_uploader_,
       /*generate_summary*/ origin_is_multiple_threads);
@@ -2885,7 +2885,7 @@ void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selecte
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
           GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
           GetCaptureData()),
-      GetOrCreateSelectionCallstackDataView(), report);
+      GetOrCreateSelectionCallstackDataView(), std::move(report));
   FireRefreshCallbacks();
 }
 

@@ -134,7 +134,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
                               std::unique_ptr<CallTreeView> bottom_up_view,
                               orbit_data_views::DataView* callstack_data_view,
-                              const std::shared_ptr<class SamplingReport>& report) override;
+                              std::unique_ptr<class SamplingReport> report) override;
 
   void ClearCallstackInspection() override;
   void LeaveCallstackInspectionTriggered();

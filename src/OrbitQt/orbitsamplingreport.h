@@ -35,7 +35,7 @@ class OrbitSamplingReport : public QWidget {
   void RefreshTabs();
 
   void SetInspection(orbit_data_views::DataView* callstack_data_view,
-                     const std::shared_ptr<SamplingReport>& report);
+                     std::unique_ptr<SamplingReport> report);
 
  signals:
   void leaveCallstackInspectionTriggered();
