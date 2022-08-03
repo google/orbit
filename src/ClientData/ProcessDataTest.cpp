@@ -486,8 +486,8 @@ TEST(ProcessData, GetUniqueModulesPathAndBuildIds) {
 
   auto module_ids = process.GetUniqueModuleIdentifiers();
   ASSERT_EQ(module_ids.size(), 2);
-  EXPECT_THAT(module_ids, testing::ElementsAre(ModuleIdentifier{file_path_1, build_id_1},
-                                               ModuleIdentifier{file_path_2, build_id_2}));
+  EXPECT_THAT(module_ids, testing::UnorderedElementsAre(ModuleIdentifier{file_path_1, build_id_1},
+                                                        ModuleIdentifier{file_path_2, build_id_2}));
 }
 
 TEST(ProcessData, RemapModule) {
