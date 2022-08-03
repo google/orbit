@@ -22,14 +22,10 @@ OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
 
 void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
                                     SelectionType selection_type, FontType font_type,
-                                    bool is_main_instance, bool uniform_row_height,
+                                    bool uniform_row_height,
                                     QFlags<Qt::AlignmentFlag> text_alignment) {
   ui->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height,
                            text_alignment);
-
-  if (is_main_instance) {
-    ui->treeView->GetModel()->GetDataView()->SetAsMainInstance();
-  }
 
   std::string label = ui->treeView->GetLabel();
   if (!label.empty()) {
