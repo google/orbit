@@ -197,16 +197,12 @@ void OrbitSamplingReport::RefreshTabs() {
   }
 }
 
-void OrbitSamplingReport::OnLeaveInspectionButtonClicked() {
-  emit leaveCallstackInspectionTriggered();
-}
-
 void OrbitSamplingReport::SetInspection(orbit_data_views::DataView* callstack_data_view,
                                         std::unique_ptr<SamplingReport> report) {
   Deinitialize();
   Initialize(callstack_data_view, std::move(report));
   connect(ui_->inspectionNoticeButton, &QPushButton::clicked, this,
-          &OrbitSamplingReport::OnLeaveInspectionButtonClicked);
+          &OrbitSamplingReport::LeaveCallstackInspectionClicked);
   ui_->inspectionNoticeWidget->show();
   RefreshCallstackView();
   RefreshTabs();

@@ -1914,12 +1914,10 @@ void OrbitMainWindow::SetCallstackInspection(std::unique_ptr<CallTreeView> top_d
 
   ui->samplingReport->hide();
   ui->inspectionReport->SetInspection(callstack_data_view, std::move(report));
-  connect(ui->inspectionReport, &OrbitSamplingReport::leaveCallstackInspectionTriggered, this,
-          &OrbitMainWindow::LeaveCallstackInspectionTriggered);
+  connect(ui->inspectionReport, &OrbitSamplingReport::LeaveCallstackInspectionClicked, this,
+          [this]() { app_->ClearInspection(); });
   ui->inspectionReport->show();
 }
-
-void OrbitMainWindow::LeaveCallstackInspectionTriggered() { app_->ClearInspection(); }
 
 void OrbitMainWindow::ClearCallstackInspection() {
   ui->topDownWidget->ClearInspection();

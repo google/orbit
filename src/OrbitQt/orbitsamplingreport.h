@@ -38,13 +38,12 @@ class OrbitSamplingReport : public QWidget {
                      std::unique_ptr<SamplingReport> report);
 
  signals:
-  void leaveCallstackInspectionTriggered();
+  void LeaveCallstackInspectionClicked();
 
  private slots:
   void on_NextCallstackButton_clicked();
   void on_PreviousCallstackButton_clicked();
   void OnCurrentThreadTabChanged(int current_tab_index);
-  void OnLeaveInspectionButtonClicked();
 
  private:
   Ui::OrbitSamplingReport* ui_;

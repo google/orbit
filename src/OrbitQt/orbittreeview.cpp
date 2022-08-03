@@ -5,8 +5,6 @@
 #include "orbittreeview.h"
 
 #include <glad/glad.h>
-#include <qevent.h>
-#include <qitemselectionmodel.h>
 
 #include <QAbstractItemView>
 #include <QAction>
@@ -21,6 +19,7 @@
 #include <QMenu>
 #include <QModelIndexList>
 #include <QMouseEvent>
+#include <QResizeEvent>
 #include <QScrollBar>
 #include <QSize>
 #include <algorithm>

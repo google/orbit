@@ -137,7 +137,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
                               std::unique_ptr<class SamplingReport> report) override;
 
   void ClearCallstackInspection() override;
-  void LeaveCallstackInspectionTriggered();
 
  protected:
   void closeEvent(QCloseEvent* event) override;
