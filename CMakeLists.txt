@@ -135,6 +135,11 @@ if (MSVC)
   add_compile_options("/MP")
   # Set source and execution character sets to UTF-8.
   add_compile_options("/utf-8")
+  # Set warning level for external includes.
+  string(APPEND CMAKE_CXX_FLAGS " /experimental:external /external:anglebrackets /external:W0")
+  string(APPEND CMAKE_C_FLAGS " /experimental:external /external:anglebrackets /external:W0")
+  # Treat all compiler warnings as errors.
+  add_compile_options("/WX")
 endif()
 
 if(WIN32)
