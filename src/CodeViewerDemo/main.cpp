@@ -16,7 +16,7 @@ class DummyCodeReport : public orbit_code_report::CodeReport {
   [[nodiscard]] uint32_t GetNumSamplesInFunction() const override { return num_samples_; }
   [[nodiscard]] uint32_t GetNumSamples() const override { return num_samples_; }
   [[nodiscard]] std::optional<uint32_t> GetNumSamplesAtLine(size_t line) const override {
-    return line;
+    return static_cast<uint32_t>(line);
   }
 
  private:

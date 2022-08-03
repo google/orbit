@@ -281,7 +281,7 @@ void SamplingReportDataView::UpdateSelectedIndicesAndFunctionIds(
   selected_indices_.clear();
   selected_function_ids_.clear();
   for (int row : selected_indices) {
-    selected_indices_.insert(indices_[row]);
+    selected_indices_.insert(static_cast<int>(indices_[row]));
     selected_function_ids_.insert(GetSampledFunction(row).absolute_address);
   }
 }

@@ -569,7 +569,7 @@ const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
 std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {
   for (size_t function_row = 0; function_row < indices_.size(); function_row++) {
     if (GetScopeId(function_row) == scope_id) {
-      return function_row;
+      return static_cast<int>(function_row);
     }
   }
   return std::nullopt;

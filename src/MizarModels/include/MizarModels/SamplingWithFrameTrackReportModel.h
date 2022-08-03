@@ -105,7 +105,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         {Column::kPvalue, "P-value"},
         {Column::kIsSignificant, "Significant?"},
         {Column::kSlowdownPercent, "Slowdown, %"},
-        {Column::kPercentOfSlowdown, "\% of frametime slowdown"}};
+        {Column::kPercentOfSlowdown, "% of frametime slowdown"}};
 
     if (orientation == Qt::Vertical || role != Qt::DisplayRole) {
       return {};

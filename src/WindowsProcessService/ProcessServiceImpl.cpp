@@ -54,12 +54,13 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRe
     if (process_list_ == nullptr) {
       process_list_ = orbit_windows_utils::ProcessList::Create();
     }
-    process_list_->Refresh();
+    auto result = process_list_->Refresh();
+    if (result.has_error()) {
+      return Status(StatusCode::NOT_FOUND,
+                    absl::StrFormat("Error listing processes: %s", result.error().message()));
+    }
     processes = process_list_->GetProcesses();
-  }
-
-  if (processes.empty()) {
-    return Status(StatusCode::NOT_FOUND, "Error listing processes");
+    ORBIT_CHECK(!processes.empty());
   }
 
   for (const Process* process : processes) {

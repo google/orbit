@@ -44,8 +44,10 @@ TEST(File, MoveAssingToExisingUniqueFd) {
   EXPECT_FALSE(fd_or_error.value().valid());
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wself-move"
+#endif  // __GNUC__
 TEST(File, UniqueFdSelfMove) {
   auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
   ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
@@ -55,7 +57,9 @@ TEST(File, UniqueFdSelfMove) {
 
   ASSERT_TRUE(valid_fd.valid());
 }
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif  // __GNUC__
 
 TEST(File, AcccessInvalidUniqueFd) {
   unique_fd fd;
