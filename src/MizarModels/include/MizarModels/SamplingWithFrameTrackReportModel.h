@@ -175,8 +175,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         absl::StrFormat("The function \"%s\" is  %.3f%%\n"
                         "slower in %s capture that it was in %s capture.\n"
                         "Negative percentage represent a speed-up.",
-                        *function_name, slowdown_percent, *orbit_mizar_base::kBaselineTitle,
-                        *orbit_mizar_base::kComparisonTitle));
+                        *function_name, slowdown_percent, *orbit_mizar_base::kComparisonTitle,
+                        *orbit_mizar_base::kBaselineTitle));
   }
 
   [[nodiscard]] static QString MakeTooltipForPercentOfSlowdownColumn(
