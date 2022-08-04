@@ -66,7 +66,6 @@ class MizarPairedDataTmpl {
         frame_track_id, FrameStartNs(min_timestamp_ns), FrameStartNs(max_timestamp_ns));
     if (frame_starts.size() < 2) return {};
 
-    // TODO(b/235572160) Estimate the actual sampling period and use it instead
     const uint64_t sampling_period = data_->GetNominalSamplingPeriodNs();
 
     std::vector<uint64_t> result;
