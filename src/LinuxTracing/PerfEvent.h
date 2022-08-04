@@ -249,6 +249,24 @@ struct DmaFenceSignaledPerfEventData {
 };
 using DmaFenceSignaledPerfEvent = TypedPerfEvent<DmaFenceSignaledPerfEventData>;
 
+struct PerfRecordSample {
+  perf_event_header header;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+
+  mutable uint64_t ips_size;
+  mutable std::unique_ptr<uint64_t[]> ips;
+
+  uint32_t raw_size;
+  std::unique_ptr<uint8_t[]> raw_data;
+
+  uint64_t abi;
+  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+
+  uint64_t stack_size;
+  std::unique_ptr<uint8_t[]> stack_data;
+  uint64_t dyn_size;
+};
+
 // This struct holds the data we need from any of the possible perf_event_open events that we
 // collect. The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all
 // events, while each of the possible `...PerfEventData`s in the `std::variant` contains the data
