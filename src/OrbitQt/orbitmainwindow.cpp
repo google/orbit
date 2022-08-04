@@ -192,7 +192,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
                                 SelectionType::kExtended, FontType::kDefault);
   ui->PresetsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),
                               SelectionType::kDefault, FontType::kDefault,
-                              /*is_main_instance=*/true, /*uniform_row_height=*/false,
+                              /*uniform_row_height=*/false,
                               /*text_alignment=*/Qt::AlignTop | Qt::AlignLeft);
 
   std::visit([this](const auto& target) { SetTarget(target); }, target_configuration_);

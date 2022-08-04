@@ -122,7 +122,6 @@ class DataView {
 
   virtual ~DataView() = default;
 
-  virtual void SetAsMainInstance() {}
   virtual const std::vector<Column>& GetColumns() = 0;
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }

@@ -29,7 +29,7 @@ class OrbitDataViewPanel : public QWidget {
   ~OrbitDataViewPanel() override;
 
   void Initialize(orbit_data_views::DataView* data_view, SelectionType selection_type,
-                  FontType font_type, bool is_main_instance = true, bool uniform_row_height = true,
+                  FontType font_type, bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void Deinitialize();
   void Link(OrbitDataViewPanel* a_Panel);
