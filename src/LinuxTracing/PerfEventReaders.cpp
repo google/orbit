@@ -25,50 +25,68 @@
 
 namespace orbit_linux_tracing {
 
-enum class ReadingFlags : int {
-  kReadNone = 0,
-  kReadHeader = (1 << 0),
-  // StandardFields are the fields in perf_event_sample_id_tid_time_streamid_cpu
-  kReadStandardFields = (1 << 1),
-  kReadCallchain = (1 << 2),
-  kReadRaw = (1 << 3),
-  kReadRegsUser = (1 << 4),
-  kReadStackUser = (1 << 5),
-};
-ReadingFlags operator|(ReadingFlags a, ReadingFlags b) {
-  return static_cast<ReadingFlags>(static_cast<int>(a) | static_cast<int>(b));
-}
-ReadingFlags operator&(ReadingFlags a, ReadingFlags b) {
-  return static_cast<ReadingFlags>(static_cast<int>(a) & static_cast<int>(b));
-}
-
-bool is_flag_set(ReadingFlags flag_collection, ReadingFlags flag_to_be_checked) {
-  return (flag_collection & flag_to_be_checked) != ReadingFlags::kReadNone;
-}
-
-PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
-                                     const perf_event_header& header, ReadingFlags flags) {
+[[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header,
+                                                          perf_event_attr flags) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
-  PerfRecordSample event;
+  PerfRecordSample event{};
 
-  // Note, the header and the standard fields are always present. These flags are to avoid
-  // unnecssary copying. Even if they're unset that doesn't mean that we can skip them when counting
-  // the offset.
-  if (is_flag_set(flags, ReadingFlags::kReadHeader)) {
-    ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
+  ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
+
+  int current_offset = sizeof(perf_event_header);
+
+  if (flags.sample_type & PERF_SAMPLE_IDENTIFIER) {
+    ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
   }
 
-  if (is_flag_set(flags, ReadingFlags::kReadStandardFields)) {
-    ring_buffer->ReadRawAtOffset(&event.sample_id, sizeof(perf_event_header),
-                                 sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+  if (flags.sample_type & PERF_SAMPLE_IP) {
+    ring_buffer->ReadRawAtOffset(&event.ip, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
   }
 
-  int current_offset =
-      sizeof(perf_event_sample_id_tid_time_streamid_cpu) + sizeof(perf_event_header);
+  if (flags.sample_type & PERF_SAMPLE_TID) {
+    ring_buffer->ReadRawAtOffset(&event.pid, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+    ring_buffer->ReadRawAtOffset(&event.tid, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+  }
 
-  if (is_flag_set(flags, ReadingFlags::kReadCallchain)) {
+  if (flags.sample_type & PERF_SAMPLE_TIME) {
+    ring_buffer->ReadRawAtOffset(&event.time, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_ADDR) {
+    ring_buffer->ReadRawAtOffset(&event.addr, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_ID) {
+    ring_buffer->ReadRawAtOffset(&event.id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_STREAM_ID) {
+    ring_buffer->ReadRawAtOffset(&event.stream_id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_CPU) {
+    ring_buffer->ReadRawAtOffset(&event.cpu, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+    ring_buffer->ReadRawAtOffset(&event.res, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_PERIOD) {
+    ring_buffer->ReadRawAtOffset(&event.period, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_CALLCHAIN) {
     ring_buffer->ReadRawAtOffset(&event.ips_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
     event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
@@ -77,7 +95,7 @@ PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
     current_offset += event.ips_size * sizeof(uint64_t);
   }
 
-  if (is_flag_set(flags, ReadingFlags::kReadRaw)) {
+  if (flags.sample_type & PERF_SAMPLE_RAW) {
     ring_buffer->ReadRawAtOffset(&event.raw_size, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
     event.raw_data = make_unique_for_overwrite<uint8_t[]>(event.raw_size);
@@ -86,19 +104,19 @@ PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
     current_offset += event.raw_size * sizeof(uint8_t);
   }
 
-  if (is_flag_set(flags, ReadingFlags::kReadRegsUser)) {
+  if (flags.sample_type & PERF_SAMPLE_REGS_USER) {
     ring_buffer->ReadRawAtOffset(&event.abi, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
     if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
-      event.regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>();
+      const int num_of_regs = std::bitset<64>(flags.sample_regs_user).count();
+      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs);
       ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
-                                   sizeof(perf_event_sample_regs_user_all));
-      current_offset += sizeof(perf_event_sample_regs_user_all);
-    } else {
-      current_offset += sizeof(uint64_t);
+                                   num_of_regs * sizeof(uint64_t));
+      current_offset += num_of_regs * sizeof(uint64_t);
     }
   }
 
-  if (is_flag_set(flags, ReadingFlags::kReadStackUser)) {
+  if (flags.sample_type & PERF_SAMPLE_STACK_USER) {
     ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
     event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.stack_size);

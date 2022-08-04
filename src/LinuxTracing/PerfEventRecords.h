@@ -40,7 +40,7 @@ struct __attribute__((__packed__)) perf_event_fork_exit {
 
 // This struct must be in sync with the SAMPLE_REGS_USER_ALL in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
-  uint64_t abi;
+  // uint64_t abi;
   uint64_t ax;
   uint64_t bx;
   uint64_t cx;

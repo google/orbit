@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_PERF_EVENT_H_
 #define LINUX_TRACING_PERF_EVENT_H_
 
+#include <absl/base/casts.h>
 #include <asm/perf_regs.h>
 #include <string.h>
 #include <sys/types.h>
@@ -63,8 +64,11 @@ struct DiscardedPerfEventData {
 using DiscardedPerfEvent = TypedPerfEvent<DiscardedPerfEventData>;
 
 struct StackSamplePerfEventData {
-  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the
@@ -75,7 +79,7 @@ struct StackSamplePerfEventData {
 
   pid_t pid;
   pid_t tid;
-  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  std::unique_ptr<uint64_t[]> regs;
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
 };
@@ -84,8 +88,11 @@ using StackSamplePerfEvent = TypedPerfEvent<StackSamplePerfEventData>;
 struct CallchainSamplePerfEventData {
   [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
   [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
-  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   void SetIps(const std::vector<uint64_t>& new_ips) const {
@@ -103,7 +110,7 @@ struct CallchainSamplePerfEventData {
   // LeafFunctionCallManager::PatchCallerOfLeafFunction.
   mutable uint64_t ips_size;
   mutable std::unique_ptr<uint64_t[]> ips;
-  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  std::unique_ptr<uint64_t[]> regs;
   std::unique_ptr<uint8_t[]> data;
 };
 using CallchainSamplePerfEvent = TypedPerfEvent<CallchainSamplePerfEventData>;
@@ -251,20 +258,42 @@ using DmaFenceSignaledPerfEvent = TypedPerfEvent<DmaFenceSignaledPerfEventData>;
 
 struct PerfRecordSample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
 
-  mutable uint64_t ips_size;
-  mutable std::unique_ptr<uint64_t[]> ips;
+  uint64_t sample_id; /* if PERF_SAMPLE_IDENTIFIER */
+  uint64_t ip;        /* if PERF_SAMPLE_IP */
+  uint32_t pid, tid;  /* if PERF_SAMPLE_TID */
+  uint64_t time;      /* if PERF_SAMPLE_TIME */
+  uint64_t addr;      /* if PERF_SAMPLE_ADDR */
+  uint64_t id;        /* if PERF_SAMPLE_ID */
+  uint64_t stream_id; /* if PERF_SAMPLE_STREAM_ID */
+  uint32_t cpu, res;  /* if PERF_SAMPLE_CPU */
+  uint64_t period;    /* if PERF_SAMPLE_PERIOD */
 
-  uint32_t raw_size;
-  std::unique_ptr<uint8_t[]> raw_data;
+  // struct read_format v;                 /* if PERF_SAMPLE_READ */
 
-  uint64_t abi;
-  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  uint64_t ips_size;                       /* if PERF_SAMPLE_CALLCHAIN */
+  mutable std::unique_ptr<uint64_t[]> ips; /* if PERF_SAMPLE_CALLCHAIN */
 
-  uint64_t stack_size;
-  std::unique_ptr<uint8_t[]> stack_data;
-  uint64_t dyn_size;
+  uint32_t raw_size;                   /* if PERF_SAMPLE_RAW */
+  std::unique_ptr<uint8_t[]> raw_data; /* if PERF_SAMPLE_RAW */
+
+  // uint64_t bnr;                        /* if PERF_SAMPLE_BRANCH_STACK */
+  // struct perf_branch_entry lbr[bnr];   /* if PERF_SAMPLE_BRANCH_STACK */
+
+  uint64_t abi;                     /* if PERF_SAMPLE_REGS_USER */
+  std::unique_ptr<uint64_t[]> regs; /* if PERF_SAMPLE_REGS_USER */
+
+  uint64_t stack_size;                   /* if PERF_SAMPLE_STACK_USER */
+  std::unique_ptr<uint8_t[]> stack_data; /* if PERF_SAMPLE_STACK_USER */
+  uint64_t dyn_size;                     /* if PERF_SAMPLE_STACK_USER && size != 0 */
+
+  // uint64_t weight;                     /* if PERF_SAMPLE_WEIGHT */
+  // uint64_t data_src;                   /* if PERF_SAMPLE_DATA_SRC */
+  // uint64_t transaction;                /* if PERF_SAMPLE_TRANSACTION */
+  // uint64_t abi;                        /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t regs[weight(mask)];         /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t phys_addr;                  /* if PERF_SAMPLE_PHYS_ADDR */
+  // uint64_t cgroup;                     /* if PERF_SAMPLE_CGROUP */
 };
 
 // This struct holds the data we need from any of the possible perf_event_open events that we

@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -1199,11 +1200,13 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_stack_sample) {
+    ORBIT_LOG("YES...1");
     pid_t pid = ReadSampleRecordPid(ring_buffer);
 
     const size_t size_of_stack_sample = sizeof(perf_event_stack_sample_fixed) +
                                         2 * sizeof(uint64_t) /*size and dyn_size*/ +
-                                        stack_dump_size_ /*data*/;
+                                        stack_dump_size_ /*data*/
+                                        + sizeof(uint64_t) /*abi*/;
 
     if (header.size != size_of_stack_sample) {
       // Skip stack samples that have an unexpected size. These normally have
@@ -1212,10 +1215,12 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
       // always the case: for example, when a process exits while tracing, we
       // might get a stack sample with pid and tid != 0 but still with
       // abi == PERF_SAMPLE_REGS_ABI_NONE and size == 0.
+      ORBIT_LOG("YES...2");
       ring_buffer->SkipRecord(header);
       return timestamp_ns;
     }
     if (pid != target_pid_) {
+      ORBIT_LOG("YES...3");
       ring_buffer->SkipRecord(header);
       return timestamp_ns;
     }
@@ -1223,6 +1228,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     // e.g., with header.misc == PERF_RECORD_MISC_KERNEL,
     // in general they seem to produce valid callstacks.
 
+    ORBIT_LOG("YES...4");
     StackSamplePerfEvent event = ConsumeStackSamplePerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.sample_count;
