@@ -36,7 +36,7 @@ Please have a look at the first three sections of our [development documentation
 2. The list of loaded modules will appear on the top of the <b><samp>Symbols</samp></b> tab.  If debug symbols were found for a module, it will be highlighted in blue.
 3. <b><samp>Right click</samp></b> on the module(s) for which you want to load debug information and select <b><samp>Load Symbols</samp></b>. The <b><samp>Functions</samp></b> tab will get populated.
 4. Select functions you wish to profile in the <b><samp>Functions</samp></b> tab by <b><samp>right clicking</samp></b> and choosing <b><samp>Hook</samp></b>.
-5. In the <b><samp>Capture</samp></b> tab, start profiling by pressing <kbd>F5</kbd>.  To stop profiling, press <kbd>F5</kbd> again.  You can zoom time using the scroll wheel.  To zoom vertically, hold <kbd>ctrl</kbd> while scrolling.  You can also <kbd>ctrl</kbd>+<b><samp>right-click</samp></b> and drag to zoom time.  Press <kbd>SPACE</kbd> to Zoom the last 2 seconds of capture.
+5. In the <b><samp>Capture</samp></b> tab, start profiling by pressing <kbd>F5</kbd>.  To stop profiling, press <kbd>F5</kbd> again. You can either zoom time using <kbd>W</kbd> and <kbd>S</kbd> or <kbd>ctrl</kbd> + the scroll wheel.  You can also <kbd>ctrl</kbd>+<b><samp>right-click</samp></b> and drag to zoom to a specific time range. To scale the UI, press <kbd>ctrl</kbd> + <kbd>+</kbd>/<kbd>-</kbd>. Press <kbd>SPACE</kbd> to see the last 2 seconds of capture.
 6. You can select sections of the per-thread sampling event track to get a sampling report of your selection.
 
 ## Presets
