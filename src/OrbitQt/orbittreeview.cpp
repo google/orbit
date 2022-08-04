@@ -5,8 +5,6 @@
 #include "orbittreeview.h"
 
 #include <glad/glad.h>
-#include <qitemselectionmodel.h>
-#include <stddef.h>
 
 #include <QAbstractItemView>
 #include <QAction>
@@ -21,15 +19,15 @@
 #include <QMenu>
 #include <QModelIndexList>
 #include <QMouseEvent>
+#include <QResizeEvent>
 #include <QScrollBar>
 #include <QSize>
 #include <algorithm>
+#include <cstddef>
 #include <set>
 #include <utility>
 
 #include "DataViews/DataView.h"
-#include "DataViews/DataViewType.h"
-#include "orbitglwidget.h"
 
 OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
   header()->setSortIndicatorShown(true);
@@ -95,6 +93,11 @@ void OrbitTreeView::Initialize(orbit_data_views::DataView* data_view, SelectionT
     const QFont fixed_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     setFont(fixed_font);
   }
+  // After a round of Deinitialize() and Initialize(), the table column sizes get reset and
+  // resizeEvent doesn't get called again. Manually trigger the event here to make sure they get set
+  // properly.
+  QResizeEvent event = QResizeEvent(size(), QSize{-1, -1});
+  resizeEvent(&event);
 }
 
 void OrbitTreeView::Deinitialize() {

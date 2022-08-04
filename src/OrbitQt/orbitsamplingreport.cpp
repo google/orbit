@@ -137,6 +137,12 @@ void OrbitSamplingReport::Deinitialize() {
     panel->Deinitialize();
   }
   ui_->CallstackTreeView->Deinitialize();
+  orbit_data_views_.clear();
+  ui_->tabWidget->clear();
+  if (sampling_report_) {
+    sampling_report_->ClearReport();
+  }
+  sampling_report_.reset();
 }
 
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
@@ -152,6 +158,9 @@ void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
 }
 
 void OrbitSamplingReport::OnCurrentThreadTabChanged(int current_tab_index) {
+  if (current_tab_index == -1 || current_tab_index >= static_cast<int>(orbit_data_views_.size())) {
+    return;
+  }
   OrbitDataViewPanel* data_view = orbit_data_views_[current_tab_index];
   QModelIndexList index_list = data_view->GetTreeView()->selectionModel()->selectedIndexes();
   std::vector<int> row_list;
@@ -186,4 +195,15 @@ void OrbitSamplingReport::RefreshTabs() {
   for (OrbitDataViewPanel* panel : orbit_data_views_) {
     panel->Refresh();
   }
+}
+
+void OrbitSamplingReport::SetInspection(orbit_data_views::DataView* callstack_data_view,
+                                        std::unique_ptr<SamplingReport> report) {
+  Deinitialize();
+  Initialize(callstack_data_view, std::move(report));
+  connect(ui_->inspectionNoticeButton, &QPushButton::clicked, this,
+          &OrbitSamplingReport::LeaveCallstackInspectionClicked);
+  ui_->inspectionNoticeWidget->show();
+  RefreshCallstackView();
+  RefreshTabs();
 }

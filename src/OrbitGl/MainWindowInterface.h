@@ -71,9 +71,11 @@ class MainWindowInterface {
 
   virtual ~MainWindowInterface() = default;
 
-  virtual void SetCallTreeInspection(std::unique_ptr<CallTreeView> top_down_view,
-                                     std::unique_ptr<CallTreeView> bottom_up_view) = 0;
-  virtual void ClearCallTreeInspection() = 0;
+  virtual void SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
+                                      std::unique_ptr<CallTreeView> bottom_up_view,
+                                      orbit_data_views::DataView* callstack_data_view,
+                                      std::unique_ptr<class SamplingReport> report) = 0;
+  virtual void ClearCallstackInspection() = 0;
 };
 
 }  // namespace orbit_gl

@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "orbitdataviewpanel.h"
 
@@ -34,6 +33,12 @@ class OrbitSamplingReport : public QWidget {
 
   void RefreshCallstackView();
   void RefreshTabs();
+
+  void SetInspection(orbit_data_views::DataView* callstack_data_view,
+                     std::unique_ptr<SamplingReport> report);
+
+ signals:
+  void LeaveCallstackInspectionClicked();
 
  private slots:
   void on_NextCallstackButton_clicked();
