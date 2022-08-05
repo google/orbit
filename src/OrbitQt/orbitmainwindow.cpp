@@ -73,6 +73,7 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
@@ -1869,10 +1870,10 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
   QPointer<orbit_qt::AnnotatingSourceCodeDialog> dialog_ptr =
       OpenAndDeleteOnClose(std::move(dialog));
 
-  dialog_ptr->AddAnnotatingSourceCode(
-      function_info, [this](const std::string& module_path, const std::string& build_id) {
-        return app_->RetrieveModuleWithDebugInfo(module_path, build_id);
-      });
+  dialog_ptr->AddAnnotatingSourceCode(function_info,
+                                      [this](const orbit_client_data::ModuleIdentifier& module_id) {
+                                        return app_->RetrieveModuleWithDebugInfo(module_id);
+                                      });
 }
 
 void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,

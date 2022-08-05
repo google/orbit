@@ -80,8 +80,7 @@ void MizarData::UpdateModules(const std::vector<orbit_grpc_protos::ModuleInfo>& 
 void MizarData::LoadSymbolsForAllModules() {
   for (const orbit_client_data::ModuleData* module_data : module_manager_->GetAllModuleData()) {
     orbit_client_data::ModuleData* mutable_module_data =
-        module_manager_->GetMutableModuleByPathAndBuildId(module_data->file_path(),
-                                                          module_data->build_id());
+        module_manager_->GetMutableModuleByModuleIdentifier(module_data->module_id());
     LoadSymbols(*mutable_module_data);
   }
 }

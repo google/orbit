@@ -15,6 +15,7 @@
 #include "ClientData/CaptureDataHolder.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -92,10 +93,10 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
 
   [[nodiscard]] virtual const orbit_client_data::ProcessData* GetTargetProcess() const = 0;
 
-  [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) const = 0;
-  [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
-      const std::string& path, const std::string& build_id) = 0;
+  [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
+      const orbit_client_data::ModuleIdentifier& module_id) const = 0;
+  [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModuleIdentifier(
+      const orbit_client_data::ModuleIdentifier& module_id) = 0;
   virtual orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 

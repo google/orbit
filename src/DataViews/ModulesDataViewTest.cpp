@@ -79,8 +79,7 @@ class ModulesDataViewTest : public testing::Test {
       ORBIT_CHECK(index < kNumModules);
       view_.AddModule(
           modules_in_memory_[index].start(),
-          module_manager_.GetMutableModuleByPathAndBuildId(modules_in_memory_[index].file_path(),
-                                                           modules_in_memory_[index].build_id()),
+          module_manager_.GetMutableModuleByModuleIdentifier(modules_in_memory_[index].module_id()),
           modules_in_memory_[index]);
     }
   }
@@ -134,8 +133,8 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   // Load Symbols should be disabled when module is loaded successfully.
 
   const ModuleInMemory& module_in_memory = modules_in_memory_[kIndex];
-  ModuleData* module = module_manager_.GetMutableModuleByPathAndBuildId(
-      module_in_memory.file_path(), module_in_memory.build_id());
+  ModuleData* module =
+      module_manager_.GetMutableModuleByModuleIdentifier(module_in_memory.module_id());
   module->AddSymbols({});
   EXPECT_TRUE(module->is_loaded());
 
@@ -243,8 +242,8 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
   using ViewRowEntry = std::array<std::string, kNumColumns>;
   std::vector<ViewRowEntry> view_entries;
   for (const ModuleInMemory& module_in_memory : modules_in_memory_) {
-    const ModuleData* module = module_manager_.GetMutableModuleByPathAndBuildId(
-        module_in_memory.file_path(), module_in_memory.build_id());
+    const ModuleData* module =
+        module_manager_.GetMutableModuleByModuleIdentifier(module_in_memory.module_id());
 
     ViewRowEntry entry;
     entry[kColumnName] = module->name();
@@ -308,8 +307,8 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
 TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
   constexpr int kIndex = 0;
   AddModulesByIndices({kIndex});
-  const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
-      modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
+  const ModuleData* module =
+      module_manager_.GetModuleByModuleIdentifier(modules_in_memory_[kIndex].module_id());
 
   auto get_content_for = [this, module](SymbolLoadingState state) -> std::string {
     EXPECT_CALL(app_, GetSymbolLoadingStateForModule(module)).WillOnce(testing::Return(state));
@@ -327,8 +326,8 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
 TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
   constexpr int kIndex = 0;
   AddModulesByIndices({kIndex});
-  const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
-      modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
+  const ModuleData* module =
+      module_manager_.GetModuleByModuleIdentifier(modules_in_memory_[kIndex].module_id());
 
   auto check_color_correct_for = [this, module](SymbolLoadingState state) {
     uint8_t red = 0;

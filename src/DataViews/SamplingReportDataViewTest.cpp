@@ -40,9 +40,11 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
+
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
@@ -58,6 +60,7 @@ using orbit_data_views::kMenuActionLoadSymbols;
 using orbit_data_views::kMenuActionSelect;
 using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
+
 using orbit_grpc_protos::ModuleInfo;
 
 using ::testing::_;
@@ -218,8 +221,8 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
       orbit_grpc_protos::ModuleSymbols module_symbols;
       module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
-      ModuleData* module_data =
-          module_manager->GetMutableModuleByPathAndBuildId(kModulePaths[i], kModuleBuildIds[i]);
+      ModuleData* module_data = module_manager->GetMutableModuleByModuleIdentifier(
+          ModuleIdentifier{kModulePaths[i], kModuleBuildIds[i]});
       module_data->AddSymbols(module_symbols);
     }
   }
@@ -442,11 +445,10 @@ TEST_F(SamplingReportDataViewTest, ColumnSelectedShowsRightResults) {
 
 TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
-      .WillRepeatedly(
-          [&](const std::string& module_path, const std::string& build_id) -> ModuleData* {
-            return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
-          });
+  EXPECT_CALL(app_, GetMutableModuleByModuleIdentifier)
+      .WillRepeatedly([&](const ModuleIdentifier& module_id) -> ModuleData* {
+        return module_manager_.GetMutableModuleByModuleIdentifier(module_id);
+      });
 
   bool capture_connected;
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
@@ -524,17 +526,17 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionSelect, select);
     CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
 
-    // Find indices that SamplingReportDataView::GetModulePathAndBuildIdFromRow can find matching
-    // module path and build id pair.
+    // Find indices that SamplingReportDataView::GetModuleIdentifierFromRow can find matching
+    // ModuleIdentifier
     std::vector<int> selected_indices_with_matching_module;
     for (int index : selected_indices) {
       // Sampled function 3's absolute address does not match any module
       if (index != 3) selected_indices_with_matching_module.push_back(index);
     }
 
-    // Load symbols action is available if and only if: in all the module path and build id pairs
-    // returned by SamplingReportDataView::GetModulePathAndBuildIdFromRow, there is one pair
-    // corresponds to a module that is not loaded yet.
+    // Load symbols action is available if and only if: for all ModuleIdentifiers returned by
+    // SamplingReportDataView::GetModuleIdentifierFromRow, there is corresponding module that is not
+    // loaded yet.
     ContextMenuEntry load_symbols = ContextMenuEntry::kDisabled;
     for (int index : selected_indices_with_matching_module) {
       if (!kModuleIsLoaded[index]) {
@@ -568,11 +570,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
-  EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
-      .WillRepeatedly(
-          [&](const std::string& module_path, const std::string& build_id) -> ModuleData* {
-            return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
-          });
+  EXPECT_CALL(app_, GetMutableModuleByModuleIdentifier)
+      .WillRepeatedly([&](const ModuleIdentifier& module_id) -> ModuleData* {
+        return module_manager_.GetMutableModuleByModuleIdentifier(module_id);
+      });
 
   AddFunctionsByIndices({0});
   FlattenContextMenu context_menu =
@@ -700,11 +701,11 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
     const int load_symbols_index = GetActionIndexOnMenu(context_menu, kMenuActionLoadSymbols);
     EXPECT_TRUE(load_symbols_index != kInvalidActionIndex);
 
-    EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
+    EXPECT_CALL(app_, GetMutableModuleByModuleIdentifier)
         .Times(1)
-        .WillOnce([&](const std::string& module_path, const std::string& build_id) -> ModuleData* {
-          EXPECT_EQ(build_id, kModuleBuildIds[2]);
-          return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
+        .WillOnce([&](const ModuleIdentifier& module_id) -> ModuleData* {
+          EXPECT_EQ(module_id.build_id, kModuleBuildIds[2]);
+          return module_manager_.GetMutableModuleByModuleIdentifier(module_id);
         });
     EXPECT_CALL(app_, LoadSymbolsManually)
         .Times(1)

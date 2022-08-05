@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "absl/container/flat_hash_map.h"
@@ -38,6 +39,9 @@ class ModuleData final {
   }
   [[nodiscard]] uint64_t executable_segment_offset() const {
     return module_info_.executable_segment_offset();
+  }
+  [[nodiscard]] ModuleIdentifier module_id() const {
+    return ModuleIdentifier{file_path(), build_id()};
   }
   [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> GetObjectSegments() const;
   [[nodiscard]] uint64_t ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const;

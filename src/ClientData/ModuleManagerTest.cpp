@@ -18,7 +18,7 @@ namespace orbit_client_data {
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
 
-TEST(ModuleManager, GetModuleByPathAndBuildId) {
+TEST(ModuleManager, GetModuleByModuleIdentifier) {
   std::string name = "name of module";
   std::string file_path = "path/of/module";
   uint64_t file_size = 300;
@@ -36,9 +36,9 @@ TEST(ModuleManager, GetModuleByPathAndBuildId) {
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
   {
-    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(file_path, build_id);
-    const ModuleData* mutable_module =
-        module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+    const ModuleIdentifier module_id{file_path, build_id};
+    const ModuleData* module = module_manager.GetModuleByModuleIdentifier(module_id);
+    const ModuleData* mutable_module = module_manager.GetMutableModuleByModuleIdentifier(module_id);
     ASSERT_NE(module, nullptr);
     EXPECT_EQ(module, mutable_module);
     EXPECT_EQ(module->name(), name);
@@ -50,35 +50,24 @@ TEST(ModuleManager, GetModuleByPathAndBuildId) {
 
   {
     const ModuleData* module_invalid_path =
-        module_manager.GetModuleByPathAndBuildId("wrong/path", build_id);
+        module_manager.GetModuleByModuleIdentifier(ModuleIdentifier{"wrong/path", build_id});
     EXPECT_EQ(module_invalid_path, nullptr);
   }
 
   {
-    const ModuleData* mutable_module_invalid_path =
-        module_manager.GetMutableModuleByPathAndBuildId("wrong/path", build_id);
-    EXPECT_EQ(mutable_module_invalid_path, nullptr);
-  }
-
-  {
     const ModuleData* module_invalid_build_id =
-        module_manager.GetModuleByPathAndBuildId(file_path, "wrong buildid");
-    EXPECT_EQ(module_invalid_build_id, nullptr);
-  }
-
-  {
-    const ModuleData* module_invalid_build_id =
-        module_manager.GetMutableModuleByPathAndBuildId(file_path, "wrong buildid");
+        module_manager.GetModuleByModuleIdentifier(ModuleIdentifier{file_path, "wrong buildid"});
     EXPECT_EQ(module_invalid_build_id, nullptr);
   }
 }
 
-TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
+TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
   std::string name = "name of module";
   std::string file_path = "path/of/module";
   uint64_t file_size = 300;
   std::string build_id = "build id 1";
   uint64_t load_bias = 0x400;
+  const ModuleIdentifier module_id{file_path, build_id};
 
   ModuleInfo module_info;
   module_info.set_name(name);
@@ -90,7 +79,7 @@ TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
   ModuleManager module_manager;
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+  ModuleData* module = module_manager.GetMutableModuleByModuleIdentifier(module_id);
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
   EXPECT_EQ(module->file_path(), file_path);
@@ -102,8 +91,12 @@ TEST(ModuleManager, GetMutableModuleByPathAndBuildId) {
   module->AddSymbols({});
   EXPECT_TRUE(module->is_loaded());
 
-  EXPECT_EQ(module_manager.GetMutableModuleByPathAndBuildId("wrong/path", build_id), nullptr);
-  EXPECT_EQ(module_manager.GetMutableModuleByPathAndBuildId(file_path, "wrong build_id"), nullptr);
+  EXPECT_EQ(
+      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{"wrong/path", build_id}),
+      nullptr);
+  EXPECT_EQ(module_manager.GetMutableModuleByModuleIdentifier(
+                ModuleIdentifier{file_path, "wrong build_id"}),
+            nullptr);
 }
 
 TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
@@ -127,9 +120,7 @@ TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
 
   ModuleInMemory module_in_memory{0x1000, 0x2000, kFilePath, kBuildId};
 
-  EXPECT_NE(module_manager.GetModuleByPathAndBuildId(module_in_memory.file_path(),
-                                                     module_in_memory.build_id()),
-            nullptr);
+  EXPECT_NE(module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id()), nullptr);
   EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1000),
             nullptr);
   EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1010),
@@ -179,7 +170,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   std::vector<ModuleData*> unloaded_modules = module_manager.AddOrUpdateModules({module_info});
   EXPECT_TRUE(unloaded_modules.empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+  ModuleData* module =
+      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{file_path, build_id});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
@@ -232,8 +224,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->file_path(), file_path);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module =
-      module_manager.GetModuleByPathAndBuildId(different_path, kDifferentBuildId);
+  const ModuleData* different_module = module_manager.GetModuleByModuleIdentifier(
+      ModuleIdentifier{different_path, kDifferentBuildId});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
@@ -258,7 +250,8 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
       module_manager.AddOrUpdateNotLoadedModules({module_info});
   EXPECT_TRUE(not_changed_modules.empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByPathAndBuildId(file_path, build_id);
+  ModuleData* module =
+      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{file_path, build_id});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
@@ -308,8 +301,8 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_EQ(module->file_path(), file_path);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module =
-      module_manager.GetModuleByPathAndBuildId(different_path, kDifferentBuildId);
+  const ModuleData* different_module = module_manager.GetModuleByModuleIdentifier(
+      ModuleIdentifier{different_path, kDifferentBuildId});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);

@@ -5,10 +5,12 @@
 #include "ClientData/ProcessData.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 
 #include <cstdint>
 #include <vector>
 
+#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/strings/str_format.h"
@@ -193,12 +195,11 @@ bool ProcessData::IsModuleLoadedByProcess(const ModuleData* module) const {
                      });
 }
 
-std::vector<std::pair<std::string, std::string>> ProcessData::GetUniqueModulesPathAndBuildId()
-    const {
+std::vector<ModuleIdentifier> ProcessData::GetUniqueModuleIdentifiers() const {
   absl::MutexLock lock(&mutex_);
-  std::set<std::pair<std::string, std::string>> module_keys;
+  absl::flat_hash_set<ModuleIdentifier> module_keys;
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
-    module_keys.insert(std::make_pair(module_in_memory.file_path(), module_in_memory.build_id()));
+    module_keys.insert(module_in_memory.module_id());
   }
 
   return {module_keys.begin(), module_keys.end()};
