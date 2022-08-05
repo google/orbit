@@ -31,6 +31,10 @@
 #include "types.h"
 #include "ui_orbitsamplingreport.h"
 
+namespace {
+const Color kRed = Color{255, 0, 0, 26};
+}  // namespace
+
 OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
     : QWidget(parent), ui_(new Ui::OrbitSamplingReport) {
   ui_->setupUi(this);
@@ -109,10 +113,11 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
       auto* notice_box = new orbit_util_widgets::NoticeWidget(tab);
       std::string thread_tab_name = report_data_view.GetName();
       std::replace(thread_tab_name.begin(), thread_tab_name.end(), '\n', ' ');
-      double unwind_error_ratio = sampling_report_->ComputeUnwindErrorRatio(thread_id);
-      std::string label = absl::StrFormat("%.2f%% of callstack samples in %s are unwinding errors.",
-                                          unwind_error_ratio * 100, thread_tab_name);
-      notice_box->Initialize(label, "Hide", Color{255, 0, 0, 26});
+      const double unwind_error_ratio = sampling_report_->ComputeUnwindErrorRatio(thread_id);
+      const std::string label =
+          absl::StrFormat("%.2f%% of callstack samples in %s are unwinding errors.",
+                          unwind_error_ratio * 100, thread_tab_name);
+      notice_box->Initialize(label, "Hide", kRed);
       QObject::connect(notice_box, &orbit_util_widgets::NoticeWidget::ButtonClicked, notice_box,
                        [notice_box]() { notice_box->hide(); });
       gridLayout_2->addWidget(notice_box, 1, 0);

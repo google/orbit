@@ -16,6 +16,9 @@
 #include "CoreMath.h"
 #include "ui_NoticeWidget.h"
 
+namespace {
+const Color kGreen{0, 255, 0, 26};
+}  // namespace
 namespace orbit_util_widgets {
 
 NoticeWidget::~NoticeWidget() = default;
@@ -40,7 +43,7 @@ void NoticeWidget::InitializeAsInspection() {
   constexpr const char* kLabelText =
       "You are currently in an inspection, limiting the tree to specific callstacks.";
   constexpr const char* kButtonText = "Leave Inspection";
-  Initialize(kLabelText, kButtonText, Color{0, 255, 0, 26});
+  Initialize(kLabelText, kButtonText, kGreen);
 }
 
 void NoticeWidget::paintEvent(QPaintEvent* event) {
