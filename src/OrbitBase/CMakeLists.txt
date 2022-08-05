@@ -45,7 +45,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Sort.h
         include/OrbitBase/StringConversion.h
         include/OrbitBase/StopSource.h
-        include/OrbitBase/StopState.h
         include/OrbitBase/StopToken.h
         include/OrbitBase/TaskGroup.h
         include/OrbitBase/TemporaryFile.h
