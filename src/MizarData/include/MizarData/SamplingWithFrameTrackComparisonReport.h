@@ -17,6 +17,7 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/ThreadId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/Logging.h"
@@ -33,19 +34,22 @@ struct CorrectedComparisonResult : public orbit_mizar_statistics::ComparisonResu
 class HalfOfSamplingWithFrameTrackReportConfig {
   using TID = ::orbit_mizar_base::TID;
   using FrameTrackId = ::orbit_mizar_data::FrameTrackId;
+  using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
 
  public:
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<TID> tids,
-                                                    uint64_t start_ns, uint64_t duration_ns,
+                                                    RelativeTimeNs start,
                                                     FrameTrackId frame_track_id)
       : tids(std::move(tids)),
-        start_relative_ns(start_ns),
-        duration_ns(duration_ns),
+        start_relative(start),
+        duration(orbit_mizar_base::MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max())),
         frame_track_id(frame_track_id) {}
 
+  [[nodiscard]] RelativeTimeNs EndRelative() const { return start_relative + duration; }
+
   absl::flat_hash_set<TID> tids{};
-  uint64_t start_relative_ns{};  // nanoseconds elapsed since capture start
-  uint64_t duration_ns{};
+  RelativeTimeNs start_relative{};  // nanoseconds elapsed since capture start
+  RelativeTimeNs duration{};
   FrameTrackId frame_track_id{};
 };
 

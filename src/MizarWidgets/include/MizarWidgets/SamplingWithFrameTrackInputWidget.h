@@ -18,6 +18,7 @@
 #include <QObject>
 #include <QWidget>
 #include <Qt>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string_view>
@@ -26,6 +27,7 @@
 
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
@@ -45,6 +47,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   Q_OBJECT
   using TID = ::orbit_mizar_base::TID;
   using FrameTrackId = ::orbit_mizar_data::FrameTrackId;
+  using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
 
  public:
   ~SamplingWithFrameTrackInputWidgetBase() override;
@@ -74,8 +77,8 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   absl::flat_hash_set<TID> selected_tids_;
   FrameTrackId frame_track_id_{};
 
-  // std::numeric_limits<uint64_t>::max() corresponds to malformed input
-  uint64_t start_relative_time_ns_ = 0;
+  // std::numeric_limits<uint64_t>::max() ms corresponds to malformed input
+  RelativeTimeNs start_timestamp_ = orbit_mizar_base::MakeRelativeTimeNs(0);
 };
 
 template <typename PairedData>

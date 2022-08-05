@@ -54,8 +54,7 @@ QLineEdit* SamplingWithFrameTrackInputWidgetBase::GetStartMs() const { return ui
 orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig
 SamplingWithFrameTrackInputWidgetBase::MakeConfig() const {
   return orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig{
-      selected_tids_, start_relative_time_ns_, std::numeric_limits<uint64_t>::max(),
-      frame_track_id_};
+      selected_tids_, start_timestamp_, frame_track_id_};
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
@@ -70,17 +69,23 @@ void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int ind
   frame_track_id_ = GetFrameTrackList()->itemData(index, kFrameTrackIdRole).value<FrameTrackId>();
 }
 
-void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {
+static uint64_t ParseStartNs(const QString& time_ms) {
   if (time_ms.isEmpty()) {
-    start_relative_time_ns_ = 0;
-    return;
+    return 0;
   }
+
   bool ok;
-  constexpr uint64_t kNsInMs = 1'000'000;
-  start_relative_time_ns_ = static_cast<uint64_t>(time_ms.toInt(&ok)) * kNsInMs;
+  int result = time_ms.toInt(&ok);
   if (!ok) {
-    start_relative_time_ns_ = std::numeric_limits<uint64_t>::max();
+    return std::numeric_limits<uint64_t>::max();
   }
+
+  constexpr uint64_t kNsInMs = 1e6;
+  return result * kNsInMs;
+}
+
+void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {
+  start_timestamp_ = orbit_mizar_base::MakeRelativeTimeNs(ParseStartNs(time_ms));
 }
 
 SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() = default;

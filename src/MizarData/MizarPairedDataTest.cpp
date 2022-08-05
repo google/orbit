@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -19,15 +20,18 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;
 using ::orbit_grpc_protos::PresentEvent;
+using ::orbit_mizar_base::MakeRelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
-using orbit_test_utils::MakeMap;
+using ::orbit_test_utils::MakeMap;
+using ::std::chrono::milliseconds;
 using ::testing::ElementsAre;
 using ::testing::Invoke;
 using ::testing::Return;
@@ -222,23 +226,27 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(0),
+                                          MakeRelativeTimeNs(kRelativeTime5), action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, 0, kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(0),
+                                          MakeRelativeTimeNs(kRelativeTime5), action);
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 
   //  some timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, kRelativeTime1, kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(kRelativeTime1),
+                                          MakeRelativeTimeNs(kRelativeTime5), action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds));
 
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, kRelativeTime1, kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(kRelativeTime1),
+                                          MakeRelativeTimeNs(kRelativeTime5), action);
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 }
 
@@ -246,7 +254,8 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
                                                                               kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
-      {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), 0, std::numeric_limits<uint64_t>::max());
+      {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), MakeRelativeTimeNs(0),
+      MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max()));
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
 }

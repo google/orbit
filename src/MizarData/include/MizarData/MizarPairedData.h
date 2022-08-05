@@ -26,6 +26,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/ThreadId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
 #include "MizarData/MizarDataProvider.h"
@@ -42,6 +43,7 @@ class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
   using ScopeId = ::orbit_client_data::ScopeId;
+  using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
@@ -59,9 +61,9 @@ class MizarPairedDataTmpl {
   // multiplying the counter by the sampling period.
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
       const absl::flat_hash_set<TID>& tids, FrameTrackId frame_track_id,
-      uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
+      RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
     const auto [min_timestamp_ns, max_timestamp_ns] =
-        RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
+        RelativeToAbsoluteTimestampRange(min_relative_time, max_relative_time);
     const std::vector<FrameStartNs> frame_starts = GetFrameStarts(
         frame_track_id, FrameStartNs(min_timestamp_ns), FrameStartNs(max_timestamp_ns));
     if (frame_starts.size() < 2) return {};
@@ -105,8 +107,8 @@ class MizarPairedDataTmpl {
   // `min_relative_timestamp_ns` and `max_relative_timestamp_ns` are the nanoseconds elapsed since
   // capture start.
   template <typename Action>
-  void ForEachCallstackEvent(TID tid, uint64_t min_relative_timestamp_ns,
-                             uint64_t max_relative_timestamp_ns, Action&& action) const {
+  void ForEachCallstackEvent(TID tid, RelativeTimeNs min_relative_timestamp,
+                             RelativeTimeNs max_relative_timestamp, Action&& action) const {
     auto action_on_callstack_events =
         [this, &action](const orbit_client_data::CallstackEvent& event) -> void {
       const orbit_client_data::CallstackInfo* callstack =
@@ -116,7 +118,7 @@ class MizarPairedDataTmpl {
     };
 
     const auto [min_timestamp_ns, max_timestamp_ns] =
-        RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
+        RelativeToAbsoluteTimestampRange(min_relative_timestamp, max_relative_timestamp);
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
                                           action_on_callstack_events);
   }
@@ -159,11 +161,14 @@ class MizarPairedDataTmpl {
     return count;
   }
 
+  [[nodiscard]] uint64_t ToUint64TTimestampNs(RelativeTimeNs relative_time) const {
+    return NonWrappingAddition(data_->GetCaptureStartTimestampNs(), relative_time->value);
+  }
+
   [[nodiscard]] std::pair<uint64_t, uint64_t> RelativeToAbsoluteTimestampRange(
-      uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
-    return std::make_pair(
-        NonWrappingAddition(data_->GetCaptureStartTimestampNs(), min_relative_timestamp_ns),
-        NonWrappingAddition(data_->GetCaptureStartTimestampNs(), max_relative_timestamp_ns));
+      RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
+    return std::make_pair(ToUint64TTimestampNs(min_relative_time),
+                          ToUint64TTimestampNs(max_relative_time));
   }
 
   [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(

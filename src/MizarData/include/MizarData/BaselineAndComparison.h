@@ -15,7 +15,6 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"
-#include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "Statistics/MultiplicityCorrection.h"
@@ -97,8 +96,7 @@ class BaselineAndComparisonTmpl {
   [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
     const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
-        config.tids, config.frame_track_id, config.start_relative_ns,
-        NonWrappingAddition(config.start_relative_ns, config.duration_ns));
+        config.tids, config.frame_track_id, config.start_relative, config.EndRelative());
     orbit_client_data::ScopeStats stats;
     for (const uint64_t active_invocation_time : active_invocation_times) {
       stats.UpdateStats(active_invocation_time);
@@ -111,8 +109,7 @@ class BaselineAndComparisonTmpl {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
     for (const TID tid : config.tids) {
-      data.ForEachCallstackEvent(tid, config.start_relative_ns,
-                                 NonWrappingAddition(config.start_relative_ns, config.duration_ns),
+      data.ForEachCallstackEvent(tid, config.start_relative, config.EndRelative(),
                                  [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
                                    total_callstacks++;
                                    if (callstack.empty()) return;
