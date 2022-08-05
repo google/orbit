@@ -148,6 +148,23 @@ auto operator+(First&& lhs, Second&& rhs) {
       *std::forward<First>(lhs) + *std::forward<Second>(rhs));
 };
 
+// When the `Tag` inherits from the struct, the `Typedef<Tag, T>` `operator-`. The result will be
+// wrapped into a Typedef of tag `ResultTag`
+template <typename ResultTag>
+struct MinusTag {
+  using MinusResultTag = ResultTag;
+};
+
+template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
+          typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
+          typename ResultTag = typename Tag::MinusResultTag,
+          typename = std::enable_if_t<
+              std::is_same_v<typename FirstDecayed::Tag, typename SecondDecayed::Tag>>>
+auto operator-(First&& lhs, Second&& rhs) {
+  return Typedef<ResultTag, decltype(*std::forward<First>(lhs) - *std::forward<Second>(rhs))>(
+      *std::forward<First>(lhs) - *std::forward<Second>(rhs));
+};
+
 // When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports multiplication by
 // `Scalar` via `operator*`
 template <typename Scalar>
