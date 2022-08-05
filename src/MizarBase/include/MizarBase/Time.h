@@ -25,6 +25,7 @@ struct NonWrappingNanoseconds {
   uint64_t value;
 };
 
+// Represents the time passed since the capture start
 using RelativeTimeNs = orbit_base::Typedef<RelativeTimestampTag, NonWrappingNanoseconds>;
 
 constexpr RelativeTimeNs MakeRelativeTimeNs(uint64_t t) { return RelativeTimeNs(std::in_place, t); }

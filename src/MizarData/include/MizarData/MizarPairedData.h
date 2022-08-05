@@ -161,14 +161,14 @@ class MizarPairedDataTmpl {
     return count;
   }
 
-  [[nodiscard]] uint64_t ToUint64TTimestampNs(RelativeTimeNs relative_time) const {
+  [[nodiscard]] uint64_t ToAbsoluteTimestamp(RelativeTimeNs relative_time) const {
     return NonWrappingAddition(data_->GetCaptureStartTimestampNs(), relative_time->value);
   }
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> RelativeToAbsoluteTimestampRange(
       RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
-    return std::make_pair(ToUint64TTimestampNs(min_relative_time),
-                          ToUint64TTimestampNs(max_relative_time));
+    return std::make_pair(ToAbsoluteTimestamp(min_relative_time),
+                          ToAbsoluteTimestamp(max_relative_time));
   }
 
   [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(

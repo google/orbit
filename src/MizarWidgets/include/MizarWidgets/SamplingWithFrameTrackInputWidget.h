@@ -77,7 +77,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   absl::flat_hash_set<TID> selected_tids_;
   FrameTrackId frame_track_id_{};
 
-  // std::numeric_limits<uint64_t>::max() ms corresponds to malformed input
+  // std::numeric_limits<uint64_t>::max() ns corresponds to malformed input
   RelativeTimeNs start_timestamp_ = orbit_mizar_base::MakeRelativeTimeNs(0);
 };
 
