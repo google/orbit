@@ -71,9 +71,9 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   ui_->callTreeTreeView->setItemDelegateForColumn(
       CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
   search_typing_finished_timer_->setSingleShot(true);
-  ui_->inspectionNoticeWidget->hide();
+  ui_->inspectionNoticeWidget->InitializeAsInspection();
 
-  connect(ui_->noticeButton, &QPushButton::clicked, this,
+  connect(ui_->inspectionNoticeWidget, &orbit_util_widgets::NoticeWidget::ButtonClicked, this,
           &CallTreeWidget::OnLeaveInspectionButtonClicked);
   connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
   connect(ui_->callTreeTreeView, &CustomSignalsTreeView::copyKeySequencePressed, this,

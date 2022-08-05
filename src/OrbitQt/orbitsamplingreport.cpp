@@ -24,6 +24,7 @@
 #include "DataViews/SamplingReportDataView.h"
 #include "OrbitBase/Logging.h"
 #include "SamplingReport.h"
+#include "UtilWidgets/NoticeWidget.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
@@ -42,6 +43,12 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
   sizes.append(5000);
   sizes.append(5000);
   ui_->splitter->setSizes(sizes);
+
+  connect(ui_->inspectionNoticeWidget, &orbit_util_widgets::NoticeWidget::ButtonClicked, this,
+          &OrbitSamplingReport::LeaveCallstackInspectionClicked);
+  ui_->inspectionNoticeWidget->InitializeAsInspection();
+  connect(ui_->tabWidget, &QTabWidget::currentChanged, this,
+          &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui_; }
@@ -98,38 +105,21 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
     uint32_t thread_id = report_data_view.GetThreadID();
     // Report any thread that contains more than 5% unwinding errors.
     constexpr double kUnwindErrorNoticeThreshold = 0.05;
-    double unwind_error_ratio = sampling_report_->ComputeUnwindErrorRatio(thread_id);
     if (sampling_report_->ComputeUnwindErrorRatio(thread_id) >= kUnwindErrorNoticeThreshold) {
-      auto* notice_box = new QWidget(tab);
-      notice_box->setStyleSheet(
-          ".QWidget { border-radius: 5px; border: 1px solid palette(text); background:"
-          " rgba(255,0,0, 10%); } "
-          "QPushButton:focus { border-color: rgba(255, 0, 0, 20%); }");
-      auto* notice_box_layout = new QGridLayout(notice_box);
-
+      auto* notice_box = new orbit_util_widgets::NoticeWidget(tab);
       std::string thread_tab_name = report_data_view.GetName();
       std::replace(thread_tab_name.begin(), thread_tab_name.end(), '\n', ' ');
-      auto* notice_label = new QLabel(QString::fromStdString(absl::StrFormat(
-                                          "%.2f%% of callstack samples in %s are unwinding errors.",
-                                          unwind_error_ratio * 100, thread_tab_name)),
-                                      notice_box);
-      notice_box_layout->addWidget(notice_label, 0, 0);
-      auto* notice_button = new QPushButton(notice_box);
-      notice_button->setText("Hide");
-      QObject::connect(notice_button, &QPushButton::clicked, notice_box,
+      double unwind_error_ratio = sampling_report_->ComputeUnwindErrorRatio(thread_id);
+      std::string label = absl::StrFormat("%.2f%% of callstack samples in %s are unwinding errors.",
+                                          unwind_error_ratio * 100, thread_tab_name);
+      notice_box->Initialize(label, "Hide", Color{255, 0, 0, 26});
+      QObject::connect(notice_box, &orbit_util_widgets::NoticeWidget::ButtonClicked, notice_box,
                        [notice_box]() { notice_box->hide(); });
-      notice_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-      notice_box_layout->addWidget(notice_button, 0, 1);
-
       gridLayout_2->addWidget(notice_box, 1, 0);
     }
 
     ui_->tabWidget->addTab(tab, QString::fromStdString(report_data_view.GetName()));
   }
-
-  connect(ui_->tabWidget, &QTabWidget::currentChanged, this,
-          &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
 void OrbitSamplingReport::Deinitialize() {
@@ -201,8 +191,6 @@ void OrbitSamplingReport::SetInspection(orbit_data_views::DataView* callstack_da
                                         std::unique_ptr<SamplingReport> report) {
   Deinitialize();
   Initialize(callstack_data_view, std::move(report));
-  connect(ui_->inspectionNoticeButton, &QPushButton::clicked, this,
-          &OrbitSamplingReport::LeaveCallstackInspectionClicked);
   ui_->inspectionNoticeWidget->show();
   RefreshCallstackView();
   RefreshTabs();

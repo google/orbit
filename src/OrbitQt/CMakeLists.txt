@@ -98,6 +98,7 @@ target_link_libraries(
           SessionSetup
           SourcePathsMapping
           SourcePathsMappingUI
+          UtilWidgets
           Qt5::Widgets
           Qt5::Core
           SyntaxHighlighter)
