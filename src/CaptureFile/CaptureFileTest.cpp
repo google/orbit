@@ -295,8 +295,7 @@ TEST(CaptureFile, OpenCaptureFileTooSmall) {
   auto write_result = orbit_base::WriteFully(temporary_file.fd(), "ups");
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
-  ASSERT_TRUE(capture_file_or_error.has_error());
-  EXPECT_EQ(capture_file_or_error.error().message(), "Not enough bytes left in the file: 3 < 24");
+  EXPECT_THAT(capture_file_or_error, HasError("Failed to read the file signature"));
 }
 
 static std::string CreateHeader(uint32_t version, uint64_t capture_section_offset,
