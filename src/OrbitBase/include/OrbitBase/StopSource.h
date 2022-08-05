@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/StopState.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitBase/StopToken.h"
 
 namespace orbit_base {
@@ -18,22 +18,20 @@ namespace orbit_base {
 // Then the a stop can be requested from any thread by calling StopSource::RequestStop.
 class StopSource {
  public:
-  explicit StopSource() : shared_stop_state_(std::make_shared<orbit_base_internal::StopState>()) {}
-
   // Returns true if StopSource has a stop-state, otherwise false. If StopSource has a stop-state
   // and a stop has already been requested, this function still returns true.
-  [[nodiscard]] bool IsStopPossible() const { return shared_stop_state_.use_count() > 0; }
+  [[nodiscard]] bool IsStopPossible() const { return promise_.IsValid(); }
   void RequestStop() {
     ORBIT_CHECK(IsStopPossible());
-    shared_stop_state_->Stop();
+    promise_.MarkFinished();
   }
   [[nodiscard]] StopToken GetStopToken() const {
     ORBIT_CHECK(IsStopPossible());
-    return StopToken(shared_stop_state_);
+    return StopToken(promise_.GetFuture());
   }
 
  private:
-  std::shared_ptr<orbit_base_internal::StopState> shared_stop_state_;
+  Promise<void> promise_;
 };
 
 }  // namespace orbit_base

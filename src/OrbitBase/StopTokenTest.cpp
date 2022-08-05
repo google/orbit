@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/SharedState.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
@@ -57,4 +58,13 @@ TEST_F(StopTokenTest, Move) {
   EXPECT_FALSE(stop_token_.IsStopPossible());
 }
 
+TEST_F(StopTokenTest, GetFuture) {
+  Future<void> future = stop_token_.GetFuture();
+
+  EXPECT_TRUE(future.IsValid());
+  EXPECT_FALSE(future.IsFinished());
+
+  RequestStop();
+  EXPECT_TRUE(future.IsFinished());
+}
 }  // namespace orbit_base

@@ -7,8 +7,8 @@
 
 #include <memory>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/StopState.h"
 
 namespace orbit_base {
 
@@ -22,17 +22,18 @@ class StopToken {
  public:
   // Returns true if StopToken has a stop-state, otherwise false. If StopToken has a stop-state and
   // a stop has already been requested, this function still returns true.
-  [[nodiscard]] bool IsStopPossible() const { return shared_stop_state_ != nullptr; }
+  [[nodiscard]] bool IsStopPossible() const { return future_.IsValid(); }
   [[nodiscard]] bool IsStopRequested() const {
     ORBIT_CHECK(IsStopPossible());
-    return shared_stop_state_->IsStopped();
+    return future_.IsFinished();
   }
 
- private:
-  explicit StopToken(std::shared_ptr<orbit_base_internal::StopState> shared_stop_state)
-      : shared_stop_state_(std::move(shared_stop_state)) {}
+  [[nodiscard]] Future<void> GetFuture() const { return future_; }
 
-  std::shared_ptr<orbit_base_internal::StopState> shared_stop_state_;
+ private:
+  explicit StopToken(Future<void> future) : future_{std::move(future)} {}
+
+  orbit_base::Future<void> future_;
 };
 
 }  // namespace orbit_base

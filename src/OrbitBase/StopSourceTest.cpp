@@ -14,21 +14,6 @@ TEST(StopSource, ConstructStopPossible) {
   EXPECT_TRUE(stop_source.IsStopPossible());
 }
 
-TEST(StopSource, CopyStopPossible) {
-  {
-    StopSource stop_source{};
-    StopSource stop_source_copy{stop_source};
-    EXPECT_TRUE(stop_source.IsStopPossible());
-    EXPECT_TRUE(stop_source_copy.IsStopPossible());
-  }
-  {
-    StopSource stop_source{};
-    StopSource stop_source_copy = stop_source;
-    EXPECT_TRUE(stop_source.IsStopPossible());
-    EXPECT_TRUE(stop_source_copy.IsStopPossible());
-  }
-}
-
 TEST(StopSource, MoveStopPossible) {
   {
     StopSource stop_source{};
@@ -63,43 +48,6 @@ TEST(StopSource, RequestStop) {
 
   ASSERT_TRUE(stop_token_2.IsStopPossible());
   EXPECT_TRUE(stop_token_2.IsStopRequested());
-}
-
-TEST(StopSource, CopyAndRequestStop) {
-  {  // Request stop in original stop source
-    StopSource stop_source{};
-    StopSource stop_source_copy{stop_source};
-
-    StopToken stop_token = stop_source.GetStopToken();
-    ASSERT_TRUE(stop_token.IsStopPossible());
-
-    StopToken stop_token_copy = stop_source.GetStopToken();
-    ASSERT_TRUE(stop_token_copy.IsStopPossible());
-
-    EXPECT_FALSE(stop_token_copy.IsStopRequested());
-    EXPECT_EQ(stop_token.IsStopRequested(), stop_token.IsStopRequested());
-
-    stop_source.RequestStop();
-    EXPECT_TRUE(stop_token_copy.IsStopRequested());
-    EXPECT_EQ(stop_token.IsStopRequested(), stop_token.IsStopRequested());
-  }
-  {  // Request stop in copied stop source
-    StopSource stop_source{};
-    StopSource stop_source_copy{stop_source};
-
-    StopToken stop_token = stop_source.GetStopToken();
-    ASSERT_TRUE(stop_token.IsStopPossible());
-
-    StopToken stop_token_copy = stop_source.GetStopToken();
-    ASSERT_TRUE(stop_token_copy.IsStopPossible());
-
-    EXPECT_FALSE(stop_token_copy.IsStopRequested());
-    EXPECT_EQ(stop_token.IsStopRequested(), stop_token.IsStopRequested());
-
-    stop_source_copy.RequestStop();
-    EXPECT_TRUE(stop_token_copy.IsStopRequested());
-    EXPECT_EQ(stop_token.IsStopRequested(), stop_token.IsStopRequested());
-  }
 }
 
 TEST(StopSource, MoveAndRequestStop) {
