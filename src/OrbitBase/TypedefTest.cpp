@@ -367,6 +367,10 @@ struct MoveOnlyInt {
     return MoveOnlyInt(a.value + b.value);
   }
 
+  [[nodiscard]] friend MoveOnlyInt operator-(const MoveOnlyInt& a, const MoveOnlyInt& b) {
+    return MoveOnlyInt(a.value - b.value);
+  }
+
   [[nodiscard]] friend MoveOnlyInt operator*(const MoveOnlyInt& a, std::unique_ptr<int> times) {
     return MoveOnlyInt(a.value * (*times));
   }
@@ -379,6 +383,24 @@ TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
   WrapperWithPlus<MoveOnlyInt> b_wrapped(std::in_place, kBValue);
 
   EXPECT_EQ((std::move(a_wrapped) + std::move(b_wrapped))->value, kAValue + kBValue);
+}
+
+struct DistanceTag {};
+struct CoordinateTag : MinusTag<DistanceTag> {};
+
+template <typename T>
+using Distance = Typedef<DistanceTag, T>;
+
+template <typename T>
+using Coordinate = Typedef<CoordinateTag, T>;
+
+TEST(Typedef, CoordinateHasMinusForMoveOnlyType) {
+  Coordinate<MoveOnlyInt> a(std::in_place, kAValue);
+  Coordinate<MoveOnlyInt> b(std::in_place, kBValue);
+
+  Distance<MoveOnlyInt> distance = std::move(a) - std::move(b);
+
+  EXPECT_EQ(distance->value, kAValue - kBValue);
 }
 
 template <typename Scalar>
