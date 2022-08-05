@@ -256,6 +256,8 @@ struct DmaFenceSignaledPerfEventData {
 };
 using DmaFenceSignaledPerfEvent = TypedPerfEvent<DmaFenceSignaledPerfEventData>;
 
+// This struct is supposed to resemble the perf_record_sample, all commented out
+// fields are fields we don't currently use anywhere.
 struct PerfRecordSample {
   perf_event_header header;
 
