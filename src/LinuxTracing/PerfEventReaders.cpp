@@ -25,9 +25,8 @@
 
 namespace orbit_linux_tracing {
 
-[[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
-                                                          const perf_event_header& header,
-                                                          perf_event_attr flags) {
+[[nodiscard]] [[maybe_unused]] static PerfRecordSample ConsumeRecordSample(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, perf_event_attr flags) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
@@ -292,12 +291,14 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
           {
               .pid = static_cast<pid_t>(sample_id.pid),
               .tid = static_cast<pid_t>(sample_id.tid),
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(20),
               .dyn_size = dyn_size,
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
 
+  ring_buffer->ReadRawAtOffset(event.data.regs.get(), offsetof(perf_event_stack_sample_fixed, regs),
+                               20 * sizeof(uint64_t));
   ring_buffer->ReadValueAtOffset(event.data.regs.get(),
                                  offsetof(perf_event_stack_sample_fixed, regs));
   ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
@@ -332,7 +333,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
 
   const size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
                                sizeof(perf_event_callchain_sample_fixed::nr);
-  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
+  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes + sizeof(uint64_t);
   // Note that perf_event_sample_regs_user_all contains abi and the regs array.
   const size_t offset_of_size =
       offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
@@ -357,7 +358,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
               .tid = static_cast<pid_t>(sample_id.tid),
               .ips_size = nr,
               .ips = make_unique_for_overwrite<uint64_t[]>(nr),
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(20),
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };

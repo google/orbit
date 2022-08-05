@@ -1204,8 +1204,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     const size_t size_of_stack_sample = sizeof(perf_event_stack_sample_fixed) +
                                         2 * sizeof(uint64_t) /*size and dyn_size*/ +
-                                        stack_dump_size_ /*data*/
-                                        + sizeof(uint64_t) /*abi*/;
+                                        stack_dump_size_ /*data*/;
 
     if (header.size != size_of_stack_sample) {
       // Skip stack samples that have an unexpected size. These normally have
