@@ -550,11 +550,12 @@ TEST_F(LeafFunctionCallManagerTest,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
 
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.GetRegisters().sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
 
   EXPECT_THAT(
       event_data.CopyOfIpsAsVector(),

@@ -6,6 +6,7 @@
 #define LINUX_TRACING_PERF_EVENT_RECORDS_H_
 
 #include <cstdint>
+
 #include "PerfEventOpen.h"
 
 namespace orbit_linux_tracing {
