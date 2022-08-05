@@ -10,6 +10,8 @@
 #include <memory>
 #include <string>
 
+#include "CoreMath.h"
+
 namespace Ui {
 class NoticeWidget;
 }
@@ -23,7 +25,8 @@ class NoticeWidget : public QWidget {
   explicit NoticeWidget(QWidget* parent = nullptr);
   ~NoticeWidget() override;
 
-  void Initialize(const std::string& label_text, const std::string& button_text);
+  void Initialize(const std::string& label_text, const std::string& button_text,
+                  const Color& color);
   void InitializeAsInspection();
 
  signals:

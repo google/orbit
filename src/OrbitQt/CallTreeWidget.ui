@@ -58,32 +58,10 @@
     </layout>
    </item>
    <item row="0" column="0">
-    <widget class="QWidget" name="inspectionNoticeWidget" native="true">
-     <property name="styleSheet">
-      <string notr="true">.QWidget{ border-radius: 5px; border: 1px solid palette(text) ; background: rgba(0,255,0, 10%);}</string>
+    <widget class="orbit_util_widgets::NoticeWidget" name="inspectionNoticeWidget" native="true">
+     <property name="visible">
+      <bool>false</bool>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="1">
-       <widget class="QPushButton" name="noticeButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Leave Inspection</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="noticeLabel">
-        <property name="text">
-         <string>You are currently in an inspection, limiting the tree to specific callstacks.</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </item>
   </layout>
@@ -93,6 +71,11 @@
    <class>CustomSignalsTreeView</class>
    <extends>QTreeView</extends>
    <header>CustomSignalsTreeView.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoticeWidget</class>
+   <extends>QWidget</extends>
+   <header>UtilWidgets/NoticeWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
