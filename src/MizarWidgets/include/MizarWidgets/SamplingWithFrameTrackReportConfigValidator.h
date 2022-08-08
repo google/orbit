@@ -52,7 +52,7 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
     if (config.tids.empty()) {
       return ErrorMessage{title_std_string + ": No threads selected"};
     }
-    if (config.start_relative_ns > data.CaptureDurationNs()) {
+    if (config.start_relative->value > data.CaptureDurationNs()) {
       return ErrorMessage{title_std_string + ": Start > capture duration"};
     }
     return outcome::success();

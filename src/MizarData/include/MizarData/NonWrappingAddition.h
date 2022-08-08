@@ -12,6 +12,8 @@
 
 namespace orbit_mizar_data {
 
+// TODO(b/241527383) remove when all time types in Mizar are Typedefs. The function is currently
+// duplicated in `NonWrappingNanoseconds`
 [[nodiscard]] inline uint64_t NonWrappingAddition(const uint64_t a, const uint64_t b) {
   const uint64_t sum = a + b;
   if (sum < a || sum < b) return std::numeric_limits<uint64_t>::max();

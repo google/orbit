@@ -143,7 +143,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
   }
 
   void ExpectRelativeStartNsIs(uint64_t start_relative_ns_) const {
-    EXPECT_EQ(widget_->MakeConfig().start_relative_ns, start_relative_ns_);
+    EXPECT_EQ(widget_->MakeConfig().start_relative->value, start_relative_ns_);
   }
 
   MockPairedData data_;
@@ -209,7 +209,7 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnStartMsChangedIsCorrect) {
   ExpectRelativeStartNsIs(123'000'000);
 
   start_ms_->setText("99999999999999999999999999");
-  ExpectRelativeStartNsIs(static_cast<uint64_t>(std::numeric_limits<uint64_t>::max()));
+  ExpectRelativeStartNsIs(std::numeric_limits<uint64_t>::max());
 
   start_ms_->setText("-0");
   ExpectRelativeStartNsIs(0);

@@ -9,6 +9,7 @@ add_library(MizarBase STATIC)
 target_sources(MizarBase PUBLIC
   include/MizarBase/BaselineOrComparison.h
   include/MizarBase/SampledFunctionId.h
+  include/MizarBase/Time.h
   include/MizarBase/Titles.h
   include/MizarBase/ThreadId.h)
 

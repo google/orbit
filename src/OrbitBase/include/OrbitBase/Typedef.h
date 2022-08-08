@@ -62,7 +62,7 @@ class Typedef {
 
   template <typename... Args>
   constexpr explicit Typedef(std::in_place_t, Args&&... args)
-      : value_(T(std::forward<Args>(args)...)) {}
+      : value_(T{std::forward<Args>(args)...}) {}
 
   constexpr Typedef() : value_{} {}
 

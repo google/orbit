@@ -9,6 +9,7 @@
 #include <QString>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Time.h"
 #include "MizarBase/Titles.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
@@ -16,6 +17,8 @@
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
+using ::orbit_mizar_base::MakeRelativeTimeNs;
+using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::TID;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
@@ -63,54 +66,37 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
       validator{};
 
   constexpr FrameTrackId kId(orbit_client_data::ScopeId(0));
-
-  EXPECT_THAT(validator.Validate(&bac,
-                                 orbit_mizar_base::MakeBaseline<HalfConfig>(
-                                     absl::flat_hash_set<TID>{TID(1)}, /*start_ns=*/0,
-                                     /*duration_ns=*/0, kId),
-                                 orbit_mizar_base::MakeComparison<HalfConfig>(
-                                     absl::flat_hash_set<TID>{},
-                                     /*start_ns=*/0, /*duration_ns=*/0, kId)),
-              HasError("Comparison: No threads selected"));
+  constexpr RelativeTimeNs kStart = MakeRelativeTimeNs(0);
 
   EXPECT_THAT(
       validator.Validate(
           &bac,
-          orbit_mizar_base::MakeBaseline<HalfConfig>(absl::flat_hash_set<TID>{}, /*start_ns=*/0,
-                                                     /*duration_ns=*/0, kId),
-          orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{TID(1)},
-                                                       /*start_ns=*/0, /*duration_ns=*/0, kId)),
+          orbit_mizar_base::MakeBaseline<HalfConfig>(absl::flat_hash_set<TID>{TID(1)}, kStart, kId),
+          orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{}, kStart, kId)),
+      HasError("Comparison: No threads selected"));
+
+  EXPECT_THAT(
+      validator.Validate(
+          &bac, orbit_mizar_base::MakeBaseline<HalfConfig>(absl::flat_hash_set<TID>{}, kStart, kId),
+          orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{TID(1)}, kStart,
+                                                       kId)),
       HasError("Baseline: No threads selected"));
 
-  EXPECT_THAT(
-      validator.Validate(
-          &bac,
-          orbit_mizar_base::MakeBaseline<HalfConfig>(absl::flat_hash_set<TID>{TID(1)},
-                                                     /*start_ns=*/kBaselineCaptureDuration + 1,
-                                                     /*duration_ns=*/0, kId),
-          orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{TID(1)},
-                                                       /*start_ns=*/0, /*duration_ns=*/0, kId)),
-      HasError("Baseline: Start > capture duration"));
+  EXPECT_THAT(validator.Validate(&bac,
+                                 orbit_mizar_base::MakeBaseline<HalfConfig>(
+                                     absl::flat_hash_set<TID>{TID(1)},
+                                     MakeRelativeTimeNs(kBaselineCaptureDuration + 1), kId),
+                                 orbit_mizar_base::MakeComparison<HalfConfig>(
+                                     absl::flat_hash_set<TID>{TID(1)}, kStart, kId)),
+              HasError("Baseline: Start > capture duration"));
 
   EXPECT_THAT(validator.Validate(&bac,
                                  orbit_mizar_base::MakeBaseline<HalfConfig>(
-                                     absl::flat_hash_set<TID>{TID(1)}, /*start_ns=*/0,
-                                     /*duration_ns=*/0, kId),
+                                     absl::flat_hash_set<TID>{TID(1)}, kStart, kId),
                                  orbit_mizar_base::MakeComparison<HalfConfig>(
                                      absl::flat_hash_set<TID>{TID(1)},
-                                     /*start_ns=*/kComparisonCaptureDuration + 1,
-                                     /*duration_ns=*/0, kId)),
+                                     MakeRelativeTimeNs(kComparisonCaptureDuration + 1), kId)),
               HasError("Comparison: Start > capture duration"));
-
-  EXPECT_THAT(validator.Validate(&bac,
-                                 orbit_mizar_base::MakeBaseline<HalfConfig>(
-                                     absl::flat_hash_set<TID>{TID(1)}, /*start_ns=*/0,
-                                     /*duration_ns=*/kBaselineCaptureDuration - 1, kId),
-                                 orbit_mizar_base::MakeComparison<HalfConfig>(
-                                     absl::flat_hash_set<TID>{TID(1)},
-                                     /*start_ns=*/kComparisonCaptureDuration - 1,
-                                     /*duration_ns=*/0, kId)),
-              HasNoError());
 }
 
 }  // namespace orbit_mizar_widgets

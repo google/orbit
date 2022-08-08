@@ -29,6 +29,8 @@ using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
+using ::orbit_mizar_base::MakeRelativeTimeNs;
+using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
 using ::orbit_test_utils::Commons;
@@ -116,14 +118,15 @@ class MockPairedData {
         frame_track_active_times_(std::move(frame_track_active_times)) {}
 
   template <typename Action>
-  void ForEachCallstackEvent(TID /*tid*/, uint64_t /*min_timestamp*/, uint64_t /*max_timestamp*/,
-                             Action&& action) const {
+  void ForEachCallstackEvent(TID /*tid*/, RelativeTimeNs /*min_timestamp*/,
+                             RelativeTimeNs /*max_timestamp*/, Action&& action) const {
     std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
   }
 
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
       const absl::flat_hash_set<TID>& /*tids*/, FrameTrackId /*frame_track_scope_id*/,
-      uint64_t /*min_relative_timestamp_ns*/, uint64_t /*max_relative_timestamp_ns*/) const {
+      RelativeTimeNs /*min_relative_timestamp_ns*/,
+      RelativeTimeNs /*max_relative_timestamp_ns*/) const {
     return frame_track_active_times_;
   };
 
@@ -168,10 +171,10 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
       std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1,
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, MakeRelativeTimeNs(0),
           FrameTrackId(ScopeId(1))),
       MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1,
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, MakeRelativeTimeNs(0),
           FrameTrackId(ScopeId(1))));
 
   EXPECT_EQ(report.GetBaselineSamplingCounts()->GetTotalCallstacks(), kCallstacks.size());
