@@ -36,7 +36,7 @@ class OrbitLiveFunctions : public QWidget {
   ~OrbitLiveFunctions() override;
 
   void Initialize(OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                  SelectionType selection_type, FontType font_type, bool is_main_instance = true);
+                  SelectionType selection_type, FontType font_type);
   void Deinitialize();
   void Refresh();
   void OnDataChanged();
