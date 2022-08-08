@@ -13,9 +13,9 @@
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
 #include <llvm/Demangle/Demangle.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iterator>
@@ -26,7 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -41,13 +40,10 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
-#include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/ThreadUtils.h"
-#include "Statistics/Histogram.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;

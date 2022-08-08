@@ -13,7 +13,6 @@
 #include <Qt>
 
 #include "DataViews/DataView.h"
-#include "orbittablemodel.h"
 #include "orbittreeview.h"
 #include "types.h"
 
@@ -41,11 +40,11 @@ class OrbitDataViewPanel : public QWidget {
   QLineEdit* GetFilterLineEdit();
 
  private slots:
-  void on_FilterLineEdit_textChanged(const QString& a_Text);
-  void on_refreshButton_clicked();
+  void OnFilterLineEditTextChanged(const QString& a_Text);
+  void OnRefreshButtonClicked();
 
  private:
-  Ui::OrbitDataViewPanel* ui;
+  Ui::OrbitDataViewPanel* ui_;
 };
 
 #endif  // ORBIT_QT_ORBIT_DATA_VIEW_PANEL_H_

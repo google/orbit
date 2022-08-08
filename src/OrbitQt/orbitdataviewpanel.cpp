@@ -9,64 +9,61 @@
 #include <QPushButton>
 #include <string>
 
-#include "orbittablemodel.h"
 #include "ui_orbitdataviewpanel.h"
 
 OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
-    : QWidget(parent), ui(new Ui::OrbitDataViewPanel) {
-  ui->setupUi(this);
-  ui->label->hide();
+    : QWidget(parent), ui_(new Ui::OrbitDataViewPanel) {
+  ui_->setupUi(this);
+  ui_->label->hide();
 }
 
-OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui; }
+OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui_; }
 
 void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
                                     SelectionType selection_type, FontType font_type,
                                     bool uniform_row_height,
                                     QFlags<Qt::AlignmentFlag> text_alignment) {
-  ui->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height,
-                           text_alignment);
+  ui_->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height,
+                            text_alignment);
 
-  std::string label = ui->treeView->GetLabel();
+  std::string const label = ui_->treeView->GetLabel();
   if (!label.empty()) {
-    this->ui->label->setText(QString::fromStdString(label));
-    this->ui->label->show();
+    this->ui_->label->setText(QString::fromStdString(label));
+    this->ui_->label->show();
   }
 
-  if (ui->treeView->HasRefreshButton()) {
-    ui->refreshButton->show();
-    ui->horizontalLayout->setContentsMargins(0, 0, 6, 0);
+  if (ui_->treeView->HasRefreshButton()) {
+    ui_->refreshButton->show();
+    ui_->horizontalLayout->setContentsMargins(0, 0, 6, 0);
   } else {
-    ui->refreshButton->hide();
+    ui_->refreshButton->hide();
   }
 
   data_view->SetUiFilterCallback([this](const std::string& filter) { SetFilter(filter.c_str()); });
 }
 
-void OrbitDataViewPanel::Deinitialize() { ui->treeView->Deinitialize(); }
+void OrbitDataViewPanel::Deinitialize() { ui_->treeView->Deinitialize(); }
 
-OrbitTreeView* OrbitDataViewPanel::GetTreeView() { return ui->treeView; }
+OrbitTreeView* OrbitDataViewPanel::GetTreeView() { return ui_->treeView; }
 
-QLineEdit* OrbitDataViewPanel::GetFilterLineEdit() { return ui->FilterLineEdit; }
+QLineEdit* OrbitDataViewPanel::GetFilterLineEdit() { return ui_->FilterLineEdit; }
 
-void OrbitDataViewPanel::Link(OrbitDataViewPanel* a_Panel) {
-  ui->treeView->Link(a_Panel->ui->treeView);
+void OrbitDataViewPanel::Link(OrbitDataViewPanel* panel) {
+  ui_->treeView->Link(panel->ui_->treeView);
 }
 
-void OrbitDataViewPanel::Refresh() { ui->treeView->Refresh(); }
+void OrbitDataViewPanel::Refresh() { ui_->treeView->Refresh(); }
 
 void OrbitDataViewPanel::SetDataModel(orbit_data_views::DataView* model) {
-  ui->treeView->SetDataModel(model);
+  ui_->treeView->SetDataModel(model);
 }
 
-void OrbitDataViewPanel::ClearDataModel() { ui->treeView->ClearDataModel(); }
+void OrbitDataViewPanel::ClearDataModel() { ui_->treeView->ClearDataModel(); }
 
-void OrbitDataViewPanel::SetFilter(const QString& a_Filter) {
-  ui->FilterLineEdit->setText(a_Filter);
+void OrbitDataViewPanel::SetFilter(const QString& filter) { ui_->FilterLineEdit->setText(filter); }
+
+void OrbitDataViewPanel::OnFilterLineEditTextChanged(const QString& text) {
+  ui_->treeView->OnFilter(text);
 }
 
-void OrbitDataViewPanel::on_FilterLineEdit_textChanged(const QString& a_Text) {
-  ui->treeView->OnFilter(a_Text);
-}
-
-void OrbitDataViewPanel::on_refreshButton_clicked() { ui->treeView->OnRefreshButtonClicked(); }
+void OrbitDataViewPanel::OnRefreshButtonClicked() { ui_->treeView->OnRefreshButtonClicked(); }
