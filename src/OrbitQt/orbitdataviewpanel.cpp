@@ -26,7 +26,7 @@ void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
   ui_->treeView->Initialize(data_view, selection_type, font_type, uniform_row_height,
                             text_alignment);
 
-  std::string const label = ui_->treeView->GetLabel();
+  const std::string label = ui_->treeView->GetLabel();
   if (!label.empty()) {
     this->ui_->label->setText(QString::fromStdString(label));
     this->ui_->label->show();
