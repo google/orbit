@@ -81,6 +81,7 @@ static uint64_t ParseStartNs(const QString& time_ms) {
   }
 
   constexpr uint64_t kNsInMs = 1e6;
+  // Overflow can't happen here as long as sizeof(int) == 32 bits, as (2^31-1) * 1e6 < 2 ** 64 - 1
   return result * kNsInMs;
 }
 
