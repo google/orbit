@@ -424,7 +424,11 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       time_graph_->GetTrackContainer()->IncrementVerticalScroll(
           /*ratio=*/-kScrollingRatioPerPageUpAndDown);
       break;
+    // Adding 93 == ']' here such that with e.g. German and Italian keyboards the ctrl+"+" shortcut
+    // works. As an unwanted side effect ctrl+"]" on an English keyboard also acts as vertical zoom.
+    // See b/237773876.
     case '+':
+    case 93:
       if (time_graph_ == nullptr) return;
       if (ctrl) {
         time_graph_->VerticalZoom(1, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
