@@ -42,7 +42,7 @@ class OrbitLiveFunctions : public QWidget {
   void OnDataChanged();
   void OnRowSelected(std::optional<int> row);
   void Reset();
-  void SetFilter(const QString& a_Filter);
+  void SetFilter(const QString& filter);
   void AddIterator(uint64_t id, const orbit_client_data::FunctionInfo* function);
   QLineEdit* GetFilterLineEdit();
   std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
@@ -55,9 +55,9 @@ class OrbitLiveFunctions : public QWidget {
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;
 
  private:
-  Ui::OrbitLiveFunctions* ui;
+  Ui::OrbitLiveFunctions* ui_;
   std::optional<LiveFunctionsController> live_functions_;
-  absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis;
+  absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis_;
   OrbitEventIterator* all_events_iterator_;
 };
 

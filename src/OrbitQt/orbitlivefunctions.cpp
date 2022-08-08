@@ -31,18 +31,18 @@
 using orbit_client_data::FunctionInfo;
 
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
-    : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {
-  ui->setupUi(this);
+    : QWidget(parent), ui_(new Ui::OrbitLiveFunctions) {
+  ui_->setupUi(this);
 }
 
-OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui; }
+OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui_; }
 
 void OrbitLiveFunctions::Initialize(OrbitApp* app,
                                     orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                     SelectionType selection_type, FontType font_type) {
   live_functions_.emplace(app, metrics_uploader);
   orbit_data_views::DataView* data_view = &live_functions_->GetDataView();
-  ui->data_view_panel_->Initialize(data_view, selection_type, font_type);
+  ui_->data_view_panel_->Initialize(data_view, selection_type, font_type);
 
   live_functions_->SetAddIteratorCallback(
       [this](uint64_t id, const FunctionInfo* function) { this->AddIterator(id, function); });
@@ -52,7 +52,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
     if (!this->live_functions_->OnAllNextButton()) {
       return;
     }
-    for (auto& iterator_ui : iterator_uis) {
+    for (auto& iterator_ui : iterator_uis_) {
       uint64_t index = iterator_ui.first;
       iterator_ui.second->SetCurrentTime(this->live_functions_->GetStartTime(index));
     }
@@ -61,7 +61,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
     if (!this->live_functions_->OnAllPreviousButton()) {
       return;
     }
-    for (auto& iterator_ui : iterator_uis) {
+    for (auto& iterator_ui : iterator_uis_) {
       uint64_t index = iterator_ui.first;
       iterator_ui.second->SetCurrentTime(this->live_functions_->GetStartTime(index));
     }
@@ -69,32 +69,32 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
   all_events_iterator_->SetFunctionName("All functions");
   all_events_iterator_->HideDeleteButton();
   all_events_iterator_->DisableButtons();
-  dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
-      ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
+  dynamic_cast<QBoxLayout*>(ui_->iteratorFrame->layout())
+      ->insertWidget(ui_->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 
-  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalSelectionRangeChange,
+  QObject::connect(ui_->histogram_widget_, &orbit_qt::HistogramWidget::SignalSelectionRangeChange,
                    this, [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
                      emit SignalSelectionRangeChange(range);
                    });
 
-  ui->histogram_title_->setText(ui->histogram_widget_->GetTitle());
-  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalTitleChange,
-                   ui->histogram_title_, &QLabel::setText);
-  ui->histogram_widget_->setMouseTracking(true);
+  ui_->histogram_title_->setText(ui_->histogram_widget_->GetTitle());
+  QObject::connect(ui_->histogram_widget_, &orbit_qt::HistogramWidget::SignalTitleChange,
+                   ui_->histogram_title_, &QLabel::setText);
+  ui_->histogram_widget_->setMouseTracking(true);
 }
 
 void OrbitLiveFunctions::Deinitialize() {
   delete all_events_iterator_;
   live_functions_->SetAddIteratorCallback([](uint64_t, const FunctionInfo*) {});
-  ui->data_view_panel_->Deinitialize();
+  ui_->data_view_panel_->Deinitialize();
   live_functions_.reset();
 }
 
-void OrbitLiveFunctions::SetFilter(const QString& a_Filter) {
-  ui->data_view_panel_->SetFilter(a_Filter);
+void OrbitLiveFunctions::SetFilter(const QString& filter) {
+  ui_->data_view_panel_->SetFilter(filter);
 }
 
-void OrbitLiveFunctions::Refresh() { ui->data_view_panel_->Refresh(); }
+void OrbitLiveFunctions::Refresh() { ui_->data_view_panel_->Refresh(); }
 
 void OrbitLiveFunctions::OnDataChanged() {
   if (live_functions_) {
@@ -109,21 +109,21 @@ void OrbitLiveFunctions::AddIterator(size_t id, const FunctionInfo* function) {
 
   iterator_ui->SetNextButtonCallback([this, id]() {
     live_functions_->OnNextButton(id);
-    auto it = this->iterator_uis.find(id);
+    auto it = this->iterator_uis_.find(id);
     it->second->SetCurrentTime(live_functions_->GetStartTime(id));
   });
   iterator_ui->SetPreviousButtonCallback([this, id]() {
     live_functions_->OnPreviousButton(id);
-    auto it = this->iterator_uis.find(id);
+    auto it = this->iterator_uis_.find(id);
     it->second->SetCurrentTime(live_functions_->GetStartTime(id));
   });
   iterator_ui->SetDeleteButtonCallback([this, id]() {
     live_functions_->OnDeleteButton(id);
-    auto it = this->iterator_uis.find(id);
-    ui->iteratorFrame->layout()->removeWidget(it->second);
+    auto it = this->iterator_uis_.find(id);
+    ui_->iteratorFrame->layout()->removeWidget(it->second);
     it->second->deleteLater();
-    iterator_uis.erase(id);
-    if (iterator_uis.empty()) {
+    iterator_uis_.erase(id);
+    if (iterator_uis_.empty()) {
       this->all_events_iterator_->DisableButtons();
     }
   });
@@ -132,16 +132,16 @@ void OrbitLiveFunctions::AddIterator(size_t id, const FunctionInfo* function) {
   iterator_ui->SetMinMaxTime(live_functions_->GetCaptureMin(), live_functions_->GetCaptureMax());
   iterator_ui->SetCurrentTime(live_functions_->GetStartTime(id));
 
-  iterator_uis.insert(std::make_pair(id, iterator_ui));
+  iterator_uis_.insert(std::make_pair(id, iterator_ui));
 
   all_events_iterator_->EnableButtons();
 
-  dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
-      ->insertWidget(ui->iteratorFrame->layout()->count() - 1, iterator_ui);
+  dynamic_cast<QBoxLayout*>(ui_->iteratorFrame->layout())
+      ->insertWidget(ui_->iteratorFrame->layout()->count() - 1, iterator_ui);
 }
 
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
-  return ui->data_view_panel_->GetFilterLineEdit();
+  return ui_->data_view_panel_->GetFilterLineEdit();
 }
 
 void OrbitLiveFunctions::Reset() {
@@ -149,27 +149,27 @@ void OrbitLiveFunctions::Reset() {
 
   live_functions_->Reset();
 
-  for (auto& [_, iterator_ui] : iterator_uis) {
-    ui->iteratorFrame->layout()->removeWidget(iterator_ui);
+  for (auto& [_, iterator_ui] : iterator_uis_) {
+    ui_->iteratorFrame->layout()->removeWidget(iterator_ui);
     delete iterator_ui;
   }
-  iterator_uis.clear();
+  iterator_uis_.clear();
   all_events_iterator_->DisableButtons();
 }
 
 void OrbitLiveFunctions::OnRowSelected(std::optional<int> row) {
-  ui->data_view_panel_->GetTreeView()->SetIsInternalRefresh(true);
-  QItemSelectionModel* selection = ui->data_view_panel_->GetTreeView()->selectionModel();
+  ui_->data_view_panel_->GetTreeView()->SetIsInternalRefresh(true);
+  QItemSelectionModel* selection = ui_->data_view_panel_->GetTreeView()->selectionModel();
   QModelIndex index;
   if (row.has_value()) {
-    index = ui->data_view_panel_->GetTreeView()->GetModel()->CreateIndex(row.value(), 0);
+    index = ui_->data_view_panel_->GetTreeView()->GetModel()->CreateIndex(row.value(), 0);
   }
   selection->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-  ui->data_view_panel_->GetTreeView()->SetIsInternalRefresh(false);
+  ui_->data_view_panel_->GetTreeView()->SetIsInternalRefresh(false);
 }
 
 void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data,
                                        const std::string& scope_name,
                                        std::optional<orbit_client_data::ScopeId> scope_id) {
-  ui->histogram_widget_->UpdateData(data, scope_name, scope_id);
+  ui_->histogram_widget_->UpdateData(data, scope_name, scope_id);
 }
