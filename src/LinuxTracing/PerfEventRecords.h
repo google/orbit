@@ -64,9 +64,6 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
   uint64_t r15;
 };
 
-constexpr uint64_t kTotalNumOfRegisters =
-    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
-
 // This struct must be in sync with the SAMPLE_REGS_USER_AX in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_ax {
   uint64_t abi;

@@ -47,6 +47,9 @@ namespace orbit_linux_tracing {
 
 namespace {
 
+constexpr uint64_t kTotalNumOfRegisters =
+    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
 class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
   MOCK_METHOD(std::shared_ptr<unwindstack::MapInfo>, Find, (uint64_t), (override));

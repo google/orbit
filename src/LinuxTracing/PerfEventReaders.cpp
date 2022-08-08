@@ -327,6 +327,9 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
 
+  constexpr uint64_t kTotalNumOfRegisters =
+      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
   StackSamplePerfEvent event{
       .timestamp = sample_id.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -391,6 +394,9 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   ring_buffer->ReadValueAtOffset(&sample_id,
                                  offsetof(perf_event_callchain_sample_fixed, sample_id));
+
+  constexpr uint64_t kTotalNumOfRegisters =
+      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
 
   CallchainSamplePerfEvent event{
       .timestamp = sample_id.time,

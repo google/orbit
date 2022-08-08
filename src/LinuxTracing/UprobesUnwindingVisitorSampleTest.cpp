@@ -51,6 +51,9 @@ namespace orbit_linux_tracing {
 
 namespace {
 
+static constexpr uint64_t kTotalNumOfRegisters =
+    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
 class UprobesUnwindingVisitorSampleTest : public ::testing::Test {
  protected:
   void SetUp() override {
