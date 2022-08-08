@@ -12,7 +12,7 @@
 
 namespace orbit_mizar_base {
 
-struct RelativeTimestampTag : orbit_base::PlusTag {};
+struct RelativeTimestampTag : orbit_base::PlusTag<RelativeTimestampTag> {};
 
 // wraps `uint64_t` bears semantics of time in nanoseconds and implements a non-wrapping addition
 struct NonWrappingNanoseconds {

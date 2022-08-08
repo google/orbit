@@ -325,7 +325,7 @@ TEST(Typedef, ComparisonIsCorrect) {
   EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
 }
 
-struct WrapperWithPlusTag : PlusTag {};
+struct WrapperWithPlusTag : PlusTag<WrapperWithPlusTag> {};
 
 template <typename T>
 using WrapperWithPlus = Typedef<WrapperWithPlusTag, T>;
@@ -386,7 +386,7 @@ TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
 }
 
 struct DistanceTag {};
-struct CoordinateTag : MinusTag<DistanceTag> {};
+struct CoordinateTag : MinusTag<DistanceTag>, PlusTag<DistanceTag> {};
 
 template <typename T>
 using Distance = Typedef<DistanceTag, T>;
@@ -401,6 +401,21 @@ TEST(Typedef, CoordinateHasMinusForMoveOnlyType) {
   Distance<MoveOnlyInt> distance = std::move(a) - std::move(b);
 
   EXPECT_EQ(distance->value, kAValue - kBValue);
+}
+
+TEST(Typedef, CoordinateHasPlusForMoveOnlyType) {
+  {
+    Coordinate<MoveOnlyInt> origin(std::in_place, kAValue);
+    Distance<MoveOnlyInt> distance(std::in_place, kBValue);
+    Coordinate<MoveOnlyInt> coordinate = std::move(origin) + std::move(distance);
+    EXPECT_EQ(coordinate->value, kAValue + kBValue);
+  }
+  {
+    Coordinate<MoveOnlyInt> origin(std::in_place, kAValue);
+    Distance<MoveOnlyInt> distance(std::in_place, kBValue);
+    Coordinate<MoveOnlyInt> coordinate = std::move(distance) + std::move(origin);
+    EXPECT_EQ(coordinate->value, kAValue + kBValue);
+  }
 }
 
 template <typename Scalar>
