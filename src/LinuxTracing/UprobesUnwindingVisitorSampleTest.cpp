@@ -51,6 +51,9 @@ namespace orbit_linux_tracing {
 
 namespace {
 
+static constexpr uint64_t kTotalNumOfRegisters =
+    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
 class UprobesUnwindingVisitorSampleTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -212,7 +215,7 @@ StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
           {
               .pid = 10,
               .tid = 11,
-              .regs = std::make_unique<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .dyn_size = kStackSize,
               .data = std::make_unique<uint8_t[]>(kStackSize),
           },
@@ -227,7 +230,7 @@ CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uin
           {
               .pid = 10,
               .tid = 11,
-              .regs = std::make_unique<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .data = std::make_unique<uint8_t[]>(kStackSize),
           },
   };
@@ -273,7 +276,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
                                                       &discarded_samples_in_uretprobes_counter);
 
   uint64_t dyn_size = event.data.dyn_size;
-  uint64_t sp = event.data.regs->sp;
+  uint64_t sp = event.data.GetRegisters().sp;
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_stack_slices,
@@ -1025,7 +1028,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserSpaceStack) {
   PerfEvent{std::move(user_stack_event)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
-  uint64_t sp = event.data.regs->sp;
+  uint64_t sp = event.data.GetRegisters().sp;
   uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
@@ -1132,7 +1135,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
   PerfEvent{std::move(user_stack_event_new)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
-  uint64_t sp = event.data.regs->sp;
+  uint64_t sp = event.data.GetRegisters().sp;
   uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
@@ -1240,7 +1243,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
   PerfEvent{std::move(user_stack_event_other_thread)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
-  uint64_t sp = event.data.regs->sp;
+  uint64_t sp = event.data.GetRegisters().sp;
   uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
@@ -1349,7 +1352,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
   PerfEvent{std::move(user_stack_event2)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
-  uint64_t sp = event.data.regs->sp;
+  uint64_t sp = event.data.GetRegisters().sp;
   uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 

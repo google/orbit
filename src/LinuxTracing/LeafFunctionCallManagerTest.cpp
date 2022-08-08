@@ -47,6 +47,9 @@ namespace orbit_linux_tracing {
 
 namespace {
 
+constexpr uint64_t kTotalNumOfRegisters =
+    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
 class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
   MOCK_METHOD(std::shared_ptr<unwindstack::MapInfo>, Find, (uint64_t), (override));
@@ -152,12 +155,16 @@ CallchainSamplePerfEventData BuildFakeCallchainSamplePerfEventData(
   CallchainSamplePerfEventData event_data{
       .pid = 10,
       .tid = 11,
-      .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+      .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
       .data = make_unique_for_overwrite<uint8_t[]>(13)};
+
   event_data.SetIps(callchain);
+
   if (callchain.size() > 1) {
     // Set the first non-kernel address as IP.
-    event_data.regs->ip = callchain[1];
+    perf_event_sample_regs_user_all regs{};
+    regs.ip = callchain[1];
+    std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
   }
   return event_data;
 }
@@ -173,9 +180,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = 2 * kStackDumpSize;
-  event_data.regs->sp = 0;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -186,9 +195,9 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   // The stack dump is too small, so we are only able to unwind the instruction
   // pointer.
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
-  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = event_data.regs->sp;
-  libunwindstack_regs.set_pc(event_data.regs->ip);
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = event_data.GetRegisters().sp;
+  libunwindstack_regs.set_pc(event_data.GetRegisters().ip);
 
   std::vector<StackSliceView> actual_stack_slices;
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
@@ -205,7 +214,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   // to read out of bounds.
   EXPECT_THAT(actual_stack_slices,
               ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
+                                         Eq(event_data.GetRegisters().sp)),
                                 Property("size", &StackSliceView::size, Eq(kStackDumpSize)),
                                 Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
@@ -221,9 +230,11 @@ TEST_F(
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize * 2;
-  event_data.regs->sp = 0;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -234,7 +245,7 @@ TEST_F(
   // The stack dump is too small to fully contain the caller's frame, but large
   // enough to actually unwind the caller successfully.
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = kStackDumpSize;
   libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
@@ -254,7 +265,7 @@ TEST_F(
   // to read out of bounds.
   EXPECT_THAT(actual_stack_slices,
               ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
+                                         Eq(event_data.GetRegisters().sp)),
                                 Property("size", &StackSliceView::size, Eq(kStackDumpSize)),
                                 Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(
@@ -273,9 +284,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = 2 * kStackDumpSize;
-  event_data.regs->sp = 0;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -299,9 +312,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = 2 * kStackDumpSize;
-  event_data.regs->sp = 0;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -324,9 +339,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize / 2;
-  event_data.regs->sp = 10;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -335,7 +352,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
       .WillOnce(Return(std::make_optional<bool>(false)));
 
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kNonExecutableMapsStart);
 
@@ -352,11 +369,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
   // However, we should also support empty callstacks and treat them as unwinding error.
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
 
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 
@@ -370,7 +388,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
 
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kNonExecutableMapsStart);
 
@@ -389,11 +407,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -407,9 +426,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   // bp < sp indicates that bp was used as general purpose register
-  event_data.regs->bp = 1;
-  event_data.regs->sp = 10;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 1;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -425,8 +446,8 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize / 10;
-  event_data.regs->sp = 10;
+  event_data.regs.get()[6] = kStackDumpSize / 10;
+  event_data.regs.get()[7] = 10;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -435,7 +456,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
       .WillOnce(Return(std::make_optional<bool>(false)));
 
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp - 10;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp - 10;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2);
 
@@ -451,11 +472,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
 
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -469,9 +491,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize / 2;
-  event_data.regs->sp = 10;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -482,7 +506,7 @@ TEST_F(LeafFunctionCallManagerTest,
   // When libunwindstack reports a different, but valid, rbp after unwinding,
   // the innermost function has frame pointers.
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp + 10;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp + 10;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2);
 
@@ -498,11 +522,12 @@ TEST_F(LeafFunctionCallManagerTest,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
 
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
 
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
@@ -516,9 +541,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize / 2;
-  event_data.regs->sp = 10;
-  event_data.regs->ip = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -527,7 +554,7 @@ TEST_F(LeafFunctionCallManagerTest,
       .WillOnce(Return(std::make_optional<bool>(false)));
 
   unwindstack::RegsX86_64 libunwindstack_regs{};
-  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.GetRegisters().bp;
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
@@ -545,11 +572,12 @@ TEST_F(LeafFunctionCallManagerTest,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
 
   EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
-                                         Eq(event_data.regs->sp)),
-                                Property("size", &StackSliceView::size,
-                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
-                                Property("data", &StackSliceView::data, NotNull()))));
+              ElementsAre(AllOf(
+                  Property("start_address", &StackSliceView::start_address,
+                           Eq(event_data.GetRegisters().sp)),
+                  Property("size", &StackSliceView::size,
+                           Eq(event_data.GetRegisters().bp - event_data.GetRegisters().sp + 16)),
+                  Property("data", &StackSliceView::data, NotNull()))));
 
   EXPECT_THAT(
       event_data.CopyOfIpsAsVector(),

@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_PERF_EVENT_H_
 #define LINUX_TRACING_PERF_EVENT_H_
 
+#include <absl/base/casts.h>
 #include <asm/perf_regs.h>
 #include <string.h>
 #include <sys/types.h>
@@ -63,8 +64,11 @@ struct DiscardedPerfEventData {
 using DiscardedPerfEvent = TypedPerfEvent<DiscardedPerfEventData>;
 
 struct StackSamplePerfEventData {
-  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the
@@ -75,7 +79,7 @@ struct StackSamplePerfEventData {
 
   pid_t pid;
   pid_t tid;
-  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  std::unique_ptr<uint64_t[]> regs;
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
 };
@@ -84,8 +88,11 @@ using StackSamplePerfEvent = TypedPerfEvent<StackSamplePerfEventData>;
 struct CallchainSamplePerfEventData {
   [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
   [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
-  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
-    return perf_event_sample_regs_user_all_to_register_array(*regs);
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   void SetIps(const std::vector<uint64_t>& new_ips) const {
@@ -103,7 +110,7 @@ struct CallchainSamplePerfEventData {
   // LeafFunctionCallManager::PatchCallerOfLeafFunction.
   mutable uint64_t ips_size;
   mutable std::unique_ptr<uint64_t[]> ips;
-  std::unique_ptr<perf_event_sample_regs_user_all> regs;
+  std::unique_ptr<uint64_t[]> regs;
   std::unique_ptr<uint8_t[]> data;
 };
 using CallchainSamplePerfEvent = TypedPerfEvent<CallchainSamplePerfEventData>;

@@ -52,9 +52,9 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   ORBIT_CHECK(current_maps != nullptr);
   ORBIT_CHECK(unwinder != nullptr);
 
-  const uint64_t rbp = event_data->GetRegisters()[PERF_REG_X86_BP];
-  const uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
-  const uint64_t rip = event_data->GetRegisters()[PERF_REG_X86_IP];
+  const uint64_t rbp = event_data->GetRegisters().bp;
+  const uint64_t rsp = event_data->GetRegisters().sp;
+  const uint64_t rip = event_data->GetRegisters().ip;
 
   if (rbp < rsp) {
     return Callstack::kFramePointerUnwindingError;
@@ -78,11 +78,12 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   // include the previous frame pointer and the return address) for unwinding. If $rbp does not
   // change from unwinding, we need to patch in the pc after unwinding.
   const uint64_t stack_size = rbp - rsp + 16;
-  StackSliceView stack_slice{event_data->regs->sp, std::min<uint64_t>(stack_size, stack_dump_size_),
+  StackSliceView stack_slice{event_data->GetRegisters().sp,
+                             std::min<uint64_t>(stack_size, stack_dump_size_),
                              event_data->data.get()};
   std::vector<StackSliceView> stack_slices{stack_slice};
   const LibunwindstackResult& libunwindstack_result =
-      unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegisters(),
+      unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegistersAsArray(),
                        stack_slices, true, /*max_frames=*/1);
 
   // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. we don't

@@ -18,11 +18,161 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "PerfEvent.h"
 #include "PerfEventOrderedStream.h"
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"
 
 namespace orbit_linux_tracing {
+
+// This struct is supposed to resemble the perf_record_sample, all commented out
+// fields are fields we don't currently use anywhere. This is only used to communicate
+// between ConsumeRecordSample and the rest of the consumer functions
+struct PerfRecordSample {
+  perf_event_header header;
+
+  uint64_t sample_id; /* if PERF_SAMPLE_IDENTIFIER */
+  uint64_t ip;        /* if PERF_SAMPLE_IP */
+  uint32_t pid, tid;  /* if PERF_SAMPLE_TID */
+  uint64_t time;      /* if PERF_SAMPLE_TIME */
+  uint64_t addr;      /* if PERF_SAMPLE_ADDR */
+  uint64_t id;        /* if PERF_SAMPLE_ID */
+  uint64_t stream_id; /* if PERF_SAMPLE_STREAM_ID */
+  uint32_t cpu, res;  /* if PERF_SAMPLE_CPU */
+  uint64_t period;    /* if PERF_SAMPLE_PERIOD */
+
+  // struct read_format v;                 /* if PERF_SAMPLE_READ */
+
+  uint64_t ips_size;               /* if PERF_SAMPLE_CALLCHAIN */
+  std::unique_ptr<uint64_t[]> ips; /* if PERF_SAMPLE_CALLCHAIN */
+
+  uint32_t raw_size;                   /* if PERF_SAMPLE_RAW */
+  std::unique_ptr<uint8_t[]> raw_data; /* if PERF_SAMPLE_RAW */
+
+  // uint64_t bnr;                        /* if PERF_SAMPLE_BRANCH_STACK */
+  // struct perf_branch_entry lbr[bnr];   /* if PERF_SAMPLE_BRANCH_STACK */
+
+  uint64_t abi;                     /* if PERF_SAMPLE_REGS_USER */
+  std::unique_ptr<uint64_t[]> regs; /* if PERF_SAMPLE_REGS_USER */
+
+  uint64_t stack_size;                   /* if PERF_SAMPLE_STACK_USER */
+  std::unique_ptr<uint8_t[]> stack_data; /* if PERF_SAMPLE_STACK_USER */
+  uint64_t dyn_size;                     /* if PERF_SAMPLE_STACK_USER && size != 0 */
+
+  // uint64_t weight;                     /* if PERF_SAMPLE_WEIGHT */
+  // uint64_t data_src;                   /* if PERF_SAMPLE_DATA_SRC */
+  // uint64_t transaction;                /* if PERF_SAMPLE_TRANSACTION */
+  // uint64_t abi;                        /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t regs[weight(mask)];         /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t phys_addr;                  /* if PERF_SAMPLE_PHYS_ADDR */
+  // uint64_t cgroup;                     /* if PERF_SAMPLE_CGROUP */
+};
+
+[[nodiscard]] [[maybe_unused]] static PerfRecordSample ConsumeRecordSample(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, perf_event_attr flags) {
+  ORBIT_CHECK(header.size >
+              sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+
+  PerfRecordSample event{};
+  int current_offset = 0;
+
+  ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
+  current_offset += sizeof(perf_event_header);
+
+  if (flags.sample_type & PERF_SAMPLE_IDENTIFIER) {
+    ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_IP) {
+    ring_buffer->ReadRawAtOffset(&event.ip, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_TID) {
+    ring_buffer->ReadRawAtOffset(&event.pid, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+    ring_buffer->ReadRawAtOffset(&event.tid, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_TIME) {
+    ring_buffer->ReadRawAtOffset(&event.time, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_ADDR) {
+    ring_buffer->ReadRawAtOffset(&event.addr, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_ID) {
+    ring_buffer->ReadRawAtOffset(&event.id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_STREAM_ID) {
+    ring_buffer->ReadRawAtOffset(&event.stream_id, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_CPU) {
+    ring_buffer->ReadRawAtOffset(&event.cpu, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+    ring_buffer->ReadRawAtOffset(&event.res, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_PERIOD) {
+    ring_buffer->ReadRawAtOffset(&event.period, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_CALLCHAIN) {
+    ring_buffer->ReadRawAtOffset(&event.ips_size, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+    event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
+    ring_buffer->ReadRawAtOffset(event.ips.get(), current_offset,
+                                 event.ips_size * sizeof(uint64_t));
+    current_offset += event.ips_size * sizeof(uint64_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_RAW) {
+    ring_buffer->ReadRawAtOffset(&event.raw_size, current_offset, sizeof(uint32_t));
+    current_offset += sizeof(uint32_t);
+    event.raw_data = make_unique_for_overwrite<uint8_t[]>(event.raw_size);
+    ring_buffer->ReadRawAtOffset(event.raw_data.get(), current_offset,
+                                 event.raw_size * sizeof(uint8_t));
+    current_offset += event.raw_size * sizeof(uint8_t);
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_REGS_USER) {
+    ring_buffer->ReadRawAtOffset(&event.abi, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+    if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
+      const int num_of_regs = std::bitset<64>(flags.sample_regs_user).count();
+      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs);
+      ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
+                                   num_of_regs * sizeof(uint64_t));
+      current_offset += num_of_regs * sizeof(uint64_t);
+    }
+  }
+
+  if (flags.sample_type & PERF_SAMPLE_STACK_USER) {
+    ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
+    event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.stack_size);
+    ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
+                                 event.stack_size * sizeof(uint8_t));
+    current_offset += event.stack_size * sizeof(uint8_t);
+    if (event.stack_size != 0u) {
+      ring_buffer->ReadRawAtOffset(&event.dyn_size, current_offset, sizeof(uint64_t));
+      current_offset += sizeof(uint64_t);
+    }
+  }
+
+  return event;
+}
 
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
                          perf_event_sample_id_tid_time_streamid_cpu* sample_id) {
@@ -177,6 +327,9 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
   ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
 
+  constexpr uint64_t kTotalNumOfRegisters =
+      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
   StackSamplePerfEvent event{
       .timestamp = sample_id.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -184,12 +337,14 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
           {
               .pid = static_cast<pid_t>(sample_id.pid),
               .tid = static_cast<pid_t>(sample_id.tid),
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .dyn_size = dyn_size,
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
 
+  ring_buffer->ReadRawAtOffset(event.data.regs.get(), offsetof(perf_event_stack_sample_fixed, regs),
+                               kTotalNumOfRegisters * sizeof(uint64_t));
   ring_buffer->ReadValueAtOffset(event.data.regs.get(),
                                  offsetof(perf_event_stack_sample_fixed, regs));
   ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
@@ -224,7 +379,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
 
   const size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
                                sizeof(perf_event_callchain_sample_fixed::nr);
-  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes;
+  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes + sizeof(uint64_t);
   // Note that perf_event_sample_regs_user_all contains abi and the regs array.
   const size_t offset_of_size =
       offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
@@ -240,6 +395,9 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   ring_buffer->ReadValueAtOffset(&sample_id,
                                  offsetof(perf_event_callchain_sample_fixed, sample_id));
 
+  constexpr uint64_t kTotalNumOfRegisters =
+      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+
   CallchainSamplePerfEvent event{
       .timestamp = sample_id.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -249,7 +407,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
               .tid = static_cast<pid_t>(sample_id.tid),
               .ips_size = nr,
               .ips = make_unique_for_overwrite<uint64_t[]>(nr),
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };

@@ -5,6 +5,8 @@
 #ifndef LINUX_TRACING_PERF_EVENT_RECORDS_H_
 #define LINUX_TRACING_PERF_EVENT_RECORDS_H_
 
+#include <cstdint>
+
 #include "PerfEventOpen.h"
 
 namespace orbit_linux_tracing {
@@ -40,7 +42,6 @@ struct __attribute__((__packed__)) perf_event_fork_exit {
 
 // This struct must be in sync with the SAMPLE_REGS_USER_ALL in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
-  uint64_t abi;
   uint64_t ax;
   uint64_t bx;
   uint64_t cx;
@@ -104,6 +105,7 @@ struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {
 struct __attribute__((__packed__)) perf_event_stack_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  uint64_t abi;
   perf_event_sample_regs_user_all regs;
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
