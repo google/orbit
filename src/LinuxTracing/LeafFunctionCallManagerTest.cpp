@@ -149,16 +149,19 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
 
 CallchainSamplePerfEventData BuildFakeCallchainSamplePerfEventData(
     const std::vector<uint64_t>& callchain) {
-  CallchainSamplePerfEventData event_data{.pid = 10,
-                                          .tid = 11,
-                                          .regs = make_unique_for_overwrite<uint64_t[]>(20),
-                                          .data = make_unique_for_overwrite<uint8_t[]>(13)};
+  CallchainSamplePerfEventData event_data{
+      .pid = 10,
+      .tid = 11,
+      .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
+      .data = make_unique_for_overwrite<uint8_t[]>(13)};
 
   event_data.SetIps(callchain);
 
   if (callchain.size() > 1) {
     // Set the first non-kernel address as IP.
-    event_data.regs.get()[8] = callchain[1];
+    perf_event_sample_regs_user_all regs{};
+    regs.ip = callchain[1];
+    std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
   }
   return event_data;
 }
@@ -174,9 +177,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = 2 * kStackDumpSize;
-  event_data.regs.get()[7] = 0;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -222,9 +227,11 @@ TEST_F(
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = 2 * kStackDumpSize;
-  event_data.regs.get()[7] = 0;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -274,9 +281,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = 2 * kStackDumpSize;
-  event_data.regs.get()[7] = 0;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -300,9 +309,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = 2 * kStackDumpSize;
-  event_data.regs.get()[7] = 0;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 2 * kStackDumpSize;
+  regs.sp = 0;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -325,9 +336,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = kStackDumpSize / 2;
-  event_data.regs.get()[7] = 10;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -410,9 +423,11 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   // bp < sp indicates that bp was used as general purpose register
-  event_data.regs.get()[6] = 1;
-  event_data.regs.get()[7] = 10;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = 1;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -473,9 +488,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = kStackDumpSize / 2;
-  event_data.regs.get()[7] = 10;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -521,9 +538,11 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs.get()[6] = kStackDumpSize / 2;
-  event_data.regs.get()[7] = 10;
-  event_data.regs.get()[8] = kTargetAddress1;
+  perf_event_sample_regs_user_all regs{};
+  regs.bp = kStackDumpSize / 2;
+  regs.sp = 10;
+  regs.ip = kTargetAddress1;
+  std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));

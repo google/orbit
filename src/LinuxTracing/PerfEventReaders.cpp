@@ -25,16 +25,59 @@
 
 namespace orbit_linux_tracing {
 
+// This struct is supposed to resemble the perf_record_sample, all commented out
+// fields are fields we don't currently use anywhere. This is only used to communicate
+// between ConsumeRecordSample and the rest of the consumer functions
+struct PerfRecordSample {
+  perf_event_header header;
+
+  uint64_t sample_id; /* if PERF_SAMPLE_IDENTIFIER */
+  uint64_t ip;        /* if PERF_SAMPLE_IP */
+  uint32_t pid, tid;  /* if PERF_SAMPLE_TID */
+  uint64_t time;      /* if PERF_SAMPLE_TIME */
+  uint64_t addr;      /* if PERF_SAMPLE_ADDR */
+  uint64_t id;        /* if PERF_SAMPLE_ID */
+  uint64_t stream_id; /* if PERF_SAMPLE_STREAM_ID */
+  uint32_t cpu, res;  /* if PERF_SAMPLE_CPU */
+  uint64_t period;    /* if PERF_SAMPLE_PERIOD */
+
+  // struct read_format v;                 /* if PERF_SAMPLE_READ */
+
+  uint64_t ips_size;               /* if PERF_SAMPLE_CALLCHAIN */
+  std::unique_ptr<uint64_t[]> ips; /* if PERF_SAMPLE_CALLCHAIN */
+
+  uint32_t raw_size;                   /* if PERF_SAMPLE_RAW */
+  std::unique_ptr<uint8_t[]> raw_data; /* if PERF_SAMPLE_RAW */
+
+  // uint64_t bnr;                        /* if PERF_SAMPLE_BRANCH_STACK */
+  // struct perf_branch_entry lbr[bnr];   /* if PERF_SAMPLE_BRANCH_STACK */
+
+  uint64_t abi;                     /* if PERF_SAMPLE_REGS_USER */
+  std::unique_ptr<uint64_t[]> regs; /* if PERF_SAMPLE_REGS_USER */
+
+  uint64_t stack_size;                   /* if PERF_SAMPLE_STACK_USER */
+  std::unique_ptr<uint8_t[]> stack_data; /* if PERF_SAMPLE_STACK_USER */
+  uint64_t dyn_size;                     /* if PERF_SAMPLE_STACK_USER && size != 0 */
+
+  // uint64_t weight;                     /* if PERF_SAMPLE_WEIGHT */
+  // uint64_t data_src;                   /* if PERF_SAMPLE_DATA_SRC */
+  // uint64_t transaction;                /* if PERF_SAMPLE_TRANSACTION */
+  // uint64_t abi;                        /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t regs[weight(mask)];         /* if PERF_SAMPLE_REGS_INTR */
+  // uint64_t phys_addr;                  /* if PERF_SAMPLE_PHYS_ADDR */
+  // uint64_t cgroup;                     /* if PERF_SAMPLE_CGROUP */
+};
+
 [[nodiscard]] [[maybe_unused]] static PerfRecordSample ConsumeRecordSample(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header, perf_event_attr flags) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
   PerfRecordSample event{};
+  int current_offset = 0;
 
   ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
-
-  int current_offset = sizeof(perf_event_header);
+  current_offset += sizeof(perf_event_header);
 
   if (flags.sample_type & PERF_SAMPLE_IDENTIFIER) {
     ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
@@ -291,14 +334,14 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
           {
               .pid = static_cast<pid_t>(sample_id.pid),
               .tid = static_cast<pid_t>(sample_id.tid),
-              .regs = make_unique_for_overwrite<uint64_t[]>(20),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .dyn_size = dyn_size,
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
 
   ring_buffer->ReadRawAtOffset(event.data.regs.get(), offsetof(perf_event_stack_sample_fixed, regs),
-                               20 * sizeof(uint64_t));
+                               kTotalNumOfRegisters * sizeof(uint64_t));
   ring_buffer->ReadValueAtOffset(event.data.regs.get(),
                                  offsetof(perf_event_stack_sample_fixed, regs));
   ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
@@ -358,7 +401,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
               .tid = static_cast<pid_t>(sample_id.tid),
               .ips_size = nr,
               .ips = make_unique_for_overwrite<uint64_t[]>(nr),
-              .regs = make_unique_for_overwrite<uint64_t[]>(20),
+              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
               .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
