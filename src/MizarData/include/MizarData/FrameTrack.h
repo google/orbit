@@ -19,10 +19,6 @@ using FrameTrackId =
     orbit_base::Typedef<FrameTrackIdTag, std::variant<orbit_client_data::ScopeId,
                                                       orbit_grpc_protos::PresentEvent::Source>>;
 
-struct FrameStartNsTag {};
-// Absolute timestamp of the capture start in nanos
-using FrameStartNs = orbit_base::Typedef<FrameStartNsTag, uint64_t>;
-
 struct FrameTrackInfoTag {};
 // The class describes a frame track
 using FrameTrackInfo =

@@ -10,6 +10,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
 #include "TestUtils/ContainerHelpers.h"
@@ -18,6 +19,8 @@ using ::orbit_client_data::ScopeId;
 using ::orbit_client_data::ScopeInfo;
 using ::orbit_client_protos::TimerInfo;
 using ::orbit_grpc_protos::PresentEvent;
+using ::orbit_mizar_base::MakeTimestampNs;
+using ::orbit_mizar_base::TimestampNs;
 using ::orbit_test_utils::MakeMap;
 using ::testing::ElementsAreArray;
 using ::testing::Invoke;
@@ -54,19 +57,20 @@ static const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
     {"Foo", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
     {"Bar", orbit_client_data::ScopeType::kApiScope}};
 
-static const std::vector<FrameStartNs> kFirstScopeStarts = {FrameStartNs(10), FrameStartNs(20)};
-static const std::vector<FrameStartNs> kSecondScopeStarts = {FrameStartNs(100), FrameStartNs(200),
-                                                             FrameStartNs(300)};
-static const std::vector<std::vector<FrameStartNs>> kScopeFrameTrackStartLists = {
+static const std::vector<TimestampNs> kFirstScopeStarts = {MakeTimestampNs(10),
+                                                           MakeTimestampNs(20)};
+static const std::vector<TimestampNs> kSecondScopeStarts = {
+    MakeTimestampNs(100), MakeTimestampNs(200), MakeTimestampNs(300)};
+static const std::vector<std::vector<TimestampNs>> kScopeFrameTrackStartLists = {
     kFirstScopeStarts, kSecondScopeStarts};
 
-// Re-wrap the values form `FrameStartNs` into `TimerInfos`
-static std::vector<TimerInfo> ToTimerInfos(const std::vector<FrameStartNs>& starts) {
+// Re-wrap the values form `TimestampNs` into `TimerInfos`
+static std::vector<TimerInfo> ToTimerInfos(const std::vector<TimestampNs>& starts) {
   std::vector<TimerInfo> result;
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
-                 [](FrameStartNs start) {
+                 [](TimestampNs start) {
                    TimerInfo timer;
-                   timer.set_start(*start);
+                   timer.set_start(start->value);
                    return timer;
                  });
   return result;
@@ -90,20 +94,24 @@ static const absl::flat_hash_map<ScopeId, std::vector<const TimerInfo*>> kScopeI
                                                                   kSecondScopeTimerPtrs});
 static const absl::flat_hash_map<ScopeId, ScopeInfo> kScopeIdToInfo =
     MakeMap(kScopeIds, kScopeInfos);
-static const absl::flat_hash_map<ScopeInfo, std::vector<FrameStartNs>> kScopeInfoToFrameStarts =
+static const absl::flat_hash_map<ScopeInfo, std::vector<TimestampNs>> kScopeInfoToFrameStarts =
     MakeMap(kScopeInfos, kScopeFrameTrackStartLists);
 
-static const std::vector<FrameStartNs> kDxgiFrameStarts = {
-    FrameStartNs(1), FrameStartNs(2), FrameStartNs(4), FrameStartNs(10), FrameStartNs(20)};
-static const std::vector<FrameStartNs> kD3d9FrameStarts = {
-    FrameStartNs(10), FrameStartNs(20), FrameStartNs(40), FrameStartNs(100), FrameStartNs(200)};
+static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw) {
+  std::vector<TimestampNs> result;
+  absl::c_transform(raw, std::back_inserter(result), MakeTimestampNs);
+  return result;
+}
 
-static std::vector<PresentEvent> MakePresentEvent(const std::vector<FrameStartNs>& starts) {
+static const std::vector<TimestampNs> kDxgiFrameStarts = MakeTimestamps({1, 2, 4, 10, 20});
+static const std::vector<TimestampNs> kD3d9FrameStarts = MakeTimestamps({10, 20, 40, 100, 200});
+
+static std::vector<PresentEvent> MakePresentEvent(const std::vector<TimestampNs>& starts) {
   std::vector<PresentEvent> result;
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
-                 [](const FrameStartNs start) {
+                 [](const TimestampNs start) {
                    PresentEvent event;
-                   event.set_begin_timestamp_ns(*start);
+                   event.set_begin_timestamp_ns(start->value);
                    return event;
                  });
   return result;
@@ -112,9 +120,8 @@ static std::vector<PresentEvent> MakePresentEvent(const std::vector<FrameStartNs
 static const std::vector<PresentEvent::Source> kEtwSources = {PresentEvent::kDxgi,
                                                               PresentEvent::kD3d9};
 
-const absl::flat_hash_map<PresentEvent::Source, std::vector<FrameStartNs>> kEtwSourceToFrameStart =
-    MakeMap(kEtwSources,
-            std::vector<std::vector<FrameStartNs>>{kDxgiFrameStarts, kD3d9FrameStarts});
+const absl::flat_hash_map<PresentEvent::Source, std::vector<TimestampNs>> kEtwSourceToFrameStart =
+    MakeMap(kEtwSources, std::vector<std::vector<TimestampNs>>{kDxgiFrameStarts, kD3d9FrameStarts});
 const absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>>
     kEtwSourceToPresentEvent = MakeMap(
         kEtwSources, std::vector<std::vector<PresentEvent>>{MakePresentEvent(kDxgiFrameStarts),
@@ -156,26 +163,25 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
         }));
   }
 
-  void ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs min_start,
-                                                                 FrameStartNs max_start) {
+  void ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs min_start,
+                                                                 TimestampNs max_start) {
     for (const auto& [id, info] : frame_track_manager_.GetFrameTracks()) {
-      const std::vector<FrameStartNs> expected_frame_starts =
-          std::visit(orbit_base::overloaded{
-                         [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
-                         [min_start, max_start](PresentEvent::Source source) {
-                           std::vector<FrameStartNs> filtered_time_list;
-                           const std::vector<FrameStartNs> all_frame_starts =
-                               kEtwSourceToFrameStart.at(source);
-                           std::copy_if(std::begin(all_frame_starts), std::end(all_frame_starts),
-                                        std::back_inserter(filtered_time_list),
-                                        [min_start, max_start](FrameStartNs start) {
-                                          return min_start <= start && start <= max_start;
-                                        });
-                           return filtered_time_list;
-                         }},
-                     *info);
+      const std::vector<TimestampNs> expected_frame_starts = std::visit(
+          orbit_base::overloaded{
+              [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
+              [min_start, max_start](PresentEvent::Source source) {
+                std::vector<TimestampNs> filtered_time_list;
+                const std::vector<TimestampNs> all_frame_starts = kEtwSourceToFrameStart.at(source);
+                std::copy_if(std::begin(all_frame_starts), std::end(all_frame_starts),
+                             std::back_inserter(filtered_time_list),
+                             [min_start, max_start](TimestampNs start) {
+                               return min_start <= start && start <= max_start;
+                             });
+                return filtered_time_list;
+              }},
+          *info);
 
-      const std::vector<FrameStartNs> actual_frame_starts =
+      const std::vector<TimestampNs> actual_frame_starts =
           frame_track_manager_.GetFrameStarts(id, min_start, max_start);
       EXPECT_THAT(actual_frame_starts, ElementsAreArray(expected_frame_starts));
     }
@@ -210,7 +216,7 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForScopesA
 
   // Filtering of scopes w.r.t min/max timestamp is handles by Capture data, it is not covered
   // in the test, hence we just pass zeroes. The MockCaptureData ignores these anyway.
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(0), FrameStartNs(0));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0), MakeTimestampNs(0));
 }
 
 TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAndNoScopes) {
@@ -220,14 +226,22 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAnd
 
   // The arguments are chosen w.r.t the values used in kFirstScopeStarts, kSecondScopeStarts,
   // kDxgiFrameStarts and kD3d9FrameStarts
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(0), FrameStartNs(15));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(0), FrameStartNs(50));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(0), FrameStartNs(300));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(3), FrameStartNs(15));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(15), FrameStartNs(50));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(50), FrameStartNs(300));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(50), FrameStartNs(3000));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(1000), FrameStartNs(3000));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
+                                                            MakeTimestampNs(15));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
+                                                            MakeTimestampNs(50));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
+                                                            MakeTimestampNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(3),
+                                                            MakeTimestampNs(15));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(15),
+                                                            MakeTimestampNs(50));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(50),
+                                                            MakeTimestampNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(50),
+                                                            MakeTimestampNs(3000));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(1000),
+                                                            MakeTimestampNs(3000));
 }
 
 TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAndScopes) {
@@ -236,7 +250,8 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAnd
 
   ExpectGetFrameTracksIsCorrect(kScopeInfos, kEtwSources);
 
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs(0), FrameStartNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
+                                                            MakeTimestampNs(300));
 }
 
 }  // namespace orbit_mizar_data

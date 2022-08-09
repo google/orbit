@@ -7,12 +7,11 @@
 
 #include <utility>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
 #include "stdint.h"
 
 namespace orbit_mizar_base {
-
-struct RelativeTimestampTag : orbit_base::PlusTag<RelativeTimestampTag> {};
 
 // wraps `uint64_t` bears semantics of time in nanoseconds and implements a non-wrapping addition
 struct NonWrappingNanoseconds {
@@ -22,13 +21,44 @@ struct NonWrappingNanoseconds {
     return {sum};
   }
 
+  friend NonWrappingNanoseconds operator-(NonWrappingNanoseconds a, NonWrappingNanoseconds b) {
+    ORBIT_CHECK(a.value >= b.value);
+    return {a.value - b.value};
+  }
+
+  friend NonWrappingNanoseconds operator*(NonWrappingNanoseconds a, uint64_t times) {
+    if (std::numeric_limits<uint64_t>::max() / times < a.value) {
+      return {std::numeric_limits<uint64_t>::max()};
+    }
+    return {a.value * times};
+  }
+
+  friend bool operator<(NonWrappingNanoseconds a, NonWrappingNanoseconds b) {
+    return a.value < b.value;
+  }
+
+  friend bool operator==(NonWrappingNanoseconds a, NonWrappingNanoseconds b) {
+    return a.value == b.value;
+  }
+
   uint64_t value;
 };
+
+struct RelativeTimestampTag : orbit_base::PlusTag<RelativeTimestampTag>,
+                              orbit_base::TimesScalarTag<uint64_t> {};
 
 // Represents the time passed since the capture start
 using RelativeTimeNs = orbit_base::Typedef<RelativeTimestampTag, NonWrappingNanoseconds>;
 
 constexpr RelativeTimeNs MakeRelativeTimeNs(uint64_t t) { return RelativeTimeNs(std::in_place, t); }
+
+struct TimestampNsTag : orbit_base::MinusTag<RelativeTimestampTag>,
+                        orbit_base::PlusTag<RelativeTimestampTag> {};
+
+// Absolute timestamp of the capture start in nanos
+using TimestampNs = orbit_base::Typedef<TimestampNsTag, NonWrappingNanoseconds>;
+
+constexpr TimestampNs MakeTimestampNs(uint64_t t) { return TimestampNs(std::in_place, t); }
 
 }  // namespace orbit_mizar_base
 
