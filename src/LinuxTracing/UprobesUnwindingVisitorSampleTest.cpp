@@ -215,7 +215,7 @@ StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
           {
               .pid = 10,
               .tid = 11,
-              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
+              .regs = std::make_unique<uint64_t[]>(kTotalNumOfRegisters),
               .dyn_size = kStackSize,
               .data = std::make_unique<uint8_t[]>(kStackSize),
           },
@@ -230,7 +230,7 @@ CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uin
           {
               .pid = 10,
               .tid = 11,
-              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
+              .regs = std::make_unique<uint64_t[]>(kTotalNumOfRegisters),
               .data = std::make_unique<uint8_t[]>(kStackSize),
           },
   };
