@@ -135,16 +135,29 @@ class Typedef {
 template <typename Tag>
 class Typedef<Tag, void> {};
 
-// When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports `operator+`
-struct PlusTag {};
+// When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports `operator+` with other
+// `Typedef<OtherSummandTag, T>`. The result is wrapped into a Typedef of tag `Tag`.
+template <typename OtherSummandTag>
+struct PlusTag {
+  using PlusOtherSummandTag = OtherSummandTag;
+};
 
 template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
           typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
           typename = std::enable_if_t<
-              std::is_same_v<typename FirstDecayed::Tag, typename SecondDecayed::Tag>>,
-          typename = std::enable_if_t<std::is_base_of_v<PlusTag, Tag>>>
+              std::is_same_v<typename Tag::PlusOtherSummandTag, typename SecondDecayed::Tag>>>
 auto operator+(First&& lhs, Second&& rhs) {
   return Typedef<Tag, decltype(*std::forward<First>(lhs) + *std::forward<Second>(rhs))>(
+      *std::forward<First>(lhs) + *std::forward<Second>(rhs));
+};
+
+template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
+          typename SecondDecayed = std::decay_t<Second>,
+          typename FirstTag = typename FirstDecayed::Tag,
+          typename SecondTag = typename SecondDecayed::Tag,
+          typename = std::enable_if_t<!std::is_base_of_v<PlusTag<SecondTag>, FirstTag>>>
+auto operator+(First&& lhs, Second&& rhs) {
+  return Typedef<SecondTag, decltype(*std::forward<First>(lhs) + *std::forward<Second>(rhs))>(
       *std::forward<First>(lhs) + *std::forward<Second>(rhs));
 };
 
