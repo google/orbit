@@ -29,7 +29,7 @@
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
-#include "MizarData/MizarDataProvider.h" 
+#include "MizarData/MizarDataProvider.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {

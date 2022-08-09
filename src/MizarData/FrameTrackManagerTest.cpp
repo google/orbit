@@ -57,10 +57,14 @@ static const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
     {"Foo", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
     {"Bar", orbit_client_data::ScopeType::kApiScope}};
 
-static const std::vector<TimestampNs> kFirstScopeStarts = {MakeTimestampNs(10),
-                                                           MakeTimestampNs(20)};
-static const std::vector<TimestampNs> kSecondScopeStarts = {
-    MakeTimestampNs(100), MakeTimestampNs(200), MakeTimestampNs(300)};
+static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw) {
+  std::vector<TimestampNs> result;
+  absl::c_transform(raw, std::back_inserter(result), MakeTimestampNs);
+  return result;
+}
+
+static const std::vector<TimestampNs> kFirstScopeStarts = MakeTimestamps({10, 20});
+static const std::vector<TimestampNs> kSecondScopeStarts = MakeTimestamps({100, 200, 300});
 static const std::vector<std::vector<TimestampNs>> kScopeFrameTrackStartLists = {
     kFirstScopeStarts, kSecondScopeStarts};
 
@@ -96,12 +100,6 @@ static const absl::flat_hash_map<ScopeId, ScopeInfo> kScopeIdToInfo =
     MakeMap(kScopeIds, kScopeInfos);
 static const absl::flat_hash_map<ScopeInfo, std::vector<TimestampNs>> kScopeInfoToFrameStarts =
     MakeMap(kScopeInfos, kScopeFrameTrackStartLists);
-
-static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw) {
-  std::vector<TimestampNs> result;
-  absl::c_transform(raw, std::back_inserter(result), MakeTimestampNs);
-  return result;
-}
 
 static const std::vector<TimestampNs> kDxgiFrameStarts = MakeTimestamps({1, 2, 4, 10, 20});
 static const std::vector<TimestampNs> kD3d9FrameStarts = MakeTimestamps({10, 20, 40, 100, 200});
