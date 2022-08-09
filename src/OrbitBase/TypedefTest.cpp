@@ -422,6 +422,20 @@ TEST(Typedef, WrapperWithTimesScalarIntTimesFloat) {
   }
 }
 
+TEST(Typedef, WrapperWithTimesScalarIntTimesLValueFloat) {
+  WrapperWithTimesScalar<int, double> wrapped(2);
+  constexpr double kScalar = 0.5;
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * kScalar;
+    EXPECT_EQ(*half_of_wrapped, 2 * kScalar);
+  }
+
+  {
+    WrapperWithTimesScalar<double, double> half_of_wrapped = kScalar * wrapped;
+    EXPECT_EQ(*half_of_wrapped, 2 * kScalar);
+  }
+}
+
 TEST(Typedef, WrapperWithTimesScalarMoveOnly) {
   {
     auto times = std::make_unique<int>(kBValue);
