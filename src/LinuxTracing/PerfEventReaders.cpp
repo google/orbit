@@ -296,11 +296,11 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
 
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  perf_event_attr flags{};
-
-  flags.sample_type =
-      PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
-  flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  const perf_event_attr flags{
+      .sample_type =
+          PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+  };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
@@ -323,11 +323,11 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
 
 CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                          const perf_event_header& header) {
-  perf_event_attr flags{};
-
-  flags.sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
-                      SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
-  flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  const perf_event_attr flags{
+      .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
+                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+  };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
@@ -407,10 +407,9 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
 
 GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header) {
-  perf_event_attr flags{};
-
-  flags.sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
-  flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  const perf_event_attr flags{
+      .sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
@@ -431,14 +430,14 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 
 SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  perf_event_attr flags{};
-
-  flags.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
+  const perf_event_attr flags{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
   sched_wakeup_tracepoint_fixed sched_wakeup;
-  memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
   return SchedWakeupPerfEvent{
