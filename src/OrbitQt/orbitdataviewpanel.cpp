@@ -40,6 +40,10 @@ void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
   }
 
   data_view->SetUiFilterCallback([this](const std::string& filter) { SetFilter(filter.c_str()); });
+  connect(ui_->FilterLineEdit, &QLineEdit::textChanged, this,
+          &OrbitDataViewPanel::OnFilterLineEditTextChanged);
+  connect(ui_->refreshButton, &QPushButton::clicked, this,
+          &OrbitDataViewPanel::OnRefreshButtonClicked);
 }
 
 void OrbitDataViewPanel::Deinitialize() { ui_->treeView->Deinitialize(); }
