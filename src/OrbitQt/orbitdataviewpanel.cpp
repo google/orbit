@@ -15,6 +15,10 @@ OrbitDataViewPanel::OrbitDataViewPanel(QWidget* parent)
     : QWidget(parent), ui_(new Ui::OrbitDataViewPanel) {
   ui_->setupUi(this);
   ui_->label->hide();
+  connect(ui_->FilterLineEdit, &QLineEdit::textChanged, this,
+          &OrbitDataViewPanel::OnFilterLineEditTextChanged);
+  connect(ui_->refreshButton, &QPushButton::clicked, this,
+          &OrbitDataViewPanel::OnRefreshButtonClicked);
 }
 
 OrbitDataViewPanel::~OrbitDataViewPanel() { delete ui_; }
