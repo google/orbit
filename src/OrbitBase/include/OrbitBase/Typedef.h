@@ -136,7 +136,7 @@ template <typename Tag>
 class Typedef<Tag, void> {};
 
 // When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports `operator+` with other
-// `Typedef<OtherSummandTag, T>`. The result is wrapped into `Typedef<Tag, T>`.
+// `Typedef<OtherSummandTag, T>`. The result is wrapped into a Typedef of tag `Tag`.
 template <typename OtherSummandTag>
 struct PlusTag {
   using PlusOtherSummandTag = OtherSummandTag;
@@ -157,7 +157,8 @@ template <typename First, typename Second, typename FirstDecayed = std::decay_t<
           typename SecondTag = typename SecondDecayed::Tag,
           typename = std::enable_if_t<!std::is_base_of_v<PlusTag<SecondTag>, FirstTag>>>
 auto operator+(First&& lhs, Second&& rhs) {
-  return std::forward<Second>(rhs) + std::forward<First>(lhs);
+  return Typedef<SecondTag, decltype(*std::forward<First>(lhs) + *std::forward<Second>(rhs))>(
+      *std::forward<First>(lhs) + *std::forward<Second>(rhs));
 };
 
 // When the `Tag` inherits from the struct, the `Typedef<Tag, T>` `operator-`. The result will be
