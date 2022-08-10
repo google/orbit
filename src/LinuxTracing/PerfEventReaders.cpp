@@ -296,9 +296,8 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
 
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  // The flags here should be in sync with stack_sample_event_open in
-  // PerfEventOpen.
-  // TODO(): use the same perf_event_attr object from stack_sample_event_open
+  // The flags here are in sync with stack_sample_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from stack_sample_event_open
   const perf_event_attr flags{
       .sample_type =
           PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
@@ -326,9 +325,8 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
 
 CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                          const perf_event_header& header) {
-  // The flags here should be in sync with callchain_sample_event_open in
-  // PerfEventOpen.
-  // TODO(): use the same perf_event_attr object from callchain_sample_event_open
+  // The flags here are in sync with callchain_sample_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from callchain_sample_event_open
   const perf_event_attr flags{
       .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
                      SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
@@ -413,9 +411,8 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
 
 GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header) {
-  // The flags here should be in sync with generic_event_attr in
-  // PerfEventOpen.
-  // TODO(): use the same perf_event_attr object from generic_event_attr
+  // The flags here are in sync with generic_event_attr in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from generic_event_attr
   const perf_event_attr flags{
       .sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
   };
@@ -439,9 +436,8 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 
 SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  // The flags here should be in sync with tracepoint_event_open in
-  // PerfEventOpen.
-  // TODO(): use the same perf_event_attr object from tracepoint_event_open
+  // The flags here are in sync with tracepoint_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from tracepoint_event_open
   const perf_event_attr flags{
       .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
   };
