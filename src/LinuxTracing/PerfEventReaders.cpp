@@ -68,8 +68,9 @@ struct PerfRecordSample {
   // uint64_t cgroup;                     /* if PERF_SAMPLE_CGROUP */
 };
 
-[[nodiscard]] [[maybe_unused]] static PerfRecordSample ConsumeRecordSample(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, perf_event_attr flags) {
+[[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header,
+                                                          perf_event_attr flags) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
@@ -295,127 +296,58 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
 
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  // We expect the following layout of the perf event:
-  //  struct {
-  //    struct perf_event_header header;
-  //    u64 sample_id;          /* if PERF_SAMPLE_IDENTIFIER */
-  //    u32 pid, tid;           /* if PERF_SAMPLE_TID */
-  //    u64 time;               /* if PERF_SAMPLE_TIME */
-  //    u64 stream_id;          /* if PERF_SAMPLE_STREAM_ID */
-  //    u32 cpu, res;           /* if PERF_SAMPLE_CPU */
-  //    u64 abi;                /* if PERF_SAMPLE_REGS_USER */
-  //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
-  //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
-  //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
-  //  };
-  // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
-  // rather than relying on a struct.
+  // The flags here are in sync with stack_sample_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from stack_sample_event_open
+  const perf_event_attr flags{
+      .sample_type =
+          PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+  };
 
-  size_t offset_of_size =
-      offsetof(perf_event_stack_sample_fixed, regs) + sizeof(perf_event_sample_regs_user_all);
-  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
-
-  uint64_t size = 0;
-  ring_buffer->ReadValueAtOffset(&size, offset_of_size);
-
-  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
-
-  uint64_t dyn_size = 0;
-  ring_buffer->ReadValueAtOffset(&dyn_size, offset_of_dyn_size);
-
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  ring_buffer->ReadValueAtOffset(&sample_id, offsetof(perf_event_stack_sample_fixed, sample_id));
-
-  constexpr uint64_t kTotalNumOfRegisters =
-      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
   StackSamplePerfEvent event{
-      .timestamp = sample_id.time,
+      .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              .pid = static_cast<pid_t>(sample_id.pid),
-              .tid = static_cast<pid_t>(sample_id.tid),
-              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
-              .dyn_size = dyn_size,
-              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
+              .pid = static_cast<pid_t>(res.pid),
+              .tid = static_cast<pid_t>(res.tid),
+              .regs = std::move(res.regs),
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
           },
   };
 
-  ring_buffer->ReadRawAtOffset(event.data.regs.get(), offsetof(perf_event_stack_sample_fixed, regs),
-                               kTotalNumOfRegisters * sizeof(uint64_t));
-  ring_buffer->ReadValueAtOffset(event.data.regs.get(),
-                                 offsetof(perf_event_stack_sample_fixed, regs));
-  ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
   ring_buffer->SkipRecord(header);
   return event;
 }
 
 CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                          const perf_event_header& header) {
-  // We expect the following layout of the perf event:
-  //  struct {
-  //    struct perf_event_header header;
-  //    u64 sample_id;          /* if PERF_SAMPLE_IDENTIFIER */
-  //    u32 pid, tid;           /* if PERF_SAMPLE_TID */
-  //    u64 time;               /* if PERF_SAMPLE_TIME */
-  //    u64 stream_id;          /* if PERF_SAMPLE_STREAM_ID */
-  //    u32 cpu, res;           /* if PERF_SAMPLE_CPU */
-  //    u64 nr;                 /* if PERF_SAMPLE_CALLCHAIN */
-  //    u64 ips[nr];            /* if PERF_SAMPLE_CALLCHAIN */
-  //    u64 abi;                /* if PERF_SAMPLE_REGS_USER */
-  //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
-  //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
-  //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
-  //  };
-  // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
-  // rather than relying on a struct.
-  uint64_t nr = 0;
-  ring_buffer->ReadValueAtOffset(&nr, offsetof(perf_event_callchain_sample_fixed, nr));
+  // The flags here are in sync with callchain_sample_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from callchain_sample_event_open
+  const perf_event_attr flags{
+      .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
+                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+  };
 
-  const uint64_t size_of_ips_in_bytes = nr * sizeof(uint64_t);
-
-  const size_t offset_of_ips = offsetof(perf_event_callchain_sample_fixed, nr) +
-                               sizeof(perf_event_callchain_sample_fixed::nr);
-  const size_t offset_of_regs_user_struct = offset_of_ips + size_of_ips_in_bytes + sizeof(uint64_t);
-  // Note that perf_event_sample_regs_user_all contains abi and the regs array.
-  const size_t offset_of_size =
-      offset_of_regs_user_struct + sizeof(perf_event_sample_regs_user_all);
-  const size_t offset_of_data = offset_of_size + sizeof(uint64_t);
-
-  uint64_t size = 0;
-  ring_buffer->ReadRawAtOffset(&size, offset_of_size, sizeof(uint64_t));
-
-  const size_t offset_of_dyn_size = offset_of_data + size;
-  uint64_t dyn_size = 0;
-  ring_buffer->ReadRawAtOffset(&dyn_size, offset_of_dyn_size, sizeof(uint64_t));
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  ring_buffer->ReadValueAtOffset(&sample_id,
-                                 offsetof(perf_event_callchain_sample_fixed, sample_id));
-
-  constexpr uint64_t kTotalNumOfRegisters =
-      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
   CallchainSamplePerfEvent event{
-      .timestamp = sample_id.time,
+      .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              .pid = static_cast<pid_t>(sample_id.pid),
-              .tid = static_cast<pid_t>(sample_id.tid),
-              .ips_size = nr,
-              .ips = make_unique_for_overwrite<uint64_t[]>(nr),
-              .regs = make_unique_for_overwrite<uint64_t[]>(kTotalNumOfRegisters),
-              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
+              .pid = static_cast<pid_t>(res.pid),
+              .tid = static_cast<pid_t>(res.tid),
+              .ips_size = res.ips_size,
+              .ips = std::move(res.ips),
+              .regs = std::move(res.regs),
+              .data = std::move(res.stack_data),
           },
   };
-
-  ring_buffer->ReadRawAtOffset(event.data.ips.get(), offset_of_ips, size_of_ips_in_bytes);
-  ring_buffer->ReadRawAtOffset(event.data.regs.get(), offset_of_regs_user_struct,
-                               sizeof(perf_event_sample_regs_user_all));
-  ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
 
   ring_buffer->SkipRecord(header);
   return event;
@@ -479,16 +411,22 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
 
 GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header) {
-  perf_event_raw_sample_fixed ring_buffer_record;
-  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+  // The flags here are in sync with generic_event_attr in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from generic_event_attr
+  const perf_event_attr flags{
+      .sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
   GenericTracepointPerfEvent event{
-      .timestamp = ring_buffer_record.sample_id.time,
+      .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              .pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
-              .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
-              .cpu = ring_buffer_record.sample_id.cpu,
+              .pid = static_cast<pid_t>(res.pid),
+              .tid = static_cast<pid_t>(res.tid),
+              .cpu = res.cpu,
           },
   };
 
@@ -498,31 +436,28 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 
 SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  ORBIT_CHECK(header.size >= sizeof(perf_event_raw_sample_fixed));
-  perf_event_raw_sample_fixed ring_buffer_record;
-  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+  // The flags here are in sync with tracepoint_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from tracepoint_event_open
+  const perf_event_attr flags{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
 
-  // The last fields of the sched:sched_wakeup tracepoint aren't always the same, depending on the
-  // kernel version. Fortunately we only need the first fields, which are always the same, so only
-  // read those. See `sched_wakeup_tracepoint_fixed`.
-  ORBIT_CHECK(ring_buffer_record.size >= sizeof(sched_wakeup_tracepoint_fixed));
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
   sched_wakeup_tracepoint_fixed sched_wakeup;
-  ring_buffer->ReadRawAtOffset(
-      &sched_wakeup,
-      offsetof(perf_event_raw_sample_fixed, size) + sizeof(perf_event_raw_sample_fixed::size),
-      sizeof(sched_wakeup_tracepoint_fixed));
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
   return SchedWakeupPerfEvent{
-      .timestamp = ring_buffer_record.sample_id.time,
+      .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
               // The tracepoint format calls the woken tid "data.pid" but it's effectively the
               // thread id.
               .woken_tid = sched_wakeup.pid,
-              .was_unblocked_by_tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
-              .was_unblocked_by_pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
+              .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+              .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
           },
   };
 }
