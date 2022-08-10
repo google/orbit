@@ -42,6 +42,7 @@ struct ClientCaptureOptions {
   bool enable_introspection = false;
   bool record_arguments = false;
   bool record_return_values = false;
+  bool enable_auto_frame_track = false;
 };
 
 }  // namespace orbit_capture_client
