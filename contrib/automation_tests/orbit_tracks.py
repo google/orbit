@@ -27,7 +27,9 @@ def main(argv):
         # We check for "sdma0" or "vce0" or both to exist. Both are connected to the encoding of video frames.
         VerifyTracksExist(track_names=[("*sdma0*", "*vce0*")], allow_duplicates=True),
         SelectTrack(track_index=0, expect_failure=True),  # Scheduler track cannot be selected
-        SelectTrack(track_index=5),  # hello_ggp_stand track can be selected
+        FilterTracks(filter_string="hello"),
+        SelectTrack(track_index=1),  # hello_ggp_stand track can be selected
+        FilterTracks(filter_string=""),
         # TODO(b/233028574): SelectTrack doesn't release the clicked track properly and can't be followed
         # directly with MoveTrack(). It needs to run DeselectTrack() to release the track before moving
         # tracks.
