@@ -14,6 +14,7 @@
 namespace orbit_mizar_base {
 
 // wraps `uint64_t` bears semantics of time in nanoseconds and implements a non-wrapping addition
+// TODO(b/242038718) Remove and rely on the explicitly allowed Typedefs arithmetics customisation
 struct NonWrappingNanoseconds {
   friend NonWrappingNanoseconds operator+(NonWrappingNanoseconds a, NonWrappingNanoseconds b) {
     const uint64_t sum = a.value + b.value;

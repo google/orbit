@@ -325,101 +325,133 @@ TEST(Typedef, ComparisonIsCorrect) {
   EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
 }
 
-struct WrapperWithPlusTag : PlusTag<WrapperWithPlusTag> {};
+struct WrapperWithArithmeticsTag : PlusTag<WrapperWithArithmeticsTag>, TimesScalarTag<int> {};
 
 template <typename T>
-using WrapperWithPlus = Typedef<WrapperWithPlusTag, T>;
+using WrapperWithArithmetics = Typedef<WrapperWithArithmeticsTag, T>;
+
+static_assert(kHasZeroMemoryOverheadV<WrapperWithArithmetics<int>>);
 
 constexpr int kAValue = 1;
 constexpr int kBValue = 2;
 
-TEST(Typedef, WrapperWithPlusHasPlus) {
-  WrapperWithPlus<int> a(kAValue);
-  WrapperWithPlus<int> b(kBValue);
+TEST(Typedef, WrapperWithArithmeticsHasTimesScalar) {
+  WrapperWithArithmetics<int> a(kAValue);
+  WrapperWithArithmetics<int> result = a * kBValue;
+  EXPECT_EQ(*result, kAValue * kBValue);
+}
+
+TEST(Typedef, WrapperWithArithmeticsHasPlus) {
+  WrapperWithArithmetics<int> a(kAValue);
+  WrapperWithArithmetics<int> b(kBValue);
   EXPECT_EQ(*(a + b), kAValue + kBValue);
 }
 
-TEST(Typedef, WrapperWithPlusHasPlusAndPromotes) {
+TEST(Typedef, WrapperWithArithmeticsHasPlusAndPromotes) {
   constexpr int kInt = 1;
   constexpr float kFloat = 0.5;
-  WrapperWithPlus<int> a(kInt);
-  WrapperWithPlus<float> b(kFloat);
-  WrapperWithPlus<float> result = a + b;
+  WrapperWithArithmetics<int> a(kInt);
+  WrapperWithArithmetics<float> b(kFloat);
+  WrapperWithArithmetics<float> result = a + b;
   EXPECT_EQ(*result, kInt + kFloat);
 }
 
-TEST(Typedef, WrapperWithPlusHasPlusAndConvertsArgument) {
+TEST(Typedef, WrapperWithArithmeticsHasPlusAndConvertsArgument) {
   constexpr std::chrono::nanoseconds kNanos(1000);
   constexpr std::chrono::microseconds kMicros(1);
-  WrapperWithPlus<std::chrono::nanoseconds> a(kNanos);
-  WrapperWithPlus<std::chrono::microseconds> b(kMicros);
+  WrapperWithArithmetics<std::chrono::nanoseconds> a(kNanos);
+  WrapperWithArithmetics<std::chrono::microseconds> b(kMicros);
   EXPECT_EQ(*(a + b), kNanos + kMicros);
 }
 
-struct MoveOnlyInt {
-  explicit MoveOnlyInt(int i) : value(i) {}
+static int PlusThatMultiplies(int a, int b) { return a * b; }
 
-  MoveOnlyInt(const MoveOnlyInt&) = delete;
-  MoveOnlyInt& operator=(const MoveOnlyInt&) = delete;
-  MoveOnlyInt(MoveOnlyInt&&) = default;
+struct CustomPlusTag : PlusTag<CustomPlusTag, PlusThatMultiplies> {};
+using IntWithProductInsteadOfPlus = orbit_base::Typedef<CustomPlusTag, int>;
 
-  [[nodiscard]] friend MoveOnlyInt operator+(const MoveOnlyInt& a, const MoveOnlyInt& b) {
-    return MoveOnlyInt(a.value + b.value);
+TEST(Typedef, CustomPlus) {
+  IntWithProductInsteadOfPlus a{kAValue};
+  IntWithProductInsteadOfPlus b(kBValue);
+  EXPECT_EQ(*(a + b), kAValue * kBValue);
+}
+
+struct AddUnique {
+  template <typename T, typename U>
+  auto operator()(std::unique_ptr<T> a, std::unique_ptr<U> b) const {
+    return std::make_unique<decltype(*a + *b)>(*a + *b);
   }
-
-  [[nodiscard]] friend MoveOnlyInt operator-(const MoveOnlyInt& a, const MoveOnlyInt& b) {
-    return MoveOnlyInt(a.value - b.value);
-  }
-
-  [[nodiscard]] friend MoveOnlyInt operator*(const MoveOnlyInt& a, std::unique_ptr<int> times) {
-    return MoveOnlyInt(a.value * (*times));
-  }
-
-  int value;
 };
 
-TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
-  WrapperWithPlus<MoveOnlyInt> a_wrapped(std::in_place, kAValue);
-  WrapperWithPlus<MoveOnlyInt> b_wrapped(std::in_place, kBValue);
+constexpr AddUnique kAddUnique{};
 
-  EXPECT_EQ((std::move(a_wrapped) + std::move(b_wrapped))->value, kAValue + kBValue);
+struct SubUnique {
+  template <typename T, typename U>
+  auto operator()(std::unique_ptr<T> a, std::unique_ptr<U> b) const {
+    return std::make_unique<decltype(*a - *b)>(*a - *b);
+  }
+};
+
+constexpr SubUnique kSubUnique{};
+
+struct TimesDoubleUnique {
+  template <typename T>
+  auto operator()(std::unique_ptr<T> vector, std::unique_ptr<int> d) const {
+    return std::make_unique<decltype(*vector * *d)>(*vector * *d);
+  }
+
+  template <typename T>
+  auto operator()(T vector, double d) const {
+    return vector * d;
+  }
+};
+
+constexpr TimesDoubleUnique kTimesDoubleUnique;
+
+struct UniqueIntTag : PlusTag<UniqueIntTag, kAddUnique> {};
+using UniqueInt = orbit_base::Typedef<UniqueIntTag, std::unique_ptr<int>>;
+
+TEST(Typedef, WrapperWithArithmeticsHasPlusForMoveOnlyType) {
+  UniqueInt a_wrapped(std::make_unique<int>(kAValue));
+  UniqueInt b_wrapped(std::make_unique<int>(kBValue));
+
+  EXPECT_EQ(**(std::move(a_wrapped) + std::move(b_wrapped)), kAValue + kBValue);
 }
 
 struct DistanceTag {};
-struct CoordinateTag : MinusTag<DistanceTag>, PlusTag<DistanceTag> {};
+struct CoordinateTag : MinusTag<DistanceTag, kSubUnique>, PlusTag<DistanceTag, kAddUnique> {};
 
 template <typename T>
-using Distance = Typedef<DistanceTag, T>;
+using Distance = Typedef<DistanceTag, std::unique_ptr<T>>;
 
 template <typename T>
-using Coordinate = Typedef<CoordinateTag, T>;
+using Coordinate = Typedef<CoordinateTag, std::unique_ptr<T>>;
 
 TEST(Typedef, CoordinateHasMinusForMoveOnlyType) {
-  Coordinate<MoveOnlyInt> a(std::in_place, kAValue);
-  Coordinate<MoveOnlyInt> b(std::in_place, kBValue);
+  Coordinate<int> a(std::make_unique<int>(kAValue));
+  Coordinate<int> b(std::make_unique<int>(kBValue));
 
-  Distance<MoveOnlyInt> distance = std::move(a) - std::move(b);
+  Distance<int> distance = std::move(a) - std::move(b);
 
-  EXPECT_EQ(distance->value, kAValue - kBValue);
+  EXPECT_EQ(**distance, kAValue - kBValue);
 }
 
 TEST(Typedef, CoordinateHasPlusForMoveOnlyType) {
   {
-    Coordinate<MoveOnlyInt> origin(std::in_place, kAValue);
-    Distance<MoveOnlyInt> distance(std::in_place, kBValue);
-    Coordinate<MoveOnlyInt> coordinate = std::move(origin) + std::move(distance);
-    EXPECT_EQ(coordinate->value, kAValue + kBValue);
+    Coordinate<int> origin(std::make_unique<int>(kAValue));
+    Distance<int> distance(std::make_unique<int>(kBValue));
+    Coordinate<int> coordinate = std::move(origin) + std::move(distance);
+    EXPECT_EQ(**coordinate, kAValue + kBValue);
   }
   {
-    Coordinate<MoveOnlyInt> origin(std::in_place, kAValue);
-    Distance<MoveOnlyInt> distance(std::in_place, kBValue);
-    Coordinate<MoveOnlyInt> coordinate = std::move(distance) + std::move(origin);
-    EXPECT_EQ(coordinate->value, kAValue + kBValue);
+    Coordinate<int> origin(std::make_unique<int>(kAValue));
+    Distance<int> distance(std::make_unique<int>(kBValue));
+    Coordinate<int> coordinate = std::move(distance) + std::move(origin);
+    EXPECT_EQ(**coordinate, kAValue + kBValue);
   }
 }
 
 template <typename Scalar>
-struct WrapperWithTimesScalarTag : TimesScalarTag<Scalar> {};
+struct WrapperWithTimesScalarTag : TimesScalarTag<Scalar, kTimesDoubleUnique> {};
 
 template <typename T, typename Scalar>
 using WrapperWithTimesScalar = Typedef<WrapperWithTimesScalarTag<Scalar>, T>;
@@ -454,18 +486,20 @@ TEST(Typedef, WrapperWithTimesScalarIntTimesLValueFloat) {
 TEST(Typedef, WrapperWithTimesScalarMoveOnly) {
   {
     auto times = std::make_unique<int>(kBValue);
-    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
-    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> wrapped(
+        std::make_unique<int>(kAValue));
+    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> result =
         std::move(wrapped) * std::move(times);
-    EXPECT_EQ(result->value, kAValue * kBValue);
+    EXPECT_EQ(**result, kAValue * kBValue);
   }
 
   {
     auto times = std::make_unique<int>(kBValue);
-    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> wrapped(std::in_place, kAValue);
-    WrapperWithTimesScalar<MoveOnlyInt, std::unique_ptr<int>> result =
+    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> wrapped(
+        std::make_unique<int>(kAValue));
+    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> result =
         std::move(times) * std::move(wrapped);
-    EXPECT_EQ(result->value, kAValue * kBValue);
+    EXPECT_EQ(**result, kAValue * kBValue);
   }
 }
 
