@@ -140,7 +140,7 @@ struct UprobesWithStackPerfEventData {
   uint64_t stream_id;
   pid_t pid;
   pid_t tid;
-  perf_event_sample_regs_user_sp regs;
+  uint64_t sp;
 
   uint64_t dyn_size;
   // This mutablility allows moving the data out of this class in the UprobesUnwindingVisitor even

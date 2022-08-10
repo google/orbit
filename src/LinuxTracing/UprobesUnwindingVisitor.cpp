@@ -496,7 +496,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
                                     const UprobesWithStackPerfEventData& event_data) {
-  StackSlice stack_slice{.start_address = event_data.regs.sp,
+  StackSlice stack_slice{.start_address = event_data.sp,
                          .size = event_data.dyn_size,
                          .data = std::move(event_data.data)};
   absl::flat_hash_map<uint64_t, StackSlice>& stream_id_to_stack =
