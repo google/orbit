@@ -14,6 +14,7 @@
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
@@ -32,6 +33,7 @@ class BaselineAndComparisonTmpl {
   using Comparison = ::orbit_mizar_base::Comparison<T>;
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
+  using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
 
  public:
   BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
@@ -95,11 +97,11 @@ class BaselineAndComparisonTmpl {
 
   [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
-    const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
+    const std::vector<RelativeTimeNs> active_invocation_times = data.ActiveInvocationTimes(
         config.tids, config.frame_track_id, config.start_relative, config.EndRelative());
     orbit_client_data::ScopeStats stats;
-    for (const uint64_t active_invocation_time : active_invocation_times) {
-      stats.UpdateStats(active_invocation_time);
+    for (const RelativeTimeNs active_invocation_time : active_invocation_times) {
+      stats.UpdateStats(active_invocation_time->value);
     }
     return stats;
   }

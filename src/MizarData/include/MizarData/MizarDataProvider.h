@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/CaptureDataHolder.h"
+#include "MizarBase/Time.h"
 
 namespace orbit_mizar_data {
 
@@ -36,9 +37,9 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
       uint64_t address) const = 0;
   [[nodiscard]] virtual absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const = 0;
 
-  [[nodiscard]] virtual uint64_t GetCaptureStartTimestampNs() const = 0;
+  [[nodiscard]] virtual orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const = 0;
 
-  [[nodiscard]] virtual uint64_t GetNominalSamplingPeriodNs() const = 0;
+  [[nodiscard]] virtual orbit_mizar_base::RelativeTimeNs GetNominalSamplingPeriodNs() const = 0;
 };
 
 }  // namespace orbit_mizar_data

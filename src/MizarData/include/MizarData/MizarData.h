@@ -19,6 +19,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
+#include "MizarBase/Time.h"
 #include "MizarDataProvider.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitPaths/Paths.h"
@@ -30,8 +31,9 @@ namespace orbit_mizar_data {
 // Also owns a map from the function absolute addresses to their names.
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
-  using ScopeId = orbit_client_data::ScopeId;
-  using PresentEvent = orbit_grpc_protos::PresentEvent;
+  using ScopeId = ::orbit_client_data::ScopeId;
+  using PresentEvent = ::orbit_grpc_protos::PresentEvent;
+  using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
 
  public:
   MizarData() = default;
@@ -53,14 +55,16 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const override;
 
-  [[nodiscard]] uint64_t GetCaptureStartTimestampNs() const override {
-    return GetCaptureData().GetCaptureStarted().capture_start_timestamp_ns();
+  [[nodiscard]] orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const override {
+    return orbit_mizar_base::MakeTimestampNs(
+        GetCaptureData().GetCaptureStarted().capture_start_timestamp_ns());
   }
 
-  [[nodiscard]] uint64_t GetNominalSamplingPeriodNs() const override {
+  [[nodiscard]] RelativeTimeNs GetNominalSamplingPeriodNs() const override {
     const double samples_per_second =
         GetCaptureData().GetCaptureStarted().capture_options().samples_per_second();
-    return static_cast<uint64_t>(1'000'000'000 / samples_per_second);
+    return orbit_mizar_base::MakeRelativeTimeNs(
+        static_cast<uint64_t>(1'000'000'000 / samples_per_second));
   }
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,

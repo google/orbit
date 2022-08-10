@@ -28,8 +28,11 @@
 using ::orbit_client_data::ScopeId;
 using ::orbit_grpc_protos::PresentEvent;
 using ::orbit_mizar_base::MakeRelativeTimeNs;
+using ::orbit_mizar_base::MakeTimestampNs;
+using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
+using ::orbit_mizar_base::TimestampNs;
 using ::orbit_test_utils::MakeMap;
 using ::std::chrono::milliseconds;
 using ::testing::ElementsAre;
@@ -54,8 +57,8 @@ class MockCaptureData {
 class MockMizarData {
  public:
   MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
-  MOCK_METHOD(uint64_t, GetCaptureStartTimestampNs, (), (const));
-  MOCK_METHOD(uint64_t, GetNominalSamplingPeriodNs, (), (const));
+  MOCK_METHOD(TimestampNs, GetCaptureStartTimestampNs, (), (const));
+  MOCK_METHOD(RelativeTimeNs, GetNominalSamplingPeriodNs, (), (const));
   MOCK_METHOD((absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>>),
               source_to_present_events, (), (const));
 };
@@ -80,13 +83,13 @@ constexpr uint64_t kCompleteCallstackId = 1;
 constexpr uint64_t kInCompleteCallstackId = 2;
 constexpr uint64_t kAnotherCompleteCallstackId = 3;
 
-constexpr uint64_t kCaptureStart = 123;
-constexpr uint64_t kRelativeTime1 = 10;
-constexpr uint64_t kRelativeTime2 = 15;
-constexpr uint64_t kRelativeTime3 = 20;
-constexpr uint64_t kRelativeTime4 = 30;
-constexpr uint64_t kRelativeTime5 = 40;
-constexpr uint64_t kRelativeTimeTooLate = 1000;
+constexpr TimestampNs kCaptureStart = MakeTimestampNs(123);
+constexpr RelativeTimeNs kRelativeTime1 = MakeRelativeTimeNs(10);
+constexpr RelativeTimeNs kRelativeTime2 = MakeRelativeTimeNs(15);
+constexpr RelativeTimeNs kRelativeTime3 = MakeRelativeTimeNs(20);
+constexpr RelativeTimeNs kRelativeTime4 = MakeRelativeTimeNs(30);
+constexpr RelativeTimeNs kRelativeTime5 = MakeRelativeTimeNs(40);
+constexpr RelativeTimeNs kRelativeTimeTooLate = MakeRelativeTimeNs(1000);
 constexpr TID kTID{0x3AD1};
 constexpr TID kAnotherTID{0x3AD2};
 constexpr TID kNamelessTID{0x3AD3};
@@ -114,15 +117,16 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   callstack_data->AddUniqueCallstack(kInCompleteCallstackId, kInCompleteCallstack);
   callstack_data->AddUniqueCallstack(kAnotherCompleteCallstackId, kAnotherCompleteCallstack);
 
-  callstack_data->AddCallstackEvent({kCaptureStart, kCompleteCallstackId, *kTID});
-  callstack_data->AddCallstackEvent({kCaptureStart + kRelativeTime1, kCompleteCallstackId, *kTID});
+  callstack_data->AddCallstackEvent({kCaptureStart->value, kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {kCaptureStart + kRelativeTime3, kInCompleteCallstackId, *kTID});
+      {(kCaptureStart + kRelativeTime1)->value, kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {kCaptureStart + kRelativeTime4, kAnotherCompleteCallstackId, *kAnotherTID});
+      {(kCaptureStart + kRelativeTime3)->value, kInCompleteCallstackId, *kTID});
+  callstack_data->AddCallstackEvent(
+      {(kCaptureStart + kRelativeTime4)->value, kAnotherCompleteCallstackId, *kAnotherTID});
 
   callstack_data->AddCallstackEvent(
-      {kCaptureStart + kRelativeTimeTooLate, kAnotherCompleteCallstackId, *kNamelessTID});
+      {(kCaptureStart + kRelativeTimeTooLate)->value, kAnotherCompleteCallstackId, *kNamelessTID});
 
   return callstack_data;
 }();
@@ -148,9 +152,8 @@ const std::vector<SFID> kAnotherCompleteCallstackIds =
 
 namespace {
 
-const std::vector<FrameStartNs> kStarts = {FrameStartNs(kCaptureStart),
-                                           FrameStartNs(kCaptureStart + kRelativeTime2),
-                                           FrameStartNs(kCaptureStart + kRelativeTime5)};
+const std::vector<TimestampNs> kStarts = {kCaptureStart, kCaptureStart + kRelativeTime2,
+                                          kCaptureStart + kRelativeTime5};
 
 class MockFrameTrackManager {
  public:
@@ -158,15 +161,15 @@ class MockFrameTrackManager {
 
   explicit MockFrameTrackManager(const MockMizarData* data) { passed_data_ = data; }
 
-  [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId, FrameStartNs,
-                                                         FrameStartNs) const {
+  [[nodiscard]] std::vector<TimestampNs> GetFrameStarts(FrameTrackId, TimestampNs,
+                                                        TimestampNs) const {
     return kStarts;
   }
 };
 
 }  // namespace
 
-constexpr uint64_t kSamplingPeriod = 10;
+constexpr RelativeTimeNs kSamplingPeriod = MakeRelativeTimeNs(10);
 
 const std::vector<ScopeId> kScopeIds = {ScopeId(1), ScopeId(2), ScopeId(10), ScopeId(30)};
 const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
@@ -226,38 +229,36 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(0),
-                                          MakeRelativeTimeNs(kRelativeTime5), action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(0), kRelativeTime5, action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(0),
-                                          MakeRelativeTimeNs(kRelativeTime5), action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(0), kRelativeTime5,
+                                          action);
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 
   //  some timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(kRelativeTime1),
-                                          MakeRelativeTimeNs(kRelativeTime5), action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, kRelativeTime1, kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds));
 
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(kRelativeTime1),
-                                          MakeRelativeTimeNs(kRelativeTime5), action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, kRelativeTime1, kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 }
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
                                                                               kAddressToId);
-  std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
-      {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), MakeRelativeTimeNs(0),
-      MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max()));
+  std::vector<RelativeTimeNs> actual_active_invocation_times =
+      mizar_paired_data.ActiveInvocationTimes(
+          {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), MakeRelativeTimeNs(0),
+          MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max()));
   EXPECT_THAT(actual_active_invocation_times,
-              ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
+              ElementsAre(kSamplingPeriod * uint64_t{2}, kSamplingPeriod * uint64_t{2}));
 }
 
 TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {

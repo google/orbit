@@ -30,7 +30,6 @@
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
 #include "MizarData/MizarDataProvider.h"
-#include "MizarData/NonWrappingAddition.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {
@@ -44,6 +43,7 @@ class MizarPairedDataTmpl {
   using TID = ::orbit_mizar_base::TID;
   using ScopeId = ::orbit_client_data::ScopeId;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
+  using TimestampNs = ::orbit_mizar_base::TimestampNs;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
@@ -59,23 +59,23 @@ class MizarPairedDataTmpl {
   // time the process was waiting, de-scheduled, or the VM itself was de-scheduled. The estimate is
   // obtained via counting how many callstack samples have been obtained during each frame and then
   // multiplying the counter by the sampling period.
-  [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
+  [[nodiscard]] std::vector<RelativeTimeNs> ActiveInvocationTimes(
       const absl::flat_hash_set<TID>& tids, FrameTrackId frame_track_id,
       RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
     const auto [min_timestamp_ns, max_timestamp_ns] =
         RelativeToAbsoluteTimestampRange(min_relative_time, max_relative_time);
-    const std::vector<FrameStartNs> frame_starts = GetFrameStarts(
-        frame_track_id, FrameStartNs(min_timestamp_ns), FrameStartNs(max_timestamp_ns));
+    const std::vector<TimestampNs> frame_starts =
+        GetFrameStarts(frame_track_id, min_timestamp_ns, max_timestamp_ns);
     if (frame_starts.size() < 2) return {};
 
-    const uint64_t sampling_period = data_->GetNominalSamplingPeriodNs();
+    const RelativeTimeNs sampling_period = data_->GetNominalSamplingPeriodNs();
 
-    std::vector<uint64_t> result;
+    std::vector<RelativeTimeNs> result;
     for (size_t i = 0; i + 1 < frame_starts.size(); ++i) {
       const uint64_t callstack_count = std::transform_reduce(
           std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
           [this, i, &frame_starts](const TID tid) {
-            return CallstackSamplesCount(tid, *frame_starts[i], *frame_starts[i + 1]);
+            return CallstackSamplesCount(tid, frame_starts[i], frame_starts[i + 1]);
           });
 
       result.push_back(sampling_period * callstack_count);
@@ -95,8 +95,8 @@ class MizarPairedDataTmpl {
     return frame_tracks_.GetFrameTracks();
   }
 
-  [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId id, FrameStartNs min_start,
-                                                         FrameStartNs max_start) const {
+  [[nodiscard]] std::vector<TimestampNs> GetFrameStarts(FrameTrackId id, TimestampNs min_start,
+                                                        TimestampNs max_start) const {
     return frame_tracks_.GetFrameStarts(id, min_start, max_start);
   }
 
@@ -122,8 +122,9 @@ class MizarPairedDataTmpl {
                                           action_on_callstack_events);
   }
 
-  [[nodiscard]] uint64_t CaptureDurationNs() const {
-    return GetCallstackData().max_time() - data_->GetCaptureStartTimestampNs();
+  [[nodiscard]] RelativeTimeNs CaptureDurationNs() const {
+    return orbit_mizar_base::MakeTimestampNs(GetCallstackData().max_time()) -
+           data_->GetCaptureStartTimestampNs();
   }
 
  private:
@@ -145,26 +146,26 @@ class MizarPairedDataTmpl {
   }
 
   template <typename Action>
-  void ForEachCallstackEventOfTidInTimeRange(TID tid, uint64_t min_timestamp_ns,
-                                             uint64_t max_timestamp_ns,
+  void ForEachCallstackEventOfTidInTimeRange(TID tid, TimestampNs min_timestamp_ns,
+                                             TimestampNs max_timestamp_ns,
                                              Action&& action_on_callstack_events) const {
     GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-        *tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
+        *tid, min_timestamp_ns->value, max_timestamp_ns->value, action_on_callstack_events);
   }
 
-  [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, uint64_t min_timestamp_ns,
-                                               uint64_t max_timestamp_ns) const {
+  [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, TimestampNs min_timestamp_ns,
+                                               TimestampNs max_timestamp_ns) const {
     uint64_t count = 0;
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
                                           [&count](const auto& /*callstack*/) { count++; });
     return count;
   }
 
-  [[nodiscard]] uint64_t ToAbsoluteTimestamp(RelativeTimeNs relative_time) const {
-    return NonWrappingAddition(data_->GetCaptureStartTimestampNs(), relative_time->value);
+  [[nodiscard]] TimestampNs ToAbsoluteTimestamp(RelativeTimeNs relative_time) const {
+    return data_->GetCaptureStartTimestampNs() + relative_time;
   }
 
-  [[nodiscard]] std::pair<uint64_t, uint64_t> RelativeToAbsoluteTimestampRange(
+  [[nodiscard]] std::pair<TimestampNs, TimestampNs> RelativeToAbsoluteTimestampRange(
       RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
     return std::make_pair(ToAbsoluteTimestamp(min_relative_time),
                           ToAbsoluteTimestamp(max_relative_time));

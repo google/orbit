@@ -9,6 +9,7 @@
 #include <absl/functional/bind_front.h>
 
 #include "ClientData/CaptureData.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/MizarDataProvider.h"
@@ -21,6 +22,7 @@ class FrameTrackManagerTmpl {
   using ScopeId = ::orbit_client_data::ScopeId;
   using ScopeType = ::orbit_client_data::ScopeType;
   using PresentEvent = ::orbit_grpc_protos::PresentEvent;
+  using TimestampNs = ::orbit_mizar_base::TimestampNs;
 
  public:
   explicit FrameTrackManagerTmpl(const Data* data) : data_(data) {}
@@ -42,8 +44,8 @@ class FrameTrackManagerTmpl {
     return result;
   }
 
-  [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId id, FrameStartNs min_start,
-                                                         FrameStartNs max_start) const {
+  [[nodiscard]] std::vector<TimestampNs> GetFrameStarts(FrameTrackId id, TimestampNs min_start,
+                                                        TimestampNs max_start) const {
     return std::visit(
         orbit_base::overloaded{
             absl::bind_front(&FrameTrackManagerTmpl::GetScopeFrameStarts, this, min_start,
@@ -54,32 +56,33 @@ class FrameTrackManagerTmpl {
   }
 
  private:
-  [[nodiscard]] std::vector<FrameStartNs> GetScopeFrameStarts(FrameStartNs min_start,
-                                                              FrameStartNs max_start,
-                                                              ScopeId scope_id) const {
+  [[nodiscard]] std::vector<TimestampNs> GetScopeFrameStarts(TimestampNs min_start,
+                                                             TimestampNs max_start,
+                                                             ScopeId scope_id) const {
     const std::vector<const TimerInfo*> timers =
-        GetCaptureData().GetTimersForScope(scope_id, *min_start, *max_start);
+        GetCaptureData().GetTimersForScope(scope_id, min_start->value, max_start->value);
 
-    std::vector<FrameStartNs> result;
+    std::vector<TimestampNs> result;
     result.reserve(timers.size());
-    absl::c_transform(timers, std::back_inserter(result),
-                      [](const TimerInfo* timer) { return FrameStartNs(timer->start()); });
+    absl::c_transform(timers, std::back_inserter(result), [](const TimerInfo* timer) {
+      return orbit_mizar_base::MakeTimestampNs(timer->start());
+    });
     return result;
   }
 
-  [[nodiscard]] std::vector<FrameStartNs> GetEtwFrameStarts(FrameStartNs min_start,
-                                                            FrameStartNs max_start,
-                                                            PresentEvent::Source etw_source) const {
+  [[nodiscard]] std::vector<TimestampNs> GetEtwFrameStarts(TimestampNs min_start,
+                                                           TimestampNs max_start,
+                                                           PresentEvent::Source etw_source) const {
     const auto& source_to_present_events = data_->source_to_present_events();
 
     const auto it = source_to_present_events.find(etw_source);
     if (it == source_to_present_events.end()) {
       return {};
     }
-    std::vector<FrameStartNs> result;
+    std::vector<TimestampNs> result;
     const std::vector<PresentEvent>& events = it->second;
     for (const PresentEvent& event : events) {
-      const FrameStartNs event_start(event.begin_timestamp_ns());
+      const TimestampNs event_start = orbit_mizar_base::MakeTimestampNs(event.begin_timestamp_ns());
       if (min_start <= event_start && event_start <= max_start) {
         result.push_back(event_start);
       }

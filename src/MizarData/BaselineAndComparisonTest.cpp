@@ -19,6 +19,7 @@
 #include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -96,7 +97,12 @@ const absl::flat_hash_map<SFID, std::string> kSfidToName = MakeMap(kSfids, kBase
 const std::vector<std::vector<SFID>> kCallstacks = {
     std::vector<SFID>{kSfidThird, kSfidSecond, kSfidFirst}, {kSfidSecond}, {}};
 
-const std::vector<uint64_t> kFrameTrackActiveTimes = {300, 100, 200};
+const std::vector<RelativeTimeNs> kFrameTrackActiveTimes = [] {
+  const std::vector<uint64_t> kRaw = {300, 100, 200};
+  std::vector<RelativeTimeNs> result;
+  absl::c_transform(kRaw, std::back_inserter(result), MakeRelativeTimeNs);
+  return result;
+}();
 
 constexpr double kStatistic = 1.234;
 constexpr std::array<double, kSfidCount> kPvalues = {0.01, 0.02, 0.05};
@@ -113,7 +119,7 @@ namespace {
 class MockPairedData {
  public:
   explicit MockPairedData(std::vector<std::vector<SFID>> callstacks,
-                          std::vector<uint64_t> frame_track_active_times)
+                          std::vector<RelativeTimeNs> frame_track_active_times)
       : callstacks_(std::move(callstacks)),
         frame_track_active_times_(std::move(frame_track_active_times)) {}
 
@@ -123,7 +129,7 @@ class MockPairedData {
     std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
   }
 
-  [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
+  [[nodiscard]] std::vector<RelativeTimeNs> ActiveInvocationTimes(
       const absl::flat_hash_set<TID>& /*tids*/, FrameTrackId /*frame_track_scope_id*/,
       RelativeTimeNs /*min_relative_timestamp_ns*/,
       RelativeTimeNs /*max_relative_timestamp_ns*/) const {
@@ -132,7 +138,7 @@ class MockPairedData {
 
  private:
   std::vector<std::vector<SFID>> callstacks_;
-  std::vector<uint64_t> frame_track_active_times_;
+  std::vector<RelativeTimeNs> frame_track_active_times_;
 };
 
 class MockFunctionTimeComparator {
@@ -164,8 +170,8 @@ class MockFunctionTimeComparator {
 
 TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   auto full = MakeBaseline<MockPairedData>(kCallstacks, kFrameTrackActiveTimes);
-  auto empty =
-      MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, std::vector<uint64_t>{});
+  auto empty = MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{},
+                                              std::vector<RelativeTimeNs>{});
 
   BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator, MockCorrection> bac(
       std::move(full), std::move(empty), {kSfidToName});
