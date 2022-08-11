@@ -374,7 +374,7 @@ std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
-  if (!res.abi) {
+  if (res.abi == PERF_SAMPLE_REGS_ABI_NONE) {
     ring_buffer->SkipRecord(header);
     return std::nullopt;
   }
