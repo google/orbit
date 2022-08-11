@@ -198,7 +198,7 @@ auto operator-(First&& lhs, Second&& rhs) {
 };
 
 // When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports multiplication by
-// `Scalar` via `operator*`. By default, `operator*(T, Scalar)` is used.The behaviour may
+// `Scalar` via `operator*`. By default, `operator*(T, Scalar)` is used. The behaviour may
 // be overriden via supplying an instance of a functor or a function pointer as the second template
 // parameter.
 template <typename Scalar, auto& TimesScalarFun = orbit_base_internal::kDefaultTimes>

@@ -26,7 +26,7 @@ struct DefaultPlus {
   }
 };
 
-constexpr DefaultPlus kDefaultPlus{};
+constexpr DefaultPlus kDefaultPlus;
 
 struct DefaultMinus {
   template <typename T, typename U>
@@ -35,7 +35,7 @@ struct DefaultMinus {
   }
 };
 
-constexpr DefaultMinus kDefaultMinus{};
+constexpr DefaultMinus kDefaultMinus;
 
 struct DefaultTimes {
   template <typename T, typename U>
