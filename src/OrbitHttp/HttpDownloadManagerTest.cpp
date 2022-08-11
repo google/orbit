@@ -14,6 +14,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
+#include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WhenAll.h"
 #include "OrbitHttp/HttpDownloadManager.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
@@ -26,6 +27,7 @@ using orbit_base::FileExists;
 using orbit_base::Future;
 using orbit_base::IsCanceled;
 using orbit_base::StopSource;
+using orbit_base::TemporaryFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
@@ -42,19 +44,37 @@ class HttpDownloadManagerTest : public ::testing::Test {
     local_http_server_process_->start();
   }
 
-  ~HttpDownloadManagerTest() override { local_http_server_process_->kill(); }
+  ~HttpDownloadManagerTest() override {
+    local_http_server_process_->kill();
+    for (const auto& file_path : files_to_remove_) (void)orbit_base::RemoveFile(file_path);
+  }
+
+  std::filesystem::path GetTemporaryFilePath() {
+    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    EXPECT_THAT(temporary_file_or_error, HasNoError());
+
+    TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+    std::filesystem::path file_path = temporary_file.file_path();
+    temporary_file.CloseAndRemove();
+
+    // No matter the file is downloaded or not, we will try to remove it in the end.
+    files_to_remove_.push_back(file_path);
+
+    return file_path;
+  }
 
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
   HttpDownloadManager manager_;
 
  private:
   QProcess* local_http_server_process_;
+  std::vector<std::filesystem::path> files_to_remove_;
 };
 }  // namespace
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
   std::string valid_url = "http://localhost:8000/dllmain.dll";
-  std::filesystem::path local_path{"C:/tmp/download.dll"};
+  auto local_path = GetTemporaryFilePath();
   StopSource stop_source{};
 
   auto future = manager_.Download(valid_url, local_path, stop_source.GetStopToken());
@@ -73,7 +93,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
   std::string valid_url = "http://localhost:8000/dllmain.dll";
-  std::filesystem::path local_path{"C:/tmp/download.dll"};
+  auto local_path = GetTemporaryFilePath();
   StopSource stop_source{};
   stop_source.RequestStop();
 
@@ -89,7 +109,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleFailed) {
   std::string invalid_url = "http://localhost:8000/non_exist.dll";
-  std::filesystem::path local_path{"C:/tmp/download.dll"};
+  auto local_path = GetTemporaryFilePath();
   StopSource stop_source{};
 
   auto future = manager_.Download(invalid_url, local_path, stop_source.GetStopToken());
@@ -107,7 +127,7 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
                                                           "http://localhost:8000/non_exist.dll",
                                                           "http://localhost:8000/hello_world_elf"};
   const std::array<std::filesystem::path, kDownloadCounts> kLocalPaths{
-      "C:/tmp/download01.dll", "C:/tmp/non_exist.dll", "C:/tmp/download02_elf"};
+      GetTemporaryFilePath(), GetTemporaryFilePath(), GetTemporaryFilePath()};
   std::array<StopSource, kDownloadCounts> stop_sources{};
 
   std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> futures;
