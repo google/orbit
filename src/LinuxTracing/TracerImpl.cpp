@@ -1125,9 +1125,12 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
       return timestamp_ns;
     }
 
-    UprobesWithStackPerfEvent event = ConsumeUprobeWithStackPerfEvent(ring_buffer, header);
-    DeferEvent(std::move(event));
-    ++stats_.uprobes_with_stack_count;
+    std::optional<UprobesWithStackPerfEvent> event =
+        ConsumeUprobeWithStackPerfEvent(ring_buffer, header);
+    if (event.has_value()) {
+      DeferEvent(std::move(event.value()));
+      ++stats_.uprobes_with_stack_count;
+    }
   } else if (is_uprobe_with_args) {
     ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
     perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;

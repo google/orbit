@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -360,58 +361,38 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   return event;
 }
 
-UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                          const perf_event_header& header) {
-  // We expect the following layout of the perf event:
-  //  struct {
-  //    struct perf_event_header header;
-  //    u64 sample_id;          /* if PERF_SAMPLE_IDENTIFIER */
-  //    u32 pid, tid;           /* if PERF_SAMPLE_TID */
-  //    u64 time;               /* if PERF_SAMPLE_TIME */
-  //    u64 stream_id;          /* if PERF_SAMPLE_STREAM_ID */
-  //    u32 cpu, res;           /* if PERF_SAMPLE_CPU */
-  //    u64 abi;                /* if PERF_SAMPLE_REGS_USER */
-  //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
-  //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
-  //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
-  //  };
-  // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
-  // rather than relying on a struct.
+std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with uprobes_with_stack_and_sp_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // uprobes_with_stack_and_sp_event_open
+  const perf_event_attr flags{
+      .sample_type =
+          PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_regs_user = SAMPLE_REGS_USER_SP,
+  };
 
-  size_t offset_of_size = offsetof(perf_event_sp_stack_user_sample_fixed, regs) +
-                          sizeof(perf_event_sample_regs_user_sp);
-  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
-  uint64_t size = 0;
-  ring_buffer->ReadValueAtOffset(&size, offset_of_size);
-
-  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
-
-  uint64_t dyn_size = 0;
-  ring_buffer->ReadValueAtOffset(&dyn_size, offset_of_dyn_size);
-
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  ring_buffer->ReadValueAtOffset(&sample_id,
-                                 offsetof(perf_event_sp_stack_user_sample_fixed, sample_id));
-
-  perf_event_sample_regs_user_sp regs;
-  ring_buffer->ReadValueAtOffset(&regs, offsetof(perf_event_sp_stack_user_sample_fixed, regs));
+  if (!res.abi) {
+    ring_buffer->SkipRecord(header);
+    return std::nullopt;
+  }
 
   UprobesWithStackPerfEvent event{
-      .timestamp = sample_id.time,
+      .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              .stream_id = sample_id.stream_id,
-              .pid = static_cast<pid_t>(sample_id.pid),
-              .tid = static_cast<pid_t>(sample_id.tid),
-              .regs = regs,
-              .dyn_size = dyn_size,
-              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
+              .stream_id = res.stream_id,
+              .pid = static_cast<pid_t>(res.pid),
+              .tid = static_cast<pid_t>(res.tid),
+              .sp = res.regs[0],
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
           },
   };
-  ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
+
   ring_buffer->SkipRecord(header);
   return event;
 }

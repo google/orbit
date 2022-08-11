@@ -1015,11 +1015,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserSpaceStack) {
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointer,
-                  },
+              .sp = kUserStackPointer,
               .dyn_size = kUserStackSize,
               .data = std::make_unique<uint8_t[]>(kUserStackSize),
           },
@@ -1102,11 +1098,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointerOld,
-                  },
+              .sp = kUserStackPointerOld,
               .dyn_size = kUserStackSizeOld,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeOld),
           },
@@ -1122,11 +1114,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointerNew,
-                  },
+              .sp = kUserStackPointerNew,
               .dyn_size = kUserStackSizeNew,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeNew),
           },
@@ -1210,11 +1198,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointerSameThread,
-                  },
+              .sp = kUserStackPointerSameThread,
               .dyn_size = kUserStackSizeSameThread,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeSameThread),
           },
@@ -1231,11 +1215,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid + 1,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointerOtherThread,
-                  },
+              .sp = kUserStackPointerOtherThread,
               .dyn_size = kUserStackSizeOtherThread,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeOtherThread),
           },
@@ -1318,11 +1298,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
               .stream_id = 1,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointer1,
-                  },
+              .sp = kUserStackPointer1,
               .dyn_size = kUserStackSize1,
               .data = std::make_unique<uint8_t[]>(kUserStackSize1),
           },
@@ -1339,11 +1315,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
               .stream_id = 2,
               .pid = event.data.pid,
               .tid = event.data.tid,
-              .regs =
-                  {
-                      .abi = PERF_SAMPLE_REGS_ABI_64,
-                      .sp = kUserStackPointer2,
-                  },
+              .sp = kUserStackPointer2,
               .dyn_size = kUserStackSize2,
               .data = std::make_unique<uint8_t[]>(kUserStackSize2),
           },
