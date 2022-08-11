@@ -34,6 +34,8 @@ struct CaptureStartData {
   orbit_metrics_uploader::OrbitCaptureData_CallstackUnwindingMethod callstack_unwinding_method =
       orbit_metrics_uploader::
           OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_UNKNOWN;
+  orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack auto_frame_track =
+      orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_UNKNOWN;
 };
 
 struct CaptureCompleteData {

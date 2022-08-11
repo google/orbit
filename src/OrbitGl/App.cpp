@@ -209,7 +209,8 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
     bool thread_states, int64_t memory_information_sampling_period_ms,
     bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer,
     DynamicInstrumentationMethod dynamic_instrumentation_method,
-    uint64_t callstack_samples_per_second, UnwindingMethod callstack_unwinding_method) {
+    uint64_t callstack_samples_per_second, UnwindingMethod callstack_unwinding_method,
+    bool auto_frame_track) {
   orbit_metrics_uploader::CaptureStartData capture_start_data{};
   capture_start_data.number_of_instrumented_functions = instrumented_functions.size();
   capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
@@ -243,6 +244,10 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
                 OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_DWARF
           : orbit_metrics_uploader::
                 OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_FRAME_POINTER;
+  capture_start_data.auto_frame_track =
+      auto_frame_track
+          ? orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_ENABLED
+          : orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_DISABLED;
   return capture_start_data;
 }
 
@@ -1589,6 +1594,7 @@ void OrbitApp::StartCapture() {
   options.process_id = process->pid();
   options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
   options.record_arguments = false;
+  options.enable_auto_frame_track = data_manager_->enable_auto_frame_track();
 
   // In metrics, -1 indicates memory collection was turned off. See also the comment in
   // orbit_log_event.proto
@@ -1618,7 +1624,7 @@ void OrbitApp::StartCapture() {
           data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
           orbit_vulkan_layer_loaded_by_process, options.max_local_marker_depth_per_command_buffer,
           options.dynamic_instrumentation_method, static_cast<uint64_t>(options.samples_per_second),
-          options.unwinding_method)};
+          options.unwinding_method, data_manager_->enable_auto_frame_track())};
 
   metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
 

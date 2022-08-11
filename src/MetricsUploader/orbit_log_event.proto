@@ -98,7 +98,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
-// NextID: 31
+// NextID: 32
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -279,4 +279,12 @@ message OrbitCaptureData {
     TARGET_PROCESS_TERMINATION_SIGNAL_INTERNAL_ERROR = 33;
   };
   TargetProcessTerminationSignal target_process_termination_signal = 30;
+
+  // Whether the automatic addition of a frame track is enabled or not.
+  enum AutoFrameTrack {
+    AUTO_FRAME_TRACK_UNKNOWN = 0;
+    AUTO_FRAME_TRACK_ENABLED = 1;
+    AUTO_FRAME_TRACK_DISABLED = 2;
+  }
+  AutoFrameTrack auto_frame_track = 31;
 }

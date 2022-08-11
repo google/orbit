@@ -25,7 +25,13 @@ constexpr CaptureStartData kTestStartData{
     OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED /*lib_orbit_vulkan_layer*/,
     OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_LIMITED /*local_marker_depth_per_command_buffer*/
     ,
-    11 /*max_local_marker_depth_per_command_buffer*/
+    11 /*max_local_marker_depth_per_command_buffer*/,
+    OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_KERNEL /*dynamic_instrumentation_method*/
+    ,
+    12 /*callstack_samples_per_second*/,
+    OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_DWARF /*callstack_unwinding_method*/
+    ,
+    OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_ENABLED /*auto_frame_track*/
 };
 
 const CaptureCompleteData kTestCompleteData{
@@ -58,7 +64,12 @@ bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
          capture_data.local_marker_depth_per_command_buffer() ==
              start_data.local_marker_depth_per_command_buffer &&
          capture_data.max_local_marker_depth_per_command_buffer() ==
-             start_data.max_local_marker_depth_per_command_buffer;
+             start_data.max_local_marker_depth_per_command_buffer &&
+         capture_data.dynamic_instrumentation_method() ==
+             start_data.dynamic_instrumentation_method &&
+         capture_data.callstack_samples_per_second() == start_data.callstack_samples_per_second &&
+         capture_data.callstack_unwinding_method() == start_data.callstack_unwinding_method &&
+         capture_data.auto_frame_track() == start_data.auto_frame_track;
 }
 
 bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,
