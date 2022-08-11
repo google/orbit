@@ -45,7 +45,7 @@ class HalfOfSamplingWithFrameTrackReportConfig {
         duration(orbit_mizar_base::MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max())),
         frame_track_id(frame_track_id) {}
 
-  [[nodiscard]] RelativeTimeNs EndRelative() const { return start_relative + duration; }
+  [[nodiscard]] RelativeTimeNs EndRelative() const { return Add(start_relative, duration); }
 
   absl::flat_hash_set<TID> tids{};
   RelativeTimeNs start_relative{};  // nanoseconds elapsed since capture start

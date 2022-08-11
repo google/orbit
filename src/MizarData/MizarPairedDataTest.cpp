@@ -119,14 +119,14 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
 
   callstack_data->AddCallstackEvent({kCaptureStart->value, kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime1)->value, kCompleteCallstackId, *kTID});
+      {Add(kCaptureStart, kRelativeTime1)->value, kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime3)->value, kInCompleteCallstackId, *kTID});
+      {Add(kCaptureStart, kRelativeTime3)->value, kInCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime4)->value, kAnotherCompleteCallstackId, *kAnotherTID});
+      {Add(kCaptureStart, kRelativeTime4)->value, kAnotherCompleteCallstackId, *kAnotherTID});
 
-  callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTimeTooLate)->value, kAnotherCompleteCallstackId, *kNamelessTID});
+  callstack_data->AddCallstackEvent({Add(kCaptureStart, kRelativeTimeTooLate)->value,
+                                     kAnotherCompleteCallstackId, *kNamelessTID});
 
   return callstack_data;
 }();
@@ -152,8 +152,8 @@ const std::vector<SFID> kAnotherCompleteCallstackIds =
 
 namespace {
 
-const std::vector<TimestampNs> kStarts = {kCaptureStart, kCaptureStart + kRelativeTime2,
-                                          kCaptureStart + kRelativeTime5};
+const std::vector<TimestampNs> kStarts = {kCaptureStart, Add(kCaptureStart, kRelativeTime2),
+                                          Add(kCaptureStart, kRelativeTime5)};
 
 class MockFrameTrackManager {
  public:
@@ -257,8 +257,8 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
       mizar_paired_data.ActiveInvocationTimes(
           {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), MakeRelativeTimeNs(0),
           MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max()));
-  EXPECT_THAT(actual_active_invocation_times,
-              ElementsAre(kSamplingPeriod * uint64_t{2}, kSamplingPeriod * uint64_t{2}));
+  EXPECT_THAT(actual_active_invocation_times, ElementsAre(Times(kSamplingPeriod, uint64_t{2}),
+                                                          Times(kSamplingPeriod, uint64_t{2})));
 }
 
 TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {

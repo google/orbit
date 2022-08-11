@@ -78,7 +78,7 @@ class MizarPairedDataTmpl {
             return CallstackSamplesCount(tid, frame_starts[i], frame_starts[i + 1]);
           });
 
-      result.push_back(sampling_period * callstack_count);
+      result.push_back(Times(sampling_period, callstack_count));
     }
     return result;
   }
@@ -123,8 +123,8 @@ class MizarPairedDataTmpl {
   }
 
   [[nodiscard]] RelativeTimeNs CaptureDurationNs() const {
-    return orbit_mizar_base::MakeTimestampNs(GetCallstackData().max_time()) -
-           data_->GetCaptureStartTimestampNs();
+    return Sub(orbit_mizar_base::MakeTimestampNs(GetCallstackData().max_time()),
+               data_->GetCaptureStartTimestampNs());
   }
 
  private:
@@ -162,7 +162,7 @@ class MizarPairedDataTmpl {
   }
 
   [[nodiscard]] TimestampNs ToAbsoluteTimestamp(RelativeTimeNs relative_time) const {
-    return data_->GetCaptureStartTimestampNs() + relative_time;
+    return Add(data_->GetCaptureStartTimestampNs(), relative_time);
   }
 
   [[nodiscard]] std::pair<TimestampNs, TimestampNs> RelativeToAbsoluteTimestampRange(
