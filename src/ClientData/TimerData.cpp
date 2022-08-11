@@ -44,6 +44,25 @@ const TimerChain* TimerData::GetChain(uint64_t depth) const {
   return nullptr;
 }
 
+std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimers(uint64_t min_tick,
+                                                                        uint64_t max_tick) const {
+  // TODO(b/204173236): use it in TimerTracks.
+  absl::MutexLock lock(&mutex_);
+  std::vector<const orbit_client_protos::TimerInfo*> timers;
+  for (const auto& [depth, chain] : timers_) {
+    ORBIT_CHECK(chain != nullptr);
+    for (const auto& block : *chain) {
+      if (!block.Intersects(min_tick, max_tick)) continue;
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const orbit_client_protos::TimerInfo* timer = &block[i];
+        if (min_tick <= timer->start() && timer->end() <= max_tick) timers.push_back(timer);
+      }
+    }
+  }
+
+  return timers;
+}
+
 const TimerInfo* TimerData::GetFirstAfterStartTime(uint64_t time, uint32_t depth) const {
   const orbit_client_data::TimerChain* chain = GetChain(depth);
   if (chain == nullptr) return nullptr;
