@@ -78,7 +78,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   FrameTrackId frame_track_id_{};
 
   // std::numeric_limits<uint64_t>::max() ns corresponds to malformed input
-  RelativeTimeNs start_timestamp_ = orbit_mizar_base::MakeRelativeTimeNs(0);
+  RelativeTimeNs start_timestamp_{0};
 };
 
 template <typename PairedData>

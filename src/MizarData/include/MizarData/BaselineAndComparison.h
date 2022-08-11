@@ -101,7 +101,7 @@ class BaselineAndComparisonTmpl {
         config.tids, config.frame_track_id, config.start_relative, config.EndRelative());
     orbit_client_data::ScopeStats stats;
     for (const RelativeTimeNs active_invocation_time : active_invocation_times) {
-      stats.UpdateStats(active_invocation_time->value);
+      stats.UpdateStats(*active_invocation_time);
     }
     return stats;
   }

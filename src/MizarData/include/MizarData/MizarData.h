@@ -56,14 +56,14 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
       uint64_t address) const override;
 
   [[nodiscard]] orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const override {
-    return orbit_mizar_base::MakeTimestampNs(
+    return orbit_mizar_base::TimestampNs(
         GetCaptureData().GetCaptureStarted().capture_start_timestamp_ns());
   }
 
   [[nodiscard]] RelativeTimeNs GetNominalSamplingPeriodNs() const override {
     const double samples_per_second =
         GetCaptureData().GetCaptureStarted().capture_options().samples_per_second();
-    return orbit_mizar_base::MakeRelativeTimeNs(
+    return orbit_mizar_base::RelativeTimeNs(
         static_cast<uint64_t>(1'000'000'000 / samples_per_second));
   }
 

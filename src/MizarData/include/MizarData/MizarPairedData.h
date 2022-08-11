@@ -123,7 +123,7 @@ class MizarPairedDataTmpl {
   }
 
   [[nodiscard]] RelativeTimeNs CaptureDurationNs() const {
-    return Sub(orbit_mizar_base::MakeTimestampNs(GetCallstackData().max_time()),
+    return Sub(orbit_mizar_base::TimestampNs(GetCallstackData().max_time()),
                data_->GetCaptureStartTimestampNs());
   }
 
@@ -150,7 +150,7 @@ class MizarPairedDataTmpl {
                                              TimestampNs max_timestamp_ns,
                                              Action&& action_on_callstack_events) const {
     GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-        *tid, min_timestamp_ns->value, max_timestamp_ns->value, action_on_callstack_events);
+        *tid, *min_timestamp_ns, *max_timestamp_ns, action_on_callstack_events);
   }
 
   [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, TimestampNs min_timestamp_ns,

@@ -19,7 +19,6 @@ using ::orbit_client_data::ScopeId;
 using ::orbit_client_data::ScopeInfo;
 using ::orbit_client_protos::TimerInfo;
 using ::orbit_grpc_protos::PresentEvent;
-using ::orbit_mizar_base::MakeTimestampNs;
 using ::orbit_mizar_base::TimestampNs;
 using ::orbit_test_utils::MakeMap;
 using ::testing::ElementsAreArray;
@@ -59,7 +58,8 @@ static const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
 
 static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw) {
   std::vector<TimestampNs> result;
-  absl::c_transform(raw, std::back_inserter(result), MakeTimestampNs);
+  absl::c_transform(raw, std::back_inserter(result),
+                    [](uint64_t value) { return TimestampNs(value); });
   return result;
 }
 
@@ -74,7 +74,7 @@ static std::vector<TimerInfo> ToTimerInfos(const std::vector<TimestampNs>& start
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
                  [](TimestampNs start) {
                    TimerInfo timer;
-                   timer.set_start(start->value);
+                   timer.set_start(*start);
                    return timer;
                  });
   return result;
@@ -109,7 +109,7 @@ static std::vector<PresentEvent> MakePresentEvent(const std::vector<TimestampNs>
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
                  [](const TimestampNs start) {
                    PresentEvent event;
-                   event.set_begin_timestamp_ns(start->value);
+                   event.set_begin_timestamp_ns(*start);
                    return event;
                  });
   return result;
@@ -214,7 +214,7 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForScopesA
 
   // Filtering of scopes w.r.t min/max timestamp is handles by Capture data, it is not covered
   // in the test, hence we just pass zeroes. The MockCaptureData ignores these anyway.
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0), MakeTimestampNs(0));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(0), TimestampNs(0));
 }
 
 TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAndNoScopes) {
@@ -224,22 +224,14 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAnd
 
   // The arguments are chosen w.r.t the values used in kFirstScopeStarts, kSecondScopeStarts,
   // kDxgiFrameStarts and kD3d9FrameStarts
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
-                                                            MakeTimestampNs(15));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
-                                                            MakeTimestampNs(50));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
-                                                            MakeTimestampNs(300));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(3),
-                                                            MakeTimestampNs(15));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(15),
-                                                            MakeTimestampNs(50));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(50),
-                                                            MakeTimestampNs(300));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(50),
-                                                            MakeTimestampNs(3000));
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(1000),
-                                                            MakeTimestampNs(3000));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(0), TimestampNs(15));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(0), TimestampNs(50));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(0), TimestampNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(3), TimestampNs(15));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(15), TimestampNs(50));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(50), TimestampNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(50), TimestampNs(3000));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(1000), TimestampNs(3000));
 }
 
 TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAndScopes) {
@@ -248,8 +240,7 @@ TEST_F(ExpectFrameTracksHasFrameStartsForScopes, FrameTracksAreCorrectForEtwsAnd
 
   ExpectGetFrameTracksIsCorrect(kScopeInfos, kEtwSources);
 
-  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(MakeTimestampNs(0),
-                                                            MakeTimestampNs(300));
+  ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs(0), TimestampNs(300));
 }
 
 }  // namespace orbit_mizar_data
