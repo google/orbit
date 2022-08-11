@@ -165,14 +165,14 @@ struct PerfRecordSample {
     if (event.stack_size != 0u) {
       ring_buffer->ReadRawAtOffset(
           &event.dyn_size, current_offset + (event.stack_size * sizeof(uint8_t)), sizeof(uint64_t));
-    } else {
-      event.dyn_size = 0;
     }
     event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.dyn_size);
     ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
                                  event.dyn_size * sizeof(uint8_t));
     current_offset += event.stack_size * sizeof(uint8_t);
-    current_offset += sizeof(uint64_t);
+    if (event.stack_size != 0u) {
+      current_offset += sizeof(uint64_t);
+    }
   }
 
   return event;
