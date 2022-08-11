@@ -17,10 +17,9 @@
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
-using ::orbit_mizar_base::MakeRelativeTimeNs;
 using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::TID;
-using orbit_mizar_base::TimestampNs;
+using ::orbit_mizar_base::TimestampNs;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
 using ::orbit_test_utils::HasError;
@@ -45,8 +44,8 @@ class MockBaselineAndComparison {
 
 namespace orbit_mizar_widgets {
 
-constexpr RelativeTimeNs kBaselineCaptureDuration = MakeRelativeTimeNs(123456);
-constexpr RelativeTimeNs kComparisonCaptureDuration = MakeRelativeTimeNs(234567);
+constexpr RelativeTimeNs kBaselineCaptureDuration(123456);
+constexpr RelativeTimeNs kComparisonCaptureDuration(234567);
 
 using HalfConfig = orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig;
 
@@ -66,7 +65,7 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
       validator{};
 
   constexpr FrameTrackId kId(orbit_client_data::ScopeId(0));
-  constexpr RelativeTimeNs kStart = MakeRelativeTimeNs(0);
+  constexpr RelativeTimeNs kStart(0);
 
   EXPECT_THAT(
       validator.Validate(
@@ -82,7 +81,7 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
                                                        kId)),
       HasError("Baseline: No threads selected"));
 
-  constexpr RelativeTimeNs kOneNs = MakeRelativeTimeNs(1);
+  constexpr RelativeTimeNs kOneNs(1);
 
   EXPECT_THAT(validator.Validate(
                   &bac,

@@ -42,7 +42,7 @@ class HalfOfSamplingWithFrameTrackReportConfig {
                                                     FrameTrackId frame_track_id)
       : tids(std::move(tids)),
         start_relative(start),
-        duration(orbit_mizar_base::MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max())),
+        duration(orbit_mizar_base::RelativeTimeNs(std::numeric_limits<uint64_t>::max())),
         frame_track_id(frame_track_id) {}
 
   [[nodiscard]] RelativeTimeNs EndRelative() const { return start_relative + duration; }

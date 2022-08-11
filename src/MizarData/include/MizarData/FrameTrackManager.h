@@ -60,12 +60,12 @@ class FrameTrackManagerTmpl {
                                                              TimestampNs max_start,
                                                              ScopeId scope_id) const {
     const std::vector<const TimerInfo*> timers =
-        GetCaptureData().GetTimersForScope(scope_id, min_start->value, max_start->value);
+        GetCaptureData().GetTimersForScope(scope_id, *min_start, *max_start);
 
     std::vector<TimestampNs> result;
     result.reserve(timers.size());
     absl::c_transform(timers, std::back_inserter(result), [](const TimerInfo* timer) {
-      return orbit_mizar_base::MakeTimestampNs(timer->start());
+      return orbit_mizar_base::TimestampNs(timer->start());
     });
     return result;
   }
@@ -82,7 +82,7 @@ class FrameTrackManagerTmpl {
     std::vector<TimestampNs> result;
     const std::vector<PresentEvent>& events = it->second;
     for (const PresentEvent& event : events) {
-      const TimestampNs event_start = orbit_mizar_base::MakeTimestampNs(event.begin_timestamp_ns());
+      const TimestampNs event_start = orbit_mizar_base::TimestampNs(event.begin_timestamp_ns());
       if (min_start <= event_start && event_start <= max_start) {
         result.push_back(event_start);
       }

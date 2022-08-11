@@ -27,8 +27,6 @@
 
 using ::orbit_client_data::ScopeId;
 using ::orbit_grpc_protos::PresentEvent;
-using ::orbit_mizar_base::MakeRelativeTimeNs;
-using ::orbit_mizar_base::MakeTimestampNs;
 using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
@@ -83,13 +81,13 @@ constexpr uint64_t kCompleteCallstackId = 1;
 constexpr uint64_t kInCompleteCallstackId = 2;
 constexpr uint64_t kAnotherCompleteCallstackId = 3;
 
-constexpr TimestampNs kCaptureStart = MakeTimestampNs(123);
-constexpr RelativeTimeNs kRelativeTime1 = MakeRelativeTimeNs(10);
-constexpr RelativeTimeNs kRelativeTime2 = MakeRelativeTimeNs(15);
-constexpr RelativeTimeNs kRelativeTime3 = MakeRelativeTimeNs(20);
-constexpr RelativeTimeNs kRelativeTime4 = MakeRelativeTimeNs(30);
-constexpr RelativeTimeNs kRelativeTime5 = MakeRelativeTimeNs(40);
-constexpr RelativeTimeNs kRelativeTimeTooLate = MakeRelativeTimeNs(1000);
+constexpr TimestampNs kCaptureStart(123);
+constexpr RelativeTimeNs kRelativeTime1(10);
+constexpr RelativeTimeNs kRelativeTime2(15);
+constexpr RelativeTimeNs kRelativeTime3(20);
+constexpr RelativeTimeNs kRelativeTime4(30);
+constexpr RelativeTimeNs kRelativeTime5(40);
+constexpr RelativeTimeNs kRelativeTimeTooLate(1000);
 constexpr TID kTID{0x3AD1};
 constexpr TID kAnotherTID{0x3AD2};
 constexpr TID kNamelessTID{0x3AD3};
@@ -117,16 +115,16 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   callstack_data->AddUniqueCallstack(kInCompleteCallstackId, kInCompleteCallstack);
   callstack_data->AddUniqueCallstack(kAnotherCompleteCallstackId, kAnotherCompleteCallstack);
 
-  callstack_data->AddCallstackEvent({kCaptureStart->value, kCompleteCallstackId, *kTID});
+  callstack_data->AddCallstackEvent({*kCaptureStart, kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime1)->value, kCompleteCallstackId, *kTID});
+      {*(kCaptureStart + kRelativeTime1), kCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime3)->value, kInCompleteCallstackId, *kTID});
+      {*(kCaptureStart + kRelativeTime3), kInCompleteCallstackId, *kTID});
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTime4)->value, kAnotherCompleteCallstackId, *kAnotherTID});
+      {*(kCaptureStart + kRelativeTime4), kAnotherCompleteCallstackId, *kAnotherTID});
 
   callstack_data->AddCallstackEvent(
-      {(kCaptureStart + kRelativeTimeTooLate)->value, kAnotherCompleteCallstackId, *kNamelessTID});
+      {*(kCaptureStart + kRelativeTimeTooLate), kAnotherCompleteCallstackId, *kNamelessTID});
 
   return callstack_data;
 }();
@@ -169,7 +167,7 @@ class MockFrameTrackManager {
 
 }  // namespace
 
-constexpr RelativeTimeNs kSamplingPeriod = MakeRelativeTimeNs(10);
+constexpr RelativeTimeNs kSamplingPeriod(10);
 
 const std::vector<ScopeId> kScopeIds = {ScopeId(1), ScopeId(2), ScopeId(10), ScopeId(30)};
 const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
@@ -229,14 +227,13 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, MakeRelativeTimeNs(0), kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, RelativeTimeNs(0), kRelativeTime5, action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, MakeRelativeTimeNs(0), kRelativeTime5,
-                                          action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, RelativeTimeNs(0), kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 
   //  some timestamps
@@ -254,9 +251,9 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
                                                                               kAddressToId);
   std::vector<RelativeTimeNs> actual_active_invocation_times =
-      mizar_paired_data.ActiveInvocationTimes(
-          {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), MakeRelativeTimeNs(0),
-          MakeRelativeTimeNs(std::numeric_limits<uint64_t>::max()));
+      mizar_paired_data.ActiveInvocationTimes({kTID, kAnotherTID}, FrameTrackId(ScopeId(1)),
+                                              RelativeTimeNs(0),
+                                              RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * uint64_t{2}, kSamplingPeriod * uint64_t{2}));
 }

@@ -30,7 +30,6 @@ using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
-using ::orbit_mizar_base::MakeRelativeTimeNs;
 using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
@@ -100,7 +99,8 @@ const std::vector<std::vector<SFID>> kCallstacks = {
 const std::vector<RelativeTimeNs> kFrameTrackActiveTimes = [] {
   const std::vector<uint64_t> kRaw = {300, 100, 200};
   std::vector<RelativeTimeNs> result;
-  absl::c_transform(kRaw, std::back_inserter(result), MakeRelativeTimeNs);
+  absl::c_transform(kRaw, std::back_inserter(result),
+                    [](uint64_t value) { return RelativeTimeNs(value); });
   return result;
 }();
 
@@ -177,10 +177,10 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
       std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, MakeRelativeTimeNs(0),
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, RelativeTimeNs(0),
           FrameTrackId(ScopeId(1))),
       MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, MakeRelativeTimeNs(0),
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, RelativeTimeNs(0),
           FrameTrackId(ScopeId(1))));
 
   EXPECT_EQ(report.GetBaselineSamplingCounts()->GetTotalCallstacks(), kCallstacks.size());

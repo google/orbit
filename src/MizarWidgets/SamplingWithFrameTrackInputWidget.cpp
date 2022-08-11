@@ -86,7 +86,7 @@ static uint64_t ParseStartNs(const QString& time_ms) {
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {
-  start_timestamp_ = orbit_mizar_base::MakeRelativeTimeNs(ParseStartNs(time_ms));
+  start_timestamp_ = RelativeTimeNs(ParseStartNs(time_ms));
 }
 
 SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() = default;
