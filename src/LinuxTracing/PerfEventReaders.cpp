@@ -163,14 +163,18 @@ struct PerfRecordSample {
     ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
     if (event.stack_size != 0u) {
+      // dyn_size comes after the actual stack but we read it first so
+      // we can use it to not copy unnessary parts of the stack.
       ring_buffer->ReadRawAtOffset(
           &event.dyn_size, current_offset + (event.stack_size * sizeof(uint8_t)), sizeof(uint64_t));
+      event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.dyn_size);
+      ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
+                                   event.dyn_size * sizeof(uint8_t));
     }
-    event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.dyn_size);
-    ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
-                                 event.dyn_size * sizeof(uint8_t));
     current_offset += event.stack_size * sizeof(uint8_t);
     if (event.stack_size != 0u) {
+      // dyn_size was already read but its offset wasn't increased.
+      // we increase it here.
       current_offset += sizeof(uint64_t);
     }
   }
