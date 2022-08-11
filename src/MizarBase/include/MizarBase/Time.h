@@ -13,13 +13,13 @@
 
 namespace orbit_mizar_base_internal {
 
-static inline uint64_t NonWrappingSum(uint64_t a, uint64_t b) {
+inline uint64_t NonWrappingSum(uint64_t a, uint64_t b) {
   const uint64_t sum = a + b;
   if (sum < a || sum < b) return std::numeric_limits<uint64_t>::max();
   return sum;
 }
 
-static inline uint64_t AbortingOnUnderflowSub(uint64_t a, uint64_t b) {
+inline uint64_t AbortingOnUnderflowSub(uint64_t a, uint64_t b) {
   ORBIT_CHECK(a >= b);
   return a - b;
 }
