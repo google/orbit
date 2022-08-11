@@ -10,6 +10,7 @@
 #include <llvm/DebugInfo/CodeView/TypeDeserializer.h>
 #include <llvm/DebugInfo/CodeView/TypeRecord.h>
 #include <llvm/DebugInfo/PDB/Native/TpiStream.h>
+#include <llvm/Object/COFF.h>
 
 #include <memory>
 
@@ -32,9 +33,11 @@ namespace {
 class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
  public:
   SymbolInfoVisitor(ModuleSymbols* module_symbols, const ObjectFileInfo& object_file_info,
+                    llvm::FixedStreamArray<llvm::object::coff_section>* section_headers,
                     llvm::pdb::TpiStream* type_info_stream)
       : module_symbols_(module_symbols),
         object_file_info_(object_file_info),
+        section_headers_(section_headers),
         type_info_stream_(type_info_stream) {
     ORBIT_CHECK(module_symbols != nullptr);
     ORBIT_CHECK(type_info_stream != nullptr);
@@ -58,9 +61,13 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
     // The address in PDB files is a relative virtual address (RVA), to make the address compatible
     // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
-    // the offset of the executable section.
-    symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias +
-                            object_file_info_.executable_segment_offset);
+    // the virtual offset of the section.
+    // Note: The segments are numbered starting at 1 and match what you observe using
+    // `dumpbin /HEADERS`.
+    ORBIT_CHECK(section_headers_ != nullptr && section_headers_->size() >= proc.Segment &&
+                proc.Segment > 0);
+    uint64_t section_offset = (*section_headers_)[proc.Segment - 1].VirtualAddress;
+    symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias + section_offset);
     symbol_info.set_size(proc.CodeSize);
 
     ORBIT_CHECK(module_symbols_ != nullptr);
@@ -127,6 +134,7 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
   ModuleSymbols* module_symbols_;
   ObjectFileInfo object_file_info_;
+  llvm::FixedStreamArray<llvm::object::coff_section>* section_headers_;
   llvm::pdb::TpiStream* type_info_stream_;
 };
 
@@ -160,6 +168,9 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   // Given that we check hasPDBTpiStream above, we must get a TpiStream here.
   ORBIT_CHECK(type_info_stream);
 
+  llvm::FixedStreamArray<llvm::object::coff_section> section_headers =
+      debug_info_stream->getSectionHeaders();
+
   const llvm::pdb::DbiModuleList& modules = debug_info_stream->modules();
 
   for (uint32_t index = 0; index < modules.getModuleCount(); ++index) {
@@ -186,7 +197,8 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
     llvm::codeview::SymbolDeserializer deserializer(nullptr,
                                                     llvm::codeview::CodeViewContainer::Pdb);
     pipeline.addCallbackToPipeline(deserializer);
-    SymbolInfoVisitor symbol_visitor(&module_symbols, object_file_info_, &type_info_stream.get());
+    SymbolInfoVisitor symbol_visitor(&module_symbols, object_file_info_, &section_headers,
+                                     &type_info_stream.get());
     pipeline.addCallbackToPipeline(symbol_visitor);
     llvm::codeview::CVSymbolVisitor visitor(pipeline);
 

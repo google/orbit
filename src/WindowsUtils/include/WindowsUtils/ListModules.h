@@ -18,6 +18,7 @@ struct Module {
   uint64_t file_size = 0;
   uint64_t address_start = 0;
   uint64_t address_end = 0;
+  uint64_t load_bias = 0;
   std::string build_id;
   std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections;
 };
