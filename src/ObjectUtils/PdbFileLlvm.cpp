@@ -61,8 +61,11 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
     // The address in PDB files is a relative virtual address (RVA), to make the address compatible
     // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
-    // the offset of the section.
-    ORBIT_CHECK(section_headers_ != nullptr && section_headers_->size() >= proc.Segment);
+    // the virtual offset of the section.
+    // Note: The segments are numbered starting at 1 and match what you observe using
+    // `dumpbin /HEADERS`.
+    ORBIT_CHECK(section_headers_ != nullptr && section_headers_->size() >= proc.Segment &&
+                proc.Segment > 0);
     uint64_t section_offset = (*section_headers_)[proc.Segment - 1].VirtualAddress;
     symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias + section_offset);
     symbol_info.set_size(proc.CodeSize);
