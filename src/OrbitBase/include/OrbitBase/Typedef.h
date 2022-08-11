@@ -149,24 +149,22 @@ struct PlusTag : public orbit_base_internal::PlusTagBase<OtherSummandTag> {
   }
 };
 
-// TODO(b/242038711) Use functions instead of operators for Typedefs
 template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
           typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
           typename = std::enable_if_t<
               std::is_same_v<typename Tag::PlusOtherSummandTag, typename SecondDecayed::Tag>>>
-auto operator+(First&& lhs, Second&& rhs) {
+auto Add(First&& lhs, Second&& rhs) {
   return Typedef<Tag, decltype(Tag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       Tag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
 };
 
-// TODO(b/242038711) Use functions instead of operators for Typedefs
 template <
     typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
     typename SecondDecayed = std::decay_t<Second>, typename FirstTag = typename FirstDecayed::Tag,
     typename SecondTag = typename SecondDecayed::Tag,
     typename =
         std::enable_if_t<!std::is_base_of_v<orbit_base_internal::PlusTagBase<SecondTag>, FirstTag>>>
-auto operator+(First&& lhs, Second&& rhs) {
+auto Add(First&& lhs, Second&& rhs) {
   return Typedef<SecondTag,
                  decltype(SecondTag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       SecondTag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
@@ -186,12 +184,11 @@ struct MinusTag {
   }
 };
 
-// TODO(b/242038711) Use functions instead of operators for Typedefs
 template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
           typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
           typename ResultTag = typename Tag::MinusResultTag,
           typename = std::enable_if_t<std::is_same_v<Tag, typename SecondDecayed::Tag>>>
-auto operator-(First&& lhs, Second&& rhs) {
+auto Sub(First&& lhs, Second&& rhs) {
   return Typedef<ResultTag,
                  decltype(Tag::Sub(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       Tag::Sub(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
@@ -209,23 +206,14 @@ struct TimesScalarTag : orbit_base_internal::TimesScalarTagBase<Scalar> {
   }
 };
 
-// TODO(b/242038711) Use functions instead of operators for Typedefs
 template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_t<Vector>,
           typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
           typename = std::enable_if_t<
               std::is_base_of_v<orbit_base_internal::TimesScalarTagBase<ScalarDecayed>, Tag>>>
-auto operator*(Vector&& vector, Scalar&& scalar) {
+auto Times(Vector&& vector, Scalar&& scalar) {
   return Typedef<Tag, decltype(Tag::TimesScalar(*std::forward<Vector>(vector),
                                                 std::forward<Scalar>(scalar)))>(
       Tag::TimesScalar(*std::forward<Vector>(vector), std::forward<Scalar>(scalar)));
-}
-
-template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_t<Vector>,
-          typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
-          typename = std::enable_if_t<
-              std::is_base_of_v<orbit_base_internal::TimesScalarTagBase<ScalarDecayed>, Tag>>>
-auto operator*(Scalar&& scalar, Vector&& vector) {
-  return std::forward<Vector>(vector) * std::forward<Scalar>(scalar);
 }
 
 // Say, we have a pair of typedefs.

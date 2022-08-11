@@ -41,7 +41,7 @@ struct D {
 
 }  // namespace
 
-static int Add(int i, int j) { return i + j; }
+static int Sum(int i, int j) { return i + j; }
 
 namespace orbit_base {
 
@@ -278,7 +278,7 @@ TEST(TypedefTest, CallIsCorrect) {
   }
 
   {
-    const MyType<int> sum_wrapped = LiftAndApply(Add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = LiftAndApply(Sum, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -337,14 +337,14 @@ constexpr int kBValue = 2;
 
 TEST(Typedef, WrapperWithArithmeticsHasTimesScalar) {
   WrapperWithArithmetics<int> a(kAValue);
-  WrapperWithArithmetics<int> result = a * kBValue;
+  WrapperWithArithmetics<int> result = Times(a, kBValue);
   EXPECT_EQ(*result, kAValue * kBValue);
 }
 
 TEST(Typedef, WrapperWithArithmeticsHasPlus) {
   WrapperWithArithmetics<int> a(kAValue);
   WrapperWithArithmetics<int> b(kBValue);
-  EXPECT_EQ(*(a + b), kAValue + kBValue);
+  EXPECT_EQ(*Add(a, b), kAValue + kBValue);
 }
 
 TEST(Typedef, WrapperWithArithmeticsHasPlusAndPromotes) {
@@ -352,7 +352,7 @@ TEST(Typedef, WrapperWithArithmeticsHasPlusAndPromotes) {
   constexpr float kFloat = 0.5;
   WrapperWithArithmetics<int> a(kInt);
   WrapperWithArithmetics<float> b(kFloat);
-  WrapperWithArithmetics<float> result = a + b;
+  WrapperWithArithmetics<float> result = Add(a, b);
   EXPECT_EQ(*result, kInt + kFloat);
 }
 
@@ -361,7 +361,7 @@ TEST(Typedef, WrapperWithArithmeticsHasPlusAndConvertsArgument) {
   constexpr std::chrono::microseconds kMicros(1);
   WrapperWithArithmetics<std::chrono::nanoseconds> a(kNanos);
   WrapperWithArithmetics<std::chrono::microseconds> b(kMicros);
-  EXPECT_EQ(*(a + b), kNanos + kMicros);
+  EXPECT_EQ(*(Add(a, b)), kNanos + kMicros);
 }
 
 static int PlusThatMultiplies(int a, int b) { return a * b; }
@@ -372,7 +372,7 @@ using IntWithProductInsteadOfPlus = orbit_base::Typedef<CustomPlusTag, int>;
 TEST(Typedef, CustomPlus) {
   IntWithProductInsteadOfPlus a{kAValue};
   IntWithProductInsteadOfPlus b(kBValue);
-  EXPECT_EQ(*(a + b), kAValue * kBValue);
+  EXPECT_EQ(*(Add(a, b)), kAValue * kBValue);
 }
 
 struct AddUnique {
@@ -414,7 +414,7 @@ TEST(Typedef, WrapperWithArithmeticsHasPlusForMoveOnlyType) {
   UniqueInt a_wrapped(std::make_unique<int>(kAValue));
   UniqueInt b_wrapped(std::make_unique<int>(kBValue));
 
-  EXPECT_EQ(**(std::move(a_wrapped) + std::move(b_wrapped)), kAValue + kBValue);
+  EXPECT_EQ(**Add(std::move(a_wrapped), std::move(b_wrapped)), kAValue + kBValue);
 }
 
 struct DistanceTag {};
@@ -430,7 +430,7 @@ TEST(Typedef, CoordinateHasMinusForMoveOnlyType) {
   Coordinate<int> a(std::make_unique<int>(kAValue));
   Coordinate<int> b(std::make_unique<int>(kBValue));
 
-  Distance<int> distance = std::move(a) - std::move(b);
+  Distance<int> distance = Sub(std::move(a), std::move(b));
 
   EXPECT_EQ(**distance, kAValue - kBValue);
 }
@@ -439,13 +439,13 @@ TEST(Typedef, CoordinateHasPlusForMoveOnlyType) {
   {
     Coordinate<int> origin(std::make_unique<int>(kAValue));
     Distance<int> distance(std::make_unique<int>(kBValue));
-    Coordinate<int> coordinate = std::move(origin) + std::move(distance);
+    Coordinate<int> coordinate = Add(std::move(origin), std::move(distance));
     EXPECT_EQ(**coordinate, kAValue + kBValue);
   }
   {
     Coordinate<int> origin(std::make_unique<int>(kAValue));
     Distance<int> distance(std::make_unique<int>(kBValue));
-    Coordinate<int> coordinate = std::move(distance) + std::move(origin);
+    Coordinate<int> coordinate = Add(std::move(distance), std::move(origin));
     EXPECT_EQ(**coordinate, kAValue + kBValue);
   }
 }
@@ -458,49 +458,24 @@ using WrapperWithTimesScalar = Typedef<WrapperWithTimesScalarTag<Scalar>, T>;
 
 TEST(Typedef, WrapperWithTimesScalarIntTimesFloat) {
   WrapperWithTimesScalar<int, double> wrapped(2);
-  {
-    WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * 0.5;
-    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
-  }
-
-  {
-    WrapperWithTimesScalar<double, double> half_of_wrapped = 0.5 * wrapped;
-    EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
-  }
+  WrapperWithTimesScalar<double, double> half_of_wrapped = Times(wrapped, 0.5);
+  EXPECT_EQ(*half_of_wrapped, 2 * 0.5);
 }
 
 TEST(Typedef, WrapperWithTimesScalarIntTimesLValueFloat) {
   WrapperWithTimesScalar<int, double> wrapped(2);
   constexpr double kScalar = 0.5;
-  {
-    WrapperWithTimesScalar<double, double> half_of_wrapped = wrapped * kScalar;
-    EXPECT_EQ(*half_of_wrapped, 2 * kScalar);
-  }
-
-  {
-    WrapperWithTimesScalar<double, double> half_of_wrapped = kScalar * wrapped;
-    EXPECT_EQ(*half_of_wrapped, 2 * kScalar);
-  }
+  WrapperWithTimesScalar<double, double> half_of_wrapped = Times(wrapped, kScalar);
+  EXPECT_EQ(*half_of_wrapped, 2 * kScalar);
 }
 
 TEST(Typedef, WrapperWithTimesScalarMoveOnly) {
-  {
-    auto times = std::make_unique<int>(kBValue);
-    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> wrapped(
-        std::make_unique<int>(kAValue));
-    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> result =
-        std::move(wrapped) * std::move(times);
-    EXPECT_EQ(**result, kAValue * kBValue);
-  }
-
-  {
-    auto times = std::make_unique<int>(kBValue);
-    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> wrapped(
-        std::make_unique<int>(kAValue));
-    WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> result =
-        std::move(times) * std::move(wrapped);
-    EXPECT_EQ(**result, kAValue * kBValue);
-  }
+  auto times = std::make_unique<int>(kBValue);
+  WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> wrapped(
+      std::make_unique<int>(kAValue));
+  WrapperWithTimesScalar<std::unique_ptr<int>, std::unique_ptr<int>> result =
+      Times(std::move(wrapped), std::move(times));
+  EXPECT_EQ(**result, kAValue * kBValue);
 }
 
 }  // namespace orbit_base

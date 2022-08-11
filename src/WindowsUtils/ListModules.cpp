@@ -54,8 +54,10 @@ std::vector<Module> ListModules(uint32_t pid) {
     std::string module_path = orbit_base::ToStdString(module_entry.szExePath);
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module_path);
     std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections;
+    uint64_t load_bias = 0;
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
+      load_bias = coff_file_or_error.value()->GetLoadBias();
       sections = coff_file_or_error.value()->GetObjectSegments();
     } else {
       ORBIT_ERROR(
@@ -70,6 +72,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     module.address_start = absl::bit_cast<uint64_t>(module_entry.modBaseAddr);
     module.address_end = module.address_start + module_entry.modBaseSize;
     module.build_id = build_id;
+    module.load_bias = load_bias;
     module.sections = std::move(sections);
 
   } while (Module32Next(module_snap_handle, &module_entry));

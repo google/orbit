@@ -86,7 +86,7 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
   EXPECT_THAT(validator.Validate(
                   &bac,
                   orbit_mizar_base::MakeBaseline<HalfConfig>(
-                      absl::flat_hash_set<TID>{TID(1)}, kBaselineCaptureDuration + kOneNs, kId),
+                      absl::flat_hash_set<TID>{TID(1)}, Add(kBaselineCaptureDuration, kOneNs), kId),
                   orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{TID(1)},
                                                                kStart, kId)),
               HasError("Baseline: Start > capture duration"));
@@ -95,8 +95,8 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
       validator.Validate(
           &bac,
           orbit_mizar_base::MakeBaseline<HalfConfig>(absl::flat_hash_set<TID>{TID(1)}, kStart, kId),
-          orbit_mizar_base::MakeComparison<HalfConfig>(absl::flat_hash_set<TID>{TID(1)},
-                                                       kComparisonCaptureDuration + kOneNs, kId)),
+          orbit_mizar_base::MakeComparison<HalfConfig>(
+              absl::flat_hash_set<TID>{TID(1)}, Add(kComparisonCaptureDuration, kOneNs), kId)),
       HasError("Comparison: Start > capture duration"));
 }
 
