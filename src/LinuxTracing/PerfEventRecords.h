@@ -79,7 +79,6 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
 
 // This struct must be in sync with the SAMPLE_REGS_USER_SP in PerfEventOpen.h.
 struct __attribute__((__packed__)) perf_event_sample_regs_user_sp {
-  uint64_t abi;
   uint64_t sp;
 };
 
@@ -142,6 +141,7 @@ struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
 struct __attribute__((__packed__)) perf_event_sp_stack_user_sample_fixed {
   perf_event_header header;
   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  uint64_t abi;
   perf_event_sample_regs_user_sp regs;
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */

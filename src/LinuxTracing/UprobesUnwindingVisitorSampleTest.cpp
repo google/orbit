@@ -1023,7 +1023,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserSpaceStack) {
           },
   };
   perf_event_sample_regs_user_sp sp_regs{};
-  sp_regs.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs.sp = kUserStackPointer;
   std::memcpy(user_stack_event.data.regs.get(), &sp_regs, sizeof(sp_regs));
   uint8_t* user_stack_data = user_stack_event.data.data.get();
@@ -1110,7 +1109,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
           },
   };
   perf_event_sample_regs_user_sp sp_regs1{};
-  sp_regs1.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs1.sp = kUserStackPointerOld;
   std::memcpy(user_stack_event_old.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   PerfEvent{std::move(user_stack_event_old)}.Accept(&visitor_);
@@ -1130,7 +1128,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
           },
   };
   perf_event_sample_regs_user_sp sp_regs2{};
-  sp_regs2.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs2.sp = kUserStackPointerNew;
   std::memcpy(user_stack_event_new.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   uint8_t* user_stack_data = user_stack_event_new.data.data.get();
@@ -1218,7 +1215,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
           },
   };
   perf_event_sample_regs_user_sp sp_regs1{};
-  sp_regs1.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs1.sp = kUserStackPointerSameThread;
   std::memcpy(user_stack_event_same_thread.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   uint8_t* user_stack_data = user_stack_event_same_thread.data.data.get();
@@ -1239,7 +1235,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
           },
   };
   perf_event_sample_regs_user_sp sp_regs2{};
-  sp_regs2.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs2.sp = kUserStackPointerOtherThread;
   std::memcpy(user_stack_event_other_thread.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   PerfEvent{std::move(user_stack_event_other_thread)}.Accept(&visitor_);
@@ -1326,7 +1321,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
           },
   };
   perf_event_sample_regs_user_sp sp_regs1{};
-  sp_regs1.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs1.sp = kUserStackPointer1;
   std::memcpy(user_stack_event1.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   uint8_t* user_stack_data1 = user_stack_event1.data.data.get();
@@ -1347,7 +1341,6 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
           },
   };
   perf_event_sample_regs_user_sp sp_regs2{};
-  sp_regs2.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs2.sp = kUserStackPointer2;
   std::memcpy(user_stack_event2.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   uint8_t* user_stack_data2 = user_stack_event2.data.data.get();
