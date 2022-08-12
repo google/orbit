@@ -387,6 +387,8 @@ std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
               .stream_id = res.stream_id,
               .pid = static_cast<pid_t>(res.pid),
               .tid = static_cast<pid_t>(res.tid),
+              // It's okay to check the first element because we've
+              // already checked if abi = 0.
               .sp = res.regs[0],
               .dyn_size = res.dyn_size,
               .data = std::move(res.stack_data),
