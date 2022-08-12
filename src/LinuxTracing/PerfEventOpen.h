@@ -151,6 +151,13 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length);
 int tracepoint_event_open(const char* tracepoint_category, const char* tracepoint_name, pid_t pid,
                           int32_t cpu);
 
+int tracepoint_with_stack_event_open(const char* tracepoint_category, const char* tracepoint_name,
+                                     pid_t pid, int32_t cpu, uint16_t stack_dump_size);
+
+int tracepoint_with_callchain_event_open(const char* tracepoint_category,
+                                         const char* tracepoint_name, pid_t pid, int32_t cpu,
+                                         uint16_t stack_dump_size);
+
 }  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_PERF_EVENT_OPEN_H_
