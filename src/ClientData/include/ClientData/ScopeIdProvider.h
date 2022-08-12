@@ -5,7 +5,9 @@
 #ifndef ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_
 #define ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
 
 #include <cstdint>
 #include <optional>
@@ -62,10 +64,11 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
         scope_info_to_id_(std::move(scope_info_to_id)),
         scope_id_to_info_(std::move(scope_id_to_info)) {}
 
-  uint64_t next_id_{};
+  uint64_t next_id_ ABSL_GUARDED_BY(mutex_){};
   uint64_t max_instrumented_function_id{};
-  absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_;
-  absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info_;
+  absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_ ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info_ ABSL_GUARDED_BY(mutex_);
+  mutable absl::Mutex mutex_;
 };
 
 }  // namespace orbit_client_data
