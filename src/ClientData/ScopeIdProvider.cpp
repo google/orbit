@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
+#include <absl/synchronization/mutex.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -81,10 +82,19 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& t
 
   const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
 
-  const auto it = scope_info_to_id_.find(scope_info);
-  if (it != scope_info_to_id_.end()) {
-    return it->second;
+  {
+    absl::ReaderMutexLock reader_lock{&mutex_};
+    if (std::optional<ScopeId> id = GetExistingScopeId(scope_info); id.has_value()) {
+      return id.value();
+    }
   }
+
+  absl::WriterMutexLock writer_local{&mutex_};
+
+  if (std::optional<ScopeId> id = GetExistingScopeId(scope_info); id.has_value()) {
+    return id.value();
+  }
+
   const ScopeId id{next_id_};
   next_id_++;
 
@@ -94,6 +104,7 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& t
 }
 
 [[nodiscard]] std::vector<ScopeId> NameEqualityScopeIdProvider::GetAllProvidedScopeIds() const {
+  absl::ReaderMutexLock reader_lock{&mutex_};
   std::vector<ScopeId> ids;
   std::transform(std::begin(scope_id_to_info_), std::end(scope_id_to_info_),
                  std::back_inserter(ids), [](const auto& entry) { return entry.first; });
@@ -101,6 +112,7 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& t
 }
 
 const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(ScopeId scope_id) const {
+  absl::ReaderMutexLock reader_lock{&mutex_};
   const auto it = scope_id_to_info_.find(scope_id);
   ORBIT_CHECK(it != scope_id_to_info_.end());
   return it->second;
@@ -109,6 +121,14 @@ const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(ScopeId scope_id) con
 uint64_t NameEqualityScopeIdProvider::ScopeIdToFunctionId(ScopeId scope_id) const {
   if (*scope_id <= max_instrumented_function_id) return *scope_id;
   return orbit_grpc_protos::kInvalidFunctionId;
+}
+
+std::optional<ScopeId> NameEqualityScopeIdProvider::GetExistingScopeId(
+    const ScopeInfo& scope_info) const {
+  if (const auto it = scope_info_to_id_.find(scope_info); it != scope_info_to_id_.end()) {
+    return it->second;
+  }
+  return std::nullopt;
 }
 
 }  // namespace orbit_client_data
