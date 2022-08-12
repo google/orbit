@@ -312,7 +312,6 @@ message OrbitCaptureData {
   int64 number_of_modules_without_build_id = 36;
 }
 
-
 // Holds data about one symbol loading action for a module that happens in
 // Orbit. This is sent after a symbol loading attempt concludes and contains
 // information like whether symbols were found and iff, from where they were
