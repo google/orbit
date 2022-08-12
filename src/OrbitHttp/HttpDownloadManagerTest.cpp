@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <QMetaEnum>
 #include <QProcess>
 #include <QStringList>
 #include <memory>
@@ -12,6 +13,7 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/TemporaryFile.h"
@@ -41,7 +43,29 @@ class HttpDownloadManagerTest : public ::testing::Test {
     local_http_server_process_->setArguments(
         QStringList{"-m", R"(http.server)", "--bind", "localhost", "--directory",
                     QString::fromStdString(orbit_test::GetTestdataDir().string()), "8000"});
+    local_http_server_process_->setProcessChannelMode(QProcess::MergedChannels);
     local_http_server_process_->start();
+    ORBIT_LOG("Execute command:\n\"%s %s\"\n", local_http_server_process_->program().toStdString(),
+              local_http_server_process_->arguments().join(" ").toStdString());
+
+    // Output the error for starting local_http_server_process_
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    if (auto error = local_http_server_process_->error(); error != QProcess::UnknownError) {
+      ORBIT_LOG("Error while starting process.\nError:\n%s,\nDetails:\n%s\n",
+                QMetaEnum::fromType<QProcess::ProcessError>().valueToKey(error),
+                local_http_server_process_->errorString().toStdString());
+    }
+
+    // Output the error occurred while running local_http_server_process_
+    QObject::connect(
+        local_http_server_process_, &QProcess::errorOccurred,
+        [process = local_http_server_process_](QProcess::ProcessError error) {
+          if (error == QProcess::Crashed) return;
+          ORBIT_LOG("Error while executing process.\nError:\n%s,\nstdout:\n%s\nstderr:\n%s\n",
+                    QMetaEnum::fromType<QProcess::ProcessError>().valueToKey(error),
+                    process->readAllStandardOutput().toStdString(),
+                    process->readAllStandardError().toStdString());
+        });
   }
 
   ~HttpDownloadManagerTest() override {
