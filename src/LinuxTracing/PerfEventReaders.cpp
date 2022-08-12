@@ -361,8 +361,8 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   return event;
 }
 
-std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header) {
   // The flags here are in sync with uprobes_with_stack_and_sp_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // uprobes_with_stack_and_sp_event_open
@@ -375,10 +375,6 @@ std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
   ring_buffer->SkipRecord(header);
 
-  if (res.abi == PERF_SAMPLE_REGS_ABI_NONE) {
-    return std::nullopt;
-  }
-
   UprobesWithStackPerfEvent event{
       .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -387,9 +383,7 @@ std::optional<UprobesWithStackPerfEvent> ConsumeUprobeWithStackPerfEvent(
               .stream_id = res.stream_id,
               .pid = static_cast<pid_t>(res.pid),
               .tid = static_cast<pid_t>(res.tid),
-              // It's okay to check the first element because we've
-              // already checked if abi = 0.
-              .sp = res.regs[0],
+              .regs = std::move(res.regs),
               .dyn_size = res.dyn_size,
               .data = std::move(res.stack_data),
           },
