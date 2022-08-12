@@ -9,11 +9,13 @@ package orbit_metrics_uploader;
 // This proto is used for communication between Orbit and metrics uploader
 // client. Changing this proto requires changing the metrics uploader client
 // library accordingly.
+// NextID: 8
 message OrbitLogEvent {
-  // NextID: 49
+  // NextID: 54
   enum LogEventType {
     UNKNOWN_EVENT_TYPE = 0;
     // go/keep-sorted start
+    ORBIT_AUTO_SYMBOL_LOAD = 53;
     ORBIT_CAPTURE_DURATION = 2;
     ORBIT_CAPTURE_END = 17;
     ORBIT_CAPTURE_LOAD = 4;
@@ -25,6 +27,7 @@ message OrbitLogEvent {
     ORBIT_DISASSEMBLY_SHOW = 47;
     ORBIT_END_SESSION_CLICKED = 13;
     ORBIT_EXIT = 15;
+    ORBIT_FLAG_AUTO_SYMBOL_LOADING_DISABLED = 50;
     ORBIT_FRAME_TRACK_ADDED_INVISIBLE = 29;
     ORBIT_FRAME_TRACK_ADDED_VISIBLE = 28;
     ORBIT_FRAME_TRACK_DISABLED = 31;
@@ -50,10 +53,13 @@ message OrbitLogEvent {
     ORBIT_SESSION_SETUP_WINDOW_OPEN = 11;
     ORBIT_SOURCE_CODE_REQUESTED = 34;
     ORBIT_SOURCE_CODE_SHOW = 48;
+    ORBIT_SYMBOL_DOWNLOAD_CANCELLED_BY_USER = 52;
+    ORBIT_SYMBOL_DOWNLOAD_DISABLED_BY_USER = 51;
     ORBIT_SYMBOL_LOAD = 16;
     ORBIT_SYMBOL_LOADING_ERROR_CANCELLED = 45;
     ORBIT_SYMBOL_LOADING_ERROR_DISPLAYED = 44;
     ORBIT_SYMBOL_LOADING_ERROR_RESOLVED = 46;
+    ORBIT_SYMBOL_LOAD_V2 = 49;
     ORBIT_SYMBOL_LOCATIONS_ADD_FILE = 38;
     ORBIT_SYMBOL_LOCATIONS_ADD_FOLDER = 37;
     ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE = 40;
@@ -91,6 +97,8 @@ message OrbitLogEvent {
   StatusCode status_code = 5;
   // Detailed information about a capture. Sent with ORBIT_CAPTURE_END.
   OrbitCaptureData orbit_capture_data = 6;
+  // Detailed information about symbol loading. Sent with ORBIT_SYMBOL_LOAD_V2.
+  OrbitPerModuleSymbolLoadData orbit_per_module_symbol_load_data = 7;
 }
 
 // Holds data about a capture taken in Orbit. This includes data that was
@@ -98,7 +106,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
-// NextID: 32
+// NextID: 37
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -287,4 +295,63 @@ message OrbitCaptureData {
     AUTO_FRAME_TRACK_DISABLED = 2;
   }
   AutoFrameTrack auto_frame_track = 31;
+
+  // Total number of modules used by the process.
+  int64 number_of_modules = 32;
+
+  // Number of modules where Orbit was unable to find symbols.
+  int64 number_of_symbols_not_found = 33;
+
+  // Number of symbol downloads that were cancelled on capture start.
+  int64 number_of_symbol_downloads_cancelled_on_capture_start = 34;
+
+  // Number of modules for which the user disabled symbol downloads.
+  int64 number_of_modules_with_symbol_download_disabled = 35;
+
+  // Number of modules that do not contain a build-id.
+  int64 number_of_modules_without_build_id = 36;
+}
+
+// Holds data about one symbol loading action for a module that happens in
+// Orbit. This is sent after a symbol loading attempt concludes and contains
+// information like whether symbols were found and iff, from where they were
+// loaded.
+// NextID: 5
+message OrbitPerModuleSymbolLoadData {
+  // Whether symbols were found by Orbit or not.
+  enum SymbolsFound {
+    SYMBOLS_FOUND_UNKNOWN = 0;
+    SYMBOLS_FOUND_TRUE = 1;
+    SYMBOLS_FOUND_FALSE = 2;
+  }
+  SymbolsFound symbols_found = 1;
+
+  // Whether the symbols come from a different file than the module file, or
+  // whether they are included in the module. If no symbols were found, this is
+  // set to UNKNOWN.
+  enum SymbolFileSeparation {
+    SYMBOL_FILE_SEPARATION_UNKNOWN = 0;
+    DIFFERENT_FILE = 1;
+    MODULE_FILE = 2;
+  }
+  SymbolFileSeparation symbol_file_separation = 2;
+
+  // Whether the module is the main module of the process, or not.
+  enum IsMainModule {
+    IS_MAIN_MODULE_UNKNOWN = 0;
+    IS_MAIN_MODULE_TRUE = 1;
+    IS_MAIN_MODULE_FALSE = 2;
+  }
+  IsMainModule is_main_module = 3;
+
+  // Source from where the symbols have been loaded.
+  enum SymbolSource {
+    SYMBOL_SOURCE_UNKNOWN = 0;
+    ORBIT_CACHE = 1;
+    LOCAL_STADIA_SDK = 2;
+    STADIA_INSTANCE = 3;
+    SYMBOL_LOCATIONS_DIALOG = 4;
+    ADDITIONAL_SYMBOL_PATHS_FLAG = 5;
+  }
+  SymbolSource symbol_source = 4;
 }
