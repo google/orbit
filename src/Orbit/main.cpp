@@ -5,6 +5,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/flags/internal/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
@@ -105,6 +106,11 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   orbit_metrics_uploader::ScopedMetric metric{metrics_uploader.get(),
                                               orbit_metrics_uploader::OrbitLogEvent::ORBIT_EXIT};
+
+  if (!absl::GetFlag(FLAGS_auto_symbol_loading)) {
+    metrics_uploader->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FLAG_AUTO_SYMBOL_LOADING_DISABLED);
+  }
 
   // If Orbit starts with loading a capture file, we skip SessionSetupDialog and create a
   // FileTarget from capture_file_path. After creating the FileTarget, we reset
