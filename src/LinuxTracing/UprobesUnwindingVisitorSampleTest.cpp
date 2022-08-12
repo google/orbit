@@ -1132,7 +1132,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
   perf_event_sample_regs_user_sp sp_regs2{};
   sp_regs2.abi = PERF_SAMPLE_REGS_ABI_64;
   sp_regs2.sp = kUserStackPointerNew;
-  std::memcpy(user_stack_event_old.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
+  std::memcpy(user_stack_event_new.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   uint8_t* user_stack_data = user_stack_event_new.data.data.get();
   PerfEvent{std::move(user_stack_event_new)}.Accept(&visitor_);
 
