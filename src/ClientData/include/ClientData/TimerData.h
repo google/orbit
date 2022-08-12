@@ -26,26 +26,9 @@ class TimerData final : public TimerDataInterface {
 
   // The method is not optimized. The complexity is linear in the total number of timer_infos,
   // sortedness is not made use of.
-  [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override {
-    // TODO(b/204173236): use it in TimerTracks.
-    absl::MutexLock lock(&mutex_);
-    std::vector<const orbit_client_protos::TimerInfo*> timers;
-    for (const auto& [depth, chain] : timers_) {
-      ORBIT_CHECK(chain != nullptr);
-      for (const auto& block : *chain) {
-        if (!block.Intersects(min_tick, max_tick)) continue;
-        for (uint64_t i = 0; i < block.size(); i++) {
-          const orbit_client_protos::TimerInfo* timer = &block[i];
-          if (min_tick <= timer->start() && timer->end() <= max_tick) timers.push_back(timer);
-        }
-      }
-    }
-
-    return timers;
-  }
-
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
   // Metadata queries
   [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const override { return num_timers_; }
