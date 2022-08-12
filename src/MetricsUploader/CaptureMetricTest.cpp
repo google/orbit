@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "MetricsUploader/CaptureMetric.h"
-#include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/MockMetricsUploader.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "Test/Path.h"
 
@@ -101,25 +101,8 @@ bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,
 using ::testing::_;
 using ::testing::Ge;
 
-class MockUploader : public MetricsUploader {
- public:
-  MOCK_METHOD(bool, SendLogEvent, (OrbitLogEvent_LogEventType /*log_event_type*/), (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent_LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/),
-              (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent_LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/,
-               OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
-  MOCK_METHOD(bool, SendCaptureEvent,
-              (OrbitCaptureData /*capture data*/, OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
-};
-
 TEST(CaptureMetric, SendCaptureFailed) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
@@ -139,7 +122,7 @@ TEST(CaptureMetric, SendCaptureFailed) {
 }
 
 TEST(CaptureMetric, SendCaptureCancelled) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
@@ -159,7 +142,7 @@ TEST(CaptureMetric, SendCaptureCancelled) {
 }
 
 TEST(CaptureMetric, SendCaptureSucceeded) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
@@ -178,7 +161,7 @@ TEST(CaptureMetric, SendCaptureSucceeded) {
 }
 
 TEST(CaptureMetric, SendCaptureSucceededWithoutCompleteData) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
@@ -197,7 +180,7 @@ TEST(CaptureMetric, SendCaptureSucceededWithoutCompleteData) {
 }
 
 TEST(CaptureMetric, SendCaptureWithFile) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   constexpr uint64_t kTestFileSize = 10;
 
@@ -222,7 +205,7 @@ TEST(CaptureMetric, SendCaptureWithFile) {
 }
 
 TEST(CaptureMetric, SendCaptureWithoutFile) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader, SendCaptureEvent(_, _))
       .Times(1)
