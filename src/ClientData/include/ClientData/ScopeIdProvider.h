@@ -64,6 +64,9 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
         scope_info_to_id_(std::move(scope_info_to_id)),
         scope_id_to_info_(std::move(scope_id_to_info)) {}
 
+  [[nodiscard]] std::optional<ScopeId> GetExistingScopeId(const ScopeInfo& scope_info) const
+      ABSL_SHARED_LOCKS_REQUIRED(mutex_);
+
   uint64_t next_id_ ABSL_GUARDED_BY(mutex_){};
   uint64_t max_instrumented_function_id{};
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_ ABSL_GUARDED_BY(mutex_);

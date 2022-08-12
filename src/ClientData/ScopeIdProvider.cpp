@@ -84,13 +84,16 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& t
 
   {
     absl::ReaderMutexLock reader_lock{&mutex_};
-    const auto it = scope_info_to_id_.find(scope_info);
-    if (it != scope_info_to_id_.end()) {
-      return it->second;
+    if (std::optional<ScopeId> id = GetExistingScopeId(scope_info); id.has_value()) {
+      return id.value();
     }
   }
 
   absl::WriterMutexLock writer_local{&mutex_};
+
+  if (std::optional<ScopeId> id = GetExistingScopeId(scope_info); id.has_value()) {
+    return id.value();
+  }
 
   const ScopeId id{next_id_};
   next_id_++;
@@ -118,6 +121,14 @@ const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(ScopeId scope_id) con
 uint64_t NameEqualityScopeIdProvider::ScopeIdToFunctionId(ScopeId scope_id) const {
   if (*scope_id <= max_instrumented_function_id) return *scope_id;
   return orbit_grpc_protos::kInvalidFunctionId;
+}
+
+std::optional<ScopeId> NameEqualityScopeIdProvider::GetExistingScopeId(
+    const ScopeInfo& scope_info) const {
+  if (const auto it = scope_info_to_id_.find(scope_info); it != scope_info_to_id_.end()) {
+    return it->second;
+  }
+  return std::nullopt;
 }
 
 }  // namespace orbit_client_data
