@@ -8,8 +8,10 @@
 #include <QEventLoop>
 #include <QMetaEnum>
 #include <QProcess>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
+#include <QString>
 #include <QStringList>
-#include <QTimer>
 #include <memory>
 
 #include "OrbitBase/CanceledOr.h"
@@ -54,18 +56,19 @@ class HttpDownloadManagerTest : public ::testing::Test {
               local_http_server_process_->arguments().join(" ").toStdString());
 
     QEventLoop loop{};
-    QObject::connect(
-        local_http_server_process_, &QProcess::readyReadStandardOutput, [&loop, this]() {
-          const std::string prefix = "Serving HTTP on ::1 port ";
-          const std::string suffix = " (http";
-          auto std_output = local_http_server_process_->readAllStandardOutput().toStdString();
-          if (!absl::StrContains(std_output, prefix)) return;
+    QObject::connect(local_http_server_process_, &QProcess::readyReadStandardOutput,
+                     [&loop, this]() {
+                       constexpr QStringView prefix = QStringViewLiteral("Serving HTTP on");
+                       QString std_output = local_http_server_process_->readAllStandardOutput();
+                       if (!std_output.contains(prefix)) return;
 
-          auto first = std_output.find(prefix) + prefix.length();
-          auto last = std_output.find(suffix);
-          port_ = std_output.substr(first, last - first);
-          if (loop.isRunning()) loop.quit();
-        });
+                       QRegularExpression portRegex("port ([0-9]+)");
+                       QRegularExpressionMatch portMatch = portRegex.match(std_output);
+                       if (portMatch.hasMatch()) {
+                         port_ = portMatch.captured(1);
+                         loop.quit();
+                       }
+                     });
 
     QObject::connect(local_http_server_process_, &QProcess::errorOccurred,
                      [&loop, this](QProcess::ProcessError error) {
@@ -75,12 +78,6 @@ class HttpDownloadManagerTest : public ::testing::Test {
                                  local_http_server_process_->errorString().toStdString());
                        if (loop.isRunning()) loop.quit();
                      });
-
-    QTimer::singleShot(std::chrono::seconds{5}, &loop, [&loop]() {
-      if (!loop.isRunning()) return;
-      ORBIT_LOG("Timeout while starting process.");
-      loop.quit();
-    });
 
     local_http_server_process_->start();
     loop.exec();
@@ -106,8 +103,7 @@ class HttpDownloadManagerTest : public ::testing::Test {
   }
 
   [[nodiscard]] std::string GetUrl(std::string filename) const {
-    EXPECT_FALSE(port_.empty());
-    return absl::StrFormat("http://localhost:%s/%s", port_, filename);
+    return absl::StrFormat("http://localhost:%s/%s", port_.toStdString(), filename);
   }
 
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
@@ -116,7 +112,7 @@ class HttpDownloadManagerTest : public ::testing::Test {
  private:
   QProcess* local_http_server_process_;
   std::vector<std::filesystem::path> files_to_remove_;
-  std::string port_;
+  QString port_;
 };
 }  // namespace
 
