@@ -138,6 +138,8 @@ void OrbitLiveFunctions::AddIterator(size_t id, const FunctionInfo* function) {
 
   dynamic_cast<QBoxLayout*>(ui_->iteratorFrame->layout())
       ->insertWidget(ui_->iteratorFrame->layout()->count() - 1, iterator_ui);
+
+  ui_->tabWidget->setCurrentWidget(ui_->iterators_tab);
 }
 
 QLineEdit* OrbitLiveFunctions::GetFilterLineEdit() {
