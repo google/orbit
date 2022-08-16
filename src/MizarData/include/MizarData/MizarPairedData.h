@@ -101,8 +101,7 @@ class MizarPairedDataTmpl {
   }
 
   // Action is a void callable that takes a single argument of type
-  // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
-  // sampled function id.
+  // `const std::vector<ScopeId>` representing a callstack sample.
   // `min_relative_timestamp_ns` and `max_relative_timestamp_ns` are the nanoseconds elapsed since
   // capture start.
   template <typename Action>
