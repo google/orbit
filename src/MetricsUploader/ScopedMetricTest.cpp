@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/MockMetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 
 namespace orbit_metrics_uploader {
@@ -18,27 +19,10 @@ using ::testing::AllOf;
 using ::testing::Ge;
 using ::testing::Lt;
 
-class MockUploader : public MetricsUploader {
- public:
-  MOCK_METHOD(bool, SendLogEvent, (OrbitLogEvent::LogEventType /*log_event_type*/), (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent::LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/),
-              (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent::LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/,
-               OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
-  MOCK_METHOD(bool, SendCaptureEvent,
-              (OrbitCaptureData /*capture data*/, OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
-};
-
 TEST(ScopedMetric, Constructor) {
   { ScopedMetric metric{nullptr, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN}; }
 
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader,
               SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, _, OrbitLogEvent::SUCCESS))
@@ -48,7 +32,7 @@ TEST(ScopedMetric, Constructor) {
 }
 
 TEST(ScopedMetric, SetStatusCode) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   EXPECT_CALL(uploader,
               SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN, _, OrbitLogEvent::CANCELLED))
@@ -61,7 +45,7 @@ TEST(ScopedMetric, SetStatusCode) {
 }
 
 TEST(ScopedMetric, Sleep) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   std::chrono::milliseconds sleep_time{1};
 
@@ -76,7 +60,7 @@ TEST(ScopedMetric, Sleep) {
 }
 
 TEST(ScopedMetric, MoveAndSleep) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   std::chrono::milliseconds sleep_time{1};
 
@@ -93,7 +77,7 @@ TEST(ScopedMetric, MoveAndSleep) {
 }
 
 TEST(ScopedMetric, PauseAndResume) {
-  MockUploader uploader{};
+  MockMetricsUploader uploader{};
 
   std::chrono::milliseconds sleep_time{200};
 

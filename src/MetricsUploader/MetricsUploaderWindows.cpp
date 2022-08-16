@@ -43,6 +43,9 @@ class MetricsUploaderImpl : public MetricsUploader {
                     OrbitLogEvent::StatusCode status_code) override;
   bool SendCaptureEvent(OrbitCaptureData capture_data,
                         OrbitLogEvent::StatusCode status_code) override;
+  bool SendSymbolLoadEvent(OrbitPerModuleSymbolLoadData symbol_load_data,
+                           std::chrono::milliseconds event_duration,
+                           OrbitLogEvent::StatusCode status_code) override;
 
  private:
   [[nodiscard]] bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const;
@@ -252,6 +255,17 @@ bool MetricsUploaderImpl::SendCaptureEvent(OrbitCaptureData capture_data,
   OrbitLogEvent log_event;
   log_event.set_log_event_type(OrbitLogEvent::ORBIT_CAPTURE_END);
   *log_event.mutable_orbit_capture_data() = std::move(capture_data);
+  log_event.set_status_code(status_code);
+  return FillAndSendLogEvent(log_event);
+}
+
+bool MetricsUploaderImpl::SendSymbolLoadEvent(OrbitPerModuleSymbolLoadData symbol_load_data,
+                                              std::chrono::milliseconds event_duration,
+                                              OrbitLogEvent::StatusCode status_code) {
+  OrbitLogEvent log_event;
+  log_event.set_log_event_type(OrbitLogEvent::ORBIT_SYMBOL_LOAD_V2);
+  *log_event.mutable_orbit_per_module_symbol_load_data() = std::move(symbol_load_data);
+  log_event.set_event_duration_milliseconds(event_duration.count());
   log_event.set_status_code(status_code);
   return FillAndSendLogEvent(log_event);
 }

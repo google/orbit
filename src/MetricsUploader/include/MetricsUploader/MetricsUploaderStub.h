@@ -28,6 +28,11 @@ class MetricsUploaderStub : public MetricsUploader {
                         OrbitLogEvent::StatusCode /*status_code*/) override {
     return false;
   }
+  bool SendSymbolLoadEvent(OrbitPerModuleSymbolLoadData /*symbol_load_data*/,
+                           std::chrono::milliseconds /*event_duration*/,
+                           OrbitLogEvent::StatusCode /*status_code*/) override {
+    return false;
+  }
 };
 
 }  // namespace orbit_metrics_uploader

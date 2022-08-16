@@ -23,7 +23,7 @@
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
-#include "MetricsUploader/ScopedMetric.h"
+#include "MetricsUploader/MockMetricsUploader.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
@@ -43,25 +43,6 @@ class MockPersistentStorageManager : public orbit_client_symbols::PersistentStor
   MOCK_METHOD((ModuleSymbolFileMappings), LoadModuleSymbolFileMappings, (), (override));
   MOCK_METHOD(void, SaveDisabledModulePaths, (absl::flat_hash_set<std::string>), (override));
   MOCK_METHOD(absl::flat_hash_set<std::string>, LoadDisabledModulePaths, (), (override));
-};
-
-class MockMetricsUploader : public orbit_metrics_uploader::MetricsUploader {
- public:
-  MOCK_METHOD(bool, SendLogEvent,
-              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/), (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/),
-              (override));
-  MOCK_METHOD(bool, SendLogEvent,
-              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/,
-               std::chrono::milliseconds /*event_duration*/,
-               OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
-  MOCK_METHOD(bool, SendCaptureEvent,
-              (orbit_metrics_uploader::OrbitCaptureData /*capture data*/,
-               OrbitLogEvent::StatusCode /*status_code*/),
-              (override));
 };
 
 class SymbolLocationsDialogTest : public ::testing::Test {
@@ -139,7 +120,7 @@ class SymbolLocationsDialogTest : public ::testing::Test {
   }
 
   MockPersistentStorageManager mock_storage_manager_;
-  MockMetricsUploader mock_uploader_;
+  orbit_metrics_uploader::MockMetricsUploader mock_uploader_;
 };
 
 TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
