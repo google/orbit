@@ -24,6 +24,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MizarBase/Address.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
@@ -44,10 +45,11 @@ class MizarPairedDataTmpl {
   using ScopeId = ::orbit_client_data::ScopeId;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
   using TimestampNs = ::orbit_mizar_base::TimestampNs;
+  using Address = ::orbit_mizar_base::Address;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
-                      absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
+                      absl::flat_hash_map<Address, SFID> address_to_sfid)
       : data_(std::move(data)),
         address_to_sfid_(std::move(address_to_sfid)),
         frame_tracks_(data_.get()) {
@@ -182,11 +184,11 @@ class MizarPairedDataTmpl {
 
   [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(const std::vector<uint64_t>& frames) const {
     std::vector<SFID> result;
-    for (const uint64_t address : frames) {
+    orbit_mizar_base::ForFrames(frames, [this, &result](Address address) {
       if (auto it = address_to_sfid_.find(address); it != address_to_sfid_.end()) {
         result.push_back(it->second);
       }
-    }
+    });
     return result;
   }
 
@@ -197,7 +199,7 @@ class MizarPairedDataTmpl {
   }
 
   std::unique_ptr<Data> data_;
-  absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
+  absl::flat_hash_map<Address, SFID> address_to_sfid_;
   FrameTracks frame_tracks_;
   absl::flat_hash_map<TID, std::string> tid_to_names_;
   absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;

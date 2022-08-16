@@ -10,7 +10,10 @@
 
 #include <string>
 
+#include "MizarBase/Address.h"
 #include "MizarBase/SampledFunctionId.h"
+
+using ::orbit_mizar_base::Address;
 
 namespace orbit_mizar_data {
 
@@ -24,10 +27,10 @@ template <typename K, typename V>
   return result;
 }
 
-static absl::flat_hash_map<uint64_t, SFID> AddressToSFID(
-    const absl::flat_hash_map<uint64_t, std::string>& address_to_name,
+static absl::flat_hash_map<Address, SFID> AddressToSFID(
+    const absl::flat_hash_map<Address, std::string>& address_to_name,
     const absl::flat_hash_map<std::string, SFID>& name_to_sfid) {
-  absl::flat_hash_map<uint64_t, SFID> address_to_sfid;
+  absl::flat_hash_map<Address, SFID> address_to_sfid;
   for (const auto& [address, name] : address_to_name) {
     if (const auto it = name_to_sfid.find(name); it != name_to_sfid.end()) {
       address_to_sfid.try_emplace(address, it->second);
@@ -37,12 +40,10 @@ static absl::flat_hash_map<uint64_t, SFID> AddressToSFID(
 }
 
 [[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(
-    const absl::flat_hash_map<uint64_t, std::string>& baseline_address_to_name,
-    const absl::flat_hash_map<uint64_t, std::string>& comparison_address_to_name) {
-  absl::flat_hash_set<std::string> baseline_names =
-      ValueSet<uint64_t, std::string>(baseline_address_to_name);
-  absl::flat_hash_set<std::string> comparison_names =
-      ValueSet<uint64_t, std::string>(comparison_address_to_name);
+    const absl::flat_hash_map<Address, std::string>& baseline_address_to_name,
+    const absl::flat_hash_map<Address, std::string>& comparison_address_to_name) {
+  absl::flat_hash_set<std::string> baseline_names = ValueSet(baseline_address_to_name);
+  absl::flat_hash_set<std::string> comparison_names = ValueSet(comparison_address_to_name);
 
   absl::flat_hash_map<std::string, SFID> name_to_sfid;
   absl::flat_hash_map<SFID, std::string> sfid_to_name;
@@ -56,9 +57,9 @@ static absl::flat_hash_map<uint64_t, SFID> AddressToSFID(
     }
   }
 
-  absl::flat_hash_map<uint64_t, SFID> baseline_address_to_sfid =
+  absl::flat_hash_map<Address, SFID> baseline_address_to_sfid =
       AddressToSFID(baseline_address_to_name, name_to_sfid);
-  absl::flat_hash_map<uint64_t, SFID> comparison_address_to_sfid =
+  absl::flat_hash_map<Address, SFID> comparison_address_to_sfid =
       AddressToSFID(comparison_address_to_name, name_to_sfid);
 
   return {std::move(baseline_address_to_sfid), std::move(comparison_address_to_sfid),

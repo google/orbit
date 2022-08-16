@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarBase STATIC)
 
 target_sources(MizarBase PUBLIC
+  include/MizarBase/Address.h
   include/MizarBase/BaselineOrComparison.h
   include/MizarBase/SampledFunctionId.h
   include/MizarBase/Time.h

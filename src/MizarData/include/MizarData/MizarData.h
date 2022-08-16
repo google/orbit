@@ -34,6 +34,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   using ScopeId = ::orbit_client_data::ScopeId;
   using PresentEvent = ::orbit_grpc_protos::PresentEvent;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
+  using Address = ::orbit_mizar_base::Address;
 
  public:
   MizarData() = default;
@@ -50,10 +51,10 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
     return source_to_present_events_;
   }
 
-  [[nodiscard]] absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const override;
+  [[nodiscard]] absl::flat_hash_map<Address, std::string> AllAddressToName() const override;
 
   [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
-      uint64_t address) const override;
+      Address address) const override;
 
   [[nodiscard]] orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const override {
     return orbit_mizar_base::TimestampNs(
