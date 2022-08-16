@@ -61,6 +61,12 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetCollectThreadStates() const;
   void SetTraceGpuSubmissions(bool trace_gpu_submissions);
   [[nodiscard]] bool GetTraceGpuSubmissions() const;
+  void SetPureOrNotTracepoint(bool is_pure);
+  [[nodiscard]] bool GetPureOrNotTracepoint() const;
+  void SetTracepointCallstackMethod(
+      orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+  GetTracepointCallstackMethod() const;
   void SetEnableApi(bool enable_api);
   [[nodiscard]] bool GetEnableApi() const;
   void SetDynamicInstrumentationMethod(
@@ -95,6 +101,9 @@ class CaptureOptionsDialog : public QDialog {
   static constexpr orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
       kDynamicInstrumentationMethodDefaultValue =
           orbit_grpc_protos::CaptureOptions::kUserSpaceInstrumentation;
+  static constexpr bool kIsPureTracepointDefault = true;
+  static constexpr orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+      kTracepointCallstackMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kPureTracepoint;
   static constexpr uint64_t kLocalMarkerDepthDefaultValue = 0;
   static constexpr orbit_client_data::WineSyscallHandlingMethod
       kWineSyscallHandlingMethodDefaultValue =

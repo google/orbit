@@ -6,6 +6,7 @@
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <qnamespace.h>
 
 #include <QAbstractButton>
 #include <QDialog>
@@ -14,6 +15,8 @@
 #include <QtGui/QValidator>
 
 #include "ClientFlags/ClientFlags.h"
+#include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {
@@ -52,6 +55,21 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
                      ui_->unwindingMethodGroupBox->setEnabled(checked);
                    });
 
+  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+                   [this](bool checked) {
+                     ui_->tracepointCallstackCollectionCheckBox->setEnabled(checked);
+                     ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(
+                         checked && ui_->tracepointCallstackCollectionCheckBox->isChecked());
+                     ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(
+                         checked && ui_->tracepointCallstackCollectionCheckBox->isChecked());
+                   });
+
+  QObject::connect(ui_->tracepointCallstackCollectionCheckBox, qOverload<bool>(&QCheckBox::toggled),
+                   this, [this](bool checked) {
+                     ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(checked);
+                     ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(checked);
+                   });
+
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->unwindingMethodGroupBox->setEnabled(ui_->samplingCheckBox->isChecked());
@@ -86,6 +104,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->schedulerCheckBox->hide();
     ui_->devModeGroupBox->hide();
     ui_->wineNoneRadioButton->hide();
+  }
+
+  if (!absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    ui_->tracepointCallstackCollectionCheckBox->hide();
+    ui_->tracepointUnwindingMethodGroupBox->hide();
   }
 }
 
@@ -192,6 +215,45 @@ DynamicInstrumentationMethod CaptureOptionsDialog::GetDynamicInstrumentationMeth
     return CaptureOptions::kUserSpaceInstrumentation;
   }
   ORBIT_UNREACHABLE();
+}
+
+void CaptureOptionsDialog::SetPureOrNotTracepoint(bool is_pure) {
+  ui_->tracepointCallstackCollectionCheckBox->setChecked(!is_pure);
+}
+
+bool CaptureOptionsDialog::GetPureOrNotTracepoint() const {
+  return !ui_->tracepointCallstackCollectionCheckBox->isChecked();
+}
+
+void CaptureOptionsDialog::SetTracepointCallstackMethod(
+    CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method) {
+  switch (tracepoint_callstack_method) {
+    case CaptureOptions::kFramePointersTracepoint:
+      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(true);
+      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(false);
+      break;
+    case CaptureOptions::kDWARFTracepoint:
+      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(true);
+      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(false);
+      break;
+    default:
+      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(true);
+      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(false);
+      break;
+  }
+}
+
+orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+CaptureOptionsDialog::GetTracepointCallstackMethod() const {
+  if (ui_->tracepointCallstackFramepointersMethodRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->tracepointCallstackDWARFMethodRadioButton->isChecked());
+    return CaptureOptions::kFramePointersTracepoint;
+  }
+  if (ui_->tracepointCallstackDWARFMethodRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->tracepointCallstackFramepointersMethodRadioButton->isChecked());
+    return CaptureOptions::kDWARFTracepoint;
+  }
+  return CaptureOptions::kDWARFTracepoint;
 }
 
 void CaptureOptionsDialog::SetWineSyscallHandlingMethod(

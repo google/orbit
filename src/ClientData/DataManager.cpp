@@ -315,4 +315,15 @@ uint64_t DataManager::memory_warning_threshold_kb() const {
   return memory_warning_threshold_kb_;
 }
 
+void DataManager::set_tracepoint_callstack_method(
+    orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  tracepoint_callstack_method_ = tracepoint_callstack_method;
+}
+
+orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+DataManager::tracepoint_callstack_method() const {
+  return tracepoint_callstack_method_;
+}
+
 }  // namespace orbit_client_data

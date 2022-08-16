@@ -85,6 +85,11 @@ class DataManager final {
   void set_enable_introspection(bool enable_introspection);
   [[nodiscard]] bool enable_introspection() const;
 
+  void set_tracepoint_callstack_method(
+      orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+  tracepoint_callstack_method() const;
+
   void set_dynamic_instrumentation_method(
       orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
   [[nodiscard]] orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
@@ -142,6 +147,7 @@ class DataManager final {
   bool enable_api_ = false;
   bool enable_introspection_ = false;
   orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod dynamic_instrumentation_method_{};
+  orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method_{};
   WineSyscallHandlingMethod wine_syscall_handling_method_{};
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;

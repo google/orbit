@@ -455,6 +455,14 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const {
     return GetCaptureData().memory_warning_threshold_kb();
   }
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
+  GetTracepointCallstackMethod() const {
+    return data_manager_->tracepoint_callstack_method();
+  }
+  void SetTracepointCallstackMethod(
+      orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method) {
+    data_manager_->set_tracepoint_callstack_method(tracepoint_callstack_method);
+  }
 
   // TODO(kuebler): Move them to a separate controller at some point
   void SelectFunction(const orbit_client_data::FunctionInfo& func) override;
