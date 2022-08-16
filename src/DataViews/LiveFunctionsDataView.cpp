@@ -28,7 +28,6 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
@@ -212,7 +211,6 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
 
 void LiveFunctionsDataView::DoSort() {
   if (!app_->HasCaptureData()) {
-    ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
@@ -226,11 +224,11 @@ void LiveFunctionsDataView::DoSort() {
           [this](ScopeId id) -> std::tuple<orbit_client_data::ScopeType, bool, bool> {
             bool is_selected = false;
             bool is_frame_track_enabled = false;
-            const auto it = scope_id_to_function_info_.find(id);
-            if (it != scope_id_to_function_info_.end()) {
-              is_selected = app_->IsFunctionSelected(it->second);
+            const FunctionInfo* function_info = app_->GetCaptureData().GetFunctionInfoByScopeId(id);
+            if (function_info != nullptr) {
+              is_selected = app_->IsFunctionSelected(*function_info);
               is_frame_track_enabled =
-                  FunctionsDataView::ShouldShowFrameTrackIcon(app_, it->second);
+                  FunctionsDataView::ShouldShowFrameTrackIcon(app_, *function_info);
             }
             const orbit_client_data::ScopeType type = GetScopeInfo(id).GetType();
             return std::make_tuple(type, is_selected, is_frame_track_enabled);
@@ -365,12 +363,12 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
     ScopeId scope_id = GetScopeId(i);
-    const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-    if (instrumented_function == nullptr) continue;
+    const FunctionInfo* function_info = GetFunctionInfoFromRow(i);
+    if (function_info == nullptr) continue;
 
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
     if (stats.count() > 0) {
-      live_functions_->AddIterator(scope_id, instrumented_function);
+      live_functions_->AddIterator(scope_id, function_info);
       metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
     }
   }
@@ -443,7 +441,6 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
 
 void LiveFunctionsDataView::DoFilter() {
   if (!app_->HasCaptureData()) {
-    ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
 
@@ -478,15 +475,8 @@ void LiveFunctionsDataView::DoFilter() {
   app_->SetVisibleScopeIds(std::move(visible_scope_ids));
 }
 
-void LiveFunctionsDataView::AddFunction(ScopeId scope_id,
-                                        orbit_client_data::FunctionInfo function_info) {
-  scope_id_to_function_info_.insert_or_assign(scope_id, std::move(function_info));
-  AddToIndices(scope_id);
-}
-
 void LiveFunctionsDataView::OnDataChanged() {
   UpdateHistogramWithScopeIds({});
-  scope_id_to_function_info_.clear();
   indices_.clear();
 
   if (!app_->HasCaptureData()) {
@@ -494,40 +484,9 @@ void LiveFunctionsDataView::OnDataChanged() {
     return;
   }
 
-  const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
-      instrumented_functions = app_->GetCaptureData().instrumented_functions();
-  for (const auto& [function_id, instrumented_function] : instrumented_functions) {
-    const ModuleManager* module_manager = app_->GetModuleManager();
-    const FunctionInfo* function_info_from_capture_data;
-
-    function_info_from_capture_data =
-        orbit_client_data::FindFunctionByModuleIdentifierAndVirtualAddress(
-            *module_manager,
-            ModuleIdentifier{instrumented_function.file_path(),
-                             instrumented_function.file_build_id()},
-            instrumented_function.function_virtual_address());
-
-    // This could happen because module has not yet been updated, it also
-    // happens when loading capture. In which case we will try to construct
-    // function info from instrumented function
-    std::optional<FunctionInfo> function_info;
-    if (function_info_from_capture_data == nullptr) {
-      function_info = CreateFunctionInfoFromInstrumentedFunction(instrumented_function);
-    } else {
-      function_info = *function_info_from_capture_data;
-    }
-
-    if (!function_info.has_value()) {
-      continue;
-    }
-    const std::optional<ScopeId> scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
-    ORBIT_CHECK(scope_id.has_value());
-    AddFunction(scope_id.value(), std::move(*function_info));
-  }
-
   std::vector<ScopeId> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
   for (ScopeId scope_id : all_scope_ids) {
-    if (!scope_id_to_function_info_.contains(scope_id)) AddToIndices(scope_id);
+    AddToIndices(scope_id);
   }
 
   DataView::OnDataChanged();
@@ -563,8 +522,7 @@ ScopeId LiveFunctionsDataView::GetScopeId(uint32_t row) const {
 
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
   ORBIT_CHECK(static_cast<unsigned int>(row) < indices_.size());
-  const auto it = scope_id_to_function_info_.find(GetScopeId(row));
-  return it == scope_id_to_function_info_.end() ? nullptr : &it->second;
+  return app_->GetCaptureData().GetFunctionInfoByScopeId(GetScopeId(row));
 }
 
 std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {

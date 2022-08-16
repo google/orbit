@@ -49,7 +49,6 @@ class LiveFunctionsDataView : public DataView {
                  const RefreshMode& mode) override;
   [[nodiscard]] bool ResetOnRefresh() const override { return false; }
   std::optional<int> GetRowFromScopeId(ScopeId scope_id);
-  void AddFunction(ScopeId scope_id, orbit_client_data::FunctionInfo function_info);
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
   void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;
@@ -60,6 +59,13 @@ class LiveFunctionsDataView : public DataView {
   void UpdateHistogramWithScopeIds(const std::vector<ScopeId>& scope_ids);
 
   std::string GetToolTip(int /*row*/, int column) override;
+
+  void AddToIndices(ScopeId scope_id) {
+    ORBIT_CHECK(app_->HasCaptureData());
+    const ScopeId max_scope_id = app_->GetCaptureData().GetMaxId();
+    ORBIT_CHECK(scope_id <= max_scope_id);
+    indices_.push_back(*scope_id);
+  }
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
@@ -118,8 +124,8 @@ class LiveFunctionsDataView : public DataView {
                                                                          ValueType default_value) {
     return MakeSorter(
         [this, getter, default_value](ScopeId id) {
-          const auto it = scope_id_to_function_info_.find(id);
-          return it == scope_id_to_function_info_.end() ? default_value : getter(it->second);
+          auto info = app_->GetCaptureData().GetFunctionInfoByScopeId(id);
+          return info == nullptr ? default_value : getter(*info);
         },
         ascending);
   }
@@ -129,13 +135,6 @@ class LiveFunctionsDataView : public DataView {
     return [sorter](uint64_t index_a, uint64_t index_b) {
       return sorter(ScopeId(index_a), ScopeId(index_b));
     };
-  }
-
-  void AddToIndices(ScopeId scope_id) {
-    ORBIT_CHECK(app_->HasCaptureData());
-    const ScopeId max_scope_id = app_->GetCaptureData().GetMaxId();
-    ORBIT_CHECK(scope_id <= max_scope_id);
-    indices_.push_back(*scope_id);
   }
 
   [[nodiscard]] std::vector<ScopeId> FetchMissingScopeIds() const;
