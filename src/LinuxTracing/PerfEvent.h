@@ -137,10 +137,13 @@ struct UprobesWithArgumentsPerfEventData {
 using UprobesWithArgumentsPerfEvent = TypedPerfEvent<UprobesWithArgumentsPerfEventData>;
 
 struct UprobesWithStackPerfEventData {
+  [[nodiscard]] const perf_event_sample_regs_user_sp& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_sp*>(regs.get());
+  }
   uint64_t stream_id;
   pid_t pid;
   pid_t tid;
-  perf_event_sample_regs_user_sp regs;
+  std::unique_ptr<uint64_t[]> regs;
 
   uint64_t dyn_size;
   // This mutablility allows moving the data out of this class in the UprobesUnwindingVisitor even
