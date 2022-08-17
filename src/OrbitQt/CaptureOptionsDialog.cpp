@@ -88,6 +88,13 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(
       1, std::numeric_limits<uint64_t>::max(), ui_->memorySamplingPeriodMsLineEdit));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
+  ui_->tracepointCallstackCollectionCheckBox->setEnabled(ui_->threadStateCheckBox->isChecked());
+  ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(
+      ui_->threadStateCheckBox->isChecked() &&
+      ui_->tracepointCallstackCollectionCheckBox->isChecked());
+  ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(
+      ui_->threadStateCheckBox->isChecked() &&
+      ui_->tracepointCallstackCollectionCheckBox->isChecked());
 
   if (!absl::GetFlag(FLAGS_auto_frame_track)) {
     ui_->autoFrameTrackGroupBox->hide();
