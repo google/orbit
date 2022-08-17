@@ -36,8 +36,8 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   using PresentEvent = ::orbit_grpc_protos::PresentEvent;
 
  public:
-  FrameTrackListModelTmpl(const PairedData* data, absl::flat_hash_set<TID>* selected_tids,
-                          RelativeTimeNs* start_timestamp, QObject* parent = nullptr)
+  FrameTrackListModelTmpl(const PairedData* data, const absl::flat_hash_set<TID>* selected_tids,
+                          const RelativeTimeNs* start_timestamp, QObject* parent = nullptr)
       : QAbstractListModel(parent),
         data_(data),
         selected_tids_(selected_tids),
@@ -126,8 +126,8 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   }
 
   const PairedData* data_;
-  absl::flat_hash_set<TID>* selected_tids_{};
-  RelativeTimeNs* start_timestamp_{};
+  const absl::flat_hash_set<TID>* selected_tids_{};
+  const RelativeTimeNs* start_timestamp_{};
   std::vector<std::pair<FrameTrackId, std::string>> id_to_displayed_name_;
 };
 
