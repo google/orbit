@@ -58,7 +58,7 @@ class HttpDownloadManagerTest : public ::testing::Test {
     QEventLoop loop{};
     QObject::connect(local_http_server_process_, &QProcess::readyReadStandardOutput,
                      [&loop, this]() {
-                       constexpr QStringView prefix = QStringViewLiteral("Serving HTTP on");
+                       const QString prefix = "Serving HTTP on";
                        QString std_output = local_http_server_process_->readAllStandardOutput();
                        if (!std_output.contains(prefix)) return;
 
