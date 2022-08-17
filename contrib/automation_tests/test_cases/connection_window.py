@@ -59,9 +59,8 @@ class LoadCapture(E2ETestCase):
 
         others_button = self.find_control('Button', '...')
         others_button.click_input()
-        # There is a rare flakyness which causes the file dialog to open slowly: b/242843902
-        time.sleep(10)
-
+        wait_for_condition(lambda: self.find_control('Edit', 'File name:') is not None,
+                           max_seconds=120)
         file_name_edit = self.find_control('Edit', 'File name:')
 
         if not os.path.isabs(capture_file_path):
