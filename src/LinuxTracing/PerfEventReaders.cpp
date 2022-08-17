@@ -445,6 +445,150 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
   };
 }
 
+SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_callchain_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_wakeup_tracepoint_fixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+
+  ring_buffer->SkipRecord(header);
+  return SchedWakeupWithCallchainPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+              // thread id.
+              .woken_tid = sched_wakeup.pid,
+              .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+              .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
+              .ips_size = res.ips_size,
+              .ips = std::move(res.ips),
+              .regs = std::move(res.regs),
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+SchedWakeupWithStackPerfEvent ConsumeSchedWakeupWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_stack_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_wakeup_tracepoint_fixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+
+  ring_buffer->SkipRecord(header);
+  return SchedWakeupWithStackPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+              // thread id.
+              .woken_tid = sched_wakeup.pid,
+              .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+              .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
+              .regs = std::move(res.regs),
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_stack_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_switch_tracepoint sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+
+  ring_buffer->SkipRecord(header);
+  return SchedSwitchWithStackPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .cpu = res.cpu,
+              // As the tracepoint data does not include the pid of the process that the thread
+              // being switched out belongs to, we use the pid set by perf_event_open in the
+              // corresponding generic field of the PERF_RECORD_SAMPLE.
+              // Note, though, that this value is -1 when the switch out is caused by the thread
+              // exiting. This is not the case for data.prev_pid, whose value is always correct as
+              // it comes directly from the tracepoint data.
+              .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
+              .prev_tid = sched_wakeup.prev_pid,
+              .prev_state = sched_wakeup.prev_state,
+              .next_tid = sched_wakeup.next_pid,
+              .regs = std::move(res.regs),
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEventData(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_callchain_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_switch_tracepoint sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+
+  ring_buffer->SkipRecord(header);
+  return SchedSwitchWithCallchainPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .cpu = res.cpu,
+              // As the tracepoint data does not include the pid of the process that the thread
+              // being switched out belongs to, we use the pid set by perf_event_open in the
+              // corresponding generic field of the PERF_RECORD_SAMPLE.
+              // Note, though, that this value is -1 when the switch out is caused by the thread
+              // exiting. This is not the case for data.prev_pid, whose value is always correct as
+              // it comes directly from the tracepoint data.
+              .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
+              .prev_tid = sched_wakeup.prev_pid,
+              .prev_state = sched_wakeup.prev_state,
+              .next_tid = sched_wakeup.next_pid,
+              .ips_size = res.ips_size,
+              .ips = std::move(res.ips),
+              .regs = std::move(res.regs),
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
 template <typename EventType, typename StructType>
 EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   uint32_t tracepoint_size;
