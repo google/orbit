@@ -20,20 +20,21 @@
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "MizarBase/Address.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "OrbitBase/Result.h"
 
-using ::orbit_mizar_base::Address;
-using ::orbit_mizar_base::ForFrames;
+using ::orbit_mizar_base::AbsoluteAddress;
+using ::orbit_mizar_base::ForEachFrame;
 
 namespace orbit_mizar_data {
-[[nodiscard]] absl::flat_hash_map<Address, std::string> MizarData::AllAddressToName() const {
-  absl::flat_hash_map<Address, std::string> result;
+[[nodiscard]] absl::flat_hash_map<AbsoluteAddress, std::string> MizarData::AllAddressToName()
+    const {
+  absl::flat_hash_map<AbsoluteAddress, std::string> result;
 
   GetCaptureData().GetCallstackData().ForEachUniqueCallstack(
       [&result, this](const uint64_t /*callstack_id*/,
                       const orbit_client_data::CallstackInfo& info) {
-        ForFrames(info.frames(), [this, &result](const Address address) {
+        ForEachFrame(info.frames(), [this, &result](const AbsoluteAddress address) {
           std::optional<std::string> name = this->GetFunctionNameFromAddress(address);
           if (name.has_value()) {
             result.try_emplace(address, std::move(name.value()));
@@ -64,7 +65,7 @@ void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   }
 }
 
-std::optional<std::string> MizarData::GetFunctionNameFromAddress(Address address) const {
+std::optional<std::string> MizarData::GetFunctionNameFromAddress(AbsoluteAddress address) const {
   const std::string name =
       orbit_client_data::GetFunctionNameByAddress(*module_manager_, GetCaptureData(), *address);
 

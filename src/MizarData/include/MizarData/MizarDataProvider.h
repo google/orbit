@@ -12,14 +12,14 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/CaptureDataHolder.h"
-#include "MizarBase/Address.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/Time.h"
 
 namespace orbit_mizar_data {
 
 // Handles one of the two datasets Mizar operates on
 class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
-  using Address = ::orbit_mizar_base::Address;
+  using AbsoluteAddress = ::orbit_mizar_base::AbsoluteAddress;
 
  public:
   MizarDataProvider() = default;
@@ -37,8 +37,9 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
   source_to_present_events() const = 0;
 
   [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
-      Address address) const = 0;
-  [[nodiscard]] virtual absl::flat_hash_map<Address, std::string> AllAddressToName() const = 0;
+      AbsoluteAddress address) const = 0;
+  [[nodiscard]] virtual absl::flat_hash_map<AbsoluteAddress, std::string> AllAddressToName()
+      const = 0;
 
   [[nodiscard]] virtual orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const = 0;
 

@@ -11,20 +11,24 @@
 
 #include <string>
 
-#include "MizarBase/Address.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/SampledFunctionId.h"
 
 namespace orbit_mizar_data {
 
 struct AddressToIdAndIdToName {
-  absl::flat_hash_map<orbit_mizar_base::Address, orbit_mizar_base::SFID> baseline_address_to_sfid;
-  absl::flat_hash_map<orbit_mizar_base::Address, orbit_mizar_base::SFID> comparison_address_to_sfid;
+  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
+      baseline_address_to_sfid;
+  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
+      comparison_address_to_sfid;
   absl::flat_hash_map<orbit_mizar_base::SFID, std::string> sfid_to_name;
 };
 
 [[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(
-    const absl::flat_hash_map<orbit_mizar_base::Address, std::string>& baseline_address_to_name,
-    const absl::flat_hash_map<orbit_mizar_base::Address, std::string>& comparison_address_to_name);
+    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, std::string>&
+        baseline_address_to_name,
+    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, std::string>&
+        comparison_address_to_name);
 
 }  // namespace orbit_mizar_data
 
