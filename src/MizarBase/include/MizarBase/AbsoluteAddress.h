@@ -12,6 +12,7 @@
 namespace orbit_mizar_base {
 
 struct AbsoluteAddressTag {};
+// The type represents an absolute address
 using AbsoluteAddress = orbit_base::Typedef<AbsoluteAddressTag, const uint64_t>;
 
 template <typename Action>
