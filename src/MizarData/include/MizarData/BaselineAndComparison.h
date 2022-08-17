@@ -95,6 +95,7 @@ class BaselineAndComparisonTmpl {
     return corrected;
   }
 
+  // TODO (b/242839338) Duplicated code. See FrameTrackListModel
   [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
     const std::vector<RelativeTimeNs> active_invocation_times = data.ActiveInvocationTimes(
