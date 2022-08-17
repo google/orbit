@@ -106,7 +106,8 @@ message CaptureOptions {
     kThreadStateChangeCallStackCollection = 2;
   }
 
-  ThreadStateChangeCallStackCollection thread_state_change_call_stack_collection = 15;
+  ThreadStateChangeCallStackCollection 
+      thread_state_change_call_stack_collection = 15;
   UnwindingMethod thread_state_change_call_stack_unwinding_method = 21;
 }
 
