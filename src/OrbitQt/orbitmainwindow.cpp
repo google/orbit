@@ -1106,9 +1106,10 @@ const QString OrbitMainWindow::kMemorySamplingPeriodMsSettingKey{"MemorySampling
 const QString OrbitMainWindow::kMemoryWarningThresholdKbSettingKey{"MemoryWarningThresholdKb"};
 const QString OrbitMainWindow::kLimitLocalMarkerDepthPerCommandBufferSettingsKey{
     "LimitLocalMarkerDepthPerCommandBuffer"};
-const QString OrbitMainWindow::kIsPureTracepoint{"IsPureTracepoint"};
-const QString OrbitMainWindow::kTracepointCallstackCollectionMethod{
-    "TracepointCallstackCollectionMethod"};
+const QString OrbitMainWindow::kEnableCallStackCollectionOnThreadStateChanges{
+    "EnableCallStackCollectionOnThreadStateChanges"};
+const QString OrbitMainWindow::kCallStackCollectionOnThreadStateChangesMethod{
+    "CallStackCollectionOnThreadStateChangesMethod"};
 const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 const QString OrbitMainWindow::kMainWindowGeometrySettingKey{"MainWindowGeometry"};
@@ -1167,23 +1168,31 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
-  bool const is_pure_tracepoint =
-      settings.value(kIsPureTracepoint, orbit_qt::CaptureOptionsDialog::kIsPureTracepointDefault)
+  bool const collect_callstack_on_thread_state_change =
+      settings
+          .value(kEnableCallStackCollectionOnThreadStateChanges,
+                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
           .toBool();
-  CaptureOptions::TracepointCallstackMethod const tracepoint_callstack_method =
-      static_cast<CaptureOptions::TracepointCallstackMethod>(
+  CaptureOptions::UnwindingMethod const tracepoint_callstack_method =
+      static_cast<CaptureOptions::UnwindingMethod>(
           settings
-              .value(kTracepointCallstackCollectionMethod,
-                     orbit_qt::CaptureOptionsDialog::kTracepointCallstackMethodDefaultValue)
+              .value(kCallStackCollectionOnThreadStateChangesMethod,
+                     orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackMethodDefaultValue)
               .toInt());
   if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
-    if (is_pure_tracepoint) {
-      app_->SetTracepointCallstackMethod(CaptureOptions::kPureTracepoint);
+    if (!collect_callstack_on_thread_state_change) {
+      app_->SetThreadStateChangeCallstackCollection(
+          CaptureOptions::kNoThreadStateChangeCallStackCollection);
+      app_->SetThreadStateChangeCallstackMethod(orbit_grpc_protos::CaptureOptions::kUndefined);
     } else {
-      app_->SetTracepointCallstackMethod(tracepoint_callstack_method);
+      app_->SetThreadStateChangeCallstackCollection(
+          CaptureOptions::kThreadStateChangeCallStackCollection);
+      app_->SetThreadStateChangeCallstackMethod(tracepoint_callstack_method);
     }
   } else {
-    app_->SetTracepointCallstackMethod(CaptureOptions::kTracepointCallstackMethodUnspecified);
+    app_->SetThreadStateChangeCallstackCollection(
+        CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
+    app_->SetThreadStateChangeCallstackMethod(CaptureOptions::kUndefined);
   }
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings
@@ -1324,20 +1333,22 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
           .toULongLong());
 
-  CaptureOptions::TracepointCallstackMethod const tracepoint_callstack_method =
-      static_cast<CaptureOptions::TracepointCallstackMethod>(
+  CaptureOptions::UnwindingMethod const thread_state_change_callstack_method =
+      static_cast<CaptureOptions::UnwindingMethod>(
           settings
-              .value(kTracepointCallstackCollectionMethod,
-                     orbit_qt::CaptureOptionsDialog::kTracepointCallstackMethodDefaultValue)
+              .value(kCallStackCollectionOnThreadStateChangesMethod,
+                     orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackMethodDefaultValue)
               .toInt());
 
-  dialog.SetTracepointCallstackMethod(tracepoint_callstack_method);
+  dialog.SetThreadStateChangeCallstackMethod(thread_state_change_callstack_method);
 
-  bool const is_pure_tracepoint =
-      settings.value(kIsPureTracepoint, orbit_qt::CaptureOptionsDialog::kIsPureTracepointDefault)
+  bool const collect_callstack_on_thread_state_change =
+      settings
+          .value(kEnableCallStackCollectionOnThreadStateChanges,
+                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
           .toBool();
 
-  dialog.SetPureOrNotTracepoint(is_pure_tracepoint);
+  dialog.SetEnableCallStackCollectionOnThreadStateChanges(collect_callstack_on_thread_state_change);
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -1369,10 +1380,10 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                     dialog.GetLimitLocalMarkerDepthPerCommandBuffer());
   settings.setValue(kMaxLocalMarkerDepthPerCommandBufferSettingsKey,
                     QString::number(dialog.GetMaxLocalMarkerDepthPerCommandBuffer()));
-  settings.setValue(kTracepointCallstackCollectionMethod,
-                    QString::number(dialog.GetTracepointCallstackMethod()));
-  settings.setValue(kIsPureTracepoint,
-                    QString::number(static_cast<int>(dialog.GetPureOrNotTracepoint())));
+  settings.setValue(kCallStackCollectionOnThreadStateChangesMethod,
+                    dialog.GetThreadStateChangeCallstackMethod());
+  settings.setValue(kEnableCallStackCollectionOnThreadStateChanges,
+                    static_cast<int>(dialog.GetEnableCallStackCollectionOnThreadStateChanges()));
   LoadCaptureOptionsIntoApp();
 }
 

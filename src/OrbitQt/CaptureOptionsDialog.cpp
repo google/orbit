@@ -6,7 +6,6 @@
 
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
-#include <qnamespace.h>
 
 #include <QAbstractButton>
 #include <QDialog>
@@ -57,18 +56,19 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
                    [this](bool checked) {
-                     ui_->tracepointCallstackCollectionCheckBox->setEnabled(checked);
-                     ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(
-                         checked && ui_->tracepointCallstackCollectionCheckBox->isChecked());
-                     ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(
-                         checked && ui_->tracepointCallstackCollectionCheckBox->isChecked());
+                     ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(checked);
+                     ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(
+                         checked && ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
+                     ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(
+                         checked && ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
                    });
 
-  QObject::connect(ui_->tracepointCallstackCollectionCheckBox, qOverload<bool>(&QCheckBox::toggled),
-                   this, [this](bool checked) {
-                     ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(checked);
-                     ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(checked);
-                   });
+  QObject::connect(
+      ui_->threadStateChangeCallstackCollectionCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+      [this](bool checked) {
+        ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(checked);
+        ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(checked);
+      });
 
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
@@ -88,13 +88,14 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(
       1, std::numeric_limits<uint64_t>::max(), ui_->memorySamplingPeriodMsLineEdit));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
-  ui_->tracepointCallstackCollectionCheckBox->setEnabled(ui_->threadStateCheckBox->isChecked());
-  ui_->tracepointCallstackDWARFMethodRadioButton->setEnabled(
+  ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(
+      ui_->threadStateCheckBox->isChecked());
+  ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(
       ui_->threadStateCheckBox->isChecked() &&
-      ui_->tracepointCallstackCollectionCheckBox->isChecked());
-  ui_->tracepointCallstackFramepointersMethodRadioButton->setEnabled(
+      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
+  ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(
       ui_->threadStateCheckBox->isChecked() &&
-      ui_->tracepointCallstackCollectionCheckBox->isChecked());
+      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
 
   if (!absl::GetFlag(FLAGS_auto_frame_track)) {
     ui_->autoFrameTrackGroupBox->hide();
@@ -114,8 +115,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   }
 
   if (!absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    ui_->tracepointCallstackCollectionCheckBox->hide();
-    ui_->tracepointUnwindingMethodGroupBox->hide();
+    ui_->threadStateChangeCallstackCollectionCheckBox->hide();
+    ui_->threadStateChangeCallstackUnwindingMethodGroupBox->hide();
   }
 }
 
@@ -224,43 +225,38 @@ DynamicInstrumentationMethod CaptureOptionsDialog::GetDynamicInstrumentationMeth
   ORBIT_UNREACHABLE();
 }
 
-void CaptureOptionsDialog::SetPureOrNotTracepoint(bool is_pure) {
-  ui_->tracepointCallstackCollectionCheckBox->setChecked(!is_pure);
+void CaptureOptionsDialog::SetEnableCallStackCollectionOnThreadStateChanges(bool check) {
+  ui_->threadStateChangeCallstackCollectionCheckBox->setChecked(check);
 }
 
-bool CaptureOptionsDialog::GetPureOrNotTracepoint() const {
-  return !ui_->tracepointCallstackCollectionCheckBox->isChecked();
+bool CaptureOptionsDialog::GetEnableCallStackCollectionOnThreadStateChanges() const {
+  return ui_->threadStateChangeCallstackCollectionCheckBox->isChecked();
 }
 
-void CaptureOptionsDialog::SetTracepointCallstackMethod(
-    CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method) {
-  switch (tracepoint_callstack_method) {
-    case CaptureOptions::kFramePointersTracepoint:
-      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(true);
-      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(false);
+void CaptureOptionsDialog::SetThreadStateChangeCallstackMethod(
+    CaptureOptions::UnwindingMethod thread_state_change_callstack_method) {
+  switch (thread_state_change_callstack_method) {
+    case CaptureOptions::kFramePointers:
+      ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setChecked(true);
+      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(false);
       break;
-    case CaptureOptions::kDWARFTracepoint:
-      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(true);
-      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(false);
-      break;
+    case CaptureOptions::kDwarf:
     default:
-      ui_->tracepointCallstackDWARFMethodRadioButton->setChecked(true);
-      ui_->tracepointCallstackFramepointersMethodRadioButton->setChecked(false);
+      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(true);
+      ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setChecked(false);
       break;
   }
 }
 
-orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
-CaptureOptionsDialog::GetTracepointCallstackMethod() const {
-  if (ui_->tracepointCallstackFramepointersMethodRadioButton->isChecked()) {
-    ORBIT_CHECK(!ui_->tracepointCallstackDWARFMethodRadioButton->isChecked());
-    return CaptureOptions::kFramePointersTracepoint;
+orbit_grpc_protos::CaptureOptions::UnwindingMethod
+CaptureOptionsDialog::GetThreadStateChangeCallstackMethod() const {
+  if (ui_->threadStateChangeCallstackFramepointersMethodRadioButton->isChecked()) {
+    return CaptureOptions::kFramePointers;
   }
-  if (ui_->tracepointCallstackDWARFMethodRadioButton->isChecked()) {
-    ORBIT_CHECK(!ui_->tracepointCallstackFramepointersMethodRadioButton->isChecked());
-    return CaptureOptions::kDWARFTracepoint;
+  if (ui_->threadStateChangeCallstackDWARFMethodRadioButton->isChecked()) {
+    return CaptureOptions::kDwarf;
   }
-  return CaptureOptions::kDWARFTracepoint;
+  return CaptureOptions::kDwarf;
 }
 
 void CaptureOptionsDialog::SetWineSyscallHandlingMethod(

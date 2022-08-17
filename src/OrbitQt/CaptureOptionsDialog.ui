@@ -542,7 +542,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="tracepointCallstackCollectionCheckBox">
+           <widget class="QCheckBox" name="threadStateChangeCallstackCollectionCheckBox">
             <property name="text">
              <string>Collect call stacks on thread state changes</string>
             </property>
@@ -552,7 +552,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="tracepointUnwindingMethodGroupBox">
+           <widget class="QGroupBox" name="threadStateChangeCallstackUnwindingMethodGroupBox">
             <property name="enabled">
              <bool>true</bool>
             </property>
@@ -564,7 +564,7 @@ p, li { white-space: pre-wrap; }
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_16">
              <item>
-              <widget class="QRadioButton" name="tracepointCallstackDWARFMethodRadioButton">
+              <widget class="QRadioButton" name="threadStateChangeCallstackDWARFMethodRadioButton">
                <property name="text">
                 <string>DWARF</string>
                </property>
@@ -574,7 +574,7 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="tracepointCallstackFramepointersMethodRadioButton">
+              <widget class="QRadioButton" name="threadStateChangeCallstackFramepointersMethodRadioButton">
                <property name="text">
                 <string>Frame pointers</string>
                </property>

@@ -315,15 +315,27 @@ uint64_t DataManager::memory_warning_threshold_kb() const {
   return memory_warning_threshold_kb_;
 }
 
-void DataManager::set_tracepoint_callstack_method(
-    orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod tracepoint_callstack_method) {
+void DataManager::set_thread_state_change_callstack_method(
+    orbit_grpc_protos::CaptureOptions::UnwindingMethod thread_state_change_callstack_method) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  tracepoint_callstack_method_ = tracepoint_callstack_method;
+  thread_state_change_callstack_method_ = thread_state_change_callstack_method;
 }
 
-orbit_grpc_protos::CaptureOptions::TracepointCallstackMethod
-DataManager::tracepoint_callstack_method() const {
-  return tracepoint_callstack_method_;
+orbit_grpc_protos::CaptureOptions::UnwindingMethod
+DataManager::thread_state_change_callstack_method() const {
+  return thread_state_change_callstack_method_;
+}
+
+void DataManager::set_thread_state_change_callstack_collection(
+    orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+        thread_state_change_callstack_collection) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  thread_state_change_callstack_collection_ = thread_state_change_callstack_collection;
+}
+
+orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+DataManager::thread_state_change_callstack_collection() const {
+  return thread_state_change_callstack_collection_;
 }
 
 }  // namespace orbit_client_data
