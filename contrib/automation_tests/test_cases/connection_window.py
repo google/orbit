@@ -59,6 +59,7 @@ class LoadCapture(E2ETestCase):
 
         others_button = self.find_control('Button', '...')
         others_button.click_input()
+
         wait_for_condition(lambda: self.find_control('Edit', 'File name:') is not None,
                            max_seconds=120)
         file_name_edit = self.find_control('Edit', 'File name:')
