@@ -7,7 +7,6 @@ found in the LICENSE file.
 import logging
 import os
 import tempfile
-import time
 import shutil
 
 from typing import Iterable
