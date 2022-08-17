@@ -7,6 +7,7 @@ found in the LICENSE file.
 import logging
 import os
 import tempfile
+import time
 import shutil
 
 from typing import Iterable
@@ -58,6 +59,8 @@ class LoadCapture(E2ETestCase):
 
         others_button = self.find_control('Button', '...')
         others_button.click_input()
+        # There is a rare flakyness which causes the file dialog to open slowly: b/242843902
+        time.sleep(10)
 
         file_name_edit = self.find_control('Edit', 'File name:')
 
