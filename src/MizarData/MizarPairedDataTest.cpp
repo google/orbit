@@ -19,6 +19,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
@@ -27,6 +28,8 @@
 
 using ::orbit_client_data::ScopeId;
 using ::orbit_grpc_protos::PresentEvent;
+using ::orbit_mizar_base::AbsoluteAddress;
+using ::orbit_mizar_base::ForEachFrame;
 using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
@@ -64,18 +67,18 @@ class MockMizarData {
 }  // namespace
 
 namespace orbit_mizar_data {
-constexpr uint64_t kAddressFood = 0xF00D;
-constexpr uint64_t kAddressBad = 0xBAD;
-constexpr uint64_t kAddressCall = 0xCA11;
-constexpr uint64_t kAddressBefore = 0xB3F0;
+constexpr AbsoluteAddress kAddressFood(0xF00D);
+constexpr AbsoluteAddress kAddressBad(0xBAD);
+constexpr AbsoluteAddress kAddressCall(0xCA11);
+constexpr AbsoluteAddress kAddressBefore(0xB3F0);
 
 const orbit_client_data::CallstackInfo kCompleteCallstack(
-    {kAddressBefore, kAddressCall, kAddressBad}, orbit_client_data::CallstackType::kComplete);
+    {*kAddressBefore, *kAddressCall, *kAddressBad}, orbit_client_data::CallstackType::kComplete);
 const orbit_client_data::CallstackInfo kInCompleteCallstack(
-    {kAddressBefore, kAddressCall, kAddressBad},
+    {*kAddressBefore, *kAddressCall, *kAddressBad},
     orbit_client_data::CallstackType::kDwarfUnwindingError);
 const orbit_client_data::CallstackInfo kAnotherCompleteCallstack(
-    {kAddressBefore, kAddressCall, kAddressFood}, orbit_client_data::CallstackType::kComplete);
+    {*kAddressBefore, *kAddressCall, *kAddressFood}, orbit_client_data::CallstackType::kComplete);
 
 constexpr uint64_t kCompleteCallstackId = 1;
 constexpr uint64_t kInCompleteCallstackId = 2;
@@ -106,7 +109,7 @@ const absl::flat_hash_map<TID, std::string> kSampledTidToName = [] {
   return result;
 }();
 
-const absl::flat_hash_map<uint64_t, SFID> kAddressToId = {
+const absl::flat_hash_map<AbsoluteAddress, SFID> kAddressToId = {
     {kAddressFood, SFID(1)}, {kAddressCall, SFID(2)}, {kAddressBefore, SFID(3)}};
 
 const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
@@ -133,12 +136,15 @@ const absl::flat_hash_map<TID, uint64_t> kTidToCallstackCount = {
     {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
 
 [[nodiscard]] static std::vector<SFID> SFIDsForCallstacks(const std::vector<uint64_t>& addresses) {
-  std::vector<uint64_t> good_addresses;
-  std::copy_if(std::begin(addresses), std::end(addresses), std::back_inserter(good_addresses),
-               [](uint64_t address) { return kAddressToId.contains(address); });
+  std::vector<AbsoluteAddress> good_addresses;
+  ForEachFrame(addresses, [&good_addresses](AbsoluteAddress address) {
+    if (kAddressToId.contains(address)) {
+      good_addresses.push_back(address);
+    }
+  });
   std::vector<SFID> ids;
   std::transform(std::begin(good_addresses), std::end(good_addresses), std::back_inserter(ids),
-                 [](uint64_t address) { return kAddressToId.at(address); });
+                 [](AbsoluteAddress address) { return kAddressToId.at(address); });
   return ids;
 }
 

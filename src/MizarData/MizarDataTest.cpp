@@ -21,16 +21,21 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "MizarData/MizarData.h"
 
+using ::orbit_mizar_base::AbsoluteAddress;
 using ::testing::Invoke;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedPointwise;
 
 namespace {
 class MockMizarData : public orbit_mizar_data::MizarData {
+  using AbsoluteAddress = ::orbit_mizar_base::AbsoluteAddress;
+
  public:
-  MOCK_METHOD(std::optional<std::string>, GetFunctionNameFromAddress, (uint64_t), (const override));
+  MOCK_METHOD(std::optional<std::string>, GetFunctionNameFromAddress, (AbsoluteAddress),
+              (const override));
 };
 }  // namespace
 
@@ -129,10 +134,10 @@ TEST(MizarDataTest, OnTimerAddsDAndMSAndOnlyThem) {
   EXPECT_THAT(stored_timers, UnorderedPointwise(TimerInfosEq(), kTimersToStore));
 }
 
-constexpr uint64_t kFunctionAddress = 0xBEAF;
-constexpr uint64_t kAnotherFunctionAddress = 0xF00D;
-constexpr uint64_t kUnknownFunctionAddress = 0xBAD;
-const orbit_client_data::LinuxAddressInfo kLinuxAddressInfo(kFunctionAddress, 0, "/module/path",
+constexpr AbsoluteAddress kFunctionAddress(0xBEAF);
+constexpr AbsoluteAddress kAnotherFunctionAddress(0xF00D);
+constexpr AbsoluteAddress kUnknownFunctionAddress(0xBAD);
+const orbit_client_data::LinuxAddressInfo kLinuxAddressInfo(*kFunctionAddress, 0, "/module/path",
                                                             kFunctionName);
 
 TEST(MizarDataTest, GetFunctionNameFromAddressIsCorrect) {
@@ -148,19 +153,19 @@ TEST(MizarDataTest, GetFunctionNameFromAddressIsCorrect) {
 }
 
 const uint64_t kTime = 951753;
-const orbit_client_data::CallstackInfo kCallstackInfo({kFunctionAddress, kUnknownFunctionAddress,
-                                                       kFunctionAddress},
+const orbit_client_data::CallstackInfo kCallstackInfo({*kFunctionAddress, *kUnknownFunctionAddress,
+                                                       *kFunctionAddress},
                                                       orbit_client_data::CallstackType::kComplete);
 constexpr uint64_t kCallstackId = 0xCA11;
 static const orbit_client_data::CallstackEvent kCallstackEvent(kTime, kCallstackId, kTID);
-static const absl::flat_hash_map<uint64_t, std::string> kSymbolsTable = {
+static const absl::flat_hash_map<AbsoluteAddress, std::string> kSymbolsTable = {
     {kFunctionAddress, kFunctionName}, {kAnotherFunctionAddress, "food()"}};
 
 TEST(MizarDataTest, AllAddressToNameIsCorrect) {
   MockMizarData data;
 
   EXPECT_CALL(data, GetFunctionNameFromAddress)
-      .WillRepeatedly(Invoke([](uint64_t addr) -> std::optional<std::string> {
+      .WillRepeatedly(Invoke([](AbsoluteAddress addr) -> std::optional<std::string> {
         if (const auto it = kSymbolsTable.find(addr); it != kSymbolsTable.end()) {
           return it->second;
         }

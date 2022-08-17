@@ -26,6 +26,7 @@
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;
+using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
@@ -49,14 +50,24 @@ const std::array<std::string, kFunctionNum> kComparisonFunctionNames = {"foo()",
 const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
 
-const absl::flat_hash_map<uint64_t, std::string> kBaselineAddressToName =
-    MakeMap(kBaselineFunctionAddresses, kBaselineFunctionNames);
-const absl::flat_hash_map<uint64_t, std::string> kComparisonAddressToName =
-    MakeMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
+template <size_t N>
+static absl::flat_hash_map<AbsoluteAddress, std::string> MakeAddressToNameMap(
+    const std::array<uint64_t, N>& raw_addresses, const std::array<std::string, N>& names) {
+  std::array<AbsoluteAddress, N> addresses;
+  absl::c_transform(raw_addresses, std::begin(addresses),
+                    [](uint64_t raw) { return AbsoluteAddress(raw); });
+  return MakeMap(addresses, names);
+}
 
-static void ExpectCorrectNames(const absl::flat_hash_map<uint64_t, SFID>& address_to_sfid,
-                               const absl::flat_hash_map<SFID, std::string>& sfid_to_name,
-                               const absl::flat_hash_map<uint64_t, std::string>& address_to_name) {
+const absl::flat_hash_map<AbsoluteAddress, std::string> kBaselineAddressToName =
+    MakeAddressToNameMap(kBaselineFunctionAddresses, kBaselineFunctionNames);
+const absl::flat_hash_map<AbsoluteAddress, std::string> kComparisonAddressToName =
+    MakeAddressToNameMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
+
+static void ExpectCorrectNames(
+    const absl::flat_hash_map<AbsoluteAddress, SFID>& address_to_sfid,
+    const absl::flat_hash_map<SFID, std::string>& sfid_to_name,
+    const absl::flat_hash_map<AbsoluteAddress, std::string>& address_to_name) {
   for (const auto& [address, sfid] : address_to_sfid) {
     EXPECT_TRUE(sfid_to_name.contains(sfid));
     EXPECT_EQ(sfid_to_name.at(sfid), address_to_name.at(address));
