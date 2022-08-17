@@ -43,10 +43,17 @@ class HttpDownloadManagerTest : public ::testing::Test {
   HttpDownloadManagerTest()
       : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()), manager_() {
     local_http_server_process_ = new QProcess();
+#ifdef _WIN32
+    local_http_server_process_->setProgram("py");
+    local_http_server_process_->setArguments(
+        QStringList{"-3", "-m", R"(http.server)", "--bind", "localhost", "--directory",
+                    QString::fromStdString(orbit_test::GetTestdataDir().string()), "0"});
+#else
     local_http_server_process_->setProgram("python3");
     local_http_server_process_->setArguments(
         QStringList{"-m", R"(http.server)", "--bind", "localhost", "--directory",
                     QString::fromStdString(orbit_test::GetTestdataDir().string()), "0"});
+#endif
 
     QProcessEnvironment current_env = local_http_server_process_->processEnvironment();
     current_env.insert("PYTHONUNBUFFERED", "true");
