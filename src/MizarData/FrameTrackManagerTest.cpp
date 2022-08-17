@@ -63,8 +63,8 @@ static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw)
   return result;
 }
 
-static const std::vector<TimestampNs> kFirstScopeStarts = MakeTimestamps({10, 20});
-static const std::vector<TimestampNs> kSecondScopeStarts = MakeTimestamps({100, 200, 300});
+static const std::vector<TimestampNs> kFirstScopeStarts = MakeTimestamps({20, 10});
+static const std::vector<TimestampNs> kSecondScopeStarts = MakeTimestamps({200, 100, 300});
 static const std::vector<std::vector<TimestampNs>> kScopeFrameTrackStartLists = {
     kFirstScopeStarts, kSecondScopeStarts};
 
@@ -101,8 +101,8 @@ static const absl::flat_hash_map<ScopeId, ScopeInfo> kScopeIdToInfo =
 static const absl::flat_hash_map<ScopeInfo, std::vector<TimestampNs>> kScopeInfoToFrameStarts =
     MakeMap(kScopeInfos, kScopeFrameTrackStartLists);
 
-static const std::vector<TimestampNs> kDxgiFrameStarts = MakeTimestamps({1, 2, 4, 10, 20});
-static const std::vector<TimestampNs> kD3d9FrameStarts = MakeTimestamps({10, 20, 40, 100, 200});
+static const std::vector<TimestampNs> kDxgiFrameStarts = MakeTimestamps({10, 1, 2, 4, 20});
+static const std::vector<TimestampNs> kD3d9FrameStarts = MakeTimestamps({100, 10, 20, 40, 200});
 
 static std::vector<PresentEvent> MakePresentEvent(const std::vector<TimestampNs>& starts) {
   std::vector<PresentEvent> result;
@@ -164,7 +164,7 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
   void ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(TimestampNs min_start,
                                                                  TimestampNs max_start) {
     for (const auto& [id, info] : frame_track_manager_.GetFrameTracks()) {
-      const std::vector<TimestampNs> expected_frame_starts = std::visit(
+      std::vector<TimestampNs> expected_frame_starts = std::visit(
           orbit_base::overloaded{
               [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
               [min_start, max_start](PresentEvent::Source source) {
@@ -178,7 +178,7 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
                 return filtered_time_list;
               }},
           *info);
-
+      absl::c_sort(expected_frame_starts);
       const std::vector<TimestampNs> actual_frame_starts =
           frame_track_manager_.GetFrameStarts(id, min_start, max_start);
       EXPECT_THAT(actual_frame_starts, ElementsAreArray(expected_frame_starts));
