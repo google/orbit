@@ -259,7 +259,7 @@ struct DmaFenceSignaledPerfEventData {
 };
 using DmaFenceSignaledPerfEvent = TypedPerfEvent<DmaFenceSignaledPerfEventData>;
 
-struct CallchainSchedWakeupPerfEventData {
+struct SchedWakeupWithCallchainPerfEventData {
   [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
   [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
@@ -288,9 +288,9 @@ struct CallchainSchedWakeupPerfEventData {
   std::unique_ptr<uint64_t[]> regs;
   std::unique_ptr<uint8_t[]> data;
 };
-using CallchainSchedWakeupPerfEvent = TypedPerfEvent<CallchainSchedWakeupPerfEventData>;
+using SchedWakeupWithCallchainPerfEvent = TypedPerfEvent<SchedWakeupWithCallchainPerfEventData>;
 
-struct CallchainSchedSwitchPerfEventData {
+struct SchedSwitchWithCallchainPerfEventData {
   [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
   [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
@@ -321,9 +321,9 @@ struct CallchainSchedSwitchPerfEventData {
   std::unique_ptr<uint64_t[]> regs;
   std::unique_ptr<uint8_t[]> data;
 };
-using CallchainSchedSwitchPerfEvent = TypedPerfEvent<CallchainSchedSwitchPerfEventData>;
+using SchedSwitchWithCallchainPerfEvent = TypedPerfEvent<SchedSwitchWithCallchainPerfEventData>;
 
-struct StackSchedWakeupPerfEventData {
+struct SchedWakeupWithStackPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
@@ -344,9 +344,9 @@ struct StackSchedWakeupPerfEventData {
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
 };
-using StackSchedWakeupPerfEvent = TypedPerfEvent<StackSchedWakeupPerfEventData>;
+using SchedWakeupWithStackPerfEvent = TypedPerfEvent<SchedWakeupWithStackPerfEventData>;
 
-struct StackSchedSwitchPerfEventData {
+struct SchedSwitchWithStackPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
@@ -369,7 +369,7 @@ struct StackSchedSwitchPerfEventData {
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
 };
-using StackSchedSwitchPerfEvent = TypedPerfEvent<StackSchedSwitchPerfEventData>;
+using SchedSwitchWithStackPerfEvent = TypedPerfEvent<SchedSwitchWithStackPerfEventData>;
 
 // This struct holds the data we need from any of the possible perf_event_open events that we
 // collect. The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all
