@@ -49,19 +49,17 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header);
 
-SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                                   const perf_event_header& header);
+SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                                   const perf_event_header& header);
+SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
 SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                           const perf_event_header& header,
-                                                           bool just_get_tracepoint);
+                                                                   const perf_event_header& header);
 
 SchedWakeupWithStackPerfEvent ConsumeSchedWakeupWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                           const perf_event_header& header,
-                                                           bool just_get_tracepoint);
+                                                                   const perf_event_header& header);
 
 AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                      const perf_event_header& header);
