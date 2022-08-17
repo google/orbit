@@ -259,6 +259,118 @@ struct DmaFenceSignaledPerfEventData {
 };
 using DmaFenceSignaledPerfEvent = TypedPerfEvent<DmaFenceSignaledPerfEventData>;
 
+struct CallchainSchedWakeupPerfEventData {
+  [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
+  [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
+  }
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
+  void SetIps(const std::vector<uint64_t>& new_ips) const {
+    ips_size = new_ips.size();
+    ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
+    memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));
+  }
+  [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() const {
+    return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
+  }
+
+  pid_t woken_tid;
+  pid_t was_unblocked_by_tid;
+  pid_t was_unblocked_by_pid;
+  // Mutability is needed in SetIps which in turn is needed by
+  // LeafFunctionCallManager::PatchCallerOfLeafFunction.
+  mutable uint64_t ips_size;
+  mutable std::unique_ptr<uint64_t[]> ips;
+  std::unique_ptr<uint64_t[]> regs;
+  std::unique_ptr<uint8_t[]> data;
+};
+using CallchainSchedWakeupPerfEvent = TypedPerfEvent<CallchainSchedWakeupPerfEventData>;
+
+struct CallchainSchedSwitchPerfEventData {
+  [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
+  [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
+  }
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
+  void SetIps(const std::vector<uint64_t>& new_ips) const {
+    ips_size = new_ips.size();
+    ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
+    memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));
+  }
+  [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() const {
+    return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
+  }
+
+  uint32_t cpu;
+  pid_t prev_pid_or_minus_one;
+  pid_t prev_tid;
+  int64_t prev_state;
+  int32_t next_tid;
+  // Mutability is needed in SetIps which in turn is needed by
+  // LeafFunctionCallManager::PatchCallerOfLeafFunction.
+  mutable uint64_t ips_size;
+  mutable std::unique_ptr<uint64_t[]> ips;
+  std::unique_ptr<uint64_t[]> regs;
+  std::unique_ptr<uint8_t[]> data;
+};
+using CallchainSchedSwitchPerfEvent = TypedPerfEvent<CallchainSchedSwitchPerfEventData>;
+
+struct StackSchedWakeupPerfEventData {
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
+  }
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
+  // Handing out this non const pointer makes the stack data mutable even if the
+  // StackSamplePerfEvent is const.  This mutablility is needed in
+  // UprobesReturnAddressManager::PatchSample.
+  [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
+  [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
+
+  pid_t woken_tid;
+  pid_t was_unblocked_by_tid;
+  pid_t was_unblocked_by_pid;
+  std::unique_ptr<uint64_t[]> regs;
+  uint64_t dyn_size;
+  std::unique_ptr<uint8_t[]> data;
+};
+using StackSchedWakeupPerfEvent = TypedPerfEvent<StackSchedWakeupPerfEventData>;
+
+struct StackSchedSwitchPerfEventData {
+  [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
+    return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
+  }
+  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
+    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
+  // Handing out this non const pointer makes the stack data mutable even if the
+  // StackSamplePerfEvent is const.  This mutablility is needed in
+  // UprobesReturnAddressManager::PatchSample.
+  [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
+  [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
+
+  uint32_t cpu;
+  pid_t prev_pid_or_minus_one;
+  pid_t prev_tid;
+  int64_t prev_state;
+  int32_t next_tid;
+  std::unique_ptr<uint64_t[]> regs;
+  uint64_t dyn_size;
+  std::unique_ptr<uint8_t[]> data;
+};
+using StackSchedSwitchPerfEvent = TypedPerfEvent<StackSchedSwitchPerfEventData>;
+
 // This struct holds the data we need from any of the possible perf_event_open events that we
 // collect. The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all
 // events, while each of the possible `...PerfEventData`s in the `std::variant` contains the data
