@@ -131,8 +131,7 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   }
 
   void InitFrameTrackList(const PairedData& data) {
-    auto model = std::make_unique<
-        orbit_mizar_models::FrameTrackListModelTmpl<PairedData, orbit_client_data::ScopeStats>>(
+    auto model = std::make_unique<orbit_mizar_models::FrameTrackListModelTmpl<PairedData>>(
         &data, &selected_tids_, &start_timestamp_, parent());
 
     GetFrameTrackList()->setModel(model.release());

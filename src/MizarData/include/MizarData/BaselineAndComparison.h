@@ -95,16 +95,10 @@ class BaselineAndComparisonTmpl {
     return corrected;
   }
 
-  // TODO (b/242839338) Duplicated code. See FrameTrackListModel
   [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
-    const std::vector<RelativeTimeNs> active_invocation_times = data.ActiveInvocationTimes(
-        config.tids, config.frame_track_id, config.start_relative, config.EndRelative());
-    orbit_client_data::ScopeStats stats;
-    for (const RelativeTimeNs active_invocation_time : active_invocation_times) {
-      stats.UpdateStats(*active_invocation_time);
-    }
-    return stats;
+    return data.ActiveInvocationTimeStats(config.tids, config.frame_track_id, config.start_relative,
+                                          config.EndRelative());
   }
 
   [[nodiscard]] static SamplingCounts MakeCounts(
