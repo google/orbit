@@ -38,10 +38,10 @@ struct MockPairedData {
               (const));
 };
 
-struct FrameTrackStats {
+struct MockFrameTrackStats {
   static inline std::vector<RelativeTimeNs> durations_fed_since_last_instantiation_ = {};
 
-  FrameTrackStats() { durations_fed_since_last_instantiation_.clear(); }
+  MockFrameTrackStats() { durations_fed_since_last_instantiation_.clear(); }
 
   void UpdateStats(uint64_t duration) {
     durations_fed_since_last_instantiation_.emplace_back(duration);
@@ -112,8 +112,8 @@ TEST(FrameTrackListModelTest, NoFrameTracks) {
   absl::flat_hash_set<TID> tids = {};
   RelativeTimeNs start(123);
 
-  FrameTrackListModelTmpl<MockPairedData, FrameTrackStats> model(&data, &tids, &start);
-  EXPECT_EQ(model.rowCount(), 0);
+  FrameTrackListModelTmpl<MockPairedData, MockFrameTrackStats> model(&data, &tids, &start);
+  EXPECT_EQ(model.rowCount({}), 0);
 }
 
 TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
@@ -129,9 +129,9 @@ TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
       }));
   EXPECT_CALL(data, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
-  FrameTrackListModelTmpl<MockPairedData, FrameTrackStats> model(&data, &kTids, &kStart);
+  FrameTrackListModelTmpl<MockPairedData, MockFrameTrackStats> model(&data, &kTids, &kStart);
 
-  ASSERT_EQ(model.rowCount(), kFrameTracksCount);
+  ASSERT_EQ(model.rowCount({}), kFrameTracksCount);
 
   for (size_t row = 0; row < kFrameTracksCount; ++row) {
     const QModelIndex index = model.index(row);
@@ -143,7 +143,7 @@ TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
     EXPECT_EQ(actual_shown.toStdString(), kIdToExpectedShown.at(actual_id));
 
     std::ignore = model.data(index, Qt::ToolTipRole);
-    EXPECT_THAT(FrameTrackStats::durations_fed_since_last_instantiation_,
+    EXPECT_THAT(MockFrameTrackStats::durations_fed_since_last_instantiation_,
                 UnorderedElementsAreArray(kIdToFrameInvocationTimes.at(actual_id)));
   }
 }

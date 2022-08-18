@@ -45,11 +45,11 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
         start_timestamp_(start_timestamp),
         frame_tracks_(MakeDisplayedNames(data)) {}
 
-  [[nodiscard]] int rowCount(const QModelIndex& /*parent*/ = {}) const override {
-    return frame_tracks_.size();
+  [[nodiscard]] int rowCount(const QModelIndex& parent) const override {
+    return parent.isValid() ? 0 : frame_tracks_.size();
   }
 
-  [[nodiscard]] QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
+  [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override {
     if (index.model() != this) return {};
     const auto& [id, name] = frame_tracks_[index.row()];
     switch (role) {
@@ -133,6 +133,7 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   std::vector<FrameTrack> frame_tracks_;
 };
 
+// The instantiation is supposed to be used in production
 using FrameTrackListModel =
     FrameTrackListModelTmpl<orbit_mizar_data::MizarPairedData, orbit_client_data::ScopeStats>;
 

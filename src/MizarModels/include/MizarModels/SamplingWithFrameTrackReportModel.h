@@ -74,11 +74,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     EmitDataChanged(Column::kIsSignificant);
   }
 
-  [[nodiscard]] int rowCount(const QModelIndex& /*parent*/ = {}) const override {
-    return static_cast<int>(sfids_.size());
+  [[nodiscard]] int rowCount(const QModelIndex& parent) const override {
+    return parent.isValid() ? 0 : static_cast<int>(sfids_.size());
   };
-  [[nodiscard]] int columnCount(const QModelIndex& /*parent*/) const override {
-    return kColumnsCount;
+  [[nodiscard]] int columnCount(const QModelIndex& parent) const override {
+    return parent.isValid() ? 0 : kColumnsCount;
   };
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override {
     if (index.model() != this) return {};
@@ -122,7 +122,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   void EmitDataChanged(Column column) {
     const int column_int = static_cast<int>(column);
-    emit dataChanged(index(0, column_int), index(rowCount() - 1, column_int));
+    emit dataChanged(index(0, column_int), index(rowCount({}) - 1, column_int));
   }
 
   [[nodiscard]] Index MakeIndex(const QModelIndex& index) const {

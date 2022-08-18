@@ -59,7 +59,8 @@ static constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIds = {
 class MockFrameTrackListModel : public QAbstractListModel {
  public:
   MockFrameTrackListModel(const MockPairedData*, const absl::flat_hash_set<TID>*,
-                          const RelativeTimeNs*, QObject*) {}
+                          const RelativeTimeNs*, QObject* parent)
+      : QAbstractListModel(parent) {}
 
   [[nodiscard]] int rowCount(const QModelIndex& /*parent*/) const override {
     return kFrameTracksCount;
