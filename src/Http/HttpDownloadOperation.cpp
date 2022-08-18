@@ -7,6 +7,7 @@
 #include <absl/strings/str_format.h>
 
 #include <QNetworkRequest>
+#include <QPointer>
 #include <QUrl>
 
 #include "OrbitBase/ImmediateExecutor.h"
@@ -15,11 +16,8 @@
 namespace orbit_http_internal {
 
 void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> maybe_error_msg) {
-  {
-    absl::MutexLock lock(&state_mutex_);
-    ORBIT_CHECK((state == State::kError) == maybe_error_msg.has_value());
-    state_ = state;
-  }
+  ORBIT_CHECK((state == State::kError) == maybe_error_msg.has_value());
+  state_ = state;
 
   switch (state) {
     case State::kInitial:
@@ -58,15 +56,13 @@ void HttpDownloadOperation::OnDownloadFinished() {
   }
 
   reply_->deleteLater();
+  reply_ = nullptr;
 }
 
 void HttpDownloadOperation::OnDownloadReadyRead() { output_.write(reply_->readAll()); }
 
 void HttpDownloadOperation::Start() {
-  {
-    absl::MutexLock lock(&state_mutex_);
-    ORBIT_CHECK(state_ == State::kInitial);
-  }
+  ORBIT_CHECK(state_ == State::kInitial);
 
   output_.setFileName(QString::fromStdString(save_file_path_.string()));
   if (!output_.open(QIODevice::WriteOnly)) {
@@ -76,6 +72,7 @@ void HttpDownloadOperation::Start() {
   }
 
   QNetworkRequest request(QUrl(QString::fromStdString(url_)));
+  // Enable redirecting with limiting the allowed maximum redirect times to 10.
 #if QT_VERSION >= 0x50600
 #if QT_VERSION >= 0x50900
   request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
@@ -93,9 +90,14 @@ void HttpDownloadOperation::Start() {
   UpdateState(State::kStarted, std::nullopt);
 
   orbit_base::ImmediateExecutor executor{};
-  stop_token_.GetFuture().Then(&executor, [this]() { Abort(); });
+  stop_token_.GetFuture().Then(&executor, [download = QPointer<HttpDownloadOperation>{this}]() {
+    if (!download) return;
+    QMetaObject::invokeMethod(download, &HttpDownloadOperation::Abort);
+  });
 }
 
-void HttpDownloadOperation::Abort() { reply_->abort(); }
+void HttpDownloadOperation::Abort() {
+  if (reply_ != nullptr) reply_->abort();
+}
 
 }  // namespace orbit_http_internal

@@ -42,31 +42,30 @@ class HttpDownloadManagerTest : public ::testing::Test {
  protected:
   HttpDownloadManagerTest()
       : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()), manager_() {
-    local_http_server_process_ = new QProcess();
 #ifdef _WIN32
-    local_http_server_process_->setProgram("py");
-    local_http_server_process_->setArguments(
+    local_http_server_process_.setProgram("py");
+    local_http_server_process_.setArguments(
         QStringList{"-3", "-m", R"(http.server)", "--bind", "localhost", "--directory",
                     QString::fromStdString(orbit_test::GetTestdataDir().string()), "0"});
 #else
-    local_http_server_process_->setProgram("python3");
-    local_http_server_process_->setArguments(
+    local_http_server_process_.setProgram("python3");
+    local_http_server_process_.setArguments(
         QStringList{"-m", R"(http.server)", "--bind", "localhost", "--directory",
                     QString::fromStdString(orbit_test::GetTestdataDir().string()), "0"});
 #endif
 
-    QProcessEnvironment current_env = local_http_server_process_->processEnvironment();
+    QProcessEnvironment current_env = local_http_server_process_.processEnvironment();
     current_env.insert("PYTHONUNBUFFERED", "true");
-    local_http_server_process_->setProcessEnvironment(current_env);
+    local_http_server_process_.setProcessEnvironment(current_env);
 
-    ORBIT_LOG("Execute command:\n\"%s %s\"\n", local_http_server_process_->program().toStdString(),
-              local_http_server_process_->arguments().join(" ").toStdString());
+    ORBIT_LOG("Execute command:\n\"%s %s\"\n", local_http_server_process_.program().toStdString(),
+              local_http_server_process_.arguments().join(" ").toStdString());
 
     QEventLoop loop{};
-    QObject::connect(local_http_server_process_, &QProcess::readyReadStandardOutput,
+    QObject::connect(&local_http_server_process_, &QProcess::readyReadStandardOutput,
                      [&loop, this]() {
                        const QString prefix = "Serving HTTP on";
-                       QString std_output = local_http_server_process_->readAllStandardOutput();
+                       QString std_output = local_http_server_process_.readAllStandardOutput();
                        if (!std_output.contains(prefix)) return;
 
                        QRegularExpression portRegex("port ([0-9]+)");
@@ -77,21 +76,20 @@ class HttpDownloadManagerTest : public ::testing::Test {
                        }
                      });
 
-    QObject::connect(local_http_server_process_, &QProcess::errorOccurred,
+    QObject::connect(&local_http_server_process_, &QProcess::errorOccurred,
                      [&loop, this](QProcess::ProcessError error) {
                        if (error == QProcess::Crashed) return;
                        ORBIT_LOG("Error while executing process.\nError:\n%s,\nDetails:\n%s.\n",
                                  QMetaEnum::fromType<QProcess::ProcessError>().valueToKey(error),
-                                 local_http_server_process_->errorString().toStdString());
+                                 local_http_server_process_.errorString().toStdString());
                        if (loop.isRunning()) loop.quit();
                      });
 
-    local_http_server_process_->start();
+    local_http_server_process_.start();
     loop.exec();
   }
 
   ~HttpDownloadManagerTest() override {
-    local_http_server_process_->kill();
     for (const auto& file_path : files_to_remove_) (void)orbit_base::RemoveFile(file_path);
   }
 
@@ -117,7 +115,7 @@ class HttpDownloadManagerTest : public ::testing::Test {
   HttpDownloadManager manager_;
 
  private:
-  QProcess* local_http_server_process_;
+  QProcess local_http_server_process_;
   std::vector<std::filesystem::path> files_to_remove_;
   QString port_;
 };

@@ -18,12 +18,11 @@ namespace orbit_http_internal {
 class HttpDownloadOperation : public QObject {
   Q_OBJECT
  public:
-  explicit HttpDownloadOperation(const std::string& url,
-                                 const std::filesystem::path& save_file_path,
+  explicit HttpDownloadOperation(std::string url, std::filesystem::path save_file_path,
                                  orbit_base::StopToken stop_token, QNetworkAccessManager* manager)
       : QObject(nullptr),
-        url_(url),
-        save_file_path_(save_file_path),
+        url_(std::move(url)),
+        save_file_path_(std::move(save_file_path)),
         stop_token_(std::move(stop_token)),
         manager_(manager) {}
 
@@ -48,8 +47,7 @@ class HttpDownloadOperation : public QObject {
  private:
   void UpdateState(State state, std::optional<std::string> maybe_error_msg);
 
-  mutable absl::Mutex state_mutex_;
-  State state_ ABSL_GUARDED_BY(state_mutex_) = State::kInitial;
+  State state_ = State::kInitial;
 
   std::string url_;
   std::filesystem::path save_file_path_;

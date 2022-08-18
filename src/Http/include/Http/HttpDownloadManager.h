@@ -23,7 +23,7 @@ namespace orbit_http {
 class HttpDownloadManager : public QObject {
   Q_OBJECT
  public:
-  explicit HttpDownloadManager();
+  explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
 
   ~HttpDownloadManager() override;
 
@@ -43,7 +43,7 @@ class HttpDownloadManager : public QObject {
 
   std::queue<HttpDownloadOperationMetadata> waiting_download_operations_;
   orbit_http_internal::HttpDownloadOperation* current_download_operation_ = nullptr;
-  std::unique_ptr<QNetworkAccessManager> manager_;
+  QNetworkAccessManager manager_;
 };
 
 }  // namespace orbit_http
