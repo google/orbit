@@ -21,8 +21,8 @@ class MappingItemModel : public QAbstractListModel {
   void SetMappings(std::vector<Mapping> new_mappings);
   [[nodiscard]] const std::vector<Mapping>& GetMappings() const { return mappings_; }
 
-  [[nodiscard]] int rowCount(const QModelIndex& /*parent */ = QModelIndex{}) const override {
-    return static_cast<int>(mappings_.size());
+  [[nodiscard]] int rowCount(const QModelIndex& parent = QModelIndex{}) const override {
+    return parent.isValid() ? 0 : static_cast<int>(mappings_.size());
   }
 
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
