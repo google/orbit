@@ -14,9 +14,11 @@
 #include <Qt>
 #include <string>
 
+#include "ClientData/ScopeStats.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
+#include "MizarData/MizarPairedData.h"
 #include "OrbitBase/Overloaded.h"
 #include "OrbitBase/Sort.h"
 
@@ -130,6 +132,9 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   const RelativeTimeNs* start_timestamp_{};
   std::vector<FrameTrack> frame_tracks_;
 };
+
+using FrameTrackListModel =
+    FrameTrackListModelTmpl<orbit_mizar_data::MizarPairedData, orbit_client_data::ScopeStats>;
 
 }  // namespace orbit_mizar_models
 
