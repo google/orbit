@@ -20,6 +20,7 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/ThreadId.h"
+#include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 #include "TestUtils/ContainerHelpers.h"
@@ -27,6 +28,7 @@
 using ::orbit_client_data::ScopeId;
 using ::orbit_client_data::ScopeType;
 using ::orbit_grpc_protos::PresentEvent;
+using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::TID;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
@@ -38,12 +40,17 @@ using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAreArray;
 
 namespace {
+
+// TODO(b/242839305) The test should mock FrameTrackListModel
 class MockPairedData {
  public:
   MOCK_METHOD((const absl::flat_hash_map<TID, std::string>&), TidToNames, (), (const));
   MOCK_METHOD((const absl::flat_hash_map<TID, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
   MOCK_METHOD((absl::flat_hash_map<FrameTrackId, FrameTrackInfo>), GetFrameTracks, (), (const));
+  MOCK_METHOD(std::vector<RelativeTimeNs>, ActiveInvocationTimes,
+              (const absl::flat_hash_set<TID>&, FrameTrackId, RelativeTimeNs, RelativeTimeNs),
+              (const));
 };
 }  // namespace
 

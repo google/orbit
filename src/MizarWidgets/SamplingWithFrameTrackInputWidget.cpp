@@ -66,7 +66,9 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int index) {
-  frame_track_id_ = GetFrameTrackList()->itemData(index, kFrameTrackIdRole).value<FrameTrackId>();
+  frame_track_id_ = GetFrameTrackList()
+                        ->itemData(index, orbit_mizar_models::kFrameTrackIdRole)
+                        .value<FrameTrackId>();
 }
 
 static uint64_t ParseStartNs(const QString& time_ms) {

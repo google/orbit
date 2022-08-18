@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarModels INTERFACE)
 
 target_sources(MizarModels INTERFACE
+  include/MizarModels/FrameTrackListModel.h
   include/MizarModels/SamplingWithFrameTrackReportModel.h)
 
 target_include_directories(MizarModels INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -14,6 +15,7 @@ target_include_directories(MizarModels INTERFACE ${CMAKE_CURRENT_LIST_DIR}/inclu
 target_link_libraries(MizarModels INTERFACE
   MizarBase
   MizarData
+  OrbitBase
   Qt5::Core)
 
 add_executable(MizarModelsTests)

@@ -11,6 +11,7 @@
 #include <absl/strings/str_format.h>
 #include <stdint.h>
 
+#include <QAbstractListModel>
 #include <QComboBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -26,11 +27,13 @@
 #include <vector>
 
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/ScopeStats.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarModels/FrameTrackListModel.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 
@@ -39,7 +42,6 @@ class SamplingWithFrameTrackInputWidget;
 }
 
 Q_DECLARE_METATYPE(::orbit_mizar_base::TID);
-Q_DECLARE_METATYPE(::orbit_mizar_data::FrameTrackId);
 
 namespace orbit_mizar_widgets {
 
@@ -63,7 +65,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 
  protected:
-  enum UserRoles { kTidRole = Qt::UserRole + 1, kFrameTrackIdRole };
+  static int constexpr kTidRole = Qt::UserRole + 1;
 
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent = nullptr);
 
@@ -73,12 +75,13 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   [[nodiscard]] QComboBox* GetFrameTrackList() const;
   [[nodiscard]] QLineEdit* GetStartMs() const;
 
- private:
   absl::flat_hash_set<TID> selected_tids_;
-  FrameTrackId frame_track_id_{};
 
   // std::numeric_limits<uint64_t>::max() ns corresponds to malformed input
   RelativeTimeNs start_timestamp_{0};
+
+ private:
+  FrameTrackId frame_track_id_{};
 };
 
 template <typename PairedData>
@@ -127,58 +130,18 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     }
   }
 
-  [[nodiscard]] std::string MakeDisplayedName(const FrameTrackInfo& info) const {
-    return std::visit(
-        orbit_base::overloaded{&SamplingWithFrameTrackInputWidgetTmpl::MakeFrameTrackString,
-                               &SamplingWithFrameTrackInputWidgetTmpl::PresentEventSourceName},
-        *info);
-  }
-
   void InitFrameTrackList(const PairedData& data) {
-    absl::flat_hash_map<FrameTrackId, FrameTrackInfo> id_to_infos = data.GetFrameTracks();
-    std::vector<std::pair<FrameTrackId, std::string>> id_to_displayed_name;
-    std::transform(std::begin(id_to_infos), std::end(id_to_infos),
-                   std::back_inserter(id_to_displayed_name), [this](const auto& id_to_info) {
-                     const auto [id, info] = id_to_info;
-                     const std::string displayed_name = MakeDisplayedName(info);
+    auto model = std::make_unique<
+        orbit_mizar_models::FrameTrackListModelTmpl<PairedData, orbit_client_data::ScopeStats>>(
+        &data, &selected_tids_, &start_timestamp_, parent());
 
-                     return std::make_pair(id, displayed_name);
-                   });
-
-    orbit_base::sort(std::begin(id_to_displayed_name), std::end(id_to_displayed_name),
-                     &std::pair<FrameTrackId, std::string>::second);
-
-    for (size_t i = 0; i < id_to_displayed_name.size(); ++i) {
-      const auto& [id, displayed_name] = id_to_displayed_name[i];
-      GetFrameTrackList()->insertItem(i, QString::fromStdString(displayed_name));
-      GetFrameTrackList()->setItemData(i, QVariant::fromValue(id), kFrameTrackIdRole);
-    }
+    GetFrameTrackList()->setModel(model.release());
     OnFrameTrackSelectionChanged(0);
   }
 
   void InitStartMs() {
     GetStartMs()->setValidator(new QIntValidator(0, std::numeric_limits<int>::max(), this));
     GetStartMs()->setText("0");
-  }
-
-  [[nodiscard]] static std::string MakeFrameTrackString(
-      const orbit_client_data::ScopeInfo& scope_info) {
-    const std::string_view type_string =
-        scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction
-            ? "  D"
-            : " MS";
-    return absl::StrFormat("[%s] %s", type_string, scope_info.GetName());
-  }
-
-  [[nodiscard]] static std::string PresentEventSourceName(PresentEvent::Source source) {
-    switch (source) {
-      case PresentEvent::kD3d9:
-        return "[ETW] D3d9";
-      case PresentEvent::kDxgi:
-        return "[ETW] Dxgi";
-      default:
-        ORBIT_UNREACHABLE();
-    }
   }
 };
 
