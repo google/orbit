@@ -14,6 +14,7 @@
 #include <QStringList>
 #include <memory>
 
+#include "Http/HttpDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
@@ -22,7 +23,6 @@
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WhenAll.h"
-#include "OrbitHttp/HttpDownloadManager.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"

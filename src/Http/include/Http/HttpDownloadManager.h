@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
-#define ORBIT_HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
+#ifndef HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
+#define HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
 
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <memory>
 #include <queue>
 
+#include "Http/HttpDownloadOperation.h"
 #include "OrbitBase/AnyInvocable.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
-#include "OrbitHttp/HttpDownloadOperation.h"
 
 namespace orbit_http {
 
@@ -48,4 +48,4 @@ class HttpDownloadManager : public QObject {
 
 }  // namespace orbit_http
 
-#endif  // ORBIT_HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
+#endif  // HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H

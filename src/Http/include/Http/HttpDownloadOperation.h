@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_HTTP_HTTP_DOWNLOAD_OPERATION_H
-#define ORBIT_HTTP_HTTP_DOWNLOAD_OPERATION_H
+#ifndef HTTP_HTTP_DOWNLOAD_OPERATION_H
+#define HTTP_HTTP_DOWNLOAD_OPERATION_H
 
 #include <QFile>
 #include <QNetworkAccessManager>
@@ -61,4 +61,4 @@ class HttpDownloadOperation : public QObject {
 
 }  // namespace orbit_http_internal
 
-#endif  // ORBIT_HTTP_HTTP_DOWNLOAD_OPERATION_H
+#endif  // HTTP_HTTP_DOWNLOAD_OPERATION_H
