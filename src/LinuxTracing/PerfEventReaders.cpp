@@ -193,7 +193,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   ring_buffer->ReadValueAtOffset(sample_id, offset);
 }
 
-uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
+[[nodiscard]] uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
   uint64_t time;
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
@@ -204,7 +204,7 @@ uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
   return time;
 }
 
-uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
+[[nodiscard]] uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
   uint64_t stream_id;
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
@@ -215,7 +215,7 @@ uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
   return stream_id;
 }
 
-pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
+[[nodiscard]] pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   pid_t pid;
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
@@ -225,7 +225,7 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   return pid;
 }
 
-uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
+[[nodiscard]] uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
   // Note that perf_event_throttle_unthrottle::time and
   // perf_event_sample_id_tid_time_streamid_cpu::time differ a bit. Use the latter as we use that
   // for all other events.
@@ -236,8 +236,8 @@ uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
   return time;
 }
 
-MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                   const perf_event_header& header) {
+[[nodiscard]] MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                 const perf_event_header& header) {
   // Mmap records have the following layout:
   // struct {
   //   struct perf_event_header header;
@@ -302,8 +302,8 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   };
 }
 
-StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                 const perf_event_header& header) {
+[[nodiscard]] StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                               const perf_event_header& header) {
   // The flags here are in sync with stack_sample_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from stack_sample_event_open
   const perf_event_attr flags{
@@ -331,8 +331,8 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   return event;
 }
 
-CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                         const perf_event_header& header) {
+[[nodiscard]] CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with callchain_sample_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from callchain_sample_event_open
   const perf_event_attr flags{
@@ -361,8 +361,8 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   return event;
 }
 
-UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                          const perf_event_header& header) {
+[[nodiscard]] UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with uprobes_with_stack_and_sp_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // uprobes_with_stack_and_sp_event_open
@@ -392,8 +392,8 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
   return event;
 }
 
-GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header) {
+[[nodiscard]] GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with generic_event_attr in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from generic_event_attr
   const perf_event_attr flags{
@@ -417,8 +417,8 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
   return event;
 }
 
-SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                 const perf_event_header& header) {
+[[nodiscard]] SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                               const perf_event_header& header) {
   // The flags here are in sync with tracepoint_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from tracepoint_event_open
   const perf_event_attr flags{
@@ -445,8 +445,153 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
   };
 }
 
+[[nodiscard]] SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_callchain_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_wakeup_tracepoint_fixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+
+  ring_buffer->SkipRecord(header);
+  return SchedWakeupWithCallchainPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+              // thread id.
+              .woken_tid = sched_wakeup.pid,
+              .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+              .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
+              .ips_size = res.ips_size,
+              .ips = std::move(res.ips),
+              .regs = std::move(res.regs),
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+[[nodiscard]] SchedWakeupWithStackPerfEvent ConsumeSchedWakeupWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_stack_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_wakeup_tracepoint_fixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+
+  ring_buffer->SkipRecord(header);
+  return SchedWakeupWithStackPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+              // thread id.
+              .woken_tid = sched_wakeup.pid,
+              .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+              .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
+              .regs = std::move(res.regs),
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+[[nodiscard]] SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_stack_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_switch_tracepoint sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+
+  ring_buffer->SkipRecord(header);
+  return SchedSwitchWithStackPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .cpu = res.cpu,
+              // As the tracepoint data does not include the pid of the process that the thread
+              // being switched out belongs to, we use the pid set by perf_event_open in the
+              // corresponding generic field of the PERF_RECORD_SAMPLE.
+              // Note, though, that this value is -1 when the switch out is caused by the thread
+              // exiting. This is not the case for data.prev_pid, whose value is always correct as
+              // it comes directly from the tracepoint data.
+              .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
+              .prev_tid = sched_wakeup.prev_pid,
+              .prev_state = sched_wakeup.prev_state,
+              .next_tid = sched_wakeup.next_pid,
+              .regs = std::move(res.regs),
+              .dyn_size = res.dyn_size,
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
+[[nodiscard]] SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEventData(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+  // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
+  // TODO(b/242020362): use the same perf_event_attr object from
+  // tracepoint_with_callchain_event_open
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  sched_switch_tracepoint sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+
+  ring_buffer->SkipRecord(header);
+  return SchedSwitchWithCallchainPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .cpu = res.cpu,
+              // As the tracepoint data does not include the pid of the process that the thread
+              // being switched out belongs to, we use the pid set by perf_event_open in the
+              // corresponding generic field of the PERF_RECORD_SAMPLE.
+              // Note, though, that this value is -1 when the switch out is caused by the thread
+              // exiting. This is not the case for data.prev_pid, whose value is always correct as
+              // it comes directly from the tracepoint data.
+              .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
+              .prev_tid = sched_wakeup.prev_pid,
+              .prev_state = sched_wakeup.prev_state,
+              .next_tid = sched_wakeup.next_pid,
+              .ips_size = res.ips_size,
+              .ips = std::move(res.ips),
+              .regs = std::move(res.regs),
+              .data = std::move(res.stack_data),
+          },
+  };
+}
+
 template <typename EventType, typename StructType>
-EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+[[nodiscard]] EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer,
+                                        const perf_event_header& header) {
   uint32_t tracepoint_size;
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
 
@@ -488,19 +633,20 @@ EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_hea
   return event;
 }
 
-AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                     const perf_event_header& header) {
+[[nodiscard]] AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   return ConsumeGpuEvent<AmdgpuCsIoctlPerfEvent, amdgpu_cs_ioctl_tracepoint>(ring_buffer, header);
 }
 
-AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header) {
+[[nodiscard]] [[nodiscard]] [[nodiscard]] AmdgpuSchedRunJobPerfEvent
+ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                  const perf_event_header& header) {
   return ConsumeGpuEvent<AmdgpuSchedRunJobPerfEvent, amdgpu_sched_run_job_tracepoint>(ring_buffer,
                                                                                       header);
 }
 
-DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                           const perf_event_header& header) {
+[[nodiscard]] DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   return ConsumeGpuEvent<DmaFenceSignaledPerfEvent, dma_fence_signaled_tracepoint>(ring_buffer,
                                                                                    header);
 }

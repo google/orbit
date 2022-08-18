@@ -31,17 +31,22 @@ using ::testing::UnorderedElementsAreArray;
 
 namespace {
 
+struct MockFrameTrackStats {
+  MOCK_METHOD(uint64_t, ComputeAverageTimeNs, (), (const));
+  MOCK_METHOD(uint64_t, count, (), (const));
+};
+
 struct MockPairedData {
   MOCK_METHOD((absl::flat_hash_map<FrameTrackId, FrameTrackInfo>), GetFrameTracks, (), (const));
-  MOCK_METHOD(std::vector<RelativeTimeNs>, ActiveInvocationTimes,
+  MOCK_METHOD(MockFrameTrackStats&, ActiveInvocationTimeStats,
               (const absl::flat_hash_set<TID>&, FrameTrackId, RelativeTimeNs, RelativeTimeNs),
               (const));
 };
 
-struct MockFrameTrackStats {
+struct FrameTrackStats {
   static inline std::vector<RelativeTimeNs> durations_fed_since_last_instantiation_ = {};
 
-  MockFrameTrackStats() { durations_fed_since_last_instantiation_.clear(); }
+  FrameTrackStats() { durations_fed_since_last_instantiation_.clear(); }
 
   void UpdateStats(uint64_t duration) {
     durations_fed_since_last_instantiation_.emplace_back(duration);
@@ -92,44 +97,22 @@ constexpr std::array<std::string_view, kFrameTracksCount> kExpectedShown = {
 const absl::flat_hash_map<FrameTrackId, std::string_view> kIdToExpectedShown =
     MakeMap(kFrameTrackIds, kExpectedShown);
 
-[[nodiscard]] static std::vector<RelativeTimeNs> MakeRelativeTimes(
-    const std::vector<uint64_t>& raw) {
-  std::vector<RelativeTimeNs> result;
-  absl::c_transform(raw, std::back_inserter(result), [](uint64_t t) { return RelativeTimeNs(t); });
-  return result;
-}
-
-const std::array<std::vector<RelativeTimeNs>, kFrameTracksCount> kFrameInvocationTimes = {
-    MakeRelativeTimes({1, 2, 3, 4}), MakeRelativeTimes({10, 20, 30, 40}),
-    MakeRelativeTimes({100, 200, 300, 400}), MakeRelativeTimes({1000, 2000, 3000, 4000, 123456})};
-
-const absl::flat_hash_map<FrameTrackId, std::vector<RelativeTimeNs>> kIdToFrameInvocationTimes =
-    MakeMap(kFrameTrackIds, kFrameInvocationTimes);
-
 TEST(FrameTrackListModelTest, NoFrameTracks) {
   MockPairedData data;
 
   absl::flat_hash_set<TID> tids = {};
   RelativeTimeNs start(123);
 
-  FrameTrackListModelTmpl<MockPairedData, MockFrameTrackStats> model(&data, &tids, &start);
+  FrameTrackListModelTmpl<MockPairedData> model(&data, &tids, &start);
   EXPECT_EQ(model.rowCount({}), 0);
 }
 
 TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
   MockPairedData data;
-  EXPECT_CALL(data, ActiveInvocationTimes)
-      .WillRepeatedly(Invoke([](const absl::flat_hash_set<TID>& tids, FrameTrackId id,
-                                RelativeTimeNs start, RelativeTimeNs end) {
-        EXPECT_EQ(tids, kTids);
-        EXPECT_EQ(start, kStart);
-        EXPECT_EQ(end, kEnd);
-
-        return kIdToFrameInvocationTimes.at(id);
-      }));
+  MockFrameTrackStats stats;
   EXPECT_CALL(data, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
-  FrameTrackListModelTmpl<MockPairedData, MockFrameTrackStats> model(&data, &kTids, &kStart);
+  FrameTrackListModelTmpl<MockPairedData> model(&data, &kTids, &kStart);
 
   ASSERT_EQ(model.rowCount({}), kFrameTracksCount);
 
@@ -142,9 +125,20 @@ TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
     const auto actual_shown = model.data(index, Qt::DisplayRole).value<QString>();
     EXPECT_EQ(actual_shown.toStdString(), kIdToExpectedShown.at(actual_id));
 
+    EXPECT_CALL(stats, ComputeAverageTimeNs).Times(1);
+    EXPECT_CALL(stats, count).Times(1);
+    EXPECT_CALL(data, ActiveInvocationTimeStats)
+        .WillOnce(Invoke([&stats, &actual_id](const absl::flat_hash_set<TID>& tids, FrameTrackId id,
+                                              RelativeTimeNs start,
+                                              RelativeTimeNs end) -> MockFrameTrackStats& {
+          EXPECT_EQ(tids, kTids);
+          EXPECT_EQ(start, kStart);
+          EXPECT_EQ(end, kEnd);
+          EXPECT_EQ(id, actual_id);
+
+          return stats;
+        }));
     std::ignore = model.data(index, Qt::ToolTipRole);
-    EXPECT_THAT(MockFrameTrackStats::durations_fed_since_last_instantiation_,
-                UnorderedElementsAreArray(kIdToFrameInvocationTimes.at(actual_id)));
   }
 }
 

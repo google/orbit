@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeInfo.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
@@ -46,7 +47,7 @@ class MockPairedData {
   MOCK_METHOD((const absl::flat_hash_map<TID, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
   MOCK_METHOD((absl::flat_hash_map<FrameTrackId, FrameTrackInfo>), GetFrameTracks, (), (const));
-  MOCK_METHOD(std::vector<RelativeTimeNs>, ActiveInvocationTimes,
+  MOCK_METHOD(orbit_client_data::ScopeStats, ActiveInvocationTimeStats,
               (const absl::flat_hash_set<TID>&, FrameTrackId, RelativeTimeNs, RelativeTimeNs),
               (const));
 };

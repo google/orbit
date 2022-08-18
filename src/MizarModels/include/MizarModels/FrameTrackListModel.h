@@ -28,7 +28,7 @@ namespace orbit_mizar_models {
 
 constexpr int kFrameTrackIdRole = Qt::UserRole + 1;
 
-template <typename PairedData, typename FrameTrackStats>
+template <typename PairedData>
 class FrameTrackListModelTmpl : public QAbstractListModel {
   using FrameTrackId = ::orbit_mizar_data::FrameTrackId;
   using FrameTrackInfo = ::orbit_mizar_data::FrameTrackInfo;
@@ -108,16 +108,10 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
                       *info);
   }
 
-  // TODO (b/242839338) Duplicated code. See BaselineAndComparison::MakeFrameTrackStats
   [[nodiscard]] QString MakeTooltip(FrameTrackId id, const std::string& name) const {
-    const std::vector<RelativeTimeNs> active_invocation_times = data_->ActiveInvocationTimes(
+    const auto& stats = data_->ActiveInvocationTimeStats(
         *selected_tids_, id, *start_timestamp_,
         orbit_mizar_base::RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
-
-    FrameTrackStats stats;
-    for (const RelativeTimeNs active_invocation_time : active_invocation_times) {
-      stats.UpdateStats(*active_invocation_time);
-    }
 
     constexpr double kNsInMs = 1e6;
     const double average_ms = stats.ComputeAverageTimeNs() / kNsInMs;
@@ -134,8 +128,7 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
 };
 
 // The instantiation is supposed to be used in production
-using FrameTrackListModel =
-    FrameTrackListModelTmpl<orbit_mizar_data::MizarPairedData, orbit_client_data::ScopeStats>;
+using FrameTrackListModel = FrameTrackListModelTmpl<orbit_mizar_data::MizarPairedData>;
 
 }  // namespace orbit_mizar_models
 
