@@ -543,6 +543,9 @@ p, li { white-space: pre-wrap; }
           </item>
           <item>
            <widget class="QCheckBox" name="threadStateChangeCallstackCollectionCheckBox">
+            <property name="toolTip">
+             <string>This allows capturing call stacks when threads change their states</string>
+            </property>
             <property name="text">
              <string>Collect call stacks on thread state changes</string>
             </property>
@@ -556,8 +559,11 @@ p, li { white-space: pre-wrap; }
             <property name="enabled">
              <bool>true</bool>
             </property>
+            <property name="toolTip">
+             <string>This chooses the unwinding method to be used to unwind call stacks gathered at thead state changes</string>
+            </property>
             <property name="title">
-             <string>Unwinding method</string>
+             <string>Thread state change call stacks unwinding method</string>
             </property>
             <property name="checkable">
              <bool>false</bool>

@@ -241,9 +241,13 @@ void CaptureOptionsDialog::SetThreadStateChangeCallstackMethod(
       ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(false);
       break;
     case CaptureOptions::kDwarf:
-    default:
-      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(true);
       ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setChecked(false);
+      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(true);
+      break;
+    default:
+      ORBIT_ERROR(
+          "thread_state_change_callstack_method is undefined in "
+          "SetThreadStateChangeCallstackMethod");
       break;
   }
 }
@@ -256,7 +260,7 @@ CaptureOptionsDialog::GetThreadStateChangeCallstackMethod() const {
   if (ui_->threadStateChangeCallstackDWARFMethodRadioButton->isChecked()) {
     return CaptureOptions::kDwarf;
   }
-  return CaptureOptions::kDwarf;
+  return CaptureOptions::kUndefined;
 }
 
 void CaptureOptionsDialog::SetWineSyscallHandlingMethod(
