@@ -144,7 +144,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     EXPECT_EQ(top_left.column(), static_cast<int>(column));
 
     const QModelIndex bottom_right = arguments.at(1).toModelIndex();
-    EXPECT_EQ(bottom_right.row(), model_.rowCount() - 1);
+    EXPECT_EQ(bottom_right.row(), model_.rowCount({}) - 1);
     EXPECT_EQ(bottom_right.column(), static_cast<int>(column));
   }
 
@@ -153,7 +153,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     model_.SetMultiplicityCorrectionEnabled(is_multiplicity_correction_enabled);
     model_.SetSignificanceLevel(significance_level);
 
-    for (int row = 0; row < model_.rowCount(); ++row) {
+    for (int row = 0; row < model_.rowCount({}); ++row) {
       const QString name = DisplayedString(row, Column::kFunctionName);
 
       ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));
@@ -200,11 +200,11 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
 };
 
 TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
-  EXPECT_EQ(model_.rowCount(), kExpectedReportSize);
+  EXPECT_EQ(model_.rowCount({}), kExpectedReportSize);
 
   absl::flat_hash_set<SFID> observed_sfids;
 
-  for (int row = 0; row < model_.rowCount(); ++row) {
+  for (int row = 0; row < model_.rowCount({}); ++row) {
     const QString name = DisplayedString(row, Column::kFunctionName);
 
     ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));

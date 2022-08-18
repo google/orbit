@@ -84,7 +84,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   FrameTrackId frame_track_id_{};
 };
 
-template <typename PairedData>
+template <typename PairedData, typename FrameTrackListModel>
 class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInputWidgetBase {
   using TID = ::orbit_mizar_base::TID;
   using FrameTrackId = ::orbit_mizar_data::FrameTrackId;
@@ -131,8 +131,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   }
 
   void InitFrameTrackList(const PairedData& data) {
-    auto model = std::make_unique<orbit_mizar_models::FrameTrackListModelTmpl<PairedData>>(
-        &data, &selected_tids_, &start_timestamp_, parent());
+    auto model =
+        std::make_unique<FrameTrackListModel>(&data, &selected_tids_, &start_timestamp_, parent());
 
     GetFrameTrackList()->setModel(model.release());
     OnFrameTrackSelectionChanged(0);
@@ -145,7 +145,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
 };
 
 using SamplingWithFrameTrackInputWidget =
-    SamplingWithFrameTrackInputWidgetTmpl<orbit_mizar_data::MizarPairedData>;
+    SamplingWithFrameTrackInputWidgetTmpl<orbit_mizar_data::MizarPairedData,
+                                          orbit_mizar_models::FrameTrackListModel>;
 
 }  // namespace orbit_mizar_widgets
 

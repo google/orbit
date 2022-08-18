@@ -91,7 +91,7 @@ TEST(FrameTrackListModelTest, NoFrameTracks) {
   RelativeTimeNs start(123);
 
   FrameTrackListModelTmpl<MockPairedData> model(&data, &tids, &start);
-  EXPECT_EQ(model.rowCount(), 0);
+  EXPECT_EQ(model.rowCount({}), 0);
 }
 
 TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
@@ -101,7 +101,7 @@ TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
 
   FrameTrackListModelTmpl<MockPairedData> model(&data, &kTids, &kStart);
 
-  ASSERT_EQ(model.rowCount(), kFrameTracksCount);
+  ASSERT_EQ(model.rowCount({}), kFrameTracksCount);
 
   for (size_t row = 0; row < kFrameTracksCount; ++row) {
     const QModelIndex index = model.index(row);

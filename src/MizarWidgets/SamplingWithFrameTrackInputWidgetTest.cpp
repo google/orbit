@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QObject>
 #include <QStringLiteral>
 #include <QTest>
 #include <array>
@@ -18,41 +19,55 @@
 #include <string>
 
 #include "ClientData/ScopeId.h"
-#include "ClientData/ScopeInfo.h"
-#include "ClientData/ScopeStats.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
-#include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;
-using ::orbit_client_data::ScopeType;
 using ::orbit_grpc_protos::PresentEvent;
 using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::TID;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
-using ::orbit_test_utils::MakeMap;
 using ::testing::ElementsAreArray;
 using ::testing::NotNull;
-using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAreArray;
 
 namespace {
 
-// TODO(b/242839305) The test should mock FrameTrackListModel
 class MockPairedData {
  public:
   MOCK_METHOD((const absl::flat_hash_map<TID, std::string>&), TidToNames, (), (const));
   MOCK_METHOD((const absl::flat_hash_map<TID, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
-  MOCK_METHOD((absl::flat_hash_map<FrameTrackId, FrameTrackInfo>), GetFrameTracks, (), (const));
   MOCK_METHOD(orbit_client_data::ScopeStats, ActiveInvocationTimeStats,
               (const absl::flat_hash_set<TID>&, FrameTrackId, RelativeTimeNs, RelativeTimeNs),
               (const));
 };
+
+static constexpr size_t kFrameTracksCount = 4;
+static constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIds = {
+    FrameTrackId(ScopeId(2)), FrameTrackId(ScopeId(1)), FrameTrackId(ScopeId(10)),
+    FrameTrackId(PresentEvent::kD3d9)};
+
+class MockFrameTrackListModel : public QAbstractListModel {
+ public:
+  MockFrameTrackListModel(const MockPairedData*, const absl::flat_hash_set<TID>*,
+                          const RelativeTimeNs*, QObject* parent)
+      : QAbstractListModel(parent) {}
+
+  [[nodiscard]] int rowCount(const QModelIndex& /*parent*/) const override {
+    return kFrameTracksCount;
+  }
+
+  [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override {
+    if (index.model() != this || role != orbit_mizar_models::kFrameTrackIdRole) return {};
+    return QVariant::fromValue(kScopeIds[index.row()]);
+  }
+};
+
 }  // namespace
 
 namespace orbit_mizar_widgets {
@@ -80,40 +95,14 @@ const std::vector<std::string> kThreadNamesSorted = {
 const QString kInputName = QStringLiteral("InputName");
 const QString kFileName = QStringLiteral("FileName");
 
-constexpr size_t kScopeFrameTracksCount = 3;
-constexpr size_t kFrameTracksCount = kScopeFrameTracksCount + 1;
-constexpr std::array<FrameTrackId, kFrameTracksCount> kFrameTrackIds = {
-    FrameTrackId(ScopeId(1)), FrameTrackId(ScopeId(2)), FrameTrackId(ScopeId(10)),
-    FrameTrackId(PresentEvent::kD3d9)};
-constexpr std::array<std::string_view, kScopeFrameTracksCount> kFrameTrackNames = {"Foo", "Boo",
-                                                                                   "Manual"};
-constexpr std::array<ScopeType, kScopeFrameTracksCount> kScopeInfoTypes = {
-    ScopeType::kDynamicallyInstrumentedFunction, ScopeType::kDynamicallyInstrumentedFunction,
-    ScopeType::kApiScope};
-constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIdsInExpectedOrder = {
-    FrameTrackId(ScopeId(2)), FrameTrackId(ScopeId(1)), FrameTrackId(ScopeId(10)),
-    FrameTrackId(PresentEvent::kD3d9)};
-const std::vector<FrameTrackInfo> kFrameTrackInfos = [] {
-  std::vector<FrameTrackInfo> result;
-  for (size_t i = 0; i < kScopeFrameTracksCount; ++i) {
-    const std::string_view name_view = kFrameTrackNames[i];
-    orbit_client_data::ScopeInfo info(std::string(name_view), kScopeInfoTypes[i]);
-    result.emplace_back(info);
-  }
-  result.emplace_back(PresentEvent::kD3d9);
-  return result;
-}();
-
-const absl::flat_hash_map<FrameTrackId, FrameTrackInfo> kFrameTracks =
-    MakeMap(kFrameTrackIds, kFrameTrackInfos);
-
 class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
  public:
   SamplingWithFrameTrackInputWidgetTest()
-      : widget_(std::make_unique<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>>(nullptr)) {
+      : widget_(std::make_unique<
+                SamplingWithFrameTrackInputWidgetTmpl<MockPairedData, MockFrameTrackListModel>>(
+            nullptr)) {
     EXPECT_CALL(data_, TidToNames).WillRepeatedly(ReturnRef(kTidToName));
     EXPECT_CALL(data_, TidToCallstackSampleCounts).WillRepeatedly(ReturnRef(kTidToCount));
-    EXPECT_CALL(data_, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
     widget_->Init(data_, kInputName, kFileName);
   }
@@ -155,7 +144,8 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
   }
 
   MockPairedData data_;
-  std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>> widget_;
+  std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData, MockFrameTrackListModel>>
+      widget_;
   QLabel* title_{};
   QLabel* file_name_{};
   QListWidget* thread_list_{};
@@ -194,16 +184,16 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnFrameTrackSelectionChangedIsCorr
   EXPECT_THAT(frame_track_list_content, ElementsAreArray(frame_track_list_content));
 
   frame_track_list_->setCurrentIndex(0);
-  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[0]);
+  ExpectSelectedFrameTrackIdIs(kScopeIds[0]);
 
   frame_track_list_->setCurrentIndex(2);
-  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[2]);
+  ExpectSelectedFrameTrackIdIs(kScopeIds[2]);
 
   frame_track_list_->setCurrentIndex(1);
-  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[1]);
+  ExpectSelectedFrameTrackIdIs(kScopeIds[1]);
 
   frame_track_list_->setCurrentIndex(3);
-  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[3]);
+  ExpectSelectedFrameTrackIdIs(kScopeIds[3]);
 }
 
 TEST_F(SamplingWithFrameTrackInputWidgetTest, OnStartMsChangedIsCorrect) {
