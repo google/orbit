@@ -38,7 +38,7 @@ namespace orbit_mizar_data {
 // This class represents the data loaded from a capture that has been made aware of its counterpart
 // it will be compared against. In particular, it is aware of the functions that has been sampled in
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
-template <typename Data, typename FrameTracks>
+template <typename Data, typename FrameTracks, typename FrameTrackStats>
 class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
@@ -83,6 +83,18 @@ class MizarPairedDataTmpl {
       result.push_back(Times(sampling_period, callstack_count));
     }
     return result;
+  }
+
+  [[nodiscard]] FrameTrackStats ActiveInvocationTimeStats(const absl::flat_hash_set<TID>& tids,
+                                                          FrameTrackId frame_track_id,
+                                                          RelativeTimeNs min_relative_time,
+                                                          RelativeTimeNs max_relative_time) const {
+    FrameTrackStats stats;
+    for (const RelativeTimeNs active_invocation_time :
+         ActiveInvocationTimes(tids, frame_track_id, min_relative_time, max_relative_time)) {
+      stats.UpdateStats(*active_invocation_time);
+    }
+    return stats;
   }
 
   [[nodiscard]] const absl::flat_hash_map<TID, std::string>& TidToNames() const {
@@ -204,7 +216,8 @@ class MizarPairedDataTmpl {
   absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;
 };
 
-using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager>;
+using MizarPairedData =
+    MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager, orbit_client_data::ScopeStats>;
 
 }  // namespace orbit_mizar_data
 
