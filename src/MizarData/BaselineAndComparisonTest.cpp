@@ -183,7 +183,7 @@ class MockFunctionTimeComparator {
 
 static void ExpectScopeStatsEq(const orbit_client_data::ScopeStats a,
                                const orbit_client_data::ScopeStats b) {
-  EXPECT_EQ(a.ComputeAverageTimeNs(), b.ComputeAverageTimeNs()); 
+  EXPECT_EQ(a.ComputeAverageTimeNs(), b.ComputeAverageTimeNs());
   EXPECT_EQ(a.variance_ns(), b.variance_ns());
   EXPECT_EQ(a.count(), b.count());
 }
