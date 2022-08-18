@@ -43,19 +43,6 @@ struct MockPairedData {
               (const));
 };
 
-struct FrameTrackStats {
-  static inline std::vector<RelativeTimeNs> durations_fed_since_last_instantiation_ = {};
-
-  FrameTrackStats() { durations_fed_since_last_instantiation_.clear(); }
-
-  void UpdateStats(uint64_t duration) {
-    durations_fed_since_last_instantiation_.emplace_back(duration);
-  }
-
-  MOCK_METHOD(uint64_t, ComputeAverageTimeNs, (), (const));
-  MOCK_METHOD(uint64_t, count, (), (const));
-};
-
 }  // namespace
 
 namespace orbit_mizar_models {
