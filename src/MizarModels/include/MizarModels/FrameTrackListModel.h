@@ -26,8 +26,6 @@ namespace orbit_mizar_models {
 
 constexpr int kFrameTrackIdRole = Qt::UserRole + 1;
 
-// TODO(b/242839382) Add a dedicated unit test. Currently it is covered by the
-// SamplingWithFrameTrackInputWidgetTest.
 template <typename PairedData, typename FrameTrackStats>
 class FrameTrackListModelTmpl : public QAbstractListModel {
   using FrameTrackId = ::orbit_mizar_data::FrameTrackId;

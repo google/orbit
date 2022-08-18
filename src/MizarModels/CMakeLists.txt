@@ -21,6 +21,7 @@ target_link_libraries(MizarModels INTERFACE
 add_executable(MizarModelsTests)
 
 target_sources(MizarModelsTests PRIVATE
+  FrameTrackListModelTest.cpp
   SamplingWithFrameTrackReportModelTest.cpp)
 
 target_link_libraries(MizarModelsTests PRIVATE
