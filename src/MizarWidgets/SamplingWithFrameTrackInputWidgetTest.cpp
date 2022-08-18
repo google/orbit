@@ -6,12 +6,12 @@
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <qobject.h>
 
 #include <QApplication>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QObject>
 #include <QStringLiteral>
 #include <QTest>
 #include <array>
@@ -19,12 +19,10 @@
 #include <string>
 
 #include "ClientData/ScopeId.h"
-#include "ClientData/ScopeInfo.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
-#include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;
 using ::orbit_client_data::ScopeType;
@@ -33,7 +31,6 @@ using ::orbit_mizar_base::RelativeTimeNs;
 using ::orbit_mizar_base::TID;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
-using ::orbit_test_utils::MakeMap;
 using ::testing::ElementsAreArray;
 using ::testing::NotNull;
 using ::testing::Return;
