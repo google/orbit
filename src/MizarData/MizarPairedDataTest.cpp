@@ -264,8 +264,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 }
 
-const auto kExpectedInvocationTimes = {Times(kSamplingPeriod, uint64_t{2}),
-                                       Times(kSamplingPeriod, uint64_t{2})};
+const auto kExpectedInvocationTimes = {Times(kSamplingPeriod, 2), Times(kSamplingPeriod, 2)};
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataUnderTest mizar_paired_data(std::move(data_), kAddressToId);
