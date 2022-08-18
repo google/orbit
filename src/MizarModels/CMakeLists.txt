@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarModels INTERFACE)
 
 target_sources(MizarModels INTERFACE
-  include/MizarModels/SamplingWithFrameTrackReportModel.h
-  include/MizarModels/FrameTrackListModel.h)
+  include/MizarModels/FrameTrackListModel.h
+  include/MizarModels/SamplingWithFrameTrackReportModel.h)
 
 target_include_directories(MizarModels INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 

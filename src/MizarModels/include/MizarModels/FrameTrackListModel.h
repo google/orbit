@@ -12,6 +12,7 @@
 #include <QAbstractListModel>
 #include <QString>
 #include <Qt>
+#include <string>
 
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
@@ -42,15 +43,15 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
         data_(data),
         selected_tids_(selected_tids),
         start_timestamp_(start_timestamp),
-        id_to_displayed_name_(MakeDisplayedNames(data)) {}
+        frame_tracks_(MakeDisplayedNames(data)) {}
 
   [[nodiscard]] int rowCount(const QModelIndex& /*parent*/ = {}) const override {
-    return id_to_displayed_name_.size();
+    return frame_tracks_.size();
   }
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
     if (index.model() != this) return {};
-    const auto& [id, name] = id_to_displayed_name_[index.row()];
+    const auto& [id, name] = frame_tracks_[index.row()];
     switch (role) {
       case Qt::DisplayRole:
         return QString::fromStdString(name);
@@ -64,21 +65,22 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   }
 
  private:
-  static std::vector<std::pair<FrameTrackId, std::string>> MakeDisplayedNames(
-      const PairedData* data) {
-    absl::flat_hash_map<FrameTrackId, FrameTrackInfo> id_to_infos = data->GetFrameTracks();
-    std::vector<std::pair<FrameTrackId, std::string>> id_to_displayed_name;
-    std::transform(std::begin(id_to_infos), std::end(id_to_infos),
-                   std::back_inserter(id_to_displayed_name), [](const auto& id_to_info) {
-                     const auto [id, info] = id_to_info;
-                     const std::string displayed_name = MakeDisplayedName(info);
+  struct FrameTrack {
+    FrameTrackId id;
+    std::string displayed_name;
+  };
 
-                     return std::make_pair(id, displayed_name);
+  [[nodiscard]] static std::vector<FrameTrack> MakeDisplayedNames(const PairedData* data) {
+    absl::flat_hash_map<FrameTrackId, FrameTrackInfo> id_to_infos = data->GetFrameTracks();
+    std::vector<FrameTrack> frame_tracks;
+    std::transform(std::begin(id_to_infos), std::end(id_to_infos), std::back_inserter(frame_tracks),
+                   [](const auto& id_to_info) {
+                     const auto [id, info] = id_to_info;
+                     return FrameTrack{id, MakeDisplayedName(info)};
                    });
 
-    orbit_base::sort(std::begin(id_to_displayed_name), std::end(id_to_displayed_name),
-                     &std::pair<FrameTrackId, std::string>::second);
-    return id_to_displayed_name;
+    orbit_base::sort(std::begin(frame_tracks), std::end(frame_tracks), &FrameTrack::displayed_name);
+    return frame_tracks;
   }
 
   [[nodiscard]] static std::string MakeFrameTrackString(
@@ -128,7 +130,7 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   const PairedData* data_;
   const absl::flat_hash_set<TID>* selected_tids_{};
   const RelativeTimeNs* start_timestamp_{};
-  std::vector<std::pair<FrameTrackId, std::string>> id_to_displayed_name_;
+  std::vector<FrameTrack> frame_tracks_;
 };
 
 }  // namespace orbit_mizar_models
