@@ -21,7 +21,7 @@ struct PlusTagBase {};
 
 struct DefaultPlus {
   template <typename T, typename U>
-  auto operator()(T&& t, U&& u) const {
+  constexpr auto operator()(T&& t, U&& u) const {
     return std::forward<T>(t) + std::forward<U>(u);
   }
 };
@@ -30,7 +30,7 @@ constexpr DefaultPlus kDefaultPlus;
 
 struct DefaultMinus {
   template <typename T, typename U>
-  auto operator()(T&& t, U&& u) const {
+  constexpr auto operator()(T&& t, U&& u) const {
     return std::forward<T>(t) - std::forward<U>(u);
   }
 };
@@ -39,7 +39,7 @@ constexpr DefaultMinus kDefaultMinus;
 
 struct DefaultTimes {
   template <typename T, typename U>
-  auto operator()(T&& t, U&& u) const {
+  constexpr auto operator()(T&& t, U&& u) const {
     return std::forward<T>(t) * std::forward<U>(u);
   }
 };
