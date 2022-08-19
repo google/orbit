@@ -500,22 +500,17 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     const char* tracepoint_name = tracepoints_to_open[tracepoint_index].tracepoint_name;
     for (int32_t cpu : cpus) {
       int tracepoint_fd = -1;
-      switch (thread_state_change_callstack_collection) {
-        case CaptureOptions::kThreadStateChangeCallStackCollection:
-          switch (thread_state_change_callstack_unwinding_method) {
-            case CaptureOptions::kFramePointers:
-              tracepoint_fd = tracepoint_with_callchain_event_open(
-                  tracepoint_category, tracepoint_name, -1, cpu, stack_dump_size);
-              break;
-            case CaptureOptions::kDwarf:
-            default:
-              tracepoint_fd = tracepoint_with_stack_event_open(tracepoint_category, tracepoint_name,
-                                                               -1, cpu, stack_dump_size);
-          }
-          break;
-        case CaptureOptions::kNoThreadStateChangeCallStackCollection:
-        default:
-          tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+      if (thread_state_change_callstack_collection ==
+              CaptureOptions::kThreadStateChangeCallStackCollection &&
+          thread_state_change_callstack_unwinding_method == CaptureOptions::kFramePointers) {
+        tracepoint_fd = tracepoint_with_callchain_event_open(tracepoint_category, tracepoint_name,
+                                                             -1, cpu, stack_dump_size);
+      } else if (thread_state_change_callstack_collection ==
+                 CaptureOptions::kThreadStateChangeCallStackCollection) {
+        tracepoint_fd = tracepoint_with_stack_event_open(tracepoint_category, tracepoint_name, -1,
+                                                         cpu, stack_dump_size);
+      } else {
+        tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
       }
       if (tracepoint_fd == -1) {
         ORBIT_ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name,
@@ -599,44 +594,27 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
     const CaptureOptions::UnwindingMethod unwinding_method) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<TracepointToOpen> tracepoints_to_open;
-  switch (thread_state_change_callstack_collection) {
-    case CaptureOptions::kThreadStateChangeCallStackCollection:
-      switch (unwinding_method) {
-        case CaptureOptions::kFramePointers:
-          if (trace_thread_state_ || trace_context_switches_) {
-            tracepoints_to_open.emplace_back("sched", "sched_switch",
-                                             &sched_switch_with_callchain_ids_);
-          }
-          if (trace_thread_state_) {
-            // We also need task:task_newtask, but this is already opened by
-            // OpenThreadNameTracepoints.
-            tracepoints_to_open.emplace_back("sched", "sched_wakeup",
-                                             &sched_wakeup_with_callchain_ids_);
-          }
-          break;
-        case CaptureOptions::kDwarf:
-        default:
-          if (trace_thread_state_ || trace_context_switches_) {
-            tracepoints_to_open.emplace_back("sched", "sched_switch",
-                                             &sched_switch_with_stack_ids_);
-          }
-          if (trace_thread_state_) {
-            // We also need task:task_newtask, but this is already opened by
-            // OpenThreadNameTracepoints.
-            tracepoints_to_open.emplace_back("sched", "sched_wakeup",
-                                             &sched_wakeup_with_stack_ids_);
-          }
-      }
-      break;
-    case CaptureOptions::kNoThreadStateChangeCallStackCollection:
-    default:
-      if (trace_thread_state_ || trace_context_switches_) {
-        tracepoints_to_open.emplace_back("sched", "sched_switch", &sched_switch_ids_);
-      }
-      if (trace_thread_state_) {
-        // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
-        tracepoints_to_open.emplace_back("sched", "sched_wakeup", &sched_wakeup_ids_);
-      }
+  absl::flat_hash_set<uint64_t>* current_sched_switch_ids = &sched_switch_ids_;
+  absl::flat_hash_set<uint64_t>* current_sched_wakeup_ids = &sched_wakeup_ids_;
+  if (thread_state_change_callstack_collection ==
+          CaptureOptions::kThreadStateChangeCallStackCollection &&
+      thread_state_change_callstack_method_ == CaptureOptions::kDwarf) {
+    current_sched_switch_ids = &sched_switch_with_stack_ids_;
+    current_sched_wakeup_ids = &sched_wakeup_with_stack_ids_;
+  }
+  if (thread_state_change_callstack_collection ==
+          CaptureOptions::kThreadStateChangeCallStackCollection &&
+      thread_state_change_callstack_method_ == CaptureOptions::kFramePointers) {
+    current_sched_switch_ids = &sched_switch_with_callchain_ids_;
+    current_sched_wakeup_ids = &sched_wakeup_with_callchain_ids_;
+  }
+  if (trace_thread_state_ || trace_context_switches_) {
+    tracepoints_to_open.emplace_back("sched", "sched_switch", &current_sched_switch_ids);
+  }
+  if (trace_thread_state_) {
+    // We also need task:task_newtask, but this is already opened by
+    // OpenThreadNameTracepoints.
+    tracepoints_to_open.emplace_back("sched", "sched_wakeup", &current_sched_wakeup_ids);
   }
   if (tracepoints_to_open.empty()) {
     return true;
@@ -1387,21 +1365,32 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch_with_callchain) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
   } else if (is_sched_wakeup_with_callchain) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
   } else if (is_sched_switch_with_stack) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
   } else if (is_sched_wakeup_with_stack) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
   } else if (is_amdgpu_cs_ioctl_event) {
     AmdgpuCsIoctlPerfEvent event = ConsumeAmdgpuCsIoctlPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
+
   } else if (is_amdgpu_sched_run_job_event) {
     AmdgpuSchedRunJobPerfEvent event = ConsumeAmdgpuSchedRunJobPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
+
   } else if (is_dma_fence_signaled_event) {
     DmaFenceSignaledPerfEvent event = ConsumeDmaFenceSignaledPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
+
   } else if (is_user_instrumented_tracepoint) {
     auto it = ids_to_tracepoint_info_.find(stream_id);
     if (it == ids_to_tracepoint_info_.end()) {
