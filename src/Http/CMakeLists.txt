@@ -10,9 +10,9 @@ add_library(Http STATIC)
 
 target_sources(Http PRIVATE
         HttpDownloadOperation.cpp
-        HttpDownloadOperation.h
         HttpDownloadManager.cpp)
 target_sources(Http PUBLIC
+        include/Http/HttpDownloadOperation.h
         include/Http/HttpDownloadManager.h)
 
 target_include_directories(Http PUBLIC

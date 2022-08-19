@@ -2,18 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "HttpDownloadOperation.h"
+#include "Http/HttpDownloadOperation.h"
 
 #include <absl/strings/str_format.h>
 
 #include <QNetworkRequest>
-#include <QPointer>
 #include <QUrl>
 
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_http {
+namespace orbit_http_internal {
 
 void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> maybe_error_msg) {
   ORBIT_CHECK((state == State::kError) == maybe_error_msg.has_value());
@@ -42,6 +41,7 @@ void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> 
 }
 
 void HttpDownloadOperation::OnDownloadFinished() {
+  output_.write(reply_->readAll());
   output_.close();
 
   if (!reply_->error()) {
@@ -56,7 +56,7 @@ void HttpDownloadOperation::OnDownloadFinished() {
   }
 
   reply_->deleteLater();
-  reply_ = nullptr;
+  deleteLater();
 }
 
 void HttpDownloadOperation::OnDownloadReadyRead() { output_.write(reply_->readAll()); }
@@ -72,17 +72,10 @@ void HttpDownloadOperation::Start() {
   }
 
   QNetworkRequest request(QUrl(QString::fromStdString(url_)));
-  // Enable redirecting with limiting the allowed maximum redirect times to 10.
-#if QT_VERSION >= 0x50600
-#if QT_VERSION >= 0x50900
   request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                        QNetworkRequest::NoLessSafeRedirectPolicy);
-#else
-  request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
-#endif
   constexpr const int kMaximumAllowedRedirects = 10;
   request.setMaximumRedirectsAllowed(kMaximumAllowedRedirects);
-#endif
 
   reply_ = manager_->get(request);
   connect(reply_, &QNetworkReply::finished, this, &HttpDownloadOperation::OnDownloadFinished);
@@ -97,7 +90,7 @@ void HttpDownloadOperation::Start() {
 }
 
 void HttpDownloadOperation::Abort() {
-  if (reply_ != nullptr) reply_->abort();
+  if (reply_) reply_->abort();
 }
 
-}  // namespace orbit_http
+}  // namespace orbit_http_internal

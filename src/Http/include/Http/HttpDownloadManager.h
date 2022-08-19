@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
-#define HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
+#ifndef HTTP_HTTP_DOWNLOAD_MANAGER_H
+#define HTTP_HTTP_DOWNLOAD_MANAGER_H
 
 #include <QNetworkAccessManager>
 #include <QObject>
+#include <QPointer>
 #include <memory>
 
+#include "Http/HttpDownloadOperation.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
@@ -21,13 +23,20 @@ class HttpDownloadManager : public QObject {
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
 
+  ~HttpDownloadManager() override {
+    for (const auto& operation : download_operations_) {
+      if (operation) operation->Abort();
+    }
+  }
+
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
       std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token);
 
  private:
   QNetworkAccessManager manager_;
+  std::vector<QPointer<orbit_http_internal::HttpDownloadOperation>> download_operations_;
 };
 
 }  // namespace orbit_http
 
-#endif  // HTTP_REMOTE_SYMBOL_STORE_DOWNLOAD_MANAGER_H
+#endif  // HTTP_HTTP_DOWNLOAD_MANAGER_H
