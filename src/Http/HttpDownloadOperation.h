@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef HTTP_HTTP_DOWNLOAD_OPERATION_H
-#define HTTP_HTTP_DOWNLOAD_OPERATION_H
+#ifndef HTTP_DOWNLOAD_OPERATION_H
+#define HTTP_DOWNLOAD_OPERATION_H
 
 #include <QFile>
 #include <QNetworkAccessManager>
@@ -13,7 +13,7 @@
 
 #include "OrbitBase/StopToken.h"
 
-namespace orbit_http_internal {
+namespace orbit_http {
 
 class HttpDownloadOperation : public QObject {
   Q_OBJECT
@@ -57,6 +57,6 @@ class HttpDownloadOperation : public QObject {
   QFile output_;
 };
 
-}  // namespace orbit_http_internal
+}  // namespace orbit_http
 
-#endif  // HTTP_HTTP_DOWNLOAD_OPERATION_H
+#endif  // HTTP_DOWNLOAD_OPERATION_H

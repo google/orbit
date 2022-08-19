@@ -9,11 +9,8 @@
 #include <QObject>
 #include <memory>
 
-#include "Http/HttpDownloadOperation.h"
-#include "OrbitBase/AnyInvocable.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 
@@ -28,7 +25,6 @@ class HttpDownloadManager : public QObject {
       std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token);
 
  private:
-  std::vector<orbit_http_internal::HttpDownloadOperation*> download_operations_;
   QNetworkAccessManager manager_;
 };
 

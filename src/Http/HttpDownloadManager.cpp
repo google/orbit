@@ -4,12 +4,14 @@
 
 #include "Http/HttpDownloadManager.h"
 
+#include "HttpDownloadOperation.h"
+#include "OrbitBase/Promise.h"
+
 namespace orbit_http {
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::Promise;
 using orbit_base::StopToken;
-using orbit_http_internal::HttpDownloadOperation;
 
 Future<ErrorMessageOr<CanceledOr<void>>> HttpDownloadManager::Download(
     std::string url, std::filesystem::path save_file_path, StopToken stop_token) {
@@ -45,8 +47,6 @@ Future<ErrorMessageOr<CanceledOr<void>>> HttpDownloadManager::Download(
                    std::move(finish_handler));
 
   current_download_operation->Start();
-
-  download_operations_.push_back(current_download_operation);
 
   return future;
 }

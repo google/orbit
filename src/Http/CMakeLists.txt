@@ -8,18 +8,18 @@ project(Http)
 
 add_library(Http STATIC)
 
-target_sources(Http PRIVATE 
+target_sources(Http PRIVATE
         HttpDownloadOperation.cpp
+        HttpDownloadOperation.h
         HttpDownloadManager.cpp)
-target_sources(Http PUBLIC 
-        include/Http/HttpDownloadOperation.h
+target_sources(Http PUBLIC
         include/Http/HttpDownloadManager.h)
 
 target_include_directories(Http PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(Http PUBLIC
-        OrbitBase        
+        OrbitBase
         Qt5::Core
         Qt5::Network)
 
@@ -27,13 +27,13 @@ set_target_properties(Http PROPERTIES AUTOMOC ON)
 
 add_executable(HttpTests)
 
-target_sources(HttpTests PRIVATE 
+target_sources(HttpTests PRIVATE
         HttpDownloadManagerTest.cpp)
 
 target_link_libraries(HttpTests PRIVATE
         GTest::QtCoreMain
         Http
-        OrbitBase       
+        OrbitBase
         QtUtils
         Qt5::Core
         TestUtils)
