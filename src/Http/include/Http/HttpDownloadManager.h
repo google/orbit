@@ -8,7 +8,6 @@
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <memory>
-#include <queue>
 
 #include "Http/HttpDownloadOperation.h"
 #include "OrbitBase/AnyInvocable.h"
@@ -25,24 +24,11 @@ class HttpDownloadManager : public QObject {
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
 
-  ~HttpDownloadManager() override;
-
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
-      const std::string& url, const std::filesystem::path& save_file_path,
-      orbit_base::StopToken stop_token);
+      std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token);
 
  private:
-  struct HttpDownloadOperationMetadata {
-    std::string url;
-    std::filesystem::path save_file_path;
-    orbit_base::StopToken stop_token;
-    orbit_base::Promise<ErrorMessageOr<orbit_base::CanceledOr<void>>> promise;
-  };
-
-  void DoDownload(HttpDownloadOperationMetadata metadata);
-
-  std::queue<HttpDownloadOperationMetadata> waiting_download_operations_;
-  orbit_http_internal::HttpDownloadOperation* current_download_operation_ = nullptr;
+  std::vector<orbit_http_internal::HttpDownloadOperation*> download_operations_;
   QNetworkAccessManager manager_;
 };
 
