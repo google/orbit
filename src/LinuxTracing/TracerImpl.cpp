@@ -609,12 +609,12 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
     current_sched_wakeup_ids = &sched_wakeup_with_callchain_ids_;
   }
   if (trace_thread_state_ || trace_context_switches_) {
-    tracepoints_to_open.emplace_back("sched", "sched_switch", &current_sched_switch_ids);
+    tracepoints_to_open.emplace_back("sched", "sched_switch", current_sched_switch_ids);
   }
   if (trace_thread_state_) {
     // We also need task:task_newtask, but this is already opened by
     // OpenThreadNameTracepoints.
-    tracepoints_to_open.emplace_back("sched", "sched_wakeup", &current_sched_wakeup_ids);
+    tracepoints_to_open.emplace_back("sched", "sched_wakeup", current_sched_wakeup_ids);
   }
   if (tracepoints_to_open.empty()) {
     return true;
