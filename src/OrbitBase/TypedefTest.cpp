@@ -325,7 +325,9 @@ TEST(Typedef, ComparisonIsCorrect) {
   EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
 }
 
-struct WrapperWithArithmeticsTag : PlusTag<WrapperWithArithmeticsTag>, TimesScalarTag<int> {};
+struct WrapperWithArithmeticsTag : PlusTag<WrapperWithArithmeticsTag>,
+                                   MinusTag<WrapperWithArithmeticsTag>,
+                                   TimesScalarTag<int> {};
 
 template <typename T>
 using WrapperWithArithmetics = Typedef<WrapperWithArithmeticsTag, T>;
@@ -336,8 +338,8 @@ constexpr int kAValue = 1;
 constexpr int kBValue = 2;
 
 TEST(Typedef, WrapperWithArithmeticsHasTimesScalar) {
-  WrapperWithArithmetics<int> a(kAValue);
-  WrapperWithArithmetics<int> result = Times(a, kBValue);
+  constexpr WrapperWithArithmetics<int> a(kAValue);
+  constexpr WrapperWithArithmetics<int> result = Times(a, kBValue);
   EXPECT_EQ(*result, kAValue * kBValue);
 }
 
@@ -347,13 +349,15 @@ TEST(Typedef, WrapperWithArithmeticsHasPlus) {
   EXPECT_EQ(*Add(a, b), kAValue + kBValue);
 }
 
-TEST(Typedef, WrapperWithArithmeticsHasPlusAndPromotes) {
+TEST(Typedef, WrapperWithArithmeticsHasPlusAndMinusAndPromotes) {
   constexpr int kInt = 1;
   constexpr float kFloat = 0.5;
-  WrapperWithArithmetics<int> a(kInt);
-  WrapperWithArithmetics<float> b(kFloat);
-  WrapperWithArithmetics<float> result = Add(a, b);
-  EXPECT_EQ(*result, kInt + kFloat);
+  constexpr WrapperWithArithmetics<int> a(kInt);
+  constexpr WrapperWithArithmetics<float> b(kFloat);
+  constexpr WrapperWithArithmetics<float> sum = Add(a, b);
+  constexpr WrapperWithArithmetics<float> diff = Sub(a, b);
+  EXPECT_EQ(*sum, kInt + kFloat);
+  EXPECT_EQ(*diff, kInt - kFloat);
 }
 
 TEST(Typedef, WrapperWithArithmeticsHasPlusAndConvertsArgument) {
