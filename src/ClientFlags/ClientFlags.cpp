@@ -87,3 +87,6 @@ ABSL_FLAG(
 ABSL_FLAG(bool, auto_frame_track, true, "Automatically add the default Frame Track.");
 
 ABSL_FLAG(bool, time_range_selection, false, "Enable time range selection feature.");
+
+ABSL_FLAG(bool, tracepoint_callstack_collection, false,
+          "Enable callstack gathering for tracepoints feature.");

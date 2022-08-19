@@ -61,6 +61,12 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] bool GetCollectThreadStates() const;
   void SetTraceGpuSubmissions(bool trace_gpu_submissions);
   [[nodiscard]] bool GetTraceGpuSubmissions() const;
+  void SetEnableCallStackCollectionOnThreadStateChanges(bool check);
+  [[nodiscard]] bool GetEnableCallStackCollectionOnThreadStateChanges() const;
+  void SetThreadStateChangeCallstackMethod(
+      orbit_grpc_protos::CaptureOptions::UnwindingMethod thread_state_change_callstack_method);
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod
+  GetThreadStateChangeCallstackMethod() const;
   void SetEnableApi(bool enable_api);
   [[nodiscard]] bool GetEnableApi() const;
   void SetDynamicInstrumentationMethod(
@@ -95,6 +101,11 @@ class CaptureOptionsDialog : public QDialog {
   static constexpr orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
       kDynamicInstrumentationMethodDefaultValue =
           orbit_grpc_protos::CaptureOptions::kUserSpaceInstrumentation;
+  static constexpr orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+      kThreadStateChangeCallStackCollectionDefaultValue =
+          orbit_grpc_protos::CaptureOptions::kNoThreadStateChangeCallStackCollection;
+  static constexpr orbit_grpc_protos::CaptureOptions::UnwindingMethod
+      kThreadStateChangeCallStackMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kUndefined;
   static constexpr uint64_t kLocalMarkerDepthDefaultValue = 0;
   static constexpr orbit_client_data::WineSyscallHandlingMethod
       kWineSyscallHandlingMethodDefaultValue =

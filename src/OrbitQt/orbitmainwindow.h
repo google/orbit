@@ -232,6 +232,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static const QString kMemorySamplingPeriodMsSettingKey;
   static const QString kMemoryWarningThresholdKbSettingKey;
   static const QString kLimitLocalMarkerDepthPerCommandBufferSettingsKey;
+  static const QString kEnableCallStackCollectionOnThreadStateChanges;
+  static const QString kCallStackCollectionOnThreadStateChangesMethod;
   static const QString kMaxLocalMarkerDepthPerCommandBufferSettingsKey;
   static const QString kMainWindowGeometrySettingKey;
   static const QString kMainWindowStateSettingKey;
