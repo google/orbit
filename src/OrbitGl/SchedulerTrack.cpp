@@ -88,11 +88,10 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
   return orbit_gl::GetThreadColor(timer_info.thread_id());
 }
 
-float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  uint32_t num_gaps = timer_info.depth();
+float SchedulerTrack::GetYFromDepth(uint32_t depth) const {
   return GetPos()[1] + GetHeightAboveTimers() +
-         (layout_->GetTextCoresHeight() * static_cast<float>(timer_info.depth())) +
-         num_gaps * layout_->GetSpaceBetweenCores();
+         (layout_->GetTextCoresHeight() * static_cast<float>(depth)) +
+         depth * layout_->GetSpaceBetweenCores();
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> SchedulerTrack::GetScopesInRange(

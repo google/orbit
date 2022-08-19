@@ -110,8 +110,7 @@ std::string GpuDebugMarkerTrack::GetBoxTooltip(const PrimitiveAssembler& primiti
           .c_str());
 }
 
-float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  uint32_t depth = timer_info.depth();
+float GpuDebugMarkerTrack::GetYFromDepth(uint32_t depth) const {
   if (IsCollapsed()) {
     depth = 0;
   }
