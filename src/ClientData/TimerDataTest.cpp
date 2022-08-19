@@ -21,13 +21,62 @@ TEST(TimerData, IsEmpty) {
   EXPECT_EQ(timer_data.GetMinTime(), std::numeric_limits<uint64_t>::max());
 }
 
+/*
+Timers to test:
+_____________________________
+|   Left   |     |  Right   |  |
+|-----------------------------
+     |  Middle / Down   |
+     --------------------
+ */
+
+static constexpr uint64_t kLeftTimerStart = 2;
+static constexpr uint64_t kLeftTimerEnd = 6;
+static constexpr uint64_t kMiddleTimerStart = 5;
+static constexpr uint64_t kMiddleTimerEnd = 9;
+static constexpr uint64_t kRightTimerStart = 8;
+static constexpr uint64_t kRightTimerEnd = 12;
+static constexpr uint64_t kNumTimers = 3;
+static constexpr uint64_t kDepth = 2;
+static constexpr uint64_t kMinTimestamp = 2;
+static constexpr uint64_t kMaxTimestamp = 12;
+
+TimerInfo GetLeftTimer() {
+  TimerInfo timer_info_left;
+  timer_info_left.set_start(kLeftTimerStart);
+  timer_info_left.set_end(kLeftTimerEnd);
+  timer_info_left.set_depth(0);
+  return timer_info_left;
+}
+
+TimerInfo GetRightTimer() {
+  TimerInfo timer_info_right;
+  timer_info_right.set_start(kRightTimerStart);
+  timer_info_right.set_end(kRightTimerEnd);
+  timer_info_right.set_depth(0);
+  return timer_info_right;
+}
+
+TimerInfo GetDownTimer() {
+  TimerInfo timer_info_down;
+  timer_info_down.set_start(kMiddleTimerStart);
+  timer_info_down.set_end(kMiddleTimerEnd);
+  timer_info_down.set_depth(1);
+  return timer_info_down;
+}
+
+TimerInfo GetMiddleTimer() {
+  TimerInfo timer_info_middle;
+  timer_info_middle.set_start(kMiddleTimerStart);
+  timer_info_middle.set_end(kMiddleTimerEnd);
+  timer_info_middle.set_depth(0);
+  return timer_info_middle;
+}
+
 TEST(TimerData, AddTimers) {
   TimerData timer_data;
-  TimerInfo timer_info;
-  timer_info.set_start(2);
-  timer_info.set_end(5);
 
-  timer_data.AddTimer(timer_info, 0);
+  timer_data.AddTimer(GetLeftTimer(), 0);
 
   EXPECT_FALSE(timer_data.IsEmpty());
   EXPECT_EQ(timer_data.GetNumberOfTimers(), 1);
@@ -35,13 +84,10 @@ TEST(TimerData, AddTimers) {
   EXPECT_EQ(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 1);
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 5);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+  EXPECT_EQ(timer_data.GetMinTime(), kLeftTimerStart);
+  EXPECT_EQ(timer_data.GetMaxTime(), kLeftTimerEnd);
 
-  timer_info.set_start(8);
-  timer_info.set_end(11);
-
-  timer_data.AddTimer(timer_info, 0);
+  timer_data.AddTimer(GetRightTimer(), 0);
 
   EXPECT_FALSE(timer_data.IsEmpty());
   EXPECT_EQ(timer_data.GetNumberOfTimers(), 2);
@@ -49,116 +95,100 @@ TEST(TimerData, AddTimers) {
   EXPECT_EQ(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 2);
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 11);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+  EXPECT_EQ(timer_data.GetMinTime(), kLeftTimerStart);
+  EXPECT_EQ(timer_data.GetMaxTime(), kRightTimerEnd);
 
-  timer_info.set_start(10);
-  timer_info.set_end(11);
+  timer_data.AddTimer(GetDownTimer(), 1);
 
-  timer_data.AddTimer(timer_info, 1);
-
-  EXPECT_EQ(timer_data.GetNumberOfTimers(), 3);
+  EXPECT_EQ(timer_data.GetNumberOfTimers(), kNumTimers);
   EXPECT_FALSE(timer_data.IsEmpty());
   ASSERT_NE(timer_data.GetChain(0), nullptr);
   ASSERT_NE(timer_data.GetChain(1), nullptr);
   EXPECT_EQ(timer_data.GetChain(0)->size(), 2);
   EXPECT_EQ(timer_data.GetChain(1)->size(), 1);
+  EXPECT_EQ(timer_data.GetDepth(), kDepth);
+  EXPECT_EQ(timer_data.GetMinTime(), kMinTimestamp);
+  EXPECT_EQ(timer_data.GetMaxTime(), kMaxTimestamp);
+}
 
-  EXPECT_EQ(timer_data.GetMaxTime(), 11);
-  EXPECT_EQ(timer_data.GetMinTime(), 2);
+std::unique_ptr<TimerData> GetOrderedTimersSameDepth() {
+  std::unique_ptr<TimerData> timer_data = std::make_unique<TimerData>();
+  timer_data->AddTimer(GetLeftTimer());
+  timer_data->AddTimer(GetMiddleTimer());
+  timer_data->AddTimer(GetRightTimer());
+  return timer_data;
 }
 
 // TODO(b/204173036): Make GetFirstAfterStartTime private and test GetLeft/Right/Top/Down instead.
 TEST(TimerData, FindTimers) {
-  TimerData timer_data;
+  std::unique_ptr<TimerData> timer_data = GetOrderedTimersSameDepth();
 
   {
-    TimerInfo timer_info;
-    timer_info.set_start(2);
-    timer_info.set_end(5);
-    timer_data.AddTimer(timer_info, 0);
-
-    timer_info.set_start(8);
-    timer_info.set_end(11);
-    timer_data.AddTimer(timer_info, 0);
-
-    timer_info.set_start(10);
-    timer_info.set_end(12);
-    timer_data.AddTimer(timer_info, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstAfterStartTime(kMiddleTimerStart - 1, 0);
+    ASSERT_NE(timer_info, nullptr);
+    EXPECT_EQ(timer_info->start(), kMiddleTimerStart);
+    EXPECT_EQ(timer_info->end(), kMiddleTimerEnd);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(4, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstAfterStartTime(kLeftTimerStart, 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 8);
-    EXPECT_EQ(timer_info->end(), 11);
+    EXPECT_EQ(timer_info->start(), kMiddleTimerStart);
+    EXPECT_EQ(timer_info->end(), kMiddleTimerEnd);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(2, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstAfterStartTime(kLeftTimerStart - 1, 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 8);
-    EXPECT_EQ(timer_info->end(), 11);
+    EXPECT_EQ(timer_info->start(), kLeftTimerStart);
+    EXPECT_EQ(timer_info->end(), kLeftTimerEnd);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(1, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstAfterStartTime(kRightTimerStart - 1, 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 2);
-    EXPECT_EQ(timer_info->end(), 5);
-  }
-
-  {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(9, 0);
-    ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 10);
-    EXPECT_EQ(timer_info->end(), 12);
+    EXPECT_EQ(timer_info->start(), kRightTimerStart);
+    EXPECT_EQ(timer_info->end(), kRightTimerEnd);
   }
 
   {
     const TimerInfo* timer_info =
-        timer_data.GetFirstAfterStartTime(std::numeric_limits<uint64_t>::max(), 0);
+        timer_data->GetFirstAfterStartTime(std::numeric_limits<uint64_t>::max(), 0);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstAfterStartTime(0, 1);
+    const TimerInfo* timer_info = timer_data->GetFirstAfterStartTime(0, 1);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(6, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstBeforeStartTime(kMiddleTimerStart, 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 2);
-    EXPECT_EQ(timer_info->end(), 5);
-  }
-
-  {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(4, 0);
-    ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 2);
-    EXPECT_EQ(timer_info->end(), 5);
+    EXPECT_EQ(timer_info->start(), kLeftTimerStart);
+    EXPECT_EQ(timer_info->end(), kLeftTimerEnd);
   }
 
   {
     const TimerInfo* timer_info =
-        timer_data.GetFirstBeforeStartTime(std::numeric_limits<uint64_t>::max(), 0);
+        timer_data->GetFirstBeforeStartTime(std::numeric_limits<uint64_t>::max(), 0);
     ASSERT_NE(timer_info, nullptr);
-    EXPECT_EQ(timer_info->start(), 10);
-    EXPECT_EQ(timer_info->end(), 12);
+    EXPECT_EQ(timer_info->start(), kRightTimerStart);
+    EXPECT_EQ(timer_info->end(), kRightTimerEnd);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(2, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstBeforeStartTime(kLeftTimerStart, 0);
     EXPECT_EQ(timer_info, nullptr);
   }
 
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(0, 0);
+    const TimerInfo* timer_info = timer_data->GetFirstBeforeStartTime(0, 0);
     EXPECT_EQ(timer_info, nullptr);
   }
   {
-    const TimerInfo* timer_info = timer_data.GetFirstBeforeStartTime(1000, 1);
+    const TimerInfo* timer_info =
+        timer_data->GetFirstBeforeStartTime(std::numeric_limits<uint64_t>::max(), 1);
     EXPECT_EQ(timer_info, nullptr);
   }
 }
