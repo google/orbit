@@ -252,7 +252,12 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
 
   constexpr uint8_t kOddAlpha = 210;
   if ((timer_info.depth() & 0x1) == 0) {
-    color[3] = kOddAlpha;
+    // The usage of alpha values with possible intersection of timers may lead to a strange visual
+    // behavior where users doesn't understand why some timers "are lighter". Therefore, we
+    // "compute" the odd-alpha manually.
+    for (int i = 0; i < 3; ++i) {
+      color[i] = static_cast<char>(static_cast<int>(color[i]) * kOddAlpha / 255);
+    }
   }
 
   return color;
