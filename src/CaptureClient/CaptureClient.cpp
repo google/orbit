@@ -167,6 +167,11 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
   auto api_functions = FindApiFunctions(module_manager, process_data);
   *(capture_options.mutable_api_functions()) = {api_functions.begin(), api_functions.end()};
 
+  capture_options.set_thread_state_change_call_stack_collection(
+      options.thread_state_change_callstack_collection);
+  capture_options.set_thread_state_change_call_stack_unwinding_method(
+      options.thread_state_change_callstack_unwinding_method);
+
   return capture_options;
 }
 

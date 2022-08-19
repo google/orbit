@@ -29,6 +29,14 @@ struct ClientCaptureOptions {
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method =
       orbit_grpc_protos::CaptureOptions::UnwindingMethod::CaptureOptions_UnwindingMethod_kUndefined;
 
+  orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+      thread_state_change_callstack_collection =
+          orbit_grpc_protos::CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified;
+
+  orbit_grpc_protos::CaptureOptions::UnwindingMethod
+      thread_state_change_callstack_unwinding_method =
+          orbit_grpc_protos::CaptureOptions::kUndefined;
+
   uint16_t stack_dump_size = 0;
   uint64_t max_local_marker_depth_per_command_buffer = 0;
   uint64_t memory_sampling_period_ms = 0;
