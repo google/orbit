@@ -79,11 +79,6 @@ TracerImpl::TracerImpl(
       capture_options.thread_state_change_call_stack_collection();
   thread_state_change_callstack_method_ =
       capture_options.thread_state_change_call_stack_unwinding_method();
-
-  ORBIT_LOG("%d %d", capture_options.thread_state_change_call_stack_collection(),
-            capture_options.thread_state_change_call_stack_unwinding_method());
-  ORBIT_LOG("%d %d", thread_state_change_callstack_collection_,
-            thread_state_change_callstack_method_);
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
     constexpr uint16_t kDefaultStackSampleUserSizeFramePointer = 512;
