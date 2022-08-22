@@ -100,8 +100,6 @@ std::optional<uint64_t> CoffFileImpl::GetVirtualAddressOfSymbolSection(
   return section ? std::make_optional(section.get()->VirtualAddress) : std::nullopt;
 }
 
-constexpr uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
-
 std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
     const llvm::object::SymbolRef& symbol_ref) {
   llvm::Expected<llvm::object::SymbolRef::Type> type = symbol_ref.getType();
@@ -134,14 +132,9 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
   symbol_info.set_address(symbol_virtual_address);
 
   // The COFF symbol table doesn't contain the size of symbols. Set a placeholder for now.
-  symbol_info.set_size(kUnknownSymbolSize);
+  symbol_info.set_size(ObjectFile::kUnknownSymbolSize);
 
   return symbol_info;
-}
-
-// Comparator to sort SymbolInfos by address, and perform the corresponding binary searches.
-bool SymbolInfoLessByAddress(const SymbolInfo& lhs, const SymbolInfo& rhs) {
-  return lhs.address() < rhs.address();
 }
 
 void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
@@ -218,28 +211,6 @@ void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
         symbol_info.set_address(low_pc);
         symbol_info.set_size(high_pc - low_pc);
       }
-    }
-  }
-}
-
-void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* symbol_infos) {
-  // We don't have sizes for functions obtained from the COFF symbol table. For these, compute the
-  // size as the distance from the address of the next function.
-  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolInfoLessByAddress);
-
-  for (size_t i = 0; i < symbol_infos->size(); ++i) {
-    SymbolInfo& symbol_info = symbol_infos->at(i);
-    if (symbol_info.size() != kUnknownSymbolSize) {
-      // This function symbol was from DWARF debug info and already has a size.
-      continue;
-    }
-
-    if (i < symbol_infos->size() - 1) {
-      // Deduce the size as the distance from the next function's address.
-      symbol_info.set_size(symbol_infos->at(i + 1).address() - symbol_info.address());
-    } else {
-      // If the last symbol doesn't have a size, we can't deduce it, and we just set it to zero.
-      symbol_info.set_size(0);
     }
   }
 }
