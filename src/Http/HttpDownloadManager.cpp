@@ -19,8 +19,7 @@ orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> HttpDownloadMan
   auto future = promise.GetFuture();
 
   auto current_download_operation = new HttpDownloadOperation{
-      std::move(url), std::move(save_file_path), std::move(stop_token), &manager_};
-  download_operations_.push_back(current_download_operation);
+      std::move(url), std::move(save_file_path), std::move(stop_token), &manager_, this};
 
   auto finish_handler = [current_download_operation, promise = std::move(promise)](
                             HttpDownloadOperation::State state,

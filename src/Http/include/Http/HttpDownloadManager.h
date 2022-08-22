@@ -24,8 +24,9 @@ class HttpDownloadManager : public QObject {
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
 
   ~HttpDownloadManager() override {
-    for (const auto& operation : download_operations_) {
-      if (operation) operation->Abort();
+    for (const auto& download_operation :
+         findChildren<orbit_http_internal::HttpDownloadOperation*>()) {
+      download_operation->Abort();
     }
   }
 
@@ -34,7 +35,6 @@ class HttpDownloadManager : public QObject {
 
  private:
   QNetworkAccessManager manager_;
-  std::vector<QPointer<orbit_http_internal::HttpDownloadOperation>> download_operations_;
 };
 
 }  // namespace orbit_http
