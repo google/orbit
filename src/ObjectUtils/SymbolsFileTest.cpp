@@ -18,15 +18,13 @@ TEST(SymbolsFile, CreateSymbolsFileFromElf) {
   const std::filesystem::path elf_with_symbols_path =
       orbit_test::GetTestdataDir() / "hello_world_elf";
 
-  auto valid_symbols_file =
-      CreateSymbolsFile(elf_with_symbols_path, ObjectFileInfo{0x10000});
+  auto valid_symbols_file = CreateSymbolsFile(elf_with_symbols_path, ObjectFileInfo{0x10000});
   EXPECT_THAT(valid_symbols_file, HasNoError());
 
   const std::filesystem::path elf_without_symbols_path =
       orbit_test::GetTestdataDir() / "no_symbols_elf";
 
-  auto invalid_symbols_file =
-      CreateSymbolsFile(elf_without_symbols_path, ObjectFileInfo{0x10000});
+  auto invalid_symbols_file = CreateSymbolsFile(elf_without_symbols_path, ObjectFileInfo{0x10000});
   EXPECT_THAT(invalid_symbols_file, HasError("Unable to create symbols file"));
   EXPECT_THAT(invalid_symbols_file, HasError("File does not contain symbols."));
 }
@@ -34,15 +32,13 @@ TEST(SymbolsFile, CreateSymbolsFileFromElf) {
 TEST(SymbolsFile, CreateSymbolsFileFromCoff) {
   const std::filesystem::path coff_with_symbols_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
-  auto valid_symbols_file =
-      CreateSymbolsFile(coff_with_symbols_path, ObjectFileInfo{0x10000});
+  auto valid_symbols_file = CreateSymbolsFile(coff_with_symbols_path, ObjectFileInfo{0x10000});
   EXPECT_THAT(valid_symbols_file, HasNoError());
 
   const std::filesystem::path coff_without_symbols_path =
       orbit_test::GetTestdataDir() / "dllmain.dll";
 
-  auto invalid_symbols_file =
-      CreateSymbolsFile(coff_without_symbols_path, ObjectFileInfo{0x10000});
+  auto invalid_symbols_file = CreateSymbolsFile(coff_without_symbols_path, ObjectFileInfo{0x10000});
   EXPECT_THAT(invalid_symbols_file, HasError("Unable to create symbols file"));
   EXPECT_THAT(invalid_symbols_file, HasError("File does not contain symbols."));
 }
@@ -50,8 +46,7 @@ TEST(SymbolsFile, CreateSymbolsFileFromCoff) {
 TEST(SymbolsFile, CreateSymbolsFileFromPdb) {
   const std::filesystem::path pwd_with_symbols_path = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
-  auto valid_symbols_file =
-      CreateSymbolsFile(pwd_with_symbols_path, ObjectFileInfo{0x10000});
+  auto valid_symbols_file = CreateSymbolsFile(pwd_with_symbols_path, ObjectFileInfo{0x10000});
   EXPECT_THAT(valid_symbols_file, HasNoError());
 
   // pdb file always contains symbols, so a test for not containing symbols is not necessary
