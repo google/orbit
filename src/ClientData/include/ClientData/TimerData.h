@@ -32,6 +32,8 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
       uint32_t /*depth*/, uint32_t /*resolution*/, uint64_t /*start_ns*/,
       uint64_t /*end_ns*/) const override {
+    // TODO(b/242971217): Implement TimerData rendering optimization when timers are ordered.
+    ORBIT_UNREACHABLE();
     return {};
   };
 
