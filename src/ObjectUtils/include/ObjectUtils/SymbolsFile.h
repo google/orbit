@@ -18,11 +18,6 @@ struct ObjectFileInfo {
   // For ELF, this is the load bias of the executable segment. For PE/COFF, we use ImageBase here,
   // so that our address computations are consistent between what we do for ELF and for COFF.
   uint64_t load_bias = 0;
-  // This is the offset of the executable segment when loaded into memory. For ELF, as we defined
-  // the load bias based on the executable segment, this is also the offset of the executable
-  // segment in the file. For PE/COFF, this is in general different from the offset of the .text
-  // section in the file.
-  uint64_t executable_segment_offset = 0;
 };
 
 class SymbolsFile {
