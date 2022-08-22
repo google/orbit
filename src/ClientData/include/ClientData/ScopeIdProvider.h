@@ -28,6 +28,10 @@ class ScopeIdProvider {
   [[nodiscard]] virtual std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const = 0;
   [[nodiscard]] virtual uint64_t ScopeIdToFunctionId(ScopeId scope_id) const = 0;
 
+  // TODO(b/243122633) The method is added in the hope to investigate the crash via additional
+  // runtime checks. When the bug is resolved, the method should be removed.
+  [[nodiscard]] virtual ScopeId GetMaxId() const = 0;
+
   [[nodiscard]] virtual std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) = 0;
 
   [[nodiscard]] virtual std::vector<ScopeId> GetAllProvidedScopeIds() const = 0;
@@ -48,6 +52,11 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
 
   [[nodiscard]] std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const override;
   [[nodiscard]] uint64_t ScopeIdToFunctionId(ScopeId scope_id) const override;
+
+  [[nodiscard]] ScopeId GetMaxId() const override {
+    absl::ReaderMutexLock reader_lock{&mutex_};
+    return ScopeId(next_id_ - 1);
+  }
 
   [[nodiscard]] std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) override;
 
