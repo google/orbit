@@ -250,13 +250,11 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
     color = orbit_gl::GetThreadColor(timer_info.thread_id());
   }
 
-  constexpr uint8_t kOddAlpha = 210;
+  constexpr uint8_t kOddRowColorMultiplier = 210;
   if ((timer_info.depth() & 0x1) == 0) {
-    // The usage of alpha values with possible intersection of timers may lead to a strange visual
-    // behavior where users doesn't understand why some timers "are lighter". Therefore, we
-    // "compute" the odd-alpha manually.
+    // We are slightly alternating the colors for thread timers based on their depth.
     for (int i = 0; i < 3; ++i) {
-      color[i] = static_cast<char>(static_cast<int>(color[i]) * kOddAlpha / 255);
+      color[i] = static_cast<char>(static_cast<int>(color[i]) * kOddRowColorMultiplier / 255);
     }
   }
 
