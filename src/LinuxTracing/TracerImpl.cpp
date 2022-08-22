@@ -77,8 +77,6 @@ TracerImpl::TracerImpl(
   ORBIT_CHECK(listener_ != nullptr);
   thread_state_change_callstack_collection_ =
       capture_options.thread_state_change_call_stack_collection();
-  thread_state_change_callstack_method_ =
-      capture_options.thread_state_change_call_stack_unwinding_method();
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
     constexpr uint16_t kDefaultStackSampleUserSizeFramePointer = 512;
@@ -597,10 +595,10 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
   absl::flat_hash_set<uint64_t>* current_sched_wakeup_ids = &sched_wakeup_ids_;
   if (thread_state_change_callstack_collection ==
       CaptureOptions::kThreadStateChangeCallStackCollection) {
-    if (thread_state_change_callstack_method_ == CaptureOptions::kDwarf) {
+    if (unwinding_method_ == CaptureOptions::kDwarf) {
       current_sched_switch_ids = &sched_switch_with_stack_ids_;
       current_sched_wakeup_ids = &sched_wakeup_with_stack_ids_;
-    } else if (thread_state_change_callstack_method_ == CaptureOptions::kFramePointers) {
+    } else if (unwinding_method_ == CaptureOptions::kFramePointers) {
       current_sched_switch_ids = &sched_switch_with_callchain_ids_;
       current_sched_wakeup_ids = &sched_wakeup_with_callchain_ids_;
     }
@@ -792,8 +790,7 @@ void TracerImpl::Startup() {
   }
   if (trace_context_switches_ || trace_thread_state_) {
     if (bool opened = OpenContextSwitchAndThreadStateTracepoints(
-            all_cpus, thread_state_change_callstack_collection_,
-            thread_state_change_callstack_method_);
+            all_cpus, thread_state_change_callstack_collection_, unwinding_method_);
         !opened) {
       perf_event_open_error_details.emplace_back(
           "sched:sched_switch and sched:sched_wakeup tracepoints");

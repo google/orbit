@@ -151,7 +151,6 @@ class TracerImpl : public Tracer {
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
       thread_state_change_callstack_collection_;
-  orbit_grpc_protos::CaptureOptions::UnwindingMethod thread_state_change_callstack_method_;
   std::vector<orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   std::vector<orbit_grpc_protos::FunctionToRecordAdditionalStackOn>
       functions_to_record_additional_stack_on_;

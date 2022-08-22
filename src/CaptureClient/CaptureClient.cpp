@@ -169,8 +169,6 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
 
   capture_options.set_thread_state_change_call_stack_collection(
       options.thread_state_change_callstack_collection);
-  capture_options.set_thread_state_change_call_stack_unwinding_method(
-      options.thread_state_change_callstack_unwinding_method);
 
   return capture_options;
 }

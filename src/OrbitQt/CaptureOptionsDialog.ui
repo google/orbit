@@ -66,9 +66,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-435</y>
+        <y>0</y>
         <width>502</width>
-        <height>1190</height>
+        <height>1098</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -552,41 +552,6 @@ p, li { white-space: pre-wrap; }
             <property name="checked">
              <bool>true</bool>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="threadStateChangeCallstackUnwindingMethodGroupBox">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>This chooses the unwinding method to be used to unwind call stacks gathered at thead state changes</string>
-            </property>
-            <property name="title">
-             <string>Thread state change call stacks unwinding method</string>
-            </property>
-            <property name="checkable">
-             <bool>false</bool>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_16">
-             <item>
-              <widget class="QRadioButton" name="threadStateChangeCallstackDWARFMethodRadioButton">
-               <property name="text">
-                <string>DWARF</string>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QRadioButton" name="threadStateChangeCallstackFramepointersMethodRadioButton">
-               <property name="text">
-                <string>Frame pointers</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </widget>
           </item>
          </layout>
