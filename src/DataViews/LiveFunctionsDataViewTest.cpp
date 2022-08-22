@@ -235,6 +235,8 @@ class LiveFunctionsDataViewTest : public testing::Test {
         capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
+    EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
@@ -279,9 +281,6 @@ TEST_F(LiveFunctionsDataViewTest, HasValidDefaultSortingColumn) {
 TEST_F(LiveFunctionsDataViewTest, ColumnValuesAreCorrect) {
   AddFunctionsByIndices({0});
 
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-
   // The selected column will be tested separately.
   EXPECT_EQ(view_.GetValue(0, kColumnName), kPrettyNames[0]);
   EXPECT_EQ(view_.GetValue(0, kColumnModule), kModulePaths[0]);
@@ -297,8 +296,6 @@ TEST_F(LiveFunctionsDataViewTest, ColumnValuesAreCorrect) {
 TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected = false;
   bool frame_track_enabled = false;
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
   // The following code guarantees the appearance of frame track icon is determined by
@@ -361,7 +358,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
     return std::nullopt;
   };
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
   EXPECT_CALL(app_, IsCapturing).WillRepeatedly(testing::ReturnPointee(&is_capturing));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
@@ -459,8 +455,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
 TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   bool function_selected = false;
   bool frame_track_enabled = false;
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
@@ -507,7 +501,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     for (size_t i = 0; i < kNumThreads; ++i) {
       capture_data_->AddOrAssignThreadName(kThreadIds[i], kThreadNames[i]);
     }
-    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
     for (size_t i = 0; i < kNumTimers; ++i) {
@@ -678,8 +671,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
 TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
   AddFunctionsByIndices({0, 1, 2});
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
   // Filtering by function display name with single token
   {
@@ -724,9 +715,6 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
   EXPECT_CALL(app_, DeselectTimer).Times(3);
   EXPECT_CALL(app_, GetHighlightedScopeId).Times(3);
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
   // Single selection will hightlight the selected function
   {
@@ -764,8 +752,6 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
 TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
   AddFunctionsByIndices({0, 1, 2});
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
   using ViewRowEntry = std::array<std::string, kNumColumns>;
   std::vector<ViewRowEntry> view_entries;
@@ -867,12 +853,9 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();
   }));
-  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
