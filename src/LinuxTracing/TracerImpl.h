@@ -88,7 +88,11 @@ class TracerImpl : public Tracer {
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
   void InitSwitchesStatesNamesVisitor();
-  bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenContextSwitchAndThreadStateTracepoints(
+      const std::vector<int32_t>& cpus,
+      orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+          thread_state_change_callstack_collection,
+      orbit_grpc_protos::CaptureOptions::UnwindingMethod thread_state_change_callstack_method);
 
   void InitGpuTracepointEventVisitor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
@@ -145,6 +149,8 @@ class TracerImpl : public Tracer {
   std::optional<uint64_t> sampling_period_ns_;
   uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
+  orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
+      thread_state_change_callstack_collection_;
   std::vector<orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   std::vector<orbit_grpc_protos::FunctionToRecordAdditionalStackOn>
       functions_to_record_additional_stack_on_;
@@ -176,6 +182,10 @@ class TracerImpl : public Tracer {
   absl::flat_hash_set<uint64_t> task_rename_ids_;
   absl::flat_hash_set<uint64_t> sched_switch_ids_;
   absl::flat_hash_set<uint64_t> sched_wakeup_ids_;
+  absl::flat_hash_set<uint64_t> sched_switch_with_callchain_ids_;
+  absl::flat_hash_set<uint64_t> sched_wakeup_with_callchain_ids_;
+  absl::flat_hash_set<uint64_t> sched_switch_with_stack_ids_;
+  absl::flat_hash_set<uint64_t> sched_wakeup_with_stack_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_cs_ioctl_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;
   absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;

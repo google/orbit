@@ -108,7 +108,6 @@ message CaptureOptions {
 
   ThreadStateChangeCallStackCollection
       thread_state_change_call_stack_collection = 21;
-  UnwindingMethod thread_state_change_call_stack_unwinding_method = 22;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we
