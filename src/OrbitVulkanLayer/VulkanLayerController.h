@@ -164,8 +164,7 @@ class VulkanLayerController {
 
     // Add our required extension (if not already present), to the extensions requested by the game.
     AddRequiredDeviceExtensionNameIfMissing(
-        create_info, physical_device, next_get_instance_proc_addr_function,
-        VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME, &all_extension_names);
+        create_info, physical_device, VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME, &all_extension_names);
 
     // Expose the c-strings (but ensure, the std::strings stay in memory!).
     std::vector<const char*> all_extension_names_cstr{};
@@ -181,8 +180,9 @@ class VulkanLayerController {
 
     // Need to call vkCreateInstance down the chain to actually create the
     // instance, as we need it to be alive in the create instance dispatch table.
-    auto create_device_function = absl::bit_cast<PFN_vkCreateDevice>(
-        next_get_instance_proc_addr_function(VK_NULL_HANDLE, "vkCreateDevice"));
+    auto create_device_function =
+        absl::bit_cast<PFN_vkCreateDevice>(next_get_instance_proc_addr_function(
+            dispatch_table_.GetInstance(physical_device), "vkCreateDevice"));
     VkResult result =
         create_device_function(physical_device, &create_info_modified, allocator, device);
 
@@ -704,15 +704,14 @@ class VulkanLayerController {
     }
   }
 
-  void AddRequiredDeviceExtensionNameIfMissing(
-      const VkDeviceCreateInfo* create_info, VkPhysicalDevice physical_device,
-      PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function, const char* extension_name,
-      std::vector<std::string>* output) {
+  void AddRequiredDeviceExtensionNameIfMissing(const VkDeviceCreateInfo* create_info,
+                                               VkPhysicalDevice physical_device,
+                                               const char* extension_name,
+                                               std::vector<std::string>* output) {
     auto raw_enumerate_device_extension_properties_function =
         // Pass a valid instance, as following the spec. we are not allowed to use nullptr here.
         absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-            next_get_instance_proc_addr_function(dispatch_table_.GetInstance(physical_device),
-                                                 "vkEnumerateDeviceExtensionProperties"));
+            dispatch_table_.EnumerateDeviceExtensionProperties(physical_device));
     auto enumerate_device_extension_properties =
         [&raw_enumerate_device_extension_properties_function, physical_device](
             uint32_t* count, VkExtensionProperties* properties) -> VkResult {
