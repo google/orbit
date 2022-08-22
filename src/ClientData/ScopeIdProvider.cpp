@@ -95,8 +95,7 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& t
     return id.value();
   }
 
-  const ScopeId id{next_id_};
-  next_id_++;
+  const ScopeId id = next_id_++;
 
   scope_info_to_id_.emplace(scope_info, id);
   scope_id_to_info_.emplace(id, scope_info);
@@ -119,7 +118,7 @@ const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(ScopeId scope_id) con
 }
 
 uint64_t NameEqualityScopeIdProvider::ScopeIdToFunctionId(ScopeId scope_id) const {
-  if (*scope_id <= max_instrumented_function_id) return *scope_id;
+  if (scope_id <= max_instrumented_function_id_) return *scope_id;
   return orbit_grpc_protos::kInvalidFunctionId;
 }
 

@@ -9,13 +9,13 @@
 
 namespace orbit_client_data {
 
-struct ScopeIdTag {};
+struct ScopeIdTag : orbit_base::PostIncrementTag {};
 
 // The typedef is used for uniform treatment of events of various types. In particular,
 // manual instrumentation events, and dynamic instrumentation events. In particular, this is used
 // for computation and visualization of aggregated statistics (see
 // go/stadia-orbit-manual-instrumentation-aggregation).
-using ScopeId = orbit_base::Typedef<ScopeIdTag, const uint64_t>;
+using ScopeId = orbit_base::Typedef<ScopeIdTag, uint64_t>;
 
 static_assert(orbit_base::kHasZeroMemoryOverheadV<ScopeId>);
 
