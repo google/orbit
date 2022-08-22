@@ -1171,12 +1171,17 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
           .value(kEnableCallStackCollectionOnThreadStateChanges,
                  orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
           .toBool();
-  if (!collect_callstack_on_thread_state_change) {
-    app_->SetThreadStateChangeCallstackCollection(
-        CaptureOptions::kNoThreadStateChangeCallStackCollection);
+  if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
+    if (!collect_callstack_on_thread_state_change) {
+      app_->SetThreadStateChangeCallstackCollection(
+          CaptureOptions::kNoThreadStateChangeCallStackCollection);
+    } else {
+      app_->SetThreadStateChangeCallstackCollection(
+          CaptureOptions::kThreadStateChangeCallStackCollection);
+    }
   } else {
     app_->SetThreadStateChangeCallstackCollection(
-        CaptureOptions::kThreadStateChangeCallStackCollection);
+        CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
   }
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings

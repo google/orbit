@@ -54,10 +54,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
                      ui_->unwindingMethodGroupBox->setEnabled(checked);
                    });
 
-  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
-                   [this](bool checked) {
-                     ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(checked);
-                   });
+  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled),
+                   ui_->threadStateChangeCallstackCollectionCheckBox, &QCheckBox::setEnabled);
 
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());

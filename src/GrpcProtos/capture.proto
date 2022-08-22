@@ -599,8 +599,6 @@ message ThreadStateSlice {
   // Otherwise, they should be 0 to minimize bandwidth usage.
   uint32 wakeup_tid = 7;
   uint32 wakeup_pid = 8;
-
-  uint32 CallStackId = 10;
 }
 
 message AddressInfo {

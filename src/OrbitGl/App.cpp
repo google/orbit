@@ -1597,7 +1597,7 @@ void OrbitApp::StartCapture() {
   options.enable_auto_frame_track = data_manager_->enable_auto_frame_track();
   options.thread_state_change_callstack_collection =
       data_manager_->thread_state_change_callstack_collection();
-      
+
   // In metrics, -1 indicates memory collection was turned off. See also the comment in
   // orbit_log_event.proto
   constexpr int64_t kMemoryCollectionDisabledMetricsValue = -1;

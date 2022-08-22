@@ -487,8 +487,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     const CaptureOptions::ThreadStateChangeCallStackCollection
         thread_state_change_callstack_collection =
             CaptureOptions::kNoThreadStateChangeCallStackCollection,
-    const CaptureOptions::UnwindingMethod thread_state_change_callstack_unwinding_method =
-        CaptureOptions::kUndefined) {
+    const CaptureOptions::UnwindingMethod unwinding_method = CaptureOptions::kUndefined) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<size_t, absl::flat_hash_map<int32_t, int>> index_to_tracepoint_fds_per_cpu;
   bool tracepoint_event_open_errors = false;
@@ -501,7 +500,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
       int tracepoint_fd = -1;
       if (thread_state_change_callstack_collection ==
               CaptureOptions::kThreadStateChangeCallStackCollection &&
-          thread_state_change_callstack_unwinding_method == CaptureOptions::kFramePointers) {
+          unwinding_method == CaptureOptions::kFramePointers) {
         tracepoint_fd = tracepoint_with_callchain_event_open(tracepoint_category, tracepoint_name,
                                                              -1, cpu, stack_dump_size);
       } else if (thread_state_change_callstack_collection ==
