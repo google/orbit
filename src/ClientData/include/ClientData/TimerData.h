@@ -29,6 +29,14 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
+      uint32_t /*depth*/, uint32_t /*resolution*/, uint64_t /*start_ns*/,
+      uint64_t /*end_ns*/) const override {
+    // TODO(b/242971217): Implement TimerData rendering optimization when timers are ordered.
+    ORBIT_UNREACHABLE();
+    return {};
+  };
+
   // Metadata queries
   [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; }
   [[nodiscard]] size_t GetNumberOfTimers() const override { return num_timers_; }

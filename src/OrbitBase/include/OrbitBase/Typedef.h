@@ -144,7 +144,7 @@ struct PlusTag : public orbit_base_internal::PlusTagBase<OtherSummandTag> {
   using PlusOtherSummandTag = OtherSummandTag;
 
   template <typename T, typename U>
-  static auto Add(T&& t, U&& u) {
+  constexpr static auto Add(T&& t, U&& u) {
     return AddFun(std::forward<T>(t), std::forward<U>(u));
   }
 };
@@ -153,7 +153,7 @@ template <typename First, typename Second, typename FirstDecayed = std::decay_t<
           typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
           typename = std::enable_if_t<
               std::is_same_v<typename Tag::PlusOtherSummandTag, typename SecondDecayed::Tag>>>
-auto Add(First&& lhs, Second&& rhs) {
+constexpr auto Add(First&& lhs, Second&& rhs) {
   return Typedef<Tag, decltype(Tag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       Tag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
 };
@@ -164,7 +164,7 @@ template <
     typename SecondTag = typename SecondDecayed::Tag,
     typename =
         std::enable_if_t<!std::is_base_of_v<orbit_base_internal::PlusTagBase<SecondTag>, FirstTag>>>
-auto Add(First&& lhs, Second&& rhs) {
+constexpr auto Add(First&& lhs, Second&& rhs) {
   return Typedef<SecondTag,
                  decltype(SecondTag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       SecondTag::Add(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
@@ -179,7 +179,7 @@ struct MinusTag {
   using MinusResultTag = ResultTag;
 
   template <typename T, typename U>
-  static auto Sub(T&& t, U&& u) {
+  constexpr static auto Sub(T&& t, U&& u) {
     return MinusFun(std::forward<T>(t), std::forward<U>(u));
   }
 };
@@ -188,7 +188,7 @@ template <typename First, typename Second, typename FirstDecayed = std::decay_t<
           typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
           typename ResultTag = typename Tag::MinusResultTag,
           typename = std::enable_if_t<std::is_same_v<Tag, typename SecondDecayed::Tag>>>
-auto Sub(First&& lhs, Second&& rhs) {
+constexpr auto Sub(First&& lhs, Second&& rhs) {
   return Typedef<ResultTag,
                  decltype(Tag::Sub(*std::forward<First>(lhs), *std::forward<Second>(rhs)))>(
       Tag::Sub(*std::forward<First>(lhs), *std::forward<Second>(rhs)));
@@ -201,7 +201,7 @@ auto Sub(First&& lhs, Second&& rhs) {
 template <typename Scalar, auto& TimesScalarFun = orbit_base_internal::kDefaultTimes>
 struct TimesScalarTag : orbit_base_internal::TimesScalarTagBase<Scalar> {
   template <typename T, typename ScalarDeduced>
-  static auto TimesScalar(T&& t, ScalarDeduced&& scalar) {
+  constexpr static auto TimesScalar(T&& t, ScalarDeduced&& scalar) {
     return TimesScalarFun(std::forward<T>(t), std::forward<ScalarDeduced>(scalar));
   }
 };
@@ -210,7 +210,7 @@ template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_
           typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
           typename = std::enable_if_t<
               std::is_base_of_v<orbit_base_internal::TimesScalarTagBase<ScalarDecayed>, Tag>>>
-auto Times(Vector&& vector, Scalar&& scalar) {
+constexpr auto Times(Vector&& vector, Scalar&& scalar) {
   return Typedef<Tag, decltype(Tag::TimesScalar(*std::forward<Vector>(vector),
                                                 std::forward<Scalar>(scalar)))>(
       Tag::TimesScalar(*std::forward<Vector>(vector), std::forward<Scalar>(scalar)));

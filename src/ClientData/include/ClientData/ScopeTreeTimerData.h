@@ -39,12 +39,8 @@ class ScopeTreeTimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepth(
       uint32_t depth, uint64_t start_ns = std::numeric_limits<uint64_t>::min(),
       uint64_t end_ns = std::numeric_limits<uint64_t>::max()) const;
-  // This method avoids returning two timers that map to the same pixel in the screen, so is
-  // especially useful when there are many timers in the screen (zooming-out for example).
-  // The overall complexity is O(log(num_timers) * resolution). Resolution should be the number
-  // of pixels-width where timers will be drawn.
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
-      uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const;
+      uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const override;
 
   // Metadata queries
   [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; };
