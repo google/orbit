@@ -230,9 +230,7 @@ struct PostIncrementTag {};
 template <typename TypedefType, typename Tag = typename TypedefType::Tag,
           typename = std::enable_if_t<std::is_base_of_v<PostIncrementTag, Tag>>>
 const auto operator++(TypedefType& i, int) {
-  const auto result = i;
-  (*i)++;
-  return result;
+  return TypedefType((*i)++);
 }
 
 // Say, we have a pair of typedefs.
