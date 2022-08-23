@@ -1394,7 +1394,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DmaFenceSignaledPerfEvent event = ConsumeDmaFenceSignaledPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
-    
+
   } else if (is_user_instrumented_tracepoint) {
     auto it = ids_to_tracepoint_info_.find(stream_id);
     if (it == ids_to_tracepoint_info_.end()) {
@@ -1414,8 +1414,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
   } else {
-      ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
-      ring_buffer->SkipRecord(header);
+    ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
+    ring_buffer->SkipRecord(header);
   }
 
   return timestamp_ns;
