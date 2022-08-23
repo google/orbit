@@ -709,7 +709,6 @@ class VulkanLayerController {
                                                const char* extension_name,
                                                std::vector<std::string>* output) {
     auto raw_enumerate_device_extension_properties_function =
-        // Pass a valid instance, as following the spec. we are not allowed to use nullptr here.
         absl::bit_cast<PFN_vkEnumerateDeviceExtensionProperties>(
             dispatch_table_.EnumerateDeviceExtensionProperties(physical_device));
     auto enumerate_device_extension_properties =
