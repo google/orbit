@@ -88,8 +88,9 @@ class E2ETestCase:
         behavior of context menus: They are not parented underneath the current main window, but are treated
         as a separate window.
         """
-        # Add an extra sleep. Context menu needs to show up before we search for it.
-        time.sleep(1)
+        wait_for_condition(lambda: self.find_control(
+            'MenuItem', text, parent=self.suite.application.top_window(), raise_on_failure=False) is
+                           not None)
         return self.find_control('MenuItem',
                                  text,
                                  parent=self.suite.application.top_window(),
@@ -157,7 +158,6 @@ class E2ETestSuite:
     name = property(lambda self: self._test_name)
     application = property(lambda self: self._application)
     dev_mode = property(lambda self: self._dev_mode)
-
     """
     Used to store data shared across test cases of the same suite. Can be used to e.g. persist timings or results
     from previously executed test cases within the same suite.
