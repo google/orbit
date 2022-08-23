@@ -39,6 +39,14 @@ class SymbolsFile {
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() = 0;
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
+
+  static constexpr uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
+
+  [[nodiscard]] static bool SymbolInfoLessByAddress(const orbit_grpc_protos::SymbolInfo& lhs,
+                                                    const orbit_grpc_protos::SymbolInfo& rhs);
+
+  static void DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(
+      std::vector<orbit_grpc_protos::SymbolInfo>* symbol_infos);
 };
 
 // Create a symbols file from the file at symbol_file_path. Additional info about the corresponding

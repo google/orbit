@@ -57,33 +57,4 @@ ErrorMessageOr<std::unique_ptr<ObjectFile>> CreateObjectFile(
   return ErrorMessage("Unknown object file type.");
 }
 
-// Comparator to sort SymbolInfos by address, and perform the corresponding binary searches.
-bool ObjectFile::SymbolInfoLessByAddress(const orbit_grpc_protos::SymbolInfo& lhs,
-                                         const orbit_grpc_protos::SymbolInfo& rhs) {
-  return lhs.address() < rhs.address();
-}
-
-void ObjectFile::DeduceDebugSymbolMissingSizes(
-    std::vector<orbit_grpc_protos::SymbolInfo>* symbol_infos) {
-  // We don't have sizes for functions obtained from the COFF symbol table. For these, compute the
-  // size as the distance from the address of the next function.
-  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolInfoLessByAddress);
-
-  for (size_t i = 0; i < symbol_infos->size(); ++i) {
-    orbit_grpc_protos::SymbolInfo& symbol_info = symbol_infos->at(i);
-    if (symbol_info.size() != kUnknownSymbolSize) {
-      // This function symbol was from DWARF debug info and already has a size.
-      continue;
-    }
-
-    if (i < symbol_infos->size() - 1) {
-      // Deduce the size as the distance from the next function's address.
-      symbol_info.set_size(symbol_infos->at(i + 1).address() - symbol_info.address());
-    } else {
-      // If the last symbol doesn't have a size, we can't deduce it, and we just set it to zero.
-      symbol_info.set_size(0);
-    }
-  }
-}
-
 }  // namespace orbit_object_utils

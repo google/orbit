@@ -67,14 +67,6 @@ class ObjectFile : public SymbolsFile {
 
   [[nodiscard]] virtual bool IsElf() const = 0;
   [[nodiscard]] virtual bool IsCoff() const = 0;
-
-  static constexpr uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
-
-  [[nodiscard]] static bool SymbolInfoLessByAddress(const orbit_grpc_protos::SymbolInfo& lhs,
-                                                    const orbit_grpc_protos::SymbolInfo& rhs);
-
-  static void DeduceDebugSymbolMissingSizes(
-      std::vector<orbit_grpc_protos::SymbolInfo>* symbol_infos);
 };
 
 ErrorMessageOr<std::unique_ptr<ObjectFile>> CreateObjectFile(

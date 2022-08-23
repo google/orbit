@@ -131,8 +131,10 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
   symbol_info.set_demangled_name(llvm::demangle(name.get().str()));
   symbol_info.set_address(symbol_virtual_address);
 
-  // The COFF symbol table doesn't contain the size of symbols. Set a placeholder for now.
-  symbol_info.set_size(ObjectFile::kUnknownSymbolSize);
+  // The COFF symbol table doesn't contain the size of symbols. Set a placeholder which indicates
+  // that the size is unknown for now and try to deduce it later. We will later use that placeholder
+  // to know which sizes are unknown.
+  symbol_info.set_size(kUnknownSymbolSize);
 
   return symbol_info;
 }
@@ -241,7 +243,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
     AddNewDebugSymbolsFromCoffSymbolTable(object_file_->symbols(), &symbol_infos);
   }
 
-  DeduceDebugSymbolMissingSizes(&symbol_infos);
+  DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&symbol_infos);
 
   if (symbol_infos.empty()) {
     return ErrorMessage(
