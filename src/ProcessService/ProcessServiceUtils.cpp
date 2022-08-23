@@ -290,8 +290,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     }
 
     orbit_object_utils::ObjectFileInfo object_file_info{
-        object_file_or_error.value()->GetLoadBias(),
-        object_file_or_error.value()->GetExecutableSegmentOffset()};
+        object_file_or_error.value()->GetLoadBias()};
     auto symbols_file_or_error = CreateSymbolsFile(search_path, object_file_info);
     if (symbols_file_or_error.has_error()) {
       error_messages.push_back(symbols_file_or_error.error().message());

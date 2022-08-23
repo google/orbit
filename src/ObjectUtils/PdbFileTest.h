@@ -38,7 +38,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
   ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_result =
-      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
+      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
   auto symbols_result = pdb_file->LoadDebugSymbols();
@@ -188,7 +188,7 @@ TYPED_TEST_P(PdbFileTest, CanObtainGuidAndAgeFromPdbAndDll) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
-      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
+      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
 
@@ -212,7 +212,7 @@ TYPED_TEST_P(PdbFileTest, CreatePdbFailsOnNonPdbFile) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.dll";
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
-      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
+      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000});
   EXPECT_THAT(pdb_file_result, HasError("Unable to load PDB file"));
 }
 

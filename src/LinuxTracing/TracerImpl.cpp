@@ -75,7 +75,8 @@ TracerImpl::TracerImpl(
       user_space_instrumentation_addresses_{std::move(user_space_instrumentation_addresses)},
       listener_{listener} {
   ORBIT_CHECK(listener_ != nullptr);
-
+  thread_state_change_callstack_collection_ =
+      capture_options.thread_state_change_call_stack_collection();
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
     constexpr uint16_t kDefaultStackSampleUserSizeFramePointer = 512;
@@ -482,7 +483,11 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     const std::vector<TracepointToOpen>& tracepoints_to_open, const std::vector<int32_t>& cpus,
     std::vector<int>* tracing_fds, uint64_t ring_buffer_size_kb,
     absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu_for_redirection,
-    std::vector<PerfEventRingBuffer>* ring_buffers) {
+    std::vector<PerfEventRingBuffer>* ring_buffers, uint32_t stack_dump_size,
+    const CaptureOptions::ThreadStateChangeCallStackCollection
+        thread_state_change_callstack_collection =
+            CaptureOptions::kNoThreadStateChangeCallStackCollection,
+    const CaptureOptions::UnwindingMethod unwinding_method = CaptureOptions::kUndefined) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<size_t, absl::flat_hash_map<int32_t, int>> index_to_tracepoint_fds_per_cpu;
   bool tracepoint_event_open_errors = false;
@@ -492,7 +497,19 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     const char* tracepoint_category = tracepoints_to_open[tracepoint_index].tracepoint_category;
     const char* tracepoint_name = tracepoints_to_open[tracepoint_index].tracepoint_name;
     for (int32_t cpu : cpus) {
-      int tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+      int tracepoint_fd = -1;
+      if (thread_state_change_callstack_collection ==
+              CaptureOptions::kThreadStateChangeCallStackCollection &&
+          unwinding_method == CaptureOptions::kFramePointers) {
+        tracepoint_fd = tracepoint_with_callchain_event_open(tracepoint_category, tracepoint_name,
+                                                             -1, cpu, stack_dump_size);
+      } else if (thread_state_change_callstack_collection ==
+                 CaptureOptions::kThreadStateChangeCallStackCollection) {
+        tracepoint_fd = tracepoint_with_stack_event_open(tracepoint_category, tracepoint_name, -1,
+                                                         cpu, stack_dump_size);
+      } else {
+        tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
+      }
       if (tracepoint_fd == -1) {
         ORBIT_ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name,
                     cpu);
@@ -546,7 +563,7 @@ bool TracerImpl::OpenThreadNameTracepoints(const std::vector<int32_t>& cpus) {
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
       {{"task", "task_newtask", &task_newtask_ids_}, {"task", "task_rename", &task_rename_ids_}},
       cpus, &tracing_fds_, THREAD_NAMES_RING_BUFFER_SIZE_KB,
-      &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+      &thread_name_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_);
 }
 
 void TracerImpl::InitSwitchesStatesNamesVisitor() {
@@ -566,15 +583,32 @@ void TracerImpl::InitSwitchesStatesNamesVisitor() {
   event_processor_.AddVisitor(switches_states_names_visitor_.get());
 }
 
-bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
+    const std::vector<int32_t>& cpus,
+    const CaptureOptions::ThreadStateChangeCallStackCollection
+        thread_state_change_callstack_collection,
+    const CaptureOptions::UnwindingMethod unwinding_method) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<TracepointToOpen> tracepoints_to_open;
+  absl::flat_hash_set<uint64_t>* current_sched_switch_ids = &sched_switch_ids_;
+  absl::flat_hash_set<uint64_t>* current_sched_wakeup_ids = &sched_wakeup_ids_;
+  if (thread_state_change_callstack_collection ==
+      CaptureOptions::kThreadStateChangeCallStackCollection) {
+    if (unwinding_method_ == CaptureOptions::kDwarf) {
+      current_sched_switch_ids = &sched_switch_with_stack_ids_;
+      current_sched_wakeup_ids = &sched_wakeup_with_stack_ids_;
+    } else if (unwinding_method_ == CaptureOptions::kFramePointers) {
+      current_sched_switch_ids = &sched_switch_with_callchain_ids_;
+      current_sched_wakeup_ids = &sched_wakeup_with_callchain_ids_;
+    }
+  }
   if (trace_thread_state_ || trace_context_switches_) {
-    tracepoints_to_open.emplace_back("sched", "sched_switch", &sched_switch_ids_);
+    tracepoints_to_open.emplace_back("sched", "sched_switch", current_sched_switch_ids);
   }
   if (trace_thread_state_) {
-    // We also need task:task_newtask, but this is already opened by OpenThreadNameTracepoints.
-    tracepoints_to_open.emplace_back("sched", "sched_wakeup", &sched_wakeup_ids_);
+    // We also need task:task_newtask, but this is already opened by
+    // OpenThreadNameTracepoints.
+    tracepoints_to_open.emplace_back("sched", "sched_wakeup", current_sched_wakeup_ids);
   }
   if (tracepoints_to_open.empty()) {
     return true;
@@ -584,7 +618,8 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(const std::vector<in
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
       tracepoints_to_open, cpus, &tracing_fds_,
       CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB,
-      &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+      &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_,
+      thread_state_change_callstack_collection, unwinding_method);
 }
 
 void TracerImpl::InitGpuTracepointEventVisitor() {
@@ -613,7 +648,7 @@ bool TracerImpl::OpenGpuTracepoints(const std::vector<int32_t>& cpus) {
        {"amdgpu", "amdgpu_sched_run_job", &amdgpu_sched_run_job_ids_},
        {"dma_fence", "dma_fence_signaled", &dma_fence_signaled_ids_}},
       cpus, &tracing_fds_, GPU_TRACING_RING_BUFFER_SIZE_KB, &gpu_tracepoint_ring_buffer_fds_per_cpu,
-      &ring_buffers_);
+      &ring_buffers_, stack_dump_size_);
 }
 
 bool TracerImpl::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
@@ -626,7 +661,7 @@ bool TracerImpl::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
     tracepoint_event_open_errors |= !OpenFileDescriptorsAndRingBuffersForAllTracepoints(
         {{selected_tracepoint.category().c_str(), selected_tracepoint.name().c_str(), &stream_ids}},
         cpus, &tracing_fds_, INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB,
-        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_);
+        &tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_);
 
     for (const auto& stream_id : stream_ids) {
       ids_to_tracepoint_info_.emplace(stream_id, selected_tracepoint);
@@ -753,7 +788,9 @@ void TracerImpl::Startup() {
     perf_event_open_errors = true;
   }
   if (trace_context_switches_ || trace_thread_state_) {
-    if (bool opened = OpenContextSwitchAndThreadStateTracepoints(all_cpus); !opened) {
+    if (bool opened = OpenContextSwitchAndThreadStateTracepoints(
+            all_cpus, thread_state_change_callstack_collection_, unwinding_method_);
+        !opened) {
       perf_event_open_error_details.emplace_back(
           "sched:sched_switch and sched:sched_wakeup tracepoints");
       perf_event_open_errors = true;
@@ -1069,6 +1106,10 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   bool is_task_rename = task_rename_ids_.contains(stream_id);
   bool is_sched_switch = sched_switch_ids_.contains(stream_id);
   bool is_sched_wakeup = sched_wakeup_ids_.contains(stream_id);
+  bool is_sched_switch_with_callchain = sched_switch_with_callchain_ids_.contains(stream_id);
+  bool is_sched_wakeup_with_callchain = sched_wakeup_with_callchain_ids_.contains(stream_id);
+  bool is_sched_switch_with_stack = sched_switch_with_stack_ids_.contains(stream_id);
+  bool is_sched_wakeup_with_stack = sched_wakeup_with_stack_ids_.contains(stream_id);
   bool is_amdgpu_cs_ioctl_event = amdgpu_cs_ioctl_ids_.contains(stream_id);
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
@@ -1077,6 +1118,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   ORBIT_CHECK(is_uprobe + is_uprobe_with_args + is_uprobe_with_stack + is_uretprobe +
                   is_uretprobe_with_retval + is_stack_sample + is_callchain_sample +
                   is_task_newtask + is_task_rename + is_sched_switch + is_sched_wakeup +
+                  is_sched_switch_with_callchain + is_sched_wakeup_with_callchain +
+                  is_sched_switch_with_stack + is_sched_wakeup_with_stack +
                   is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
                   is_dma_fence_signaled_event + is_user_instrumented_tracepoint <=
               1);
@@ -1517,6 +1560,10 @@ void TracerImpl::Reset() {
   task_rename_ids_.clear();
   sched_switch_ids_.clear();
   sched_wakeup_ids_.clear();
+  sched_switch_with_callchain_ids_.clear();
+  sched_wakeup_with_callchain_ids_.clear();
+  sched_switch_with_stack_ids_.clear();
+  sched_wakeup_with_stack_ids_.clear();
   amdgpu_cs_ioctl_ids_.clear();
   amdgpu_sched_run_job_ids_.clear();
   dma_fence_signaled_ids_.clear();

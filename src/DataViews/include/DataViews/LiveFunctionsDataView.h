@@ -21,6 +21,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_data_views {
@@ -130,7 +131,12 @@ class LiveFunctionsDataView : public DataView {
     };
   }
 
-  void AddToIndices(ScopeId scope_id) { indices_.push_back(*scope_id); }
+  void AddToIndices(ScopeId scope_id) {
+    ORBIT_CHECK(app_->HasCaptureData());
+    const ScopeId max_scope_id = app_->GetCaptureData().GetMaxId();
+    ORBIT_CHECK(scope_id <= max_scope_id);
+    indices_.push_back(*scope_id);
+  }
 
   [[nodiscard]] std::vector<ScopeId> FetchMissingScopeIds() const;
 

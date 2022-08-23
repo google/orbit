@@ -83,8 +83,7 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
       continue;
     }
 
-    orbit_object_utils::ObjectFileInfo object_file_info{object_file->GetLoadBias(),
-                                                        object_file->GetExecutableSegmentOffset()};
+    orbit_object_utils::ObjectFileInfo object_file_info{object_file->GetLoadBias()};
 
     ErrorMessageOr<std::unique_ptr<SymbolsFile>> symbols_file_or_error =
         CreateSymbolsFile(search_path, object_file_info);

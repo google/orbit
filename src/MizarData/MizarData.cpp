@@ -137,8 +137,7 @@ static ErrorMessageOr<void> FindAndLoadSymbols(orbit_symbols::SymbolHelper& symb
                                                orbit_client_data::ModuleData& module_data) {
   OUTCOME_TRY(const auto symbols_path, FindSymbolsPath(symbol_helper, module_data));
 
-  orbit_object_utils::ObjectFileInfo object_file_info{module_data.load_bias(),
-                                                      module_data.executable_segment_offset()};
+  orbit_object_utils::ObjectFileInfo object_file_info{module_data.load_bias()};
   OUTCOME_TRY(orbit_grpc_protos::ModuleSymbols symbols,
               orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info));
   module_data.AddSymbols(symbols);

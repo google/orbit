@@ -1595,6 +1595,8 @@ void OrbitApp::StartCapture() {
   options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
   options.record_arguments = false;
   options.enable_auto_frame_track = data_manager_->enable_auto_frame_track();
+  options.thread_state_change_callstack_collection =
+      data_manager_->thread_state_change_callstack_collection();
 
   // In metrics, -1 indicates memory collection was turned off. See also the comment in
   // orbit_log_event.proto
@@ -2194,13 +2196,11 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::filesystem::path& symbols_path, const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
 
-  auto load_symbols_from_file =
-      thread_pool_->Schedule([this, symbols_path, module_id]() {
-        const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
-        orbit_object_utils::ObjectFileInfo object_file_info{
-            module_data->load_bias(), module_data->executable_segment_offset()};
-        return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
-      });
+  auto load_symbols_from_file = thread_pool_->Schedule([this, symbols_path, module_id]() {
+    const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
+    orbit_object_utils::ObjectFileInfo object_file_info{module_data->load_bias()};
+    return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
+  });
 
   auto add_symbols = [this, module_id](const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>&
                                            symbols_result) mutable -> ErrorMessageOr<void> {

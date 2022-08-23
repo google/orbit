@@ -54,21 +54,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
                      ui_->unwindingMethodGroupBox->setEnabled(checked);
                    });
 
-  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
-                   [this](bool checked) {
-                     ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(checked);
-                     ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(
-                         checked && ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
-                     ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(
-                         checked && ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
-                   });
-
-  QObject::connect(
-      ui_->threadStateChangeCallstackCollectionCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
-      [this](bool checked) {
-        ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(checked);
-        ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(checked);
-      });
+  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled),
+                   ui_->threadStateChangeCallstackCollectionCheckBox, &QCheckBox::setEnabled);
 
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
@@ -90,12 +77,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
   ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(
       ui_->threadStateCheckBox->isChecked());
-  ui_->threadStateChangeCallstackDWARFMethodRadioButton->setEnabled(
-      ui_->threadStateCheckBox->isChecked() &&
-      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
-  ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setEnabled(
-      ui_->threadStateCheckBox->isChecked() &&
-      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
 
   if (!absl::GetFlag(FLAGS_auto_frame_track)) {
     ui_->autoFrameTrackGroupBox->hide();
@@ -116,7 +97,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   if (!absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
     ui_->threadStateChangeCallstackCollectionCheckBox->hide();
-    ui_->threadStateChangeCallstackUnwindingMethodGroupBox->hide();
   }
 }
 
@@ -231,36 +211,6 @@ void CaptureOptionsDialog::SetEnableCallStackCollectionOnThreadStateChanges(bool
 
 bool CaptureOptionsDialog::GetEnableCallStackCollectionOnThreadStateChanges() const {
   return ui_->threadStateChangeCallstackCollectionCheckBox->isChecked();
-}
-
-void CaptureOptionsDialog::SetThreadStateChangeCallstackMethod(
-    CaptureOptions::UnwindingMethod thread_state_change_callstack_method) {
-  switch (thread_state_change_callstack_method) {
-    case CaptureOptions::kFramePointers:
-      ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setChecked(true);
-      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(false);
-      break;
-    case CaptureOptions::kDwarf:
-      ui_->threadStateChangeCallstackFramepointersMethodRadioButton->setChecked(false);
-      ui_->threadStateChangeCallstackDWARFMethodRadioButton->setChecked(true);
-      break;
-    default:
-      ORBIT_ERROR(
-          "thread_state_change_callstack_method is undefined in "
-          "SetThreadStateChangeCallstackMethod");
-      break;
-  }
-}
-
-orbit_grpc_protos::CaptureOptions::UnwindingMethod
-CaptureOptionsDialog::GetThreadStateChangeCallstackMethod() const {
-  if (ui_->threadStateChangeCallstackFramepointersMethodRadioButton->isChecked()) {
-    return CaptureOptions::kFramePointers;
-  }
-  if (ui_->threadStateChangeCallstackDWARFMethodRadioButton->isChecked()) {
-    return CaptureOptions::kDwarf;
-  }
-  return CaptureOptions::kUndefined;
 }
 
 void CaptureOptionsDialog::SetWineSyscallHandlingMethod(

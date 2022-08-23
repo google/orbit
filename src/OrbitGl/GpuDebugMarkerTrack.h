@@ -47,8 +47,7 @@ class GpuDebugMarkerTrack final : public TimerTrack {
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
 
-  [[nodiscard]] float GetYFromTimer(
-      const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
   [[nodiscard]] bool TimerFilter(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer, bool is_selected,
                                     bool is_highlighted,
