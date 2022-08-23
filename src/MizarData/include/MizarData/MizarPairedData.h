@@ -167,11 +167,9 @@ class MizarPairedDataTmpl {
 
   [[nodiscard]] RelativeTimeNs FrameActiveInvocationTime(const absl::flat_hash_set<TID>& tids,
                                                          Frame frame) const {
-    const uint64_t callstack_count =
-        std::transform_reduce(std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
-                              [this, &frame](const TID tid) {
-                                return CallstackSamplesCount(tid, frame.start, frame.end);
-                              });
+    const uint64_t callstack_count = std::transform_reduce(
+        std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
+        [&](const TID tid) { return CallstackSamplesCount(tid, frame.start, frame.end); });
     const RelativeTimeNs sampling_period = this->data_->GetNominalSamplingPeriodNs();
     return Times(sampling_period, callstack_count);
   }
