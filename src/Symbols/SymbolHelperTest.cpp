@@ -301,8 +301,7 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
   // .debug contains symbols
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf.debug";
-    const auto result =
-        SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000, 0x1000});
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
 
     ASSERT_THAT(result, HasValue());
     const ModuleSymbols& symbols = result.value();
@@ -313,8 +312,7 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
   // .pdb contains symbols
   {
     const fs::path file_path = testdata_directory / "dllmain.pdb";
-    const auto result =
-        SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000, 0x1000});
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
 
     ASSERT_THAT(result, HasValue());
     const ModuleSymbols& symbols = result.value();
@@ -325,24 +323,21 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
   // elf does not contain symbols
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf";
-    const auto result =
-        SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000, 0x1000});
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
 
   // coff does not contain symbols
   {
     const fs::path file_path = testdata_directory / "dllmain.dll";
-    const auto result =
-        SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000, 0x1000});
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
 
   // invalid file
   {
     const fs::path file_path = testdata_directory / "file_does_not_exist";
-    const auto result =
-        SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000, 0x1000});
+    const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("Unable to create symbols file"));
     EXPECT_THAT(result, HasError("File does not exist"));
   }
