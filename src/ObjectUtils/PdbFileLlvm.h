@@ -15,6 +15,7 @@
 #include <llvm/DebugInfo/PDB/Native/DbiStream.h>
 #include <llvm/DebugInfo/PDB/Native/ModuleDebugStream.h>
 #include <llvm/DebugInfo/PDB/Native/NativeSession.h>
+#include <llvm/DebugInfo/PDB/Native/InfoStream.h>
 #include <llvm/DebugInfo/PDB/Native/PDBFile.h>
 #include <llvm/DebugInfo/PDB/PDB.h>
 #include <llvm/DebugInfo/PDB/PDBSymbolExe.h>
@@ -28,6 +29,7 @@
 #include "ObjectUtils/PdbFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_object_utils {
 
@@ -46,7 +48,16 @@ class PdbFileLlvm : public PdbFile {
     return result;
   }
 
-  [[nodiscard]] uint32_t GetAge() const override { return session_->getGlobalScope()->getAge(); }
+  [[nodiscard]] uint32_t GetAge() const override {
+    auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
+    ORBIT_CHECK(native_session != nullptr);
+    llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
+    ORBIT_CHECK(pdb_file.hasPDBDbiStream());
+    llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
+    ORBIT_CHECK(debug_info_stream);
+
+    return debug_info_stream->getAge();
+  }
   [[nodiscard]] std::string GetBuildId() const override {
     return ComputeWindowsBuildId(GetGuid(), GetAge());
   }

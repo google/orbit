@@ -382,6 +382,17 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
+  auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session.get());
+  ORBIT_CHECK(native_session != nullptr);
+  llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
+  const std::string dbi_error_str = absl::StrFormat("Unable to load PDB file %s with error: PDB has no Dbi Stream", file_path.string());
+  if (!pdb_file.hasPDBDbiStream()) {
+    return ErrorMessage(dbi_error_str);
+  }
+  llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
+  if (!debug_info_stream) {
+    return ErrorMessage(dbi_error_str);
+  }
   return absl::WrapUnique<PdbFileLlvm>(
       new PdbFileLlvm(file_path, object_file_info, std::move(session)));
 }
