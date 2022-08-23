@@ -55,7 +55,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
 
   [[nodiscard]] ScopeId GetMaxId() const override {
     absl::ReaderMutexLock reader_lock{&mutex_};
-    return ScopeId(next_id_ - 1);
+    return ScopeId(*next_id_ - 1);
   }
 
   [[nodiscard]] std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) override;
