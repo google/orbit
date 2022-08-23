@@ -177,45 +177,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 }
 
 void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
-                                       const SchedWakeupPerfEventData& event_data) {
-  if (!TidMatchesPidFilter(event_data.woken_tid)) {
-    return;
-  }
-
-  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
-      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
-      event_data.was_unblocked_by_pid);
-
-  if (state_slice.has_value()) {
-    state_slice->set_callstack_id(orbit_base::kInvalidCallstackId);
-    listener_->OnThreadStateSlice(std::move(state_slice.value()));
-    if (thread_state_counter_ != nullptr) {
-      ++(*thread_state_counter_);
-    }
-  }
-}
-
-void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
-                                       const SchedWakeupWithStackPerfEventData& event_data) {
-  if (!TidMatchesPidFilter(event_data.woken_tid)) {
-    return;
-  }
-
-  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
-      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
-      event_data.was_unblocked_by_pid);
-
-  if (state_slice.has_value()) {
-    state_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
-    listener_->OnThreadStateSlice(std::move(state_slice.value()));
-    if (thread_state_counter_ != nullptr) {
-      ++(*thread_state_counter_);
-    }
-  }
-}
-
-void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
                                        const SchedSwitchWithStackPerfEventData& event_data) {
+  // TODO(b/243515760) Refactor this function
+
   // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
 
   // Process the context switch out for scheduling slices.
@@ -275,6 +239,45 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
       }
+    }
+  }
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedWakeupPerfEventData& event_data) {
+  if (!TidMatchesPidFilter(event_data.woken_tid)) {
+    return;
+  }
+
+  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
+      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
+      event_data.was_unblocked_by_pid);
+
+  if (state_slice.has_value()) {
+    state_slice->set_callstack_id(orbit_base::kInvalidCallstackId);
+    listener_->OnThreadStateSlice(std::move(state_slice.value()));
+    if (thread_state_counter_ != nullptr) {
+      ++(*thread_state_counter_);
+    }
+  }
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedWakeupWithStackPerfEventData& event_data) {
+  // TODO(b/243515760) Refactor this function
+  if (!TidMatchesPidFilter(event_data.woken_tid)) {
+    return;
+  }
+
+  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
+      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
+      event_data.was_unblocked_by_pid);
+
+  if (state_slice.has_value()) {
+    state_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
+    listener_->OnThreadStateSlice(std::move(state_slice.value()));
+    if (thread_state_counter_ != nullptr) {
+      ++(*thread_state_counter_);
     }
   }
 }

@@ -131,7 +131,7 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
 
   void OnThreadStateChangeCallstack(
       orbit_grpc_protos::ThreadStateChangeCallstack /*thread_state_change_call_stack*/) override {
-    // TODO(mahmooddarwish): Add test for OnThreadStateChangeCallstack
+    // TODO(b/243515756): Add test for OnThreadStateChangeCallstack
   }
 
   void OnAddressInfo(orbit_grpc_protos::FullAddressInfo address_info) override {

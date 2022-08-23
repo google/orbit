@@ -28,8 +28,11 @@ class ProducerEventProcessor {
   static std::unique_ptr<ProducerEventProcessor> Create(
       ClientCaptureEventCollector* client_capture_event_collector);
 
- private:
+  // Needed to allow merging between call stacks and tracepoints, see design doc:
+  // go/stadia-orbit-tracepoint-callstack
+ protected:
   std::optional<orbit_grpc_protos::ThreadStateSlice> cached_thread_state_slice = std::nullopt;
+  std::optional<orbit_grpc_protos::SchedulingSlice> cached_scheduling_slice = std::nullopt;
   std::optional<orbit_grpc_protos::ThreadStateChangeCallstack>
       cached_thread_state_change_callstack = std::nullopt;
 };

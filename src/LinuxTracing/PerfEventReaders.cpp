@@ -153,7 +153,7 @@ struct PerfRecordSample {
     current_offset += sizeof(uint64_t);
     if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
       const int num_of_regs = std::bitset<64>(flags.sample_regs_user).count();
-      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs * sizeof(uint64_t));
+      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs);
       ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
                                    num_of_regs * sizeof(uint64_t));
       current_offset += num_of_regs * sizeof(uint64_t);
