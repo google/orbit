@@ -59,6 +59,8 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const SchedSwitchPerfEventData& event_data) override;
   void Visit(uint64_t timestamp, const SchedWakeupPerfEventData& event_data) override;
+  void Visit(uint64_t timestamp, const SchedWakeupWithStackPerfEventData& event_data) override;
+  void Visit(uint64_t timestamp, const SchedSwitchWithStackPerfEventData& event_data) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
   void Visit(uint64_t event_timestamp, const TaskRenamePerfEventData& event_data) override;

@@ -23,6 +23,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadStateChangeCallstack;
 using orbit_grpc_protos::ThreadStateSlice;
 
 using orbit_grpc_protos::kLinuxTracingProducerId;
@@ -49,6 +50,12 @@ void TracingHandler::Stop() {
 void TracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
   ProducerCaptureEvent event;
   *event.mutable_scheduling_slice() = std::move(scheduling_slice);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnThreadStateChangeCallstack(ThreadStateChangeCallstack callstack) {
+  ProducerCaptureEvent event;
+  *event.mutable_thread_state_change_callstack() = std::move(callstack);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

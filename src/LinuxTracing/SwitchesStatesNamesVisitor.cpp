@@ -151,7 +151,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
     ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event_data.prev_state);
     std::optional<ThreadStateSlice> out_slice =
         state_manager_.OnSchedSwitchOut(event_timestamp, event_data.prev_tid, new_state);
+
     if (out_slice.has_value()) {
+      out_slice->set_callstack_id(orbit_base::kInvalidCallstackId);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -163,7 +165,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
   if (event_data.next_tid != 0 && TidMatchesPidFilter(event_data.next_tid)) {
     std::optional<ThreadStateSlice> in_slice =
         state_manager_.OnSchedSwitchIn(event_timestamp, event_data.next_tid);
+
     if (in_slice.has_value()) {
+      in_slice->set_callstack_id(orbit_base::kInvalidCallstackId);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -181,10 +185,96 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
   std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
       event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
       event_data.was_unblocked_by_pid);
+
   if (state_slice.has_value()) {
+    state_slice->set_callstack_id(orbit_base::kInvalidCallstackId);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {
       ++(*thread_state_counter_);
+    }
+  }
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedWakeupWithStackPerfEventData& event_data) {
+  if (!TidMatchesPidFilter(event_data.woken_tid)) {
+    return;
+  }
+
+  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
+      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
+      event_data.was_unblocked_by_pid);
+
+  if (state_slice.has_value()) {
+    state_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
+    listener_->OnThreadStateSlice(std::move(state_slice.value()));
+    if (thread_state_counter_ != nullptr) {
+      ++(*thread_state_counter_);
+    }
+  }
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedSwitchWithStackPerfEventData& event_data) {
+  // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
+
+  // Process the context switch out for scheduling slices.
+  if (produce_scheduling_slices_ && event_data.prev_tid != 0) {
+    // SchedSwitchPerfEvent::pid (which doesn't come from the tracepoint data, but from the generic
+    // field of the PERF_RECORD_SAMPLE) is the pid of the process that the thread being switched out
+    // belongs to. But when the switch out is caused by the thread exiting, it has value -1. In such
+    // cases, use the association between tid and pid that we keep internally to obtain the pid.
+    pid_t prev_pid = event_data.prev_pid_or_minus_one;
+    if (prev_pid == -1) {
+      if (std::optional<pid_t> fallback_prev_pid = GetPidOfTid(event_data.prev_tid);
+          fallback_prev_pid.has_value()) {
+        prev_pid = fallback_prev_pid.value();
+      }
+    }
+    std::optional<SchedulingSlice> scheduling_slice = switch_manager_.ProcessContextSwitchOut(
+        prev_pid, event_data.prev_tid, event_data.cpu, event_timestamp);
+    if (scheduling_slice.has_value()) {
+      if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
+        ORBIT_ERROR("SchedulingSlice with unknown pid");
+      }
+      scheduling_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
+      listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
+    }
+  }
+
+  // Process the context switch in for scheduling slices.
+  if (produce_scheduling_slices_ && event_data.next_tid != 0) {
+    std::optional<pid_t> next_pid = GetPidOfTid(event_data.next_tid);
+    switch_manager_.ProcessContextSwitchIn(next_pid, event_data.next_tid, event_data.cpu,
+                                           event_timestamp);
+  }
+
+  // Process the context switch out for thread state.
+  if (event_data.prev_tid != 0 && TidMatchesPidFilter(event_data.prev_tid)) {
+    ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event_data.prev_state);
+    std::optional<ThreadStateSlice> out_slice =
+        state_manager_.OnSchedSwitchOut(event_timestamp, event_data.prev_tid, new_state);
+
+    if (out_slice.has_value()) {
+      out_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
+      listener_->OnThreadStateSlice(std::move(out_slice.value()));
+      if (thread_state_counter_ != nullptr) {
+        ++(*thread_state_counter_);
+      }
+    }
+  }
+
+  // Process the context switch in for thread state.
+  if (event_data.next_tid != 0 && TidMatchesPidFilter(event_data.next_tid)) {
+    std::optional<ThreadStateSlice> in_slice =
+        state_manager_.OnSchedSwitchIn(event_timestamp, event_data.next_tid);
+
+    if (in_slice.has_value()) {
+      in_slice->set_callstack_id(orbit_base::kWaitOnCallstack);
+      listener_->OnThreadStateSlice(std::move(in_slice.value()));
+      if (thread_state_counter_ != nullptr) {
+        ++(*thread_state_counter_);
+      }
     }
   }
 }

@@ -8,6 +8,7 @@
 
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiEvent;
@@ -52,6 +53,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
+using orbit_grpc_protos::ThreadStateChangeCallstack;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
@@ -150,6 +152,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
   void ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
       WarningInstrumentingWithUprobesEvent* warning_event);
+  void ProcessThreadStateChangeCallstackAndTransferOwnership(ThreadStateChangeCallstack* callstack);
   void ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
       WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event);
 
@@ -555,6 +558,9 @@ void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndT
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessThreadStateChangeCallstackAndTransferOwnership(
+    ThreadStateChangeCallstack* /*callstack*/) {}
+
 void ProducerEventProcessorImpl::
     ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
         WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event) {
@@ -686,6 +692,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
+      break;
+    case ProducerCaptureEvent::kThreadStateChangeCallstack:
+      ProcessThreadStateChangeCallstackAndTransferOwnership(
+          event.release_thread_state_change_callstack());
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());

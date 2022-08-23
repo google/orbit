@@ -129,6 +129,7 @@ message SchedulingSlice {
   int32 core = 3;
   uint64 duration_ns = 6;
   uint64 out_timestamp_ns = 5;
+  uint32 callstack_id = 7;
 }
 
 message FunctionCall {
@@ -434,6 +435,12 @@ message FullCallstackSample {
   uint64 timestamp_ns = 4;
 }
 
+message ThreadStateChangeCallstack {
+  uint32 tid = 1;
+  Callstack callstack = 2;
+  uint64 timestamp_ns = 3;
+}
+
 message InternedString {
   uint64 key = 1;
   // This is a string, we use bytes to avoid UTF-8 validation.
@@ -600,6 +607,8 @@ message ThreadStateSlice {
   // Otherwise, they should be 0 to minimize bandwidth usage.
   uint32 wakeup_tid = 7;
   uint32 wakeup_pid = 8;
+
+  uint32 callstack_id = 10;
 }
 
 message AddressInfo {
@@ -892,7 +901,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15.
-    // Next lower-frequency ID: 50
+    // Next lower-frequency ID: 51
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -938,6 +947,7 @@ message ProducerCaptureEvent {
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
+    ThreadStateChangeCallstack thread_state_change_callstack = 50;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent

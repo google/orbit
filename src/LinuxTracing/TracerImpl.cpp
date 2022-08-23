@@ -1311,6 +1311,32 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     SchedWakeupPerfEvent event = ConsumeSchedWakeupPerfEvent(ring_buffer, header);
     DeferEvent(event);
 
+  } else if (is_sched_switch_with_callchain) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
+  } else if (is_sched_wakeup_with_callchain) {
+    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+
+  } else if (is_sched_switch_with_stack) {
+    pid_t pid = ReadSampleRecordPid(ring_buffer);
+
+    if (pid != target_pid_) {
+      ring_buffer->SkipRecord(header);
+      return timestamp_ns;
+    }
+    SchedSwitchWithStackPerfEvent event = ConsumeSchedSwitchWithStackPerfEvent(ring_buffer, header);
+    DeferEvent(std::move(event));
+
+  } else if (is_sched_wakeup_with_stack) {
+    pid_t pid = ReadSampleRecordPid(ring_buffer);
+
+    if (pid != target_pid_) {
+      ring_buffer->SkipRecord(header);
+      return timestamp_ns;
+    }
+    SchedWakeupWithStackPerfEvent event = ConsumeSchedWakeupWithStackPerfEvent(ring_buffer, header);
+    DeferEvent(std::move(event));
+
   } else if (is_amdgpu_cs_ioctl_event) {
     AmdgpuCsIoctlPerfEvent event = ConsumeAmdgpuCsIoctlPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
@@ -1325,7 +1351,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DmaFenceSignaledPerfEvent event = ConsumeDmaFenceSignaledPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.gpu_events_count;
-
+    
   } else if (is_user_instrumented_tracepoint) {
     auto it = ids_to_tracepoint_info_.find(stream_id);
     if (it == ids_to_tracepoint_info_.end()) {
@@ -1345,8 +1371,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
   } else {
-    ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
-    ring_buffer->SkipRecord(header);
+      ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
+      ring_buffer->SkipRecord(header);
   }
 
   return timestamp_ns;

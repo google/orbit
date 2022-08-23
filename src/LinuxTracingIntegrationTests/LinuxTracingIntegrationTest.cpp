@@ -129,6 +129,11 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnThreadStateChangeCallstack(
+      orbit_grpc_protos::ThreadStateChangeCallstack /*thread_state_change_call_stack*/) override {
+    // TODO(mahmooddarwish): Add test for OnThreadStateChangeCallstack
+  }
+
   void OnAddressInfo(orbit_grpc_protos::FullAddressInfo address_info) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_full_address_info() = std::move(address_info);
@@ -437,6 +442,9 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSlice:
         EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateChangeCallstack:
+        ORBIT_UNREACHABLE();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         ORBIT_UNREACHABLE();

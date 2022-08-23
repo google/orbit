@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <optional>
+
 #include "ClientCaptureEventCollector.h"
 #include "GrpcProtos/capture.pb.h"
 
@@ -25,6 +27,11 @@ class ProducerEventProcessor {
 
   static std::unique_ptr<ProducerEventProcessor> Create(
       ClientCaptureEventCollector* client_capture_event_collector);
+
+ private:
+  std::optional<orbit_grpc_protos::ThreadStateSlice> cached_thread_state_slice = std::nullopt;
+  std::optional<orbit_grpc_protos::ThreadStateChangeCallstack>
+      cached_thread_state_change_callstack = std::nullopt;
 };
 
 }  // namespace orbit_producer_event_processor

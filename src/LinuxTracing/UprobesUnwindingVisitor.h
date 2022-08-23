@@ -95,6 +95,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp,
              const UserSpaceFunctionExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const SchedWakeupWithStackPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const SchedSwitchWithStackPerfEventData& event_data) override;
 
  private:
   // This struct holds a copy of some stack data collected from the target process.

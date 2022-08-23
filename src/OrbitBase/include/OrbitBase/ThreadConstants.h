@@ -27,6 +27,12 @@ static constexpr uint32_t kAllThreadsOfAllProcessesTid = -2;
 // Represents a fake thread id to specify the set of all thread ids of all processes on the system
 // that are NOT in the current process.
 static constexpr uint32_t kNotTargetProcessTid = -3;
+
+// Used to indicate that a tracepoint isn't waiting on a call stack.
+static constexpr uint32_t kInvalidCallstackId = -1;
+
+// Used to indicate that a tracepoint is waiting on a call stack.
+static constexpr uint32_t kWaitOnCallstack = 1;
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_THREAD_CONSTANTS_H_
