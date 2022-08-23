@@ -385,7 +385,8 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
   auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session.get());
   ORBIT_CHECK(native_session != nullptr);
   llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
-  const std::string dbi_error_str = absl::StrFormat("Unable to load PDB file %s with error: PDB has no Dbi Stream", file_path.string());
+  const std::string dbi_error_str = absl::StrFormat(
+      "Unable to load PDB file %s with error: PDB has no Dbi Stream", file_path.string());
   if (!pdb_file.hasPDBDbiStream()) {
     return ErrorMessage(dbi_error_str);
   }
