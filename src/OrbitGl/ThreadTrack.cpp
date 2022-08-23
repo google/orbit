@@ -367,20 +367,6 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   thread_track_data_provider_->AddTimer(timer_info);
 }
 
-[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
-    const internal::DrawData& draw_data, const orbit_gl::TimelineInfoInterface* timeline_info,
-    const TimerInfo& timer_info) {
-  double start_us = timeline_info->GetUsFromTick(timer_info.start());
-  double end_us = timeline_info->GetUsFromTick(timer_info.end());
-  double elapsed_us = end_us - start_us;
-  double normalized_start = start_us * draw_data.inv_time_window;
-  double normalized_length = elapsed_us * draw_data.inv_time_window;
-  float world_timer_width = static_cast<float>(normalized_length * draw_data.track_width);
-  float world_timer_x =
-      static_cast<float>(draw_data.track_start_x + normalized_start * draw_data.track_width);
-  return {world_timer_x, world_timer_width};
-}
-
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -411,13 +397,20 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
       std::unique_ptr<PickingUserData> user_data =
           CreatePickingUserData(primitive_assembler, *timer_info);
 
-      auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, timeline_info_, *timer_info);
-      const Vec2 pos = {pos_x, world_timer_y};
-      const Vec2 size = {size_x, box_height};
+      const float start_x = timeline_info_->GetWorldFromTick(timer_info->start());
+      const float end_x = timeline_info_->GetWorldFromTick(timer_info->end());
+      // First we are using floor and ceil to extend points to the pixel borders. After we are
+      // adding 0.5 to move the extended value to the center of the pixel.
+      const float kHalfPixel = 0.5f;
+      const float extended_start_x = floorf(start_x) + kHalfPixel;
+      const float extended_end_x = ceil(end_x) + kHalfPixel;
 
-      auto timer_duration = timer_info->end() - timer_info->start();
-      if (timer_duration > draw_data.ns_per_pixel) {
+      float box_height = GetDefaultBoxHeight();
+      const Vec2 pos = {extended_start_x, world_timer_y};
+      const Vec2 size = {extended_end_x - extended_start_x, box_height};
+
+      // We are optimizing rendering by drawing the boxes with 1 pixel width as lines.
+      if (size[0] > 1.5f) {
         if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
@@ -428,8 +421,11 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
               CreatePickingUserData(primitive_assembler, *timer_info));
         }
       } else {
-        primitive_assembler.AddVerticalLine(pos, box_height, draw_data.z, color,
-                                            std::move(user_data));
+        // In this case size should be equal to 1. We will use the middle point of the start and
+        // end, so there are no empty spaces when we combine boxes with lines.
+        const float kHalfSize = 0.5f;
+        primitive_assembler.AddVerticalLine({pos[0] + kHalfSize, pos[1]}, box_height, draw_data.z,
+                                            color, std::move(user_data));
       }
     }
   }
