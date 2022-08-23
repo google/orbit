@@ -728,6 +728,12 @@ TEST_F(
     return VK_SUCCESS;
   };
 
+  EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
+      .Times(1)
+      .WillOnce(Invoke([](VkPhysicalDevice /*device*/) -> PFN_vkEnumerateDeviceExtensionProperties {
+        return kFakeEnumerateDeviceExtensionProperties;
+      }));
+
   PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
       +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -735,9 +741,6 @@ TEST_F(
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateDevice") == 0) {
       return absl::bit_cast<PFN_vkVoidFunction>(kMockDriverCreateDevice);
-    }
-    if (strcmp(name, "vkEnumerateDeviceExtensionProperties") == 0) {
-      return absl::bit_cast<PFN_vkVoidFunction>(kFakeEnumerateDeviceExtensionProperties);
     }
     return nullptr;
   };
