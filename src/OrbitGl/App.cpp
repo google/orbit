@@ -2196,13 +2196,11 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::filesystem::path& symbols_path, const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
 
-  auto load_symbols_from_file =
-      thread_pool_->Schedule([this, symbols_path, module_id]() {
-        const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
-        orbit_object_utils::ObjectFileInfo object_file_info{
-            module_data->load_bias(), module_data->executable_segment_offset()};
-        return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
-      });
+  auto load_symbols_from_file = thread_pool_->Schedule([this, symbols_path, module_id]() {
+    const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
+    orbit_object_utils::ObjectFileInfo object_file_info{module_data->load_bias()};
+    return orbit_symbols::SymbolHelper::LoadSymbolsFromFile(symbols_path, object_file_info);
+  });
 
   auto add_symbols = [this, module_id](const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>&
                                            symbols_result) mutable -> ErrorMessageOr<void> {
