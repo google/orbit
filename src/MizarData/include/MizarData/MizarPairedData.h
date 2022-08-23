@@ -169,7 +169,7 @@ class MizarPairedDataTmpl {
                                                          Frame frame) const {
     const uint64_t callstack_count = std::transform_reduce(
         std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
-        [&](const TID tid) { return CallstackSamplesCount(tid, frame.start, frame.end); });
+        [&](const TID tid) { return CountCallstackSamples(tid, frame.start, frame.end); });
     const RelativeTimeNs sampling_period = this->data_->GetNominalSamplingPeriodNs();
     return Times(sampling_period, callstack_count);
   }
@@ -199,7 +199,7 @@ class MizarPairedDataTmpl {
         *tid, *min_timestamp_ns, *max_timestamp_ns, action_on_callstack_events);
   }
 
-  [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, TimestampNs min_timestamp_ns,
+  [[nodiscard]] uint64_t CountCallstackSamples(TID tid, TimestampNs min_timestamp_ns,
                                                TimestampNs max_timestamp_ns) const {
     uint64_t count = 0;
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
