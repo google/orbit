@@ -1329,11 +1329,15 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
           .toULongLong());
 
-  bool const collect_callstack_on_thread_state_change =
-      settings
-          .value(kEnableCallStackCollectionOnThreadStateChanges,
-                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
-          .toBool();
+  bool collect_callstack_on_thread_state_change = false;
+  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    collect_callstack_on_thread_state_change =
+        settings
+            .value(
+                kEnableCallStackCollectionOnThreadStateChanges,
+                orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
+            .toBool();
+  }
 
   dialog.SetEnableCallStackCollectionOnThreadStateChanges(collect_callstack_on_thread_state_change);
 
