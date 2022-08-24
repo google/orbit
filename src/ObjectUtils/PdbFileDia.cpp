@@ -124,9 +124,8 @@ template <typename Consumer>
 ErrorMessageOr<void> ForEachSymbolWithSymTag(const enum SymTagEnum& sym_tag,
                                              IDiaSymbol* dia_global_scope_symbol,
                                              std::string_view file_path, Consumer&& consumer) {
-  HRESULT result = 0;
   CComPtr<IDiaEnumSymbols> dia_enum_symbols;
-  result = dia_global_scope_symbol->findChildren(sym_tag, NULL, nsNone, &dia_enum_symbols);
+  HRESULT result = dia_global_scope_symbol->findChildren(sym_tag, NULL, nsNone, &dia_enum_symbols);
   if (result != S_OK) {
     return ErrorMessage{absl::StrFormat("findChildren failed for %s (%u)", file_path, result)};
   }
@@ -148,7 +147,9 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
   absl::flat_hash_set<uint64_t> addresses_from_module_info_stream;
 
   // Find the function symbols in the module info stream. For now, we ignore "blocks" and
-  // "thunks", as they don't add meaningful information.
+  // "thunks". "Thunks" (which are 5 byte long jumps from incremental linking) don't even
+  // have a name, and while "blocks" (nested scopes inside functions) may have names
+  // according to the documentation, we have never observed that in real PDB files.
   OUTCOME_TRY(ForEachSymbolWithSymTag(
       SymTagFunction, dia_global_scope_symbol_.p, file_path_.string(),
       [&module_symbols, &addresses_from_module_info_stream, this](IDiaSymbol* dia_symbol) {
