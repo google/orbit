@@ -133,7 +133,7 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
 
   // The COFF symbol table doesn't contain the size of symbols. Set a placeholder which indicates
   // that the size is unknown for now and try to deduce it later. We will later use that placeholder
-  // to know which sizes are unknown.
+  // in DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol.
   symbol_info.set_size(kUnknownSymbolSize);
 
   return symbol_info;
