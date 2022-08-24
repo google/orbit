@@ -41,7 +41,7 @@ TEST(PdbFileDiaTest, LoadsFunctionsOnlyInPublicSymbols) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "libomp.dll.pdb";
 
   ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_result =
-      PdbFileDia::CreatePdbFile(file_path_pdb, ObjectFileInfo{0, 0x1000});
+      PdbFileDia::CreatePdbFile(file_path_pdb, ObjectFileInfo{0});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
   auto symbols_result = pdb_file->LoadDebugSymbols();
