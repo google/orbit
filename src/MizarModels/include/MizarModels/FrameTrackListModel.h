@@ -109,16 +109,20 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   }
 
   [[nodiscard]] QString MakeTooltip(FrameTrackId id, const std::string& name) const {
-    const auto& stats = data_->ActiveInvocationTimeStats(
-        *selected_tids_, id, *start_timestamp_,
-        orbit_mizar_base::RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
+    const auto& [wall_clock_time, active_invocation_time] =
+        data_->WallClockAndActiveInvocationTimeStats(
+            *selected_tids_, id, *start_timestamp_,
+            orbit_mizar_base::RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
 
     constexpr double kNsInMs = 1e6;
-    const double average_ms = stats.ComputeAverageTimeNs() / kNsInMs;
+    const double average_wall_clock_ms = wall_clock_time.ComputeAverageTimeNs() / kNsInMs;
+    const double average_active_ms = active_invocation_time.ComputeAverageTimeNs() / kNsInMs;
+    ORBIT_CHECK(wall_clock_time.count() == active_invocation_time.count());
     return QString::fromStdString(
         absl::StrFormat("The frame track \"%s\" has %u frames\n"
+                        "with average wall-clock time of %.3f ms,\n"
                         "with average CPU time across selected threads of %.3f ms.",
-                        name, stats.count(), average_ms));
+                        name, wall_clock_time.count(), average_wall_clock_ms, average_active_ms));
   }
 
   const PairedData* data_;
