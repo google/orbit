@@ -64,4 +64,24 @@ void SymbolFinder::RemoveFromCurrentlyRetrieving(
   symbol_files_currently_retrieving_.erase(module_id);
 }
 
+bool SymbolFinder::IsModuleDownloadDisabled(const std::string& module_file_path) const {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  return download_disabled_modules_.contains(module_file_path);
+}
+
+absl::flat_hash_set<std::string> SymbolFinder::GetDownloadDisabledModules() const {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  return download_disabled_modules_;
+}
+
+void SymbolFinder::SetDownloadDisabledModules(absl::flat_hash_set<std::string> module_paths) {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  download_disabled_modules_ = std::move(module_paths);
+}
+
+void SymbolFinder::RemoveFromCurrentlyDownloadDisabled(const std::string& module_file_path) {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  download_disabled_modules_.erase(module_file_path);
+}
+
 }  // namespace orbit_client_symbols

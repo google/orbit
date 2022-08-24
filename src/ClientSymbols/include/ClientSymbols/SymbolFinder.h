@@ -6,6 +6,7 @@
 #define CLIENT_SYMBOLS_SYMBOL_FINDER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 
 #include <thread>
 
@@ -49,6 +50,13 @@ class SymbolFinder {
                                 SymbolFindingResult finding_result);
   void RemoveFromCurrentlyRetrieving(const orbit_client_data::ModuleIdentifier& module_id);
 
+  // The following methods access download_disabled_modules_ and verify whether the call is from
+  // main thread.
+  [[nodiscard]] bool IsModuleDownloadDisabled(const std::string& module_file_path) const;
+  [[nodiscard]] absl::flat_hash_set<std::string> GetDownloadDisabledModules() const;
+  void SetDownloadDisabledModules(absl::flat_hash_set<std::string> module_paths);
+  void RemoveFromCurrentlyDownloadDisabled(const std::string& module_file_path);
+
  private:
   const std::thread::id main_thread_id_;
 
@@ -65,6 +73,10 @@ class SymbolFinder {
   // ONLY access this from the main thread.
   absl::flat_hash_map<orbit_client_data::ModuleIdentifier, SymbolFindingResult>
       symbol_files_currently_retrieving_;
+
+  // Set of module file paths for the modules which the download is disabled.
+  // ONLY access this from the main thread.
+  absl::flat_hash_set<std::string> download_disabled_modules_;
 };
 
 }  // namespace orbit_client_symbols

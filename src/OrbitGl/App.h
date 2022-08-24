@@ -689,10 +689,6 @@ class OrbitApp final : public DataViewFactory,
   // ONLY access this from the main thread.
   absl::flat_hash_set<orbit_client_data::ModuleIdentifier> modules_with_symbol_loading_error_;
 
-  // Set of modules for which the download is disabled.
-  // ONLY access this from the main thread.
-  absl::flat_hash_set<std::string> download_disabled_modules_;
-
   // A boolean information about if the default Frame Track was added in the current session.
   bool default_frame_track_was_added_ = false;
 
