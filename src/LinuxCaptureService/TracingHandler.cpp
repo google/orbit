@@ -23,8 +23,8 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
-using orbit_grpc_protos::TracepointCallstack;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::TracepointCallstack;
 
 using orbit_grpc_protos::kLinuxTracingProducerId;
 

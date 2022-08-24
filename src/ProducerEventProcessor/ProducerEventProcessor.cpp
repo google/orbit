@@ -568,8 +568,7 @@ void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndT
 }
 
 void ProducerEventProcessorImpl::ProcessTracepointCallstackAndTransferOwnership(
-    TracepointCallstack* /*callstack*/) {
-}
+    TracepointCallstack* /*callstack*/) {}
 
 void ProducerEventProcessorImpl::
     ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
