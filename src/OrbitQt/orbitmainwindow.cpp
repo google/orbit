@@ -1168,20 +1168,16 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
 
   if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    bool const collect_callstack_on_thread_state_change =
-        settings
-            .value(
-                kEnableCallStackCollectionOnThreadStateChanges,
-                orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
-            .toBool();
+    CaptureOptions::ThreadStateChangeCallStackCollection const
+        collect_callstack_on_thread_state_change =
+            static_cast<CaptureOptions::ThreadStateChangeCallStackCollection>(
+                settings
+                    .value(kEnableCallStackCollectionOnThreadStateChanges,
+                           orbit_qt::CaptureOptionsDialog::
+                               kThreadStateChangeCallStackCollectionDefaultValue)
+                    .toInt());
     if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
-      if (!collect_callstack_on_thread_state_change) {
-        app_->SetThreadStateChangeCallstackCollection(
-            CaptureOptions::kNoThreadStateChangeCallStackCollection);
-      } else {
-        app_->SetThreadStateChangeCallstackCollection(
-            CaptureOptions::kThreadStateChangeCallStackCollection);
-      }
+      app_->SetThreadStateChangeCallstackCollection(collect_callstack_on_thread_state_change);
     } else {
       app_->SetThreadStateChangeCallstackCollection(
           CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
@@ -1329,17 +1325,21 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
           .toULongLong());
 
-  bool collect_callstack_on_thread_state_change = false;
+  CaptureOptions::ThreadStateChangeCallStackCollection collect_callstack_on_thread_state_change =
+      CaptureOptions::kNoThreadStateChangeCallStackCollection;
   if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    collect_callstack_on_thread_state_change =
+    collect_callstack_on_thread_state_change = static_cast<
+        CaptureOptions::ThreadStateChangeCallStackCollection>(
         settings
             .value(
                 kEnableCallStackCollectionOnThreadStateChanges,
                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
-            .toBool();
+            .toInt());
   }
 
-  dialog.SetEnableCallStackCollectionOnThreadStateChanges(collect_callstack_on_thread_state_change);
+  dialog.SetEnableCallStackCollectionOnThreadStateChanges(
+      collect_callstack_on_thread_state_change ==
+      CaptureOptions::kThreadStateChangeCallStackCollection);
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
