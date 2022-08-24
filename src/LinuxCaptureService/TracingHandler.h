@@ -46,8 +46,8 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
 
   void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) override;
   void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) override;
-  void OnThreadStateChangeCallstack(
-      orbit_grpc_protos::ThreadStateChangeCallstack callstack) override;
+  void OnTracepointCallstack(
+      orbit_grpc_protos::TracepointCallstack callstack) override;
   void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) override;
   void OnGpuJob(orbit_grpc_protos::FullGpuJob gpu_job) override;
   void OnThreadName(orbit_grpc_protos::ThreadName thread_name) override;

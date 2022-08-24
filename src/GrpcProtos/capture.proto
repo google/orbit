@@ -434,7 +434,9 @@ message FullCallstackSample {
   uint64 timestamp_ns = 4;
 }
 
-message ThreadStateChangeCallstack {
+message TracepointCallstack {
+  // This is an internal proto. This will be used to merge callstacks
+  // with tracepoints coming to ProducerEventProcessor.
   uint32 tid = 1;
   Callstack callstack = 2;
   uint64 timestamp_ns = 3;
@@ -946,7 +948,7 @@ message ProducerCaptureEvent {
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
-    ThreadStateChangeCallstack thread_state_change_callstack = 50;
+    TracepointCallstack thread_state_change_callstack = 50;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent

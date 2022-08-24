@@ -33,7 +33,7 @@ using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
-using orbit_grpc_protos::ThreadStateChangeCallstack;
+using orbit_grpc_protos::TracepointCallstack;
 
 static bool CallstackIsInUserSpaceInstrumentation(
     const std::vector<unwindstack::FrameData>& frames,
@@ -264,7 +264,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const SchedWakeupWithStackPerfEventData& event_data) {
-  // TODO(b/243515760) Refactor this function
+  // TODO(b/243515760) Refactor this function because a lot of this code is duplicated and it can be
+  // written better.
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
@@ -296,11 +297,11 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     return;
   }
 
-  ThreadStateChangeCallstack thread_state_change_callstack;
-  thread_state_change_callstack.set_tid(event_data.was_unblocked_by_tid);
-  thread_state_change_callstack.set_timestamp_ns(event_timestamp);
+  TracepointCallstack tracepoint_callstack;
+  tracepoint_callstack.set_tid(event_data.was_unblocked_by_tid);
+  tracepoint_callstack.set_timestamp_ns(event_timestamp);
 
-  Callstack* callstack = thread_state_change_callstack.mutable_callstack();
+  Callstack* callstack = tracepoint_callstack.mutable_callstack();
   callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     SendFullAddressInfoToListener(libunwindstack_frame);
@@ -308,12 +309,13 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   ORBIT_CHECK(!callstack->pcs().empty());
-  listener_->OnThreadStateChangeCallstack(std::move(thread_state_change_callstack));
+  listener_->OnTracepointCallstack(std::move(tracepoint_callstack));
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const SchedSwitchWithStackPerfEventData& event_data) {
-  // TODO(b/243515760) Refactor this function
+  // TODO(b/243515760) Refactor this function because a lot of this code is duplicated and it can be
+  // written better.
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
@@ -343,11 +345,11 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     return;
   }
 
-  ThreadStateChangeCallstack thread_state_change_callstack;
-  thread_state_change_callstack.set_tid(event_data.next_tid);
-  thread_state_change_callstack.set_timestamp_ns(event_timestamp);
+  TracepointCallstack tracepoint_callstack;
+  tracepoint_callstack.set_tid(event_data.next_tid);
+  tracepoint_callstack.set_timestamp_ns(event_timestamp);
 
-  Callstack* callstack = thread_state_change_callstack.mutable_callstack();
+  Callstack* callstack = tracepoint_callstack.mutable_callstack();
   callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     SendFullAddressInfoToListener(libunwindstack_frame);
@@ -355,7 +357,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   ORBIT_CHECK(!callstack->pcs().empty());
-  listener_->OnThreadStateChangeCallstack(std::move(thread_state_change_callstack));
+  listener_->OnTracepointCallstack(std::move(tracepoint_callstack));
 }
 
 [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType

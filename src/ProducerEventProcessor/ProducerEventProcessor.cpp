@@ -53,8 +53,8 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
-using orbit_grpc_protos::ThreadStateChangeCallstack;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::TracepointCallstack;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
@@ -152,7 +152,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
   void ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
       WarningInstrumentingWithUprobesEvent* warning_event);
-  void ProcessThreadStateChangeCallstackAndTransferOwnership(ThreadStateChangeCallstack* callstack);
+  void ProcessTracepointCallstackAndTransferOwnership(TracepointCallstack* callstack);
   void ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
       WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event);
 
@@ -172,6 +172,15 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // <producer_id, producer_string_id> -> client_string_id
   absl::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t>
       producer_interned_string_id_to_client_string_id_;
+
+  // Needed to allow merging between call stacks and tracepoints, see design doc:
+  // go/stadia-orbit-tracepoint-callstack
+  std::optional<orbit_grpc_protos::ThreadStateSlice> thread_state_slice_waiting_for_callstack =
+      std::nullopt;
+  std::optional<orbit_grpc_protos::SchedulingSlice> scheduling_slice_waiting_for_callstack =
+      std::nullopt;
+  std::optional<orbit_grpc_protos::TracepointCallstack>
+      callstack_waiting_for_thread_state_or_scheduling_slice = std::nullopt;
 };
 
 void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {
@@ -558,8 +567,9 @@ void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndT
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
-void ProducerEventProcessorImpl::ProcessThreadStateChangeCallstackAndTransferOwnership(
-    ThreadStateChangeCallstack* /*callstack*/) {}
+void ProducerEventProcessorImpl::ProcessTracepointCallstackAndTransferOwnership(
+    TracepointCallstack* /*callstack*/) {
+}
 
 void ProducerEventProcessorImpl::
     ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
@@ -694,8 +704,7 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
       break;
     case ProducerCaptureEvent::kThreadStateChangeCallstack:
-      ProcessThreadStateChangeCallstackAndTransferOwnership(
-          event.release_thread_state_change_callstack());
+      ProcessTracepointCallstackAndTransferOwnership(event.release_thread_state_change_callstack());
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
