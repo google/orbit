@@ -50,14 +50,14 @@ std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& proc
 
 bool FunctionInfo::IsFunctionSelectable() const {
   constexpr const char* kLibOrbitUserSpaceInstrumentation = "liborbituserspaceinstrumentation.so";
-  if (module_path().find(kLibOrbitUserSpaceInstrumentation) != std::string::npos) {
+  if (absl::StrContains(module_path(), kLibOrbitUserSpaceInstrumentation)) {
     return false;
   }
 
   constexpr const char* kNameOfWineSyscallDispatcher = "__wine_syscall_dispatcher";
   constexpr const char* kNameOfWineSyscallDispatcherModule = "ntdll.so";
-  if (pretty_name().find(kNameOfWineSyscallDispatcher) != std::string::npos &&
-      module_path().find(kNameOfWineSyscallDispatcherModule) != std::string::npos) {
+  if (absl::StrContains(pretty_name(), kNameOfWineSyscallDispatcher) &&
+      absl::StrContains(module_path(), kNameOfWineSyscallDispatcherModule)) {
     return false;
   }
 
