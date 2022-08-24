@@ -344,6 +344,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
+  symbol_finder_ = std::make_unique<orbit_client_symbols::SymbolFinder>(main_thread_id_);
 
   QObject::connect(
       &update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
@@ -1795,9 +1796,9 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
   ORBIT_SCOPE_FUNCTION;
 
-  const auto it = symbol_files_currently_downloading_.find(module_file_path);
-  if (it != symbol_files_currently_downloading_.end()) {
-    return it->second.future;
+  if (auto result = symbol_finder_->GetDownloadingResultByModulePath(module_file_path);
+      result.has_value()) {
+    return result.value();
   }
 
   orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
@@ -1854,15 +1855,15 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future =
       UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
 
-  symbol_files_currently_downloading_.emplace(
-      module_file_path,
-      OrbitApp::ModuleDownloadOperation{std::move(stop_source), chained_result_future});
+  symbol_finder_->AddToCurrentlyDownloading(
+      module_file_path, orbit_client_symbols::SymbolFinder::ModuleDownloadOperation{
+                            std::move(stop_source), chained_result_future});
   FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   chained_result_future.Then(
       main_thread_executor_,
       [this,
        module_file_path](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_downloading_.erase(module_file_path);
+        symbol_finder_->RemoveFromCurrentlyDownloading(module_file_path);
         FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
       });
 
@@ -3361,8 +3362,7 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
 
 [[nodiscard]] bool OrbitApp::IsModuleDownloading(const ModuleData* module) const {
   ORBIT_CHECK(module != nullptr);
-  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
-  return symbol_files_currently_downloading_.contains(module->file_path());
+  return symbol_finder_->IsModuleDownloading(module->file_path());
 }
 
 SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* module) const {
@@ -3401,20 +3401,15 @@ void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> mod
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
   for (const auto* module : modules) {
-    if (!symbol_files_currently_downloading_.contains(module->file_path())) {
-      // Download already ended
-      continue;
-    }
+    // Continue if download already ended.
+    if (!IsModuleDownloading(module)) continue;
+
     if (show_dialog) {
       CanceledOr<void> canceled_or = main_window_->DisplayStopDownloadDialog(module);
       if (orbit_base::IsCanceled(canceled_or)) continue;
     }
 
-    if (!symbol_files_currently_downloading_.contains(module->file_path())) {
-      // Download already ended (while user was looking at the dialog)
-      continue;
-    }
-    symbol_files_currently_downloading_.at(module->file_path()).stop_source.RequestStop();
+    symbol_finder_->StopModuleDownloading(module->file_path());
   }
 }
 

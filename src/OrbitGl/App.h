@@ -52,6 +52,7 @@
 #include "ClientServices/CrashManager.h"
 #include "ClientServices/ProcessManager.h"
 #include "ClientServices/TracepointServiceClient.h"
+#include "ClientSymbols/SymbolFinder.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "DataViewFactory.h"
 #include "DataViews/AppInterface.h"
@@ -673,15 +674,6 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  struct ModuleDownloadOperation {
-    orbit_base::StopSource stop_source;
-    orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> future;
-  };
-  // Map of module file path to download operation future, that holds all symbol downloads that
-  // are currently in progress.
-  // ONLY access this from the main thread.
-  absl::flat_hash_map<std::string, ModuleDownloadOperation> symbol_files_currently_downloading_;
-
   // Map of "module ID" (file path and build ID) to symbol file retrieving future, that holds all
   // symbol retrieving operations currently in progress. (Retrieving here means finding locally or
   // downloading from the instance). Since downloading a symbols file can be part of the retrieval,
@@ -730,6 +722,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
+  std::unique_ptr<orbit_client_symbols::SymbolFinder> symbol_finder_;
 
   orbit_client_data::ProcessData* process_ = nullptr;
 

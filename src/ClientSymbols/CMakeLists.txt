@@ -9,15 +9,18 @@ add_library(ClientSymbols STATIC)
 
 target_include_directories(ClientSymbols PUBLIC include/)
 target_link_libraries(ClientSymbols PUBLIC 
-        CONAN_PKG::abseil        
+        CONAN_PKG::abseil
+        OrbitBase        
         Qt5::Core)
 
 target_sources(ClientSymbols PUBLIC 
         include/ClientSymbols/PersistentStorageManager.h
-        include/ClientSymbols/QSettingsBasedStorageManager.h)
+        include/ClientSymbols/QSettingsBasedStorageManager.h        
+        include/ClientSymbols/SymbolFinder.h)
 
 target_sources(ClientSymbols PRIVATE 
-        QSettingsBasedStorageManager.cpp)
+        QSettingsBasedStorageManager.cpp
+        SymbolFinder.cpp)
 
 add_executable(ClientSymbolsTests)
 target_sources(ClientSymbolsTests PRIVATE 
