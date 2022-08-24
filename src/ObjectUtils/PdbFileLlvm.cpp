@@ -1,14 +1,23 @@
 // Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+#ifdef _MSC_VER
+#pragma warning(disable : 4996)
+#endif
 
 #include "PdbFileLlvm.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/memory/memory.h>
 #include <absl/strings/str_cat.h>
 #include <llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h>
+#include <llvm/DebugInfo/CodeView/SymbolRecord.h>
 #include <llvm/DebugInfo/CodeView/TypeDeserializer.h>
 #include <llvm/DebugInfo/CodeView/TypeRecord.h>
+#include <llvm/DebugInfo/PDB/Native/GlobalsStream.h>
+#include <llvm/DebugInfo/PDB/Native/ISectionContribVisitor.h>
+#include <llvm/DebugInfo/PDB/Native/PublicsStream.h>
+#include <llvm/DebugInfo/PDB/Native/SymbolStream.h>
 #include <llvm/DebugInfo/PDB/Native/TpiStream.h>
 #include <llvm/Object/COFF.h>
 
@@ -26,20 +35,35 @@ namespace orbit_object_utils {
 
 namespace {
 
+[[nodiscard]] uint64_t ComputeRelativeAddress(
+    uint64_t offset_in_section, uint16_t section, uint64_t load_bias,
+    const llvm::FixedStreamArray<llvm::object::coff_section>& section_headers) {
+  // The address in PDB files is a relative virtual address (RVA), to make the address
+  // compatible with how we do the computation, we need to add both the load bias (ImageBase for
+  // COFF) and the virtual offset of the section. Note: The segments are numbered starting at 1 and
+  // match what you observe using `dumpbin /HEADERS`.
+  ORBIT_CHECK(section_headers.size() >= section && section > 0);
+  uint64_t section_offset = section_headers[section - 1].VirtualAddress;
+  return offset_in_section + section_offset + load_bias;
+}
+
 // Codeview debug records from a PDB file can be accessed through llvm using a visitor
 // interface (using llvm::codeview::CVSymbolVisitor::visitSymbolStream). This can be
 // customized by implementing one's own visitor class, which we do here to fill out
 // all symbol info required for functions.
 class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
  public:
-  SymbolInfoVisitor(ModuleSymbols* module_symbols, const ObjectFileInfo& object_file_info,
+  SymbolInfoVisitor(std::vector<SymbolInfo>* symbol_infos,
+                    absl::flat_hash_set<uint64_t>* address_from_module_debug_stream,
+                    const ObjectFileInfo& object_file_info,
                     llvm::FixedStreamArray<llvm::object::coff_section>* section_headers,
                     llvm::pdb::TpiStream* type_info_stream)
-      : module_symbols_(module_symbols),
+      : symbol_infos_(symbol_infos),
+        addresses_from_module_debug_stream_(address_from_module_debug_stream),
         object_file_info_(object_file_info),
         section_headers_(section_headers),
         type_info_stream_(type_info_stream) {
-    ORBIT_CHECK(module_symbols != nullptr);
+    ORBIT_CHECK(symbol_infos != nullptr);
     ORBIT_CHECK(type_info_stream != nullptr);
   }
 
@@ -59,19 +83,15 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
           absl::StrCat(symbol_info.demangled_name(), argument_list.data()));
     }
 
-    // The address in PDB files is a relative virtual address (RVA), to make the address compatible
-    // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
-    // the virtual offset of the section.
-    // Note: The segments are numbered starting at 1 and match what you observe using
-    // `dumpbin /HEADERS`.
-    ORBIT_CHECK(section_headers_ != nullptr && section_headers_->size() >= proc.Segment &&
-                proc.Segment > 0);
-    uint64_t section_offset = (*section_headers_)[proc.Segment - 1].VirtualAddress;
-    symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias + section_offset);
+    uint64_t address = ComputeRelativeAddress(proc.CodeOffset, proc.Segment,
+                                              object_file_info_.load_bias, *section_headers_);
+    symbol_info.set_address(address);
     symbol_info.set_size(proc.CodeSize);
 
-    ORBIT_CHECK(module_symbols_ != nullptr);
-    *(module_symbols_->add_symbol_infos()) = std::move(symbol_info);
+    ORBIT_CHECK(addresses_from_module_debug_stream_ != nullptr);
+    addresses_from_module_debug_stream_->insert(symbol_info.address());
+    ORBIT_CHECK(symbol_infos_ != nullptr);
+    symbol_infos_->emplace_back(std::move(symbol_info));
 
     return llvm::Error::success();
   }
@@ -132,46 +152,53 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     }
   }
 
-  ModuleSymbols* module_symbols_;
+  std::vector<SymbolInfo>* symbol_infos_;
+  absl::flat_hash_set<uint64_t>* addresses_from_module_debug_stream_;
   ObjectFileInfo object_file_info_;
   llvm::FixedStreamArray<llvm::object::coff_section>* section_headers_;
   llvm::pdb::TpiStream* type_info_stream_;
 };
 
-}  // namespace
+// This visitor will try to deduce the missing size information from the given symbol using
+// the section contributions information.
+// Unfortunately, this is performing a linear search on the contribution records, but LLVM
+// does not offer a better way to access the information.
+class SectionContributionsVisitor : public llvm::pdb::ISectionContribVisitor {
+ public:
+  SectionContributionsVisitor(ObjectFileInfo object_file_info,
+                              llvm::FixedStreamArray<llvm::object::coff_section>* section_headers,
+                              SymbolInfo* symbol_with_missing_size)
+      : object_file_info_(object_file_info),
+        section_headers_(section_headers),
+        symbol_with_missing_size_(symbol_with_missing_size) {}
 
-PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
-                         std::unique_ptr<llvm::pdb::IPDBSession> session)
-    : file_path_(std::move(file_path)),
-      object_file_info_(object_file_info),
-      session_(std::move(session)) {}
+  void visit(const llvm::pdb::SectionContrib& section_contrib) override {
+    ORBIT_CHECK(section_headers_ != nullptr);
+    uint64_t address = ComputeRelativeAddress(section_contrib.Off, section_contrib.ISect,
+                                              object_file_info_.load_bias, *section_headers_);
 
-[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
-  ModuleSymbols module_symbols;
-
-  auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
-  ORBIT_CHECK(native_session != nullptr);
-  llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
-
-  if (!pdb_file.hasPDBDbiStream()) {
-    return ErrorMessage("PDB file does not have a DBI stream.");
+    if (address == symbol_with_missing_size_->address()) {
+      symbol_with_missing_size_->set_size(section_contrib.Size);
+    }
   }
 
-  llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
-  // Given that we check hasPDBDbiStream above, we must get a DbiStream here.
-  ORBIT_CHECK(debug_info_stream);
-
-  if (!pdb_file.hasPDBTpiStream()) {
-    return ErrorMessage("PDB file does not have a TPI stream.");
+  void visit(const llvm::pdb::SectionContrib2& section_contrib) override {
+    visit(section_contrib.Base);
   }
-  llvm::Expected<llvm::pdb::TpiStream&> type_info_stream = pdb_file.getPDBTpiStream();
-  // Given that we check hasPDBTpiStream above, we must get a TpiStream here.
-  ORBIT_CHECK(type_info_stream);
 
-  llvm::FixedStreamArray<llvm::object::coff_section> section_headers =
-      debug_info_stream->getSectionHeaders();
+ private:
+  ObjectFileInfo object_file_info_;
+  llvm::FixedStreamArray<llvm::object::coff_section>* section_headers_{};
+  SymbolInfo* symbol_with_missing_size_{};
+};
 
-  const llvm::pdb::DbiModuleList& modules = debug_info_stream->modules();
+ErrorMessageOr<void> LoadDebugSymbolsFromModuleStreams(
+    llvm::pdb::PDBFile& pdb_file, llvm::pdb::DbiStream& debug_info_stream,
+    llvm::pdb::TpiStream& type_info_stream,
+    llvm::FixedStreamArray<llvm::object::coff_section>& section_headers,
+    ObjectFileInfo object_file_info, std::vector<SymbolInfo>* symbol_infos,
+    absl::flat_hash_set<uint64_t>* addresses_from_module_debug_stream) {
+  const llvm::pdb::DbiModuleList& modules = debug_info_stream.modules();
 
   for (uint32_t index = 0; index < modules.getModuleCount(); ++index) {
     auto modi = modules.getModuleDescriptor(index);
@@ -197,8 +224,8 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
     llvm::codeview::SymbolDeserializer deserializer(nullptr,
                                                     llvm::codeview::CodeViewContainer::Pdb);
     pipeline.addCallbackToPipeline(deserializer);
-    SymbolInfoVisitor symbol_visitor(&module_symbols, object_file_info_, &section_headers,
-                                     &type_info_stream.get());
+    SymbolInfoVisitor symbol_visitor(symbol_infos, addresses_from_module_debug_stream,
+                                     object_file_info, &section_headers, &type_info_stream);
     pipeline.addCallbackToPipeline(symbol_visitor);
     llvm::codeview::CVSymbolVisitor visitor(pipeline);
 
@@ -214,6 +241,117 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
                           llvm::toString(std::move(error)))};
     }
   }
+  return outcome::success();
+}
+
+void LoadDebugSymbolsFromPublicSymbolStream(
+    llvm::pdb::PublicsStream& public_symbol_stream, llvm::pdb::SymbolStream& symbol_stream,
+    llvm::FixedStreamArray<llvm::object::coff_section>& section_headers,
+    ObjectFileInfo object_file_info, std::vector<SymbolInfo>* symbol_infos,
+    absl::flat_hash_set<uint64_t>* addresses_from_module_debug_stream) {
+  const llvm::pdb::GSIHashTable& public_symbol_has_records = public_symbol_stream.getPublicsTable();
+  for (const auto& hash_record : public_symbol_has_records) {
+    llvm::Expected<llvm::codeview::PublicSym32> record =
+        llvm::codeview::SymbolDeserializer::deserializeAs<llvm::codeview::PublicSym32>(
+            symbol_stream.readRecord(hash_record));
+    ORBIT_CHECK(record);
+
+    // Skip this symbol if it is not a function (but rather a global constant).
+    if ((record->Flags & llvm::codeview::PublicSymFlags::Function) ==
+        llvm::codeview::PublicSymFlags::None) {
+      continue;
+    }
+
+    SymbolInfo symbol_info;
+    uint64_t address = ComputeRelativeAddress(record->Offset, record->Segment,
+                                              object_file_info.load_bias, section_headers);
+    symbol_info.set_address(address);
+
+    if (addresses_from_module_debug_stream->contains(symbol_info.address())) continue;
+
+    symbol_info.set_demangled_name(llvm::demangle(record->Name.str()));
+    // The PDB public symbols don't contain the size of symbol. Set a placeholder which indicates
+    // that the size is unknown for now and try to deduce it later. We will later use that
+    // placeholder in DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol.
+    symbol_info.set_size(ObjectFile::kUnknownSymbolSize);
+    symbol_infos->emplace_back(std::move(symbol_info));
+  }
+}
+
+}  // namespace
+
+PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& object_file_info,
+                         std::unique_ptr<llvm::pdb::IPDBSession> session)
+    : file_path_(std::move(file_path)),
+      object_file_info_(object_file_info),
+      session_(std::move(session)) {}
+
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
+  std::vector<SymbolInfo> symbol_infos;
+  absl::flat_hash_set<uint64_t> address_from_module_debug_stream;
+
+  auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
+  ORBIT_CHECK(native_session != nullptr);
+  llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
+
+  if (!pdb_file.hasPDBDbiStream()) {
+    return ErrorMessage("PDB file does not have a DBI stream.");
+  }
+
+  llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
+  // Given that we check hasPDBDbiStream above, we must get a DbiStream here.
+  ORBIT_CHECK(debug_info_stream);
+
+  if (!pdb_file.hasPDBTpiStream()) {
+    return ErrorMessage("PDB file does not have a TPI stream.");
+  }
+  llvm::Expected<llvm::pdb::TpiStream&> type_info_stream = pdb_file.getPDBTpiStream();
+  // Given that we check hasPDBTpiStream above, we must get a TpiStream here.
+  ORBIT_CHECK(type_info_stream);
+
+  llvm::FixedStreamArray<llvm::object::coff_section> section_headers =
+      debug_info_stream->getSectionHeaders();
+
+  OUTCOME_TRY(LoadDebugSymbolsFromModuleStreams(
+      pdb_file, debug_info_stream.get(), type_info_stream.get(), section_headers, object_file_info_,
+      &symbol_infos, &address_from_module_debug_stream));
+
+  if (!pdb_file.hasPDBPublicsStream()) {
+    return ErrorMessage("PDB file does not have a public symbol stream.");
+  }
+  llvm::Expected<llvm::pdb::PublicsStream&> public_symbol_stream = pdb_file.getPDBPublicsStream();
+  ORBIT_CHECK(public_symbol_stream);
+
+  if (!pdb_file.hasPDBSymbolStream()) {
+    return ErrorMessage("PDB file does not have a symbol stream.");
+  }
+  llvm::Expected<llvm::pdb::SymbolStream&> symbol_stream = pdb_file.getPDBSymbolStream();
+  ORBIT_CHECK(symbol_stream);
+
+  LoadDebugSymbolsFromPublicSymbolStream(public_symbol_stream.get(), symbol_stream.get(),
+                                         section_headers, object_file_info_, &symbol_infos,
+                                         &address_from_module_debug_stream);
+
+  DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&symbol_infos);
+
+  if (symbol_infos.empty()) {
+    return ModuleSymbols{};
+  }
+
+  // The `DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol` can't fix the size of the last
+  // symbol (if that symbol is missing the size). But we can try and check if we are lucky and find
+  // that symbol in the section contributions stream.
+  SymbolInfo& last_symbol = symbol_infos[symbol_infos.size() - 1];
+  if (last_symbol.size() == ObjectFile::kUnknownSymbolSize) {
+    SectionContributionsVisitor visitor{object_file_info_, &section_headers, &last_symbol};
+    debug_info_stream->visitSectionContributions(visitor);
+  }
+
+  ModuleSymbols module_symbols;
+  for (const SymbolInfo& symbol_info : symbol_infos) {
+    *(module_symbols.add_symbol_infos()) = symbol_info;
+  }
+
   return module_symbols;
 }
 

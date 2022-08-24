@@ -51,13 +51,8 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
   }
 
-  // TODO(kuebler): Reading public symbols is not yet implemented in the LLVM-based parser.
-  auto test_suite_name = ::testing::UnitTest::GetInstance()->current_test_suite()->name();
-  if (absl::StrContains(test_suite_name, "PdbFileLlvmTest")) {
-    ASSERT_EQ(symbol_infos_by_address.size(), 5459);
-  } else {
-    ASSERT_EQ(symbol_infos_by_address.size(), 5552);
-  }
+  ASSERT_EQ(symbol_infos_by_address.size(), 5552);
+
   {
     const SymbolInfo* symbol = symbol_infos_by_address[0x18000eea0];
     ASSERT_NE(symbol, nullptr);
@@ -189,6 +184,34 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   }
 }
 
+TYPED_TEST_P(PdbFileTest, LoadsFunctionsOnlyInPublicSymbols) {
+  std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "libomp.dll.pdb";
+
+  ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_result =
+      TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0});
+  ASSERT_THAT(pdb_file_result, HasNoError());
+  std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
+  auto symbols_result = pdb_file->LoadDebugSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  auto symbols = std::move(symbols_result.value());
+
+  absl::flat_hash_map<uint64_t, const SymbolInfo*> symbol_infos_by_address;
+  for (const SymbolInfo& symbol_info : symbols.symbol_infos()) {
+    symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
+  }
+
+  ASSERT_EQ(symbol_infos_by_address.size(), 6868);
+
+  {
+    const SymbolInfo* symbol = symbol_infos_by_address[0x0F187B];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->demangled_name(), "FormatMessageW");
+    EXPECT_EQ(symbol->address(), 0xF187B);
+    EXPECT_EQ(symbol->size(), 6);
+  }
+}
+
 TYPED_TEST_P(PdbFileTest, CanObtainGuidAndAgeFromPdbAndDll) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
 
@@ -221,7 +244,7 @@ TYPED_TEST_P(PdbFileTest, CreatePdbFailsOnNonPdbFile) {
   EXPECT_THAT(pdb_file_result, HasError("Unable to load PDB file"));
 }
 
-REGISTER_TYPED_TEST_SUITE_P(PdbFileTest, LoadDebugSymbols, CanObtainGuidAndAgeFromPdbAndDll,
-                            CreatePdbFailsOnNonPdbFile);
+REGISTER_TYPED_TEST_SUITE_P(PdbFileTest, LoadDebugSymbols, LoadsFunctionsOnlyInPublicSymbols,
+                            CanObtainGuidAndAgeFromPdbAndDll, CreatePdbFailsOnNonPdbFile);
 
 #endif  // OBJECT_UTILS_PDB_FILE_TEST_H_
