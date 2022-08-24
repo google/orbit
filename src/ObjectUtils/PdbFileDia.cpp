@@ -4,7 +4,9 @@
 
 #include "PdbFileDia.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/memory/memory.h>
+#include <cvconst.h>
 #include <diacreate.h>
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
@@ -13,6 +15,7 @@
 #include "ObjectUtils/PdbUtilsDia.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/StringConversion.h"
 
 using orbit_grpc_protos::ModuleSymbols;
@@ -84,46 +87,148 @@ ErrorMessageOr<void> PdbFileDia::LoadDataForPDB() {
   return outcome::success();
 }
 
-ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() {
-  HRESULT result = 0;
+namespace {
+// This enum represents the possible flags to undecorate (demangle) a name of
+// a public symbol. They are not defined in the DIA SDK headers. The values
+// are defined here:
+// https://docs.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/idiasymbol-get-undecoratednameex
+enum UNDNAME_FLAGS : DWORD {
+  UNDNAME_COMPLETE = 0x0000,  // Enables full undecoration.
+  UNDNAME_NO_LEADING_UNDERSCORES =
+      0x0001,                       // Removes leading underscores from Microsoft extended keywords.
+  UNDNAME_NO_MS_KEYWORDS = 0x0002,  // Disables expansion of Microsoft extended keywords.
+  UNDNAME_NO_FUNCTION_RETURNS =
+      0x0004,  // Disables expansion of return type for primary declaration.
+  UNDNAME_NO_ALLOCATION_MODEL = 0x0008,  // Disables expansion of the declaration model.
+  UNDNAME_NO_ALLOCATION_LANGUAGE =
+      0x0010,                    // Disables expansion of the declaration language specifier.
+  UNDNAME_RESERVED1 = 0x0020,    // RESERVED.
+  UNDNAME_RESERVED2 = 0x0040,    // RESERVED.
+  UNDNAME_NO_THISTYPE = 0x0060,  // Disables all modifiers on the this type.
+  UNDNAME_NO_ACCESS_SPECIFIERS = 0x0080,  // Disables expansion of access specifiers for members.
+  UNDNAME_NO_THROW_SIGNATURES = 0x0100,   // Disables expansion of "throw-signatures" for
+                                          // functions and pointers to functions.
+  UNDNAME_NO_MEMBER_TYPE = 0x0200,        // Disables expansion of static or virtual members.
+  UNDNAME_NO_RETURN_UDT_MODEL =
+      0x0400,                      // Disables expansion of the Microsoft model for UDT returns.
+  UNDNAME_32_BIT_DECODE = 0x0800,  // Undecorates 32-bit decorated names.
+  UNDNAME_NAME_ONLY = 0x1000,      // Gets only the name for primary declaration, returns
+                                   // just[scope::] name.Expands template params.
+  UNDNAME_TYPE_ONLY = 0x2000,  // Input is just a type encoding, composes an abstract declarator.
+  UNDNAME_HAVE_PARAMETERS = 0x4000,       // The real template parameters are available.
+  UNDNAME_NO_ECSU = 0x8000,               // Suppresses enum/class/struct/union.
+  UNDNAME_NO_IDENT_CHAR_CHECK = 0x10000,  // Suppresses check for valid identifier characters.
+  UNDNAME_NO_PTR64 = 0x20000,             // Does not include ptr64 in output.
+};
+template <typename Consumer>
+ErrorMessageOr<void> ForEachSymbolWithSymTag(const enum SymTagEnum& sym_tag,
+                                             IDiaSymbol* dia_global_scope_symbol,
+                                             std::string_view file_path, Consumer&& consumer) {
   CComPtr<IDiaEnumSymbols> dia_enum_symbols;
-  result = dia_global_scope_symbol_->findChildren(SymTagFunction, NULL, nsNone, &dia_enum_symbols);
+  HRESULT result = dia_global_scope_symbol->findChildren(sym_tag, NULL, nsNone, &dia_enum_symbols);
   if (result != S_OK) {
-    return ErrorMessage{
-        absl::StrFormat("findChildren failed for %s (%u)", file_path_.string(), result)};
+    return ErrorMessage{absl::StrFormat("findChildren failed for %s (%u)", file_path, result)};
   }
 
-  ModuleSymbols module_symbols;
   IDiaSymbol* dia_symbol = nullptr;
   ULONG celt = 0;
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
     CComPtr<IDiaSymbol> dia_symbol_com_ptr = dia_symbol;
-    SymbolInfo symbol_info;
-
-    BSTR function_name = {};
-    if (dia_symbol->get_name(&function_name) != S_OK) continue;
-    symbol_info.set_demangled_name(orbit_base::ToStdString(function_name));
-    ErrorMessageOr<std::string> parameter_list_or_error = PdbDiaParameterListAsString(dia_symbol);
-    if (parameter_list_or_error.has_value()) {
-      symbol_info.set_demangled_name(symbol_info.demangled_name() +
-                                     parameter_list_or_error.value());
-    } else {
-      ORBIT_ERROR("Unable to retrieve parameter types of function %s. Error: %s",
-                  symbol_info.demangled_name(), parameter_list_or_error.error().message());
-    }
-    SysFreeString(function_name);
-
-    DWORD relative_virtual_address = 0;
-    if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;
-    symbol_info.set_address(relative_virtual_address + object_file_info_.load_bias);
-
-    ULONGLONG length = 0;
-    if (dia_symbol->get_length(&length) != S_OK) continue;
-    symbol_info.set_size(length);
-
-    *module_symbols.add_symbol_infos() = std::move(symbol_info);
+    std::invoke(std::forward<Consumer>(consumer), dia_symbol);
   }
+
+  return outcome::success();
+}
+}  // namespace
+
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() {
+  ModuleSymbols module_symbols;
+  absl::flat_hash_set<uint64_t> addresses_from_module_info_stream;
+
+  // Find the function symbols in the module info stream. For now, we ignore "blocks" and
+  // "thunks". "Thunks" (which are 5 byte long jumps from incremental linking) don't even
+  // have a name, and while "blocks" (nested scopes inside functions) may have names
+  // according to the documentation, we have never observed that in real PDB files.
+  OUTCOME_TRY(ForEachSymbolWithSymTag(
+      SymTagFunction, dia_global_scope_symbol_.p, file_path_.string(),
+      [&module_symbols, &addresses_from_module_info_stream, this](IDiaSymbol* dia_symbol) {
+        SymbolInfo symbol_info;
+
+        BSTR function_name = {};
+        if (dia_symbol->get_name(&function_name) != S_OK) return;
+        symbol_info.set_demangled_name(orbit_base::ToStdString(function_name));
+        ErrorMessageOr<std::string> parameter_list_or_error =
+            PdbDiaParameterListAsString(dia_symbol);
+        if (parameter_list_or_error.has_value()) {
+          symbol_info.set_demangled_name(symbol_info.demangled_name() +
+                                         parameter_list_or_error.value());
+        } else {
+          ORBIT_ERROR("Unable to retrieve parameter types of function %s. Error: %s",
+                      symbol_info.demangled_name(), parameter_list_or_error.error().message());
+        }
+        SysFreeString(function_name);
+
+        DWORD relative_virtual_address = 0;
+        if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) return;
+        symbol_info.set_address(relative_virtual_address + object_file_info_.load_bias);
+
+        ULONGLONG length = 0;
+        if (dia_symbol->get_length(&length) != S_OK) return;
+        symbol_info.set_size(length);
+
+        addresses_from_module_info_stream.insert(symbol_info.address());
+        *module_symbols.add_symbol_infos() = std::move(symbol_info);
+      }));
+
+  // Check the public symbol stream for additional function symbols. Many public
+  // symbols are already defined in the module info stream, so we will skip those
+  // whose address we have already seen.
+  OUTCOME_TRY(ForEachSymbolWithSymTag(
+      SymTagPublicSymbol, dia_global_scope_symbol_.p, file_path_.string(),
+      [&module_symbols, &addresses_from_module_info_stream, this](IDiaSymbol* dia_symbol) {
+        // Is this public symbol actually a function?
+        BOOL is_function = false;
+        if (dia_symbol->get_function(&is_function) != S_OK || !is_function) return;
+        SymbolInfo symbol_info;
+
+        DWORD relative_virtual_address = 0;
+        if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) return;
+        symbol_info.set_address(relative_virtual_address + object_file_info_.load_bias);
+
+        if (addresses_from_module_info_stream.contains(symbol_info.address())) return;
+
+        // Public symbols my have decorated (mangled names), where the decoration contains
+        // much more information/noise than on elf files, such as "static", "virtual", return
+        // types, or access modifiers like "public". We remove the unnecessary information
+        // to reduce the noice and foster function matchin in Mizar.
+        BSTR undecorated_function_name = {};
+        DWORD undecorate_options = UNDNAME_NO_MS_KEYWORDS | UNDNAME_NO_FUNCTION_RETURNS |
+                                   UNDNAME_NO_THISTYPE | UNDNAME_NO_ACCESS_SPECIFIERS |
+                                   UNDNAME_NO_MEMBER_TYPE | UNDNAME_NO_THROW_SIGNATURES |
+                                   UNDNAME_NO_ECSU | UNDNAME_NO_PTR64;
+        if (dia_symbol->get_undecoratedNameEx(undecorate_options, &undecorated_function_name) ==
+            S_OK) {
+          symbol_info.set_demangled_name(orbit_base::ToStdString(undecorated_function_name));
+          SysFreeString(undecorated_function_name);
+        }
+
+        // If there was no undecorated function name, we try the normal "name".
+        if (symbol_info.demangled_name().empty()) {
+          BSTR function_name = {};
+          if (dia_symbol->get_name(&function_name) != S_OK) return;
+          symbol_info.set_demangled_name(orbit_base::ToStdString(function_name));
+          SysFreeString(function_name);
+        }
+
+        if (symbol_info.demangled_name().empty()) return;
+
+        ULONGLONG length = 0;
+        if (dia_symbol->get_length(&length) != S_OK) return;
+        symbol_info.set_size(length);
+
+        *module_symbols.add_symbol_infos() = std::move(symbol_info);
+      }));
 
   return module_symbols;
 }
