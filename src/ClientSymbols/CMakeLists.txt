@@ -8,7 +8,8 @@ project(ClientSymbols)
 add_library(ClientSymbols STATIC)
 
 target_include_directories(ClientSymbols PUBLIC include/)
-target_link_libraries(ClientSymbols PUBLIC 
+target_link_libraries(ClientSymbols PUBLIC
+        ClientData 
         CONAN_PKG::abseil
         OrbitBase        
         Qt5::Core)

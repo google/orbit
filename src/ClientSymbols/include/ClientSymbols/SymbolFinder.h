@@ -9,6 +9,7 @@
 
 #include <thread>
 
+#include "ClientData/ModuleIdentifier.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
@@ -40,6 +41,14 @@ class SymbolFinder {
                                  ModuleDownloadOperation download_operation);
   void RemoveFromCurrentlyDownloading(const std::string& module_file_path);
 
+  // The following methods access symbol_files_currently_retrieving_ and verify whether the
+  // call is from main thread.
+  [[nodiscard]] std::optional<SymbolFindingResult> GetRetrievingResultForModule(
+      const orbit_client_data::ModuleIdentifier& module_id) const;
+  void AddToCurrentlyRetrieving(orbit_client_data::ModuleIdentifier module_id,
+                                SymbolFindingResult finding_result);
+  void RemoveFromCurrentlyRetrieving(const orbit_client_data::ModuleIdentifier& module_id);
+
  private:
   const std::thread::id main_thread_id_;
 
@@ -47,6 +56,15 @@ class SymbolFinder {
   // are currently in progress.
   // ONLY access this from the main thread.
   absl::flat_hash_map<std::string, ModuleDownloadOperation> symbol_files_currently_downloading_;
+
+  // Map of "module ID" (file path and build ID) to symbol file retrieving future, that holds all
+  // symbol retrieving operations currently in progress. (Retrieving here means finding locally or
+  // downloading from the instance). Since downloading a symbols file can be part of the retrieval,
+  // if a module ID is contained in symbol_files_currently_downloading_, it is also contained in
+  // symbol_files_currently_retrieving_.
+  // ONLY access this from the main thread.
+  absl::flat_hash_map<orbit_client_data::ModuleIdentifier, SymbolFindingResult>
+      symbol_files_currently_retrieving_;
 };
 
 }  // namespace orbit_client_symbols

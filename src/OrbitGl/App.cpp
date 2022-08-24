@@ -2004,9 +2004,8 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_id.file_path)}};
   }
 
-  const auto it = symbol_files_currently_being_retrieved_.find(module_id);
-  if (it != symbol_files_currently_being_retrieved_.end()) {
-    return it->second;
+  if (auto result = symbol_finder_->GetRetrievingResultForModule(module_id); result.has_value()) {
+    return result.value();
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -2045,11 +2044,11 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
                       });
           }));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, final_result);
+  symbol_finder_->AddToCurrentlyRetrieving(module_id, final_result);
   final_result.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_being_retrieved_.erase(module_id);
+        symbol_finder_->RemoveFromCurrentlyRetrieving(module_id);
       });
 
   return final_result;

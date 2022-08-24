@@ -6,6 +6,8 @@
 
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::ModuleIdentifier;
+
 namespace orbit_client_symbols {
 
 std::optional<SymbolFinder::SymbolFindingResult> SymbolFinder::GetDownloadingResultByModulePath(
@@ -39,6 +41,27 @@ void SymbolFinder::AddToCurrentlyDownloading(std::string module_file_path,
 void SymbolFinder::RemoveFromCurrentlyDownloading(const std::string& module_file_path) {
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
   symbol_files_currently_downloading_.erase(module_file_path);
+}
+
+std::optional<SymbolFinder::SymbolFindingResult> SymbolFinder::GetRetrievingResultForModule(
+    const ModuleIdentifier& module_id) const {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  const auto it = symbol_files_currently_retrieving_.find(module_id);
+  if (it == symbol_files_currently_retrieving_.end()) return std::nullopt;
+
+  return it->second;
+}
+
+void SymbolFinder::AddToCurrentlyRetrieving(ModuleIdentifier module_id,
+                                            SymbolFindingResult finding_result) {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  symbol_files_currently_retrieving_.emplace(std::move(module_id), std::move(finding_result));
+}
+
+void SymbolFinder::RemoveFromCurrentlyRetrieving(
+    const orbit_client_data::ModuleIdentifier& module_id) {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  symbol_files_currently_retrieving_.erase(module_id);
 }
 
 }  // namespace orbit_client_symbols
