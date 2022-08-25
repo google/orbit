@@ -30,18 +30,18 @@ _____________________________
      --------------------
  */
 
-static constexpr uint64_t kLeftTimerStart = 2;
-static constexpr uint64_t kLeftTimerEnd = 6;
-static constexpr uint64_t kMiddleTimerStart = 5;
-static constexpr uint64_t kMiddleTimerEnd = 9;
-static constexpr uint64_t kRightTimerStart = 8;
-static constexpr uint64_t kRightTimerEnd = 12;
-static constexpr uint64_t kNumTimers = 3;
-static constexpr uint64_t kDepth = 2;
-static constexpr uint64_t kMinTimestamp = 2;
-static constexpr uint64_t kMaxTimestamp = 12;
+constexpr uint64_t kLeftTimerStart = 2;
+constexpr uint64_t kLeftTimerEnd = 6;
+constexpr uint64_t kMiddleTimerStart = 5;
+constexpr uint64_t kMiddleTimerEnd = 9;
+constexpr uint64_t kRightTimerStart = 8;
+constexpr uint64_t kRightTimerEnd = 12;
+constexpr uint64_t kNumTimers = 3;
+constexpr uint64_t kDepth = 2;
+constexpr uint64_t kMinTimestamp = 2;
+constexpr uint64_t kMaxTimestamp = 12;
 
-TimerInfo GetLeftTimer() {
+static TimerInfo GetLeftTimer() {
   TimerInfo timer_info_left;
   timer_info_left.set_start(kLeftTimerStart);
   timer_info_left.set_end(kLeftTimerEnd);
@@ -49,7 +49,7 @@ TimerInfo GetLeftTimer() {
   return timer_info_left;
 }
 
-TimerInfo GetRightTimer() {
+static TimerInfo GetRightTimer() {
   TimerInfo timer_info_right;
   timer_info_right.set_start(kRightTimerStart);
   timer_info_right.set_end(kRightTimerEnd);
@@ -57,7 +57,7 @@ TimerInfo GetRightTimer() {
   return timer_info_right;
 }
 
-TimerInfo GetDownTimer() {
+static TimerInfo GetDownTimer() {
   TimerInfo timer_info_down;
   timer_info_down.set_start(kMiddleTimerStart);
   timer_info_down.set_end(kMiddleTimerEnd);
@@ -65,7 +65,7 @@ TimerInfo GetDownTimer() {
   return timer_info_down;
 }
 
-TimerInfo GetMiddleTimer() {
+static TimerInfo GetMiddleTimer() {
   TimerInfo timer_info_middle;
   timer_info_middle.set_start(kMiddleTimerStart);
   timer_info_middle.set_end(kMiddleTimerEnd);
