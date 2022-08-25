@@ -199,7 +199,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
       if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
         ORBIT_ERROR("SchedulingSlice with unknown pid");
       }
-      scheduling_slice->set_callstack_id(0);
+      scheduling_slice->set_callstack_id(1);
       listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
     }
   }
@@ -218,7 +218,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
         state_manager_.OnSchedSwitchOut(event_timestamp, event_data.prev_tid, new_state);
 
     if (out_slice.has_value()) {
-      out_slice->set_callstack_id(0);
+      out_slice->set_callstack_id(1);
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -232,7 +232,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
         state_manager_.OnSchedSwitchIn(event_timestamp, event_data.next_tid);
 
     if (in_slice.has_value()) {
-      in_slice->set_callstack_id(0);
+      in_slice->set_callstack_id(1);
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);
@@ -272,7 +272,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
       event_data.was_unblocked_by_pid);
 
   if (state_slice.has_value()) {
-    state_slice->set_callstack_id(0);
+    state_slice->set_callstack_id(1);
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {
       ++(*thread_state_counter_);
