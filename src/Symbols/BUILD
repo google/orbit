@@ -38,5 +38,6 @@ orbit_cc_test(
         "//src/OrbitBase",
         "//src/TestUtils",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/hash",
     ],
 )
