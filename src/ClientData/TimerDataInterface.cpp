@@ -15,9 +15,14 @@ uint64_t GetNextPixelBoundaryTimeNs(uint64_t current_timestamp_ns, uint32_t reso
   uint64_t current_pixel = (current_ns_from_start * resolution) / total_ns;
   uint64_t next_pixel = current_pixel + 1;
 
-  // To calculate the timestamp of a pixel boundary, we make a ceiling to be consistent to how we
-  // calculate current_pixel.
-  uint64_t next_pixel_ns_from_min = (total_ns * next_pixel + resolution - 1) / resolution;
+  // Calculates `ceil(dividend / divisor)` only using integers assuming dividend is not 0.
+  const auto rounding_up_division = [](uint64_t dividend, uint64_t divisor) -> uint64_t {
+    return 1 + (dividend - 1) / divisor;
+  };
+
+  // To calculate the timestamp of a pixel boundary, we make a cross-multiplication rounding_up to
+  // be consistent to how we calculate current_pixel.
+  uint64_t next_pixel_ns_from_min = rounding_up_division(total_ns * next_pixel, resolution);
 
   return start_ns + next_pixel_ns_from_min;
 }
