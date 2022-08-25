@@ -46,7 +46,9 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] uint32_t GetDepth() const override { return depth_; }
   [[nodiscard]] uint32_t GetProcessId() const override { return process_id_; }
 
-  // Relative timers queries
+  // Relative timers queries.
+  // TODO(b/221024788): These queries assume Timers are inserted in order and don't work for
+  // GpuSubmissionTrack.
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstAfterStartTime(uint64_t time,
                                                                              uint32_t depth) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetFirstBeforeStartTime(uint64_t time,
