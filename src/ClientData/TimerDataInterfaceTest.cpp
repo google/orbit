@@ -8,44 +8,54 @@
 
 namespace orbit_client_data {
 
-TEST(TimerData, GetNextPixelBoundaryTimeNs) {
-  const uint64_t kStartNs = 100;
-  const uint64_t kEndNs = 200;
-  uint64_t num_visible_pixels = kEndNs - kStartNs;  // 100
+constexpr uint64_t kStartNs = 100;
+constexpr uint64_t kEndNs = 200;
+static std::vector<uint32_t> kPixelResolutionsInTest = {1, 20, 30, 50, 100};
 
-  std::vector<uint32_t> kPixelResolutionsInTest = {1, 20, 30, 50, 100};
+TEST(GetNextPixelBoundaryTimeNs, TimestampAreInRange) {
+  constexpr uint64_t visible_ns = kEndNs - kStartNs;  // 100
 
-  // First we test for different resolutions that the next pixel is greater than the current one but
-  // also not greater than the maximum number of nanoseconds per pixel.
+  // Calculates `ceil(dividend / divisor)` only using integers assuming dividend and divisor are not
+  // 0.
+  const auto rounding_up_division = [](uint64_t dividend, uint64_t divisor) -> uint64_t {
+    return 1 + (dividend - 1) / divisor;
+  };
+
   for (uint32_t resolution : kPixelResolutionsInTest) {
     // The max number of nanoseconds per pixel can be calculated using a ceil function.
-    uint32_t max_nanoseconds_per_pixel = (num_visible_pixels + resolution - 1) / resolution;
+    const uint64_t max_nanoseconds_per_pixel = rounding_up_division(visible_ns, resolution);
     for (uint64_t timestamp_ns = kStartNs; timestamp_ns < kEndNs; timestamp_ns++) {
-      uint64_t next_pixel_ns =
+      const uint64_t next_pixel_ns =
           GetNextPixelBoundaryTimeNs(timestamp_ns, resolution, kStartNs, kEndNs);
+      // The timestamp of the next pixel should be between the current one and the current plus the
+      // maximum number of nanoseconds per pixel.
       EXPECT_GT(next_pixel_ns, timestamp_ns);
       EXPECT_LE(next_pixel_ns, timestamp_ns + max_nanoseconds_per_pixel);
     }
   }
+}
 
-  // Second we test that iterating through visible pixels using GetNextPixelBoundaryTimeNs goes once
-  // per pixel.
+TEST(GetNextPixelBoundaryTimeNs, NumIterations) {
+  // Iterating through visible pixels using GetNextPixelBoundaryTimeNs should go once per pixel.
   for (uint32_t resolution : kPixelResolutionsInTest) {
-    int it = 0;
+    uint32_t num_iterations = 0;
     uint64_t current_timestamp_ns = kStartNs;
     while (current_timestamp_ns < kEndNs) {
-      ++it;
+      ++num_iterations;
       current_timestamp_ns =
           GetNextPixelBoundaryTimeNs(current_timestamp_ns, resolution, kStartNs, kEndNs);
     }
-    EXPECT_EQ(it, resolution);
+    EXPECT_EQ(num_iterations, resolution);
   }
+}
+
+TEST(GetNextPixelBoundaryTimeNs, ExtremeZoomInBorderCase) {
+  constexpr uint64_t visible_ns = kEndNs - kStartNs;
 
   // If there are more visible pixels than visible timestamps, we will have several pixels with the
   // same timestamp. In this case to avoid an infinite loop, the next pixel timestamp should be
   // greater than the one queried.
-  EXPECT_EQ(GetNextPixelBoundaryTimeNs(kStartNs, num_visible_pixels * 10, kStartNs, kEndNs),
-            kStartNs + 1);
+  EXPECT_EQ(GetNextPixelBoundaryTimeNs(kStartNs, visible_ns * 10, kStartNs, kEndNs), kStartNs + 1);
 }
 
 }  // namespace orbit_client_data

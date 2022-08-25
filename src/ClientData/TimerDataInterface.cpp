@@ -15,7 +15,8 @@ uint64_t GetNextPixelBoundaryTimeNs(uint64_t current_timestamp_ns, uint32_t reso
   uint64_t current_pixel = (current_ns_from_start * resolution) / total_ns;
   uint64_t next_pixel = current_pixel + 1;
 
-  // Calculates `ceil(dividend / divisor)` only using integers assuming dividend is not 0.
+  // Calculates `ceil(dividend / divisor)` only using integers assuming dividend and divisor are not
+  // 0.
   const auto rounding_up_division = [](uint64_t dividend, uint64_t divisor) -> uint64_t {
     return 1 + (dividend - 1) / divisor;
   };
