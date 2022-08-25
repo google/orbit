@@ -1362,22 +1362,15 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
   } else if (is_sched_switch_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-
-    if (pid != target_pid_) {
-      ring_buffer->SkipRecord(header);
-      return timestamp_ns;
-    }
-    SchedSwitchWithStackPerfEvent event = ConsumeSchedSwitchWithStackPerfEvent(ring_buffer, header);
+    SchedSwitchWithStackPerfEvent event =
+        ConsumeSchedSwitchWithStackPerfEvent(ring_buffer, header, pid == target_pid_);
     DeferEvent(std::move(event));
+    ++stats_.sched_switch_count;
 
   } else if (is_sched_wakeup_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-
-    if (pid != target_pid_) {
-      ring_buffer->SkipRecord(header);
-      return timestamp_ns;
-    }
-    SchedWakeupWithStackPerfEvent event = ConsumeSchedWakeupWithStackPerfEvent(ring_buffer, header);
+    SchedWakeupWithStackPerfEvent event =
+        ConsumeSchedWakeupWithStackPerfEvent(ring_buffer, header, pid == target_pid_);
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {

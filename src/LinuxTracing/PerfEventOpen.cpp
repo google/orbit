@@ -218,7 +218,7 @@ int tracepoint_with_callchain_event_open(const char* tracepoint_category,
 }
 
 int tracepoint_with_stack_event_open(const char* tracepoint_category, const char* tracepoint_name,
-                                     pid_t pid, int32_t cpu, uint16_t stack_dump_size) {
+                                     pid_t pid, int32_t cpu, uint16_t /*stack_dump_size*/) {
   int tp_id = GetTracepointId(tracepoint_category, tracepoint_name);
   if (tp_id == -1) {
     return -1;
@@ -229,7 +229,7 @@ int tracepoint_with_stack_event_open(const char* tracepoint_category, const char
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_RAW;
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
-  pe.sample_stack_user = stack_dump_size;
+  pe.sample_stack_user = 2048;
 
   return generic_event_open(&pe, pid, cpu);
 }

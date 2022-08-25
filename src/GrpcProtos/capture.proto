@@ -609,7 +609,7 @@ message ThreadStateSlice {
   uint32 wakeup_tid = 7;
   uint32 wakeup_pid = 8;
 
-  uint32 callstack_id = 10;
+  uint64 callstack_id = 10;
 }
 
 message AddressInfo {
@@ -948,7 +948,7 @@ message ProducerCaptureEvent {
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
-    TracepointCallstack thread_state_change_callstack = 50;
+    TracepointCallstack tracepoint_callstack = 50;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent

@@ -443,7 +443,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.thread_state_slice().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
-      case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateChangeCallstack:
+      case orbit_grpc_protos::ProducerCaptureEvent::kTracepointCallstack:
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningInstrumentingWithUprobesEvent:

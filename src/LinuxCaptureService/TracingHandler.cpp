@@ -55,7 +55,7 @@ void TracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {
 
 void TracingHandler::OnTracepointCallstack(TracepointCallstack callstack) {
   ProducerCaptureEvent event;
-  *event.mutable_thread_state_change_callstack() = std::move(callstack);
+  *event.mutable_tracepoint_callstack() = std::move(callstack);
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 

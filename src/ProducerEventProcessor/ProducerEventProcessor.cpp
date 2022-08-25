@@ -695,8 +695,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
       break;
-    case ProducerCaptureEvent::kThreadStateChangeCallstack:
-      ProcessTracepointCallstackAndTransferOwnership(event.release_thread_state_change_callstack());
+    case ProducerCaptureEvent::kTracepointCallstack:
+      ProcessTracepointCallstackAndTransferOwnership(event.release_tracepoint_callstack());
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());

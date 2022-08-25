@@ -480,13 +480,16 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 [[nodiscard]] SchedWakeupWithStackPerfEvent ConsumeSchedWakeupWithStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+  perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU};
+
+  if (get_callstack) {
+    flags.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  }
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
@@ -507,18 +510,22 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
               .regs = std::move(res.regs),
               .dyn_size = res.dyn_size,
               .data = std::move(res.stack_data),
+              .just_tracepoint = !get_callstack,
           },
   };
 }
 
 [[nodiscard]] SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+  perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU};
+
+  if (get_callstack) {
+    flags.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  }
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
@@ -545,6 +552,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
               .regs = std::move(res.regs),
               .dyn_size = res.dyn_size,
               .data = std::move(res.stack_data),
+              .just_tracepoint = !get_callstack,
           },
   };
 }

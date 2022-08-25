@@ -269,6 +269,10 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
+  if (event_data.just_tracepoint) {
+    return;
+  }
+
   return_address_manager_->PatchSample(event_data.was_unblocked_by_tid,
                                        event_data.GetRegisters().sp,
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
@@ -288,7 +292,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
   LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event_data.was_unblocked_by_tid, current_maps_->Get(),
-                        event_data.GetRegistersAsArray(), stack_slices);
+                        event_data.GetRegistersAsArray(), stack_slices, true, 30);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
@@ -319,6 +323,10 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
+  if (event_data.just_tracepoint) {
+    return;
+  }
+
   return_address_manager_->PatchSample(event_data.next_tid, event_data.GetRegisters().sp,
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
 
@@ -335,8 +343,9 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     }
   }
 
-  LibunwindstackResult libunwindstack_result = unwinder_->Unwind(
-      event_data.next_tid, current_maps_->Get(), event_data.GetRegistersAsArray(), stack_slices);
+  LibunwindstackResult libunwindstack_result =
+      unwinder_->Unwind(event_data.next_tid, current_maps_->Get(), event_data.GetRegistersAsArray(),
+                        stack_slices, true, 30);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
