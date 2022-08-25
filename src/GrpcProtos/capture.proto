@@ -128,7 +128,6 @@ message SchedulingSlice {
   int32 core = 3;
   uint64 duration_ns = 6;
   uint64 out_timestamp_ns = 5;
-  uint32 callstack_id = 7;
 }
 
 message FunctionCall {

@@ -199,7 +199,6 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
       if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
         ORBIT_ERROR("SchedulingSlice with unknown pid");
       }
-      scheduling_slice->set_callstack_id(1);
       listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
     }
   }

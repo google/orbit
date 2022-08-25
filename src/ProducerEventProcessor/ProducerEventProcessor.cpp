@@ -6,6 +6,8 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <utility>
+
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -172,15 +174,6 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // <producer_id, producer_string_id> -> client_string_id
   absl::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t>
       producer_interned_string_id_to_client_string_id_;
-
-  // Needed to allow merging between call stacks and tracepoints, see design doc:
-  // go/stadia-orbit-tracepoint-callstack
-  std::optional<orbit_grpc_protos::ThreadStateSlice> thread_state_slice_waiting_for_callstack =
-      std::nullopt;
-  std::optional<orbit_grpc_protos::SchedulingSlice> scheduling_slice_waiting_for_callstack =
-      std::nullopt;
-  std::optional<orbit_grpc_protos::TracepointCallstack>
-      callstack_waiting_for_thread_state_or_scheduling_slice = std::nullopt;
 };
 
 void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {

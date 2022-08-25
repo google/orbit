@@ -298,7 +298,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   TracepointCallstack tracepoint_callstack;
-  tracepoint_callstack.set_tid(event_data.was_unblocked_by_tid);
+  tracepoint_callstack.set_tid(event_data.woken_tid);
   tracepoint_callstack.set_timestamp_ns(event_timestamp);
 
   Callstack* callstack = tracepoint_callstack.mutable_callstack();
