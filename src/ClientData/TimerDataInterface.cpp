@@ -15,16 +15,9 @@ uint64_t GetNextPixelBoundaryTimeNs(uint64_t current_timestamp_ns, uint32_t reso
   uint64_t current_pixel = (current_ns_from_start * resolution) / total_ns;
   uint64_t next_pixel = current_pixel + 1;
 
-  // To calculate the timestamp of a pixel boundary, we round to the left similar to how it works in
-  // other parts of Orbit.
-  uint64_t next_pixel_ns_from_min = total_ns * next_pixel / resolution;
-
-  // Border case when we have a lot of pixels who have the same timestamp (because the number of
-  // pixels is less than the nanoseconds in screen). In this case, as we've already drawn in the
-  // current_timestamp, the next pixel to draw should have the next timestamp.
-  if (next_pixel_ns_from_min == current_ns_from_start) {
-    next_pixel_ns_from_min = current_ns_from_start + 1;
-  }
+  // To calculate the timestamp of a pixel boundary, we make a ceiling to be consistent to how we
+  // calculate current_pixel.
+  uint64_t next_pixel_ns_from_min = (total_ns * next_pixel + resolution - 1) / resolution;
 
   return start_ns + next_pixel_ns_from_min;
 }
