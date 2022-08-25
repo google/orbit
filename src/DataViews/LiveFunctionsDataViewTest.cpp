@@ -186,7 +186,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
     orbit_client_data::ModuleData* module_data = module_manager->GetMutableModuleByModuleIdentifier(
-        orbit_client_data::ModuleIdentifier{kModulePaths[i], kBuildIds[i]});
+        orbit_symbols::ModuleIdentifier{kModulePaths[i], kBuildIds[i]});
     module_data->AddSymbols(module_symbols);
 
     const FunctionInfo& function = *module_data->FindFunctionByVirtualAddress(kAddresses[i], true);

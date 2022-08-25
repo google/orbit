@@ -73,7 +73,6 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
@@ -118,6 +117,7 @@
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
+#include "Symbols/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -1900,7 +1900,7 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
       OpenAndDeleteOnClose(std::move(dialog));
 
   dialog_ptr->AddAnnotatingSourceCode(function_info,
-                                      [this](const orbit_client_data::ModuleIdentifier& module_id) {
+                                      [this](const orbit_symbols::ModuleIdentifier& module_id) {
                                         return app_->RetrieveModuleWithDebugInfo(module_id);
                                       });
 }

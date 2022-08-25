@@ -13,11 +13,13 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
+#include "Symbols/ModuleIdentifier.h"
 #include "absl/synchronization/mutex.h"
+
+using orbit_symbols::ModuleIdentifier;
 
 namespace orbit_client_data {
 

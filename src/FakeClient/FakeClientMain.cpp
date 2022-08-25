@@ -35,6 +35,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadPool.h"
+#include "Symbols/ModuleIdentifier.h"
 
 namespace {
 
@@ -228,7 +229,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
   module_manager
-      ->GetMutableModuleByModuleIdentifier(orbit_client_data::ModuleIdentifier{file_path, build_id})
+      ->GetMutableModuleByModuleIdentifier(orbit_symbols::ModuleIdentifier{file_path, build_id})
       ->AddSymbols(module_symbols);
 }
 

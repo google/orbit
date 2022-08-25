@@ -20,6 +20,7 @@
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_symbols::ModuleIdentifier;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 

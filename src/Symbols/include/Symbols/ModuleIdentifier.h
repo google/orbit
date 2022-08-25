@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_MODULE_IDENTIFIER_H_
-#define CLIENT_DATA_MODULE_IDENTIFIER_H_
+#ifndef SYMBOLS_MODULE_IDENTIFIER_H_
+#define SYMBOLS_MODULE_IDENTIFIER_H_
 
 #include <string>
 #include <tuple>
 
-namespace orbit_client_data {
+namespace orbit_symbols {
 
 struct ModuleIdentifier {
   // TODO (b/241203463) Consider changing the type to std::filesystem::path
@@ -27,6 +27,6 @@ struct ModuleIdentifier {
   }
 };
 
-}  // namespace orbit_client_data
+}  // namespace orbit_symbols
 
-#endif  // CLIENT_DATA_MODULE_IDENTIFIER_H_
+#endif  // SYMBOLS_MODULE_IDENTIFIER_H_

@@ -11,7 +11,6 @@
 #include <filesystem>
 
 #include "AnnotatingSourceCodeDialog.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
@@ -21,6 +20,7 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
+#include "Symbols/ModuleIdentifier.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "Test/Path.h"
 
@@ -81,7 +81,7 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
   dialog.SetDisassemblyCodeReport(std::move(report));
 
   bool callback_called = false;
-  dialog.AddAnnotatingSourceCode(function_info, [&](const orbit_client_data::ModuleIdentifier&) {
+  dialog.AddAnnotatingSourceCode(function_info, [&](const orbit_symbols::ModuleIdentifier&) {
     callback_called = true;
     return orbit_base::Future<ErrorMessageOr<std::filesystem::path>>{file_path};
   });

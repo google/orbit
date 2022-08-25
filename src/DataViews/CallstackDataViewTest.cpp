@@ -22,6 +22,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
+#include "Symbols/ModuleIdentifier.h"
 
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
@@ -115,7 +116,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
       orbit_client_data::ModuleData* module_data =
           module_manager->GetMutableModuleByModuleIdentifier(
-              orbit_client_data::ModuleIdentifier{kModulePaths[i], kModuleBuildIds[i]});
+              orbit_symbols::ModuleIdentifier{kModulePaths[i], kModuleBuildIds[i]});
       module_data->AddSymbols(module_symbols);
     }
   }

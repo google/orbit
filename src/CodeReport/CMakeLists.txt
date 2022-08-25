@@ -33,7 +33,9 @@ target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
                                        DisassemblerTest.cpp
                                        DisassemblyReportTest.cpp
                                        SourceCodeReportTest.cpp)
-target_link_libraries(CodeReportTests PRIVATE CodeReport
-                                              ModuleUtils
-                                              GTest::Main)
+target_link_libraries(CodeReportTests PRIVATE 
+        CodeReport
+        ModuleUtils
+        Symbols
+        GTest::Main)
 register_test(CodeReportTests)

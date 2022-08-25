@@ -23,6 +23,7 @@ target_link_libraries(OrbitFakeClient PRIVATE
         GrpcProtos
         ModuleUtils
         ObjectUtils
-        OrbitBase)
+        OrbitBase
+        Symbols)
 
 strip_symbols(OrbitFakeClient)

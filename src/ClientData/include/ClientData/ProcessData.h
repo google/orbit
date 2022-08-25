@@ -18,12 +18,12 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "Symbols/ModuleIdentifier.h"
 
 namespace orbit_client_data {
 
@@ -40,8 +40,8 @@ class ModuleInMemory {
   [[nodiscard]] uint64_t end() const { return end_; }
   [[nodiscard]] const std::string& file_path() const { return file_path_; }
   [[nodiscard]] const std::string& build_id() const { return build_id_; }
-  [[nodiscard]] ModuleIdentifier module_id() const {
-    return ModuleIdentifier{file_path(), build_id()};
+  [[nodiscard]] orbit_symbols::ModuleIdentifier module_id() const {
+    return orbit_symbols::ModuleIdentifier{file_path(), build_id()};
   }
   [[nodiscard]] std::string FormattedAddressRange() const {
     return absl::StrFormat("[%016x - %016x]", start_, end_);
@@ -88,7 +88,7 @@ class ProcessData final {
                                                              const std::string& build_id) const;
 
   [[nodiscard]] std::map<uint64_t, ModuleInMemory> GetMemoryMapCopy() const;
-  [[nodiscard]] std::vector<ModuleIdentifier> GetUniqueModuleIdentifiers() const;
+  [[nodiscard]] std::vector<orbit_symbols::ModuleIdentifier> GetUniqueModuleIdentifiers() const;
 
   [[nodiscard]] std::vector<std::string> FindModuleBuildIdsByPath(
       const std::string& module_path) const;
