@@ -19,6 +19,7 @@ orbit_cc_library(
         "//src/Introspection",
         "//src/ObjectUtils",
         "//src/OrbitBase",
+        "//src/SymbolProvider",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings",
@@ -38,6 +39,5 @@ orbit_cc_test(
         "//src/OrbitBase",
         "//src/TestUtils",
         "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/hash",
     ],
 )

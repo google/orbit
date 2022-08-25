@@ -36,6 +36,6 @@ target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
 target_link_libraries(CodeReportTests PRIVATE 
         CodeReport
         ModuleUtils
-        Symbols
+        SymbolProvider
         GTest::Main)
 register_test(CodeReportTests)

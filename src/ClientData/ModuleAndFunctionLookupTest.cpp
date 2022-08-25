@@ -9,7 +9,7 @@
 #include "ClientData/ModuleManager.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
@@ -20,7 +20,7 @@ namespace orbit_client_data {
 TEST(ModuleAndFunctionLookup, FindFunctionByModulePathBuildIdAndVirtualAddress) {
   constexpr const char* kModuleFilePath = "/path/to/module";
   constexpr const char* kModuleBuildId = "build_id";
-  const orbit_symbols::ModuleIdentifier kModuleId{kModuleFilePath, kModuleBuildId};
+  const orbit_symbol_provider::ModuleIdentifier kModuleId{kModuleFilePath, kModuleBuildId};
 
   constexpr const char* kFunctionName = "foo()";
   constexpr uint64_t kFunctionVirtualAddress = 0x3000;

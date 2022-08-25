@@ -10,7 +10,6 @@ target_sources(Symbols PRIVATE
         SymbolHelper.cpp
         SymbolUtils.cpp)
 target_sources(Symbols PUBLIC 
-        include/Symbols/ModuleIdentifier.h
         include/Symbols/SymbolHelper.h
         include/Symbols/SymbolUtils.h)
 
@@ -21,11 +20,11 @@ target_link_libraries(Symbols PUBLIC
         GrpcProtos
         Introspection
         ObjectUtils
-        OrbitBase)
+        OrbitBase
+        SymbolProvider)
 
 add_executable(SymbolsTests)
 target_sources(SymbolsTests PRIVATE 
-        ModuleIdentifierTest.cpp
         SymbolHelperTest.cpp
         SymbolUtilsTest.cpp)
 target_link_libraries(SymbolsTests PRIVATE Symbols TestUtils GTest::Main)

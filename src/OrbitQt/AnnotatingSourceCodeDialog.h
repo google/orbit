@@ -23,7 +23,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_qt {
 
@@ -50,7 +50,7 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   // Same interface as OrbitApp::RetrieveModuleWithDebugInfo;
   using RetrieveModuleWithDebugInfoCallback =
       std::function<orbit_base::Future<ErrorMessageOr<std::filesystem::path>>(
-          const orbit_symbols::ModuleIdentifier&)>;
+          const orbit_symbol_provider::ModuleIdentifier&)>;
 
   void SetDisassemblyCodeReport(orbit_code_report::DisassemblyReport report) {
     report_ = std::move(report);

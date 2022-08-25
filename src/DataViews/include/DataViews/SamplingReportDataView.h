@@ -19,7 +19,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "OrbitBase/Result.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/container/flat_hash_set.h"
 
 class SamplingReport;
@@ -60,7 +60,7 @@ class SamplingReportDataView : public DataView {
   void DoFilter() override;
   const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
-  [[nodiscard]] std::optional<orbit_symbols::ModuleIdentifier> GetModuleIdentifierFromRow(
+  [[nodiscard]] std::optional<orbit_symbol_provider::ModuleIdentifier> GetModuleIdentifierFromRow(
       int row) const;
 
  private:

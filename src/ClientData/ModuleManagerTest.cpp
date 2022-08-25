@@ -17,7 +17,7 @@ namespace orbit_client_data {
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
-using orbit_symbols::ModuleIdentifier;
+using orbit_symbol_provider::ModuleIdentifier;
 
 TEST(ModuleManager, GetModuleByModuleIdentifier) {
   std::string name = "name of module";

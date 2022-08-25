@@ -50,14 +50,14 @@
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_metrics_uploader::OrbitLogEvent;
-using orbit_symbols::ModuleIdentifier;
+using orbit_symbol_provider::ModuleIdentifier;
 
 [[nodiscard]] static std::optional<float> FloatFromIndex(const QModelIndex& index) {
   bool is_float = false;

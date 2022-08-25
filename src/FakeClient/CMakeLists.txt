@@ -24,6 +24,6 @@ target_link_libraries(OrbitFakeClient PRIVATE
         ModuleUtils
         ObjectUtils
         OrbitBase
-        Symbols)
+        SymbolProvider)
 
 strip_symbols(OrbitFakeClient)

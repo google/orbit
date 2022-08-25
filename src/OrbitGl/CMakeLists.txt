@@ -179,6 +179,7 @@ target_link_libraries(
          PresetFile
          StringManager
          Qt5::Gui
+         SymbolProvider
          Symbols
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype

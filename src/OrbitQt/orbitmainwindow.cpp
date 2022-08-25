@@ -117,7 +117,7 @@
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -1899,10 +1899,10 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
   QPointer<orbit_qt::AnnotatingSourceCodeDialog> dialog_ptr =
       OpenAndDeleteOnClose(std::move(dialog));
 
-  dialog_ptr->AddAnnotatingSourceCode(function_info,
-                                      [this](const orbit_symbols::ModuleIdentifier& module_id) {
-                                        return app_->RetrieveModuleWithDebugInfo(module_id);
-                                      });
+  dialog_ptr->AddAnnotatingSourceCode(
+      function_info, [this](const orbit_symbol_provider::ModuleIdentifier& module_id) {
+        return app_->RetrieveModuleWithDebugInfo(module_id);
+      });
 }
 
 void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,

@@ -43,7 +43,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -51,7 +51,7 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
-using orbit_symbols::ModuleIdentifier;
+using orbit_symbol_provider::ModuleIdentifier;
 
 using orbit_client_protos::TimerInfo;
 

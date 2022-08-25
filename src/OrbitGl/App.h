@@ -89,7 +89,7 @@
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "StringManager/StringManager.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
 class OrbitApp final : public DataViewFactory,
@@ -334,7 +334,7 @@ class OrbitApp final : public DataViewFactory,
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
   // local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> RetrieveModule(
-      const orbit_symbols::ModuleIdentifier& module_id);
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
@@ -354,14 +354,14 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
       const orbit_client_data::ModuleData* module);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
-      const orbit_symbols::ModuleIdentifier& module_id);
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
 
   // This method is pretty similar to `RetrieveModule`, but it also requires debug information to be
   // present.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const orbit_client_data::ModuleData* module);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      const orbit_symbols::ModuleIdentifier& module_id);
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
 
   orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() override;
   orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
@@ -414,11 +414,11 @@ class OrbitApp final : public DataViewFactory,
     return manual_instrumentation_manager_.get();
   }
   [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByModuleIdentifier(
-      const orbit_symbols::ModuleIdentifier& module_id) override {
+      const orbit_symbol_provider::ModuleIdentifier& module_id) override {
     return module_manager_->GetMutableModuleByModuleIdentifier(module_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
-      const orbit_symbols::ModuleIdentifier& module_id) const override {
+      const orbit_symbol_provider::ModuleIdentifier& module_id) const override {
     return module_manager_->GetModuleByModuleIdentifier(module_id);
   }
   [[nodiscard]] const orbit_client_data::ProcessData& GetConnectedOrLoadedProcess() const;
@@ -578,7 +578,7 @@ class OrbitApp final : public DataViewFactory,
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
-  void AddSymbols(const orbit_symbols::ModuleIdentifier& module_id,
+  void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
                   const orbit_grpc_protos::ModuleSymbols& symbols);
   ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>> GetLoadedModulesByPath(
       const std::filesystem::path& module_path);
@@ -596,7 +596,8 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> FindModuleLocally(
       const orbit_client_data::ModuleData* module_data);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
-      const std::filesystem::path& symbols_path, const orbit_symbols::ModuleIdentifier& module_id);
+      const std::filesystem::path& symbols_path,
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
 
   static ErrorMessageOr<orbit_preset_file::PresetFile> ReadPresetFromFile(
       const std::filesystem::path& filename);
@@ -688,7 +689,7 @@ class OrbitApp final : public DataViewFactory,
   // symbol_files_currently_being_retrieved_.
   // ONLY access this from the main thread.
   absl::flat_hash_map<
-      orbit_symbols::ModuleIdentifier,
+      orbit_symbol_provider::ModuleIdentifier,
       orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>>
       symbol_files_currently_being_retrieved_;
 
@@ -698,14 +699,14 @@ class OrbitApp final : public DataViewFactory,
   // symbol_files_currently_being_retrieved_ or symbol_files_currently_downloading_, it is also
   // contained in symbols_currently_loading_.
   // ONLY access this from the main thread.
-  absl::flat_hash_map<orbit_symbols::ModuleIdentifier,
+  absl::flat_hash_map<orbit_symbol_provider::ModuleIdentifier,
                       orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>>
       symbols_currently_loading_;
 
   // Set of modules where a symbol loading error has occurred. The module identifier consists of
   // file path and build ID.
   // ONLY access this from the main thread.
-  absl::flat_hash_set<orbit_symbols::ModuleIdentifier> modules_with_symbol_loading_error_;
+  absl::flat_hash_set<orbit_symbol_provider::ModuleIdentifier> modules_with_symbol_loading_error_;
 
   // Set of modules for which the download is disabled.
   // ONLY access this from the main thread.

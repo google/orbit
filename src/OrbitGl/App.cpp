@@ -97,7 +97,7 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 
@@ -128,7 +128,7 @@ using orbit_client_data::TimerBlock;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
-using orbit_symbols::ModuleIdentifier;
+using orbit_symbol_provider::ModuleIdentifier;
 
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetModule;

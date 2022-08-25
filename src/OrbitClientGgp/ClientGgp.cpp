@@ -36,7 +36,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
 ABSL_DECLARE_FLAG(bool, thread_state);
@@ -200,8 +200,9 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
-  main_module_ = module_manager_.GetMutableModuleByModuleIdentifier(
-      orbit_symbols::ModuleIdentifier{target_process_->full_path(), target_process_build_id});
+  main_module_ =
+      module_manager_.GetMutableModuleByModuleIdentifier(orbit_symbol_provider::ModuleIdentifier{
+          target_process_->full_path(), target_process_build_id});
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }

@@ -80,7 +80,7 @@ target_link_libraries(ClientData PUBLIC
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase
-        Symbols
+        SymbolProvider
         xxHash::xxHash)
 
 add_executable(ClientDataTests)

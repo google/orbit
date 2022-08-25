@@ -47,7 +47,7 @@ target_link_libraries(DataViews PUBLIC
         PresetFile
         QtUtils
         Statistics
-        Symbols
+        SymbolProvider
         CONAN_PKG::abseil)
 
 add_executable(DataViewsTests)

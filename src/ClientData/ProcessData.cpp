@@ -12,7 +12,7 @@
 
 #include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -195,9 +195,10 @@ bool ProcessData::IsModuleLoadedByProcess(const ModuleData* module) const {
                      });
 }
 
-std::vector<orbit_symbols::ModuleIdentifier> ProcessData::GetUniqueModuleIdentifiers() const {
+std::vector<orbit_symbol_provider::ModuleIdentifier> ProcessData::GetUniqueModuleIdentifiers()
+    const {
   absl::MutexLock lock(&mutex_);
-  absl::flat_hash_set<orbit_symbols::ModuleIdentifier> module_keys;
+  absl::flat_hash_set<orbit_symbol_provider::ModuleIdentifier> module_keys;
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
     module_keys.insert(module_in_memory.module_id());
   }

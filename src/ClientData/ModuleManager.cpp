@@ -16,10 +16,10 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
-#include "Symbols/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/synchronization/mutex.h"
 
-using orbit_symbols::ModuleIdentifier;
+using orbit_symbol_provider::ModuleIdentifier;
 
 namespace orbit_client_data {
 
