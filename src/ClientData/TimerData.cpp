@@ -55,7 +55,7 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimers(uint64_t
       if (!block.Intersects(min_tick, max_tick)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         const orbit_client_protos::TimerInfo* timer = &block[i];
-        if (min_tick <= timer->start() && timer->end() <= max_tick) timers.push_back(timer);
+        if (timer->start() <= max_tick && timer->end() >= min_tick) timers.push_back(timer);
       }
     }
   }
