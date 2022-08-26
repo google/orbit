@@ -13,6 +13,9 @@ licenses(["notice"])
 
 orbit_cc_library(
     name = "SymbolProvider",
+    deps = [
+        "//src/OrbitBase",
+    ],
 )
 
 orbit_cc_test(
