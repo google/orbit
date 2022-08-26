@@ -138,6 +138,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void ClearCallstackInspection() override;
 
+  bool IsConnected() override { return is_connected_; }
+
  protected:
   void closeEvent(QCloseEvent* event) override;
   void resizeEvent(QResizeEvent* event) override;
