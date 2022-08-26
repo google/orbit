@@ -19,12 +19,6 @@ class SymbolProvider {
  public:
   virtual ~SymbolProvider() = default;
 
-  SymbolProvider(SymbolProvider&& other) = default;
-  SymbolProvider& operator=(SymbolProvider&& other) = default;
-
-  SymbolProvider(const SymbolProvider&) = delete;
-  SymbolProvider& operator=(const SymbolProvider&) = delete;
-
   // Search for symbols for the provided module in the SymbolProvider's symbol source. Return true
   // if found.
   [[nodiscard]] virtual orbit_base::Future<bool> FindSymbols(const ModuleIdentifier& module_id) = 0;
