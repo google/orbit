@@ -2015,6 +2015,8 @@ orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
       return_canceled_or = orbit_base::Canceled{};
       break;
     case Result::kStopAndDisable: {
+      metrics_uploader_->SendLogEvent(
+          orbit_metrics_uploader::OrbitLogEvent::ORBIT_SYMBOL_DOWNLOAD_DISABLED_BY_USER);
       orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
       absl::flat_hash_set<std::string> disabled_modules = storage_manager.LoadDisabledModulePaths();
       disabled_modules.emplace(module->file_path());
