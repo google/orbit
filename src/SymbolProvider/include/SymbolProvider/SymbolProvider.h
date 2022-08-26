@@ -14,15 +14,9 @@ namespace orbit_symbol_provider {
 
 // "SymbolProvider" supports retrieving symbols for the provided module from its symbol source, and
 // provides the local file path where symbols are cached if retrieval succeeded.
-// It also allows to query whether module symbols can be found in its symbol source.
 class SymbolProvider {
  public:
   virtual ~SymbolProvider() = default;
-
-  // Search for symbols for the provided module in the SymbolProvider's symbol source. Return an
-  // ErrorMessage if error occurs or symbols are not found, void otherwise.
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<void>> FindSymbols(
-      const ModuleIdentifier& module_id) = 0;
 
   // Retrieve symbols for the provided module from the SymbolProvider's symbol source. Return:
   // - A local file path if successfully retrieve symbols;
