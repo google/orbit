@@ -15,6 +15,7 @@
 #include "App.h"
 #include "AsyncTrack.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
@@ -208,6 +209,11 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       "<br/>"
       "<b>Time:</b> %s",
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
+
+  tooltip += absl::StrFormat(
+      "<br/>"
+      "Callstack Id: %llu",
+      thread_state_slice->callstack_id());
 
   return tooltip;
 }

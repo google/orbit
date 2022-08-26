@@ -343,7 +343,6 @@ struct SchedWakeupWithStackPerfEventData {
   std::unique_ptr<uint64_t[]> regs;
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
-  bool just_tracepoint;
 };
 using SchedWakeupWithStackPerfEvent = TypedPerfEvent<SchedWakeupWithStackPerfEventData>;
 
@@ -369,7 +368,6 @@ struct SchedSwitchWithStackPerfEventData {
   std::unique_ptr<uint64_t[]> regs;
   uint64_t dyn_size;
   std::unique_ptr<uint8_t[]> data;
-  bool just_tracepoint;
 };
 using SchedSwitchWithStackPerfEvent = TypedPerfEvent<SchedSwitchWithStackPerfEventData>;
 

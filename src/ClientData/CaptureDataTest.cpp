@@ -62,23 +62,40 @@ constexpr uint64_t kEnTimestamp3 = 200;
 constexpr uint32_t kWakeupTid = 4200;
 constexpr uint32_t kWakeupPid = 420;
 constexpr uint32_t kInvalidPidAndTid = 0;
+constexpr uint64_t kInvalidCallstackId = 0;
 
-const ThreadStateSliceInfo kSlice1{
-    kFirstTid,        orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, kStTimestamp1,
-    kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
-    kInvalidPidAndTid};
-const ThreadStateSliceInfo kSlice2{
-    kFirstTid,     orbit_grpc_protos::ThreadStateSlice::kRunnable, kStTimestamp2,
-    kEnTimestamp2, ThreadStateSliceInfo::WakeupReason::kUnblocked, kWakeupTid,
-    kWakeupPid};
-const ThreadStateSliceInfo kSlice3{
-    kFirstTid,        orbit_grpc_protos::ThreadStateSlice::kRunning,      kStTimestamp3,
-    kEnTimestamp3,    ThreadStateSliceInfo::WakeupReason::kNotApplicable, kInvalidPidAndTid,
-    kInvalidPidAndTid};
-const ThreadStateSliceInfo kSlice4{
-    kSecondTid,       orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, kStTimestamp1,
-    kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
-    kInvalidPidAndTid};
+const ThreadStateSliceInfo kSlice1{kFirstTid,
+                                   orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep,
+                                   kStTimestamp1,
+                                   kEnTimestamp1,
+                                   ThreadStateSliceInfo::WakeupReason::kNotApplicable,
+                                   kInvalidPidAndTid,
+                                   kInvalidPidAndTid,
+                                   kInvalidCallstackId};
+const ThreadStateSliceInfo kSlice2{kFirstTid,
+                                   orbit_grpc_protos::ThreadStateSlice::kRunnable,
+                                   kStTimestamp2,
+                                   kEnTimestamp2,
+                                   ThreadStateSliceInfo::WakeupReason::kUnblocked,
+                                   kWakeupTid,
+                                   kWakeupPid,
+                                   kInvalidCallstackId};
+const ThreadStateSliceInfo kSlice3{kFirstTid,
+                                   orbit_grpc_protos::ThreadStateSlice::kRunning,
+                                   kStTimestamp3,
+                                   kEnTimestamp3,
+                                   ThreadStateSliceInfo::WakeupReason::kNotApplicable,
+                                   kInvalidPidAndTid,
+                                   kInvalidPidAndTid,
+                                   kInvalidCallstackId};
+const ThreadStateSliceInfo kSlice4{kSecondTid,
+                                   orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep,
+                                   kStTimestamp1,
+                                   kEnTimestamp1,
+                                   ThreadStateSliceInfo::WakeupReason::kNotApplicable,
+                                   kInvalidPidAndTid,
+                                   kInvalidPidAndTid,
+                                   kInvalidCallstackId};
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;

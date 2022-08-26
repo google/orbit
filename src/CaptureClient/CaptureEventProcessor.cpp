@@ -589,6 +589,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       FromGrpcWakeupReasonToInfoWakeupReason(thread_state_slice.wakeup_reason()),
       thread_state_slice.wakeup_tid(),
       thread_state_slice.wakeup_pid(),
+      thread_state_slice.callstack_id(),
   };
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());

@@ -269,7 +269,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
-  if (event_data.just_tracepoint) {
+  if (event_data.data == nullptr) {
     return;
   }
 
@@ -323,11 +323,16 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
-  if (event_data.just_tracepoint) {
+  if (event_data.data == nullptr) {
     return;
   }
+  pid_t tid_of_the_callstack = event_data.prev_tid;
+  if (tid_of_the_callstack == 0) {
+    ORBIT_LOG("----------------");
+    tid_of_the_callstack = event_data.next_tid;
+  }
 
-  return_address_manager_->PatchSample(event_data.next_tid, event_data.GetRegisters().sp,
+  return_address_manager_->PatchSample(tid_of_the_callstack, event_data.GetRegisters().sp,
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
 
   StackSliceView event_stack_slice{event_data.GetRegisters().sp, event_data.GetStackSize(),
@@ -335,7 +340,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   std::vector<StackSliceView> stack_slices{event_stack_slice};
 
   const auto& stream_id_to_user_stack =
-      thread_id_stream_id_to_stack_slices_.find(event_data.next_tid);
+      thread_id_stream_id_to_stack_slices_.find(tid_of_the_callstack);
   if (stream_id_to_user_stack != thread_id_stream_id_to_stack_slices_.end()) {
     for (const auto& [unused_stream_id, user_stack_slice] : stream_id_to_user_stack->second) {
       stack_slices.emplace_back(user_stack_slice.start_address, user_stack_slice.size,
@@ -344,8 +349,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   LibunwindstackResult libunwindstack_result =
-      unwinder_->Unwind(event_data.next_tid, current_maps_->Get(), event_data.GetRegistersAsArray(),
-                        stack_slices, true, 30);
+      unwinder_->Unwind(tid_of_the_callstack, current_maps_->Get(),
+                        event_data.GetRegistersAsArray(), stack_slices, true, 30);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
@@ -355,7 +360,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   TracepointCallstack tracepoint_callstack;
-  tracepoint_callstack.set_tid(event_data.next_tid);
+  tracepoint_callstack.set_tid(tid_of_the_callstack);
   tracepoint_callstack.set_timestamp_ns(event_timestamp);
 
   Callstack* callstack = tracepoint_callstack.mutable_callstack();

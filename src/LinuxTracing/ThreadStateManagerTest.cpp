@@ -29,7 +29,7 @@ TEST(ThreadStateManager, OneThread) {
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -39,7 +39,7 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -49,7 +49,7 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedWakeup(400, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(400, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
@@ -59,7 +59,7 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchIn(500, kTid);
+  slice = manager.OnSchedSwitchIn(500, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -91,7 +91,7 @@ TEST(ThreadStateManager, NewTask) {
 
   manager.OnNewTask(100, kTid, kWasCreatedByTid, kWasCreatedByPid);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -101,7 +101,7 @@ TEST(ThreadStateManager, NewTask) {
   EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid);
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kRunnable, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -136,7 +136,7 @@ TEST(ThreadStateManager, TwoThreads) {
 
   manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid1);
+  slice = manager.OnSchedSwitchIn(200, kTid1, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -148,7 +148,7 @@ TEST(ThreadStateManager, TwoThreads) {
 
   manager.OnNewTask(250, kTid2, kWasCreatedByTid2, kWasCreatedByPid2);
 
-  slice = manager.OnSchedSwitchOut(300, kTid1, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(300, kTid1, ThreadStateSlice::kInterruptibleSleep, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -158,7 +158,7 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchIn(350, kTid2);
+  slice = manager.OnSchedSwitchIn(350, kTid2, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid2);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -168,7 +168,7 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid2);
   EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid2);
 
-  slice = manager.OnSchedWakeup(400, kTid1, kWasUnblockedByTid1, kWasUnblockedByPid1);
+  slice = manager.OnSchedWakeup(400, kTid1, kWasUnblockedByTid1, kWasUnblockedByPid1, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
@@ -178,7 +178,7 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchOut(450, kTid2, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(450, kTid2, ThreadStateSlice::kRunnable, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid2);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -188,7 +188,7 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchIn(500, kTid1);
+  slice = manager.OnSchedSwitchIn(500, kTid1, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid1);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -232,7 +232,7 @@ TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kInterruptibleSleep, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -254,7 +254,7 @@ TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
 
   manager.OnNewTask(100, kTid, kWasCreatedByTid, kWasCreatedByPid);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -274,10 +274,10 @@ TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedWakeup(100, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(100, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -295,10 +295,10 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(100, kTid);
+  slice = manager.OnSchedSwitchIn(100, kTid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -318,10 +318,10 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedWakeup(200, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(200, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
@@ -339,10 +339,10 @@ TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedWakeup(100, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(100, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -358,10 +358,10 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedSwitchIn(100, kTid);
+  slice = manager.OnSchedSwitchIn(100, kTid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable);
+  slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -379,10 +379,10 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchOut) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(100, kTid, ThreadStateSlice::kInterruptibleSleep, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedWakeup(200, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(200, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
@@ -402,10 +402,10 @@ TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedWakeup(150, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
+  slice = manager.OnSchedWakeup(150, kTid, kWasUnblockedByTid, kWasUnblockedByPid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -423,7 +423,7 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
 
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
-  slice = manager.OnSchedSwitchIn(200, kTid);
+  slice = manager.OnSchedSwitchIn(200, kTid, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
@@ -433,10 +433,10 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
 
-  slice = manager.OnSchedSwitchIn(250, kTid);
+  slice = manager.OnSchedSwitchIn(250, kTid, false);
   EXPECT_FALSE(slice.has_value());
 
-  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
+  slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep, false);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
