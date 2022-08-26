@@ -19,14 +19,15 @@ class SymbolProvider {
  public:
   virtual ~SymbolProvider() = default;
 
-  // Search for symbols for the provided module in the SymbolProvider's symbol source. Return true
-  // if found.
-  [[nodiscard]] virtual orbit_base::Future<bool> FindSymbols(const ModuleIdentifier& module_id) = 0;
+  // Search for symbols for the provided module in the SymbolProvider's symbol source. Return an
+  // ErrorMessage if error occurs or symbols are not found, void otherwise.
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<void>> FindSymbols(
+      const ModuleIdentifier& module_id) = 0;
 
   // Retrieve symbols for the provided module from the SymbolProvider's symbol source. Return:
   // - A local file path if successfully retrieve symbols;
   // - A Canceled if the retrieve operation is canceled via the stop_token;
-  // - A ErrorMassage if symbols are not found or error occurs while retrieving symbols.
+  // - An ErrorMassage if symbols are not found or error occurs while retrieving symbols.
   [[nodiscard]] virtual orbit_base::Future<
       ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveSymbols(const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) = 0;
