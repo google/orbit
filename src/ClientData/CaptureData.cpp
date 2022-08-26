@@ -23,6 +23,7 @@
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_symbol_provider::ModuleIdentifier;
 
 namespace orbit_client_data {
 

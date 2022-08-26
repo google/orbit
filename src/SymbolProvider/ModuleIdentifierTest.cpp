@@ -5,9 +5,9 @@
 #include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
-#include "ClientData/ModuleIdentifier.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
-namespace orbit_client_data {
+namespace orbit_symbol_provider {
 
 TEST(ModuleIdentifier, Hash) {
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
@@ -19,4 +19,4 @@ TEST(ModuleIdentifier, Hash) {
   }));
 }
 
-}  // namespace orbit_client_data
+}  // namespace orbit_symbol_provider

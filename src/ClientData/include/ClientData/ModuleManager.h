@@ -9,10 +9,10 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/container/node_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -29,8 +29,9 @@ class ModuleManager final {
       const ModuleInMemory& module_in_memory, uint64_t absolute_address);
 
   [[nodiscard]] const ModuleData* GetModuleByModuleIdentifier(
-      const ModuleIdentifier& module_id) const;
-  [[nodiscard]] ModuleData* GetMutableModuleByModuleIdentifier(const ModuleIdentifier& module_id);
+      const orbit_symbol_provider::ModuleIdentifier& module_id) const;
+  [[nodiscard]] ModuleData* GetMutableModuleByModuleIdentifier(
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
   // Add new modules for the module_infos that do not exist yet, and update the modules that do
   // exist. If the update changed the module in a way that symbols were not valid anymore, the
   // symbols are discarded aka the module is not loaded anymore. This method returns the list of
@@ -52,7 +53,7 @@ class ModuleManager final {
   mutable absl::Mutex mutex_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
   // Map of ModuleIdentifier -> ModuleData (ModuleIdentifier is file_path and build_id)
-  absl::node_hash_map<ModuleIdentifier, ModuleData> module_map_;
+  absl::node_hash_map<orbit_symbol_provider::ModuleIdentifier, ModuleData> module_map_;
 };
 
 }  // namespace orbit_client_data
