@@ -20,6 +20,7 @@ target_include_directories(Http PUBLIC
 
 target_link_libraries(Http PUBLIC
         OrbitBase
+        RemoteSymbolProvider
         Qt5::Core
         Qt5::Network)
 

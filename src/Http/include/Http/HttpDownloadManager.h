@@ -15,10 +15,12 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
+#include "RemoteSymbolProvider/DownloadManagerInterface.h"
 
 namespace orbit_http {
 
-class HttpDownloadManager : public QObject {
+class HttpDownloadManager : public QObject,
+                            public orbit_remote_symbol_provider::DownloadManagerInterface {
   Q_OBJECT
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
@@ -31,7 +33,8 @@ class HttpDownloadManager : public QObject {
   }
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
-      std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token);
+      std::string url, std::filesystem::path save_file_path,
+      orbit_base::StopToken stop_token) override;
 
  private:
   QNetworkAccessManager manager_;
