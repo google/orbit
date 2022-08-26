@@ -10,14 +10,17 @@
 #include <stdint.h>
 
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_client_services {
@@ -33,7 +36,7 @@ class ProcessClient {
   [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
       uint32_t pid);
 
-  [[nodiscard]] ErrorMessageOr<std::string> FindDebugInfoFile(
+  [[nodiscard]] ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> FindDebugInfoFile(
       const std::string& module_path, absl::Span<const std::string> additional_search_directories);
 
   [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,

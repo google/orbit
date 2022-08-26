@@ -34,9 +34,30 @@ template <typename T>
 
 // Free function to get the not found message of a NotFoundOr object.
 template <typename T>
-[[nodiscard]] std::string GetNotFoundMessage(const std::variant<T, NotFound>& not_found_or) {
+[[nodiscard]] const std::string& GetNotFoundMessage(const std::variant<T, NotFound>& not_found_or) {
   ORBIT_CHECK(IsNotFound(not_found_or));
   return std::get<NotFound>(not_found_or).message;
+}
+
+// Free function with move semantics to get the not found message of a NotFoundOr object.
+template <typename T>
+[[nodiscard]] std::string&& GetNotFoundMessage(std::variant<T, NotFound>&& not_found_or) {
+  ORBIT_CHECK(IsNotFound(not_found_or));
+  return std::move(std::get<NotFound>(std::move(not_found_or)).message);
+}
+
+// Free function to get the "found" content of a NotFoundOr object.
+template <typename T>
+[[nodiscard]] const T& GetFound(const std::variant<T, NotFound>& not_found_or) {
+  ORBIT_CHECK(!IsNotFound(not_found_or));
+  return std::get<T>(not_found_or);
+}
+
+// Free function with move semantics to get the "found" content of a NotFoundOr object.
+template <typename T>
+[[nodiscard]] T&& GetFound(std::variant<T, NotFound>&& not_found_or) {
+  ORBIT_CHECK(!IsNotFound(not_found_or));
+  return std::get<T>(std::move(not_found_or));
 }
 
 }  // namespace orbit_base

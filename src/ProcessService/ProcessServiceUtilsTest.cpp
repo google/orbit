@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/match.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <unistd.h>
@@ -13,10 +14,12 @@
 #include <iterator>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "GrpcProtos/services.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "ProcessServiceUtils.h"
 #include "Test/Path.h"
@@ -25,6 +28,7 @@
 namespace orbit_process_service {
 
 using Path = std::filesystem::path;
+using orbit_base::NotFoundOr;
 using orbit_grpc_protos::GetDebugInfoFileRequest;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
@@ -72,9 +76,11 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), module_path);
+    ASSERT_FALSE(orbit_base::IsNotFound(result.value()));
+    const auto result_path = orbit_base::GetFound(result.value());
+    EXPECT_EQ(result_path, module_path);
   }
 
   {  // coff - same file (the coff file actually does not include a build id)
@@ -82,9 +88,11 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), module_path);
+    ASSERT_FALSE(orbit_base::IsNotFound(result.value()));
+    const auto result_path = orbit_base::GetFound(result.value());
+    EXPECT_EQ(result_path, module_path);
   }
 
   {  // elf - separate file
@@ -93,9 +101,11 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), symbols_path);
+    ASSERT_FALSE(orbit_base::IsNotFound(result.value()));
+    const auto result_path = orbit_base::GetFound(result.value());
+    EXPECT_EQ(result_path, symbols_path);
   }
 
   {  // coff/pdb - separate file
@@ -104,17 +114,19 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), symbols_path);
+    ASSERT_FALSE(orbit_base::IsNotFound(result.value()));
+    const auto result_path = orbit_base::GetFound(result.value());
+    EXPECT_EQ(result_path, symbols_path);
   }
 
-  {  // non exising elf_file
+  {  // non existing module (elf_file)
     const Path module_path = test_directory / "not_existing_file";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     EXPECT_THAT(result, HasError("Unable to load ELF file"));
   }
 
@@ -123,9 +135,11 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), module_path);
+    ASSERT_FALSE(orbit_base::IsNotFound(result.value()));
+    const auto result_path = orbit_base::GetFound(result.value());
+    EXPECT_EQ(result_path, module_path);
   }
 
   {  // elf - no build id, no symbols
@@ -133,8 +147,12 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
-    const auto result = FindSymbolsFilePath(request);
-    EXPECT_THAT(result, HasError("does not contain symbols and does not contain a build id"));
+    const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
+    ASSERT_THAT(result, HasValue());
+    ASSERT_TRUE(orbit_base::IsNotFound(result.value()));
+
+    EXPECT_TRUE(absl::StrContains(orbit_base::GetNotFoundMessage(result.value()),
+                                  "does not contain symbols and does not contain a build id"));
   }
 }
 

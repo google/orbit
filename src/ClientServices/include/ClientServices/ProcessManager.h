@@ -10,6 +10,7 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
@@ -19,6 +20,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/symbol.pb.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
 
@@ -57,7 +59,7 @@ class ProcessManager {
 
   virtual ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) = 0;
 
-  virtual ErrorMessageOr<std::string> FindDebugInfoFile(
+  virtual ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> FindDebugInfoFile(
       const std::string& module_path,
       absl::Span<const std::string> additional_search_directories) = 0;
 

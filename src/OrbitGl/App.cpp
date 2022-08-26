@@ -87,6 +87,7 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
@@ -103,6 +104,7 @@
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
@@ -1800,40 +1802,45 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
     return it->second.future;
   }
 
-  orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
-      thread_pool_->Schedule([process_manager = GetProcessManager(), module_file_path]() {
-        if (absl::GetFlag(FLAGS_instance_symbols_folder).empty()) {
-          return process_manager->FindDebugInfoFile(module_file_path, {});
-        }
-        return process_manager->FindDebugInfoFile(module_file_path,
-                                                  {absl::GetFlag(FLAGS_instance_symbols_folder)});
-      });
+  orbit_base::Future<ErrorMessageOr<NotFoundOr<std::filesystem::path>>> check_file_on_remote =
+      thread_pool_->Schedule(
+          [process_manager = GetProcessManager(),
+           module_file_path]() -> ErrorMessageOr<NotFoundOr<std::filesystem::path>> {
+            std::vector<std::string> additional_instance_folder;
+            if (!absl::GetFlag(FLAGS_instance_symbols_folder).empty()) {
+              additional_instance_folder.emplace_back(absl::GetFlag(FLAGS_instance_symbols_folder));
+            }
+            return process_manager->FindDebugInfoFile(module_file_path, additional_instance_folder);
+          });
 
   orbit_base::StopSource stop_source;
 
   auto download_file = [this, module_file_path, stop_token = stop_source.GetStopToken()](
-                           ErrorMessageOr<std::string> result) mutable
+                           const NotFoundOr<std::filesystem::path>& remote_search_outcome) mutable
       -> orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-    if (result.has_error()) return {result.error()};
-
-    const std::string& debug_file_path = result.value();
+    // TODO(b/231455031) As a first step, we treat the not found message as an error
+    if (orbit_base::IsNotFound(remote_search_outcome)) {
+      return {ErrorMessage{orbit_base::GetNotFoundMessage(remote_search_outcome)}};
+    }
+    const std::filesystem::path& remote_debug_file_path =
+        orbit_base::GetFound(remote_search_outcome);
     ORBIT_LOG("Found symbols file on the remote: \"%s\" - loading it using scp...",
-              debug_file_path);
+              remote_debug_file_path.string());
 
     const std::filesystem::path local_debug_file_path =
-        symbol_helper_.GenerateCachedFilePath(module_file_path);
+        symbol_helper_.GenerateCachedFilePath(remote_debug_file_path);
 
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
-    ORBIT_LOG("Copying \"%s\" started", debug_file_path);
+    ORBIT_LOG("Copying \"%s\" started", remote_debug_file_path.string());
     orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> copy_result =
-        main_window_->DownloadFileFromInstance(debug_file_path, local_debug_file_path,
+        main_window_->DownloadFileFromInstance(remote_debug_file_path, local_debug_file_path,
                                                std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
         &immediate_executor,
-        [debug_file_path, local_debug_file_path,
+        [remote_debug_file_path, local_debug_file_path,
          copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
             -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
           if (sftp_result.has_error()) {
@@ -1846,13 +1853,14 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
           }
           const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
               std::chrono::steady_clock::now() - copy_begin);
-          ORBIT_LOG("Copying \"%s\" took %.3f ms", debug_file_path, duration.count());
+          ORBIT_LOG("Copying \"%s\" took %.3f ms", remote_debug_file_path.string(),
+                    duration.count());
           return local_debug_file_path;
         });
   };
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future =
-      UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future = UnwrapFuture(
+      check_file_on_remote.ThenIfSuccess(main_thread_executor_, std::move(download_file)));
 
   symbol_files_currently_downloading_.emplace(
       module_file_path,
