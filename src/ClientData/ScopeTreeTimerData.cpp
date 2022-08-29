@@ -36,6 +36,7 @@ void ScopeTreeTimerData::OnCaptureComplete() {
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers(
     uint64_t start_ns, uint64_t end_ns) const {
+  ORBIT_SCOPE_WITH_COLOR("GetTimers", kOrbitColorAmber);
   // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
   // interval [start_ns, end_ns+1). We have to be careful with overflowing.
   end_ns = std::max(end_ns, end_ns + 1);
@@ -73,17 +74,18 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthDiscretized(
     uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const {
+  ORBIT_SCOPE_WITH_COLOR("GetTimersAtDepthDiscretized", kOrbitColorAmber);
+  absl::MutexLock lock(&scope_tree_mutex_);
   // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
   // interval [start_ns, end_ns+1). We have to be careful with overflowing.
   end_ns = std::max(end_ns, end_ns + 1);
-  std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
-  absl::MutexLock lock(&scope_tree_mutex_);
 
+  std::vector<const orbit_client_protos::TimerInfo*> discretized_timers;
   const orbit_client_protos::TimerInfo* timer_info =
       scope_tree_.FindFirstScopeAtOrAfterTime(depth, start_ns);
 
   while (timer_info != nullptr && timer_info->start() < end_ns) {
-    all_timers_at_depth.push_back(timer_info);
+    discretized_timers.push_back(timer_info);
 
     // Use the time of next pixel boundary as a threshold to avoid returning several timers
     // for the same pixel that will overlap after.
@@ -91,7 +93,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
         GetNextPixelBoundaryTimeNs(timer_info->end(), resolution, start_ns, end_ns);
     timer_info = scope_tree_.FindFirstScopeAtOrAfterTime(depth, next_pixel_start_time_ns);
   }
-  return all_timers_at_depth;
+  return discretized_timers;
 }
 
 const orbit_client_protos::TimerInfo* ScopeTreeTimerData::GetLeft(
