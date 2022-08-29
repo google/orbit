@@ -672,6 +672,10 @@ class SetEnableAutoFrameTrack(CaptureE2ETestCaseBase):
 
     def _execute(self, enable_auto_frame_track: bool):
         self._show_capture_options_dialog()
+
+        wait_for_condition(lambda: self.find_control(
+            'Window', 'Capture Options', recurse=False, raise_on_failure=False) is not None,
+                           max_seconds=40)
         capture_options_dialog = self.find_control('Window', 'Capture Options')
         self._set_enable_auto_frame_track_capture_option(enable_auto_frame_track,
                                                          capture_options_dialog)
@@ -682,6 +686,10 @@ class SetAndCheckMemorySamplingPeriod(CaptureE2ETestCaseBase):
 
     def _execute(self, memory_sampling_period: str):
         self._show_capture_options_dialog()
+
+        wait_for_condition(lambda: self.find_control(
+            'Window', 'Capture Options', recurse=False, raise_on_failure=False) is not None,
+                           max_seconds=40)
         capture_options_dialog = self.find_control('Window', 'Capture Options')
         self._set_collect_system_memory_usage_capture_option(True, capture_options_dialog)
         memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
