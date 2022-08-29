@@ -112,7 +112,7 @@ TEST(TimerData, AddTimers) {
 }
 
 std::unique_ptr<TimerData> GetOrderedTimersSameDepth() {
-  std::unique_ptr<TimerData> timer_data = std::make_unique<TimerData>();
+  auto timer_data = std::make_unique<TimerData>();
   timer_data->AddTimer(GetLeftTimer());
   timer_data->AddTimer(GetMiddleTimer());
   timer_data->AddTimer(GetRightTimer());
@@ -120,7 +120,7 @@ std::unique_ptr<TimerData> GetOrderedTimersSameDepth() {
 }
 
 std::unique_ptr<TimerData> GetUnorderedTimersSameDepth() {
-  std::unique_ptr<TimerData> timer_data = std::make_unique<TimerData>();
+  auto timer_data = std::make_unique<TimerData>();
   timer_data->AddTimer(GetRightTimer());
   timer_data->AddTimer(GetLeftTimer());
   timer_data->AddTimer(GetMiddleTimer());
@@ -128,7 +128,7 @@ std::unique_ptr<TimerData> GetUnorderedTimersSameDepth() {
 }
 
 std::unique_ptr<TimerData> GetTimersDifferentDepths() {
-  std::unique_ptr<TimerData> timer_data = std::make_unique<TimerData>();
+  auto timer_data = std::make_unique<TimerData>();
   timer_data->AddTimer(GetLeftTimer());
   timer_data->AddTimer(GetRightTimer());
   timer_data->AddTimer(GetDownTimer(), /*depth=*/1);
