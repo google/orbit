@@ -89,20 +89,21 @@ target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         CaptureDataTest.cpp
         DataManagerTest.cpp
-        ScopeIdProviderTest.cpp
         FunctionInfoTest.cpp
         ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
+        ScopeIdProviderTest.cpp
         ScopeInfoTest.cpp
         ScopeTreeTimerDataTest.cpp
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
+        TimerDataTest.cpp
+        TimerDataInterfaceTest.cpp
         TimerTrackDataIdManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
-        TimerDataTest.cpp
         UserDefinedCaptureDataTest.cpp)
 
 target_link_libraries(ClientDataTests PRIVATE
