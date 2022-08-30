@@ -230,7 +230,7 @@ int tracepoint_with_stack_event_open(const char* tracepoint_category, const char
   pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
 
   // TODO(b/243510345): allow the user to change this value.
-  pe.sample_stack_user = 1024;
+  pe.sample_stack_user = 512;
 
   return generic_event_open(&pe, pid, cpu);
 }
