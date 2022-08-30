@@ -28,6 +28,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
+#include "SafeGetModuleAndFunctionName.h"
 #include "ThreadBar.h"
 #include "Viewport.h"
 
@@ -207,13 +208,33 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
   uint64_t end_ns = thread_state_slice->end_timestamp_ns();
   tooltip += absl::StrFormat(
       "<br/>"
-      "<b>Time:</b> %s",
+      "<b>Time:</b> %s"
+      "<br/>",
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
 
-  tooltip += absl::StrFormat(
-      "<br/>"
-      "Callstack Id: %llu",
-      thread_state_slice->triggering_callstack_id());
+  if (thread_state_slice->triggering_callstack_id() != 0) {
+    const orbit_client_data::CallstackData& callstack_data = capture_data_->GetCallstackData();
+    uint64_t const callstack_id = thread_state_slice->triggering_callstack_id();
+    const orbit_client_data::CallstackInfo* callstack = callstack_data.GetCallstack(callstack_id);
+
+    static const std::string unknown_return_text = "Function call information missing";
+
+    if (callstack == nullptr) {
+      return unknown_return_text;
+    }
+
+    if (callstack->IsUnwindingError()) {
+      tooltip += absl::StrFormat("<span style=\"color:%s;\">", kUnwindErrorColorString);
+      tooltip += "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>";
+      tooltip += orbit_client_data::CallstackTypeToDescription(callstack->type());
+      tooltip += "</span><br/>";
+      tooltip += "<br/>";
+    }
+
+    tooltip += "<b>Triggering Callstack:</b><br/>";
+    tooltip += FormatCallstackForTooltip(*callstack, capture_data_, module_manager_);
+    tooltip += "<br/>";
+  }
 
   return tooltip;
 }

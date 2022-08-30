@@ -57,6 +57,7 @@ target_sources(
          PageFaultsTrack.h
          PickingManager.h
          PrimitiveAssembler.h
+         SafeGetModuleAndFunctionName.h
          SamplingReport.h
          SchedulerTrack.h
          SchedulingStats.h
@@ -130,6 +131,7 @@ target_sources(
           PageFaultsTrack.cpp
           PickingManager.cpp
           PrimitiveAssembler.cpp
+          SafeGetModuleAndFunctionName.cpp
           SamplingReport.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp

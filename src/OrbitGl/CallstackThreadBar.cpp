@@ -26,6 +26,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
+#include "SafeGetModuleAndFunctionName.h"
 #include "ShortenStringWithEllipsis.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
@@ -226,127 +227,6 @@ bool CallstackThreadBar::IsEmpty() const {
   return callstack_count == 0;
 }
 
-CallstackThreadBar::UnformattedModuleAndFunctionName
-CallstackThreadBar::SafeGetModuleAndFunctionName(const CallstackInfo& callstack,
-                                                 size_t frame_index) const {
-  ORBIT_CHECK(capture_data_ != nullptr);
-  if (frame_index >= callstack.frames().size()) {
-    static const UnformattedModuleAndFunctionName kFrameIndexTooLargeModuleAndFunctionName = [] {
-      UnformattedModuleAndFunctionName module_and_function_name;
-      module_and_function_name.module_name = orbit_client_data::kUnknownFunctionOrModuleName;
-      module_and_function_name.module_is_unknown = true;
-      module_and_function_name.function_name = orbit_client_data::kUnknownFunctionOrModuleName;
-      module_and_function_name.function_is_unknown = true;
-      return module_and_function_name;
-    }();
-    return kFrameIndexTooLargeModuleAndFunctionName;
-  }
-
-  const uint64_t address = callstack.frames()[frame_index];
-
-  const auto& [module_path, unused_module_build_id] =
-      orbit_client_data::FindModulePathAndBuildIdByAddress(*module_manager_, *capture_data_,
-                                                           address);
-  const std::string unknown_module_path_or_module_name =
-      (module_path == orbit_client_data::kUnknownFunctionOrModuleName)
-          ? module_path
-          : std::filesystem::path(module_path).filename().string();
-
-  const std::string& function_name =
-      orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, address);
-  const std::string function_name_or_unknown_with_address =
-      (function_name == orbit_client_data::kUnknownFunctionOrModuleName)
-          ? absl::StrFormat("[unknown@%#x]", address)
-          : function_name;
-
-  UnformattedModuleAndFunctionName module_and_function_name;
-  module_and_function_name.module_name = unknown_module_path_or_module_name;
-  module_and_function_name.module_is_unknown =
-      (module_path == orbit_client_data::kUnknownFunctionOrModuleName);
-  module_and_function_name.function_name = function_name_or_unknown_with_address;
-  module_and_function_name.function_is_unknown =
-      (function_name == orbit_client_data::kUnknownFunctionOrModuleName);
-  return module_and_function_name;
-}
-
-std::string CallstackThreadBar::FormatModuleName(
-    const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name) {
-  return module_and_function_name.module_is_unknown
-             ? absl::StrFormat("<i>%s</i>", module_and_function_name.module_name)
-             : module_and_function_name.module_name;
-}
-
-std::string CallstackThreadBar::FormatFunctionName(
-    const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name,
-    int max_length) {
-  const std::string& function_name = module_and_function_name.function_name;
-  const std::string shortened_function_name =
-      (max_length > 0) ? ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_length))
-                       : function_name;
-  // Simple HTML escaping.
-  const std::string escaped_function_name =
-      absl::StrReplaceAll(shortened_function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
-  return module_and_function_name.function_is_unknown
-             ? absl::StrFormat("<i>%s</i>", escaped_function_name)
-             : escaped_function_name;
-}
-
-constexpr const char* kUnwindErrorColorString = "#ffb000";
-
-std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack) const {
-  constexpr int kMaxLineLength = 120;
-  // If the callstack has more than `kMaxLines` frames, we only show the `kBottomLineCount`
-  // outermost frames and the `kMaxLines - kBottomLineCount` innermost frames, separated by
-  // `kShortenedForReadabilityString`.
-  constexpr int kMaxLines = 20;
-  constexpr int kBottomLineCount = 5;
-  static_assert(kBottomLineCount < kMaxLines);
-
-  int callstack_size = static_cast<int>(callstack.frames().size());
-  const int bottom_n = std::min(kBottomLineCount, callstack_size);
-  const int top_n = std::min(kMaxLines, callstack_size) - bottom_n;
-
-  constexpr int kShortenedForReadabilityFakeIndex = -1;
-  constexpr const char* kShortenedForReadabilityString = "<i>... shortened for readability ...</i>";
-  std::vector<int> frame_indices_to_display;
-  for (int i = 0; i < top_n; ++i) {
-    frame_indices_to_display.push_back(i);
-  }
-  if (callstack_size > kMaxLines) {
-    frame_indices_to_display.push_back(kShortenedForReadabilityFakeIndex);
-  }
-  for (int i = callstack_size - bottom_n; i < callstack_size; ++i) {
-    frame_indices_to_display.push_back(i);
-  }
-
-  std::string result;
-  for (int frame_index : frame_indices_to_display) {
-    if (frame_index == kShortenedForReadabilityFakeIndex) {
-      result.append(kShortenedForReadabilityString).append("<br/>");
-      continue;
-    }
-
-    static const std::string kModuleFunctionSeparator{" | "};
-    const UnformattedModuleAndFunctionName module_and_function_name =
-        SafeGetModuleAndFunctionName(callstack, frame_index);
-    const std::string formatted_module_name = FormatModuleName(module_and_function_name);
-    const std::string formatted_function_name = FormatFunctionName(
-        module_and_function_name, kMaxLineLength - module_and_function_name.module_name.size() -
-                                      kModuleFunctionSeparator.size());
-    const std::string formatted_module_and_function_name =
-        formatted_module_name + kModuleFunctionSeparator + formatted_function_name;
-    // The first frame is always correct.
-    if (callstack.IsUnwindingError() && frame_index > 0) {
-      result += absl::StrFormat("<span style=\"color:%s;\">%s</span><br/>", kUnwindErrorColorString,
-                                formatted_module_and_function_name);
-    } else {
-      result.append(formatted_module_and_function_name).append("<br/>");
-    }
-  }
-
-  return result;
-}
-
 std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primitive_assembler,
                                                  PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
@@ -367,7 +247,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   }
 
   UnformattedModuleAndFunctionName innermost_module_and_function_name =
-      SafeGetModuleAndFunctionName(*callstack, 0);
+      SafeGetModuleAndFunctionName(*callstack, 0, capture_data_, module_manager_);
   std::string innermost_formatted_function_name =
       FormatFunctionName(innermost_module_and_function_name, -1);
   std::string innermost_formatted_module_name =
@@ -388,7 +268,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
     result += "<br/>";
   }
   result += "<b>Callstack:</b><br/>";
-  result += FormatCallstackForTooltip(*callstack);
+  result += FormatCallstackForTooltip(*callstack, capture_data_, module_manager_);
   result += "<br/>";
   result += "<i>To select samples, click the bar & drag across multiple samples</i>";
   result.append("</p>");
