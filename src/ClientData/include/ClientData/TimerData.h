@@ -29,13 +29,14 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
+  // This optimized method avoids returning two timers that map to the same pixel in the screen, so
+  // is especially useful when there are many timers in the screen (zooming-out for example).
+  // It assures to return at least one timer per occupied pixel. The overall complexity is
+  // O(log(num_timers) * resolution) where resolution is the number of pixels_width.
+  // TODO(b/200692451): Provide a solution for TimerTrack with intersecting timers.
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
       uint32_t /*depth*/, uint32_t /*resolution*/, uint64_t /*start_ns*/,
-      uint64_t /*end_ns*/) const override {
-    // TODO(b/242971217): Implement TimerData rendering optimization when timers are ordered.
-    ORBIT_UNREACHABLE();
-    return {};
-  };
+      uint64_t /*end_ns*/) const override;
 
   // Metadata queries
   [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; }

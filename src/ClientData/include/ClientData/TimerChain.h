@@ -57,6 +57,16 @@ class TimerBlock {
     return data_[idx];
   }
 
+  // Assuming timers are sorted, returns the first one which its end isn't smaller than min_ns.
+  // Return nullptr if there is none.
+  [[nodiscard]] const orbit_client_protos::TimerInfo* LowerBound(uint64_t min_ns) const {
+    auto it = std::lower_bound(data_.begin(), data_.end(), min_ns,
+                               [](const orbit_client_protos::TimerInfo& timer_info,
+                                  uint64_t value) { return timer_info.end() < value; });
+    if (it == data_.end()) return nullptr;
+    return &*it;
+  }
+
  private:
   static constexpr size_t kBlockSize = 1024;
 
