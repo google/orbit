@@ -1361,10 +1361,10 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch_with_callchain) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/243510000): the implementation of this case will be added later
 
   } else if (is_sched_wakeup_with_callchain) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/243510000): the implementation of this case will be added later
 
   } else if (is_sched_switch_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);

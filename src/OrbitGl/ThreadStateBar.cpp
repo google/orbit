@@ -231,7 +231,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       tooltip += "<br/>";
     }
 
-    tooltip += "<b>Triggering Callstack:</b><br/>";
+    tooltip += "<b>Triggering callstack:</b><br/>";
     tooltip += FormatCallstackForTooltip(*callstack, capture_data_, module_manager_);
     tooltip += "<br/>";
   }

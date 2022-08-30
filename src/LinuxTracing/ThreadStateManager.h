@@ -55,7 +55,7 @@ class ThreadStateManager {
       uint64_t timestamp_ns, pid_t tid, pid_t was_unblocked_by_tid, pid_t was_unblocked_by_pid,
       bool event_has_callstack);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
-      uint64_t timestamp_ns, pid_t tid, bool event_has_callstack);
+      uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
       uint64_t timestamp_ns, pid_t tid, orbit_grpc_protos::ThreadStateSlice::ThreadState new_state,
       bool event_has_callstack);
