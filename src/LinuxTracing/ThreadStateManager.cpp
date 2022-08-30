@@ -92,7 +92,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   slice.set_wakeup_reason(open_state.wakeup_reason);
   slice.set_wakeup_tid(open_state.wakeup_tid);
   slice.set_wakeup_pid(open_state.wakeup_pid);
-  slice.set_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
+  slice.set_triggering_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
   tid_open_states_.insert_or_assign(
       tid, OpenState{kNewState, timestamp_ns, orbit_grpc_protos::ThreadStateSlice::kUnblocked,
                      was_unblocked_by_tid, was_unblocked_by_pid, event_has_callstack});
@@ -134,7 +134,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   slice.set_wakeup_reason(open_state.wakeup_reason);
   slice.set_wakeup_tid(open_state.wakeup_tid);
   slice.set_wakeup_pid(open_state.wakeup_pid);
-  slice.set_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
+  slice.set_triggering_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, event_has_callstack});
   return slice;
 }
@@ -199,7 +199,7 @@ std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(uint64_t tim
     slice.set_wakeup_reason(open_state.wakeup_reason);
     slice.set_wakeup_tid(open_state.wakeup_tid);
     slice.set_wakeup_pid(open_state.wakeup_pid);
-    slice.set_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
+    slice.set_triggering_callstack_id(open_state.slice_should_get_callstack ? 42 : 0);
     slices.emplace_back(std::move(slice));
   }
   return slices;

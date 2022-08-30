@@ -615,9 +615,15 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
   }
 
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
+  uint64_t ring_buffer_size;
+  if (thread_state_change_callstack_collection_ ==
+      CaptureOptions::kThreadStateChangeCallStackCollection) {
+    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_CALLSTACKS_RING_BUFFER_SIZE_KB;
+  } else {
+    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB;
+  }
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
-      tracepoints_to_open, cpus, &tracing_fds_,
-      CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB,
+      tracepoints_to_open, cpus, &tracing_fds_, ring_buffer_size,
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_,
       thread_state_change_callstack_collection, unwinding_method);
 }

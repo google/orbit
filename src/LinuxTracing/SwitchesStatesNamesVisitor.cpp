@@ -230,8 +230,6 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
         event_timestamp, event_data.next_tid, event_data.data != nullptr);
 
     if (in_slice.has_value()) {
-      // We need to set some value here so producer event processor can know this slice should wait
-      // on a callstack.
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
       if (thread_state_counter_ != nullptr) {
         ++(*thread_state_counter_);

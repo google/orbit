@@ -187,24 +187,7 @@ void ProducerEventProcessorImpl::MergeTracepointWithCallstack(
       thread_state_slice->end_timestamp_ns() - thread_state_slice->duration_ns();
   auto it = callstack_cache.find({thread_state_slice->tid(), beginning_timestamp});
 
-  if (it == callstack_cache.end()) {
-    ORBIT_LOG("%lld %lld %lld %lld %lld %lld", thread_state_slice->callstack_id(),
-              thread_state_slice->pid(), thread_state_slice->tid(), beginning_timestamp,
-              thread_state_slice->end_timestamp_ns(), thread_state_slice->thread_state());
-    ClientCaptureEvent event;
-    ThreadStateSlice* thread_state_slice_to_be_sent = event.mutable_thread_state_slice();
-    thread_state_slice_to_be_sent->set_callstack_id(-1);
-    thread_state_slice_to_be_sent->set_thread_state(thread_state_slice->thread_state());
-    thread_state_slice_to_be_sent->set_duration_ns(thread_state_slice->duration_ns());
-    thread_state_slice_to_be_sent->set_end_timestamp_ns(thread_state_slice->end_timestamp_ns());
-    thread_state_slice_to_be_sent->set_pid(thread_state_slice->pid());
-    thread_state_slice_to_be_sent->set_tid(thread_state_slice->tid());
-    thread_state_slice_to_be_sent->set_wakeup_pid(thread_state_slice->wakeup_pid());
-    thread_state_slice_to_be_sent->set_wakeup_tid(thread_state_slice->wakeup_tid());
-    thread_state_slice_to_be_sent->set_wakeup_reason(thread_state_slice->wakeup_reason());
-    client_capture_event_collector_->AddEvent(std::move(event));
-    return;
-  }
+  ORBIT_CHECK(it != callstack_cache.end());
 
   const Callstack& callstack = (*it).second.callstack();
   std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
@@ -217,17 +200,13 @@ void ProducerEventProcessorImpl::MergeTracepointWithCallstack(
     interned_callstack_event.mutable_interned_callstack()->set_allocated_intern(
         (*it).second.release_callstack());
     client_capture_event_collector_->AddEvent(std::move(interned_callstack_event));
-    ORBIT_LOG("%lld", callstack_id);
-    for (auto frame : callstack_data.first) {
-      ORBIT_LOG("%llu", frame);
-    }
   }
 
   callstack_cache.erase(it);
 
   ClientCaptureEvent event;
   ThreadStateSlice* thread_state_slice_to_be_sent = event.mutable_thread_state_slice();
-  thread_state_slice_to_be_sent->set_callstack_id(callstack_id);
+  thread_state_slice_to_be_sent->set_triggering_callstack_id(callstack_id);
   thread_state_slice_to_be_sent->set_thread_state(thread_state_slice->thread_state());
   thread_state_slice_to_be_sent->set_duration_ns(thread_state_slice->duration_ns());
   thread_state_slice_to_be_sent->set_end_timestamp_ns(thread_state_slice->end_timestamp_ns());
@@ -606,7 +585,7 @@ void ProducerEventProcessorImpl::ProcessThreadStateSliceAndTransferOwnership(
     ThreadStateSlice* thread_state_slice) {
   ORBIT_LOG("%llu %llu", thread_state_slice->tid(),
             thread_state_slice->end_timestamp_ns() - thread_state_slice->duration_ns());
-  if (thread_state_slice->callstack_id() == 0) {
+  if (thread_state_slice->triggering_callstack_id() == 0) {
     ClientCaptureEvent event;
     event.set_allocated_thread_state_slice(thread_state_slice);
     client_capture_event_collector_->AddEvent(std::move(event));
@@ -631,7 +610,6 @@ void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndT
 
 void ProducerEventProcessorImpl::ProcessTracepointCallstackAndTransferOwnership(
     TracepointCallstack* callstack) {
-  ORBIT_LOG("%llu %llu", callstack->tid(), callstack->timestamp_ns());
   callstack_cache[{callstack->tid(), callstack->timestamp_ns()}] = std::move(*callstack);
 }
 
