@@ -14,9 +14,8 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Client.h"
+#include "OrbitGgp/MockClient.h"
 #include "OrbitGgp/Project.h"
-#include "OrbitGgp/SymbolDownloadInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "TestUtils/TestUtils.h"
@@ -31,30 +30,6 @@ using orbit_ggp::SshInfo;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 using testing::Return;
-
-class MockGgpClient : public orbit_ggp::Client {
- public:
-  MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/),
-              (override));
-  MOCK_METHOD(Future<ErrorMessageOr<QVector<Instance>>>, GetInstancesAsync,
-              (Client::InstanceListScope /*scope*/, std::optional<Project> /*project*/,
-               int /*retry*/),
-              (override));
-  MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
-              (const QString& /*instance_id*/, std::optional<Project> /*project*/), (override));
-  MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
-              (const QString& /*instance_id*/, std::optional<Project> /*project*/, int /*retry*/),
-              (override));
-  MOCK_METHOD(Future<ErrorMessageOr<QVector<Project>>>, GetProjectsAsync, (), (override));
-  MOCK_METHOD(Future<ErrorMessageOr<Project>>, GetDefaultProjectAsync, (), (override));
-  MOCK_METHOD(Future<ErrorMessageOr<Instance>>, DescribeInstanceAsync,
-              (const QString& /*instance_id*/), (override));
-  MOCK_METHOD(Future<ErrorMessageOr<orbit_ggp::Account>>, GetDefaultAccountAsync, (), (override));
-  MOCK_METHOD(Future<ErrorMessageOr<std::vector<orbit_ggp::SymbolDownloadInfo>>>,
-              GetSymbolDownloadInfoAsync, ((const std::vector<Client::SymbolDownloadQuery>&)),
-              (override));
-};
 
 namespace {
 
@@ -112,7 +87,7 @@ class RetrieveInstancesTest : public testing::Test {
   }
 
  protected:
-  MockGgpClient mock_ggp_;
+  orbit_ggp::MockClient mock_ggp_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
   std::unique_ptr<RetrieveInstances> retrieve_instances_;
 };
