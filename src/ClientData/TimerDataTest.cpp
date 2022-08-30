@@ -112,10 +112,26 @@ TEST(TimerData, AddTimers) {
 }
 
 std::unique_ptr<TimerData> GetOrderedTimersSameDepth() {
-  std::unique_ptr<TimerData> timer_data = std::make_unique<TimerData>();
+  auto timer_data = std::make_unique<TimerData>();
   timer_data->AddTimer(GetLeftTimer());
   timer_data->AddTimer(GetMiddleTimer());
   timer_data->AddTimer(GetRightTimer());
+  return timer_data;
+}
+
+std::unique_ptr<TimerData> GetUnorderedTimersSameDepth() {
+  auto timer_data = std::make_unique<TimerData>();
+  timer_data->AddTimer(GetRightTimer());
+  timer_data->AddTimer(GetLeftTimer());
+  timer_data->AddTimer(GetMiddleTimer());
+  return timer_data;
+}
+
+std::unique_ptr<TimerData> GetTimersDifferentDepths() {
+  auto timer_data = std::make_unique<TimerData>();
+  timer_data->AddTimer(GetLeftTimer());
+  timer_data->AddTimer(GetRightTimer());
+  timer_data->AddTimer(GetDownTimer(), /*depth=*/1);
   return timer_data;
 }
 
@@ -191,6 +207,23 @@ TEST(TimerData, FindTimers) {
         timer_data->GetFirstBeforeStartTime(std::numeric_limits<uint64_t>::max(), 1);
     EXPECT_EQ(timer_info, nullptr);
   }
+}
+
+void CheckGetTimers(std::unique_ptr<TimerData> timer_data) {
+  EXPECT_EQ(timer_data->GetTimers(0, kLeftTimerStart - 1).size(), 0);
+  EXPECT_EQ(timer_data->GetTimers(kRightTimerEnd + 1, kRightTimerEnd + 10).size(), 0);
+  EXPECT_EQ(timer_data->GetTimers(kLeftTimerStart - 1, kLeftTimerStart + 1).size(), 1);  // left
+  EXPECT_EQ(timer_data->GetTimers(kLeftTimerStart + 1, kLeftTimerEnd).size(), 2);  // left, middle
+  EXPECT_EQ(timer_data->GetTimers(kMiddleTimerStart, kMiddleTimerEnd).size(), 3);
+  EXPECT_EQ(timer_data->GetTimers(kRightTimerStart, kRightTimerEnd).size(), 2);     // middle, right
+  EXPECT_EQ(timer_data->GetTimers(kMiddleTimerEnd + 1, kRightTimerEnd).size(), 1);  // right
+  EXPECT_EQ(timer_data->GetTimers().size(), 3);
+}
+
+TEST(TimerData, GetTimers) {
+  CheckGetTimers(GetOrderedTimersSameDepth());
+  CheckGetTimers(GetUnorderedTimersSameDepth());
+  CheckGetTimers(GetTimersDifferentDepths());
 }
 
 }  // namespace orbit_client_data
