@@ -39,17 +39,15 @@ namespace {
 [[nodiscard]] uint64_t ComputeAddress(
     uint64_t offset_in_section, uint16_t section, uint64_t image_base,
     const llvm::FixedStreamArray<llvm::object::coff_section>& section_headers) {
-  // Addresses in PDB files are usually handled relative virtual address (RVA). For a specific
-  // symbol, LLVM won't give us the RVA directly, but the symbol's offset in the respective section.
-  // The RVA is then the section's offset (which is the section's RVA) + the symbol's offset.
+  // Unlike DIA, LLVM won't give us the RVA directly, but the symbol's offset in the respective
+  // section. We can compute the RVA as the section's RVA + the symbol's offset.
   // Note: The segments are numbered starting at 1 and match what you observe using
   // `dumpbin /HEADERS`.
   ORBIT_CHECK(section_headers.size() >= section && section > 0);
-  uint64_t section_offset = section_headers[section - 1].VirtualAddress;
-  uint64_t rva = offset_in_section + section_offset;
+  uint64_t section_rva = section_headers[section - 1].VirtualAddress;
+  uint64_t rva = offset_in_section + section_rva;
 
   // To get the address we use in Orbit, we add the object's "image base" to the RVA.
-  // Note that this is the "desired image base" as it is specified in the object/debug file.
   // The loader might choose a different image base when actually loading the object file at runtime
   // and thus, the virtual address might differ from the address we compute here.
   // See https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#general-concepts.
@@ -116,10 +114,10 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     // expected here (as they are mostly base types). However, the call to `getType` below will fail
     // on any simple type. So we check for all simple types here, instead of only for "<no type>".
     if (proc.FunctionType.isSimple()) {
-      /*llvm::StringRef function_type = type_collection.getTypeName(proc.FunctionType);
+      llvm::StringRef function_type = type_collection.getTypeName(proc.FunctionType);
       ORBIT_ERROR(
           "Unable to retrieve parameter list for function \"%s\"; The function type is \"%s\"",
-          proc.Name.data(), function_type.data());*/
+          proc.Name.data(), function_type.data());
       return "";
     }
 
@@ -131,10 +129,10 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
             llvm::codeview::TypeDeserializer::deserializeAs<llvm::codeview::ProcedureRecord>(
                 function_type, procedure_record);
         if (error) {
-          /*ORBIT_ERROR(
+          ORBIT_ERROR(
               "Unable to retrieve parameter list for function \"%s\"; The function is of type "
               "\"LF_PROCEDURE\", but we can not deserialize it to a \"ProcedureRecord\".",
-              proc.Name.data());*/
+              proc.Name.data());
           return "";
         }
 
@@ -147,10 +145,10 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
             llvm::codeview::TypeDeserializer::deserializeAs<llvm::codeview::MemberFunctionRecord>(
                 function_type, member_function_record);
         if (error) {
-          /*ORBIT_ERROR(
+          ORBIT_ERROR(
               "Unable to retrieve parameter list for function \"%s\"; The function is of type "
               "\"LF_MFUNCTION\", but we can not deserialize it to a \"MemberFunctionRecord\".",
-              proc.Name.data());*/
+              proc.Name.data());
           return "";
         }
 
@@ -175,7 +173,7 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 class SectionContributionsVisitor : public llvm::pdb::ISectionContribVisitor {
  public:
   SectionContributionsVisitor(
-      ObjectFileInfo object_file_info,
+      const ObjectFileInfo& object_file_info,
       llvm::FixedStreamArray<llvm::object::coff_section>* section_headers,
       absl::flat_hash_map<uint64_t, std::vector<SymbolInfo*>>* address_to_symbols_with_missing_size)
       : object_file_info_(object_file_info),
@@ -263,8 +261,9 @@ ErrorMessageOr<void> LoadDebugSymbolsFromModuleStreams(
 void LoadDebugSymbolsFromPublicSymbolStream(
     llvm::pdb::PublicsStream& public_symbol_stream, llvm::pdb::SymbolStream& symbol_stream,
     llvm::FixedStreamArray<llvm::object::coff_section>& section_headers,
-    const ObjectFileInfo& object_file_info, std::vector<SymbolInfo>* symbol_infos,
-    absl::flat_hash_set<uint64_t>* addresses_from_module_debug_stream) {
+    const ObjectFileInfo& object_file_info,
+    const absl::flat_hash_set<uint64_t>& addresses_from_module_debug_stream,
+    std::vector<SymbolInfo>* symbol_infos) {
   const llvm::pdb::GSIHashTable& public_symbol_has_records = public_symbol_stream.getPublicsTable();
   for (const auto& hash_record : public_symbol_has_records) {
     llvm::Expected<llvm::codeview::PublicSym32> record =
@@ -278,13 +277,13 @@ void LoadDebugSymbolsFromPublicSymbolStream(
       continue;
     }
 
-    SymbolInfo symbol_info;
     uint64_t address = ComputeAddress(record->Offset, record->Segment, object_file_info.load_bias,
                                       section_headers);
+
+    if (addresses_from_module_debug_stream.contains(address)) continue;
+
+    SymbolInfo symbol_info;
     symbol_info.set_address(address);
-
-    if (addresses_from_module_debug_stream->contains(symbol_info.address())) continue;
-
     symbol_info.set_demangled_name(llvm::demangle(record->Name.str()));
     // The PDB public symbols don't contain the size of symbol. Set a placeholder which indicates
     // that the size is unknown for now and try to deduce it later. We will later use that
@@ -303,9 +302,6 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
       session_(std::move(session)) {}
 
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
-  std::vector<SymbolInfo> symbol_infos;
-  absl::flat_hash_set<uint64_t> address_from_module_debug_stream;
-
   auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
   ORBIT_CHECK(native_session != nullptr);
   llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
@@ -313,7 +309,6 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   if (!pdb_file.hasPDBDbiStream()) {
     return ErrorMessage("PDB file does not have a DBI stream.");
   }
-
   llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
   ORBIT_CHECK(debug_info_stream);
 
@@ -326,9 +321,11 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   llvm::FixedStreamArray<llvm::object::coff_section> section_headers =
       debug_info_stream->getSectionHeaders();
 
+  std::vector<SymbolInfo> symbol_infos;
+  absl::flat_hash_set<uint64_t> addresses_from_module_debug_stream;
   OUTCOME_TRY(LoadDebugSymbolsFromModuleStreams(
       pdb_file, debug_info_stream.get(), type_info_stream.get(), section_headers, object_file_info_,
-      &symbol_infos, &address_from_module_debug_stream));
+      &symbol_infos, &addresses_from_module_debug_stream));
 
   if (!pdb_file.hasPDBPublicsStream()) {
     return ErrorMessage("PDB file does not have a public symbol stream.");
@@ -343,14 +340,12 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   ORBIT_CHECK(symbol_stream);
 
   LoadDebugSymbolsFromPublicSymbolStream(public_symbol_stream.get(), symbol_stream.get(),
-                                         section_headers, object_file_info_, &symbol_infos,
-                                         &address_from_module_debug_stream);
-
-  if (symbol_infos.empty()) {
-    return ModuleSymbols{};
-  }
+                                         section_headers, object_file_info_,
+                                         addresses_from_module_debug_stream, &symbol_infos);
 
   // We try to find the missing size information from public symbols from the section contributions.
+  // Note, that we sometimes have multiple names for the same address, so we use a vector here as
+  // the map's value type.
   absl::flat_hash_map<uint64_t, std::vector<SymbolInfo*>> address_to_symbols_with_missing_size{};
   for (SymbolInfo& symbol_info : symbol_infos) {
     if (symbol_info.size() != ObjectFile::kUnknownSymbolSize) {
