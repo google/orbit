@@ -25,7 +25,6 @@ target_sources(ClientData PUBLIC
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
-        include/ClientData/ModuleIdentifier.h
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
@@ -67,6 +66,7 @@ target_sources(ClientData PRIVATE
         ThreadTrackDataProvider.cpp
         TimerChain.cpp
         TimerData.cpp
+        TimerDataInterface.cpp
         TimerTrackDataIdManager.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
@@ -81,6 +81,7 @@ target_link_libraries(ClientData PUBLIC
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase
+        SymbolProvider
         xxHash::xxHash)
 
 add_executable(ClientDataTests)
@@ -88,21 +89,21 @@ target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         CaptureDataTest.cpp
         DataManagerTest.cpp
-        ScopeIdProviderTest.cpp
         FunctionInfoTest.cpp
         ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
-        ModuleIdentifierTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
+        ScopeIdProviderTest.cpp
         ScopeInfoTest.cpp
         ScopeTreeTimerDataTest.cpp
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
+        TimerDataTest.cpp
+        TimerDataInterfaceTest.cpp
         TimerTrackDataIdManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
-        TimerDataTest.cpp
         UserDefinedCaptureDataTest.cpp)
 
 target_link_libraries(ClientDataTests PRIVATE

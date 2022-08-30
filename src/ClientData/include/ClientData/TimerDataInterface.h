@@ -19,6 +19,13 @@ struct TimerMetadata {
   uint32_t process_id;
 };
 
+// Free Function that will be used for any implementation of
+// TimerDataInterface::GetTimersAtDepthDiscretized to get the next pixel timestamp. The query
+// assumes a closed-open interval [start_ns, end_ns), so end_ns is not a visible timestamp.
+[[nodiscard]] uint64_t GetNextPixelBoundaryTimeNs(uint64_t current_timestamp_ns,
+                                                  uint32_t resolution, uint64_t start_ns,
+                                                  uint64_t end_ns);
+
 // Interface to be use by TimerDataProvider to access data from TimerTracks.
 class TimerDataInterface {
  public:

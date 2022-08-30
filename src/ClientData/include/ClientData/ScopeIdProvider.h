@@ -55,7 +55,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
 
   [[nodiscard]] ScopeId GetMaxId() const override {
     absl::ReaderMutexLock reader_lock{&mutex_};
-    return ScopeId(next_id_ - 1);
+    return ScopeId(*next_id_ - 1);
   }
 
   [[nodiscard]] std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) override;
@@ -68,16 +68,16 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   explicit NameEqualityScopeIdProvider(
       uint64_t start_id, absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id,
       absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info)
-      : next_id_(start_id),
-        max_instrumented_function_id(start_id - 1),
+      : next_id_(ScopeId(start_id)),
+        max_instrumented_function_id_(ScopeId(start_id - 1)),
         scope_info_to_id_(std::move(scope_info_to_id)),
         scope_id_to_info_(std::move(scope_id_to_info)) {}
 
   [[nodiscard]] std::optional<ScopeId> GetExistingScopeId(const ScopeInfo& scope_info) const
       ABSL_SHARED_LOCKS_REQUIRED(mutex_);
 
-  uint64_t next_id_ ABSL_GUARDED_BY(mutex_){};
-  uint64_t max_instrumented_function_id{};
+  ScopeId next_id_ ABSL_GUARDED_BY(mutex_){};
+  ScopeId max_instrumented_function_id_{};
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_ ABSL_GUARDED_BY(mutex_);
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info_ ABSL_GUARDED_BY(mutex_);
   mutable absl::Mutex mutex_;

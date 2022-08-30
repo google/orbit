@@ -17,9 +17,11 @@ target_sources(MetricsUploader PUBLIC include/MetricsUploader/CaptureMetric.h
                                       include/MetricsUploader/MockMetricsUploader.h
                                       include/MetricsUploader/Result.h
                                       include/MetricsUploader/ScopedMetric.h
+                                      include/MetricsUploader/SymbolLoadingMetric.h
                                PRIVATE CaptureMetric.cpp
                                        Result.cpp
-                                       ScopedMetric.cpp)
+                                       ScopedMetric.cpp
+                                       SymbolLoadingMetric.cpp)
 
 if (WIN32)
 target_sources(MetricsUploader PRIVATE MetricsUploaderWindows.cpp)
@@ -72,7 +74,8 @@ endif()
 add_executable(MetricsUploaderTests)
 
 target_sources(MetricsUploaderTests PRIVATE CaptureMetricTest.cpp
-                                            ScopedMetricTest.cpp)
+                                            ScopedMetricTest.cpp
+                                            SymbolLoadingMetricTest.cpp)
 
 if (WIN32)
 target_sources(MetricsUploaderTests PRIVATE MetricsUploaderWindowsTest.cpp)

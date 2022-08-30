@@ -121,8 +121,6 @@ bool IsBlocklisted(std::string_view function_name) {
       // instrumented this location gets overwritten and we end up jumping to the middle of an
       // instruction.
       "__GI_memcpy",
-      // Attaching a return probe will fail, as __wine_syscall_dispatcher does not return properly.
-      "__wine_syscall_dispatcher",
   };
   return kBlocklist.contains(function_name);
 }

@@ -327,7 +327,9 @@ TEST(Typedef, ComparisonIsCorrect) {
 
 struct WrapperWithArithmeticsTag : PlusTag<WrapperWithArithmeticsTag>,
                                    MinusTag<WrapperWithArithmeticsTag>,
-                                   TimesScalarTag<int> {};
+                                   TimesScalarTag<int>,
+                                   PreIncrementTag,
+                                   PostIncrementTag {};
 
 template <typename T>
 using WrapperWithArithmetics = Typedef<WrapperWithArithmeticsTag, T>;
@@ -366,6 +368,19 @@ TEST(Typedef, WrapperWithArithmeticsHasPlusAndConvertsArgument) {
   WrapperWithArithmetics<std::chrono::nanoseconds> a(kNanos);
   WrapperWithArithmetics<std::chrono::microseconds> b(kMicros);
   EXPECT_EQ(*(Add(a, b)), kNanos + kMicros);
+}
+
+TEST(Typedef, PostIncrement) {
+  WrapperWithArithmetics<int> a(kAValue);
+  WrapperWithArithmetics<int> old = a++;
+  EXPECT_EQ(*a, kAValue + 1);
+  EXPECT_EQ(*old, kAValue);
+}
+
+TEST(Typedef, PreIncrement) {
+  WrapperWithArithmetics<int> a(kAValue);
+  ++(++a);
+  EXPECT_EQ(*a, kAValue + 2);
 }
 
 static int PlusThatMultiplies(int a, int b) { return a * b; }

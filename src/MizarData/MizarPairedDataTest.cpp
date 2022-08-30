@@ -169,6 +169,13 @@ namespace {
 
 const std::vector<TimestampNs> kStarts = {kCaptureStart, Add(kCaptureStart, kRelativeTime2),
                                           Add(kCaptureStart, kRelativeTime5)};
+const std::vector<RelativeTimeNs> kWallClockFrameTimes = [] {
+  std::vector<RelativeTimeNs> result;
+  for (size_t i = 0; i + 1 < kStarts.size(); ++i) {
+    result.push_back(Sub(kStarts[i + 1], kStarts[i]));
+  }
+  return result;
+}();
 
 class MockFrameTrackManager {
  public:
@@ -284,6 +291,18 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimeStats) {
       RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
   EXPECT_THAT(stat.durations_fed_since_last_instantiation_,
               ElementsAreArray(kExpectedInvocationTimes));
+}
+
+TEST_F(MizarPairedDataTest, WallClockAndActiveInvocationTimeStats) {
+  MizarPairedDataUnderTest mizar_paired_data(std::move(data_), kAddressToId);
+  const auto [wall_clock_stats, active_time_stats] =
+      mizar_paired_data.WallClockAndActiveInvocationTimeStats(
+          {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), RelativeTimeNs(0),
+          RelativeTimeNs(std::numeric_limits<uint64_t>::max()));
+  EXPECT_THAT(active_time_stats.durations_fed_since_last_instantiation_,
+              ElementsAreArray(kExpectedInvocationTimes));
+  EXPECT_THAT(wall_clock_stats.durations_fed_since_last_instantiation_,
+              ElementsAreArray(kWallClockFrameTimes));
 }
 
 TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {

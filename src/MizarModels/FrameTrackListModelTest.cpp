@@ -5,6 +5,7 @@
 #include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <gmock/gmock-cardinalities.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -25,6 +26,7 @@ using ::orbit_mizar_base::TID;
 using ::orbit_mizar_data::FrameTrackId;
 using ::orbit_mizar_data::FrameTrackInfo;
 using ::orbit_test_utils::MakeMap;
+using ::testing::AtLeast;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::UnorderedElementsAreArray;
@@ -38,7 +40,8 @@ struct MockFrameTrackStats {
 
 struct MockPairedData {
   MOCK_METHOD((absl::flat_hash_map<FrameTrackId, FrameTrackInfo>), GetFrameTracks, (), (const));
-  MOCK_METHOD(MockFrameTrackStats&, ActiveInvocationTimeStats,
+  MOCK_METHOD((std::pair<MockFrameTrackStats, MockFrameTrackStats>&),
+              WallClockAndActiveInvocationTimeStats,
               (const absl::flat_hash_set<TID>&, FrameTrackId, RelativeTimeNs, RelativeTimeNs),
               (const));
 };
@@ -94,9 +97,13 @@ TEST(FrameTrackListModelTest, NoFrameTracks) {
   EXPECT_EQ(model.rowCount({}), 0);
 }
 
+static void SetExpectationsForMockFrameTrackStats(MockFrameTrackStats& stats) {
+  EXPECT_CALL(stats, ComputeAverageTimeNs).Times(1);
+  EXPECT_CALL(stats, count).Times(AtLeast(1));
+}
+
 TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
   MockPairedData data;
-  MockFrameTrackStats stats;
   EXPECT_CALL(data, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
   FrameTrackListModelTmpl<MockPairedData> model(&data, &kTids, &kStart);
@@ -112,19 +119,22 @@ TEST(FrameTrackListModelTest, TestDisplayTooltipAndIdRoles) {
     const auto actual_shown = model.data(index, Qt::DisplayRole).value<QString>();
     EXPECT_EQ(actual_shown.toStdString(), kIdToExpectedShown.at(actual_id));
 
-    EXPECT_CALL(stats, ComputeAverageTimeNs).Times(1);
-    EXPECT_CALL(stats, count).Times(1);
-    EXPECT_CALL(data, ActiveInvocationTimeStats)
-        .WillOnce(Invoke([&stats, &actual_id](const absl::flat_hash_set<TID>& tids, FrameTrackId id,
-                                              RelativeTimeNs start,
-                                              RelativeTimeNs end) -> MockFrameTrackStats& {
-          EXPECT_EQ(tids, kTids);
-          EXPECT_EQ(start, kStart);
-          EXPECT_EQ(end, kEnd);
-          EXPECT_EQ(id, actual_id);
+    std::pair<MockFrameTrackStats, MockFrameTrackStats> wall_clock_and_active_time_stats;
+    SetExpectationsForMockFrameTrackStats(wall_clock_and_active_time_stats.first);
+    SetExpectationsForMockFrameTrackStats(wall_clock_and_active_time_stats.second);
 
-          return stats;
-        }));
+    EXPECT_CALL(data, WallClockAndActiveInvocationTimeStats)
+        .WillOnce(
+            Invoke([&wall_clock_and_active_time_stats, &actual_id](
+                       const absl::flat_hash_set<TID>& tids, FrameTrackId id, RelativeTimeNs start,
+                       RelativeTimeNs end) -> std::pair<MockFrameTrackStats, MockFrameTrackStats>& {
+              EXPECT_EQ(tids, kTids);
+              EXPECT_EQ(start, kStart);
+              EXPECT_EQ(end, kEnd);
+              EXPECT_EQ(id, actual_id);
+
+              return wall_clock_and_active_time_stats;
+            }));
     std::ignore = model.data(index, Qt::ToolTipRole);
   }
 }

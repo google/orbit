@@ -50,7 +50,18 @@ std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& proc
 
 bool FunctionInfo::IsFunctionSelectable() const {
   constexpr const char* kLibOrbitUserSpaceInstrumentation = "liborbituserspaceinstrumentation.so";
-  return module_path().find(kLibOrbitUserSpaceInstrumentation) == std::string::npos;
+  if (absl::StrContains(module_path(), kLibOrbitUserSpaceInstrumentation)) {
+    return false;
+  }
+
+  constexpr const char* kNameOfWineSyscallDispatcher = "__wine_syscall_dispatcher";
+  constexpr const char* kNameOfWineSyscallDispatcherModule = "ntdll.so";
+  if (absl::StrContains(pretty_name(), kNameOfWineSyscallDispatcher) &&
+      absl::StrContains(module_path(), kNameOfWineSyscallDispatcherModule)) {
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace orbit_client_data

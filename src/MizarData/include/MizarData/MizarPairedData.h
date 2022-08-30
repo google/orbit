@@ -48,6 +48,11 @@ class MizarPairedDataTmpl {
   using AbsoluteAddress = ::orbit_mizar_base::AbsoluteAddress;
 
  public:
+  struct WallClockAndActiveInvocationTimeStats {
+    FrameTrackStats wall_clock_time;
+    FrameTrackStats active_invocation_time;
+  };
+
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
                       absl::flat_hash_map<AbsoluteAddress, SFID> address_to_sfid)
       : data_(std::move(data)),
@@ -64,37 +69,33 @@ class MizarPairedDataTmpl {
   [[nodiscard]] std::vector<RelativeTimeNs> ActiveInvocationTimes(
       const absl::flat_hash_set<TID>& tids, FrameTrackId frame_track_id,
       RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
-    const auto [min_timestamp_ns, max_timestamp_ns] =
-        RelativeToAbsoluteTimestampRange(min_relative_time, max_relative_time);
-    const std::vector<TimestampNs> frame_starts =
-        GetFrameStarts(frame_track_id, min_timestamp_ns, max_timestamp_ns);
-    if (frame_starts.size() < 2) return {};
-
-    const RelativeTimeNs sampling_period = data_->GetNominalSamplingPeriodNs();
-
-    std::vector<RelativeTimeNs> result;
-    for (size_t i = 0; i + 1 < frame_starts.size(); ++i) {
-      const uint64_t callstack_count = std::transform_reduce(
-          std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
-          [this, i, &frame_starts](const TID tid) {
-            return CallstackSamplesCount(tid, frame_starts[i], frame_starts[i + 1]);
-          });
-
-      result.push_back(Times(sampling_period, callstack_count));
-    }
-    return result;
+    return ReduceOverFrames<std::vector<RelativeTimeNs>>(
+        frame_track_id, min_relative_time, max_relative_time,
+        [this, &tids](std::vector<RelativeTimeNs>& times, Frame frame) {
+          times.push_back(FrameActiveInvocationTime(tids, frame));
+        });
   }
 
   [[nodiscard]] FrameTrackStats ActiveInvocationTimeStats(const absl::flat_hash_set<TID>& tids,
                                                           FrameTrackId frame_track_id,
                                                           RelativeTimeNs min_relative_time,
                                                           RelativeTimeNs max_relative_time) const {
-    FrameTrackStats stats;
-    for (const RelativeTimeNs active_invocation_time :
-         ActiveInvocationTimes(tids, frame_track_id, min_relative_time, max_relative_time)) {
-      stats.UpdateStats(*active_invocation_time);
-    }
-    return stats;
+    return ReduceOverFrames<FrameTrackStats>(
+        frame_track_id, min_relative_time, max_relative_time,
+        [this, &tids](FrameTrackStats& stats, Frame frame) {
+          stats.UpdateStats(*FrameActiveInvocationTime(tids, frame));
+        });
+  }
+
+  [[nodiscard]] WallClockAndActiveInvocationTimeStats WallClockAndActiveInvocationTimeStats(
+      const absl::flat_hash_set<TID>& tids, FrameTrackId frame_track_id,
+      RelativeTimeNs min_relative_time, RelativeTimeNs max_relative_time) const {
+    return ReduceOverFrames<struct WallClockAndActiveInvocationTimeStats>(
+        frame_track_id, min_relative_time, max_relative_time,
+        [this, &tids](struct WallClockAndActiveInvocationTimeStats& stats, Frame frame) {
+          stats.active_invocation_time.UpdateStats(*FrameActiveInvocationTime(tids, frame));
+          stats.wall_clock_time.UpdateStats(*Sub(frame.end, frame.start));
+        });
   }
 
   [[nodiscard]] const absl::flat_hash_map<TID, std::string>& TidToNames() const {
@@ -141,6 +142,38 @@ class MizarPairedDataTmpl {
   }
 
  private:
+  struct Frame {
+    TimestampNs start;
+    TimestampNs end;
+  };
+
+  // Op is a `void` callable that takes `Accumulator&` and `Frame`.
+  template <typename Accumulator, typename Op>
+  [[nodiscard]] Accumulator ReduceOverFrames(FrameTrackId frame_track_id,
+                                             RelativeTimeNs min_relative_time,
+                                             RelativeTimeNs max_relative_time, Op&& op) const {
+    Accumulator accumulator;
+    const auto [min_timestamp_ns, max_timestamp_ns] =
+        RelativeToAbsoluteTimestampRange(min_relative_time, max_relative_time);
+    const std::vector<TimestampNs> frame_starts =
+        GetFrameStarts(frame_track_id, min_timestamp_ns, max_timestamp_ns);
+    if (frame_starts.size() < 2) return accumulator;
+
+    for (size_t i = 0; i + 1 < frame_starts.size(); ++i) {
+      std::invoke(op, accumulator, Frame{frame_starts[i], frame_starts[i + 1]});
+    }
+    return accumulator;
+  }
+
+  [[nodiscard]] RelativeTimeNs FrameActiveInvocationTime(const absl::flat_hash_set<TID>& tids,
+                                                         Frame frame) const {
+    const uint64_t callstack_count = std::transform_reduce(
+        std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
+        [&](const TID tid) { return CountCallstackSamples(tid, frame.start, frame.end); });
+    const RelativeTimeNs sampling_period = this->data_->GetNominalSamplingPeriodNs();
+    return Times(sampling_period, callstack_count);
+  }
+
   void SetThreadNamesAndCallstackCounts() {
     const absl::flat_hash_map<uint32_t, std::string>& thread_names =
         GetCaptureData().thread_names();
@@ -166,7 +199,7 @@ class MizarPairedDataTmpl {
         *tid, *min_timestamp_ns, *max_timestamp_ns, action_on_callstack_events);
   }
 
-  [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, TimestampNs min_timestamp_ns,
+  [[nodiscard]] uint64_t CountCallstackSamples(TID tid, TimestampNs min_timestamp_ns,
                                                TimestampNs max_timestamp_ns) const {
     uint64_t count = 0;
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,

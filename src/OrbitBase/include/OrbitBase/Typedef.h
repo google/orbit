@@ -216,6 +216,23 @@ constexpr auto Times(Vector&& vector, Scalar&& scalar) {
       Tag::TimesScalar(*std::forward<Vector>(vector), std::forward<Scalar>(scalar)));
 }
 
+struct PreIncrementTag {};
+
+template <typename TypedefType, typename Tag = typename TypedefType::Tag,
+          typename = std::enable_if_t<std::is_base_of_v<PreIncrementTag, Tag>>>
+auto& operator++(TypedefType& i) {
+  ++(*i);
+  return i;
+}
+
+struct PostIncrementTag {};
+
+template <typename TypedefType, typename Tag = typename TypedefType::Tag,
+          typename = std::enable_if_t<std::is_base_of_v<PostIncrementTag, Tag>>>
+const auto operator++(TypedefType& i, int) {
+  return TypedefType((*i)++);
+}
+
 // Say, we have a pair of typedefs.
 // ```
 // const MyType<int> kFirstWrapped(1);

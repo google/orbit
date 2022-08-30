@@ -9,8 +9,8 @@
 #include <string>
 #include <utility>
 
-#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/symbol.pb.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_client_data {
 
@@ -40,8 +40,8 @@ class FunctionInfo {
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
-  [[nodiscard]] ModuleIdentifier module_id() const {
-    return ModuleIdentifier{module_path(), module_build_id()};
+  [[nodiscard]] orbit_symbol_provider::ModuleIdentifier module_id() const {
+    return orbit_symbol_provider::ModuleIdentifier{module_path(), module_build_id()};
   }
   // The virtual address as specified in the object file.
   [[nodiscard]] uint64_t address() const { return address_; }

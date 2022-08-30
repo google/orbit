@@ -51,8 +51,13 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
   }
 
-  ASSERT_EQ(symbol_infos_by_address.size(), 5459);
-
+  // TODO(kuebler): Reading public symbols is not yet implemented in the LLVM-based parser.
+  auto test_suite_name = ::testing::UnitTest::GetInstance()->current_test_suite()->name();
+  if (absl::StrContains(test_suite_name, "PdbFileLlvmTest")) {
+    ASSERT_EQ(symbol_infos_by_address.size(), 5459);
+  } else {
+    ASSERT_EQ(symbol_infos_by_address.size(), 5552);
+  }
   {
     const SymbolInfo* symbol = symbol_infos_by_address[0x18000eea0];
     ASSERT_NE(symbol, nullptr);

@@ -48,12 +48,12 @@ static absl::flat_hash_map<AbsoluteAddress, SFID> AddressToSFID(
   absl::flat_hash_map<std::string, SFID> name_to_sfid;
   absl::flat_hash_map<SFID, std::string> sfid_to_name;
 
-  uint64_t next_sfid_value = 1;
+  SFID next_sfid_value{1};
   for (const std::string& name : baseline_names) {
     if (comparison_names.contains(name) && !name_to_sfid.contains(name)) {
       name_to_sfid.try_emplace(name, SFID(next_sfid_value));
       sfid_to_name.try_emplace(SFID(next_sfid_value), name);
-      next_sfid_value++;
+      ++next_sfid_value;
     }
   }
 

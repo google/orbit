@@ -73,7 +73,6 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
@@ -118,6 +117,7 @@
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -1166,18 +1166,21 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
-  bool const collect_callstack_on_thread_state_change =
-      settings
-          .value(kEnableCallStackCollectionOnThreadStateChanges,
-                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
-          .toBool();
-  if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
-    if (!collect_callstack_on_thread_state_change) {
-      app_->SetThreadStateChangeCallstackCollection(
-          CaptureOptions::kNoThreadStateChangeCallStackCollection);
+
+  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    CaptureOptions::ThreadStateChangeCallStackCollection const
+        collect_callstack_on_thread_state_change =
+            static_cast<CaptureOptions::ThreadStateChangeCallStackCollection>(
+                settings
+                    .value(kEnableCallStackCollectionOnThreadStateChanges,
+                           orbit_qt::CaptureOptionsDialog::
+                               kThreadStateChangeCallStackCollectionDefaultValue)
+                    .toInt());
+    if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
+      app_->SetThreadStateChangeCallstackCollection(collect_callstack_on_thread_state_change);
     } else {
       app_->SetThreadStateChangeCallstackCollection(
-          CaptureOptions::kThreadStateChangeCallStackCollection);
+          CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
     }
   } else {
     app_->SetThreadStateChangeCallstackCollection(
@@ -1322,13 +1325,21 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
           .toULongLong());
 
-  bool const collect_callstack_on_thread_state_change =
-      settings
-          .value(kEnableCallStackCollectionOnThreadStateChanges,
-                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
-          .toBool();
+  CaptureOptions::ThreadStateChangeCallStackCollection collect_callstack_on_thread_state_change =
+      CaptureOptions::kNoThreadStateChangeCallStackCollection;
+  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    collect_callstack_on_thread_state_change = static_cast<
+        CaptureOptions::ThreadStateChangeCallStackCollection>(
+        settings
+            .value(
+                kEnableCallStackCollectionOnThreadStateChanges,
+                orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
+            .toInt());
+  }
 
-  dialog.SetEnableCallStackCollectionOnThreadStateChanges(collect_callstack_on_thread_state_change);
+  dialog.SetEnableCallStackCollectionOnThreadStateChanges(
+      collect_callstack_on_thread_state_change ==
+      CaptureOptions::kThreadStateChangeCallStackCollection);
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -1899,10 +1910,10 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
   QPointer<orbit_qt::AnnotatingSourceCodeDialog> dialog_ptr =
       OpenAndDeleteOnClose(std::move(dialog));
 
-  dialog_ptr->AddAnnotatingSourceCode(function_info,
-                                      [this](const orbit_client_data::ModuleIdentifier& module_id) {
-                                        return app_->RetrieveModuleWithDebugInfo(module_id);
-                                      });
+  dialog_ptr->AddAnnotatingSourceCode(
+      function_info, [this](const orbit_symbol_provider::ModuleIdentifier& module_id) {
+        return app_->RetrieveModuleWithDebugInfo(module_id);
+      });
 }
 
 void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,

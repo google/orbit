@@ -6,7 +6,7 @@ found in the LICENSE file.
 
 import logging
 
-from core.orbit_e2e import E2ETestCase, find_control, OrbitE2EError
+from core.orbit_e2e import E2ETestCase, find_control, OrbitE2EError, wait_for_condition
 from pywinauto.keyboard import send_keys
 
 
@@ -43,6 +43,8 @@ class AddSymbolLocation(E2ETestCase):
     def _execute(self, location):
         ui = _show_and_get_symbol_location_ui(self.suite.top_window())
         self.find_control('Button', 'Add Folder', ui).click_input()
+        wait_for_condition(lambda: self.find_control('Edit', 'Folder:', parent=ui) is not None,
+                           max_seconds=180)
         self.find_control('Edit', 'Folder:', parent=ui).set_text(location)
         self.find_control('Button', 'Select Folder', parent=ui).click_input()
         symbol_path_list = self.find_control('List', parent=ui)
@@ -61,6 +63,8 @@ class AddSymbolFile(E2ETestCase):
     def _execute(self, location):
         ui = _show_and_get_symbol_location_ui(self.suite.top_window())
         self.find_control('Button', 'Add File', ui).click_input()
+        wait_for_condition(lambda: self.find_control('Edit', 'File name:', parent=ui) is not None,
+                           max_seconds=180)
         self.find_control('Edit', 'File name:', parent=ui).set_text(location)
         # Windows decides to show a drop down menu here with suggestions which file to pick. This is not needed
         # here, but the result is that a click on the open button is not registered. To circumvent that, a return

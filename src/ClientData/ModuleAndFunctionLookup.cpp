@@ -10,6 +10,8 @@
 
 namespace orbit_client_data {
 namespace {
+using orbit_symbol_provider::ModuleIdentifier;
+
 [[nodiscard]] std::optional<uint64_t>
 FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
     const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address) {
