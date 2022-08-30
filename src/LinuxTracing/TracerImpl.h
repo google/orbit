@@ -135,7 +135,9 @@ class TracerImpl : public Tracer {
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
   static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 64 * 1024;
+  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
+  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_CALLSTACKS_RING_BUFFER_SIZE_KB =
+      64 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
   static constexpr uint64_t UPROBES_WITH_STACK_RING_BUFFER_SIZE_KB = 64 * 1024;

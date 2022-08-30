@@ -218,9 +218,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 
     if (out_slice.has_value()) {
       // We need to set some value here so producer event processor can know this slice should wait
-      // on a callstack.
+      // on a callstack. Note that the value 1 here is completely arbitrary.
       if (!event_data.just_tracepoint) {
-        out_slice->set_callstack_id(1);
+        out_slice->set_triggering_callstack_id(1);
       }
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
       if (thread_state_counter_ != nullptr) {
@@ -236,9 +236,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 
     if (in_slice.has_value()) {
       // We need to set some value here so producer event processor can know this slice should wait
-      // on a callstack.
+      // on a callstack. Note that the value 1 here is completely arbitrary.
       if (!event_data.just_tracepoint) {
-        in_slice->set_callstack_id(1);
+        in_slice->set_triggering_callstack_id(1);
       }
       listener_->OnThreadStateSlice(std::move(in_slice.value()));
       if (thread_state_counter_ != nullptr) {
@@ -280,9 +280,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 
   if (state_slice.has_value()) {
     // We need to set some value here so producer event processor can know this slice should wait
-    // on a callstack.
+    // on a callstack. Note that the value 1 here is completely arbitrary.
     if (!event_data.just_tracepoint) {
-      state_slice->set_callstack_id(1);
+      state_slice->set_triggering_callstack_id(1);
     }
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {

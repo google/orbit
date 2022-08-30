@@ -434,9 +434,9 @@ message FullCallstackSample {
 }
 
 message TracepointCallstack {
-  // This is an internal (only used on the service side and won't be seen by the
-  // client) proto. This will be used to merge callstacks with tracepoints
-  // coming to ProducerEventProcessor.
+  // This proto is only used on the service and won't be seen by the client.
+  // This will be used to merge callstacks with tracepoints coming to
+  // ProducerEventProcessor.
   uint32 tid = 1;
   Callstack callstack = 2;
   uint64 timestamp_ns = 3;
@@ -609,7 +609,11 @@ message ThreadStateSlice {
   uint32 wakeup_tid = 7;
   uint32 wakeup_pid = 8;
 
-  uint64 callstack_id = 10;
+  // This is the callstack of the tracepoint that changed the state
+  // of the thread and caused this slice to happen. If the thread
+  // state is runnable then this callstack is coming from wakeup_tid,
+  // otherwise it's coming from the same thread.
+  uint64 triggering_callstack_id = 10;
 }
 
 message AddressInfo {
@@ -948,8 +952,8 @@ message ProducerCaptureEvent {
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
-    TracepointCallstack tracepoint_callstack = 50;
     ThreadStateSlice thread_state_slice = 9;
+    TracepointCallstack tracepoint_callstack = 50;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent
         warning_instrumenting_with_uprobes_event = 49;
