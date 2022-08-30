@@ -71,7 +71,8 @@ struct PerfRecordSample {
 
 [[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
                                                           const perf_event_header& header,
-                                                          perf_event_attr flags) {
+                                                          perf_event_attr flags_to_read,
+                                                          perf_event_attr flags_to_copy) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
@@ -81,99 +82,130 @@ struct PerfRecordSample {
   ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
   current_offset += sizeof(perf_event_header);
 
-  if (flags.sample_type & PERF_SAMPLE_IDENTIFIER) {
-    ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
+  if (flags_to_read.sample_type & PERF_SAMPLE_IDENTIFIER) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_IDENTIFIER) {
+      ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
+    }
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_IP) {
-    ring_buffer->ReadRawAtOffset(&event.ip, current_offset, sizeof(uint64_t));
+  if (flags_to_read.sample_type & PERF_SAMPLE_IP) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_IP) {
+      ring_buffer->ReadRawAtOffset(&event.ip, current_offset, sizeof(uint64_t));
+    }
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_TID) {
-    ring_buffer->ReadRawAtOffset(&event.pid, current_offset, sizeof(uint32_t));
+  if (flags_to_read.sample_type & PERF_SAMPLE_TID) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_TID) {
+      ring_buffer->ReadRawAtOffset(&event.pid, current_offset, sizeof(uint32_t));
+    }
     current_offset += sizeof(uint32_t);
-    ring_buffer->ReadRawAtOffset(&event.tid, current_offset, sizeof(uint32_t));
-    current_offset += sizeof(uint32_t);
-  }
-
-  if (flags.sample_type & PERF_SAMPLE_TIME) {
-    ring_buffer->ReadRawAtOffset(&event.time, current_offset, sizeof(uint64_t));
-    current_offset += sizeof(uint64_t);
-  }
-
-  if (flags.sample_type & PERF_SAMPLE_ADDR) {
-    ring_buffer->ReadRawAtOffset(&event.addr, current_offset, sizeof(uint64_t));
-    current_offset += sizeof(uint64_t);
-  }
-
-  if (flags.sample_type & PERF_SAMPLE_ID) {
-    ring_buffer->ReadRawAtOffset(&event.id, current_offset, sizeof(uint64_t));
-    current_offset += sizeof(uint64_t);
-  }
-
-  if (flags.sample_type & PERF_SAMPLE_STREAM_ID) {
-    ring_buffer->ReadRawAtOffset(&event.stream_id, current_offset, sizeof(uint64_t));
-    current_offset += sizeof(uint64_t);
-  }
-
-  if (flags.sample_type & PERF_SAMPLE_CPU) {
-    ring_buffer->ReadRawAtOffset(&event.cpu, current_offset, sizeof(uint32_t));
-    current_offset += sizeof(uint32_t);
-    ring_buffer->ReadRawAtOffset(&event.res, current_offset, sizeof(uint32_t));
+    if (flags_to_copy.sample_type & PERF_SAMPLE_TID) {
+      ring_buffer->ReadRawAtOffset(&event.tid, current_offset, sizeof(uint32_t));
+    }
     current_offset += sizeof(uint32_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_PERIOD) {
-    ring_buffer->ReadRawAtOffset(&event.period, current_offset, sizeof(uint64_t));
+  if (flags_to_read.sample_type & PERF_SAMPLE_TIME) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_TIME) {
+      ring_buffer->ReadRawAtOffset(&event.time, current_offset, sizeof(uint64_t));
+    }
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_CALLCHAIN) {
+  if (flags_to_read.sample_type & PERF_SAMPLE_ADDR) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_ADDR) {
+      ring_buffer->ReadRawAtOffset(&event.addr, current_offset, sizeof(uint64_t));
+    }
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags_to_read.sample_type & PERF_SAMPLE_ID) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_ID) {
+      ring_buffer->ReadRawAtOffset(&event.id, current_offset, sizeof(uint64_t));
+    }
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags_to_read.sample_type & PERF_SAMPLE_STREAM_ID) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_STREAM_ID) {
+      ring_buffer->ReadRawAtOffset(&event.stream_id, current_offset, sizeof(uint64_t));
+    }
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags_to_read.sample_type & PERF_SAMPLE_CPU) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_CPU) {
+      ring_buffer->ReadRawAtOffset(&event.cpu, current_offset, sizeof(uint32_t));
+    }
+    current_offset += sizeof(uint32_t);
+    if (flags_to_copy.sample_type & PERF_SAMPLE_CPU) {
+      ring_buffer->ReadRawAtOffset(&event.res, current_offset, sizeof(uint32_t));
+    }
+    current_offset += sizeof(uint32_t);
+  }
+
+  if (flags_to_read.sample_type & PERF_SAMPLE_PERIOD) {
+    if (flags_to_copy.sample_type & PERF_SAMPLE_PERIOD) {
+      ring_buffer->ReadRawAtOffset(&event.period, current_offset, sizeof(uint64_t));
+    }
+    current_offset += sizeof(uint64_t);
+  }
+
+  if (flags_to_read.sample_type & PERF_SAMPLE_CALLCHAIN) {
     ring_buffer->ReadRawAtOffset(&event.ips_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
-    event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
-    ring_buffer->ReadRawAtOffset(event.ips.get(), current_offset,
-                                 event.ips_size * sizeof(uint64_t));
+    if (flags_to_copy.sample_type & PERF_SAMPLE_CALLCHAIN) {
+      event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
+      ring_buffer->ReadRawAtOffset(event.ips.get(), current_offset,
+                                   event.ips_size * sizeof(uint64_t));
+    }
     current_offset += event.ips_size * sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_RAW) {
+  if (flags_to_read.sample_type & PERF_SAMPLE_RAW) {
     ring_buffer->ReadRawAtOffset(&event.raw_size, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
-    event.raw_data = make_unique_for_overwrite<uint8_t[]>(event.raw_size);
-    ring_buffer->ReadRawAtOffset(event.raw_data.get(), current_offset,
-                                 event.raw_size * sizeof(uint8_t));
+    if (flags_to_copy.sample_type & PERF_SAMPLE_RAW) {
+      event.raw_data = make_unique_for_overwrite<uint8_t[]>(event.raw_size);
+      ring_buffer->ReadRawAtOffset(event.raw_data.get(), current_offset,
+                                   event.raw_size * sizeof(uint8_t));
+    }
     current_offset += event.raw_size * sizeof(uint8_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_REGS_USER) {
+  if (flags_to_read.sample_type & PERF_SAMPLE_REGS_USER) {
     ring_buffer->ReadRawAtOffset(&event.abi, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
+    const int num_of_regs = std::bitset<64>(flags_to_copy.sample_regs_user).count();
+    if (flags_to_copy.sample_type & PERF_SAMPLE_REGS_USER) {
+      if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
+        event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs);
+        ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
+                                     num_of_regs * sizeof(uint64_t));
+      }
+    }
     if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
-      const int num_of_regs = std::bitset<64>(flags.sample_regs_user).count();
-      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs * sizeof(uint64_t));
-      ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
-                                   num_of_regs * sizeof(uint64_t));
       current_offset += num_of_regs * sizeof(uint64_t);
     }
   }
 
-  if (flags.sample_type & PERF_SAMPLE_STACK_USER) {
+  if (flags_to_read.sample_type & PERF_SAMPLE_STACK_USER) {
     ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
     if (event.stack_size != 0u) {
-      // dyn_size comes after the actual stack but we read it first so
-      // we can use it to not copy unnessary parts of the stack.
-      ring_buffer->ReadRawAtOffset(
-          &event.dyn_size, current_offset + (event.stack_size * sizeof(uint8_t)), sizeof(uint64_t));
-      event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.dyn_size);
-      ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
-                                   event.dyn_size * sizeof(uint8_t));
-    }
-    current_offset += event.stack_size * sizeof(uint8_t);
-    if (event.stack_size != 0u) {
+      if (flags_to_copy.sample_type & PERF_SAMPLE_STACK_USER) {
+        // dyn_size comes after the actual stack but we read it first so
+        // we can use it to not copy unnessary parts of the stack.
+        ring_buffer->ReadRawAtOffset(&event.dyn_size,
+                                     current_offset + (event.stack_size * sizeof(uint8_t)),
+                                     sizeof(uint64_t));
+        event.stack_data = make_unique_for_overwrite<uint8_t[]>(event.dyn_size);
+        ring_buffer->ReadRawAtOffset(event.stack_data.get(), current_offset,
+                                     event.dyn_size * sizeof(uint8_t));
+      }
+      current_offset += event.stack_size * sizeof(uint8_t);
       // dyn_size was already read but its offset wasn't increased.
       // we increase it here.
       current_offset += sizeof(uint64_t);
@@ -306,13 +338,14 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
                                                                const perf_event_header& header) {
   // The flags here are in sync with stack_sample_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from stack_sample_event_open
-  const perf_event_attr flags{
+  const perf_event_attr flags_to_read_and_copy{
       .sample_type =
           PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
       .sample_regs_user = SAMPLE_REGS_USER_ALL,
   };
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res =
+      ConsumeRecordSample(ring_buffer, header, flags_to_read_and_copy, flags_to_read_and_copy);
 
   StackSamplePerfEvent event{
       .timestamp = res.time,
@@ -335,13 +368,14 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with callchain_sample_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from callchain_sample_event_open
-  const perf_event_attr flags{
+  const perf_event_attr flags_to_read_and_copy{
       .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
                      SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
       .sample_regs_user = SAMPLE_REGS_USER_ALL,
   };
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res =
+      ConsumeRecordSample(ring_buffer, header, flags_to_read_and_copy, flags_to_read_and_copy);
 
   CallchainSamplePerfEvent event{
       .timestamp = res.time,
@@ -366,13 +400,14 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   // The flags here are in sync with uprobes_with_stack_and_sp_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // uprobes_with_stack_and_sp_event_open
-  const perf_event_attr flags{
+  const perf_event_attr flags_to_read_and_copy{
       .sample_type =
           PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
       .sample_regs_user = SAMPLE_REGS_USER_SP,
   };
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res =
+      ConsumeRecordSample(ring_buffer, header, flags_to_read_and_copy, flags_to_read_and_copy);
   ring_buffer->SkipRecord(header);
 
   UprobesWithStackPerfEvent event{
@@ -396,11 +431,12 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with generic_event_attr in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from generic_event_attr
-  const perf_event_attr flags{
+  const perf_event_attr flags_to_read_and_copy{
       .sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
   };
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res =
+      ConsumeRecordSample(ring_buffer, header, flags_to_read_and_copy, flags_to_read_and_copy);
 
   GenericTracepointPerfEvent event{
       .timestamp = res.time,
@@ -421,11 +457,12 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
                                                                const perf_event_header& header) {
   // The flags here are in sync with tracepoint_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from tracepoint_event_open
-  const perf_event_attr flags{
+  const perf_event_attr flags_to_read_and_copy{
       .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
   };
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res =
+      ConsumeRecordSample(ring_buffer, header, flags_to_read_and_copy, flags_to_read_and_copy);
 
   sched_wakeup_tracepoint_fixed sched_wakeup;
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
@@ -446,16 +483,26 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 [[nodiscard]] SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack) {
   // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_callchain_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
-                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+  const perf_event_attr flags_to_read{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                                     PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                                      .sample_regs_user = SAMPLE_REGS_USER_ALL};
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  perf_event_attr flags_to_copy{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
+
+  if (get_callstack) {
+    flags_to_copy.sample_type |=
+        PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags_to_copy.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  }
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags_to_read, flags_to_copy);
 
   sched_wakeup_tracepoint_fixed sched_wakeup;
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
@@ -484,14 +531,20 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU};
+  const perf_event_attr flags_to_read{.sample_type = PERF_SAMPLE_RAW |
+                                                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                                     PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                                      .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  perf_event_attr flags_to_copy{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
 
   if (get_callstack) {
-    flags.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-    flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+    flags_to_copy.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags_to_copy.sample_regs_user = SAMPLE_REGS_USER_ALL;
   }
-
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags_to_read, flags_to_copy);
 
   sched_wakeup_tracepoint_fixed sched_wakeup;
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
@@ -519,14 +572,21 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU};
+  const perf_event_attr flags_to_read{.sample_type = PERF_SAMPLE_RAW |
+                                                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                                     PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                                      .sample_regs_user = SAMPLE_REGS_USER_ALL};
+
+  perf_event_attr flags_to_copy{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
 
   if (get_callstack) {
-    flags.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-    flags.sample_regs_user = SAMPLE_REGS_USER_ALL;
+    flags_to_copy.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags_to_copy.sample_regs_user = SAMPLE_REGS_USER_ALL;
   }
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags_to_read, flags_to_copy);
 
   sched_switch_tracepoint sched_switch;
   std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));
@@ -556,16 +616,26 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 [[nodiscard]] SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEventData(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack) {
   // The flags here are in sync with tracepoint_with_callchain_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_callchain_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
-                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+  const perf_event_attr flags_to_read{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
+                                                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+                                                     PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
+                                      .sample_regs_user = SAMPLE_REGS_USER_ALL};
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  perf_event_attr flags_to_copy{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
+
+  if (get_callstack) {
+    flags_to_copy.sample_type |=
+        PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
+    flags_to_copy.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  }
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags_to_read, flags_to_copy);
 
   sched_switch_tracepoint sched_switch;
   std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));

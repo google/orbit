@@ -50,10 +50,10 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
                                                  const perf_event_header& header);
 
 SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack);
 
 SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header, bool get_callstack);
 
 SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                                    const perf_event_header& header,
