@@ -22,7 +22,7 @@ class ThreadStateSliceInfo {
                                 orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state,
                                 uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns,
                                 WakeupReason wakeup_reason, uint32_t wakeup_tid,
-                                uint32_t wakeup_pid, uint64_t callstack_id)
+                                uint32_t wakeup_pid, uint64_t triggering_callstack_id)
       : tid_{tid},
         thread_state_{thread_state},
         begin_timestamp_ns_{begin_timestamp_ns},
@@ -30,14 +30,16 @@ class ThreadStateSliceInfo {
         wakeup_reason_{wakeup_reason},
         wakeup_tid_(wakeup_tid),
         wakeup_pid_{wakeup_pid},
-        callstack_id_{callstack_id} {}
+        triggering_callstack_id_{triggering_callstack_id} {}
 
   [[nodiscard]] friend bool operator==(const ThreadStateSliceInfo& lhs,
                                        const ThreadStateSliceInfo& rhs) {
     return std::tie(lhs.tid_, lhs.thread_state_, lhs.begin_timestamp_ns_, lhs.end_timestamp_ns_,
-                    lhs.wakeup_tid_, lhs.wakeup_pid_, lhs.wakeup_reason_) ==
+                    lhs.wakeup_tid_, lhs.wakeup_pid_, lhs.wakeup_reason_,
+                    lhs.triggering_callstack_id_) ==
            std::tie(rhs.tid_, rhs.thread_state_, rhs.begin_timestamp_ns_, rhs.end_timestamp_ns_,
-                    rhs.wakeup_tid_, rhs.wakeup_pid_, rhs.wakeup_reason_);
+                    rhs.wakeup_tid_, rhs.wakeup_pid_, rhs.wakeup_reason_,
+                    rhs.triggering_callstack_id_);
   }
   [[nodiscard]] friend bool operator!=(const ThreadStateSliceInfo& lhs,
                                        const ThreadStateSliceInfo& rhs) {
@@ -53,7 +55,7 @@ class ThreadStateSliceInfo {
   }
   [[nodiscard]] uint64_t begin_timestamp_ns() const { return begin_timestamp_ns_; }
   [[nodiscard]] uint64_t end_timestamp_ns() const { return end_timestamp_ns_; }
-  [[nodiscard]] uint64_t callstack_id() const { return callstack_id_; }
+  [[nodiscard]] uint64_t triggering_callstack_id() const { return triggering_callstack_id_; }
 
  private:
   // pid is absent as we don't yet get that information from the service.
@@ -64,7 +66,7 @@ class ThreadStateSliceInfo {
   WakeupReason wakeup_reason_;
   uint32_t wakeup_tid_;
   uint32_t wakeup_pid_;
-  uint64_t callstack_id_;
+  uint64_t triggering_callstack_id_;
 };
 
 }  // namespace orbit_client_data

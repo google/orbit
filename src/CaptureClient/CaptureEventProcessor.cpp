@@ -592,6 +592,11 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       thread_state_slice.triggering_callstack_id(),
   };
 
+  uint64_t callstack_id = thread_state_slice.triggering_callstack_id();
+  Callstack callstack = callstack_intern_pool[callstack_id];
+
+  SendCallstackToListenerIfNecessary(callstack_id, callstack);
+
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 
   capture_listener_->OnThreadStateSlice(std::move(slice_info));

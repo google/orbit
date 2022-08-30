@@ -213,7 +213,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
   tooltip += absl::StrFormat(
       "<br/>"
       "Callstack Id: %llu",
-      thread_state_slice->callstack_id());
+      thread_state_slice->triggering_callstack_id());
 
   return tooltip;
 }

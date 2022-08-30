@@ -583,8 +583,6 @@ void ProducerEventProcessorImpl::ProcessThreadNamesSnapshotAndTransferOwnership(
 
 void ProducerEventProcessorImpl::ProcessThreadStateSliceAndTransferOwnership(
     ThreadStateSlice* thread_state_slice) {
-  ORBIT_LOG("%llu %llu", thread_state_slice->tid(),
-            thread_state_slice->end_timestamp_ns() - thread_state_slice->duration_ns());
   if (thread_state_slice->triggering_callstack_id() == 0) {
     ClientCaptureEvent event;
     event.set_allocated_thread_state_slice(thread_state_slice);
