@@ -20,10 +20,11 @@
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
+#include "Symbols/SymbolCacheInterface.h"
 
 namespace orbit_symbols {
 
-class SymbolHelper {
+class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
@@ -47,7 +48,7 @@ class SymbolHelper {
   static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
                                                 uint64_t expected_file_size);
   [[nodiscard]] std::filesystem::path GenerateCachedFileName(
-      const std::filesystem::path& file_path) const;
+      const std::filesystem::path& file_path) const override;
 
   [[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& file_path,
                                                     uint32_t checksum);

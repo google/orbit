@@ -10,6 +10,7 @@ target_sources(Symbols PRIVATE
         SymbolHelper.cpp
         SymbolUtils.cpp)
 target_sources(Symbols PUBLIC 
+        include/Symbols/SymbolCacheInterface.h
         include/Symbols/SymbolHelper.h
         include/Symbols/SymbolUtils.h)
 
