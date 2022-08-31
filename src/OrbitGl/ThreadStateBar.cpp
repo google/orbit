@@ -219,20 +219,19 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
     static const std::string unknown_return_text = "Function call information missing";
 
-    if (callstack == nullptr) {
-      return unknown_return_text;
-    }
-
-    if (callstack->IsUnwindingError()) {
-      tooltip += absl::StrFormat("<span style=\"color:%s;\">", kUnwindErrorColorString);
-      tooltip += "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>";
-      tooltip += orbit_client_data::CallstackTypeToDescription(callstack->type());
-      tooltip += "</span><br/>";
-      tooltip += "<br/>";
-    }
-
     tooltip += "<b>Triggering callstack:</b><br/>";
-    tooltip += FormatCallstackForTooltip(*callstack, capture_data_, module_manager_);
+    if (callstack == nullptr) {
+      tooltip += unknown_return_text;
+    } else {
+      if (callstack->IsUnwindingError()) {
+        tooltip += absl::StrFormat("<span style=\"color:%s;\">", kUnwindErrorColorString);
+        tooltip += "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>";
+        tooltip += orbit_client_data::CallstackTypeToDescription(callstack->type());
+        tooltip += "</span><br/>";
+        tooltip += "<br/>";
+      }
+      tooltip += FormatCallstackForTooltip(*callstack, capture_data_, module_manager_);
+    }
     tooltip += "<br/>";
   }
 
