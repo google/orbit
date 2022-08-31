@@ -10,27 +10,19 @@
 #include <QPointer>
 #include <memory>
 
-#include "Http/HttpDownloadOperation.h"
+#include "Http/DownloadManagerInterface.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
-#include "RemoteSymbolProvider/DownloadManagerInterface.h"
 
 namespace orbit_http {
 
-class HttpDownloadManager : public QObject,
-                            public orbit_remote_symbol_provider::DownloadManagerInterface {
+class HttpDownloadManager : public QObject, public DownloadManagerInterface {
   Q_OBJECT
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
-
-  ~HttpDownloadManager() override {
-    for (const auto& download_operation :
-         findChildren<orbit_http_internal::HttpDownloadOperation*>()) {
-      download_operation->Abort();
-    }
-  }
+  ~HttpDownloadManager() override;
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
       std::string url, std::filesystem::path save_file_path,

@@ -10,9 +10,10 @@ add_library(Http STATIC)
 
 target_sources(Http PRIVATE
         HttpDownloadOperation.cpp
+        HttpDownloadOperation.h
         HttpDownloadManager.cpp)
 target_sources(Http PUBLIC
-        include/Http/HttpDownloadOperation.h
+        include/Http/DownloadManagerInterface.h
         include/Http/HttpDownloadManager.h)
 
 target_include_directories(Http PUBLIC
@@ -20,7 +21,6 @@ target_include_directories(Http PUBLIC
 
 target_link_libraries(Http PUBLIC
         OrbitBase
-        RemoteSymbolProvider
         Qt5::Core
         Qt5::Network)
 

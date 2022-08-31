@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef REMOTE_SYMBOL_PROVIDER_DOWNLOAD_MANAGER_INTERFACE_H_
-#define REMOTE_SYMBOL_PROVIDER_DOWNLOAD_MANAGER_INTERFACE_H_
+#ifndef HTTP__DOWNLOAD_MANAGER_INTERFACE_H_
+#define HTTP__DOWNLOAD_MANAGER_INTERFACE_H_
 
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 
-namespace orbit_remote_symbol_provider {
+namespace orbit_http {
 
 class DownloadManagerInterface {
  public:
@@ -19,6 +19,6 @@ class DownloadManagerInterface {
       std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token) = 0;
 };
 
-}  // namespace orbit_remote_symbol_provider
+}  // namespace orbit_http
 
-#endif  // REMOTE_SYMBOL_PROVIDER_DOWNLOAD_MANAGER_INTERFACE_H_
+#endif  // HTTP_DOWNLOAD_MANAGER_INTERFACE_H_

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Http/HttpDownloadOperation.h"
+#include "HttpDownloadOperation.h"
 
 #include <absl/strings/str_format.h>
 
@@ -12,7 +12,7 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_http_internal {
+namespace orbit_http {
 
 void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> maybe_error_msg) {
   ORBIT_CHECK((state == State::kError) == maybe_error_msg.has_value());
@@ -93,4 +93,4 @@ void HttpDownloadOperation::Abort() {
   if (reply_) reply_->abort();
 }
 
-}  // namespace orbit_http_internal
+}  // namespace orbit_http

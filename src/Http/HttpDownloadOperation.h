@@ -14,7 +14,7 @@
 
 #include "OrbitBase/StopToken.h"
 
-namespace orbit_http_internal {
+namespace orbit_http {
 
 class HttpDownloadOperation : public QObject {
   Q_OBJECT
@@ -59,6 +59,6 @@ class HttpDownloadOperation : public QObject {
   QFile output_;
 };
 
-}  // namespace orbit_http_internal
+}  // namespace orbit_http
 
 #endif  // HTTP_HTTP_DOWNLOAD_OPERATION_H
