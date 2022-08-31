@@ -233,70 +233,46 @@ TEST(TimerData, GetTimersAtDepthDiscretized) {
   uint32_t kOnePixel = 1;
   uint32_t kNormalResolution = 1000;
 
+  auto verify_size = [&timer_data](uint32_t depth, uint32_t resolution, uint64_t start_ns,
+                                   uint64_t end_ns, size_t expected_size) {
+    EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(depth, resolution, start_ns, end_ns).size(),
+              expected_size);
+  };
+
   // Normal case. Left and right timer are visible.
-  EXPECT_EQ(
-      timer_data->GetTimersAtDepthDiscretized(0, kNormalResolution, kLeftTimerStart, kRightTimerEnd)
-          .size(),
-      2);
+  verify_size(0, kNormalResolution, kMinTimestamp, kMaxTimestamp, 2);
 
   // Range tests.
   {
     // No visible timers at the left and right of the visible range.
-    EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(0, kNormalResolution, 0, kLeftTimerStart - 1)
-                  .size(),
-              0);
-    EXPECT_EQ(timer_data
-                  ->GetTimersAtDepthDiscretized(0, kNormalResolution, kRightTimerEnd + 1,
-                                                kRightTimerEnd + 10)
-                  .size(),
-              0);
+    verify_size(0, kNormalResolution, 0, kMinTimestamp - 1, 0);
+    verify_size(0, kNormalResolution, kMaxTimestamp + 1, kMaxTimestamp + 10, 0);
 
     // Only left timer will be visible if the right timer is out of range.
-    EXPECT_EQ(timer_data
-                  ->GetTimersAtDepthDiscretized(0, kNormalResolution, kLeftTimerStart,
-                                                kRightTimerStart - 1)
-                  .size(),
-              1);
+    verify_size(0, kNormalResolution, kMinTimestamp, kRightTimerStart - 1, 1);
 
     // Only right timer will be visible if the left timer is out of range.
-    EXPECT_EQ(
-        timer_data
-            ->GetTimersAtDepthDiscretized(0, kNormalResolution, kLeftTimerEnd + 1, kRightTimerEnd)
-            .size(),
-        1);
+    verify_size(0, kNormalResolution, kLeftTimerEnd + 1, kMaxTimestamp, 1);
 
     // Both timers will be visible even if we include them partially.
-    EXPECT_EQ(
-        timer_data
-            ->GetTimersAtDepthDiscretized(0, kNormalResolution, kLeftTimerEnd, kRightTimerStart)
-            .size(),
-        2);
+    verify_size(0, kNormalResolution, kLeftTimerEnd, kRightTimerStart, 2);
   }
 
   // Resolution tests.
   {
     // Only one timer will be visible if we have 1 pixel resolution.
-    EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(0, kOnePixel, kLeftTimerStart, kRightTimerEnd)
-                  .size(),
-              1);
+    verify_size(0, kOnePixel, kMinTimestamp, kMaxTimestamp, 1);
 
     // Only one timer will be visible if we zoom-out a lot even with a normal resolution.
-    EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(0, kNormalResolution, 0, 10000000).size(), 1);
+    verify_size(0, kNormalResolution, 0, 10000000, 1);
 
     // If there is a timer in the range, we should see it in any resolution.
-    EXPECT_EQ(
-        timer_data->GetTimersAtDepthDiscretized(0, kOnePixel, kLeftTimerStart, kLeftTimerStart + 1)
-            .size(),
-        1);
-    EXPECT_EQ(timer_data
-                  ->GetTimersAtDepthDiscretized(0, kNormalResolution, kLeftTimerStart,
-                                                kLeftTimerStart + 1)
-                  .size(),
-              1);
+    verify_size(0, kOnePixel, kMinTimestamp, kMinTimestamp + 1, 1);
+    verify_size(0, kNormalResolution, kMinTimestamp, kMinTimestamp + 1, 1);
   }
 
-  // Down timer
-  EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(/*depth=*/1, 1000, 0, 1000).size(), 1);
+  // Queries with "depth = 1" should just return the down timer (if it is in the range).
+  verify_size(1, kNormalResolution, kMinTimestamp, kMaxTimestamp, 1);
 }
 
 }  // namespace orbit_client_data

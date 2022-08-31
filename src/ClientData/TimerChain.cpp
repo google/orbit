@@ -16,6 +16,15 @@ bool TimerBlock::Intersects(uint64_t min, uint64_t max) const {
   return (min <= max_timestamp_ && max >= min_timestamp_);
 }
 
+const orbit_client_protos::TimerInfo* TimerBlock::LowerBound(uint64_t min_ns) const {
+  auto it = std::lower_bound(data_.begin(), data_.end(), min_ns,
+                             [](const orbit_client_protos::TimerInfo& timer_info, uint64_t value) {
+                               return timer_info.end() < value;
+                             });
+  if (it == data_.end()) return nullptr;
+  return &*it;
+}
+
 TimerChain::~TimerChain() {
   // Find last block in chain
   while (current_->next_ != nullptr) {

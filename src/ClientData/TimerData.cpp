@@ -70,7 +70,8 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimersAtDepthDi
   ORBIT_SCOPE_WITH_COLOR("GetTimersAtDepthDiscretized", kOrbitColorBlueGrey);
   absl::MutexLock lock(&mutex_);
   // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
-  // interval [start_ns, end_ns+1). We have to be careful with overflowing.
+  // interval [start_ns, end_ns+1). We have to be careful with overflowing if end_ns is the maximum
+  // unsigned value. In that case, we will just ignore this max_timestamp for simplicity.
   end_ns = std::max(end_ns, end_ns + 1);
 
   if (timers_.find(depth) == timers_.end()) return {};
@@ -78,12 +79,13 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimersAtDepthDi
   std::vector<const orbit_client_protos::TimerInfo*> discretized_timers;
   uint64_t next_pixel_start_ns = start_ns;
 
-  // We are iterating through all blocks, but we don't have other option if we use TimerChain. A
-  // possible optimization could be not iterating after end_time but the complexity shouldn't
-  // change and this solution is simpler.
+  // We are iterating through all blocks until we are after end_ns, but we don't have other option
+  // if we use TimerChain.
   for (const auto& block : *timers_.at(depth)) {
+    if (block.MinTimestamp() >= end_ns) break;
+
     // Several candidate timers might be in the same block.
-    while (block.Intersects(next_pixel_start_ns, end_ns)) {
+    while (block.Intersects(next_pixel_start_ns, end_ns) && next_pixel_start_ns < end_ns) {
       const orbit_client_protos::TimerInfo* timer = block.LowerBound(next_pixel_start_ns);
       if (timer == nullptr || timer->start() >= end_ns) break;
       discretized_timers.push_back(timer);
@@ -91,12 +93,6 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimersAtDepthDi
       // Use the time of next pixel boundary as a threshold to avoid returning several timers
       // for the same pixel that will overlap after.
       next_pixel_start_ns = GetNextPixelBoundaryTimeNs(timer->end(), resolution, start_ns, end_ns);
-
-      // If the timestamp of the next pixel is after the end, no more timers need to be added and we
-      // are returning early just because of performance.
-      if (next_pixel_start_ns >= end_ns) {
-        return discretized_timers;
-      }
     }
   }
   return discretized_timers;
