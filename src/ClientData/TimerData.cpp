@@ -79,13 +79,13 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimersAtDepthDi
   std::vector<const orbit_client_protos::TimerInfo*> discretized_timers;
   uint64_t next_pixel_start_ns = start_ns;
 
-  // We are iterating through all blocks until we are after end_ns, but we don't have other option
-  // if we use TimerChain.
+  // We are iterating through all blocks until we are after end_ns.
   for (const auto& block : *timers_.at(depth)) {
     if (block.MinTimestamp() >= end_ns) break;
 
     // Several candidate timers might be in the same block.
     while (block.Intersects(next_pixel_start_ns, end_ns) && next_pixel_start_ns < end_ns) {
+      // First timer for which the end timestamp isn't smaller than the start of the next pixel.
       const orbit_client_protos::TimerInfo* timer = block.LowerBound(next_pixel_start_ns);
       if (timer == nullptr || timer->start() >= end_ns) break;
       discretized_timers.push_back(timer);

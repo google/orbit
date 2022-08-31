@@ -271,8 +271,11 @@ TEST(TimerData, GetTimersAtDepthDiscretized) {
     verify_size(0, kNormalResolution, kMinTimestamp, kMinTimestamp + 1, 1);
   }
 
-  // Queries with "depth = 1" should just return the down timer (if it is in the range).
+  // Queries with `depth = 1` should just return the down timer (if it is in the range).
   verify_size(1, kNormalResolution, kMinTimestamp, kMaxTimestamp, 1);
+
+  // No timers with `depth = 2` in TimerData.
+  verify_size(2, kNormalResolution, kMinTimestamp, kMaxTimestamp, 0);
 }
 
 }  // namespace orbit_client_data
