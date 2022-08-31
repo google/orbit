@@ -61,12 +61,12 @@ namespace {
 class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
  public:
   SymbolInfoVisitor(std::vector<SymbolInfo>* symbol_infos,
-                    absl::flat_hash_set<uint64_t>* address_from_module_debug_stream,
+                    absl::flat_hash_set<uint64_t>* addresses_from_module_debug_stream,
                     const ObjectFileInfo& object_file_info,
                     llvm::FixedStreamArray<llvm::object::coff_section>* section_headers,
                     llvm::pdb::TpiStream* type_info_stream)
       : symbol_infos_(symbol_infos),
-        addresses_from_module_debug_stream_(address_from_module_debug_stream),
+        addresses_from_module_debug_stream_(addresses_from_module_debug_stream),
         object_file_info_(object_file_info),
         section_headers_(section_headers),
         type_info_stream_(type_info_stream) {
@@ -285,9 +285,10 @@ void LoadDebugSymbolsFromPublicSymbolStream(
     SymbolInfo symbol_info;
     symbol_info.set_address(address);
     symbol_info.set_demangled_name(llvm::demangle(record->Name.str()));
-    // The PDB public symbols don't contain the size of symbol. Set a placeholder which indicates
+    // The PDB public symbols don't contain the size of symbols. Set a placeholder which indicates
     // that the size is unknown for now and try to deduce it later. We will later use that
-    // placeholder in DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol.
+    // placeholder to look-up the size in `SectionContributionsVisitor` or in
+    // `DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol` (as a fallback).
     symbol_info.set_size(ObjectFile::kUnknownSymbolSize);
     symbol_infos->emplace_back(std::move(symbol_info));
   }
@@ -344,7 +345,7 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
                                          addresses_from_module_debug_stream, &symbol_infos);
 
   // We try to find the missing size information from public symbols from the section contributions.
-  // Note, that we sometimes have multiple names for the same address, so we use a vector here as
+  // Note that we sometimes have multiple names for the same address, so we use a vector here as
   // the map's value type.
   absl::flat_hash_map<uint64_t, std::vector<SymbolInfo*>> address_to_symbols_with_missing_size{};
   for (SymbolInfo& symbol_info : symbol_infos) {
@@ -363,8 +364,8 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&symbol_infos);
 
   ModuleSymbols module_symbols;
-  for (const SymbolInfo& symbol_info : symbol_infos) {
-    *(module_symbols.add_symbol_infos()) = symbol_info;
+  for (SymbolInfo& symbol_info : symbol_infos) {
+    *(module_symbols.add_symbol_infos()) = std::move(symbol_info);
   }
 
   return module_symbols;
