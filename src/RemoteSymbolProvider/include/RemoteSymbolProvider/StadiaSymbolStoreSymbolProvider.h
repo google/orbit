@@ -9,31 +9,22 @@
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SymbolProvider/SymbolProvider.h"
+#include "Symbols/SymbolCacheInterface.h"
 
 namespace orbit_remote_symbol_provider {
 
 class StadiaSymbolStoreSymbolProvider : public orbit_symbol_provider::SymbolProvider {
  public:
-  ~StadiaSymbolStoreSymbolProvider() override = default;
-
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<StadiaSymbolStoreSymbolProvider>> Create(
-      std::filesystem::path cache_directory, orbit_http::DownloadManagerInterface* download_manager,
-      orbit_ggp::Client* ggp_client);
+  explicit StadiaSymbolStoreSymbolProvider(orbit_symbols::SymbolCacheInterface* symbol_cache,
+                                           orbit_http::DownloadManagerInterface* download_manager,
+                                           orbit_ggp::Client* ggp_client);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
                   orbit_base::StopToken stop_token) override;
 
  private:
-  explicit StadiaSymbolStoreSymbolProvider(std::filesystem::path cache_directory,
-                                           orbit_http::DownloadManagerInterface* download_manager,
-                                           orbit_ggp::Client* ggp_client)
-      : cache_directory_(std::move(cache_directory)),
-        download_manager_(download_manager),
-        ggp_client_(ggp_client),
-        main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
-
-  std::filesystem::path cache_directory_;
+  orbit_symbols::SymbolCacheInterface* symbol_cache_;
   orbit_http::DownloadManagerInterface* download_manager_;
   orbit_ggp::Client* ggp_client_;
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;

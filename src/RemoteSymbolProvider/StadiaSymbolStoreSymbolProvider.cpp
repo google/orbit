@@ -15,29 +15,17 @@ using orbit_base::CanceledOr;
 using orbit_base::Future;
 
 namespace orbit_remote_symbol_provider {
-ErrorMessageOr<std::unique_ptr<StadiaSymbolStoreSymbolProvider>>
-StadiaSymbolStoreSymbolProvider::Create(std::filesystem::path cache_directory,
-                                        orbit_http::DownloadManagerInterface* download_manager,
-                                        orbit_ggp::Client* ggp_client) {
-  std::string error_message = "Create StadiaSymbolStoreSymbolProvider failed with error:\n";
-  if (auto exists_or_error = orbit_base::FileExists(cache_directory); exists_or_error.has_error()) {
-    error_message.append(
-        absl::StrFormat("Cache directory not exist: %s", exists_or_error.error().message()));
-    return ErrorMessage{error_message};
-  }
 
-  if (download_manager == nullptr) {
-    error_message.append("Invalid DownloadManger.");
-    return ErrorMessage{error_message};
-  }
-
-  if (ggp_client == nullptr) {
-    error_message.append("Invalid GGP Client.");
-    return ErrorMessage{error_message};
-  }
-
-  return std::unique_ptr<StadiaSymbolStoreSymbolProvider>(
-      new StadiaSymbolStoreSymbolProvider(cache_directory, download_manager, ggp_client));
+StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
+    orbit_symbols::SymbolCacheInterface* symbol_cache,
+    orbit_http::DownloadManagerInterface* download_manager, orbit_ggp::Client* ggp_client)
+    : symbol_cache_(symbol_cache),
+      download_manager_(download_manager),
+      ggp_client_(ggp_client),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
+  ORBIT_CHECK(symbol_cache != nullptr);
+  ORBIT_CHECK(download_manager != nullptr);
+  ORBIT_CHECK(ggp_client != nullptr);
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
@@ -50,13 +38,13 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
   return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(queries).ThenIfSuccess(
       main_thread_executor_.get(),
       [this, module_file_path = module_id.file_path, stop_token = std::move(stop_token)](
-          const std::vector<orbit_ggp::SymbolDownloadInfo>& download_info)
-          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+          const std::vector<orbit_ggp::SymbolDownloadInfo>& download_info) mutable
+      -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
         if (download_info.empty()) return ErrorMessage{"No symbol download info returned."};
 
         std::string url = download_info.front().url.toStdString();
-        std::string filename = absl::StrReplaceAll(module_file_path, {{"/", "_"}});
-        std::filesystem::path save_file_path = cache_directory_ / filename;
+        std::filesystem::path save_file_path =
+            symbol_cache_->GenerateCachedFileName(module_file_path);
         return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
             .ThenIfSuccess(
                 main_thread_executor_.get(),

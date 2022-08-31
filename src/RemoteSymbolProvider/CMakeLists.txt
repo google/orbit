@@ -19,4 +19,5 @@ target_link_libraries(RemoteSymbolProvider PUBLIC
     OrbitBase
     OrbitGgp
     QtUtils
-    SymbolProvider)
+    SymbolProvider
+    Symbols)
