@@ -4,6 +4,7 @@
 
 #include "Http/HttpDownloadManager.h"
 
+#include "HttpDownloadOperation.h"
 #include "OrbitBase/Promise.h"
 
 namespace orbit_http {
@@ -11,7 +12,12 @@ using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::Promise;
 using orbit_base::StopToken;
-using orbit_http_internal::HttpDownloadOperation;
+
+HttpDownloadManager::~HttpDownloadManager() {
+  for (const auto& download_operation : findChildren<HttpDownloadOperation*>()) {
+    download_operation->Abort();
+  }
+}
 
 orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> HttpDownloadManager::Download(
     std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token) {
