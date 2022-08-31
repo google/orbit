@@ -302,6 +302,27 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
       object_file_info_(object_file_info),
       session_(std::move(session)) {}
 
+std::array<uint8_t, 16> PdbFileLlvm::GetGuid() const {
+  constexpr int kGuidSize = 16;
+  static_assert(kGuidSize == sizeof(llvm::codeview::GUID));
+  std::array<uint8_t, kGuidSize> result;
+  auto global_scope = session_->getGlobalScope();
+  const llvm::codeview::GUID& guid = global_scope->getGuid();
+  std::copy(std::begin(guid.Guid), std::end(guid.Guid), std::begin(result));
+  return result;
+}
+
+uint32_t PdbFileLlvm::GetAge() const {
+  auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
+  ORBIT_CHECK(native_session != nullptr);
+  llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
+  ORBIT_CHECK(pdb_file.hasPDBDbiStream());
+  llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
+  ORBIT_CHECK(debug_info_stream);
+
+  return debug_info_stream->getAge();
+}
+
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
   auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
   ORBIT_CHECK(native_session != nullptr);
@@ -371,6 +392,21 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
   return module_symbols;
 }
 
+static bool PdbHasDbiStream(llvm::pdb::IPDBSession* session) {
+  ORBIT_CHECK(session != nullptr);
+  auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session);
+  ORBIT_CHECK(native_session != nullptr);
+  llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
+  if (!pdb_file.hasPDBDbiStream()) {
+    return false;
+  }
+  llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
+  if (!debug_info_stream) {
+    return false;
+  }
+  return true;
+}
+
 ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
     const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info) {
   std::string file_path_string = file_path.string();
@@ -382,6 +418,14 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
     return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
                                         file_path.string(), llvm::toString(std::move(error))));
   }
+
+  // We need the debug info stream to retrieve the correct age information (which is used in the
+  // build-id). See: https://github.com/llvm/llvm-project/issues/57300
+  if (!PdbHasDbiStream(session.get())) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to load PDB file %s: PDB has no Dbi Stream", file_path.string()));
+  }
+
   return absl::WrapUnique<PdbFileLlvm>(
       new PdbFileLlvm(file_path, object_file_info, std::move(session)));
 }

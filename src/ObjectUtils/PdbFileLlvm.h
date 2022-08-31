@@ -13,6 +13,7 @@
 #include <llvm/DebugInfo/CodeView/SymbolVisitorCallbacks.h>
 #include <llvm/DebugInfo/MSF/MappedBlockStream.h>
 #include <llvm/DebugInfo/PDB/Native/DbiStream.h>
+#include <llvm/DebugInfo/PDB/Native/InfoStream.h>
 #include <llvm/DebugInfo/PDB/Native/ModuleDebugStream.h>
 #include <llvm/DebugInfo/PDB/Native/NativeSession.h>
 #include <llvm/DebugInfo/PDB/Native/PDBFile.h>
@@ -27,6 +28,7 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/PdbFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_object_utils {
@@ -36,17 +38,10 @@ class PdbFileLlvm : public PdbFile {
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 
-  [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override {
-    constexpr int kGuidSize = 16;
-    static_assert(kGuidSize == sizeof(llvm::codeview::GUID));
-    std::array<uint8_t, kGuidSize> result;
-    auto global_scope = session_->getGlobalScope();
-    const llvm::codeview::GUID& guid = global_scope->getGuid();
-    std::copy(std::begin(guid.Guid), std::end(guid.Guid), std::begin(result));
-    return result;
-  }
+  [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override;
 
-  [[nodiscard]] uint32_t GetAge() const override { return session_->getGlobalScope()->getAge(); }
+  [[nodiscard]] uint32_t GetAge() const override;
+
   [[nodiscard]] std::string GetBuildId() const override {
     return ComputeWindowsBuildId(GetGuid(), GetAge());
   }
