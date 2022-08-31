@@ -38,26 +38,10 @@ class PdbFileLlvm : public PdbFile {
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 
-  [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override {
-    constexpr int kGuidSize = 16;
-    static_assert(kGuidSize == sizeof(llvm::codeview::GUID));
-    std::array<uint8_t, kGuidSize> result;
-    auto global_scope = session_->getGlobalScope();
-    const llvm::codeview::GUID& guid = global_scope->getGuid();
-    std::copy(std::begin(guid.Guid), std::end(guid.Guid), std::begin(result));
-    return result;
-  }
+  [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override;
 
-  [[nodiscard]] uint32_t GetAge() const override {
-    auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
-    ORBIT_CHECK(native_session != nullptr);
-    llvm::pdb::PDBFile& pdb_file = native_session->getPDBFile();
-    ORBIT_CHECK(pdb_file.hasPDBDbiStream());
-    llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
-    ORBIT_CHECK(debug_info_stream);
+  [[nodiscard]] uint32_t GetAge() const override;
 
-    return debug_info_stream->getAge();
-  }
   [[nodiscard]] std::string GetBuildId() const override {
     return ComputeWindowsBuildId(GetGuid(), GetAge());
   }
