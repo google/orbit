@@ -15,7 +15,7 @@
 
 namespace orbit_symbols {
 
-struct SuccessOutcome {
+struct SymbolLoadingSuccessResult {
   enum class SymbolSource {
     kUnknown,
     kOrbitCache,
@@ -26,8 +26,8 @@ struct SuccessOutcome {
   };
   enum class SymbolFileSeparation { kDifferentFile, kModuleFile };
 
-  explicit SuccessOutcome(std::filesystem::path path, SymbolSource symbol_source,
-                          SymbolFileSeparation symbol_file_separation)
+  explicit SymbolLoadingSuccessResult(std::filesystem::path path, SymbolSource symbol_source,
+                                      SymbolFileSeparation symbol_file_separation)
       : path(std::move(path)),
         symbol_source(symbol_source),
         symbol_file_separation(symbol_file_separation) {}
@@ -37,13 +37,13 @@ struct SuccessOutcome {
 };
 
 using SymbolLoadingOutcome =
-    ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<SuccessOutcome>>>;
+    ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<SymbolLoadingSuccessResult>>>;
 
 [[nodiscard]] bool IsCanceled(const SymbolLoadingOutcome& outcome);
 [[nodiscard]] bool IsNotFound(const SymbolLoadingOutcome& outcome);
 [[nodiscard]] std::string GetNotFoundMessage(const SymbolLoadingOutcome& outcome);
-[[nodiscard]] bool IsSuccessOutcome(const SymbolLoadingOutcome& outcome);
-[[nodiscard]] SuccessOutcome GetSuccessOutcome(const SymbolLoadingOutcome& outcome);
+[[nodiscard]] bool IsSuccessResult(const SymbolLoadingOutcome& outcome);
+[[nodiscard]] SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome);
 
 }  // namespace orbit_symbols
 

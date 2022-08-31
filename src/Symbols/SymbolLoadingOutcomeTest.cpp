@@ -11,9 +11,10 @@ namespace orbit_symbols {
 
 namespace {
 
-const SuccessOutcome kSuccessOutcome{std::filesystem::path{"/tmp/test/path"},
-                                     SuccessOutcome::SymbolSource::kStadiaInstance,
-                                     SuccessOutcome::SymbolFileSeparation::kDifferentFile};
+const SymbolLoadingSuccessResult kSuccessOutcome{
+    std::filesystem::path{"/tmp/test/path"},
+    SymbolLoadingSuccessResult::SymbolSource::kStadiaInstance,
+    SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile};
 
 const orbit_base::NotFound kNotFound{"Did not find symbols"};
 
@@ -24,14 +25,14 @@ TEST(SymbolLoadingOutcome, IsCanceled) {
   EXPECT_TRUE(IsCanceled(outcome));
 }
 
-TEST(SymbolLoadingOutcome, IsSuccessOutcome) {
+TEST(SymbolLoadingOutcome, IsSuccessResult) {
   SymbolLoadingOutcome outcome{kSuccessOutcome};
-  EXPECT_TRUE(IsSuccessOutcome(outcome));
+  EXPECT_TRUE(IsSuccessResult(outcome));
 }
 
-TEST(SymbolLoadingOutcome, GetSuccessOutcome) {
+TEST(SymbolLoadingOutcome, GetSuccessResult) {
   SymbolLoadingOutcome outcome{kSuccessOutcome};
-  const SuccessOutcome& success{GetSuccessOutcome(outcome)};
+  const SymbolLoadingSuccessResult& success{GetSuccessResult(outcome)};
   EXPECT_EQ(success.path, kSuccessOutcome.path);
   EXPECT_EQ(success.symbol_source, kSuccessOutcome.symbol_source);
   EXPECT_EQ(success.symbol_file_separation, kSuccessOutcome.symbol_file_separation);
