@@ -2011,9 +2011,8 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
       FindModuleLocally(module_data);
 
-  // TODO(b/177304549): [new UI] maybe come up with a better indicator whether orbit is connected
-  // than process_manager != nullptr
-  if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr ||
+  // If --local, Orbit can not download files from the instance, because no ssh channel exists.
+  if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected() ||
       download_disabled_modules_.contains(module_id.file_path)) {
     orbit_base::ImmediateExecutor executor;
     return local_symbols_future.ThenIfSuccess(

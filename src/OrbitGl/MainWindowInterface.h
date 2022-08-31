@@ -76,6 +76,8 @@ class MainWindowInterface {
                                       orbit_data_views::DataView* callstack_data_view,
                                       std::unique_ptr<class SamplingReport> report) = 0;
   virtual void ClearCallstackInspection() = 0;
+
+  virtual bool IsConnected() = 0;
 };
 
 }  // namespace orbit_gl
