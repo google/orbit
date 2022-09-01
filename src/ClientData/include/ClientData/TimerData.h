@@ -15,6 +15,8 @@
 
 namespace orbit_client_data {
 
+// Stores all the timers from a particular TimerTrack and provides queries to get timers in a
+// certain range as well as metadata from them. Timers might be divided in different depths.
 class TimerData final : public TimerDataInterface {
  public:
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info,
@@ -29,13 +31,12 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
+  // Returns timers in a particular depth avoiding completely overlapped timers that map to the
+  // same pixels in the screen. It assures to return at least one timer in each occupied pixel. The
+  // overall complexity is faster than GetTimers since it doesn't require going through all timers.
+  // TODO(b/200692451): Provide a better solution for TimerTrack with intersecting timers.
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(
-      uint32_t /*depth*/, uint32_t /*resolution*/, uint64_t /*start_ns*/,
-      uint64_t /*end_ns*/) const override {
-    // TODO(b/242971217): Implement TimerData rendering optimization when timers are ordered.
-    ORBIT_UNREACHABLE();
-    return {};
-  };
+      uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const override;
 
   // Metadata queries
   [[nodiscard]] bool IsEmpty() const override { return GetNumberOfTimers() == 0; }

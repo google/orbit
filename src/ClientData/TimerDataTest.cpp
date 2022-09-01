@@ -226,4 +226,56 @@ TEST(TimerData, GetTimers) {
   CheckGetTimers(GetTimersDifferentDepths());
 }
 
+TEST(TimerData, GetTimersAtDepthDiscretized) {
+  // Left, right and down timers
+  std::unique_ptr<TimerData> timer_data = GetTimersDifferentDepths();
+
+  uint32_t kOnePixel = 1;
+  uint32_t kNormalResolution = 1000;
+
+  auto verify_size = [&timer_data](uint32_t depth, uint32_t resolution, uint64_t start_ns,
+                                   uint64_t end_ns, size_t expected_size) {
+    EXPECT_EQ(timer_data->GetTimersAtDepthDiscretized(depth, resolution, start_ns, end_ns).size(),
+              expected_size);
+  };
+
+  // Normal case. Left and right timer are visible.
+  verify_size(0, kNormalResolution, kMinTimestamp, kMaxTimestamp, 2);
+
+  // Range tests.
+  {
+    // No visible timers at the left and right of the visible range.
+    verify_size(0, kNormalResolution, 0, kMinTimestamp - 1, 0);
+    verify_size(0, kNormalResolution, kMaxTimestamp + 1, kMaxTimestamp + 10, 0);
+
+    // Only left timer will be visible if the right timer is out of range.
+    verify_size(0, kNormalResolution, kMinTimestamp, kRightTimerStart - 1, 1);
+
+    // Only right timer will be visible if the left timer is out of range.
+    verify_size(0, kNormalResolution, kLeftTimerEnd + 1, kMaxTimestamp, 1);
+
+    // Both timers will be visible even if we include them partially.
+    verify_size(0, kNormalResolution, kLeftTimerEnd, kRightTimerStart, 2);
+  }
+
+  // Resolution tests.
+  {
+    // Only one timer will be visible if we have 1 pixel resolution.
+    verify_size(0, kOnePixel, kMinTimestamp, kMaxTimestamp, 1);
+
+    // Only one timer will be visible if we zoom-out a lot even with a normal resolution.
+    verify_size(0, kNormalResolution, 0, 10000000, 1);
+
+    // If there is a timer in the range, we should see it in any resolution.
+    verify_size(0, kOnePixel, kMinTimestamp, kMinTimestamp + 1, 1);
+    verify_size(0, kNormalResolution, kMinTimestamp, kMinTimestamp + 1, 1);
+  }
+
+  // Queries with `depth = 1` should just return the down timer (if it is in the range).
+  verify_size(1, kNormalResolution, kMinTimestamp, kMaxTimestamp, 1);
+
+  // No timers with `depth = 2` in TimerData.
+  verify_size(2, kNormalResolution, kMinTimestamp, kMaxTimestamp, 0);
+}
+
 }  // namespace orbit_client_data

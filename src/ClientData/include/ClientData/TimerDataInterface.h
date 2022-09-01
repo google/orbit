@@ -38,10 +38,9 @@ class TimerDataInterface {
   [[nodiscard]] virtual std::vector<const TimerChain*> GetChains() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick, uint64_t max_tick) const = 0;
-  // This optimized method avoids returning two timers that map to the same pixel in the screen, so
-  // is especially useful when there are many timers in the screen (zooming-out for example).
-  // It assures to return at least one timer per occupied pixel. The overall complexity is
-  // O(log(num_timers) * resolution) where resolution is the number of pixels_width.
+  // Returns timers in a particular depth avoiding completely overlapped timers that map to the
+  // same pixels in the screen. It assures to return at least one timer in each occupied pixel. The
+  // overall complexity is faster than GetTimers since it doesn't require going through all timers.
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>
   GetTimersAtDepthDiscretized(uint32_t depth, uint32_t resolution, uint64_t start_ns,
                               uint64_t end_ns) const = 0;

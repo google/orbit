@@ -49,6 +49,7 @@ class TimerBlock {
   // {min, max}_timestamp are the minimum and maximum timestamp of the timers
   // that have so far been added to this block.
   [[nodiscard]] bool Intersects(uint64_t min, uint64_t max) const;
+  [[nodiscard]] uint64_t MinTimestamp() const { return min_timestamp_; }
 
   [[nodiscard]] size_t size() const { return data_.size(); }
   [[nodiscard]] bool at_capacity() const { return size() == kBlockSize; }
@@ -56,6 +57,10 @@ class TimerBlock {
   [[nodiscard]] const orbit_client_protos::TimerInfo& operator[](std::size_t idx) const {
     return data_[idx];
   }
+
+  // Assuming timers are sorted, returns the first one for which the end timestamp isn't smaller
+  // than min_ns. Return nullptr if there is none.
+  [[nodiscard]] const orbit_client_protos::TimerInfo* LowerBound(uint64_t min_ns) const;
 
  private:
   static constexpr size_t kBlockSize = 1024;
