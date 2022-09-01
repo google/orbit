@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_replace.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <windows.h>
@@ -30,7 +31,7 @@ static std::string GetCurrentModuleName() {
   ORBIT_CHECK(module_handle);
   wchar_t module_name[MAX_PATH] = {0};
   GetModuleFileNameW(module_handle, module_name, MAX_PATH);
-  return orbit_base::ToStdString(module_name);
+  return absl::StrReplaceAll(orbit_base::ToStdString(module_name), {{"\\", "/"}});
 }
 
 TEST(ListModules, ContainsCurrentModule) {

@@ -5,6 +5,7 @@
 #include "WindowsUtils/ListModules.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/str_replace.h>
 #include <windows.h>
 
 #include <filesystem>
@@ -52,6 +53,7 @@ std::vector<Module> ListModules(uint32_t pid) {
   do {
     std::string build_id;
     std::string module_path = orbit_base::ToStdString(module_entry.szExePath);
+    module_path = absl::StrReplaceAll(module_path, {{"\\", "/"}});
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module_path);
     std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections;
     uint64_t load_bias = 0;
