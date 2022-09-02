@@ -14,7 +14,8 @@ target_sources(Http PRIVATE
         HttpDownloadManager.cpp)
 target_sources(Http PUBLIC
         include/Http/DownloadManagerInterface.h
-        include/Http/HttpDownloadManager.h)
+        include/Http/HttpDownloadManager.h
+        include/Http/MockDownloadManagerInterface.h)
 
 target_include_directories(Http PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
