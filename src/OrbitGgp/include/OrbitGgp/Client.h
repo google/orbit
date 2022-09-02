@@ -15,13 +15,13 @@
 #include <string>
 #include <vector>
 
-#include "Account.h"
-#include "Instance.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Account.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
+#include "OrbitGgp/SshInfo.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"
-#include "SshInfo.h"
 
 namespace orbit_ggp {
 

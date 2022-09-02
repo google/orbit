@@ -15,6 +15,7 @@ target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/Error.h
           include/OrbitGgp/Instance.h
           include/OrbitGgp/InstanceItemModel.h
+          include/OrbitGgp/MockClient.h
           include/OrbitGgp/Project.h
           include/OrbitGgp/SshInfo.h          
           include/OrbitGgp/SymbolDownloadInfo.h)
