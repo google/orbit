@@ -6,11 +6,12 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(Symbols STATIC)
 
-target_sources(Symbols PRIVATE 
+target_sources(Symbols PRIVATE
         SymbolHelper.cpp
         SymbolLoadingOutcome.cpp
         SymbolUtils.cpp)
-target_sources(Symbols PUBLIC 
+target_sources(Symbols PUBLIC
+        include/Symbols/MockSymbolCacheInterface.h
         include/Symbols/SymbolCacheInterface.h
         include/Symbols/SymbolHelper.h
         include/Symbols/SymbolLoadingOutcome.h
@@ -27,7 +28,7 @@ target_link_libraries(Symbols PUBLIC
         SymbolProvider)
 
 add_executable(SymbolsTests)
-target_sources(SymbolsTests PRIVATE 
+target_sources(SymbolsTests PRIVATE
         SymbolHelperTest.cpp
         SymbolLoadingOutcomeTest.cpp
         SymbolUtilsTest.cpp)
