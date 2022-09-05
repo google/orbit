@@ -89,7 +89,7 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
 
   module_info_ = std::move(info);
 
-  ORBIT_LOG("WARNING: Module \"%s\" changed and will to be updated (it does not have build_id).",
+  ORBIT_LOG("WARNING: Module \"%s\" changed and will be updated (it does not have build_id).",
             file_path());
 
   if (!is_loaded_) return false;

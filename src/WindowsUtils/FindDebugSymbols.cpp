@@ -41,7 +41,7 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
   if (!object_file->IsCoff()) {
     return ErrorMessage{
         absl::StrFormat("Module \"%s\" is not of Coff file format, which is currently the only "
-                        "supported format for the Windows service",
+                        "supported format for the Windows service.",
                         module_path.string())};
   }
 
@@ -103,7 +103,7 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
     if (symbols_file->GetBuildId() != build_id) {
       error_messages.push_back(absl::StrFormat(
           "Potential symbols file \"%s\" has a different build id than the module requested by "
-          "the client. \"%s\" != \"%s\"",
+          "the client: \"%s\" != \"%s\"",
           search_path.string(), symbols_file->GetBuildId(), build_id));
       continue;
     }

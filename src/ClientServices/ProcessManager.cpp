@@ -43,8 +43,6 @@ class ProcessManagerImpl final : public ProcessManager {
   ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                 uint64_t size) override;
 
-  ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) override;
-
   ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> FindDebugInfoFile(
       const std::string& module_path,
       absl::Span<const std::string> additional_search_directories) override;
@@ -136,26 +134,6 @@ void ProcessManagerImpl::WorkerFunction() {
 ErrorMessageOr<std::string> ProcessManagerImpl::LoadProcessMemory(uint32_t pid, uint64_t address,
                                                                   uint64_t size) {
   return process_client_->LoadProcessMemory(pid, address, size);
-}
-
-ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(uint32_t pid,
-                                                                         uint64_t address) {
-  constexpr uint64_t kMaxSize = 256;
-  auto error_or_string = LoadProcessMemory(pid, address, kMaxSize);
-  if (error_or_string.has_value()) {
-    const std::string& str = error_or_string.value();
-    if (str.find('\0') == std::string::npos) {
-      const char* error_msg = "Remote string is not null terminated";
-      ORBIT_ERROR("%s: %s", error_msg, str.c_str());
-      return ErrorMessage(error_msg);
-    }
-
-    // The string has a size of max_size at this point. Shrink it by assigning
-    // it its own str.c_str(). c_str() is guaranteed to be null terminated.
-    error_or_string = str.c_str();
-  }
-
-  return error_or_string;
 }
 
 }  // namespace

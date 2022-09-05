@@ -41,7 +41,7 @@ template <typename T>
   ORBIT_CHECK(outer_future.IsValid());
 
   // A quick explanation what's happening here:
-  // We have an outer and a inner future. When the outer future completes, the inner
+  // We have an outer and an inner future. When the outer future completes, the inner
   // one gets available. When the inner one completes the value of type T gets available.
   //
   // Ideally we would just return the inner future. But since it is not available at the time this

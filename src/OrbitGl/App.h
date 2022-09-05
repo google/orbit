@@ -579,7 +579,7 @@ class OrbitApp final : public DataViewFactory,
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                  const orbit_grpc_protos::ModuleSymbols& symbols);
+                  const orbit_grpc_protos::ModuleSymbols& module_symbols);
   ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>> GetLoadedModulesByPath(
       const std::filesystem::path& module_path);
   ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(

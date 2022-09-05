@@ -57,8 +57,6 @@ class ProcessManager {
   virtual ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                         uint64_t size) = 0;
 
-  virtual ErrorMessageOr<std::string> LoadNullTerminatedString(uint32_t pid, uint64_t address) = 0;
-
   virtual ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> FindDebugInfoFile(
       const std::string& module_path,
       absl::Span<const std::string> additional_search_directories) = 0;

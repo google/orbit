@@ -1952,14 +1952,14 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
-  // TODO (b/231455031) Make sure this scoped metric gets the state CANCELLED when the user stops
+  // TODO(b/231455031): Make sure this scoped metric gets the state CANCELLED when the user stops
   // the download.
   ScopedMetric metric(metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
   const ModuleData* const module_data = GetModuleByModuleIdentifier(module_id);
   if (module_data == nullptr) {
     metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_id.file_path)}};
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found.", module_id.file_path)}};
   }
 
   modules_with_symbol_loading_error_.erase(module_id);
@@ -2009,7 +2009,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
   const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
 
   if (module_data == nullptr) {
-    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_id.file_path)}};
+    return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found.", module_id.file_path)}};
   }
 
   const auto it = symbol_files_currently_being_retrieved_.find(module_id);
@@ -2076,7 +2076,7 @@ Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugI
           const CanceledOr<std::filesystem::path>& local_file_path_or_canceled)
           -> ErrorMessageOr<std::filesystem::path> {
         if (orbit_base::IsCanceled(local_file_path_or_canceled)) {
-          return ErrorMessage{"User canceled loading"};
+          return ErrorMessage{"User canceled loading."};
         }
         const std::filesystem::path& local_file_path =
             orbit_base::GetNotCanceled(local_file_path_or_canceled);
@@ -2467,9 +2467,8 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() 
       .ThenIfSuccess(main_thread_executor_,
                      [this](const std::vector<ErrorMessageOr<void>>& reload_results) {
                        // We ignore whether reloading a particular module failed to preserve the
-                       // behaviour from before refactoring this. This can be changed in a
-                       // subsequent PR.
-                       (void)reload_results;
+                       // behaviour from before refactoring this. This can be changed in the future.
+                       std::ignore = reload_results;
 
                        RefreshUIAfterModuleReload();
                      })
