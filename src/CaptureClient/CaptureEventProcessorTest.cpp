@@ -19,6 +19,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
+#include "MockCaptureListener.h"
 
 namespace orbit_capture_client {
 
@@ -73,68 +74,6 @@ using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SaveArg;
-
-namespace {
-
-class MockCaptureListener : public CaptureListener {
- public:
-  MOCK_METHOD(void, OnCaptureStarted,
-              (const CaptureStarted&, std::optional<std::filesystem::path>,
-               absl::flat_hash_set<uint64_t>),
-              (override));
-  MOCK_METHOD(void, OnCaptureFinished, (const CaptureFinished&), (override));
-  MOCK_METHOD(void, OnTimer, (const TimerInfo&), (override));
-  MOCK_METHOD(void, OnKeyAndString, (uint64_t /*key*/, std::string), (override));
-  MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
-              (override));
-  MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
-  MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
-              (override));
-  MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
-  MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
-  MOCK_METHOD(void, OnUniqueTracepointInfo,
-              (uint64_t /*tracepoint_id*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
-              (override));
-  MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
-  MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
-              (override));
-  MOCK_METHOD(void, OnModulesSnapshot,
-              (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
-  MOCK_METHOD(void, OnPresentEvent, (const PresentEvent&), (override));
-  MOCK_METHOD(void, OnApiStringEvent, (const ApiStringEvent&), (override));
-  MOCK_METHOD(void, OnApiTrackValue, (const ApiTrackValue&), (override));
-  MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
-              (override));
-  MOCK_METHOD(void, OnClockResolutionEvent,
-              (orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/), (override));
-  MOCK_METHOD(
-      void, OnErrorsWithPerfEventOpenEvent,
-      (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/),
-      (override));
-  MOCK_METHOD(
-      void, OnWarningInstrumentingWithUprobesEvent,
-      (orbit_grpc_protos::
-           WarningInstrumentingWithUprobesEvent /*warning_instrumenting_with_uprobes_event*/),
-      (override));
-  MOCK_METHOD(void, OnErrorEnablingOrbitApiEvent,
-              (orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/),
-              (override));
-  MOCK_METHOD(void, OnErrorEnablingUserSpaceInstrumentationEvent,
-              (orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/),
-              (override));
-  MOCK_METHOD(
-      void, OnWarningInstrumentingWithUserSpaceInstrumentationEvent,
-      (orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/),
-      (override));
-  MOCK_METHOD(void, OnLostPerfRecordsEvent,
-              (orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/), (override));
-  MOCK_METHOD(
-      void, OnOutOfOrderEventsDiscardedEvent,
-      (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
-      (override));
-};
-
-}  // namespace
 
 TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   MockCaptureListener listener;

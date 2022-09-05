@@ -40,9 +40,8 @@ target_link_libraries(CaptureClient PUBLIC
         CONAN_PKG::llvm-core)
 
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
-target_link_libraries(
-  CaptureEventProcessorProcessEventsFuzzer
-  PRIVATE CaptureClient FuzzingUtils)
+target_link_libraries(CaptureEventProcessorProcessEventsFuzzer
+        PRIVATE CaptureClient FuzzingUtils)
 
 add_executable(CaptureClientTests)
 
@@ -51,10 +50,10 @@ target_sources(CaptureClientTests PRIVATE
         CaptureEventProcessorTest.cpp
         CompositeEventProcessorTest.cpp
         GpuQueueSubmissionProcessorTest.cpp
+        MockCaptureListener.h
         SaveToFileEventProcessorTest.cpp)
 
-target_link_libraries(
-        CaptureClientTests PRIVATE
+target_link_libraries(CaptureClientTests PRIVATE
         CaptureClient
         TestUtils
         GTest::Main)
