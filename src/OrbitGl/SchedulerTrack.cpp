@@ -19,6 +19,7 @@
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
+using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
@@ -51,12 +52,58 @@ float SchedulerTrack::GetHeight() const {
          (num_gaps * layout_->GetSpaceBetweenCores()) + layout_->GetTrackContentBottomMargin();
 }
 
+[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
+    const TimerInfo& timer_info, const orbit_gl::TimelineInfoInterface* timeline_info) {
+  const float start_x = timeline_info->GetWorldFromTick(timer_info.start());
+  const float end_x = timeline_info->GetWorldFromTick(timer_info.end());
+  // TODO(b/244736453): GetWorldFromTick uses floats and therefore is not precise enough. Since
+  //  the optimization looks for the first timer after the boundary of a pixel, we are getting
+  //  several values very close to that boundary. The lack of precision is making some of that
+  //  numbers to be just before the boundary and they ended be floored in the previous pixel. We
+  //  are temporarily hacking this issue by adding an epsilon.
+  // Epsilon for any float in the range of (0, 8092), maximum width for a 8k pixel screen.
+  constexpr float kEpsilon = std::numeric_limits<float>::epsilon() * 8092;
+  const float extended_start_x = floorf(start_x + kEpsilon);
+  const float extended_end_x = ceil(end_x + kEpsilon);
+  return {extended_start_x, extended_end_x - extended_start_x};
+}
+
 void SchedulerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
-                                        TextRenderer& text_renderer, uint64_t min_tick,
-                                        uint64_t max_tick, PickingMode picking_mode) {
+                                        TextRenderer& /*text_renderer*/, uint64_t min_tick,
+                                        uint64_t max_tick, PickingMode /*picking_mode*/) {
+  // TODO(b/242971217): The parent class already provides an implementation, but this is completely
+  // ignored because we are using an optimized way to render in SchedulerTrack. In the future we
+  // will move this implementation to be the defaulted one.
+  // TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+  //                                picking_mode);
   ORBIT_SCOPE_WITH_COLOR("SchedulerTrack::DoUpdatePrimitives", kOrbitColorPink);
-  TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
-                                 picking_mode);
+  visible_timer_count_ = 0;
+
+  const internal::DrawData draw_data =
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_,
+                  viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
+                  app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
+
+  uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
+  float box_height = GetDefaultBoxHeight();
+
+  for (uint32_t depth = 0; depth < GetDepth(); depth++) {
+    float world_timer_y = GetYFromDepth(depth);
+    for (const TimerInfo* timer_info : timer_data_->GetTimersAtDepthDiscretized(
+             depth, resolution_in_pixels, min_tick, max_tick)) {
+      ++visible_timer_count_;
+      const bool is_selected = timer_info == draw_data.selected_timer;
+
+      Color color = GetTimerColor(*timer_info, is_selected, /*is_highlighted=*/false, draw_data);
+      std::unique_ptr<PickingUserData> user_data =
+          CreatePickingUserData(primitive_assembler, *timer_info);
+
+      auto [box_start_x, box_width] = GetBoxPosXAndWidth(*timer_info, timeline_info_);
+      const Vec2 pos = {box_start_x, world_timer_y};
+      const Vec2 size = {box_width, box_height};
+      primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+    }
+  }
 }
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
