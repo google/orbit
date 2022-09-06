@@ -59,11 +59,10 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent,
 
   std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (timer_info->address_in_function() != 0) {
-    const orbit_client_data::ModuleData* module = orbit_client_data::FindModuleByAddress(
-        *capture_data_->process(), *module_manager_, timer_info->address_in_function());
-    if (module != nullptr) {
-      module_name = module->name();
-    }
+    module_name = std::filesystem::path(
+                      orbit_client_data::GetModulePathByAddress(*module_manager_, *capture_data_,
+                                                                timer_info->address_in_function()))
+                      .filename();
   }
 
   return absl::StrFormat(

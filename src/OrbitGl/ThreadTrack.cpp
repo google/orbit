@@ -149,11 +149,10 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
     module_name = std::filesystem::path(func->file_path()).filename().string();
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
-    const auto* module = orbit_client_data::FindModuleByAddress(
-        *capture_data_->process(), *module_manager_, timer_info->address_in_function());
-    if (module != nullptr) {
-      module_name = module->name();
-    }
+    module_name = std::filesystem::path(
+                      orbit_client_data::GetModulePathByAddress(*module_manager_, *capture_data_,
+                                                                timer_info->address_in_function()))
+                      .filename();
 
     function_name = orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_,
                                                                 timer_info->address_in_function());

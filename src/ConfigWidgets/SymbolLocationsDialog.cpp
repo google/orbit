@@ -246,7 +246,8 @@ std::tuple<QString, QString> SymbolLocationsDialog::GetFilePickerConfig() const 
   const ModuleData& module{*module_.value()};
 
   QString caption =
-      QString("Select symbol file for module %1").arg(QString::fromStdString(module.name()));
+      QString("Select symbol file for module %1")
+          .arg(QString::fromStdString(std::filesystem::path(module.file_path()).filename()));
 
   switch (module.object_file_type()) {
     case ModuleInfo::kElfFile:
@@ -411,7 +412,8 @@ void SymbolLocationsDialog::SetUpModuleHeadlineLabel() {
   ORBIT_CHECK(module_.has_value());
   ui_->moduleHeadlineLabel->setVisible(true);
   ui_->moduleHeadlineLabel->setText(
-      QString(kModuleHeadlineLabel).arg(QString::fromStdString(module_.value()->name())));
+      QString(kModuleHeadlineLabel)
+          .arg(QString::fromStdString(std::filesystem::path(module_.value()->file_path()).filename())));
 }
 
 void SymbolLocationsDialog::DisableAddFolder() {
@@ -421,7 +423,7 @@ void SymbolLocationsDialog::DisableAddFolder() {
   ui_->addFolderButton->setToolTip(
       QString("Module %1 does not have a build ID. For modules without build ID, Orbit cannot find "
               "symbols in folders.")
-          .arg(QString::fromStdString(module_.value()->name())));
+          .arg(QString::fromStdString(std::filesystem::path(module_.value()->file_path()).filename())));
 }
 
 void SymbolLocationsDialog::SetUpInfoLabel() {

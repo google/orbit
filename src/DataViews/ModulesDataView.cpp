@@ -73,7 +73,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
       return module->is_loaded() ? "*" : "";
     }
     case kColumnName:
-      return module->name();
+      return std::filesystem::path(module->file_path()).filename();
     case kColumnPath:
       return module->file_path();
     case kColumnAddressRange:
@@ -108,7 +108,12 @@ void ModulesDataView::DoSort() {
       sorter = ORBIT_PROC_SORT(is_loaded());
       break;
     case kColumnName:
-      sorter = ORBIT_PROC_SORT(name());
+      sorter = [&](uint64_t a, uint64_t b) {
+        return orbit_data_views_internal::CompareAscendingOrDescending(
+            std::filesystem::path(start_address_to_module_.at(a)->file_path()).filename(),
+            std::filesystem::path(start_address_to_module_.at(b)->file_path()).filename(),
+            ascending);
+      };
       break;
     case kColumnPath:
       sorter = ORBIT_PROC_SORT(file_path());
