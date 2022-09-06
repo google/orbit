@@ -21,3 +21,16 @@ target_link_libraries(RemoteSymbolProvider PUBLIC
     QtUtils
     SymbolProvider
     Symbols)
+
+add_executable(RemoteSymbolProviderTests)
+
+target_sources(RemoteSymbolProviderTests PRIVATE
+    StadiaSymbolStoreSymbolProviderTest.cpp)
+
+target_link_libraries(RemoteSymbolProviderTests PRIVATE
+    TestUtils
+    Qt5::Core
+    RemoteSymbolProvider
+    GTest::QtCoreMain)
+
+register_test(RemoteSymbolProviderTests)
