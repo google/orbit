@@ -206,11 +206,21 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
                            [](const orbit_grpc_protos::SymbolInfo& lhs, uint64_t rhs) {
                              return lhs.address() < rhs;
                            });
+
       if (symbol_from_symbol_table_it != symbol_infos->end() &&
           low_pc == symbol_from_symbol_table_it->address()) {
         // A symbol with this exact address is already in the COFF symbol table.
+        if (symbol_from_symbol_table_it->size() == kUnknownSymbolSize) {
+          // Note that we never observed a single case where setting the size of the function from
+          // the DWARF information is relevant: if a function appears in the DWARF information,
+          // either it also appears in the COFF symbol table *and* has a RUNTIME_FUNCTION, or
+          // (rarely) it doesn't appear in the COFF symbol table at all. Nonetheless, it makes sense
+          // to consider this case.
+          symbol_from_symbol_table_it->set_size(high_pc - low_pc);
+        }
         continue;
       }
+
       if (symbol_from_symbol_table_it != symbol_infos->end() &&
           symbol_from_symbol_table_it->address() < high_pc) {
         // A symbol from the COFF symbol table already has its address in this address range. Give
@@ -218,6 +228,7 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
         // Note that we have not observed this case.
         continue;
       }
+
       if (symbol_from_symbol_table_it != symbol_infos->begin()) {
         symbol_from_symbol_table_it--;
         if (symbol_from_symbol_table_it->size() != kUnknownSymbolSize &&
