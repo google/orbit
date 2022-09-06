@@ -55,7 +55,6 @@ std::string CallstackDataView::GetValue(int row, int column) {
 
   CallstackDataViewFrame frame = GetFrameFromRow(row);
   const FunctionInfo* function = frame.function;
-  const ModuleData* module = frame.module;
 
   switch (column) {
     case kColumnSelected:
@@ -76,9 +75,6 @@ std::string CallstackDataView::GetValue(int row, int column) {
               : std::filesystem::path(function->module_path()).filename().string();
       if (!module_name.empty()) {
         return module_name;
-      }
-      if (module != nullptr) {
-        return module->name();
       }
       const CaptureData& capture_data = app_->GetCaptureData();
       const ModuleManager* module_manager = app_->GetModuleManager();

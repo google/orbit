@@ -283,7 +283,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnValuesAreCorrect) {
 
   // The selected column will be tested separately.
   EXPECT_EQ(view_.GetValue(0, kColumnName), kPrettyNames[0]);
-  EXPECT_EQ(view_.GetValue(0, kColumnModule), kModulePaths[0]);
+  EXPECT_EQ(view_.GetValue(0, kColumnModule), std::filesystem::path(kModulePaths[0]).filename());
   EXPECT_EQ(view_.GetValue(0, kColumnAddress), GetExpectedDisplayAddress(kAddresses[0]));
   EXPECT_EQ(view_.GetValue(0, kColumnCount), GetExpectedDisplayCount(kCounts[0]));
   EXPECT_EQ(view_.GetValue(0, kColumnTimeTotal), GetExpectedDisplayTime(kTotalTimeNs[0]));
@@ -475,7 +475,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
-        GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
+        GetExpectedDisplayTime(kStdDevNs[0]),
+        std::filesystem::path(kModulePaths[0]).filename().string(),
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
@@ -491,7 +492,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
-        GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
+        GetExpectedDisplayTime(kStdDevNs[0]),
+        std::filesystem::path(kModulePaths[0]).filename().string(),
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
@@ -761,7 +763,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 
     ViewRowEntry entry;
     entry[kColumnName] = function.pretty_name();
-    entry[kColumnModule] = function.module_path();
+    entry[kColumnModule] = std::filesystem::path(function.module_path()).filename().string();
     entry[kColumnAddress] = GetExpectedDisplayAddress(function.address());
     entry[kColumnCount] = GetExpectedDisplayCount(stats.count());
     string_to_raw_value.insert_or_assign(entry[kColumnCount], stats.count());
