@@ -87,21 +87,22 @@ TEST_F(PresetsDataViewTest, CheckLabelAndColorForLoadStates) {
   EXPECT_EQ(view_.GetNumElements(), 1);
 
   load_state = PresetLoadState::kLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "Yes"));
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(PresetsDataView::kLoadedPresetBlankString, "Yes"));
   EXPECT_TRUE(view_.GetToolTip(0, 0).empty());
   Color color_loadable_state{};
   view_.GetDisplayColor(0, 0, color_loadable_state.r, color_loadable_state.g,
                         color_loadable_state.b);
 
   load_state = PresetLoadState::kNotLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "No"));
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(PresetsDataView::kLoadedPresetBlankString, "No"));
   EXPECT_FALSE(view_.GetToolTip(0, 0).empty());
   Color color_not_loadable_state{};
   view_.GetDisplayColor(0, 0, color_not_loadable_state.r, color_not_loadable_state.g,
                         color_not_loadable_state.b);
 
   load_state = PresetLoadState::kPartiallyLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "Partially"));
+  EXPECT_EQ(view_.GetValue(0, 0),
+            absl::StrCat(PresetsDataView::kLoadedPresetBlankString, "Partially"));
   EXPECT_TRUE(view_.GetToolTip(0, 0).empty());
   Color color_partially_loadable_state{};
   view_.GetDisplayColor(0, 0, color_partially_loadable_state.r, color_partially_loadable_state.g,

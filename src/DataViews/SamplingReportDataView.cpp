@@ -412,7 +412,7 @@ std::string SamplingReportDataView::GetToolTip(int row, int column) {
     case kColumnUnwindErrors:
       return BuildToolTipUnwindErrors(function);
     default:
-      return "";
+      return DataView::GetToolTip(row, column);
   }
 }
 

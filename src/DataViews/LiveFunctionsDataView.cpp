@@ -599,14 +599,16 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
 
-std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
-  if (column != kColumnType) return "";
-  return "Notation:\n"
-         "D — Dynamically instrumented function\n"
-         "MS — Synchronous manually instrumented scope\n"
-         "MA — Asynchronous manually instrumented scope\n"
-         "H — The function will be hooked in the next capture\n"
-         "F — Frame track enabled";
+std::string LiveFunctionsDataView::GetToolTip(int row, int column) {
+  if (column == kColumnType) {
+    return "Notation:\n"
+           "D — Dynamically instrumented function\n"
+           "MS — Synchronous manually instrumented scope\n"
+           "MA — Asynchronous manually instrumented scope\n"
+           "H — The function will be hooked in the next capture\n"
+           "F — Frame track enabled";
+  }
+  return DataView::GetToolTip(row, column);
 }
 
 [[nodiscard]] std::vector<ScopeId> LiveFunctionsDataView::FetchMissingScopeIds() const {

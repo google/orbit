@@ -94,14 +94,20 @@ std::string CallstackDataView::GetValue(int row, int column) {
   }
 }
 
-std::string CallstackDataView::GetToolTip(int row, int /*column*/) {
+std::string CallstackDataView::GetToolTip(int row, int column) {
+  if (column != kColumnName) {
+    return DataView::GetToolTip(row, column);
+  }
   CallstackDataViewFrame frame = GetFrameFromRow(row);
+  const std::string& function_name =
+      frame.function != nullptr ? frame.function->pretty_name() : frame.fallback_name;
   if (functions_to_highlight_.find(frame.address) != functions_to_highlight_.end()) {
     return absl::StrFormat(
-        "Functions marked with %s are part of the selection in the sampling report above",
-        CallstackDataView::kHighlightedFunctionString);
+        "%s\n\nFunctions marked with %s are part of the selection in the sampling report above",
+        function_name, CallstackDataView::kHighlightedFunctionString);
+  } else {
+    return function_name;
   }
-  return "";
 }
 
 const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";

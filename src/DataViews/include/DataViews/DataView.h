@@ -130,7 +130,7 @@ class DataView {
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
   virtual std::string GetValueForCopy(int row, int column) { return GetValue(row, column); }
-  virtual std::string GetToolTip(int /*row*/, int /*column*/) { return ""; }
+  virtual std::string GetToolTip(int row, int column) { return GetValue(row, column); }
 
   // Called from UI layer.
   void OnFilter(const std::string& filter);
