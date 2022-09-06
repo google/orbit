@@ -6,9 +6,11 @@ project(RemoteSymbolProvider)
 add_library(RemoteSymbolProvider STATIC)
 
 target_sources(RemoteSymbolProvider PRIVATE
+    MicrosoftSymbolServerSymbolProvider.cpp
     StadiaSymbolStoreSymbolProvider.cpp)
 
 target_sources(RemoteSymbolProvider PUBLIC
+    include/RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h
     include/RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h)
 
 target_include_directories(RemoteSymbolProvider PUBLIC
