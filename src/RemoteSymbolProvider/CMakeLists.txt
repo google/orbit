@@ -27,6 +27,7 @@ target_link_libraries(RemoteSymbolProvider PUBLIC
 add_executable(RemoteSymbolProviderTests)
 
 target_sources(RemoteSymbolProviderTests PRIVATE
+    MicrosoftSymbolServerSymbolProviderTest.cpp
     StadiaSymbolStoreSymbolProviderTest.cpp)
 
 target_link_libraries(RemoteSymbolProviderTests PRIVATE
