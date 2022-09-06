@@ -73,7 +73,7 @@ std::string ModulesDataView::GetValue(int row, int col) {
       return module->is_loaded() ? "*" : "";
     }
     case kColumnName:
-      return std::filesystem::path(module->file_path()).filename();
+      return std::filesystem::path(module->file_path()).filename().string();
     case kColumnPath:
       return module->file_path();
     case kColumnAddressRange:

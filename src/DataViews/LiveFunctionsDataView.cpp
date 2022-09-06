@@ -139,7 +139,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnStdDev:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.ComputeStdDevNs()));
     case kColumnModule:
-      return function == nullptr ? "" : std::filesystem::path(function->module_path()).filename();
+      return function == nullptr ? "" : std::filesystem::path(function->module_path()).filename().string();
     case kColumnAddress:
       return function == nullptr ? "" : absl::StrFormat("%#x", function->address());
     default:

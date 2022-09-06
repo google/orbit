@@ -475,7 +475,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
-        GetExpectedDisplayTime(kStdDevNs[0]), std::filesystem::path(kModulePaths[0]).filename(),
+        GetExpectedDisplayTime(kStdDevNs[0]), std::filesystem::path(kModulePaths[0]).filename().string(),
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
@@ -491,7 +491,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
-        GetExpectedDisplayTime(kStdDevNs[0]), std::filesystem::path(kModulePaths[0]).filename(),
+        GetExpectedDisplayTime(kStdDevNs[0]), std::filesystem::path(kModulePaths[0]).filename().string(),
         GetExpectedDisplayAddress(kAddresses[0]));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
@@ -761,7 +761,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 
     ViewRowEntry entry;
     entry[kColumnName] = function.pretty_name();
-    entry[kColumnModule] = std::filesystem::path(function.module_path()).filename();
+    entry[kColumnModule] = std::filesystem::path(function.module_path()).filename().string();
     entry[kColumnAddress] = GetExpectedDisplayAddress(function.address());
     entry[kColumnCount] = GetExpectedDisplayCount(stats.count());
     string_to_raw_value.insert_or_assign(entry[kColumnCount], stats.count());
