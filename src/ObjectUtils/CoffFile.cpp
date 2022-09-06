@@ -192,9 +192,9 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
       // For some functions in some Wine DLLs (such as d3d9.dll, d3d11.dll, dxgi.dll) we get a zero
       // address even if getLowAndHighPC succeeds: skip such functions.
       // We don't know why this happens, but we observed that:
-      // - They are from the `std`, `__gnu_cxx`, or `dxvk` namespace;
+      // - They are from the `std`, `__gnu_cxx`, or `dxvk` namespaces;
       // - Size is zero in the majority of cases, but not always;
-      // - Some of these appear with zero size multiple times.
+      // - Some of these appear with zero address multiple times.
       // Additionally, all these functions appear again once with a non-zero address and size, so in
       // the end they end up listed as expected.
       if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index) || low_pc == 0) {
