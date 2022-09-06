@@ -11,7 +11,7 @@ target_sources(Symbols PRIVATE
         SymbolLoadingOutcome.cpp
         SymbolUtils.cpp)
 target_sources(Symbols PUBLIC
-        include/Symbols/MockSymbolCacheInterface.h
+        include/Symbols/MockSymbolCache.h
         include/Symbols/SymbolCacheInterface.h
         include/Symbols/SymbolHelper.h
         include/Symbols/SymbolLoadingOutcome.h

@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//#include <gmock/gmock.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <gtest/gtest.h>
@@ -11,15 +10,14 @@
 #include <QPointer>
 #include <string_view>
 
-#include "Http/MockDownloadManagerInterface.h"
+#include "Http/MockDownloadManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "OrbitBase/VoidToMonostate.h"
 #include "OrbitGgp/MockClient.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h"
-#include "Symbols/MockSymbolCacheInterface.h"
+#include "Symbols/MockSymbolCache.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_remote_symbol_provider {
@@ -36,10 +34,11 @@ using orbit_test_utils::HasNoError;
 using ::testing::_;
 using ::testing::Return;
 
-const std::filesystem::path kSymbolCacheDir{"valid/symbol/cache/path"};
-constexpr std::string_view kOnlyAvailableModuleName{"only_available_module_name"};
-constexpr std::string_view kOnlyAvailableModuleBuildId{"ABCD12345678"};
-const ModuleIdentifier kValidModuleId{"module/path/to/only_available_module_name", "ABCD12345678"};
+const std::filesystem::path kSymbolCacheDir{"symbol/cache/path"};
+const std::string kValidModuleName{"only_available_module_name"};
+const std::string kValidModuleBuildId{"ABCD12345678"};
+const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
+                                      kValidModuleBuildId};
 
 class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
  public:
@@ -53,7 +52,7 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
         });
   }
 
-  enum class GgpClientState { kWorking, kFailing };
+  enum class GgpClientState { kWorking, kTimeout };
   void SetUpGgpClient(GgpClientState ggp_client_state) {
     EXPECT_CALL(ggp_client_, GetSymbolDownloadInfoAsync(_))
         .Times(1)
@@ -63,16 +62,16 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
           // Stadia symbol provider queries only one module each time when making the ggp call.
           ORBIT_CHECK(download_queries.size() == 1);
 
-          if (ggp_client_state == GgpClientState::kFailing) return {ErrorMessage{"Timeout"}};
+          if (ggp_client_state == GgpClientState::kTimeout) return {ErrorMessage{"Timeout"}};
 
-          if (download_queries.front().module_name != kOnlyAvailableModuleName ||
-              download_queries.front().build_id != kOnlyAvailableModuleBuildId) {
-            return {ErrorMessage{"Symbol not found"}};
+          if (download_queries.front().module_name != kValidModuleName ||
+              download_queries.front().build_id != kValidModuleBuildId) {
+            return {ErrorMessage{"Symbols not found"}};
           }
 
           SymbolDownloadInfo download_info;
-          download_info.file_id = QString::fromStdString(absl::StrFormat(
-              "symbolFiles/%s/%s", kOnlyAvailableModuleBuildId, kOnlyAvailableModuleName));
+          download_info.file_id = QString::fromStdString(
+              absl::StrFormat("symbolFiles/%s/%s", kValidModuleBuildId, kValidModuleName));
           download_info.url = "valid_url_for_symbol";
           return {std::vector<SymbolDownloadInfo>{download_info}};
         });
@@ -99,11 +98,13 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
   }
 
  protected:
-  orbit_symbols::MockSymbolCacheInterface symbol_cache_;
-  orbit_http::MockDownloadManagerInterface download_manager_;
-  orbit_ggp::MockClient ggp_client_;
+  orbit_symbols::MockSymbolCache symbol_cache_;
   StadiaSymbolStoreSymbolProvider symbol_provider_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
+
+ private:
+  orbit_http::MockDownloadManager download_manager_;
+  orbit_ggp::MockClient ggp_client_;
 };
 }  // namespace
 
@@ -113,13 +114,11 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleSuccess) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
+      .Then(executor_.get(), [this](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
         EXPECT_THAT(result, HasNoError());
         EXPECT_FALSE(IsCanceled(result.value()));
         const auto& local_file_path = std::get<std::filesystem::path>(result.value());
-        EXPECT_TRUE(
-            local_file_path ==
-            std::filesystem::path(kSymbolCacheDir / "module_path_to_only_available_module_name"));
+        EXPECT_EQ(local_file_path, symbol_cache_.GenerateCachedFileName(kValidModuleId.file_path));
 
         QCoreApplication::exit();
       });
@@ -168,7 +167,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
       .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("Symbol not found"));
+        EXPECT_THAT(result, HasError("Symbols not found"));
 
         QCoreApplication::exit();
       });
@@ -177,7 +176,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
 }
 
 TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleTimeout) {
-  SetUpGgpClient(GgpClientState::kFailing);
+  SetUpGgpClient(GgpClientState::kTimeout);
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())

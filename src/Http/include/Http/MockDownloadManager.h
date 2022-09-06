@@ -2,19 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef HTTP_MOCK_DOWNLOAD_MANAGER_INTERFACE_H_
-#define HTTP_MOCK_DOWNLOAD_MANAGER_INTERFACE_H_
+#ifndef HTTP_MOCK_DOWNLOAD_MANAGER_H_
+#define HTTP_MOCK_DOWNLOAD_MANAGER_H_
 
 #include <gmock/gmock.h>
 
 #include "Http/DownloadManagerInterface.h"
 
 namespace orbit_http {
-class MockDownloadManagerInterface : public DownloadManagerInterface {
+class MockDownloadManager : public DownloadManagerInterface {
  public:
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>, Download,
               (std::string, std::filesystem::path, orbit_base::StopToken), (override));
 };
 }  // namespace orbit_http
 
-#endif  // HTTP_MOCK_DOWNLOAD_MANAGER_INTERFACE_H_
+#endif  // HTTP_MOCK_DOWNLOAD_MANAGER_H_
