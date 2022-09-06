@@ -191,6 +191,12 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
       uint64_t unused_section_index{};
       // For some functions in some Wine DLLs (such as d3d9.dll, d3d11.dll, dxgi.dll) we get a zero
       // address even if getLowAndHighPC succeeds: skip such functions.
+      // We don't know why this happens, but we observed that:
+      // - They are from the `std`, `__gnu_cxx`, or `dxvk` namespace;
+      // - Size is zero in the majority of cases, but not always;
+      // - Some of these appear with zero size multiple times.
+      // Additionally, all these functions appear again once with a non-zero address and size, so in
+      // the end they end up listed as expected.
       if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index) || low_pc == 0) {
         continue;
       }
@@ -217,8 +223,9 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
         if (symbol_from_symbol_table_it->size() != kUnknownSymbolSize &&
             low_pc < symbol_from_symbol_table_it->address() + symbol_from_symbol_table_it->size()) {
           // This address is inside the address range of a symbol already extracted from the COFF
-          // symbol table (for which we already obtained the size from the corresponding
-          // RUNTIME_FUNCTION).
+          // symbol table (note that this can only be checked for functions from the COFF symbol
+          // table for which we obtained the size from the corresponding RUNTIME_FUNCTION, i.e., not
+          // for leaf functions).
           // We observed such cases in some Wine DLLs (e.g., combase.dll, dinput8.dll, gdi32.dll,
           // kernel32.dll, kernelbase.dll, msvcr120.dll, msvcrt.dll, ntdll.dll, ole32.dll,
           // oleaut32.dll, sechost.dll, shell32,dll, ucrtbase.dll, user32.dll, winmm.dll,
@@ -385,6 +392,7 @@ orbit_object_utils::CoffFileImpl::GetPrimaryRuntimeFunction(
     }
 
     unwind_info = reinterpret_cast<const llvm::Win64EH::UnwindInfo*>(unwind_info_bytes);
+    // From https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-unwind_info:
     // "UNW_FLAG_CHAININFO: This unwind info structure is not the primary one for the procedure.
     // Instead, the chained unwind info entry is the contents of a previous RUNTIME_FUNCTION entry."
     if ((unwind_info->getFlags() & llvm::Win64EH::UNW_ChainInfo) == 0) {
@@ -407,8 +415,9 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
       runtime_functions_or_error.value();
 
   std::vector<UnwindRange> unwind_ranges;
-  // For a function, the primary RUNTIME_FUNCTION and the ones with UNW_FLAG_CHAININFO set (if any)
-  // form a tree rooted on the primary RUNTIME_FUNCTION.
+  // For a function, the "primary" RUNTIME_FUNCTION and the ones with UNW_FLAG_CHAININFO set (if
+  // any) form a tree rooted on the "primary" RUNTIME_FUNCTION. We merge all such RUNTIME_FUNCTIONs
+  // from the same tree into a single UnwindRange.
   for (const llvm::Win64EH::RuntimeFunction& runtime_function : runtime_functions) {
     auto primary_runtime_function_or_error = GetPrimaryRuntimeFunction(&runtime_function);
     if (primary_runtime_function_or_error.has_error()) {
@@ -418,15 +427,17 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
     const llvm::Win64EH::RuntimeFunction* primary_runtime_function =
         primary_runtime_function_or_error.value();
 
-    uint64_t primary_address =
+    const uint64_t primary_address =
         object_file_->getImageBase() + primary_runtime_function->StartAddress;
-    uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
+    const uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
 
     if (unwind_ranges.empty()) {
       unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
       continue;
     }
 
+    // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-runtime_function
+    // guarantees that RUNTIME_FUNCTIONs are sorted (by address), and we rely on that here.
     UnwindRange& last_range = unwind_ranges.back();
     if (primary_address == last_range.start) {
       // Extend the size of the current function.
