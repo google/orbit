@@ -4,7 +4,7 @@
 
 #include "ObjectUtils/CoffFile.h"
 
-#include <absl/strings/str_cat.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/Demangle/Demangle.h>
@@ -13,8 +13,7 @@
 #include <llvm/Object/CVDebugRecord.h>
 #include <llvm/Object/ObjectFile.h>
 #include <llvm/Support/Error.h>
-
-#include <system_error>
+#include <llvm/Support/Win64EH.h>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
@@ -54,23 +53,29 @@ class CoffFileImpl : public CoffFile {
       const llvm::object::SymbolRef& symbol_ref);
   [[nodiscard]] std::optional<SymbolInfo> CreateSymbolInfo(
       const llvm::object::SymbolRef& symbol_ref);
-  void AddNewDebugSymbolsFromCoffSymbolTable(
-      const llvm::object::ObjectFile::symbol_iterator_range& symbol_range,
-      std::vector<SymbolInfo>* symbol_infos);
-  [[nodiscard]] bool AreDebugSymbolsEmpty() const;
+  std::vector<SymbolInfo> LoadDebugSymbolsFromCoffSymbolTable(
+      const llvm::object::ObjectFile::symbol_iterator_range& symbol_range);
+  void AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
+                                   std::vector<SymbolInfo>* symbol_infos);
+
+  ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>> GetRuntimeFunctions();
+  ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*> GetPrimaryRuntimeFunction(
+      const llvm::Win64EH::RuntimeFunction* runtime_function);
+  struct UnwindRange {
+    uint64_t start;
+    uint64_t end;
+  };
+  ErrorMessageOr<std::vector<UnwindRange>> GetUnwindRanges();
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
-  bool has_debug_info_;
   std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections_;
 };
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
                            llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
-    : file_path_(std::move(file_path)),
-      owning_binary_(std::move(owning_binary)),
-      has_debug_info_(false) {
+    : file_path_(std::move(file_path)), owning_binary_(std::move(owning_binary)) {
   object_file_ = llvm::dyn_cast<llvm::object::COFFObjectFile>(owning_binary_.getBinary());
 
   for (const llvm::object::SectionRef& section_ref : object_file_->sections()) {
@@ -80,11 +85,6 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
     object_segment.set_size_in_file(coff_section->SizeOfRawData);
     object_segment.set_address(object_file_->getImageBase() + coff_section->VirtualAddress);
     object_segment.set_size_in_memory(coff_section->VirtualSize);
-  }
-
-  const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
-  if (object_file_->getSymbolTable() != 0 || dwarf_context != nullptr) {
-    has_debug_info_ = true;
   }
 }
 
@@ -139,14 +139,9 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
   return symbol_info;
 }
 
-void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
-    const llvm::object::ObjectFile::symbol_iterator_range& symbol_range,
-    std::vector<SymbolInfo>* symbol_infos) {
-  // Sort so that we can use std::lower_bound below.
-  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolInfoLessByAddress);
-
-  std::vector<SymbolInfo> new_symbol_infos;
-
+std::vector<SymbolInfo> CoffFileImpl::LoadDebugSymbolsFromCoffSymbolTable(
+    const llvm::object::ObjectFile::symbol_iterator_range& symbol_range) {
+  std::vector<SymbolInfo> symbol_infos;
   for (const auto& symbol_ref : symbol_range) {
     llvm::Expected<llvm::object::SymbolRef::Type> type = symbol_ref.getType();
     if (!type || type.get() != llvm::object::SymbolRef::ST_Function) {
@@ -159,96 +154,176 @@ void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
     if (!symbol_or_error.has_value()) {
       continue;
     }
-    SymbolInfo& symbol_info = symbol_or_error.value();
+    symbol_infos.emplace_back(std::move(symbol_or_error.value()));
+  }
+  return symbol_infos;
+}
 
-    auto symbol_from_dwarf_it = std::lower_bound(symbol_infos->begin(), symbol_infos->end(),
-                                                 symbol_info, &SymbolInfoLessByAddress);
-    if (symbol_from_dwarf_it != symbol_infos->end() &&
-        symbol_info.address() == symbol_from_dwarf_it->address()) {
-      // A symbol with this exact address was already extracted from the DWARF debug info.
-      continue;
+void DeduceDebugSymbolMissingSizesFromUnwindInfo(
+    std::vector<SymbolInfo>* symbol_infos,
+    const absl::flat_hash_map<uint64_t, uint64_t>& unwind_range_start_to_size) {
+  for (SymbolInfo& symbol_info : *symbol_infos) {
+    ORBIT_CHECK(symbol_info.size() == SymbolsFile::kUnknownSymbolSize);
+    auto unwind_range_start_to_size_it = unwind_range_start_to_size.find(symbol_info.address());
+    if (unwind_range_start_to_size_it != unwind_range_start_to_size.end()) {
+      symbol_info.set_size(unwind_range_start_to_size_it->second);
     }
+  }
+}
 
-    if (symbol_from_dwarf_it != symbol_infos->begin()) {
-      symbol_from_dwarf_it--;
-      if (symbol_info.address() < symbol_from_dwarf_it->address() + symbol_from_dwarf_it->size()) {
-        // The address of this symbol from the COFF symbol table is inside the address range of a
-        // symbol already extracted from the DWARF debug info.
+void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
+                                               std::vector<SymbolInfo>* symbol_infos) {
+  // Sort so that we can use std::lower_bound below.
+  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolsFile::SymbolInfoLessByAddress);
+
+  std::vector<SymbolInfo> new_symbol_infos;
+  for (const auto& compile_unit : dwarf_context->compile_units()) {
+    for (uint32_t die_index = 0; die_index < compile_unit->getNumDIEs(); ++die_index) {
+      llvm::DWARFDie full_die = compile_unit->getDIEAtIndex(die_index);
+      // We only want symbols of functions, which are DIEs with isSubprogramDIR(),
+      // and not of inlined functions, which are DIEs with isSubroutineDIE().
+      if (!full_die.isSubprogramDIE()) {
         continue;
       }
-    }
 
-    new_symbol_infos.emplace_back(std::move(symbol_info));
+      uint64_t low_pc{};
+      uint64_t high_pc{};
+      uint64_t unused_section_index{};
+      // For some functions in some Wine DLLs (such as d3d9.dll, d3d11.dll, dxgi.dll) we get a zero
+      // address even if getLowAndHighPC succeeds: skip such functions.
+      // We don't know why this happens, but we observed that:
+      // - They are from the `std`, `__gnu_cxx`, or `dxvk` namespaces;
+      // - Size is zero in the majority of cases, but not always;
+      // - Some of these appear with zero address multiple times.
+      // Additionally, all these functions appear again once with a non-zero address and size, so in
+      // the end they end up listed as expected.
+      if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index) || low_pc == 0) {
+        continue;
+      }
+
+      auto symbol_from_symbol_table_it =
+          std::lower_bound(symbol_infos->begin(), symbol_infos->end(), low_pc,
+                           [](const orbit_grpc_protos::SymbolInfo& lhs, uint64_t rhs) {
+                             return lhs.address() < rhs;
+                           });
+
+      if (symbol_from_symbol_table_it != symbol_infos->end() &&
+          low_pc == symbol_from_symbol_table_it->address()) {
+        // A symbol with this exact address is already in the COFF symbol table.
+        if (symbol_from_symbol_table_it->size() == kUnknownSymbolSize) {
+          // Note that we never observed a single case where setting the size of the function from
+          // the DWARF information is relevant: if a function appears in the DWARF information,
+          // either it also appears in the COFF symbol table *and* has a RUNTIME_FUNCTION, or
+          // (rarely) it doesn't appear in the COFF symbol table at all. Nonetheless, it makes sense
+          // to consider this case.
+          symbol_from_symbol_table_it->set_size(high_pc - low_pc);
+        }
+        continue;
+      }
+
+      if (symbol_from_symbol_table_it != symbol_infos->end() &&
+          symbol_from_symbol_table_it->address() < high_pc) {
+        // A symbol from the COFF symbol table already has its address in this address range. Give
+        // complete precedence to the COFF symbol table and skip this address range.
+        // Note that we have not observed this case.
+        continue;
+      }
+
+      if (symbol_from_symbol_table_it != symbol_infos->begin()) {
+        symbol_from_symbol_table_it--;
+        if (symbol_from_symbol_table_it->size() != kUnknownSymbolSize &&
+            low_pc < symbol_from_symbol_table_it->address() + symbol_from_symbol_table_it->size()) {
+          // This address is inside the address range of a symbol already extracted from the COFF
+          // symbol table (note that this can only be checked for functions from the COFF symbol
+          // table for which we obtained the size from the corresponding RUNTIME_FUNCTION, i.e., not
+          // for leaf functions).
+          // We observed such cases in some Wine DLLs (e.g., combase.dll, dinput8.dll, gdi32.dll,
+          // kernel32.dll, kernelbase.dll, msvcr120.dll, msvcrt.dll, ntdll.dll, ole32.dll,
+          // oleaut32.dll, sechost.dll, shell32,dll, ucrtbase.dll, user32.dll, winmm.dll,
+          // xinput9_1_0.dll), where the address range from the DWARF unwind information starts
+          // exactly eight bytes after the address in COFF symbol table, and where those eight bytes
+          // always correspond to the single instruction `lea rsp,[rsp+0x0]`, which as far as I can
+          // tell is a no-op.
+          continue;
+        }
+      }
+
+      SymbolInfo& symbol_info = new_symbol_infos.emplace_back();
+      // The method getName will fall back to ShortName if LinkageName is not present,
+      // so this should never return an empty name.
+      std::string name(full_die.getName(llvm::DINameKind::LinkageName));
+      ORBIT_CHECK(!name.empty());
+      symbol_info.set_demangled_name(llvm::demangle(name));
+      symbol_info.set_address(low_pc);
+      symbol_info.set_size(high_pc - low_pc);
+    }
   }
 
-  ORBIT_LOG(
-      "Added %u function symbols from COFF symbol table on top of %u from DWARF debug info for "
-      "\"%s\"",
-      new_symbol_infos.size(), symbol_infos->size(), file_path_.string());
+  if (!new_symbol_infos.empty()) {
+    ORBIT_LOG(
+        "Added %u function symbols from DWARF debug info on top of %u from COFF symbol table for "
+        "\"%s\"",
+        new_symbol_infos.size(), symbol_infos->size(), file_path_.string());
+  }
   symbol_infos->insert(symbol_infos->end(), std::make_move_iterator(new_symbol_infos.begin()),
                        std::make_move_iterator(new_symbol_infos.end()));
 }
 
-void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
-                               std::vector<SymbolInfo>* symbol_infos) {
-  for (const auto& info_section : dwarf_context->compile_units()) {
-    for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
-      llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
-      // We only want symbols of functions, which are DIEs with isSubprogramDIR(),
-      // and not of inlined functions, which are DIEs with isSubroutineDIE().
-      if (full_die.isSubprogramDIE()) {
-        uint64_t low_pc;
-        uint64_t high_pc;
-        uint64_t unused_section_index;
-        if (!full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index)) {
-          continue;
-        }
-
-        SymbolInfo& symbol_info = symbol_infos->emplace_back();
-        // The method getName will fall back to ShortName if LinkageName is not present,
-        // so this should never return an empty name.
-        std::string name(full_die.getName(llvm::DINameKind::LinkageName));
-        ORBIT_CHECK(!name.empty());
-        symbol_info.set_demangled_name(llvm::demangle(name));
-        symbol_info.set_address(low_pc);
-        symbol_info.set_size(high_pc - low_pc);
-      }
-    }
-  }
-}
-
-// The COFF symbol table doesn't contain the size of functions. If present, the DWARF debug info
-// contains the sizes. However, we observed that the DWARF debug info misses some functions compared
-// to the COFF symbol table.
-// We integrate the two: we retrieve symbols from the DWARF debug info, and then we add symbols from
-// the COFF symbol table, but only the ones that were not in the DWARF debug info (based on their
-// address).
-// For the symbols that came from the COFF symbol table, we compute the size as the distance from
-// the address of the next function. In general this will overestimate the size of function, but we
-// prefer this to not listing the function at all.
-// Note: In some rare cases we observed that the address reported by the COFF symbol table is
-// slightly lower (e.g., by one instruction) that the one reported by the DWARF debug info. As we
-// don't have a simple way to deduce that the two addresses belong to the same function, such
-// function will appear twice in the symbol list. We accept this.
+// The COFF symbol table doesn't contain the size of functions. We obtain it using the information
+// from the corresponding RUNTIME_FUNCTIONs (also considering chained unwind info). Note that this
+// is not possible for all functions, because leaf functions (in the Microsoft definitions,
+// functions that don't allocate stack space) don't have a RUNTIME_FUNCTION.
+//
+// For Wine DLLs, which are built with MinGW, we also have DWARF unwind information from which we
+// can extract function symbols, complete with function names and sizes. However, in general, only
+// functions that are already in the COFF symbol table and that already have a RUNTIME_FUNCTION
+// appear among these symbols. In addition, in some rare cases the DWARF information reports that a
+// function starts eight bytes after the address in the COFF symbol table, where those eight bytes
+// correspond to the single instruction `lea rsp,[rsp+0x0]`. Therefore, it appears that using DWARF
+// information doesn't add anything to only using the COFF symbol table and RUNTIME_FUNCTIONs, and
+// instead can provide conflicting information.
+//
+// Of course things are not that simple. For a couple of these DLLs (comctl32.dll, msctf.dll,
+// msi.dll, ntdll.dll, user32.dll, windowscodecs.dll), a handful of functions only appear in the
+// DWARF information, and not in the COFF symbol table. Therefore, we still have to integrate DWARF
+// information into the list of symbols. However, we give full priority to the COFF symbol table, by
+// skipping all address ranges from DWARF information that intersect an existing symbol from the
+// COFF symbol table: in particular, when we have the symbols mentioned above whose address differs
+// between the COFF symbol table and the DWARF information by eight bytes, this avoids listing them
+// twice.
+//
+// Remember that at this point we still don't have the sizes of leaf functions. Now, we compute
+// those as the distance from the address of the next function. In general this can overestimate the
+// size, but we prefer this to not listing those functions at all.
 ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   std::vector<SymbolInfo> symbol_infos;
-
-  const std::unique_ptr<llvm::DWARFContext> dwarf_context =
-      llvm::DWARFContext::create(*object_file_);
-  if (dwarf_context != nullptr) {
-    FillDebugSymbolsFromDwarf(dwarf_context.get(), &symbol_infos);
+  if (object_file_->getSymbolTable() != 0) {
+    symbol_infos = LoadDebugSymbolsFromCoffSymbolTable(object_file_->symbols());
   }
 
-  if (object_file_->getSymbolTable() != 0 && object_file_->getNumberOfSymbols() != 0) {
-    AddNewDebugSymbolsFromCoffSymbolTable(object_file_->symbols(), &symbol_infos);
+  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
+  if (unwind_ranges_or_error.has_value()) {
+    absl::flat_hash_map<uint64_t, uint64_t> unwind_range_start_to_size;
+    for (const UnwindRange& unwind_range : unwind_ranges_or_error.value()) {
+      unwind_range_start_to_size.emplace(unwind_range.start, unwind_range.end - unwind_range.start);
+    }
+    DeduceDebugSymbolMissingSizesFromUnwindInfo(&symbol_infos, unwind_range_start_to_size);
+  } else {
+    ORBIT_ERROR("Could not deduce sizes of symbols from COFF symbol table of \"%s\": %s",
+                file_path_.string(), unwind_ranges_or_error.error().message());
+  }
+
+  if (const std::unique_ptr<llvm::DWARFContext> dwarf_context =
+          llvm::DWARFContext::create(*object_file_);
+      dwarf_context != nullptr) {
+    AddNewDebugSymbolsFromDwarf(dwarf_context.get(), &symbol_infos);
   }
 
   DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&symbol_infos);
 
   if (symbol_infos.empty()) {
     return ErrorMessage(
-        "Unable to load symbols from PE/COFF file, not even a single symbol of type function "
-        "found.");
+        "Unable to load symbols from PE/COFF file, not even a single function symbol was found.");
   }
 
   ModuleSymbols module_symbols;
@@ -258,34 +333,135 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   return module_symbols;
 }
 
-bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !AreDebugSymbolsEmpty(); }
-
-bool CoffFileImpl::AreDebugSymbolsEmpty() const {
-  if (object_file_->getSymbolTable() != 0 && object_file_->getNumberOfSymbols() != 0) {
-    return false;
+bool CoffFileImpl::HasDebugSymbols() const {
+  if (object_file_->getSymbolTable() != 0) {
+    for (const auto& symbol_ref : object_file_->symbols()) {
+      llvm::Expected<llvm::object::SymbolRef::Type> type = symbol_ref.getType();
+      if (type && type.get() != llvm::object::SymbolRef::ST_Function) {
+        return true;
+      }
+    }
   }
 
   const std::unique_ptr<llvm::DWARFContext> dwarf_context =
       llvm::DWARFContext::create(*object_file_);
   if (dwarf_context == nullptr) {
-    ORBIT_ERROR("Could not create DWARF context for \"%s\"", file_path_.string());
-    return true;
+    return false;
   }
+  for (const auto& compile_unit : dwarf_context->compile_units()) {
+    for (uint32_t die_index = 0; die_index < compile_unit->getNumDIEs(); ++die_index) {
+      llvm::DWARFDie full_die = compile_unit->getDIEAtIndex(die_index);
+      if (!full_die.isSubprogramDIE()) {
+        continue;
+      }
 
-  for (const auto& info_section : dwarf_context->compile_units()) {
-    for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
-      llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
-      if (!full_die.isSubprogramDIE()) continue;
-
-      uint64_t low_pc;
-      uint64_t high_pc;
-      uint64_t unused_section_index;
-      if (full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index)) {
-        return false;
+      uint64_t low_pc{};
+      uint64_t high_pc{};
+      uint64_t unused_section_index{};
+      if (full_die.getLowAndHighPC(low_pc, high_pc, unused_section_index) && low_pc != 0) {
+        return true;
       }
     }
   }
-  return true;
+  return false;
+}
+
+// LLVM doesn't provide a simple way to access the RUNTIME_FUNCTIONs, so we have to do it ourselves.
+// Even llvm-objdump has to do that:
+// https://github.com/llvm-mirror/llvm/blob/master/tools/llvm-objdump/COFFDump.cpp
+ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>> CoffFileImpl::GetRuntimeFunctions() {
+  const llvm::object::data_directory* exception_table_data_dir =
+      object_file_->getDataDirectory(llvm::COFF::EXCEPTION_TABLE);
+  if (exception_table_data_dir == nullptr) {
+    return ErrorMessage{"Unable to read Exception Table: No corresponding Data Directory."};
+  }
+
+  llvm::ArrayRef<uint8_t> exception_table_bytes;
+  if (object_file_->getRvaAndSizeAsBytes(exception_table_data_dir->RelativeVirtualAddress,
+                                         exception_table_data_dir->Size, exception_table_bytes)) {
+    return ErrorMessage{"Unable to read Exception Table."};
+  }
+
+  if (exception_table_bytes.size() % sizeof(llvm::Win64EH::RuntimeFunction) != 0) {
+    return ErrorMessage{"Unable to read Exception Table: Unexpected size."};
+  }
+
+  return llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>{
+      reinterpret_cast<const llvm::Win64EH::RuntimeFunction*>(exception_table_bytes.data()),
+      exception_table_bytes.size() / sizeof(llvm::Win64EH::RuntimeFunction)};
+}
+
+ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*>
+orbit_object_utils::CoffFileImpl::GetPrimaryRuntimeFunction(
+    const llvm::Win64EH::RuntimeFunction* runtime_function) {
+  const llvm::Win64EH::UnwindInfo* unwind_info{};
+  while (true) {
+    uintptr_t unwind_info_bytes{};
+    if (object_file_->getRvaPtr(runtime_function->UnwindInfoOffset, unwind_info_bytes)) {
+      return ErrorMessage{absl::StrFormat("Unable to read RUNTIME_FUNCTION at RVA %#x.",
+                                          runtime_function->UnwindInfoOffset)};
+    }
+
+    unwind_info = reinterpret_cast<const llvm::Win64EH::UnwindInfo*>(unwind_info_bytes);
+    // From https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-unwind_info:
+    // "UNW_FLAG_CHAININFO: This unwind info structure is not the primary one for the procedure.
+    // Instead, the chained unwind info entry is the contents of a previous RUNTIME_FUNCTION entry."
+    if ((unwind_info->getFlags() & llvm::Win64EH::UNW_ChainInfo) == 0) {
+      break;
+    }
+
+    runtime_function = unwind_info->getChainedFunctionEntry();
+  }
+
+  return runtime_function;
+}
+
+ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRanges() {
+  auto runtime_functions_or_error = GetRuntimeFunctions();
+  if (runtime_functions_or_error.has_error()) {
+    return ErrorMessage{absl::StrFormat("Unable to load unwind info ranges: %s",
+                                        runtime_functions_or_error.error().message())};
+  }
+  const llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>& runtime_functions =
+      runtime_functions_or_error.value();
+
+  std::vector<UnwindRange> unwind_ranges;
+  // For a function, the "primary" RUNTIME_FUNCTION and the ones with UNW_FLAG_CHAININFO set (if
+  // any) form a tree rooted on the "primary" RUNTIME_FUNCTION. We merge all such RUNTIME_FUNCTIONs
+  // from the same tree into a single UnwindRange.
+  for (const llvm::Win64EH::RuntimeFunction& runtime_function : runtime_functions) {
+    auto primary_runtime_function_or_error = GetPrimaryRuntimeFunction(&runtime_function);
+    if (primary_runtime_function_or_error.has_error()) {
+      return ErrorMessage{absl::StrFormat("Unable to load unwind info ranges: %s",
+                                          primary_runtime_function_or_error.error().message())};
+    }
+    const llvm::Win64EH::RuntimeFunction* primary_runtime_function =
+        primary_runtime_function_or_error.value();
+
+    const uint64_t primary_address =
+        object_file_->getImageBase() + primary_runtime_function->StartAddress;
+    const uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
+
+    if (unwind_ranges.empty()) {
+      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
+      continue;
+    }
+
+    // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-runtime_function
+    // guarantees that RUNTIME_FUNCTIONs are sorted (by address), and we rely on that here.
+    UnwindRange& last_range = unwind_ranges.back();
+    if (primary_address == last_range.start) {
+      // Extend the size of the current function.
+      last_range.end = end_address;
+    } else if (primary_address >= last_range.end) {
+      // Start a new function.
+      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
+    } else {
+      // RUNTIME_FUNCTION entries should be sorted.
+      return ErrorMessage{"Unable to load unwind info ranges: inconsistent RUNTIME_FUNCTIONs."};
+    }
+  }
+  return unwind_ranges;
 }
 
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }

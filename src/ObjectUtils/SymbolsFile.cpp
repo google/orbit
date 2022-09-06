@@ -70,7 +70,7 @@ void SymbolsFile::DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(
   for (size_t i = 0; i < symbol_infos->size(); ++i) {
     orbit_grpc_protos::SymbolInfo& symbol_info = symbol_infos->at(i);
     if (symbol_info.size() != kUnknownSymbolSize) {
-      // This function symbol was from DWARF debug info and already has a size.
+      // This function symbol already has a size.
       continue;
     }
 
