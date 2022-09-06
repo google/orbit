@@ -245,9 +245,9 @@ std::tuple<QString, QString> SymbolLocationsDialog::GetFilePickerConfig() const 
 
   const ModuleData& module{*module_.value()};
 
-  QString caption =
-      QString("Select symbol file for module %1")
-          .arg(QString::fromStdString(std::filesystem::path(module.file_path()).filename().string()));
+  QString caption = QString("Select symbol file for module %1")
+                        .arg(QString::fromStdString(
+                            std::filesystem::path(module.file_path()).filename().string()));
 
   switch (module.object_file_type()) {
     case ModuleInfo::kElfFile:
