@@ -413,7 +413,8 @@ void SymbolLocationsDialog::SetUpModuleHeadlineLabel() {
   ui_->moduleHeadlineLabel->setVisible(true);
   ui_->moduleHeadlineLabel->setText(
       QString(kModuleHeadlineLabel)
-          .arg(QString::fromStdString(std::filesystem::path(module_.value()->file_path()).filename())));
+          .arg(QString::fromStdString(
+              std::filesystem::path(module_.value()->file_path()).filename())));
 }
 
 void SymbolLocationsDialog::DisableAddFolder() {
@@ -423,7 +424,8 @@ void SymbolLocationsDialog::DisableAddFolder() {
   ui_->addFolderButton->setToolTip(
       QString("Module %1 does not have a build ID. For modules without build ID, Orbit cannot find "
               "symbols in folders.")
-          .arg(QString::fromStdString(std::filesystem::path(module_.value()->file_path()).filename())));
+          .arg(QString::fromStdString(
+              std::filesystem::path(module_.value()->file_path()).filename())));
 }
 
 void SymbolLocationsDialog::SetUpInfoLabel() {
