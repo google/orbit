@@ -32,7 +32,7 @@ using ::testing::_;
 using ::testing::Return;
 
 const std::filesystem::path kSymbolCacheDir{"symbol/cache/path"};
-const std::string kValidModuleName{"only_available_module_name"};
+const std::string kValidModuleName{"valid_module_name"};
 const std::string kValidModuleBuildId{"ABCD12345678"};
 const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
                                       kValidModuleBuildId};
@@ -121,16 +121,17 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
 }
 
 TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
-  ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
-  std::string expected_url{
+  const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
+  const std::string expected_url{
       "https://msdl.microsoft.com/download/symbols/some_module_name/some_build_id/"
       "some_module_name"};
-  SetUpDownloadManager(DownloadResultState::kError, expected_url, "Symbols not found");
+  const std::string error_msg{"Symbols not found"};
+  SetUpDownloadManager(DownloadResultState::kError, expected_url, error_msg);
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("Symbols not found"));
+      .Then(executor_.get(), [error_msg](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
+        EXPECT_THAT(result, HasError(error_msg));
 
         QCoreApplication::exit();
       });

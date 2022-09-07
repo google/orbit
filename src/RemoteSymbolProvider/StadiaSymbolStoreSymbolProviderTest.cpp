@@ -32,10 +32,14 @@ using ::testing::_;
 using ::testing::Return;
 
 const std::filesystem::path kSymbolCacheDir{"symbol/cache/path"};
-const std::string kValidModuleName{"only_available_module_name"};
+const std::string kValidModuleName{"valid_module_name"};
 const std::string kValidModuleBuildId{"ABCD12345678"};
 const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
                                       kValidModuleBuildId};
+
+const std::string kSymbolsNotFoundMsg{"Symbols not found"};
+const std::string kFailedToDownloadMsg{"Failed to download"};
+const std::string kGgpTimeoutMsg{"Timeout"};
 
 class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
  public:
@@ -58,11 +62,11 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
           // Stadia symbol provider queries only one module each time when making the ggp call.
           ORBIT_CHECK(download_queries.size() == 1);
 
-          if (ggp_client_state == GgpClientState::kTimeout) return {ErrorMessage{"Timeout"}};
+          if (ggp_client_state == GgpClientState::kTimeout) return {ErrorMessage{kGgpTimeoutMsg}};
 
           if (download_queries.front().module_name != kValidModuleName ||
               download_queries.front().build_id != kValidModuleBuildId) {
-            return {ErrorMessage{"Symbols not found"}};
+            return {ErrorMessage{kSymbolsNotFoundMsg}};
           }
 
           SymbolDownloadInfo download_info;
@@ -142,12 +146,12 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleCanceled) {
 
 TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleDownloadError) {
   SetUpGgpClient(GgpClientState::kWorking);
-  SetUpDownloadManager(DownloadResultState::kError, "Failed to download");
+  SetUpDownloadManager(DownloadResultState::kError, kFailedToDownloadMsg);
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
       .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("Failed to download"));
+        EXPECT_THAT(result, HasError(kFailedToDownloadMsg));
 
         QCoreApplication::exit();
       });
@@ -158,11 +162,11 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleDownloadError) {
 TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
   SetUpGgpClient(GgpClientState::kWorking);
 
-  ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
+  const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
       .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("Symbols not found"));
+        EXPECT_THAT(result, HasError(kSymbolsNotFoundMsg));
 
         QCoreApplication::exit();
       });
@@ -176,7 +180,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleTimeout) {
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
       .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("Timeout"));
+        EXPECT_THAT(result, HasError(kGgpTimeoutMsg));
 
         QCoreApplication::exit();
       });
