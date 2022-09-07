@@ -1337,9 +1337,11 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
             .toInt());
   }
 
-  dialog.SetEnableCallStackCollectionOnThreadStateChanges(
-      collect_callstack_on_thread_state_change ==
-      CaptureOptions::kThreadStateChangeCallStackCollection);
+  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    dialog.SetEnableCallStackCollectionOnThreadStateChanges(
+        collect_callstack_on_thread_state_change ==
+        CaptureOptions::kThreadStateChangeCallStackCollection);
+  }
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -1371,8 +1373,13 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                     dialog.GetLimitLocalMarkerDepthPerCommandBuffer());
   settings.setValue(kMaxLocalMarkerDepthPerCommandBufferSettingsKey,
                     QString::number(dialog.GetMaxLocalMarkerDepthPerCommandBuffer()));
-  settings.setValue(kEnableCallStackCollectionOnThreadStateChanges,
-                    static_cast<int>(dialog.GetEnableCallStackCollectionOnThreadStateChanges()));
+  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
+    settings.setValue(
+        kEnableCallStackCollectionOnThreadStateChanges,
+        static_cast<int>(dialog.GetEnableCallStackCollectionOnThreadStateChanges()
+                             ? CaptureOptions::kThreadStateChangeCallStackCollection
+                             : CaptureOptions::kNoThreadStateChangeCallStackCollection));
+  }
   LoadCaptureOptionsIntoApp();
 }
 
