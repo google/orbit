@@ -11,7 +11,7 @@
 TimeGraphLayout::TimeGraphLayout() {
   text_box_height_ = 20.f;
   core_height_ = 10.f;
-  thread_state_track_height_ = 4.0f;
+  thread_state_track_height_ = 6.0f;
   event_track_height_ = 10.f;
   all_threads_event_track_scale_ = 2.f;
   variable_track_height_ = 20.f;
