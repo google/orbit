@@ -84,11 +84,11 @@ void SchedulerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
                   viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
                   app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
-  uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
-  float box_height = GetDefaultBoxHeight();
+  const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
+  const float box_height = GetDefaultBoxHeight();
 
   for (uint32_t depth = 0; depth < GetDepth(); depth++) {
-    float world_timer_y = GetYFromDepth(depth);
+    const float world_timer_y = GetYFromDepth(depth);
     for (const TimerInfo* timer_info : timer_data_->GetTimersAtDepthDiscretized(
              depth, resolution_in_pixels, min_tick, max_tick)) {
       ++visible_timer_count_;
