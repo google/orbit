@@ -279,7 +279,14 @@ std::string GetExpectedDisplayInclusiveByIndex(size_t index, bool for_copy = fal
                          kConfidenceIntervalLongerSectionLength * 100.0f);
 }
 
-std::string GetExpectedToolTipByIndex(size_t index, int column) {
+std::string GetExpectedToolTipByIndex(size_t index, int column, const ModuleManager& module_manager,
+                                      const CaptureData& capture_data) {
+  if (column == kColumnSelected) {
+    return "";
+  }
+  if (column == kColumnFunctionName) {
+    return GetExpectedDisplayFunctionNameByIndex(index, module_manager, capture_data);
+  }
   if (column == kColumnInclusive || column == kColumnExclusive) {
     const uint32_t raw_count =
         (column == kColumnInclusive) ? kSampledInclusives[index] : kSampledExclusives[index];
@@ -299,6 +306,12 @@ std::string GetExpectedToolTipByIndex(size_t index, int column) {
         kFunctionPrettyNames[index], at_the_top_or_encountered, raw_count, count_type,
         kStackEventsCount, percentage, percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
         percentage + kConfidenceIntervalRightSectionLength * 100.0f);
+  }
+  if (column == kColumnModuleName) {
+    return GetExpectedDisplayModuleNameByIndex(index, module_manager, capture_data);
+  }
+  if (column == kColumnAddress) {
+    return GetExpectedDisplayAddressByIndex(index);
   }
   if (column == kColumnUnwindErrors) {
     const float percentage = kSampledUnwindErrorPercents[index];
@@ -413,7 +426,8 @@ TEST_F(SamplingReportDataViewTest, ToolTipMessageIsCorrect) {
   AddFunctionsByIndices({0});
   view_.SetStackEventsCount(kStackEventsCount);
   for (size_t column = 0; column < kNumColumns; ++column) {
-    EXPECT_EQ(view_.GetToolTip(0, column), GetExpectedToolTipByIndex(0, column));
+    EXPECT_EQ(view_.GetToolTip(0, column),
+              GetExpectedToolTipByIndex(0, column, module_manager_, *capture_data_));
   }
 }
 
