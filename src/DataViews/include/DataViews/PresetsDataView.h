@@ -46,8 +46,10 @@ class PresetsDataView : public DataView {
   void OnShowInExplorerRequested(const std::vector<int>& selection) override;
   void OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path);
 
-  static constexpr std::string_view kLoadedPresetString{"* "};
-  static constexpr std::string_view kLoadedPresetBlankString{"  "};
+  static constexpr std::string_view kLoadedPresetPrefix{"* "};
+  static constexpr std::string_view kNotLoadedPresetPrefix{"  "};
+  static constexpr std::string_view kLoadedPresetTooltipSuffix{" (loaded)"};
+  static constexpr std::string_view kNotLoadedPresetTooltipSuffix{""};
 
  protected:
   struct ModuleView {
@@ -63,6 +65,8 @@ class PresetsDataView : public DataView {
   void DoFilter() override;
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);
   [[nodiscard]] static std::string GetFunctionCountList(const std::vector<ModuleView>& modules);
+  [[nodiscard]] static std::string GetModuleAndFunctionCountList(
+      const std::vector<ModuleView>& modules);
   [[nodiscard]] const orbit_preset_file::PresetFile& GetPreset(unsigned int row) const;
   [[nodiscard]] const std::vector<ModuleView>& GetModules(uint32_t row) const;
 

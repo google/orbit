@@ -45,13 +45,23 @@ constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 constexpr const float kDateModifiedColumnWidth = 0.16f;
 
 namespace {
+
 std::string GetLoadStatusAndStateString(orbit_data_views::AppInterface* app,
                                         const PresetFile& preset) {
   std::string_view load_status = preset.IsLoaded()
-                                     ? orbit_data_views::PresetsDataView::kLoadedPresetString
-                                     : orbit_data_views::PresetsDataView::kLoadedPresetBlankString;
+                                     ? orbit_data_views::PresetsDataView::kLoadedPresetPrefix
+                                     : orbit_data_views::PresetsDataView::kNotLoadedPresetPrefix;
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
   return absl::StrCat(load_status, load_state.GetName());
+}
+
+std::string GetLoadStatusAndStateTooltip(orbit_data_views::AppInterface* app,
+                                         const PresetFile& preset) {
+  std::string_view load_status =
+      preset.IsLoaded() ? orbit_data_views::PresetsDataView::kLoadedPresetTooltipSuffix
+                        : orbit_data_views::PresetsDataView::kNotLoadedPresetTooltipSuffix;
+  orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
+  return absl::StrCat(load_state.GetName(), load_status);
 }
 
 std::string GetDateModifiedString(const PresetFile& preset) {
@@ -63,6 +73,7 @@ std::string GetDateModifiedString(const PresetFile& preset) {
 
   return orbit_data_views::FormatShortDatetime(datetime_or_error.value());
 }
+
 }  // namespace
 
 namespace orbit_data_views {
@@ -81,6 +92,12 @@ std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modul
 std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.function_count);
+  });
+}
+
+std::string PresetsDataView::GetModuleAndFunctionCountList(const std::vector<ModuleView>& modules) {
+  return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
+    absl::StrAppendFormat(out, "%s: %u function(s)", module.module_name, module.function_count);
   });
 }
 
@@ -120,12 +137,25 @@ std::string PresetsDataView::GetValue(int row, int column) {
   }
 }
 
-std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
+std::string PresetsDataView::GetToolTip(int row, int column) {
   const PresetFile& preset = GetPreset(row);
-  return absl::StrCat(preset.file_path().string(),
-                      app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
-                          ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
-                          : "");
+  switch (column) {
+    case kColumnLoadState:
+      return GetLoadStatusAndStateTooltip(app_, preset);
+    case kColumnPresetName:
+      return absl::StrCat(preset.file_path().string(),
+                          app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
+                              ? "<br/><br/><i>None of the modules in the preset can be loaded.</i>"
+                              : "");
+    case kColumnModules:
+      [[fallthrough]];
+    case kColumnFunctionCount:
+      return GetModuleAndFunctionCountList(GetModules(row));
+    case kColumnDateModified:
+      [[fallthrough]];
+    default:
+      return DataView::GetToolTip(row, column);
+  }
 }
 
 void PresetsDataView::DoSort() {
