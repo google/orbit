@@ -3,22 +3,27 @@
 # found in the LICENSE file.
 
 project(SymbolProvider)
-add_library(SymbolProvider INTERFACE)
+add_library(SymbolProvider STATIC)
 
-target_sources(SymbolProvider INTERFACE
+target_sources(SymbolProvider PRIVATE
+        SymbolLoadingOutcome.cpp)
+
+target_sources(SymbolProvider PUBLIC
         include/SymbolProvider/ModuleIdentifier.h
+        include/SymbolProvider/SymbolLoadingOutcome.h
         include/SymbolProvider/SymbolProvider.h)
 
-target_include_directories(SymbolProvider INTERFACE
+target_include_directories(SymbolProvider PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_link_libraries(SymbolProvider INTERFACE
+target_link_libraries(SymbolProvider PUBLIC
         OrbitBase)
 
 add_executable(SymbolProviderTests)
 
 target_sources(SymbolProviderTests PRIVATE 
-        ModuleIdentifierTest.cpp)
+        ModuleIdentifierTest.cpp
+        SymbolLoadingOutcomeTest.cpp)
 
 target_link_libraries(SymbolProviderTests PRIVATE 
         SymbolProvider 
