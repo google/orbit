@@ -441,9 +441,9 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
   // set of RUNTIME_FUNCTIONs we are merging. We observed this as a very rare but valid case, on
   // which more information can be found below.
   std::vector<UnwindRange> unwind_ranges;
-  uint64_t last_primary_address{};
+  uint64_t previous_primary_address{};
   uint64_t largest_primary_address{};
-  uint64_t num_chained_not_with_largest_primary = 0;
+  uint64_t number_of_runtime_functions_whose_primary_is_not_the_latest_primary = 0;
   for (const llvm::Win64EH::RuntimeFunction& runtime_function : runtime_functions) {
     auto primary_runtime_function_or_error = GetPrimaryRuntimeFunction(&runtime_function);
     if (primary_runtime_function_or_error.has_error()) {
@@ -455,35 +455,14 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
 
     const uint64_t start_address = object_file_->getImageBase() + runtime_function.StartAddress;
     const uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
-    const uint64_t primary_address =
-        object_file_->getImageBase() + primary_runtime_function->StartAddress;
-
-    if (unwind_ranges.empty()) {
-      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
-      ORBIT_CHECK(last_primary_address == 0);
-      ORBIT_CHECK(largest_primary_address == 0);
-      last_primary_address = primary_address;
-      largest_primary_address = primary_address;
-      continue;
-    }
-
-    ORBIT_CHECK(last_primary_address != 0);
-    ORBIT_CHECK(largest_primary_address != 0);
-
-    UnwindRange& last_range = unwind_ranges.back();
-    const uint64_t last_end_address = last_range.end;
 
     if (end_address < start_address) {
       return ErrorMessage{
           absl::StrCat(kErrorMessagePrefix, "RUNTIME_FUNCTION with negative function size.")};
     }
 
-    // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-runtime_function
-    // guarantees that RUNTIME_FUNCTIONs are sorted (by address), and we rely on that here.
-    if (start_address < last_end_address) {
-      return ErrorMessage{
-          absl::StrCat(kErrorMessagePrefix, "RUNTIME_FUNCTIONs not sorted or overlapping.")};
-    }
+    const uint64_t primary_address =
+        object_file_->getImageBase() + primary_runtime_function->StartAddress;
 
     // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-unwind_info states
     // that "the chained unwind info entry is the contents of a *previous* RUNTIME_FUNCTION entry",
@@ -493,7 +472,29 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
           absl::StrCat(kErrorMessagePrefix, "chained RUNTIME_FUNCTION is not a previous one.")};
     }
 
-    if (primary_address == last_primary_address && start_address == last_range.end) {
+    if (unwind_ranges.empty()) {
+      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
+      ORBIT_CHECK(previous_primary_address == 0);
+      ORBIT_CHECK(largest_primary_address == 0);
+      previous_primary_address = primary_address;
+      largest_primary_address = primary_address;
+      continue;
+    }
+
+    ORBIT_CHECK(previous_primary_address != 0);
+    ORBIT_CHECK(largest_primary_address != 0);
+
+    UnwindRange& previous_range = unwind_ranges.back();
+    const uint64_t previous_end_address = previous_range.end;
+
+    // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-runtime_function
+    // guarantees that RUNTIME_FUNCTIONs are sorted (by address), and we rely on that here.
+    if (start_address < previous_end_address) {
+      return ErrorMessage{
+          absl::StrCat(kErrorMessagePrefix, "RUNTIME_FUNCTIONs not sorted or overlapping.")};
+    }
+
+    if (primary_address == previous_primary_address && start_address == previous_range.end) {
       // This RUNTIME_FUNCTION is adjacent to the previous one, and it has the same primary
       // RUNTIME_FUNCTION as the previous one. Merge them by extending the size of the current
       // UnwindRange (which represents the current function).
@@ -504,9 +505,9 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
       // RUNTIME_FUNCTIONs that form the UnwindRange is allowed to not be part of the UnwindRange,
       // as it could be a RUNTIME_FUNCTION that came way earlier and that clearly belongs to a
       // different function, as a means of reusing unwind information from that function.
-      last_range.end = end_address;
+      previous_range.end = end_address;
     } else {
-      ORBIT_CHECK(start_address >= last_range.end);
+      ORBIT_CHECK(start_address >= previous_range.end);
       // Start a new UnwindRange (function).
       unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
     }
@@ -528,19 +529,21 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
       // Also, in the cases we observed, these RUNTIME_FUNCTIONs come in groups of adjacent
       // RUNTIME_FUNCTIONs with the same primary RUNTIME_FUNCTION, which makes us assume they belong
       // to the same function.
-      ++num_chained_not_with_largest_primary;
+      //
+      // Count these RUNTIME_FUNCTIONs and log their number later as this being such a rare case
+      // makes it interesting.
+      ++number_of_runtime_functions_whose_primary_is_not_the_latest_primary;
     }
 
-    last_primary_address = primary_address;
+    previous_primary_address = primary_address;
     largest_primary_address = std::max(largest_primary_address, primary_address);
   }
 
-  if (num_chained_not_with_largest_primary > 0) {
-    // Count and log these RUNTIME_FUNCTIONs as this is such a rare and hence interesting case.
+  if (number_of_runtime_functions_whose_primary_is_not_the_latest_primary > 0) {
     ORBIT_LOG(
         "\"%s\" has %u RUNTIME_FUNCTIONs whose primary RUNTIME_FUNCTION is not the latest primary "
         "RUNTIME_FUNCTION",
-        file_path_.string(), num_chained_not_with_largest_primary);
+        file_path_.string(), number_of_runtime_functions_whose_primary_is_not_the_latest_primary);
   }
   return unwind_ranges;
 }
