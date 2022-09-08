@@ -388,6 +388,10 @@ orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
 
   ModuleSymbols module_symbols;
   for (const llvm::object::ExportDirectoryEntryRef& ref : object_file_->export_directories()) {
+    // From https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#export-address-table:
+    // "A forwarder RVA exports a definition from some other image, making it appear as if it were
+    // being exported by the current image." So these symbols don't really belong to this file, and
+    // we skip them.
     bool is_forwarder{};
     if (llvm::Error error = ref.isForwarder(is_forwarder)) {
       llvm::consumeError(std::move(error));
