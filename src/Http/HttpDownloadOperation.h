@@ -33,6 +33,7 @@ class HttpDownloadOperation : public QObject {
     kStarted,
     kCancelled,
     kDone,
+    kNotFound,
     kError,
   };
 
