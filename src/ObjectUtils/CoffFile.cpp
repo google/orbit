@@ -389,23 +389,35 @@ orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
   ModuleSymbols module_symbols;
   for (const llvm::object::ExportDirectoryEntryRef& ref : object_file_->export_directories()) {
     bool is_forwarder{};
-    if (ref.isForwarder(is_forwarder)) continue;
+    if (llvm::Error error = ref.isForwarder(is_forwarder)) {
+      llvm::consumeError(std::move(error));
+      continue;
+    }
     if (is_forwarder) continue;
 
     uint32_t rva{};
-    if (ref.getExportRVA(rva)) continue;
+    if (llvm::Error error = ref.getExportRVA(rva)) {
+      llvm::consumeError(std::move(error));
+      continue;
+    }
     const uint64_t virtual_address = object_file_->getImageBase() + rva;
 
     std::string name;
+    llvm::StringRef name_ref;
     // From the documentation of ExportDirectoryEntryRef::getSymbolName: "If the symbol is exported
     // only by ordinal, the empty string is set as a result." However, if the name pointer table is
     // empty, the error "Invalid data was encountered while parsing the file" is produced instead.
     // So consider both cases.
-    if (llvm::StringRef name_ref; !ref.getSymbolName(name_ref) && !name_ref.empty()) {
+    if (llvm::Error get_symbol_name_error = ref.getSymbolName(name_ref);
+        !get_symbol_name_error && !name_ref.empty()) {
       name = name_ref.str();
     } else {
+      if (get_symbol_name_error) llvm::consumeError(std::move(get_symbol_name_error));
       uint32_t ordinal{};
-      if (ref.getOrdinal(ordinal)) continue;
+      if (llvm::Error get_ordinal_error = ref.getOrdinal(ordinal)) {
+        llvm::consumeError(std::move(get_ordinal_error));
+        continue;
+      }
       // We arbitrarily choose NONAME# because functions exported only by ordinal are specified in
       // the .def file with the NONAME attribute. See
       // https://docs.microsoft.com/en-us/cpp/build/exporting-functions-from-a-dll-by-ordinal-rather-than-by-name
@@ -452,9 +464,11 @@ ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>> CoffFileImpl::Get
   }
 
   llvm::ArrayRef<uint8_t> exception_table_bytes;
-  if (object_file_->getRvaAndSizeAsBytes(exception_table_data_dir->RelativeVirtualAddress,
-                                         exception_table_data_dir->Size, exception_table_bytes)) {
-    return ErrorMessage{"Unable to read Exception Table."};
+  if (llvm::Error error = object_file_->getRvaAndSizeAsBytes(
+          exception_table_data_dir->RelativeVirtualAddress, exception_table_data_dir->Size,
+          exception_table_bytes)) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to read Exception Table: %s", llvm::toString(std::move(error)))};
   }
 
   if (exception_table_bytes.size() % sizeof(llvm::Win64EH::RuntimeFunction) != 0) {
@@ -472,9 +486,11 @@ orbit_object_utils::CoffFileImpl::GetPrimaryRuntimeFunction(
   const llvm::Win64EH::UnwindInfo* unwind_info{};
   while (true) {
     uintptr_t unwind_info_bytes{};
-    if (object_file_->getRvaPtr(runtime_function->UnwindInfoOffset, unwind_info_bytes)) {
-      return ErrorMessage{absl::StrFormat("Unable to read RUNTIME_FUNCTION at RVA %#x.",
-                                          runtime_function->UnwindInfoOffset)};
+    if (llvm::Error error =
+            object_file_->getRvaPtr(runtime_function->UnwindInfoOffset, unwind_info_bytes)) {
+      return ErrorMessage{absl::StrFormat("Unable to read RUNTIME_FUNCTION at RVA %#x: %s",
+                                          runtime_function->UnwindInfoOffset,
+                                          llvm::toString(std::move(error)))};
     }
 
     unwind_info = reinterpret_cast<const llvm::Win64EH::UnwindInfo*>(unwind_info_bytes);
@@ -653,10 +669,9 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
   // If 'this' was successfully created with CreateCoffFile, 'object_file_' cannot be nullptr.
   ORBIT_CHECK(object_file_ != nullptr);
 
-  llvm::Error error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path);
-  if (error) {
-    return ErrorMessage(absl::StrFormat("Unable to load debug PDB info with error: %s",
-                                        llvm::toString(std::move(error))));
+  if (llvm::Error error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path)) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to load debug PDB info: %s", llvm::toString(std::move(error))));
   }
   if (debug_info == nullptr) {
     // Per llvm documentation, this indicates that the file does not have the requested info.
