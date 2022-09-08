@@ -1979,7 +1979,8 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
             if (orbit_base::IsCanceled(load_result_or_canceled)) {
               return {orbit_base::Canceled{}};
             }
-            const auto& local_file_path{std::get<std::filesystem::path>(load_result_or_canceled)};
+            const std::filesystem::path& local_file_path{
+                orbit_base::GetNotCanceled(load_result_or_canceled)};
             orbit_base::ImmediateExecutor executor;
             return LoadSymbols(local_file_path, module_id)
                 .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
@@ -2077,7 +2078,8 @@ Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugI
         if (orbit_base::IsCanceled(local_file_path_or_canceled)) {
           return ErrorMessage{"User canceled loading"};
         }
-        const auto& local_file_path = std::get<std::filesystem::path>(local_file_path_or_canceled);
+        const std::filesystem::path& local_file_path =
+            orbit_base::GetNotCanceled(local_file_path_or_canceled);
 
         auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
 
