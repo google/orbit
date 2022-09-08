@@ -352,6 +352,9 @@ message OrbitPerModuleSymbolLoadData {
     STADIA_INSTANCE = 3;
     SYMBOL_LOCATIONS_DIALOG = 4;
     ADDITIONAL_SYMBOL_PATHS_FLAG = 5;
+    STADIA_SYMBOL_STORE = 6;
+    MICROSOFT_SYMBOL_SERVER = 7;
+    USER_DEFINED_SYMBOL_STORE = 8;
   }
   SymbolSource symbol_source = 4;
 }
