@@ -36,6 +36,9 @@ class CoffFileImpl : public CoffFile {
 
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] bool HasDebugSymbols() const override;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromExportTable()
+      override;
+  [[nodiscard]] bool HasExportTable() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
@@ -323,7 +326,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
 
   if (symbol_infos.empty()) {
     return ErrorMessage(
-        "Unable to load symbols from PE/COFF file, not even a single function symbol was found.");
+        "Unable to load symbols from PE/COFF file: not even a single function symbol was found.");
   }
 
   ModuleSymbols module_symbols;
@@ -364,6 +367,78 @@ bool CoffFileImpl::HasDebugSymbols() const {
     }
   }
   return false;
+}
+
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
+  if (!HasExportTable()) {
+    return ErrorMessage("PE/COFF file does not have an Export Table.");
+  }
+
+  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
+  if (!unwind_ranges_or_error.has_value()) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to assign sizes to symbols from the Export Table: %s",
+                        unwind_ranges_or_error.error().message())};
+  }
+  absl::flat_hash_map<uint64_t, uint64_t> unwind_range_start_to_size;
+  for (const UnwindRange& unwind_range : unwind_ranges_or_error.value()) {
+    unwind_range_start_to_size.emplace(unwind_range.start, unwind_range.end - unwind_range.start);
+  }
+
+  ModuleSymbols module_symbols;
+  for (const llvm::object::ExportDirectoryEntryRef& ref : object_file_->export_directories()) {
+    bool is_forwarder{};
+    if (ref.isForwarder(is_forwarder)) continue;
+    if (is_forwarder) continue;
+
+    uint32_t rva{};
+    if (ref.getExportRVA(rva)) continue;
+    const uint64_t virtual_address = object_file_->getImageBase() + rva;
+
+    std::string name;
+    // From the documentation of ExportDirectoryEntryRef::getSymbolName: "If the symbol is exported
+    // only by ordinal, the empty string is set as a result." However, if the name pointer table is
+    // empty, the error "Invalid data was encountered while parsing the file" is produced instead.
+    // So consider both cases.
+    if (llvm::StringRef name_ref; !ref.getSymbolName(name_ref) && !name_ref.empty()) {
+      name = name_ref;
+    } else {
+      uint32_t ordinal{};
+      if (ref.getOrdinal(ordinal)) continue;
+      // We arbitrarily choose NONAME# because functions exported only by ordinal are specified in
+      // the .def file with the NONAME attribute. See
+      // https://docs.microsoft.com/en-us/cpp/build/exporting-functions-from-a-dll-by-ordinal-rather-than-by-name
+      name = "NONAME" + std::to_string(ordinal);
+    }
+
+    SymbolInfo symbol_info;
+    symbol_info.set_demangled_name(std::move(name));
+    symbol_info.set_address(virtual_address);
+
+    // The Export Table doesn't contain the size of symbols: obtain this size from the Exception
+    // Table, but note that that's not always possible, as leaf functions have no RUNTIME_FUNCTION.
+    auto unwind_range_start_to_size_it = unwind_range_start_to_size.find(virtual_address);
+    if (unwind_range_start_to_size_it == unwind_range_start_to_size.end()) {
+      symbol_info.set_size(0);
+    } else {
+      symbol_info.set_size(unwind_range_start_to_size_it->second);
+    }
+
+    *module_symbols.add_symbol_infos() = std::move(symbol_info);
+  }
+
+  if (module_symbols.symbol_infos_size() == 0) {
+    return ErrorMessage(
+        "Unable to load symbols from the Export Table: not even a single symbol was found.");
+  }
+
+  return module_symbols;
+}
+
+bool orbit_object_utils::CoffFileImpl::HasExportTable() const {
+  return object_file_->getDataDirectory(llvm::COFF::DataDirectoryIndex::EXPORT_TABLE)
+             ->RelativeVirtualAddress != 0;
 }
 
 // LLVM doesn't provide a simple way to access the RUNTIME_FUNCTIONs, so we have to do it ourselves.

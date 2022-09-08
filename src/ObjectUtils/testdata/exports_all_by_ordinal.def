@@ -1,0 +1,4 @@
+LIBRARY exports_all_by_ordinal
+    EXPORTS
+        PrintHelloWorldNoname1 @1 NONAME
+        PrintHelloWorldNoname2 @2 NONAME

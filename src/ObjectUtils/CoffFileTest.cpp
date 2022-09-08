@@ -29,6 +29,8 @@ TEST(CoffFile, LoadDebugSymbols) {
   ASSERT_THAT(coff_file_result, HasNoError());
   std::unique_ptr<CoffFile> coff_file = std::move(coff_file_result.value());
 
+  EXPECT_TRUE(coff_file->HasDebugSymbols());
+
   const auto symbols_result = coff_file->LoadDebugSymbols();
   ASSERT_THAT(symbols_result, HasNoError());
 
@@ -65,12 +67,98 @@ TEST(CoffFile, LoadDebugSymbols) {
 }
 
 TEST(CoffFile, HasDebugSymbols) {
+  std::filesystem::path coff_file_with_symbols_path = orbit_test::GetTestdataDir() / "libtest.dll";
+
+  auto coff_file_with_symbols_result = CreateCoffFile(coff_file_with_symbols_path);
+  ASSERT_THAT(coff_file_with_symbols_result, HasNoError());
+
+  EXPECT_TRUE(coff_file_with_symbols_result.value()->HasDebugSymbols());
+
+  std::filesystem::path coff_file_without_symbols_path =
+      orbit_test::GetTestdataDir() / "dllmain.dll";
+
+  auto coff_file_without_symbols_result = CreateCoffFile(coff_file_without_symbols_path);
+  ASSERT_THAT(coff_file_without_symbols_result, HasNoError());
+
+  EXPECT_FALSE(coff_file_without_symbols_result.value()->HasDebugSymbols());
+}
+
+static ::testing::Matcher<SymbolInfo> SymbolInfoEq(std::string_view demangled_name,
+                                                   uint64_t address, uint64_t size) {
+  return testing::AllOf(
+      testing::Property("demangled_name", &SymbolInfo::demangled_name, demangled_name),
+      testing::Property("address", &SymbolInfo::address, address),
+      testing::Property("size", &SymbolInfo::size, size));
+}
+
+TEST(CoffFile, LoadSymbolsFromExportTable) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   auto coff_file_result = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
 
-  EXPECT_TRUE(coff_file_result.value()->HasDebugSymbols());
+  EXPECT_TRUE(coff_file->HasExportTable());
+
+  const auto symbols_result = coff_file->LoadSymbolsFromExportTable();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq(
+                                "PrintHelloWorld", coff_file->GetLoadBias() + 0x13a0, 27)));
+}
+
+TEST(CoffFile, LoadSymbolsFromExportTableOneExportedOnlyByOrdinal) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "exports_one_by_ordinal.dll";
+
+  auto coff_file_result = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
+
+  EXPECT_TRUE(coff_file->HasExportTable());
+
+  const auto symbols_result = coff_file->LoadSymbolsFromExportTable();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  const uint64_t image_base = coff_file->GetLoadBias();
+  EXPECT_THAT(symbol_infos,
+              testing::ElementsAre(SymbolInfoEq("NONAME1", image_base + 0x1110, 43),
+                                   SymbolInfoEq("PrintHelloWorldNamed", image_base + 0x1150, 43)));
+}
+
+TEST(CoffFile, LoadSymbolsFromExportTableAllExportedOnlyByOrdinal) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "exports_all_by_ordinal.dll";
+
+  auto coff_file_result = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
+
+  EXPECT_TRUE(coff_file->HasExportTable());
+
+  const auto symbols_result = coff_file->LoadSymbolsFromExportTable();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  const uint64_t image_base = coff_file->GetLoadBias();
+  EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq("NONAME1", image_base + 0x1110, 43),
+                                                 SymbolInfoEq("NONAME2", image_base + 0x1150, 43)));
+}
+
+TEST(CoffFile, LoadSymbolsFromExportTableNoExportTable) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "no_export_table.exe";
+
+  auto coff_file_result = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
+
+  EXPECT_FALSE(coff_file->HasExportTable());
+
+  const auto symbols_result = coff_file->LoadSymbolsFromExportTable();
+  ASSERT_THAT(symbols_result, HasError("PE/COFF file does not have an Export Table"));
 }
 
 TEST(CoffFile, GetFilePath) {
