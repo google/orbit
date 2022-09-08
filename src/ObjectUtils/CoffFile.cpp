@@ -402,7 +402,7 @@ orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
     // empty, the error "Invalid data was encountered while parsing the file" is produced instead.
     // So consider both cases.
     if (llvm::StringRef name_ref; !ref.getSymbolName(name_ref) && !name_ref.empty()) {
-      name = name_ref;
+      name = name_ref.str();
     } else {
       uint32_t ordinal{};
       if (ref.getOrdinal(ordinal)) continue;
