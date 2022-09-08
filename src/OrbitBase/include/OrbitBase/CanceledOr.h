@@ -7,6 +7,7 @@
 
 #include <variant>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/VoidToMonostate.h"
 
 namespace orbit_base {
@@ -25,6 +26,21 @@ using CanceledOr = std::variant<VoidToMonostate_t<T>, Canceled>;
 template <typename T>
 [[nodiscard]] bool IsCanceled(const std::variant<T, Canceled>& canceled_or) {
   return std::holds_alternative<Canceled>(canceled_or);
+}
+
+// Free function to get the "Not canceled" content of a CanceledOr object. Abstracts std::get
+template <typename T>
+[[nodiscard]] const T& GetNotCanceled(const std::variant<T, Canceled>& canceled_or) {
+  ORBIT_CHECK(!IsCanceled(canceled_or));
+  return std::get<T>(canceled_or);
+}
+
+// Free function with move semantics to get the "Not canceled" content of a CanceledOr object.
+// Abstracts std::get
+template <typename T>
+[[nodiscard]] T&& GetNotCanceled(std::variant<T, Canceled>&& canceled_or) {
+  ORBIT_CHECK(!IsCanceled(canceled_or));
+  return std::get<T>(std::move(canceled_or));
 }
 
 }  // namespace orbit_base

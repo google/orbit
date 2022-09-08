@@ -9,6 +9,7 @@
 #include <QCoreApplication>
 
 #include "Http/MockDownloadManager.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitGgp/MockClient.h"
@@ -117,7 +118,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleSuccess) {
       .Then(executor_.get(), [this](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
         EXPECT_THAT(result, HasNoError());
         EXPECT_FALSE(IsCanceled(result.value()));
-        const auto& local_file_path = std::get<std::filesystem::path>(result.value());
+        const auto& local_file_path = orbit_base::GetNotCanceled(result.value());
         EXPECT_EQ(local_file_path, symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
 
         QCoreApplication::exit();

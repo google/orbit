@@ -4,6 +4,7 @@
 
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 
@@ -17,24 +18,23 @@ bool IsCanceled(const SymbolLoadingOutcome& outcome) {
 
 bool IsNotFound(const SymbolLoadingOutcome& outcome) {
   return outcome.has_value() && !IsCanceled(outcome) &&
-         orbit_base::IsNotFound(std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
+         orbit_base::IsNotFound(orbit_base::GetNotCanceled(outcome.value()));
 }
 
 std::string GetNotFoundMessage(const SymbolLoadingOutcome& outcome) {
   ORBIT_CHECK(IsNotFound(outcome));
-  return orbit_base::GetNotFoundMessage(
-      std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
+  return orbit_base::GetNotFoundMessage(orbit_base::GetNotCanceled(outcome.value()));
 }
 
 bool IsSuccessResult(const SymbolLoadingOutcome& outcome) {
   return outcome.has_value() && !IsCanceled(outcome) && !IsNotFound(outcome) &&
          std::holds_alternative<SymbolLoadingSuccessResult>(
-             std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
+             orbit_base::GetNotCanceled(outcome.value()));
 }
 
 SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome) {
   ORBIT_CHECK(IsSuccessResult(outcome));
-  return orbit_base::GetFound(std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
+  return orbit_base::GetFound(orbit_base::GetNotCanceled(outcome.value()));
 }
 
 }  // namespace orbit_symbol_provider
