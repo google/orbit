@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SYMBOLS_SYMBOL_LOADING_OUTCOME_H_
-#define SYMBOLS_SYMBOL_LOADING_OUTCOME_H_
+#ifndef SYMBOL_PROVIDER_SYMBOL_LOADING_OUTCOME_H_
+#define SYMBOL_PROVIDER_SYMBOL_LOADING_OUTCOME_H_
 
 #include <filesystem>
 #include <variant>
@@ -13,7 +13,7 @@
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 
-namespace orbit_symbols {
+namespace orbit_symbol_provider {
 
 struct SymbolLoadingSuccessResult {
   enum class SymbolSource {
@@ -48,6 +48,6 @@ using SymbolLoadingOutcome =
 [[nodiscard]] bool IsSuccessResult(const SymbolLoadingOutcome& outcome);
 [[nodiscard]] SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome);
 
-}  // namespace orbit_symbols
+}  // namespace orbit_symbol_provider
 
-#endif  // SYMBOLS_SYMBOL_LOADING_OUTCOME_H_
+#endif  // SYMBOL_PROVIDER_SYMBOL_LOADING_OUTCOME_H_

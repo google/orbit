@@ -5,9 +5,9 @@
 #include <gtest/gtest.h>
 
 #include "OrbitBase/CanceledOr.h"
-#include "Symbols/SymbolLoadingOutcome.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 
-namespace orbit_symbols {
+namespace orbit_symbol_provider {
 
 namespace {
 
@@ -48,4 +48,4 @@ TEST(SymbolLoadingOutcome, GetNotFoundMessage) {
   EXPECT_EQ(GetNotFoundMessage(outcome), kNotFound.message);
 }
 
-}  // namespace orbit_symbols
+}  // namespace orbit_symbol_provider

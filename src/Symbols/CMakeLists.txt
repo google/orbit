@@ -8,13 +8,11 @@ add_library(Symbols STATIC)
 
 target_sources(Symbols PRIVATE
         SymbolHelper.cpp
-        SymbolLoadingOutcome.cpp
         SymbolUtils.cpp)
 target_sources(Symbols PUBLIC
         include/Symbols/MockSymbolCache.h
         include/Symbols/SymbolCacheInterface.h
         include/Symbols/SymbolHelper.h
-        include/Symbols/SymbolLoadingOutcome.h
         include/Symbols/SymbolUtils.h)
 
 target_include_directories(Symbols PUBLIC
@@ -30,7 +28,6 @@ target_link_libraries(Symbols PUBLIC
 add_executable(SymbolsTests)
 target_sources(SymbolsTests PRIVATE
         SymbolHelperTest.cpp
-        SymbolLoadingOutcomeTest.cpp
         SymbolUtilsTest.cpp)
 target_link_libraries(SymbolsTests PRIVATE Symbols TestUtils GTest::Main)
 register_test(SymbolsTests)
