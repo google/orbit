@@ -13,7 +13,7 @@ namespace orbit_remote_symbol_provider {
 
 MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
     orbit_symbols::SymbolCacheInterface* symbol_cache,
-    orbit_http::DownloadManagerInterface* download_manager)
+    orbit_http::DownloadManager* download_manager)
     : symbol_cache_(symbol_cache),
       download_manager_(download_manager),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {

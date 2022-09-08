@@ -13,7 +13,7 @@ target_sources(Http PRIVATE
         HttpDownloadOperation.h
         HttpDownloadManager.cpp)
 target_sources(Http PUBLIC
-        include/Http/DownloadManagerInterface.h
+        include/Http/DownloadManager.h
         include/Http/HttpDownloadManager.h
         include/Http/MockDownloadManager.h)
 

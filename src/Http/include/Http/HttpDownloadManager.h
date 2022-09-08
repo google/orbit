@@ -10,7 +10,7 @@
 #include <QPointer>
 #include <memory>
 
-#include "Http/DownloadManagerInterface.h"
+#include "Http/DownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
@@ -18,7 +18,7 @@
 
 namespace orbit_http {
 
-class HttpDownloadManager : public QObject, public DownloadManagerInterface {
+class HttpDownloadManager : public QObject, public DownloadManager {
   Q_OBJECT
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
