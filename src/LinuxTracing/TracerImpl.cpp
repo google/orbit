@@ -618,7 +618,7 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
   uint64_t ring_buffer_size;
   if (thread_state_change_callstack_collection_ ==
       CaptureOptions::kThreadStateChangeCallStackCollection) {
-    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_CALLSTACKS_RING_BUFFER_SIZE_KB;
+    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_STACKS_RING_BUFFER_SIZE_KB;
   } else {
     ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB;
   }
