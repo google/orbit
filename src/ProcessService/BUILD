@@ -41,5 +41,6 @@ orbit_cc_test(
         "//src/GrpcProtos:tracepoint_cc_proto",
         "//src/OrbitBase",
         "//src/TestUtils",
+        "@com_google_absl//absl/strings",
     ],
 )

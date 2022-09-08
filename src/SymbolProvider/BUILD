@@ -22,6 +22,7 @@ orbit_cc_test(
     name = "SymbolProviderTests",
     deps = [
         ":SymbolProvider",
+        "//src/OrbitBase",
         "@com_google_absl//absl/hash:hash_testing_no_google3",
     ],
 )
