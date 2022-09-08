@@ -84,7 +84,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(uint32_t p
   return std::vector<ModuleInfo>(modules.begin(), modules.end());
 }
 
-ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(
+ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> ProcessClient::FindDebugInfoFile(
     const std::string& module_path, absl::Span<const std::string> additional_search_directories) {
   ORBIT_SCOPE_FUNCTION;
   GetDebugInfoFileRequest request;
@@ -94,15 +94,32 @@ ErrorMessageOr<std::string> ProcessClient::FindDebugInfoFile(
   *request.mutable_additional_search_directories() = {additional_search_directories.begin(),
                                                       additional_search_directories.end()};
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  const std::unique_ptr<grpc::ClientContext> context = CreateContext();
 
-  grpc::Status status = process_service_->GetDebugInfoFile(context.get(), request, &response);
-  if (!status.ok()) {
-    ORBIT_ERROR("gRPC call to GetDebugInfoFile failed: %s", status.error_message());
+  const grpc::Status status = process_service_->GetDebugInfoFile(context.get(), request, &response);
+
+  if (status.ok()) {
+    return std::filesystem::path{response.debug_info_file_path()};
+  }
+
+  if (status.error_code() == grpc::StatusCode::NOT_FOUND) {
+    return orbit_base::NotFound{status.error_message()};
+  }
+
+  const std::string error_message = absl::StrFormat(
+      "Error occurred while trying to find a symbol file on the remote. Error code: %d. Error "
+      "message: %s",
+      status.error_code(), status.error_message());
+  ORBIT_ERROR("%s", error_message);
+
+  // If StatusCode::UNKNOWN a deliberate error message for the user was returned from
+  // `GetDebugInfoFile`. In this case only this deliberate message is returned.
+  if (status.error_code() == grpc::StatusCode::UNKNOWN) {
     return ErrorMessage(status.error_message());
   }
 
-  return response.debug_info_file_path();
+  // Otherwise an unforeseen error occurred and the full error message is returned.
+  return ErrorMessage{error_message};
 }
 
 ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(uint32_t pid, uint64_t address,

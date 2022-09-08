@@ -224,7 +224,7 @@ static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
       absl::StrFormat("File does not exist: %s", path_in_structured_debug_store.string())};
 }
 
-ErrorMessageOr<fs::path> FindSymbolsFilePath(
+ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
     const orbit_grpc_protos::GetDebugInfoFileRequest& request) {
   const fs::path module_path{request.module_path()};
 
@@ -239,18 +239,23 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
   }
   // 2. If module does not contain a build id, no searching for separate symbol files can be done
   if (object_file_or_error.value()->GetBuildId().empty()) {
-    return ErrorMessage{
-        absl::StrFormat("Module \"%s\" does not contain symbols and does not contain a build id, "
-                        "therefore Orbit cannot search for a separate symbols file",
-                        module_path.string())};
+    return orbit_base::NotFound{absl::StrFormat(
+        "Module \"%s\" does not contain symbols and does not contain a build id, "
+        "therefore Orbit cannot search for a separate symbols file on the instance.",
+        module_path.string())};
   }
   const std::string& build_id = object_file_or_error.value()->GetBuildId();
+
+  std::vector<std::string> not_found_messages;
+
   // 3. If elf file, search in structured symbols stores.
   if (object_file_or_error.value()->IsElf()) {
     const fs::path structured_debug_store{"/usr/lib/debug"};
     ErrorMessageOr<fs::path> debug_store_result =
         FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
     if (debug_store_result.has_value()) return debug_store_result.value();
+
+    not_found_messages.emplace_back(debug_store_result.error().message());
   }
   // 4. Search in hardcoded directories + additional directories (user provided) + next to the
   // module
@@ -273,19 +278,20 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     }
   }
 
-  std::vector<std::string> error_messages;
-
   for (const auto& search_path : search_paths) {
     ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
 
     if (file_exists.has_error()) {
-      ORBIT_ERROR("%s", file_exists.error().message());
-      error_messages.emplace_back(file_exists.error().message());
+      std::string not_found_message{
+          absl::StrFormat("Potential symbols file \"%s\" could not be checked for existence: %s",
+                          search_path, file_exists.error().message())};
+      ORBIT_ERROR("%s", not_found_message);
+      not_found_messages.emplace_back(std::move(not_found_message));
       continue;
     }
 
     if (!file_exists.value()) {
-      // no error message when file simply does not exist
+      // no not found message when file simply does not exist
       continue;
     }
 
@@ -293,20 +299,22 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
         object_file_or_error.value()->GetLoadBias()};
     auto symbols_file_or_error = CreateSymbolsFile(search_path, object_file_info);
     if (symbols_file_or_error.has_error()) {
-      error_messages.push_back(symbols_file_or_error.error().message());
+      not_found_messages.push_back(
+          absl::StrFormat("Potential symbols file \"%s\" could not be opened as a symbols file: %s",
+                          search_path, symbols_file_or_error.error().message()));
       continue;
     }
 
     const std::unique_ptr<SymbolsFile>& symbols_file{symbols_file_or_error.value()};
 
     if (symbols_file->GetBuildId().empty()) {
-      error_messages.push_back(
+      not_found_messages.push_back(
           absl::StrFormat("Potential symbols file \"%s\" does not have a build id.", search_path));
       continue;
     }
 
     if (symbols_file->GetBuildId() != build_id) {
-      error_messages.push_back(absl::StrFormat(
+      not_found_messages.push_back(absl::StrFormat(
           "Potential symbols file \"%s\" has a different build id than the module requested by "
           "the client. \"%s\" != \"%s\"",
           search_path, symbols_file->GetBuildId(), build_id));
@@ -316,13 +324,13 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     return search_path;
   }
 
-  std::string error_message_for_client{absl::StrFormat(
+  std::string not_found_message_for_client{absl::StrFormat(
       "Unable to find debug symbols on the instance for module \"%s\".", module_path)};
-  if (!error_messages.empty()) {
-    absl::StrAppend(&error_message_for_client, "\nDetails:\n* ",
-                    absl::StrJoin(error_messages, "\n* "));
+  if (!not_found_messages.empty()) {
+    absl::StrAppend(&not_found_message_for_client, "\nDetails:\n* ",
+                    absl::StrJoin(not_found_messages, "\n* "));
   }
-  return ErrorMessage(error_message_for_client);
+  return orbit_base::NotFound{not_found_message_for_client};
 }
 
 bool ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,

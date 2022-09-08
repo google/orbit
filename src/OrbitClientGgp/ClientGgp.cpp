@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "CaptureClient/CaptureClient.h"
@@ -34,6 +35,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "SymbolProvider/ModuleIdentifier.h"
@@ -215,8 +217,13 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();
   ORBIT_LOG("Looking for debug info file for %s", module_path);
-  OUTCOME_TRY(auto&& main_executable_debug_file,
+  OUTCOME_TRY(orbit_base::NotFoundOr<std::filesystem::path> && find_result,
               process_client_->FindDebugInfoFile(module_path, {}));
+  if (orbit_base::IsNotFound(find_result)) {
+    return ErrorMessage{
+        absl::StrFormat("Symbols not found: %s", orbit_base::GetNotFoundMessage(find_result))};
+  }
+  const auto& main_executable_debug_file{orbit_base::GetFound(find_result)};
   ORBIT_LOG("Found file: %s", main_executable_debug_file);
   ORBIT_LOG("Loading symbols");
   orbit_object_utils::ObjectFileInfo object_file_info{main_module_->load_bias()};

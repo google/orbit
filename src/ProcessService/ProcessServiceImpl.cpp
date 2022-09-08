@@ -11,11 +11,14 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
 
@@ -24,6 +27,8 @@ namespace orbit_process_service {
 using grpc::ServerContext;
 using grpc::Status;
 using grpc::StatusCode;
+
+using orbit_base::NotFoundOr;
 
 using orbit_grpc_protos::GetDebugInfoFileRequest;
 using orbit_grpc_protos::GetDebugInfoFileResponse;
@@ -101,12 +106,19 @@ Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
                                             const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
   ORBIT_CHECK(request != nullptr);
-  const auto symbols_path = FindSymbolsFilePath(*request);
-  if (symbols_path.has_error()) {
-    return Status(StatusCode::NOT_FOUND, symbols_path.error().message());
+
+  const ErrorMessageOr<NotFoundOr<std::filesystem::path>>& find_result_or_error =
+      FindSymbolsFilePath(*request);
+  if (find_result_or_error.has_error()) {
+    return Status{StatusCode::UNKNOWN, find_result_or_error.error().message()};
   }
 
-  response->set_debug_info_file_path(symbols_path.value());
+  const NotFoundOr<std::filesystem::path>& find_result = find_result_or_error.value();
+
+  if (orbit_base::IsNotFound(find_result)) {
+    return Status{StatusCode::NOT_FOUND, orbit_base::GetNotFoundMessage(find_result)};
+  }
+  response->set_debug_info_file_path(orbit_base::GetFound(find_result));
   return Status::OK;
 }
 

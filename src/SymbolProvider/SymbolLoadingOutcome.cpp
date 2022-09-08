@@ -34,8 +34,7 @@ bool IsSuccessResult(const SymbolLoadingOutcome& outcome) {
 
 SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome) {
   ORBIT_CHECK(IsSuccessResult(outcome));
-  return std::get<SymbolLoadingSuccessResult>(
-      std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
+  return orbit_base::GetFound(std::get<NotFoundOr<SymbolLoadingSuccessResult>>(outcome.value()));
 }
 
 }  // namespace orbit_symbol_provider
