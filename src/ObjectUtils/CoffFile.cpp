@@ -417,49 +417,133 @@ orbit_object_utils::CoffFileImpl::GetPrimaryRuntimeFunction(
 }
 
 ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRanges() {
+  static constexpr std::string_view kErrorMessagePrefix = "Unable to load unwind info ranges: ";
   auto runtime_functions_or_error = GetRuntimeFunctions();
   if (runtime_functions_or_error.has_error()) {
-    return ErrorMessage{absl::StrFormat("Unable to load unwind info ranges: %s",
-                                        runtime_functions_or_error.error().message())};
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, runtime_functions_or_error.error().message())};
   }
   const llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>& runtime_functions =
       runtime_functions_or_error.value();
 
+  // We have the RUNTIME_FUNCTIONs, but chained UNWIND_INFO means that a single function can be
+  // formed by multiple RUNTIME_FUNCTIONs, so we have to merge some. We use the following rule: we
+  // merge two RUNTIME_FUNCTIONs if:
+  // - they are adjacent (the end address of the first equals the start address of the second); and
+  // - they have the same primary RUNTIME_FUNCTION (where a RUNTIME_FUNCTION that doesn't have
+  //   chained UNWIND_INFO is its own primary), as this corresponds to the prologue of the function.
+  //
+  // Note that this rule doesn't allow for "holes": if two consecutive RUNTIME_FUNCTIONs are not
+  // perfectly adjacent, we will consider them two separate functions, even if they have the same
+  // primary RUNTIME_FUNCTION. However, we never observed this case.
+  //
+  // And note that we don't require the primary RUNTIME_FUNCTION to actually be part of the current
+  // set of RUNTIME_FUNCTIONs we are merging. We observed this as a very rare but valid case, on
+  // which more information can be found below.
   std::vector<UnwindRange> unwind_ranges;
-  // For a function, the "primary" RUNTIME_FUNCTION and the ones with UNW_FLAG_CHAININFO set (if
-  // any) form a tree rooted on the "primary" RUNTIME_FUNCTION. We merge all such RUNTIME_FUNCTIONs
-  // from the same tree into a single UnwindRange.
+  uint64_t previous_primary_address{};
+  uint64_t largest_primary_address{};
+  uint64_t number_of_runtime_functions_whose_primary_is_not_the_latest_primary = 0;
   for (const llvm::Win64EH::RuntimeFunction& runtime_function : runtime_functions) {
     auto primary_runtime_function_or_error = GetPrimaryRuntimeFunction(&runtime_function);
     if (primary_runtime_function_or_error.has_error()) {
-      return ErrorMessage{absl::StrFormat("Unable to load unwind info ranges: %s",
-                                          primary_runtime_function_or_error.error().message())};
+      return ErrorMessage{
+          absl::StrCat(kErrorMessagePrefix, primary_runtime_function_or_error.error().message())};
     }
     const llvm::Win64EH::RuntimeFunction* primary_runtime_function =
         primary_runtime_function_or_error.value();
 
+    const uint64_t start_address = object_file_->getImageBase() + runtime_function.StartAddress;
+    const uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
+
+    if (end_address < start_address) {
+      return ErrorMessage{
+          absl::StrCat(kErrorMessagePrefix, "RUNTIME_FUNCTION with negative function size.")};
+    }
+
     const uint64_t primary_address =
         object_file_->getImageBase() + primary_runtime_function->StartAddress;
-    const uint64_t end_address = object_file_->getImageBase() + runtime_function.EndAddress;
+
+    // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-unwind_info states
+    // that "the chained unwind info entry is the contents of a *previous* RUNTIME_FUNCTION entry",
+    // and we rely on that here.
+    if (primary_address > start_address) {
+      return ErrorMessage{
+          absl::StrCat(kErrorMessagePrefix, "chained RUNTIME_FUNCTION is not a previous one.")};
+    }
 
     if (unwind_ranges.empty()) {
       unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
+      ORBIT_CHECK(previous_primary_address == 0);
+      ORBIT_CHECK(largest_primary_address == 0);
+      previous_primary_address = primary_address;
+      largest_primary_address = primary_address;
       continue;
     }
 
+    ORBIT_CHECK(previous_primary_address != 0);
+    ORBIT_CHECK(largest_primary_address != 0);
+
+    UnwindRange& previous_range = unwind_ranges.back();
+    const uint64_t previous_end_address = previous_range.end;
+
     // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-runtime_function
     // guarantees that RUNTIME_FUNCTIONs are sorted (by address), and we rely on that here.
-    UnwindRange& last_range = unwind_ranges.back();
-    if (primary_address == last_range.start) {
-      // Extend the size of the current function.
-      last_range.end = end_address;
-    } else if (primary_address >= last_range.end) {
-      // Start a new function.
-      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
-    } else {
-      // RUNTIME_FUNCTION entries should be sorted.
-      return ErrorMessage{"Unable to load unwind info ranges: inconsistent RUNTIME_FUNCTIONs."};
+    if (start_address < previous_end_address) {
+      return ErrorMessage{
+          absl::StrCat(kErrorMessagePrefix, "RUNTIME_FUNCTIONs not sorted or overlapping.")};
     }
+
+    if (primary_address == previous_primary_address && start_address == previous_range.end) {
+      // This RUNTIME_FUNCTION is adjacent to the previous one, and it has the same primary
+      // RUNTIME_FUNCTION as the previous one. Merge them by extending the size of the current
+      // UnwindRange (which represents the current function).
+      //
+      // Normally, the first RUNTIME_FUNCTION of the UnwindRange is a primary RUNTIME_FUNCTION, and
+      // it's the primary RUNTIME_FUNCTION of the other ones. However, because of the rare case
+      // explained below, this is not a requirement: the primary RUNTIME_FUNCTION shared by the
+      // RUNTIME_FUNCTIONs that form the UnwindRange is allowed to not be part of the UnwindRange,
+      // as it could be a RUNTIME_FUNCTION that came way earlier and that clearly belongs to a
+      // different function, as a means of reusing unwind information from that function.
+      previous_range.end = end_address;
+    } else {
+      ORBIT_CHECK(start_address >= previous_range.end);
+      // Start a new UnwindRange (function).
+      unwind_ranges.emplace_back(UnwindRange{primary_address, end_address});
+    }
+
+    if (primary_address < largest_primary_address) {
+      // The primary RUNTIME_FUNCTION of the current RUNTIME_FUNCTION is before the *latest* primary
+      // RUNTIME_FUNCTION we have seen.
+      //
+      // This is rare, but we observed it in a complex game binary. Indeed, this is allowed by
+      // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64chained-unwind-info-structures:
+      // "Chained info [...] can be used for noncontiguous code segments. By using chained info, you
+      // can reduce the size of the required unwind information, because you do not have to
+      // duplicate the unwind codes array from the primary unwind info."
+      //
+      // In the cases we observed, the address of the primary RUNTIME_FUNCTION is so much lower than
+      // the address of the current RUNTIME_FUNCTION that it's clear that they don't actually belong
+      // to the same function.
+      //
+      // Also, in the cases we observed, these RUNTIME_FUNCTIONs come in groups of adjacent
+      // RUNTIME_FUNCTIONs with the same primary RUNTIME_FUNCTION, which makes us assume they belong
+      // to the same function.
+      //
+      // Count these RUNTIME_FUNCTIONs and log their number later as this being such a rare case
+      // makes it interesting.
+      ++number_of_runtime_functions_whose_primary_is_not_the_latest_primary;
+    }
+
+    previous_primary_address = primary_address;
+    largest_primary_address = std::max(largest_primary_address, primary_address);
+  }
+
+  if (number_of_runtime_functions_whose_primary_is_not_the_latest_primary > 0) {
+    ORBIT_LOG(
+        "\"%s\" has %u RUNTIME_FUNCTIONs whose primary RUNTIME_FUNCTION is not the latest primary "
+        "RUNTIME_FUNCTION",
+        file_path_.string(), number_of_runtime_functions_whose_primary_is_not_the_latest_primary);
   }
   return unwind_ranges;
 }
