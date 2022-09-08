@@ -12,7 +12,7 @@ class SymbolCacheInterface {
  public:
   virtual ~SymbolCacheInterface() = default;
 
-  [[nodiscard]] virtual std::filesystem::path GenerateCachedFileName(
+  [[nodiscard]] virtual std::filesystem::path GenerateCachedFilePath(
       const std::filesystem::path& file_path) const = 0;
 };
 }  // namespace orbit_symbols

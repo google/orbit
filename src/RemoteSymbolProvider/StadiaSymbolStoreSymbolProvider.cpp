@@ -18,7 +18,7 @@ namespace orbit_remote_symbol_provider {
 
 StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
     orbit_symbols::SymbolCacheInterface* symbol_cache,
-    orbit_http::DownloadManagerInterface* download_manager, orbit_ggp::Client* ggp_client)
+    orbit_http::DownloadManager* download_manager, orbit_ggp::Client* ggp_client)
     : symbol_cache_(symbol_cache),
       download_manager_(download_manager),
       ggp_client_(ggp_client),
@@ -44,7 +44,7 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
 
         std::string url = download_info.front().url.toStdString();
         std::filesystem::path save_file_path =
-            symbol_cache_->GenerateCachedFileName(module_file_path);
+            symbol_cache_->GenerateCachedFilePath(module_file_path);
         return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
             .ThenIfSuccess(
                 main_thread_executor_.get(),

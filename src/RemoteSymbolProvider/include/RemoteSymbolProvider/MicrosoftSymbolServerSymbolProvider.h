@@ -14,9 +14,8 @@ namespace orbit_remote_symbol_provider {
 
 class MicrosoftSymbolServerSymbolProvider : public orbit_symbol_provider::SymbolProvider {
  public:
-  explicit MicrosoftSymbolServerSymbolProvider(
-      orbit_symbols::SymbolCacheInterface* symbol_cache,
-      orbit_http::DownloadManagerInterface* download_manager);
+  explicit MicrosoftSymbolServerSymbolProvider(orbit_symbols::SymbolCacheInterface* symbol_cache,
+                                               orbit_http::DownloadManager* download_manager);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
@@ -27,7 +26,7 @@ class MicrosoftSymbolServerSymbolProvider : public orbit_symbol_provider::Symbol
       const orbit_symbol_provider::ModuleIdentifier& module_id) const;
 
   orbit_symbols::SymbolCacheInterface* symbol_cache_;
-  orbit_http::DownloadManagerInterface* download_manager_;
+  orbit_http::DownloadManager* download_manager_;
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
 };
 

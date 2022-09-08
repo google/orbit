@@ -1821,7 +1821,7 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
               debug_file_path);
 
     const std::filesystem::path local_debug_file_path =
-        symbol_helper_.GenerateCachedFileName(module_file_path);
+        symbol_helper_.GenerateCachedFilePath(module_file_path);
 
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
