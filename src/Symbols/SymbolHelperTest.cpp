@@ -343,12 +343,12 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
   }
 }
 
-TEST(SymbolHelper, GenerateCachedFileName) {
+TEST(SymbolHelper, GenerateCachedFilePath) {
   fs::path fake_cache_dir = "/path/to/cache";
   SymbolHelper symbol_helper{fake_cache_dir, {}};
   const std::filesystem::path file_path = "/var/data/filename.elf";
   const std::filesystem::path cache_file_path = fake_cache_dir / "_var_data_filename.elf";
-  EXPECT_EQ(symbol_helper.GenerateCachedFileName(file_path), cache_file_path);
+  EXPECT_EQ(symbol_helper.GenerateCachedFilePath(file_path), cache_file_path);
 }
 
 TEST(SymbolHelper, VerifySymbolsFile) {

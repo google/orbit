@@ -47,7 +47,7 @@ class SymbolHelper : public SymbolCacheInterface {
                                                 const std::string& build_id);
   static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
                                                 uint64_t expected_file_size);
-  [[nodiscard]] std::filesystem::path GenerateCachedFileName(
+  [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
       const std::filesystem::path& file_path) const override;
 
   [[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& file_path,

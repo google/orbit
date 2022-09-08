@@ -44,7 +44,7 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
 
         std::string url = download_info.front().url.toStdString();
         std::filesystem::path save_file_path =
-            symbol_cache_->GenerateCachedFileName(module_file_path);
+            symbol_cache_->GenerateCachedFilePath(module_file_path);
         return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
             .ThenIfSuccess(
                 main_thread_executor_.get(),

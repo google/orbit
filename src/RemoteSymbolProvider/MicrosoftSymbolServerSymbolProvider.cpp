@@ -32,7 +32,7 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
     const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
-  std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFileName(module_id.file_path);
+  std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFilePath(module_id.file_path);
   std::string url = GetDownloadUrl(module_id);
 
   return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))

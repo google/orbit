@@ -45,7 +45,7 @@ class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
   MicrosoftSymbolServerSymbolProviderTest()
       : symbol_provider_{&symbol_cache_, &download_manager_},
         executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
-    EXPECT_CALL(symbol_cache_, GenerateCachedFileName)
+    EXPECT_CALL(symbol_cache_, GenerateCachedFilePath)
         .WillRepeatedly([](const std::filesystem::path& module_file_path) {
           auto file_name = absl::StrReplaceAll(module_file_path.string(), {{"/", "_"}});
           return kSymbolCacheDir / file_name;
@@ -95,7 +95,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
         EXPECT_THAT(result, HasNoError());
         EXPECT_FALSE(IsCanceled(result.value()));
         const auto& local_file_path = std::get<std::filesystem::path>(result.value());
-        EXPECT_EQ(local_file_path, symbol_cache_.GenerateCachedFileName(kValidModuleId.file_path));
+        EXPECT_EQ(local_file_path, symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
 
         QCoreApplication::exit();
       });

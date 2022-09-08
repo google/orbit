@@ -12,7 +12,7 @@
 namespace orbit_symbols {
 class MockSymbolCache : public SymbolCacheInterface {
  public:
-  MOCK_METHOD(std::filesystem::path, GenerateCachedFileName, (const std::filesystem::path&),
+  MOCK_METHOD(std::filesystem::path, GenerateCachedFilePath, (const std::filesystem::path&),
               (const, override));
 };
 }  // namespace orbit_symbols

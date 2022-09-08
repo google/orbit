@@ -270,7 +270,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
   return symbols_file->LoadDebugSymbols();
 }
 
-fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
+fs::path SymbolHelper::GenerateCachedFilePath(const fs::path& file_path) const {
   auto file_name = absl::StrReplaceAll(file_path.string(), {{"/", "_"}});
   return cache_directory_ / file_name;
 }
@@ -326,7 +326,7 @@ template <typename Verifier>
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
                                                               Verifier&& verify) const {
   ORBIT_SCOPE_FUNCTION;
-  fs::path cache_file_path = GenerateCachedFileName(module_path);
+  fs::path cache_file_path = GenerateCachedFilePath(module_path);
   std::error_code error;
   OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
   if (error) {
