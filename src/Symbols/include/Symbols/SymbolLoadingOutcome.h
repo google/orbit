@@ -22,7 +22,10 @@ struct SymbolLoadingSuccessResult {
     kLocalStadiaSdk,
     kStadiaInstance,
     kSymbolLocationsDialog,
-    kAdditionalSymbolPathsFlag
+    kAdditionalSymbolPathsFlag,
+    kStadiaSymbolStore,
+    kMicrosoftSymbolServer,
+    kUserDefinedSymbolStore
   };
   enum class SymbolFileSeparation { kDifferentFile, kModuleFile };
 
