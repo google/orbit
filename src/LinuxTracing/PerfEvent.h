@@ -403,6 +403,7 @@ struct PerfEvent {
                UserSpaceFunctionEntryPerfEventData, UserSpaceFunctionExitPerfEventData,
                MmapPerfEventData, GenericTracepointPerfEventData, TaskNewtaskPerfEventData,
                TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
+               SchedSwitchWithStackPerfEventData, SchedWakeupWithStackPerfEventData,
                AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
                DmaFenceSignaledPerfEventData>
       data;

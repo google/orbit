@@ -615,9 +615,15 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(
   }
 
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
+  uint64_t ring_buffer_size;
+  if (thread_state_change_callstack_collection_ ==
+      CaptureOptions::kThreadStateChangeCallStackCollection) {
+    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_STACKS_RING_BUFFER_SIZE_KB;
+  } else {
+    ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB;
+  }
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
-      tracepoints_to_open, cpus, &tracing_fds_,
-      CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB,
+      tracepoints_to_open, cpus, &tracing_fds_, ring_buffer_size,
       &thread_state_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_,
       thread_state_change_callstack_collection, unwinding_method);
 }
@@ -1355,16 +1361,21 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch_with_callchain) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/243510000): the implementation of this case will be added later
 
   } else if (is_sched_wakeup_with_callchain) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/243510000): the implementation of this case will be added later
 
   } else if (is_sched_switch_with_stack) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/245529464): Avoid copying the stack if the record is from another process
+    SchedSwitchWithStackPerfEvent event = ConsumeSchedSwitchWithStackPerfEvent(ring_buffer, header);
+    DeferEvent(std::move(event));
+    ++stats_.sched_switch_count;
 
   } else if (is_sched_wakeup_with_stack) {
-    // TODO(mahmooddarwish): the implementation of this case will be implemented later
+    // TODO(b/245529464): Avoid copying the stack if the record is from another process
+    SchedWakeupWithStackPerfEvent event = ConsumeSchedWakeupWithStackPerfEvent(ring_buffer, header);
+    DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {
     AmdgpuCsIoctlPerfEvent event = ConsumeAmdgpuCsIoctlPerfEvent(ring_buffer, header);
