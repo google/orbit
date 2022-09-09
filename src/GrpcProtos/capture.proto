@@ -600,27 +600,29 @@ message ThreadStateSlice {
   uint32 wakeup_tid = 7;
   uint32 wakeup_pid = 8;
 
-  // This is the callstack of the tracepoint that changed the state
-  // of the thread and caused this slice to happen. If the thread
-  // state is runnable then this callstack is coming from wakeup_tid,
-  // otherwise it's coming from the same thread.
-  uint64 triggering_callstack_id = 10;
-
-  // The callstacks for the tracepoints originate from a different event and are
-  // not part of the original ProducerCaptureEvent. They will be added by the
+  // The callstacks for the tracepoints get split during processing and
+  // originate from a different ProducerCaptureEvent. So the callstacks are not
+  // part of the original ProducerCaptureEvent, but will be added by the
   // ProducerEventProcessor.
-  // If callstack collection is disabled, `kNoCallstack` expresses, that there
+  // If callstack collection is disabled, `kNoCallstack` expresses that there
   // is no callstack to wait for.
-  // On `kWaitingForCallstack`, the ProducerEventProcessor knows, to wait
+  // On `kWaitingForCallstack`, the ProducerEventProcessor knows to wait with
   // sending this event until the callstack has been received.
-  // Once added a callstack, `kCallstackSet` expresses to the client, that there
+  // Once added a callstack, `kCallstackSet` expresses to the client that there
   // is a valid callstack id set.
   enum CallstackStatus {
     kNoCallstack = 0;
     kWaitingForCallstack = 1;
     kCallstackSet = 2;
   }
-  CallstackStatus callstack_status = 11;
+  CallstackStatus switch_out_or_wakeup_callstack_status = 10;
+
+  // This is the callstack of the tracepoint that changed the state
+  // of the thread and caused this slice to happen. The callstack corresponds to
+  // the beginning of the slice.
+  // If the thread state is runnable then this callstack is coming from
+  // wakeup_tid, otherwise it's coming from the same thread.
+  uint64 switch_out_or_wakeup_callstack_id = 11;
 }
 
 message AddressInfo {

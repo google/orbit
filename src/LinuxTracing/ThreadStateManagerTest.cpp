@@ -19,6 +19,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 namespace orbit_linux_tracing {
 
 constexpr pid_t kWakeupPidTidWhenWakeupReasonNotApplicable = 0;
+constexpr pid_t kSwitchOutOrWakeupCallstackIdNotApplicable = 0;
 
 TEST(ThreadStateManager, OneThread) {
   constexpr pid_t kTid = 42;
@@ -38,7 +39,9 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
@@ -49,7 +52,9 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedWakeup(400, kTid, kWasUnblockedByTid, kWasUnblockedByPid);
   ASSERT_TRUE(slice.has_value());
@@ -60,7 +65,9 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchIn(500, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -71,7 +78,9 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kUnblocked);
   EXPECT_EQ(slice->wakeup_pid(), kWasUnblockedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasUnblockedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
   ASSERT_TRUE(!slices.empty());
@@ -84,7 +93,9 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, NewTask) {
@@ -105,7 +116,9 @@ TEST(ThreadStateManager, NewTask) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kCreated);
   EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
@@ -116,7 +129,9 @@ TEST(ThreadStateManager, NewTask) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(400);
   ASSERT_TRUE(!slices.empty());
@@ -129,7 +144,9 @@ TEST(ThreadStateManager, NewTask) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, TwoThreads) {
@@ -153,7 +170,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   manager.OnNewTask(250, kTid2, kWasCreatedByTid2, kWasCreatedByPid2);
 
@@ -166,7 +185,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchIn(350, kTid2);
   ASSERT_TRUE(slice.has_value());
@@ -177,7 +198,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kCreated);
   EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid2);
   EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid2);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedWakeup(400, kTid1, kWasUnblockedByTid1, kWasUnblockedByPid1);
   ASSERT_TRUE(slice.has_value());
@@ -188,7 +211,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchOut(450, kTid2, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
@@ -199,7 +224,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchIn(500, kTid1);
   ASSERT_TRUE(slice.has_value());
@@ -210,7 +237,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kUnblocked);
   EXPECT_EQ(slice->wakeup_pid(), kWasUnblockedByPid1);
   EXPECT_EQ(slice->wakeup_tid(), kWasUnblockedByTid1);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
   ASSERT_TRUE(slices.size() >= 2);
@@ -228,7 +257,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = slices[1];
   EXPECT_EQ(slice->tid(), kTid2);
@@ -238,7 +269,9 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
@@ -257,7 +290,9 @@ TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
@@ -280,7 +315,9 @@ TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kCreated);
   EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
@@ -304,7 +341,9 @@ TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kUnblocked);
   EXPECT_EQ(slice->wakeup_pid(), kWasUnblockedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasUnblockedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
@@ -326,7 +365,9 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
@@ -350,7 +391,9 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
@@ -372,7 +415,9 @@ TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kUnblocked);
   EXPECT_EQ(slice->wakeup_pid(), kWasUnblockedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasUnblockedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
@@ -392,7 +437,9 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSwitchOut) {
@@ -414,7 +461,9 @@ TEST(ThreadStateManager, UnknownInitialStateWithSwitchOut) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
@@ -438,7 +487,9 @@ TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
@@ -457,7 +508,9 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchIn(250, kTid);
   EXPECT_FALSE(slice.has_value());
@@ -471,7 +524,9 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 TEST(ThreadStateManager, SwitchOutAndWakeupWaitForCallstacks) {
@@ -485,7 +540,7 @@ TEST(ThreadStateManager, SwitchOutAndWakeupWaitForCallstacks) {
   manager.OnInitialState(100, kTid, ThreadStateSlice::kRunning);
 
   slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kInterruptibleSleep,
-                                   /*wait_for_callstack*/ true);
+                                   /*has_wakeup_or_switch_out_callstack*/ true);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
@@ -494,10 +549,12 @@ TEST(ThreadStateManager, SwitchOutAndWakeupWaitForCallstacks) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedWakeup(300, kTid, kWasUnblockedByTid, kWasUnblockedByPid,
-                                /*wait_for_callstack*/ true);
+                                /*has_wakeup_or_switch_out_callstack*/ true);
   EXPECT_EQ(slice->tid(), kTid);
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
@@ -505,7 +562,9 @@ TEST(ThreadStateManager, SwitchOutAndWakeupWaitForCallstacks) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
   EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
   EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kWaitingForCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kWaitingForCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 
   slice = manager.OnSchedSwitchIn(400, kTid);
   EXPECT_EQ(slice->tid(), kTid);
@@ -515,7 +574,22 @@ TEST(ThreadStateManager, SwitchOutAndWakeupWaitForCallstacks) {
   EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kUnblocked);
   EXPECT_EQ(slice->wakeup_pid(), kWasUnblockedByPid);
   EXPECT_EQ(slice->wakeup_tid(), kWasUnblockedByTid);
-  EXPECT_EQ(slice->callstack_status(), orbit_grpc_protos::ThreadStateSlice::kWaitingForCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kWaitingForCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
+
+  slice = manager.OnSchedSwitchOut(600, kTid, ThreadStateSlice::kDead,
+                                   /*has_wakeup_or_switch_out_callstack*/ false);
+  EXPECT_EQ(slice->tid(), kTid);
+  EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunning);
+  EXPECT_EQ(slice->duration_ns(), 200);
+  EXPECT_EQ(slice->end_timestamp_ns(), 600);
+  EXPECT_EQ(slice->wakeup_reason(), orbit_grpc_protos::ThreadStateSlice::kNotApplicable);
+  EXPECT_EQ(slice->wakeup_pid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
+  EXPECT_EQ(slice->wakeup_tid(), kWakeupPidTidWhenWakeupReasonNotApplicable);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_status(),
+            orbit_grpc_protos::ThreadStateSlice::kNoCallstack);
+  EXPECT_EQ(slice->switch_out_or_wakeup_callstack_id(), kSwitchOutOrWakeupCallstackIdNotApplicable);
 }
 
 }  // namespace orbit_linux_tracing
