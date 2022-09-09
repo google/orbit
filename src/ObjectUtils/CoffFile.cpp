@@ -393,6 +393,7 @@ orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
     // being exported by the current image." So these symbols don't really belong to this file, and
     // we skip them.
     bool is_forwarder{};
+    // Note that isForwarder takes the output parameter by reference.
     if (llvm::Error error = ref.isForwarder(is_forwarder)) {
       llvm::consumeError(std::move(error));
       continue;
