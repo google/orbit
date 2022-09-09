@@ -52,30 +52,35 @@ class ThreadStateManager {
   void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
                  pid_t was_created_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid, pid_t was_unblocked_by_tid, pid_t was_unblocked_by_pid);
+      uint64_t timestamp_ns, pid_t tid, pid_t was_unblocked_by_tid, pid_t was_unblocked_by_pid,
+      bool has_wakeup_callstack = false);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
       uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
-      uint64_t timestamp_ns, pid_t tid, orbit_grpc_protos::ThreadStateSlice::ThreadState new_state);
+      uint64_t timestamp_ns, pid_t tid, orbit_grpc_protos::ThreadStateSlice::ThreadState new_state,
+      bool has_switch_out_callstack = false);
   [[nodiscard]] std::vector<orbit_grpc_protos::ThreadStateSlice> OnCaptureFinished(
       uint64_t timestamp_ns);
 
  private:
   struct OpenState {
-    OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns)
+    OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
+              bool wait_for_callstack = false)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
           wakeup_reason{orbit_grpc_protos::ThreadStateSlice::kNotApplicable},
           wakeup_tid{0},
-          wakeup_pid{0} {}
+          wakeup_pid{0},
+          has_wakeup_or_switch_out_callstack{wait_for_callstack} {}
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
               orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason, pid_t wakeup_tid,
-              pid_t wakeup_pid)
+              pid_t wakeup_pid, bool has_wakeup_or_switch_out_callstack = false)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
           wakeup_reason{wakeup_reason},
           wakeup_tid{wakeup_tid},
-          wakeup_pid{wakeup_pid} {}
+          wakeup_pid{wakeup_pid},
+          has_wakeup_or_switch_out_callstack{has_wakeup_or_switch_out_callstack} {}
     orbit_grpc_protos::ThreadStateSlice::ThreadState state;
     uint64_t begin_timestamp_ns;
     // The following field explains the relation between this thread and the thread that woke it up
@@ -86,6 +91,11 @@ class ThreadStateManager {
     // to the runnable state.
     pid_t wakeup_tid;
     pid_t wakeup_pid;
+    // We allow the user to collect callstacks on sched_wakeup and sched_switch out events. This
+    // field indicates if there was a callstack collected together with this open state. The
+    // callstack itself gets processed in the UprobesUnwindingVisitor, but this field indicates
+    // if we will need to wait for this callstack.
+    bool has_wakeup_or_switch_out_callstack;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;
