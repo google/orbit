@@ -602,8 +602,8 @@ message ThreadStateSlice {
 
   // The callstacks for the tracepoints get split during processing and
   // originate from a different ProducerCaptureEvent. So the callstacks are not
-  // part of the original ProducerCaptureEvent, but will be added by the
-  // ProducerEventProcessor.
+  // part of the ThreadStateSce contained in the original ProducerCaptureEvent,
+  // but will be added by the ProducerEventProcessor.
   // If callstack collection is disabled, `kNoCallstack` expresses that there
   // is no callstack to wait for.
   // On `kWaitingForCallstack`, the ProducerEventProcessor knows to wait with

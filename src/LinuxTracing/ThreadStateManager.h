@@ -91,7 +91,7 @@ class ThreadStateManager {
     // to the runnable state.
     pid_t wakeup_tid;
     pid_t wakeup_pid;
-    // We allow the user to collect callstacks on sched_wakeup and sched_switch out events. The next
+    // We allow the user to collect callstacks on sched_wakeup and sched_switch out events. This
     // field indicates if there was a callstack collected together with this open state. The
     // callstack itself gets processed in the UprobesUnwindingVisitor, but this field indicates
     // if we will need to wait for this callstack.
