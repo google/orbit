@@ -43,6 +43,10 @@ orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> HttpDownloadMan
       case HttpDownloadOperation::State::kError:
         promise.SetResult(ErrorMessage{std::move(maybe_error_msg.value())});
         break;
+      case HttpDownloadOperation::State::kNotFound:
+        // TODO(b/245723551): Change to return orbit_base::NotFound for the not found case.
+        promise.SetResult(ErrorMessage{"File not found"});
+        break;
       case HttpDownloadOperation::State::kStarted:
       case HttpDownloadOperation::State::kInitial:
         ORBIT_UNREACHABLE();
