@@ -59,6 +59,8 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const SchedSwitchPerfEventData& event_data) override;
   void Visit(uint64_t timestamp, const SchedWakeupPerfEventData& event_data) override;
+  void Visit(uint64_t timestamp, const SchedWakeupWithStackPerfEventData& event_data) override;
+  void Visit(uint64_t timestamp, const SchedSwitchWithStackPerfEventData& event_data) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
   void Visit(uint64_t event_timestamp, const TaskRenamePerfEventData& event_data) override;
@@ -67,6 +69,13 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   static std::optional<orbit_grpc_protos::ThreadStateSlice::ThreadState> GetThreadStateFromChar(
       char c);
   static orbit_grpc_protos::ThreadStateSlice::ThreadState GetThreadStateFromBits(uint64_t bits);
+
+  template <typename SchedSwitchEventData>
+  void VisitSchedSwitch(uint64_t timestamp, const SchedSwitchEventData& event_data,
+                        bool wait_for_callstack);
+  template <typename SchedWakeupEventData>
+  void VisitSchedWakeup(uint64_t timestamp, const SchedWakeupEventData& event_data,
+                        bool wait_for_callstack);
 
   TracerListener* listener_;
   std::atomic<uint64_t>* thread_state_counter_ = nullptr;

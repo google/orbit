@@ -14,6 +14,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "PerfEvent.h"
 
 namespace orbit_linux_tracing {
 
@@ -112,11 +113,12 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
                            event_data.was_created_by_pid);
 }
 
-void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
-                                       const SchedSwitchPerfEventData& event_data) {
-  // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
-
+template <typename SchedSwitchEventData>
+void SwitchesStatesNamesVisitor::VisitSchedSwitch(uint64_t event_timestamp,
+                                                  const SchedSwitchEventData& event_data,
+                                                  bool wait_for_callstack) {
   // Process the context switch out for scheduling slices.
+  // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
   if (produce_scheduling_slices_ && event_data.prev_tid != 0) {
     // SchedSwitchPerfEvent::pid (which doesn't come from the tracepoint data, but from the generic
     // field of the PERF_RECORD_SAMPLE) is the pid of the process that the thread being switched out
@@ -149,8 +151,8 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
   // Process the context switch out for thread state.
   if (event_data.prev_tid != 0 && TidMatchesPidFilter(event_data.prev_tid)) {
     ThreadStateSlice::ThreadState new_state = GetThreadStateFromBits(event_data.prev_state);
-    std::optional<ThreadStateSlice> out_slice =
-        state_manager_.OnSchedSwitchOut(event_timestamp, event_data.prev_tid, new_state);
+    std::optional<ThreadStateSlice> out_slice = state_manager_.OnSchedSwitchOut(
+        event_timestamp, event_data.prev_tid, new_state, wait_for_callstack);
     if (out_slice.has_value()) {
       listener_->OnThreadStateSlice(std::move(out_slice.value()));
       if (thread_state_counter_ != nullptr) {
@@ -173,20 +175,44 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 }
 
 void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
-                                       const SchedWakeupPerfEventData& event_data) {
+                                       const SchedSwitchPerfEventData& event_data) {
+  VisitSchedSwitch(event_timestamp, event_data, /*wait_for_callstack=*/false);
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedSwitchWithStackPerfEventData& event_data) {
+  const bool wait_for_callstack = event_data.data != nullptr;
+  VisitSchedSwitch(event_timestamp, event_data, wait_for_callstack);
+}
+
+template <typename SchedWakeupEventData>
+void SwitchesStatesNamesVisitor::VisitSchedWakeup(uint64_t event_timestamp,
+                                                  const SchedWakeupEventData& event_data,
+                                                  bool wait_for_callstack) {
   if (!TidMatchesPidFilter(event_data.woken_tid)) {
     return;
   }
 
   std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
       event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
-      event_data.was_unblocked_by_pid);
+      event_data.was_unblocked_by_pid, wait_for_callstack);
   if (state_slice.has_value()) {
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {
       ++(*thread_state_counter_);
     }
   }
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedWakeupPerfEventData& event_data) {
+  VisitSchedWakeup(event_timestamp, event_data, /*wait_for_callstack=*/false);
+}
+
+void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
+                                       const SchedWakeupWithStackPerfEventData& event_data) {
+  const bool wait_for_callstack = event_data.data != nullptr;
+  VisitSchedWakeup(event_timestamp, event_data, wait_for_callstack);
 }
 
 void SwitchesStatesNamesVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
