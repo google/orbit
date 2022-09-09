@@ -147,33 +147,60 @@ TEST(ScopeTreeTimerData, GetTimersAtDepth) {
 
 TEST(ScopeTreeTimerData, GetTimersAtDepthOptimized) {
   ScopeTreeTimerData scope_tree_timer_data;
+  // Left, right and down timers
   AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
 
-  // We should see both timers with a normal resolution.
-  EXPECT_EQ(
-      scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1000, kLeftTimerStart, kRightTimerEnd)
-          .size(),
-      2);
+  uint32_t kOnePixel = 1;
+  uint32_t kNormalResolution = 1000;
 
-  // We should see only one timer if we have 1 pixel resolution.
-  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1, kLeftTimerStart, kRightTimerEnd)
-                .size(),
-            1);
+  auto verify_size = [&scope_tree_timer_data](uint32_t depth, uint32_t resolution,
+                                              uint64_t start_ns, uint64_t end_ns,
+                                              size_t expected_size) {
+    EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(depth, resolution, start_ns, end_ns)
+                  .size(),
+              expected_size);
+  };
 
-  // We should only see 1 if we zoom-out a lot even with a normal resolution.
-  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1000, 0, 10000000).size(), 1);
+  // Normal case. Left and right timer are visible.
+  verify_size(0, kNormalResolution, kMinTimestamp, kMaxTimestamp, 2);
 
-  // If there is a timer in the range, we should see it in any resolution.
-  EXPECT_EQ(
-      scope_tree_timer_data.GetTimersAtDepthDiscretized(0, 1, kLeftTimerStart, kLeftTimerStart + 1)
-          .size(),
-      1);  // Left
-  EXPECT_EQ(scope_tree_timer_data
-                .GetTimersAtDepthDiscretized(0, 1000, kLeftTimerStart, kLeftTimerStart + 1)
-                .size(),
-            1);  // Left
-  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthDiscretized(1, 1000, 0, 10000000).size(),
-            1);  // Down
+  // Range tests.
+  {
+    // No visible timers at the left and right of the visible range.
+    verify_size(0, kNormalResolution, 0, kMinTimestamp - 1, 0);
+    verify_size(0, kNormalResolution, kMaxTimestamp + 1, kMaxTimestamp + 10, 0);
+
+    // Only left timer will be visible if the right timer is out of range.
+    verify_size(0, kNormalResolution, kMinTimestamp, kRightTimerStart - 1, 1);
+
+    // Only right timer will be visible if the left timer is out of range.
+    verify_size(0, kNormalResolution, kLeftTimerEnd + 1, kMaxTimestamp, 1);
+
+    // Both timers will be visible even if we include them partially.
+    verify_size(0, kNormalResolution, kLeftTimerEnd, kRightTimerStart, 2);
+  }
+
+  // Resolution tests.
+  {
+    // Only one timer will be visible if we have 1 pixel resolution.
+    verify_size(0, kOnePixel, kMinTimestamp, kMaxTimestamp, 1);
+
+    // Only one timer will be visible if we zoom-out a lot even with a normal resolution.
+    verify_size(0, kNormalResolution, 0, 10000000, 1);
+
+    // If there is a timer in the range, we should see it in any resolution.
+    verify_size(0, kOnePixel, kMinTimestamp, kMinTimestamp + 1, 1);
+    verify_size(0, kNormalResolution, kMinTimestamp, kMinTimestamp + 1, 1);
+  }
+
+  // Depth tests.
+  {
+    // Queries with `depth = 1` should just return the down timer (if it is in the range).
+    verify_size(1, kNormalResolution, kMinTimestamp, kMaxTimestamp, 1);
+
+    // No timers with `depth = 2` in TimerData.
+    verify_size(2, kNormalResolution, kMinTimestamp, kMaxTimestamp, 0);
+  }
 }
 
 TEST(ScopeTreeTimerData, GetLeftRightUpDown) {
