@@ -39,6 +39,8 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromExportTable()
       override;
   [[nodiscard]] bool HasExportTable() const override;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadExceptionTableEntriesAsSymbols() override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
@@ -644,6 +646,25 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
   return unwind_ranges;
 }
 
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+CoffFileImpl::LoadExceptionTableEntriesAsSymbols() {
+  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
+  if (!unwind_ranges_or_error.has_value()) {
+    return unwind_ranges_or_error.error();
+  }
+
+  ModuleSymbols module_symbols;
+  for (const UnwindRange& unwind_range : unwind_ranges_or_error.value()) {
+    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+    // Let's assign an arbitrary function name right away, as we want a non-empty and unique name in
+    // many places.
+    symbol_info->set_demangled_name(absl::StrFormat("[function@%#x]", unwind_range.start));
+    symbol_info->set_address(unwind_range.start);
+    symbol_info->set_size(unwind_range.end - unwind_range.start);
+  }
+  return module_symbols;
+}
+
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
 
 std::string CoffFileImpl::GetName() const { return file_path_.filename().string(); }
@@ -656,6 +677,7 @@ uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
 }
 
 uint64_t CoffFileImpl::GetImageSize() const {
+  ORBIT_CHECK(object_file_->is64());
   return object_file_->getPE32PlusHeader()->SizeOfImage;
 }
 

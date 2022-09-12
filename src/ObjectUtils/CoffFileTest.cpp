@@ -161,6 +161,67 @@ TEST(CoffFile, LoadSymbolsFromExportTableNoExportTable) {
   ASSERT_THAT(symbols_result, HasError("PE/COFF file does not have an Export Table"));
 }
 
+TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsNoChainedInfo) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
+
+  auto coff_file_result = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
+
+  const auto symbols_result = coff_file->LoadExceptionTableEntriesAsSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  EXPECT_EQ(symbol_infos.size(), 38);
+  for (const SymbolInfo& symbol_info : symbol_infos) {
+    EXPECT_EQ(symbol_info.demangled_name(),
+              absl::StrFormat("[function@%#x]", symbol_info.address()));
+  }
+  // Verify a couple of functions.
+  // Ground truth can be deduced from `dumpbin libtest.dll /UNWINDINFO`.
+  // The corresponding function can then be obtained from
+  // `dumpbin libtest.dll /SYMBOLS | findstr /c:"notype ()"`.
+  EXPECT_THAT(symbol_infos[0],
+              SymbolInfoEq("[function@0x62641000]", 0x62641000, 12));  // pre_c_init
+  EXPECT_THAT(symbol_infos[3],
+              SymbolInfoEq("[function@0x62641350]", 0x62641350, 18));  // DllMainCRTStartup
+  EXPECT_THAT(symbol_infos[7],
+              SymbolInfoEq("[function@0x626413a0]", 0x626413a0, 27));  // PrintHelloWorld
+}
+
+TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsWithChainedInfo) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "dllmain.dll";
+
+  auto coff_file_result = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_result, HasNoError());
+  const std::unique_ptr<CoffFile>& coff_file = coff_file_result.value();
+
+  const auto symbols_result = coff_file->LoadExceptionTableEntriesAsSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  // Verify all the functions for which there is chained unwind info.
+  // Ground truth can be deduced from `dumpbin dllmain.dll /UNWINDINFO` looking for "CHAININFO".
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180086400]", 0x180086400,
+                                                           0x1800864b5 - 0x180086400)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090500]", 0x180090500,
+                                                           0x180090929 - 0x180090500)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090b50]", 0x180090b50,
+                                                           0x180090ef8 - 0x180090b50)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090ff0]", 0x180090ff0,
+                                                           0x1800910dd - 0x180090ff0)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180091c70]", 0x180091c70,
+                                                           0x180091deb - 0x180091c70)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180092510]", 0x180092510,
+                                                           0x1800928e0 - 0x180092510)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x1800c2220]", 0x1800c2220,
+                                                           0x1800c22dc - 0x1800c2220)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x1800c2350]", 0x1800c2350,
+                                                           0x1800c26ed - 0x1800c2350)));
+}
+
 TEST(CoffFile, GetFilePath) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
