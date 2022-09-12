@@ -9,6 +9,7 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"
 
 using orbit_base::CanceledOr;
@@ -28,6 +29,8 @@ StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
   ORBIT_CHECK(ggp_client != nullptr);
 }
 
+// TODO(b/245522908): Treat NotFound as error message now. We will better handle the NotFound case
+// when changing symbol provider to return SymbolLoadingOutcome.
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
     const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
@@ -35,6 +38,8 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
   std::vector<orbit_ggp::Client::SymbolDownloadQuery> queries = {
       {module_path.filename().string(), module_id.build_id}};
 
+  // TODO(b/245920841): Client::GetSymbolDownloadInfoAsync should support returning ErrorMessage and
+  // NotFound.
   return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(queries).ThenIfSuccess(
       main_thread_executor_.get(),
       [this, module_file_path = module_id.file_path, stop_token = std::move(stop_token)](
@@ -49,9 +54,14 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
             .ThenIfSuccess(
                 main_thread_executor_.get(),
                 [save_file_path = std::move(save_file_path)](
-                    CanceledOr<void> download_result) -> CanceledOr<std::filesystem::path> {
+                    CanceledOr<orbit_base::NotFoundOr<void>> download_result)
+                    -> CanceledOr<std::filesystem::path> {
                   if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
-                  return CanceledOr<std::filesystem::path>{save_file_path};
+
+                  // If symbol not found in Stadia symbol store, no download url will be generated.
+                  ORBIT_CHECK(!orbit_base::IsNotFound(orbit_base::GetNotCanceled(download_result)));
+
+                  return {save_file_path};
                 });
       }));
 }

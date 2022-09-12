@@ -7,12 +7,14 @@
 
 #include <QNetworkAccessManager>
 #include <QObject>
-#include <QPointer>
-#include <memory>
+#include <QString>
+#include <filesystem>
+#include <string>
 
 #include "Http/DownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 
@@ -24,9 +26,10 @@ class HttpDownloadManager : public QObject, public DownloadManager {
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
   ~HttpDownloadManager() override;
 
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
-      std::string url, std::filesystem::path save_file_path,
-      orbit_base::StopToken stop_token) override;
+  [[nodiscard]] orbit_base::Future<
+      ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>>
+  Download(std::string url, std::filesystem::path save_file_path,
+           orbit_base::StopToken stop_token) override;
 
  private:
   QNetworkAccessManager manager_;

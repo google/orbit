@@ -10,6 +10,7 @@
 namespace orbit_http {
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 using orbit_base::Promise;
 using orbit_base::StopToken;
 
@@ -19,9 +20,9 @@ HttpDownloadManager::~HttpDownloadManager() {
   }
 }
 
-orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> HttpDownloadManager::Download(
+Future<ErrorMessageOr<CanceledOr<NotFoundOr<void>>>> HttpDownloadManager::Download(
     std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token) {
-  orbit_base::Promise<ErrorMessageOr<orbit_base::CanceledOr<void>>> promise;
+  Promise<ErrorMessageOr<CanceledOr<NotFoundOr<void>>>> promise;
   auto future = promise.GetFuture();
 
   auto current_download_operation = new HttpDownloadOperation{
@@ -34,18 +35,17 @@ orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> HttpDownloadMan
 
     current_download_operation->deleteLater();
     switch (state) {
-      case HttpDownloadOperation::State::kCancelled:
-        promise.SetResult(orbit_base::Canceled{});
-        break;
-      case HttpDownloadOperation::State::kDone:
-        promise.SetResult(outcome::success());
-        break;
       case HttpDownloadOperation::State::kError:
         promise.SetResult(ErrorMessage{std::move(maybe_error_msg.value())});
         break;
+      case HttpDownloadOperation::State::kCancelled:
+        promise.SetResult(orbit_base::Canceled{});
+        break;
       case HttpDownloadOperation::State::kNotFound:
-        // TODO(b/245723551): Change to return orbit_base::NotFound for the not found case.
-        promise.SetResult(ErrorMessage{"File not found"});
+        promise.SetResult(orbit_base::NotFound{""});
+        break;
+      case HttpDownloadOperation::State::kDone:
+        promise.SetResult(outcome::success());
         break;
       case HttpDownloadOperation::State::kStarted:
       case HttpDownloadOperation::State::kInitial:

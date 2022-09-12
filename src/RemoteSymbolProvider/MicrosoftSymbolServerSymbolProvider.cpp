@@ -6,8 +6,11 @@
 
 #include <absl/strings/substitute.h>
 
+#include "OrbitBase/NotFoundOr.h"
+
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 
 namespace orbit_remote_symbol_provider {
 
@@ -29,6 +32,8 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
                           module_id.build_id);
 }
 
+// TODO(b/245522908): Treat NotFound as error message now. We will better handle the NotFound case
+// when changing symbol provider to return SymbolLoadingOutcome.
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
     const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
@@ -36,12 +41,16 @@ MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
   std::string url = GetDownloadUrl(module_id);
 
   return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
-      .ThenIfSuccess(main_thread_executor_.get(),
-                     [save_file_path = std::move(save_file_path)](
-                         CanceledOr<void> download_result) -> CanceledOr<std::filesystem::path> {
-                       if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
-                       return CanceledOr<std::filesystem::path>{save_file_path};
-                     });
+      .ThenIfSuccess(
+          main_thread_executor_.get(),
+          [save_file_path = std::move(save_file_path)](CanceledOr<NotFoundOr<void>> download_result)
+              -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+            if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
+            if (orbit_base::IsNotFound(orbit_base::GetNotCanceled(download_result))) {
+              return ErrorMessage{"Symbols not found in Microsoft symbol server"};
+            }
+            return {save_file_path};
+          });
 }
 
 }  // namespace orbit_remote_symbol_provider
