@@ -111,19 +111,24 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
 }
 
 TEST(ElfFile, HasDynsym) {
-  const std::filesystem::path shared_object_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
-  const std::filesystem::path static_elf_path =
-      orbit_test::GetTestdataDir() / "hello_world_static_elf";
+  {
+    const std::filesystem::path shared_object_path =
+        orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
-  auto shared_object = CreateElfFile(shared_object_path);
-  ASSERT_THAT(shared_object, HasNoError());
+    auto shared_object = CreateElfFile(shared_object_path);
+    ASSERT_THAT(shared_object, HasNoError());
 
-  EXPECT_TRUE(shared_object.value()->HasDynsym());
+    EXPECT_TRUE(shared_object.value()->HasDynsym());
+  }
+  {
+    const std::filesystem::path static_elf_path =
+        orbit_test::GetTestdataDir() / "hello_world_static_elf";
 
-  auto static_elf = CreateElfFile(static_elf_path);
-  ASSERT_THAT(static_elf, HasNoError());
+    auto static_elf = CreateElfFile(static_elf_path);
+    ASSERT_THAT(static_elf, HasNoError());
 
-  EXPECT_FALSE(static_elf.value()->HasDynsym());
+    EXPECT_FALSE(static_elf.value()->HasDynsym());
+  }
 }
 
 static ::testing::Matcher<SymbolInfo> SymbolInfoEq(std::string_view demangled_name,

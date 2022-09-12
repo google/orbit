@@ -432,6 +432,7 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
   const llvm::DWARFDebugFrame* debug_or_eh_frame = nullptr;
   bool is_eh_frame = false;
 
+  // Try .debug_frame first, since it contains the most specific unwind information.
   if (llvm::Expected<const llvm::DWARFDebugFrame*> debug_frame = dwarf_context->getDebugFrame();
       debug_frame && !(*debug_frame)->empty()) {
     debug_or_eh_frame = *debug_frame;
