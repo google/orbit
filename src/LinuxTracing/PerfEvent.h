@@ -76,6 +76,8 @@ struct StackSamplePerfEventData {
   // UprobesReturnAddressManager::PatchSample.
   [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
+  [[nodiscard]] pid_t GetCallstackPid() const { return pid; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return tid; }
 
   pid_t pid;
   pid_t tid;
@@ -336,6 +338,8 @@ struct SchedWakeupWithStackPerfEventData {
   // UprobesReturnAddressManager::PatchSample.
   [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
+  [[nodiscard]] pid_t GetCallstackPid() const { return was_unblocked_by_pid; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return was_unblocked_by_tid; }
 
   pid_t woken_tid;
   pid_t was_unblocked_by_tid;
@@ -359,6 +363,8 @@ struct SchedSwitchWithStackPerfEventData {
   // UprobesReturnAddressManager::PatchSample.
   [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
+  [[nodiscard]] pid_t GetCallstackPid() const { return prev_pid_or_minus_one; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return prev_tid; }
 
   uint32_t cpu;
   pid_t prev_pid_or_minus_one;

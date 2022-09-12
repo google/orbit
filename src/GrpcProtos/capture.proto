@@ -433,6 +433,19 @@ message FullCallstackSample {
   uint64 timestamp_ns = 4;
 }
 
+message ThreadStateSliceCallstack {
+  // This proto is only used on the service side and will never be seen by the
+  // client. It is the equivalent of a FullCallstackSample for thread state
+  // tracepoint events, that needs further processing outside of
+  // UprobesUnwindingVisitor.
+  // These callstacks will be merged with the events produced by the
+  // SchwitchesStatesNamesVisitor within ProducerEventProcessor, where they'll
+  // go through the same de-duplication as the callstacks from sampling.
+  uint32 thread_state_slice_tid = 1;
+  Callstack callstack = 2;
+  uint64 timestamp_ns = 3;
+}
+
 message InternedString {
   uint64 key = 1;
   // This is a string, we use bytes to avoid UTF-8 validation.
@@ -915,7 +928,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15.
-    // Next lower-frequency ID: 50
+    // Next lower-frequency ID: 51
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -962,6 +975,7 @@ message ProducerCaptureEvent {
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
+    ThreadStateSliceCallstack thread_state_slice_callstack = 50;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent
         warning_instrumenting_with_uprobes_event = 49;

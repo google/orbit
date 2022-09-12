@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -25,6 +26,7 @@
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "PerfEvent.h"
 
 namespace orbit_linux_tracing {
 
@@ -32,6 +34,7 @@ using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
+using orbit_grpc_protos::ThreadStateSliceCallstack;
 
 static bool CallstackIsInUserSpaceInstrumentation(
     const std::vector<unwindstack::FrameData>& frames,
@@ -214,19 +217,20 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
   return Callstack::kComplete;
 }
 
-void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
-                                    const StackSamplePerfEventData& event_data) {
+template <typename StackPerfEventDataT>
+bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
+                                          Callstack* callstack) {
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
-  return_address_manager_->PatchSample(event_data.tid, event_data.GetRegisters().sp,
+  return_address_manager_->PatchSample(event_data.GetCallstackTid(), event_data.GetRegisters().sp,
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
 
   StackSliceView event_stack_slice{event_data.GetRegisters().sp, event_data.GetStackSize(),
-                                   event_data.data.get()};
+                                   event_data.GetStackData()};
   std::vector<StackSliceView> stack_slices{event_stack_slice};
-
-  const auto& stream_id_to_user_stack = thread_id_stream_id_to_stack_slices_.find(event_data.tid);
+  const auto& stream_id_to_user_stack =
+      thread_id_stream_id_to_stack_slices_.find(event_data.GetCallstackTid());
   if (stream_id_to_user_stack != thread_id_stream_id_to_stack_slices_.end()) {
     for (const auto& [unused_stream_id, user_stack_slice] : stream_id_to_user_stack->second) {
       stack_slices.emplace_back(user_stack_slice.start_address, user_stack_slice.size,
@@ -234,22 +238,17 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     }
   }
 
-  LibunwindstackResult libunwindstack_result = unwinder_->Unwind(
-      event_data.pid, current_maps_->Get(), event_data.GetRegistersAsArray(), stack_slices);
+  LibunwindstackResult libunwindstack_result =
+      unwinder_->Unwind(event_data.GetCallstackPid(), current_maps_->Get(),
+                        event_data.GetRegistersAsArray(), stack_slices);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
     // counter. Do nothing in case this doesn't hold for a reason we don't know.
     ORBIT_ERROR("Unwound callstack has no frames");
-    return;
+    return false;
   }
 
-  FullCallstackSample sample;
-  sample.set_pid(event_data.pid);
-  sample.set_tid(event_data.tid);
-  sample.set_timestamp_ns(event_timestamp);
-
-  Callstack* callstack = sample.mutable_callstack();
   callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     SendFullAddressInfoToListener(libunwindstack_frame);
@@ -257,7 +256,59 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   }
 
   ORBIT_CHECK(!callstack->pcs().empty());
+  return true;
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const StackSamplePerfEventData& event_data) {
+  FullCallstackSample sample;
+  sample.set_pid(event_data.pid);
+  sample.set_tid(event_data.tid);
+  sample.set_timestamp_ns(event_timestamp);
+
+  const bool success = UnwindStack(event_data, sample.mutable_callstack());
+
+  if (!success) {
+    return;
+  }
+
   listener_->OnCallstackSample(std::move(sample));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const SchedWakeupWithStackPerfEventData& event_data) {
+  if (event_data.data == nullptr) {
+    return;
+  }
+  ThreadStateSliceCallstack thread_state_slice_callstack;
+  thread_state_slice_callstack.set_thread_state_slice_tid(event_data.woken_tid);
+  thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
+
+  const bool success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack());
+
+  if (!success) {
+    return;
+  }
+
+  listener_->OnThreadStateSliceCallstack(std::move(thread_state_slice_callstack));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const SchedSwitchWithStackPerfEventData& event_data) {
+  if (event_data.data == nullptr) {
+    return;
+  }
+
+  ThreadStateSliceCallstack thread_state_slice_callstack;
+  thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
+  thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
+  bool const success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack());
+
+  if (!success) {
+    return;
+  }
+
+  listener_->OnThreadStateSliceCallstack(std::move(thread_state_slice_callstack));
 }
 
 [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
