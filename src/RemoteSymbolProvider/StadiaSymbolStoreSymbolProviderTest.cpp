@@ -10,6 +10,7 @@
 
 #include "Http/MockDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitGgp/MockClient.h"
@@ -21,9 +22,9 @@
 namespace orbit_remote_symbol_provider {
 
 namespace {
-using orbit_base::Canceled;
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 using orbit_ggp::SymbolDownloadInfo;
 using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 using orbit_symbol_provider::ModuleIdentifier;
@@ -84,12 +85,13 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
         .Times(1)
         .WillOnce([expected_state, error_msg = std::move(error_msg)](
                       std::string /*url*/, std::filesystem::path /*save_file_path*/,
-                      orbit_base::StopToken /*token*/) -> Future<ErrorMessageOr<CanceledOr<void>>> {
+                      orbit_base::StopToken /*token*/)
+                      -> Future<ErrorMessageOr<CanceledOr<NotFoundOr<void>>>> {
           switch (expected_state) {
             case DownloadResultState::kSuccess:
               return {outcome::success()};
             case DownloadResultState::kCanceled:
-              return {Canceled{}};
+              return {orbit_base::Canceled{}};
             case DownloadResultState::kError:
               return {ErrorMessage{error_msg}};
           }

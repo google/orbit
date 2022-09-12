@@ -12,8 +12,9 @@
 namespace orbit_http {
 class MockDownloadManager : public DownloadManager {
  public:
-  MOCK_METHOD(orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>, Download,
-              (std::string, std::filesystem::path, orbit_base::StopToken), (override));
+  MOCK_METHOD(
+      orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>>,
+      Download, (std::string, std::filesystem::path, orbit_base::StopToken), (override));
 };
 }  // namespace orbit_http
 

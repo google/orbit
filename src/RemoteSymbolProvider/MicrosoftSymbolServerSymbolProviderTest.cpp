@@ -10,6 +10,7 @@
 
 #include "Http/MockDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitGgp/MockClient.h"
@@ -21,9 +22,9 @@
 namespace orbit_remote_symbol_provider {
 
 namespace {
-using orbit_base::Canceled;
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 using orbit_ggp::SymbolDownloadInfo;
 using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 using orbit_symbol_provider::ModuleIdentifier;
@@ -53,22 +54,25 @@ class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
         });
   }
 
-  enum class DownloadResultState { kSuccess, kCanceled, kError };
+  enum class DownloadResultState { kSuccess, kNotFound, kCanceled, kError };
   void SetUpDownloadManager(DownloadResultState expected_state, std::string expected_url,
                             std::string error_msg = "") {
     EXPECT_CALL(download_manager_, Download)
         .Times(1)
         .WillOnce([expected_state, expected_url = std::move(expected_url),
-                   error_msg = std::move(error_msg)](
-                      std::string url, std::filesystem::path /*save_file_path*/,
-                      orbit_base::StopToken /*token*/) -> Future<ErrorMessageOr<CanceledOr<void>>> {
+                   error_msg = std::move(error_msg)](std::string url,
+                                                     std::filesystem::path /*save_file_path*/,
+                                                     orbit_base::StopToken /*token*/)
+                      -> Future<ErrorMessageOr<CanceledOr<NotFoundOr<void>>>> {
           EXPECT_EQ(url, expected_url);
 
           switch (expected_state) {
             case DownloadResultState::kSuccess:
               return {outcome::success()};
+            case DownloadResultState::kNotFound:
+              return {orbit_base::NotFound{""}};
             case DownloadResultState::kCanceled:
-              return {Canceled{}};
+              return {orbit_base::Canceled{}};
             case DownloadResultState::kError:
               return {ErrorMessage{error_msg}};
           }
@@ -104,6 +108,24 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
   QCoreApplication::exec();
 }
 
+TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
+  const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
+  const std::string expected_url{
+      "https://msdl.microsoft.com/download/symbols/some_module_name/some_build_id/"
+      "some_module_name"};
+  SetUpDownloadManager(DownloadResultState::kNotFound, expected_url);
+
+  orbit_base::StopSource stop_source{};
+  symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
+      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
+        EXPECT_THAT(result, HasError("not found"));
+
+        QCoreApplication::exit();
+      });
+
+  QCoreApplication::exec();
+}
+
 TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
   SetUpDownloadManager(DownloadResultState::kCanceled, kValidModuleDownloadUrl);
 
@@ -121,16 +143,12 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
   QCoreApplication::exec();
 }
 
-TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
-  const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
-  const std::string expected_url{
-      "https://msdl.microsoft.com/download/symbols/some_module_name/some_build_id/"
-      "some_module_name"};
-  const std::string error_msg{"Symbols not found"};
-  SetUpDownloadManager(DownloadResultState::kError, expected_url, error_msg);
+TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleError) {
+  const std::string error_msg{"error"};
+  SetUpDownloadManager(DownloadResultState::kError, kValidModuleDownloadUrl, error_msg);
 
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
+  symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
       .Then(executor_.get(), [error_msg](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
         EXPECT_THAT(result, HasError(error_msg));
 

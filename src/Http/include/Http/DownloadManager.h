@@ -6,6 +6,7 @@
 #define HTTP_DOWNLOAD_MANAGER_H_
 
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 
@@ -15,8 +16,10 @@ class DownloadManager {
  public:
   virtual ~DownloadManager() = default;
 
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> Download(
-      std::string url, std::filesystem::path save_file_path, orbit_base::StopToken stop_token) = 0;
+  [[nodiscard]] virtual orbit_base::Future<
+      ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>>
+  Download(std::string url, std::filesystem::path save_file_path,
+           orbit_base::StopToken stop_token) = 0;
 };
 
 }  // namespace orbit_http

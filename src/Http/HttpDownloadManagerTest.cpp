@@ -19,6 +19,7 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
@@ -29,16 +30,44 @@
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_http {
-using orbit_base::CanceledOr;
 using orbit_base::FileExists;
 using orbit_base::Future;
+using orbit_base::GetNotCanceled;
 using orbit_base::IsCanceled;
+using orbit_base::IsNotFound;
 using orbit_base::StopSource;
 using orbit_base::TemporaryFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>;
 
 namespace {
+
+static void VerifyDownloadError(const DownloadResult& result, const std::string& expected_error) {
+  EXPECT_THAT(result, HasError(expected_error));
+}
+
+static void VerifyDownloadCanceled(const DownloadResult& result) {
+  EXPECT_THAT(result, HasNoError());
+  EXPECT_TRUE(IsCanceled(result.value()));
+}
+
+static void VerifyDownloadNotFound(const DownloadResult& result) {
+  EXPECT_THAT(result, HasNoError());
+  EXPECT_FALSE(IsCanceled(result.value()));
+  EXPECT_TRUE(IsNotFound(GetNotCanceled(result.value())));
+}
+
+static void VerifyDownloadSucceeded(const DownloadResult& result,
+                                    const std::filesystem::path& local_path) {
+  EXPECT_THAT(result, HasNoError());
+  EXPECT_FALSE(IsCanceled(result.value()));
+  EXPECT_FALSE(IsNotFound(GetNotCanceled(result.value())));
+
+  auto exists_or_error = FileExists(local_path);
+  ASSERT_THAT(exists_or_error, HasNoError());
+  EXPECT_TRUE(exists_or_error.value());
+}
 
 [[nodiscard]] static TemporaryFile GetTemporaryFile() {
   auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
@@ -123,13 +152,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
   StopSource stop_source{};
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [&local_path](ErrorMessageOr<CanceledOr<void>> result) {
-    EXPECT_THAT(result, HasNoError());
-    EXPECT_FALSE(IsCanceled(result.value()));
-
-    auto exists_or_error = FileExists(local_path);
-    ASSERT_THAT(exists_or_error, HasNoError());
-    EXPECT_TRUE(exists_or_error.value());
+  future.Then(executor_.get(), [&local_path](DownloadResult result) {
+    VerifyDownloadSucceeded(result, local_path);
     QCoreApplication::exit();
   });
 
@@ -146,9 +170,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
   stop_source.RequestStop();
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](ErrorMessageOr<CanceledOr<void>> result) {
-    EXPECT_THAT(result, HasNoError());
-    EXPECT_TRUE(IsCanceled(result.value()));
+  future.Then(executor_.get(), [](DownloadResult result) {
+    VerifyDownloadCanceled(result);
     QCoreApplication::exit();
   });
 
@@ -163,8 +186,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidUrl) {
   StopSource stop_source{};
 
   auto future = manager_->Download(invalid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](ErrorMessageOr<CanceledOr<void>> result) {
-    EXPECT_THAT(result, HasError("File not found"));
+  future.Then(executor_.get(), [](DownloadResult result) {
+    VerifyDownloadNotFound(result);
     QCoreApplication::exit();
   });
 
@@ -177,8 +200,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidSaveFilePath) {
   StopSource stop_source{};
 
   auto future = manager_->Download(invalid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](ErrorMessageOr<CanceledOr<void>> result) {
-    EXPECT_THAT(result, HasError("Failed to open save file"));
+  future.Then(executor_.get(), [](DownloadResult result) {
+    VerifyDownloadError(result, "Failed to open save file");
     QCoreApplication::exit();
   });
 
@@ -193,7 +216,7 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
                                                              GetTemporaryFile()};
   std::array<StopSource, kDownloadCounts> stop_sources{};
 
-  std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> futures;
+  std::vector<Future<DownloadResult>> futures;
   futures.reserve(kDownloadCounts);
   for (size_t i = 0; i < kDownloadCounts; ++i) {
     kTemporaryFiles[i].CloseAndRemove();
@@ -203,22 +226,12 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
   }
 
   orbit_base::WhenAll(absl::MakeConstSpan(futures))
-      .Then(executor_.get(),
-            [&kTemporaryFiles](std::vector<ErrorMessageOr<CanceledOr<void>>> results) {
-              EXPECT_THAT(results[0], HasNoError());
-              EXPECT_THAT(results[1], HasError("File not found"));
-              EXPECT_THAT(results[2], HasNoError());
-
-              auto exists_or_error = FileExists(kTemporaryFiles[0].file_path());
-              ASSERT_THAT(exists_or_error, HasNoError());
-              EXPECT_TRUE(exists_or_error.value());
-
-              exists_or_error = FileExists(kTemporaryFiles[2].file_path());
-              ASSERT_THAT(exists_or_error, HasNoError());
-              EXPECT_TRUE(exists_or_error.value());
-
-              QCoreApplication::exit();
-            });
+      .Then(executor_.get(), [&kTemporaryFiles](std::vector<DownloadResult> results) {
+        VerifyDownloadSucceeded(results[0], kTemporaryFiles[0].file_path());
+        VerifyDownloadNotFound(results[1]);
+        VerifyDownloadSucceeded(results[2], kTemporaryFiles[2].file_path());
+        QCoreApplication::exit();
+      });
 
   QCoreApplication::exec();
 }
@@ -232,9 +245,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleDestroyManagerEarly) {
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
   manager_->~HttpDownloadManager();
-  future.Then(executor_.get(), [](ErrorMessageOr<CanceledOr<void>> result) {
-    EXPECT_THAT(result, HasNoError());
-    EXPECT_TRUE(IsCanceled(result.value()));
+  future.Then(executor_.get(), [](DownloadResult result) {
+    VerifyDownloadCanceled(result);
     QCoreApplication::exit();
   });
 
