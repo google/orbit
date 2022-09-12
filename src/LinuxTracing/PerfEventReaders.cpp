@@ -495,7 +495,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 
   ring_buffer->SkipRecord(header);
 
-  // If we did not received the necessary data for a callstack, there is no need to return a
+  // If we did not receive the necessary data for a callstack, there is no need to return a
   // SchedWakeupWithStackPerfEvent.
   if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
     return SchedWakeupPerfEvent{
@@ -516,7 +516,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              // See above for the usage as "pid" for a thread id.
+              // See above for the usage of "pid" as a thread id.
               .woken_tid = sched_wakeup.pid,
               .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
               .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
@@ -543,7 +543,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 
   ring_buffer->SkipRecord(header);
 
-  // If we did not received the necessary data for a callstack, there is no need to return a
+  // If we did not receive the necessary data for a callstack, there is no need to return a
   // SchedSwitchWithStackPerfEvent.
   if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
     return SchedSwitchPerfEvent{

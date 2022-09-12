@@ -231,7 +231,8 @@ ThreadStateSlice MakeThreadStateSlice(
     uint64_t end_timestamp_ns,
     ThreadStateSlice::WakeupReason wakeup_reason = ThreadStateSlice::kNotApplicable,
     uint32_t wakeup_tid = 0, uint32_t wakeup_pid = 0,
-    bool has_switch_out_or_wakeup_callstack = false) {
+    ThreadStateSlice::CallstackStatus switch_out_or_wakeup_callstack_status =
+        ThreadStateSlice::kNoCallstack) {
   ThreadStateSlice thread_state_slice;
   thread_state_slice.set_tid(tid);
   thread_state_slice.set_thread_state(thread_state);
@@ -240,12 +241,8 @@ ThreadStateSlice MakeThreadStateSlice(
   thread_state_slice.set_wakeup_reason(wakeup_reason);
   thread_state_slice.set_wakeup_tid(wakeup_tid);
   thread_state_slice.set_wakeup_pid(wakeup_pid);
-  if (has_switch_out_or_wakeup_callstack) {
-    thread_state_slice.set_switch_out_or_wakeup_callstack_status(
-        ThreadStateSlice::kWaitingForCallstack);
-  } else {
-    thread_state_slice.set_switch_out_or_wakeup_callstack_status(ThreadStateSlice::kNoCallstack);
-  }
+  thread_state_slice.set_switch_out_or_wakeup_callstack_status(
+      switch_out_or_wakeup_callstack_status);
   thread_state_slice.set_switch_out_or_wakeup_callstack_id(0);
   return thread_state_slice;
 }
@@ -631,21 +628,20 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesOnOneThreadWaitin
           ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kUninterruptibleSleep,
                                                   kWakeTimestampNs1 - kStartTimestampNs,
                                                   kWakeTimestampNs1)),
-          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunnable,
-                                                  kInTimestampNs1 - kWakeTimestampNs1,
-                                                  kInTimestampNs1, ThreadStateSlice::kUnblocked, 0,
-                                                  0, /*has_switch_out_or_wakeup_callstack=*/false)),
+          ThreadStateSliceEq(MakeThreadStateSlice(
+              kTid1, ThreadStateSlice::kRunnable, kInTimestampNs1 - kWakeTimestampNs1,
+              kInTimestampNs1, ThreadStateSlice::kUnblocked, 0, 0, ThreadStateSlice::kNoCallstack)),
           ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunning,
                                                   kOutTimestampNs1 - kInTimestampNs1,
                                                   kOutTimestampNs1)),
           ThreadStateSliceEq(MakeThreadStateSlice(
               kTid1, ThreadStateSlice::kInterruptibleSleep, kWakeTimestampNs2 - kOutTimestampNs1,
               kWakeTimestampNs2, ThreadStateSlice::kNotApplicable, 0, 0,
-              /*has_switch_out_or_wakeup_callstack=*/true)),
+              ThreadStateSlice::kWaitingForCallstack)),
           ThreadStateSliceEq(MakeThreadStateSlice(
               kTid1, ThreadStateSlice::kRunnable, kStopTimestampNs - kWakeTimestampNs2,
               kStopTimestampNs, ThreadStateSlice::kUnblocked, kTid2, kPid1,
-              /*has_switch_out_or_wakeup_callstack=*/true))));
+              ThreadStateSlice::kWaitingForCallstack))));
 }
 
 }  // namespace orbit_linux_tracing
