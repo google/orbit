@@ -216,13 +216,13 @@ int GgpAuth(int argc, char* argv[]) {
 
 int GgpCrashReport(int argc, char* argv[]) {
   if (argc < 7) {
-    std::cout << "Wrong amount of arguments" << std::endl;
+    std::cerr << "Wrong amount of arguments" << std::endl;
     return 1;
   }
   if (std::string_view{argv[1]} != "crash-report" ||
       std::string_view{argv[2]} != "download-symbols" || std::string_view{argv[3]} != "-s" ||
       std::string_view{argv[4]} != "--show-url") {
-    std::cout << "Arguments are wrong" << std::endl;
+    std::cerr << "Arguments are wrong" << std::endl;
     return 1;
   }
 
@@ -238,24 +238,35 @@ int GgpCrashReport(int argc, char* argv[]) {
    "fileId": "symbolFiles/build_id_1/symbol_filename_1"
   })"}};
 
+  int queried_module_count = 0;
   std::vector<std::string> symbols_to_output;
   for (auto i = 5; i < argc;) {
     if (std::string_view{argv[i]} != "--module") {
-      std::cout << "Arguments are wrong" << i << std::endl;
+      std::cerr << "Error: must specify a module" << std::endl;
       return 1;
     }
+
     if (++i >= argc || std::string_view{argv[i]} == "--module") {
-      std::cout << "Flag --module needs an argument" << std::endl;
+      std::cerr << "Error: flag needs an argument: --module" << std::endl;
       return 1;
     }
+
     std::string key = argv[i++];
+    if (key.find("invalid_build_id") == 0) {
+      std::cerr << "Error: invalid module name \"" << key
+                << "\": incorrectly formatted build ID \"invalid_build_id\": "
+                   "encoding/hex: odd length hex string"
+                << std::endl;
+      return 1;
+    }
+
     if (kValidKeyToSymbolDownloadInfo.find(key) != kValidKeyToSymbolDownloadInfo.end()) {
       symbols_to_output.push_back(kValidKeyToSymbolDownloadInfo.at(key));
     }
+    queried_module_count++;
   }
 
-  std::string output = R"(
-{
+  std::string output = R"({
  "symbols": [)";
   for (auto it = symbols_to_output.begin(); it != symbols_to_output.end();) {
     output += *it++;
@@ -265,6 +276,14 @@ int GgpCrashReport(int argc, char* argv[]) {
  ]
 })";
   std::cout << output;
+
+  if (queried_module_count > symbols_to_output.size()) {
+    std::cerr << "Error: some debug symbol files are missing: " << queried_module_count
+              << " modules were specified, but only " << symbols_to_output.size()
+              << " files were downloaded";
+    return 1;
+  }
+
   return 0;
 }
 
