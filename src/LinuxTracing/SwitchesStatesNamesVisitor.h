@@ -58,9 +58,9 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void ProcessInitialState(uint64_t timestamp_ns, pid_t tid, char state_char);
   void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const SchedSwitchPerfEventData& event_data) override;
+  void Visit(uint64_t timestamp, const SchedSwitchWithStackPerfEventData& event_data) override;
   void Visit(uint64_t timestamp, const SchedWakeupPerfEventData& event_data) override;
   void Visit(uint64_t timestamp, const SchedWakeupWithStackPerfEventData& event_data) override;
-  void Visit(uint64_t timestamp, const SchedSwitchWithStackPerfEventData& event_data) override;
   void ProcessRemainingOpenStates(uint64_t timestamp_ns);
 
   void Visit(uint64_t event_timestamp, const TaskRenamePerfEventData& event_data) override;
@@ -72,10 +72,10 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
 
   template <typename SchedSwitchEventData>
   void VisitSchedSwitch(uint64_t timestamp, const SchedSwitchEventData& event_data,
-                        bool wait_for_callstack);
+                        bool has_switch_out_callstack);
   template <typename SchedWakeupEventData>
   void VisitSchedWakeup(uint64_t timestamp, const SchedWakeupEventData& event_data,
-                        bool wait_for_callstack);
+                        bool has_switch_wakeup_callstack);
 
   TracerListener* listener_;
   std::atomic<uint64_t>* thread_state_counter_ = nullptr;
