@@ -1,0 +1,3 @@
+LIBRARY exports_one_by_ordinal
+    EXPORTS
+        PrintHelloWorldNoname @1 NONAME

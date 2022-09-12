@@ -31,6 +31,10 @@ class CoffFile : public ObjectFile {
   CoffFile() = default;
   ~CoffFile() override = default;
 
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadSymbolsFromExportTable() = 0;
+  [[nodiscard]] virtual bool HasExportTable() const = 0;
+
   [[nodiscard]] virtual ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const = 0;
 };
 
