@@ -479,8 +479,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   };
 }
 
-[[nodiscard]] SchedWakeupWithStackPerfEvent ConsumeSchedWakeupWithStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+[[nodiscard]] PerfEvent ConsumeSchedWakeupWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                             const perf_event_header& header) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -494,6 +494,23 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
+
+  // If we did not received the necessary data for a callstack, there is no need to return a
+  // SchedSwitchWithStackPerfEvent.
+  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
+    return SchedWakeupPerfEvent{
+        .timestamp = res.time,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+        .data =
+            {
+                // The tracepoint format calls the woken tid "data.pid" but it's effectively the
+                // thread id.
+                .woken_tid = sched_wakeup.pid,
+                .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
+                .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
+            },
+    };
+  }
   return SchedWakeupWithStackPerfEvent{
       .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -511,8 +528,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   };
 }
 
-[[nodiscard]] SchedSwitchWithStackPerfEvent ConsumeSchedSwitchWithStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+[[nodiscard]] PerfEvent ConsumeSchedSwitchWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                             const perf_event_header& header) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -526,6 +543,29 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
 
   ring_buffer->SkipRecord(header);
+
+  // If we did not received the necessary data for a callstack, there is no need to return a
+  // SchedSwitchWithStackPerfEvent.
+  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
+    return SchedSwitchPerfEvent{
+        .timestamp = res.time,
+        .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+        .data =
+            {
+                .cpu = res.cpu,
+                // As the tracepoint data does not include the pid of the process that the thread
+                // being switched out belongs to, we use the pid set by perf_event_open in the
+                // corresponding generic field of the PERF_RECORD_SAMPLE.
+                // Note, though, that this value is -1 when the switch out is caused by the thread
+                // exiting. This is not the case for data.prev_pid, whose value is always correct
+                // as it comes directly from the tracepoint data.
+                .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
+                .prev_tid = sched_wakeup.prev_pid,
+                .prev_state = sched_wakeup.prev_state,
+                .next_tid = sched_wakeup.next_pid,
+            },
+    };
+  }
   return SchedSwitchWithStackPerfEvent{
       .timestamp = res.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),

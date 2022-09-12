@@ -181,8 +181,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 
 void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
                                        const SchedSwitchWithStackPerfEventData& event_data) {
-  const bool has_switch_out_callstack = event_data.data != nullptr;
-  VisitSchedSwitch(event_timestamp, event_data, has_switch_out_callstack);
+  VisitSchedSwitch(event_timestamp, event_data, /*has_switch_out_callstack=*/true);
 }
 
 template <typename SchedWakeupPerfEventDataT>
@@ -211,8 +210,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
 
 void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
                                        const SchedWakeupWithStackPerfEventData& event_data) {
-  const bool has_wakeup_callstack = event_data.data != nullptr;
-  VisitSchedWakeup(event_timestamp, event_data, has_wakeup_callstack);
+  VisitSchedWakeup(event_timestamp, event_data, /*has_wakeup_callstack=*/true);
 }
 
 void SwitchesStatesNamesVisitor::ProcessRemainingOpenStates(uint64_t timestamp_ns) {
