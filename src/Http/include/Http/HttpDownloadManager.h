@@ -7,8 +7,16 @@
 
 #include <QNetworkAccessManager>
 #include <QObject>
+#include <QString>
+#include <filesystem>
+#include <string>
 
 #include "Http/DownloadManager.h"
+#include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/NotFoundOr.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 
 namespace orbit_http {
 
