@@ -70,11 +70,11 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
       char c);
   static orbit_grpc_protos::ThreadStateSlice::ThreadState GetThreadStateFromBits(uint64_t bits);
 
-  template <typename SchedSwitchEventData>
-  void VisitSchedSwitch(uint64_t timestamp, const SchedSwitchEventData& event_data,
+  template <typename SchedSwitchPerfEventDataT>
+  void VisitSchedSwitch(uint64_t timestamp, const SchedSwitchPerfEventDataT& event_data,
                         bool has_switch_out_callstack);
-  template <typename SchedWakeupEventData>
-  void VisitSchedWakeup(uint64_t timestamp, const SchedWakeupEventData& event_data,
+  template <typename SchedWakeupPerfEventDataT>
+  void VisitSchedWakeup(uint64_t timestamp, const SchedWakeupPerfEventDataT& event_data,
                         bool has_switch_wakeup_callstack);
 
   TracerListener* listener_;

@@ -113,9 +113,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
                            event_data.was_created_by_pid);
 }
 
-template <typename SchedSwitchEventData>
+template <typename SchedSwitchPerfEventDataT>
 void SwitchesStatesNamesVisitor::VisitSchedSwitch(uint64_t event_timestamp,
-                                                  const SchedSwitchEventData& event_data,
+                                                  const SchedSwitchPerfEventDataT& event_data,
                                                   bool has_switch_out_callstack) {
   // Process the context switch out for scheduling slices.
   // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
@@ -185,9 +185,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
   VisitSchedSwitch(event_timestamp, event_data, has_switch_out_callstack);
 }
 
-template <typename SchedWakeupEventData>
+template <typename SchedWakeupPerfEventDataT>
 void SwitchesStatesNamesVisitor::VisitSchedWakeup(uint64_t event_timestamp,
-                                                  const SchedWakeupEventData& event_data,
+                                                  const SchedWakeupPerfEventDataT& event_data,
                                                   bool has_wakeup_callstack) {
   if (!TidMatchesPidFilter(event_data.woken_tid)) {
     return;
