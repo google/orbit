@@ -479,8 +479,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   };
 }
 
-[[nodiscard]] PerfEvent ConsumeSchedWakeupWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header) {
+[[nodiscard]] PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -496,7 +496,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   ring_buffer->SkipRecord(header);
 
   // If we did not received the necessary data for a callstack, there is no need to return a
-  // SchedSwitchWithStackPerfEvent.
+  // SchedWakeupWithStackPerfEvent.
   if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
     return SchedWakeupPerfEvent{
         .timestamp = res.time,
@@ -516,8 +516,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
-              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
-              // thread id.
+              // See above for the usage as "pid" for a thread id.
               .woken_tid = sched_wakeup.pid,
               .was_unblocked_by_tid = static_cast<pid_t>(res.tid),
               .was_unblocked_by_pid = static_cast<pid_t>(res.pid),
@@ -528,8 +527,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
   };
 }
 
-[[nodiscard]] PerfEvent ConsumeSchedSwitchWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header) {
+[[nodiscard]] PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -572,12 +571,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
       .data =
           {
               .cpu = res.cpu,
-              // As the tracepoint data does not include the pid of the process that the thread
-              // being switched out belongs to, we use the pid set by perf_event_open in the
-              // corresponding generic field of the PERF_RECORD_SAMPLE.
-              // Note, though, that this value is -1 when the switch out is caused by the thread
-              // exiting. This is not the case for data.prev_pid, whose value is always correct as
-              // it comes directly from the tracepoint data.
+              // See above why we use "res.pid" as process id of the previous thread.
               .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
               .prev_tid = sched_wakeup.prev_pid,
               .prev_state = sched_wakeup.prev_state,

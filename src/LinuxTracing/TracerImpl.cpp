@@ -1368,13 +1368,13 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
   } else if (is_sched_switch_with_stack) {
     // TODO(b/245529464): Avoid copying the stack if the record is from another process
-    PerfEvent event = ConsumeSchedSwitchWithStackPerfEvent(ring_buffer, header);
+    PerfEvent event = ConsumeSchedSwitchWithOrWithoutStackPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
     ++stats_.sched_switch_count;
 
   } else if (is_sched_wakeup_with_stack) {
     // TODO(b/245529464): Avoid copying the stack if the record is from another process
-    PerfEvent event = ConsumeSchedWakeupWithStackPerfEvent(ring_buffer, header);
+    PerfEvent event = ConsumeSchedWakeupWithOrWithoutStackPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
 
   } else if (is_amdgpu_cs_ioctl_event) {

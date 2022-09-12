@@ -75,7 +75,7 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
                         bool has_switch_out_callstack);
   template <typename SchedWakeupPerfEventDataT>
   void VisitSchedWakeup(uint64_t timestamp, const SchedWakeupPerfEventDataT& event_data,
-                        bool has_switch_wakeup_callstack);
+                        bool has_wakeup_callstack);
 
   TracerListener* listener_;
   std::atomic<uint64_t>* thread_state_counter_ = nullptr;

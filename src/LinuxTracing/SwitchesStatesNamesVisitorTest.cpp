@@ -246,6 +246,7 @@ ThreadStateSlice MakeThreadStateSlice(
   } else {
     thread_state_slice.set_switch_out_or_wakeup_callstack_status(ThreadStateSlice::kNoCallstack);
   }
+  thread_state_slice.set_switch_out_or_wakeup_callstack_id(0);
   return thread_state_slice;
 }
 
@@ -260,12 +261,12 @@ ThreadStateSlice MakeThreadStateSlice(
                           expected.wakeup_reason()),
       ::testing::Property("wakeup_tid", &ThreadStateSlice::wakeup_tid, expected.wakeup_tid()),
       ::testing::Property("wakeup_pid", &ThreadStateSlice::wakeup_pid, expected.wakeup_pid()),
-      ::testing::Property("switch_out_or_wakeup_callstack_id",
-                          &ThreadStateSlice::switch_out_or_wakeup_callstack_id,
-                          expected.switch_out_or_wakeup_callstack_id()),
       ::testing::Property("switch_out_or_wakeup_callstack_status",
                           &ThreadStateSlice::switch_out_or_wakeup_callstack_status,
-                          expected.switch_out_or_wakeup_callstack_status()));
+                          expected.switch_out_or_wakeup_callstack_status()),
+      ::testing::Property("switch_out_or_wakeup_callstack_id",
+                          &ThreadStateSlice::switch_out_or_wakeup_callstack_id,
+                          expected.switch_out_or_wakeup_callstack_id()));
 }
 
 ThreadName MakeThreadName(uint32_t pid, uint32_t tid, std::string name, uint64_t timestamp_ns) {

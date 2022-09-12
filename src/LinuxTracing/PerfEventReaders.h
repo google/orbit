@@ -55,11 +55,11 @@ SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
 SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-PerfEvent ConsumeSchedSwitchWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                               const perf_event_header& header);
+PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                        const perf_event_header& header);
 
-PerfEvent ConsumeSchedWakeupWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                               const perf_event_header& header);
+PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                        const perf_event_header& header);
 
 AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                      const perf_event_header& header);

@@ -118,7 +118,7 @@ void SwitchesStatesNamesVisitor::VisitSchedSwitch(uint64_t event_timestamp,
                                                   const SchedSwitchPerfEventDataT& event_data,
                                                   bool has_switch_out_callstack) {
   // Process the context switch out for scheduling slices.
-  // Note that context switches with tid 0 are associated with idle CPU, so we never consider them.
+  // Note that tid 0 is associated with idle CPU, so we never consider it.
   if (produce_scheduling_slices_ && event_data.prev_tid != 0) {
     // SchedSwitchPerfEvent::pid (which doesn't come from the tracepoint data, but from the generic
     // field of the PERF_RECORD_SAMPLE) is the pid of the process that the thread being switched out
