@@ -156,21 +156,21 @@ SchedSwitchPerfEvent MakeFakeSchedSwitchPerfEvent(uint32_t cpu, pid_t prev_pid_o
 
 SchedSwitchWithStackPerfEvent MakeFakeSchedSwitchWithStackPerfEvent(
     uint32_t cpu, pid_t prev_pid_or_minus_one, pid_t prev_tid, int64_t prev_state_mask,
-    pid_t next_tid, uint64_t timestamp_ns, bool has_stack_data) {
-  SchedSwitchWithStackPerfEvent result{.timestamp = timestamp_ns,
-                                       .data = {
-                                           .cpu = cpu,
-                                           .prev_pid_or_minus_one = prev_pid_or_minus_one,
-                                           .prev_tid = prev_tid,
-                                           .prev_state = prev_state_mask,
-                                           .next_tid = next_tid,
-                                       }};
-  if (has_stack_data) {
-    result.data.regs = make_unique_for_overwrite<uint64_t[]>(12);
-    result.data.dyn_size = 512;
-    result.data.data = make_unique_for_overwrite<uint8_t[]>(512);
-  }
-  return result;
+    pid_t next_tid, uint64_t timestamp_ns) {
+  return SchedSwitchWithStackPerfEvent{
+      .timestamp = timestamp_ns,
+      .data =
+          {
+              .cpu = cpu,
+              .prev_pid_or_minus_one = prev_pid_or_minus_one,
+              .prev_tid = prev_tid,
+              .prev_state = prev_state_mask,
+              .next_tid = next_tid,
+              .regs = make_unique_for_overwrite<uint64_t[]>(12),
+              .dyn_size = 512,
+              .data = make_unique_for_overwrite<uint8_t[]>(512),
+          },
+  };
 }
 
 SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, pid_t was_unblocked_by_tid,
@@ -190,20 +190,19 @@ SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, pid_t was_unb
 SchedWakeupWithStackPerfEvent MakeFakeSchedWakeupWithStackPerfEvent(pid_t woken_tid,
                                                                     pid_t was_unblocked_by_tid,
                                                                     pid_t was_unblocked_by_pid,
-                                                                    uint64_t timestamp_ns,
-                                                                    bool has_stack_data) {
-  SchedWakeupWithStackPerfEvent result{.timestamp = timestamp_ns,
-                                       .data = {
-                                           .woken_tid = woken_tid,
-                                           .was_unblocked_by_tid = was_unblocked_by_tid,
-                                           .was_unblocked_by_pid = was_unblocked_by_pid,
-                                       }};
-  if (has_stack_data) {
-    result.data.regs = make_unique_for_overwrite<uint64_t[]>(12);
-    result.data.dyn_size = 512;
-    result.data.data = make_unique_for_overwrite<uint8_t[]>(512);
-  }
-  return result;
+                                                                    uint64_t timestamp_ns) {
+  return SchedWakeupWithStackPerfEvent{
+      .timestamp = timestamp_ns,
+      .data =
+          {
+              .woken_tid = woken_tid,
+              .was_unblocked_by_tid = was_unblocked_by_tid,
+              .was_unblocked_by_pid = was_unblocked_by_pid,
+              .regs = make_unique_for_overwrite<uint64_t[]>(12),
+              .dyn_size = 512,
+              .data = make_unique_for_overwrite<uint8_t[]>(512),
+          },
+  };
 }
 
 SchedulingSlice MakeSchedulingSlice(uint32_t pid, uint32_t tid, int32_t core, uint64_t duration_ns,
@@ -612,19 +611,15 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesOnOneThreadWaitin
   visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
 
   // kPid1, kTid1
-  PerfEvent{MakeFakeSchedWakeupWithStackPerfEvent(kTid1, 0, 0, kWakeTimestampNs1,
-                                                  /*has_stack_data=*/false)}
-      .Accept(&visitor_);
-  PerfEvent{MakeFakeSchedSwitchWithStackPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask,
-                                                  kTid1, kInTimestampNs1, /*has_stack_data=*/false)}
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, 0, 0, kWakeTimestampNs1)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
+                                         kInTimestampNs1)}
       .Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchWithStackPerfEvent(kCpu1, kPid1, kTid1, kInterruptibleSleepStateMask,
-                                                  kNextTid, kOutTimestampNs1,
-                                                  /*has_stack_data=*/true)}
+                                                  kNextTid, kOutTimestampNs1)}
       .Accept(&visitor_);
-  PerfEvent{MakeFakeSchedWakeupWithStackPerfEvent(kTid1, kTid2, kPid1, kWakeTimestampNs2,
-                                                  /*has_stack_data=*/true)}
-      .Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupWithStackPerfEvent(kTid1, kTid2, kPid1, kWakeTimestampNs2)}.Accept(
+      &visitor_);
 
   visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
 
