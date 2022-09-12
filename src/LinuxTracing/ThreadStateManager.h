@@ -65,13 +65,13 @@ class ThreadStateManager {
  private:
   struct OpenState {
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
-              bool wait_for_callstack = false)
+              bool has_wakeup_or_switch_out_callstack = false)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
           wakeup_reason{orbit_grpc_protos::ThreadStateSlice::kNotApplicable},
           wakeup_tid{0},
           wakeup_pid{0},
-          has_wakeup_or_switch_out_callstack{wait_for_callstack} {}
+          has_wakeup_or_switch_out_callstack{has_wakeup_or_switch_out_callstack} {}
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
               orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason, pid_t wakeup_tid,
               pid_t wakeup_pid, bool has_wakeup_or_switch_out_callstack = false)

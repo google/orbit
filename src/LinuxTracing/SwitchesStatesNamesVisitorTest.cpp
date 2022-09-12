@@ -154,12 +154,53 @@ SchedSwitchPerfEvent MakeFakeSchedSwitchPerfEvent(uint32_t cpu, pid_t prev_pid_o
   };
 }
 
-SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, uint64_t timestamp_ns) {
+SchedSwitchWithStackPerfEvent MakeFakeSchedSwitchWithStackPerfEvent(
+    uint32_t cpu, pid_t prev_pid_or_minus_one, pid_t prev_tid, int64_t prev_state_mask,
+    pid_t next_tid, uint64_t timestamp_ns) {
+  return SchedSwitchWithStackPerfEvent{
+      .timestamp = timestamp_ns,
+      .data =
+          {
+              .cpu = cpu,
+              .prev_pid_or_minus_one = prev_pid_or_minus_one,
+              .prev_tid = prev_tid,
+              .prev_state = prev_state_mask,
+              .next_tid = next_tid,
+              .regs = make_unique_for_overwrite<uint64_t[]>(12),
+              .dyn_size = 512,
+              .data = make_unique_for_overwrite<uint8_t[]>(512),
+          },
+  };
+}
+
+SchedWakeupPerfEvent MakeFakeSchedWakeupPerfEvent(pid_t woken_tid, pid_t was_unblocked_by_tid,
+                                                  pid_t was_unblocked_by_pid,
+                                                  uint64_t timestamp_ns) {
   return SchedWakeupPerfEvent{
       .timestamp = timestamp_ns,
       .data =
           {
               .woken_tid = woken_tid,
+              .was_unblocked_by_tid = was_unblocked_by_tid,
+              .was_unblocked_by_pid = was_unblocked_by_pid,
+          },
+  };
+}
+
+SchedWakeupWithStackPerfEvent MakeFakeSchedWakeupWithStackPerfEvent(pid_t woken_tid,
+                                                                    pid_t was_unblocked_by_tid,
+                                                                    pid_t was_unblocked_by_pid,
+                                                                    uint64_t timestamp_ns) {
+  return SchedWakeupWithStackPerfEvent{
+      .timestamp = timestamp_ns,
+      .data =
+          {
+              .woken_tid = woken_tid,
+              .was_unblocked_by_tid = was_unblocked_by_tid,
+              .was_unblocked_by_pid = was_unblocked_by_pid,
+              .regs = make_unique_for_overwrite<uint64_t[]>(12),
+              .dyn_size = 512,
+              .data = make_unique_for_overwrite<uint8_t[]>(512),
           },
   };
 }
@@ -185,13 +226,24 @@ SchedulingSlice MakeSchedulingSlice(uint32_t pid, uint32_t tid, int32_t core, ui
                           expected.out_timestamp_ns()));
 }
 
-ThreadStateSlice MakeThreadStateSlice(uint32_t tid, ThreadStateSlice::ThreadState thread_state,
-                                      uint64_t duration_ns, uint64_t end_timestamp_ns) {
+ThreadStateSlice MakeThreadStateSlice(
+    uint32_t tid, ThreadStateSlice::ThreadState thread_state, uint64_t duration_ns,
+    uint64_t end_timestamp_ns,
+    ThreadStateSlice::WakeupReason wakeup_reason = ThreadStateSlice::kNotApplicable,
+    uint32_t wakeup_tid = 0, uint32_t wakeup_pid = 0,
+    ThreadStateSlice::CallstackStatus switch_out_or_wakeup_callstack_status =
+        ThreadStateSlice::kNoCallstack) {
   ThreadStateSlice thread_state_slice;
   thread_state_slice.set_tid(tid);
   thread_state_slice.set_thread_state(thread_state);
   thread_state_slice.set_duration_ns(duration_ns);
   thread_state_slice.set_end_timestamp_ns(end_timestamp_ns);
+  thread_state_slice.set_wakeup_reason(wakeup_reason);
+  thread_state_slice.set_wakeup_tid(wakeup_tid);
+  thread_state_slice.set_wakeup_pid(wakeup_pid);
+  thread_state_slice.set_switch_out_or_wakeup_callstack_status(
+      switch_out_or_wakeup_callstack_status);
+  thread_state_slice.set_switch_out_or_wakeup_callstack_id(0);
   return thread_state_slice;
 }
 
@@ -201,7 +253,17 @@ ThreadStateSlice MakeThreadStateSlice(uint32_t tid, ThreadStateSlice::ThreadStat
       ::testing::Property("thread_state", &ThreadStateSlice::thread_state, expected.thread_state()),
       ::testing::Property("duration_ns", &ThreadStateSlice::duration_ns, expected.duration_ns()),
       ::testing::Property("end_timestamp_ns", &ThreadStateSlice::end_timestamp_ns,
-                          expected.end_timestamp_ns()));
+                          expected.end_timestamp_ns()),
+      ::testing::Property("wakeup_reason", &ThreadStateSlice::wakeup_reason,
+                          expected.wakeup_reason()),
+      ::testing::Property("wakeup_tid", &ThreadStateSlice::wakeup_tid, expected.wakeup_tid()),
+      ::testing::Property("wakeup_pid", &ThreadStateSlice::wakeup_pid, expected.wakeup_pid()),
+      ::testing::Property("switch_out_or_wakeup_callstack_status",
+                          &ThreadStateSlice::switch_out_or_wakeup_callstack_status,
+                          expected.switch_out_or_wakeup_callstack_status()),
+      ::testing::Property("switch_out_or_wakeup_callstack_id",
+                          &ThreadStateSlice::switch_out_or_wakeup_callstack_id,
+                          expected.switch_out_or_wakeup_callstack_id()));
 }
 
 ThreadName MakeThreadName(uint32_t pid, uint32_t tid, std::string name, uint64_t timestamp_ns) {
@@ -400,7 +462,7 @@ void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
   visitor_.ProcessInitialState(kStartTimestampNs, kTid3, 'D');
 
   // kPid1, kTid1
-  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, 0, 0, kWakeTimestampNs1)}.Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
                                          kInTimestampNs1)}
       .Accept(&visitor_);
@@ -416,10 +478,10 @@ void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu2, kPid1, kTid2, kInterruptibleSleepStateMask,
                                          kNextTid, kOutTimestampNs2)}
       .Accept(&visitor_);
-  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid2, kWakeTimestampNs2)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid2, kTid1, kPid1, kWakeTimestampNs2)}.Accept(&visitor_);
 
   // kPid2, kTid3
-  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid3, kWakeTimestampNs3)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid3, 0, 0, kWakeTimestampNs3)}.Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu3, kPrevTid, kPrevTid, kRunnableStateMask, kTid3,
                                          kInTimestampNs3)}
       .Accept(&visitor_);
@@ -494,39 +556,92 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesFromAllPossibleEv
                   ThreadStateSliceEq(MakeThreadStateSlice(
                       kTid1, ThreadStateSlice::kUninterruptibleSleep,
                       kWakeTimestampNs1 - kStartTimestampNs, kWakeTimestampNs1)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunnable,
-                                                          kInTimestampNs1 - kWakeTimestampNs1,
-                                                          kInTimestampNs1)),
+                  ThreadStateSliceEq(MakeThreadStateSlice(
+                      kTid1, ThreadStateSlice::kRunnable, kInTimestampNs1 - kWakeTimestampNs1,
+                      kInTimestampNs1, ThreadStateSlice::kUnblocked, 0, 0)),
                   ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunning,
                                                           kOutTimestampNs1 - kInTimestampNs1,
                                                           kOutTimestampNs1)),
                   ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kDead,
                                                           kStopTimestampNs - kOutTimestampNs1,
                                                           kStopTimestampNs)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
-                                                          kInTimestampNs2 - kNewTimestampNs2,
-                                                          kInTimestampNs2)),
+                  ThreadStateSliceEq(MakeThreadStateSlice(
+                      kTid2, ThreadStateSlice::kRunnable, kInTimestampNs2 - kNewTimestampNs2,
+                      kInTimestampNs2, ThreadStateSlice::kCreated, 0, 0)),
                   ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunning,
                                                           kOutTimestampNs2 - kInTimestampNs2,
                                                           kOutTimestampNs2)),
                   ThreadStateSliceEq(MakeThreadStateSlice(
                       kTid2, ThreadStateSlice::kInterruptibleSleep,
                       kWakeTimestampNs2 - kOutTimestampNs2, kWakeTimestampNs2)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
-                                                          kStopTimestampNs - kWakeTimestampNs2,
-                                                          kStopTimestampNs)),
+                  ThreadStateSliceEq(MakeThreadStateSlice(
+                      kTid2, ThreadStateSlice::kRunnable, kStopTimestampNs - kWakeTimestampNs2,
+                      kStopTimestampNs, ThreadStateSlice::kUnblocked, kTid1, kPid1)),
                   ThreadStateSliceEq(MakeThreadStateSlice(
                       kTid3, ThreadStateSlice::kUninterruptibleSleep,
                       kWakeTimestampNs3 - kStartTimestampNs, kWakeTimestampNs3)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kRunnable,
-                                                          kInTimestampNs3 - kWakeTimestampNs3,
-                                                          kInTimestampNs3)),
+                  ThreadStateSliceEq(MakeThreadStateSlice(
+                      kTid3, ThreadStateSlice::kRunnable, kInTimestampNs3 - kWakeTimestampNs3,
+                      kInTimestampNs3, ThreadStateSlice::kUnblocked, 0, 0)),
                   ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kRunning,
                                                           kOutTimestampNs3 - kInTimestampNs3,
                                                           kOutTimestampNs3)),
                   ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kDead,
                                                           kStopTimestampNs - kOutTimestampNs3,
                                                           kStopTimestampNs))));
+}
+
+TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesOnOneThreadWaitingForCallstacks) {
+  visitor_.SetThreadStatePidFilters({kPid1, kPid2});
+
+  visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
+  visitor_.ProcessInitialTidToPidAssociation(kTid2, kPid);
+  PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
+
+  std::vector<ThreadStateSlice> actual_thread_state_slices;
+  const auto save_thread_state_slice_arg = [&](ThreadStateSlice actual_thread_state_slice) {
+    actual_thread_state_slices.emplace_back(std::move(actual_thread_state_slice));
+  };
+  EXPECT_CALL(mock_listener_, OnThreadStateSlice)
+      .Times(5)
+      .WillRepeatedly(save_thread_state_slice_arg);
+
+  visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
+
+  // kPid1, kTid1
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, 0, 0, kWakeTimestampNs1)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
+                                         kInTimestampNs1)}
+      .Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchWithStackPerfEvent(kCpu1, kPid1, kTid1, kInterruptibleSleepStateMask,
+                                                  kNextTid, kOutTimestampNs1)}
+      .Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupWithStackPerfEvent(kTid1, kTid2, kPid1, kWakeTimestampNs2)}.Accept(
+      &visitor_);
+
+  visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
+
+  EXPECT_EQ(thread_state_counter_, 5);
+  EXPECT_THAT(
+      actual_thread_state_slices,
+      ::testing::ElementsAre(
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kUninterruptibleSleep,
+                                                  kWakeTimestampNs1 - kStartTimestampNs,
+                                                  kWakeTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(
+              kTid1, ThreadStateSlice::kRunnable, kInTimestampNs1 - kWakeTimestampNs1,
+              kInTimestampNs1, ThreadStateSlice::kUnblocked, 0, 0, ThreadStateSlice::kNoCallstack)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunning,
+                                                  kOutTimestampNs1 - kInTimestampNs1,
+                                                  kOutTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(
+              kTid1, ThreadStateSlice::kInterruptibleSleep, kWakeTimestampNs2 - kOutTimestampNs1,
+              kWakeTimestampNs2, ThreadStateSlice::kNotApplicable, 0, 0,
+              ThreadStateSlice::kWaitingForCallstack)),
+          ThreadStateSliceEq(MakeThreadStateSlice(
+              kTid1, ThreadStateSlice::kRunnable, kStopTimestampNs - kWakeTimestampNs2,
+              kStopTimestampNs, ThreadStateSlice::kUnblocked, kTid2, kPid1,
+              ThreadStateSlice::kWaitingForCallstack))));
 }
 
 }  // namespace orbit_linux_tracing
