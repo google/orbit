@@ -222,6 +222,31 @@ TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsWithChainedInfo) {
                                                            0x1800c26ed - 0x1800c2350)));
 }
 
+TEST(CoffFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols) {
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
+
+  auto coff_file = CreateObjectFile(file_path);
+  ASSERT_THAT(coff_file, HasNoError());
+  ASSERT_TRUE(coff_file.value()->IsCoff());
+
+  const auto fallback_symbols =
+      coff_file.value()->LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols();
+  ASSERT_THAT(fallback_symbols, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(fallback_symbols.value().symbol_infos().begin(),
+                                       fallback_symbols.value().symbol_infos().end());
+  ASSERT_EQ(symbol_infos.size(), 38);
+  EXPECT_THAT(symbol_infos.front(),
+              SymbolInfoEq("[function@0x62641000]", 0x62641000, 12));  // `pre_c_init`
+  EXPECT_THAT(symbol_infos.at(6),
+              SymbolInfoEq("[function@0x62641390]", 0x62641390, 1));  // `__gcc_deregister_frame`
+  EXPECT_THAT(symbol_infos.at(7), SymbolInfoEq("PrintHelloWorld", 0x626413a0, 27));
+  EXPECT_THAT(symbol_infos.at(8),
+              SymbolInfoEq("[function@0x626413c0]", 0x626413c0, 58));  // `__do_global_dtors`
+  EXPECT_THAT(symbol_infos.back(),
+              SymbolInfoEq("[function@0x62642300]", 0x62642300, 5));  // `register_frame_ctor`
+}
+
 TEST(CoffFile, GetFilePath) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
 

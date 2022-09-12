@@ -87,7 +87,7 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
   EXPECT_FALSE(symbols_result.has_value());
   EXPECT_THAT(symbols_result.error().message(),
-              "Unable to load symbols from .dynsym section, not even a single symbol of type "
+              "Unable to load symbols from .dynsym section: not even a single symbol of type "
               "function found.");
 }
 
@@ -180,6 +180,49 @@ TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromDebugFrame) {
                                        symbols_result.value().symbol_infos().end());
   // There is only one function, the `main` function.
   EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq("[function@0x1140]", 0x1140, 22)));
+}
+
+TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithoutDynsym) {
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "hello_world_elf";
+
+  auto elf_file = CreateObjectFile(file_path);
+  ASSERT_THAT(elf_file, HasNoError());
+  ASSERT_TRUE(elf_file.value()->IsElf());
+
+  const auto fallback_symbols =
+      elf_file.value()->LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols();
+  ASSERT_THAT(fallback_symbols, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(fallback_symbols.value().symbol_infos().begin(),
+                                       fallback_symbols.value().symbol_infos().end());
+  EXPECT_THAT(
+      symbol_infos,
+      testing::ElementsAre(SymbolInfoEq("[function@0x1050]", 0x1050, 43),  // `_start`
+                           SymbolInfoEq("[function@0x1020]", 0x1020, 32),  // no function, `.plt`
+                           SymbolInfoEq("[function@0x1040]", 0x1040, 8),  // no function, `.plt.got`
+                           SymbolInfoEq("[function@0x1135]", 0x1135, 35),   // `main`
+                           SymbolInfoEq("[function@0x1160]", 0x1160, 93),   // `__libc_csu_init`
+                           SymbolInfoEq("[function@0x11c0]", 0x11c0, 1)));  // `__libc_csu_fini`
+}
+
+TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithDynsym) {
+  const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
+
+  auto elf_file = CreateObjectFile(file_path);
+  ASSERT_THAT(elf_file, HasNoError());
+  ASSERT_TRUE(elf_file.value()->IsElf());
+
+  const auto fallback_symbols =
+      elf_file.value()->LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols();
+  ASSERT_THAT(fallback_symbols, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(fallback_symbols.value().symbol_infos().begin(),
+                                       fallback_symbols.value().symbol_infos().end());
+  EXPECT_THAT(symbol_infos,
+              testing::ElementsAre(
+                  SymbolInfoEq("PrintHelloWorld", 0x1110, 12),
+                  SymbolInfoEq("[function@0x1020]", 0x1020, 32),   // no function, `.plt`
+                  SymbolInfoEq("[function@0x1040]", 0x1040, 8)));  // no function, `.plt.got`
 }
 
 TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndImageSize) {

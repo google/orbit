@@ -5,6 +5,7 @@
 #include "ObjectUtils/CoffFile.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/Demangle/Demangle.h>
@@ -26,6 +27,7 @@ namespace orbit_object_utils {
 
 namespace {
 
+using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
 
@@ -34,21 +36,21 @@ class CoffFileImpl : public CoffFile {
   CoffFileImpl(std::filesystem::path file_path,
                llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
 
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] bool HasDebugSymbols() const override;
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromExportTable()
-      override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromExportTable() override;
   [[nodiscard]] bool HasExportTable() const override;
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
-  LoadExceptionTableEntriesAsSymbols() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadExceptionTableEntriesAsSymbols() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols()
+      override;
+
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetImageSize() const override;
-  [[nodiscard]] const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& GetObjectSegments()
-      const override;
+  [[nodiscard]] const std::vector<ModuleInfo::ObjectSegment>& GetObjectSegments() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
   [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
@@ -58,24 +60,30 @@ class CoffFileImpl : public CoffFile {
       const llvm::object::SymbolRef& symbol_ref);
   [[nodiscard]] std::optional<SymbolInfo> CreateSymbolInfo(
       const llvm::object::SymbolRef& symbol_ref);
-  std::vector<SymbolInfo> LoadDebugSymbolsFromCoffSymbolTable(
+  [[nodiscard]] std::vector<SymbolInfo> LoadDebugSymbolsFromCoffSymbolTable(
       const llvm::object::ObjectFile::symbol_iterator_range& symbol_range);
   void AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
                                    std::vector<SymbolInfo>* symbol_infos);
 
-  ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>> GetRuntimeFunctions();
-  ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*> GetPrimaryRuntimeFunction(
+  [[nodiscard]] ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>>
+  GetRuntimeFunctions();
+  [[nodiscard]] ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*> GetPrimaryRuntimeFunction(
       const llvm::Win64EH::RuntimeFunction* runtime_function);
   struct UnwindRange {
     uint64_t start;
     uint64_t end;
   };
-  ErrorMessageOr<std::vector<UnwindRange>> GetUnwindRanges();
+  [[nodiscard]] ErrorMessageOr<std::vector<UnwindRange>> GetUnwindRanges();
+
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromExportTableInternal(
+      const ErrorMessageOr<std::vector<UnwindRange>>& unwind_ranges_or_error);
+  [[nodiscard]] static ErrorMessageOr<ModuleSymbols> LoadExceptionTableEntriesAsSymbolsInternal(
+      const ErrorMessageOr<std::vector<UnwindRange>>& unwind_ranges_or_error);
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
-  std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections_;
+  std::vector<ModuleInfo::ObjectSegment> sections_;
 };
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
@@ -85,7 +93,7 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
 
   for (const llvm::object::SectionRef& section_ref : object_file_->sections()) {
     const llvm::object::coff_section* coff_section = object_file_->getCOFFSection(section_ref);
-    orbit_grpc_protos::ModuleInfo::ObjectSegment& object_segment = sections_.emplace_back();
+    ModuleInfo::ObjectSegment& object_segment = sections_.emplace_back();
     object_segment.set_offset_in_file(coff_section->PointerToRawData);
     object_segment.set_size_in_file(coff_section->SizeOfRawData);
     object_segment.set_address(object_file_->getImageBase() + coff_section->VirtualAddress);
@@ -371,17 +379,23 @@ bool CoffFileImpl::HasDebugSymbols() const {
   return false;
 }
 
-ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
-orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
+ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadSymbolsFromExportTable() {
+  return LoadSymbolsFromExportTableInternal(GetUnwindRanges());
+}
+
+ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadSymbolsFromExportTableInternal(
+    const ErrorMessageOr<std::vector<UnwindRange>>& unwind_ranges_or_error) {
+  static constexpr std::string_view kErrorMessagePrefix =
+      "Unable to load symbols from the Export Table: ";
   if (!HasExportTable()) {
-    return ErrorMessage("PE/COFF file does not have an Export Table.");
+    return ErrorMessage(
+        absl::StrCat(kErrorMessagePrefix, "PE/COFF file does not have an Export Table."));
   }
 
-  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
   if (!unwind_ranges_or_error.has_value()) {
     return ErrorMessage{
-        absl::StrFormat("Unable to assign sizes to symbols from the Export Table: %s",
-                        unwind_ranges_or_error.error().message())};
+        absl::StrFormat("%sUnable to assign sizes to symbols from the Export Table: %s",
+                        kErrorMessagePrefix, unwind_ranges_or_error.error().message())};
   }
   absl::flat_hash_map<uint64_t, uint64_t> unwind_range_start_to_size;
   for (const UnwindRange& unwind_range : unwind_ranges_or_error.value()) {
@@ -448,14 +462,13 @@ orbit_object_utils::CoffFileImpl::LoadSymbolsFromExportTable() {
   }
 
   if (module_symbols.symbol_infos_size() == 0) {
-    return ErrorMessage(
-        "Unable to load symbols from the Export Table: not even a single symbol was found.");
+    return ErrorMessage(absl::StrCat(kErrorMessagePrefix, "not even a single symbol was found."));
   }
 
   return module_symbols;
 }
 
-bool orbit_object_utils::CoffFileImpl::HasExportTable() const {
+bool CoffFileImpl::HasExportTable() const {
   return object_file_->getDataDirectory(llvm::COFF::DataDirectoryIndex::EXPORT_TABLE)
              ->RelativeVirtualAddress != 0;
 }
@@ -487,8 +500,7 @@ ErrorMessageOr<llvm::ArrayRef<llvm::Win64EH::RuntimeFunction>> CoffFileImpl::Get
       exception_table_bytes.size() / sizeof(llvm::Win64EH::RuntimeFunction)};
 }
 
-ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*>
-orbit_object_utils::CoffFileImpl::GetPrimaryRuntimeFunction(
+ErrorMessageOr<const llvm::Win64EH::RuntimeFunction*> CoffFileImpl::GetPrimaryRuntimeFunction(
     const llvm::Win64EH::RuntimeFunction* runtime_function) {
   const llvm::Win64EH::UnwindInfo* unwind_info{};
   while (true) {
@@ -646,11 +658,17 @@ ErrorMessageOr<std::vector<CoffFileImpl::UnwindRange>> CoffFileImpl::GetUnwindRa
   return unwind_ranges;
 }
 
-ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
-CoffFileImpl::LoadExceptionTableEntriesAsSymbols() {
-  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
+ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadExceptionTableEntriesAsSymbols() {
+  return LoadExceptionTableEntriesAsSymbolsInternal(GetUnwindRanges());
+}
+
+ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadExceptionTableEntriesAsSymbolsInternal(
+    const ErrorMessageOr<std::vector<UnwindRange>>& unwind_ranges_or_error) {
+  static constexpr std::string_view kErrorMessagePrefix =
+      "Unable to load unwind info ranges from the Exception Table: ";
   if (!unwind_ranges_or_error.has_value()) {
-    return unwind_ranges_or_error.error();
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, unwind_ranges_or_error.error().message())};
   }
 
   ModuleSymbols module_symbols;
@@ -662,7 +680,69 @@ CoffFileImpl::LoadExceptionTableEntriesAsSymbols() {
     symbol_info->set_address(unwind_range.start);
     symbol_info->set_size(unwind_range.end - unwind_range.start);
   }
+
+  if (module_symbols.symbol_infos().empty()) {
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, "not even a single address range found.")};
+  }
   return module_symbols;
+}
+
+ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols() {
+  static constexpr std::string_view kErrorMessagePrefix = "Unable to load fallback symbols: ";
+
+  ErrorMessageOr<std::vector<UnwindRange>> unwind_ranges_or_error = GetUnwindRanges();
+  if (!unwind_ranges_or_error.has_value()) {
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, unwind_ranges_or_error.error().message())};
+  }
+
+  ErrorMessageOr<ModuleSymbols> dynamic_linking_symbols =
+      LoadSymbolsFromExportTableInternal(unwind_ranges_or_error.value());
+  ErrorMessageOr<ModuleSymbols> unwind_ranges_as_symbols =
+      LoadExceptionTableEntriesAsSymbolsInternal(unwind_ranges_or_error.value());
+  if (!dynamic_linking_symbols.has_value() && !unwind_ranges_as_symbols.has_value()) {
+    return ErrorMessage{absl::StrFormat("%s1) %s 2) %s", kErrorMessagePrefix,
+                                        dynamic_linking_symbols.error().message(),
+                                        unwind_ranges_as_symbols.error().message())};
+  }
+  std::vector<SymbolInfo> fallback_symbols;
+
+  absl::flat_hash_set<uint64_t> dynamic_linking_addresses;
+  if (dynamic_linking_symbols.has_value()) {
+    for (SymbolInfo& symbol_info : *dynamic_linking_symbols.value().mutable_symbol_infos()) {
+      dynamic_linking_addresses.insert(symbol_info.address());
+      // Remember that the Export Table doesn't contain the size of symbols. For leaf functions,
+      // we couldn't extract the size from unwind information, so we had set it to zero. Let's set
+      // those zeros back to our placeholder, so that later we can deduce these sizes with
+      // DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol.
+      if (symbol_info.size() == 0) {
+        symbol_info.set_size(SymbolsFile::kUnknownSymbolSize);
+      }
+      fallback_symbols.emplace_back(std::move(symbol_info));
+    }
+  }
+
+  if (unwind_ranges_as_symbols.has_value()) {
+    for (SymbolInfo& symbol_info : *unwind_ranges_as_symbols.value().mutable_symbol_infos()) {
+      if (dynamic_linking_addresses.contains(symbol_info.address())) {
+        continue;
+      }
+      fallback_symbols.emplace_back(std::move(symbol_info));
+    }
+  }
+
+  // NOTE: If an exported leaf function (for which we set the size to kUnknownSymbolSize, see above)
+  // is followed by a non-exported leaf function, the non-exported leaf function won't appear in our
+  // symbols (it doesn't have a RUNTIME_FUNCTION), and the size deduced for the exported leaf
+  // function will include the non-exported one. This is not ideal, but we have to accept it.
+  DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&fallback_symbols);
+
+  ModuleSymbols fallback_module_symbols;
+  for (SymbolInfo& symbol_info : fallback_symbols) {
+    *fallback_module_symbols.add_symbol_infos() = std::move(symbol_info);
+  }
+  return fallback_module_symbols;
 }
 
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
@@ -681,8 +761,7 @@ uint64_t CoffFileImpl::GetImageSize() const {
   return object_file_->getPE32PlusHeader()->SizeOfImage;
 }
 
-const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
-orbit_object_utils::CoffFileImpl::GetObjectSegments() const {
+const std::vector<ModuleInfo::ObjectSegment>& CoffFileImpl::GetObjectSegments() const {
   return sections_;
 }
 
