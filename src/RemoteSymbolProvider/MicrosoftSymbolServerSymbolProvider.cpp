@@ -46,6 +46,8 @@ MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
           [save_file_path = std::move(save_file_path)](CanceledOr<NotFoundOr<void>> download_result)
               -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
             if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
+            // TODO(b/245522908): Change to return NotFound as soon as SymbolProvider supports
+            // SymbolLoadingOutcome
             if (orbit_base::IsNotFound(orbit_base::GetNotCanceled(download_result))) {
               return ErrorMessage{"Symbols not found in Microsoft symbol server"};
             }

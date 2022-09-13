@@ -12,8 +12,6 @@
 #include <QIODevice>
 #include <QObject>
 #include <QProcess>
-#include <QRegularExpression>
-#include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
@@ -234,32 +232,29 @@ Future<ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>> ClientImpl::GetSymbolDown
             [](ErrorMessageOr<QByteArray> call_ggp_result)
                 -> ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>> {
               if (call_ggp_result.has_error()) {
-                // When symbols are not found or some other errors occur (e.g., invalid input for
-                // the ggp call), orbit_qt_utils::ExecuteProcess returns the error message in the
-                // format of "Error occurred while executing process \"<process_description>\",
-                // error: <error>,\nstdout:\n<standard_output>\nstderr:\n<standard_error>\n".
-                QString error_msg = QString::fromStdString(call_ggp_result.error().message());
-                QRegularExpression errorRegex("stderr:\n(.+)\n");
-                QRegularExpressionMatch errorMatch = errorRegex.match(QString(error_msg));
-
-                if (!errorMatch.hasMatch()) return ErrorMessage{call_ggp_result.error().message()};
-
-                std::string call_ggp_stderr = errorMatch.captured(1).toStdString();
-                // If symbols are not found, the stderr should always contains the following string.
-                const std::string kNotFoundString = "some debug symbol files are missing";
-                if (absl::StrContains(call_ggp_stderr, kNotFoundString)) {
-                  return orbit_base::NotFound("");
+                if (absl::StrContains(call_ggp_result.error().message(),
+                                      "some debug symbol files are missing")) {
+                  return orbit_base::NotFound{"Symbols not found in Stadia symbol store"};
                 }
 
-                return ErrorMessage{call_ggp_stderr};
+                return ErrorMessage{call_ggp_result.error().message()};
               }
 
               ErrorMessageOr<std::vector<SymbolDownloadInfo>> parse_result =
                   SymbolDownloadInfo::GetListFromJson(call_ggp_result.value());
-              if (parse_result.has_error()) return ErrorMessage{parse_result.error().message()};
+              if (parse_result.has_error()) {
+                return ErrorMessage{
+                    absl::StrFormat("Failed to parse symbol download info JSON object: %s",
+                                    parse_result.error().message())};
+              }
               // We query a single module for each ggp call. If succeeds, the parse result should
               // always contain a single SymbolDownloadInfo.
-              ORBIT_CHECK(parse_result.value().size() == 1);
+              if (parse_result.value().size() != 1) {
+                return ErrorMessage{
+                    absl::StrFormat("Unexpected parsing result of symbol download info JSON "
+                                    "object: expected 1 symbol download info but actually get %d",
+                                    parse_result.value().size())};
+              }
               return {std::move(parse_result.value().front())};
             });
 }

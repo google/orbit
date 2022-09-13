@@ -40,13 +40,13 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
   orbit_ggp::Client::SymbolDownloadQuery query = {module_path.filename().string(),
                                                   module_id.build_id};
 
-  // TODO(b/245920841): Client::GetSymbolDownloadInfoAsync should support returning ErrorMessage and
-  // NotFound.
   return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(query).ThenIfSuccess(
       main_thread_executor_.get(),
       [this, module_file_path = module_id.file_path, stop_token = std::move(stop_token)](
           const NotFoundOr<SymbolDownloadInfo>& call_ggp_result) mutable
       -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+        // TODO(b/245522908): Change to return NotFound as soon as SymbolProvider supports
+        // SymbolLoadingOutcome
         if (orbit_base::IsNotFound(call_ggp_result)) {
           return ErrorMessage{"Symbols not found in Stadia symbol store"};
         }
