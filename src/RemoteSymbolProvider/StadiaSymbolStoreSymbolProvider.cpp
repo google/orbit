@@ -14,6 +14,8 @@
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
+using orbit_ggp::SymbolDownloadInfo;
 
 namespace orbit_remote_symbol_provider {
 
@@ -35,26 +37,29 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
     const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
   std::filesystem::path module_path(module_id.file_path);
-  std::vector<orbit_ggp::Client::SymbolDownloadQuery> queries = {
-      {module_path.filename().string(), module_id.build_id}};
+  orbit_ggp::Client::SymbolDownloadQuery query = {module_path.filename().string(),
+                                                  module_id.build_id};
 
-  // TODO(b/245920841): Client::GetSymbolDownloadInfoAsync should support returning ErrorMessage and
-  // NotFound.
-  return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(queries).ThenIfSuccess(
+  return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(query).ThenIfSuccess(
       main_thread_executor_.get(),
       [this, module_file_path = module_id.file_path, stop_token = std::move(stop_token)](
-          const std::vector<orbit_ggp::SymbolDownloadInfo>& download_info) mutable
+          const NotFoundOr<SymbolDownloadInfo>& call_ggp_result) mutable
       -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-        if (download_info.empty()) return ErrorMessage{"No symbol download info returned."};
+        // TODO(b/245522908): Change to return NotFound as soon as SymbolProvider supports
+        // SymbolLoadingOutcome
+        if (orbit_base::IsNotFound(call_ggp_result)) {
+          return ErrorMessage{"Symbols not found in Stadia symbol store"};
+        }
 
-        std::string url = download_info.front().url.toStdString();
+        SymbolDownloadInfo download_info = orbit_base::GetFound(call_ggp_result);
+        std::string url = download_info.url.toStdString();
         std::filesystem::path save_file_path =
             symbol_cache_->GenerateCachedFilePath(module_file_path);
         return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
             .ThenIfSuccess(
                 main_thread_executor_.get(),
-                [save_file_path = std::move(save_file_path)](
-                    CanceledOr<orbit_base::NotFoundOr<void>> download_result)
+                [save_file_path =
+                     std::move(save_file_path)](CanceledOr<NotFoundOr<void>> download_result)
                     -> CanceledOr<std::filesystem::path> {
                   if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
 

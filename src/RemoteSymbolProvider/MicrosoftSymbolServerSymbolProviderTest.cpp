@@ -13,7 +13,6 @@
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "OrbitGgp/MockClient.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
 #include "Symbols/MockSymbolCache.h"
@@ -25,8 +24,6 @@ namespace {
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::NotFoundOr;
-using orbit_ggp::SymbolDownloadInfo;
-using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 using orbit_symbol_provider::ModuleIdentifier;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;

@@ -39,7 +39,6 @@ const std::string kValidModuleBuildId{"ABCD12345678"};
 const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
                                       kValidModuleBuildId};
 
-const std::string kSymbolsNotFoundMsg{"Symbols not found"};
 const std::string kFailedToDownloadMsg{"Failed to download"};
 const std::string kGgpTimeoutMsg{"Timeout"};
 
@@ -59,23 +58,20 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
   void SetUpGgpClient(GgpClientState ggp_client_state) {
     EXPECT_CALL(ggp_client_, GetSymbolDownloadInfoAsync(_))
         .Times(1)
-        .WillOnce([ggp_client_state](const std::vector<SymbolDownloadQuery>& download_queries)
-                      -> Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> {
-          // Stadia symbol provider queries only one module each time when making the ggp call.
-          ORBIT_CHECK(download_queries.size() == 1);
-
+        .WillOnce([ggp_client_state](const SymbolDownloadQuery& download_query)
+                      -> Future<ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>> {
           if (ggp_client_state == GgpClientState::kTimeout) return {ErrorMessage{kGgpTimeoutMsg}};
 
-          if (download_queries.front().module_name != kValidModuleName ||
-              download_queries.front().build_id != kValidModuleBuildId) {
-            return {ErrorMessage{kSymbolsNotFoundMsg}};
+          if (download_query.module_name != kValidModuleName ||
+              download_query.build_id != kValidModuleBuildId) {
+            return {orbit_base::NotFound{""}};
           }
 
           SymbolDownloadInfo download_info;
           download_info.file_id = QString::fromStdString(
               absl::StrFormat("symbolFiles/%s/%s", kValidModuleBuildId, kValidModuleName));
           download_info.url = "valid_url_for_symbol";
-          return {std::vector<SymbolDownloadInfo>{download_info}};
+          return {download_info};
         });
   }
 
@@ -169,7 +165,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
       .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError(kSymbolsNotFoundMsg));
+        EXPECT_THAT(result, HasError("not found"));
 
         QCoreApplication::exit();
       });

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Account.h"
 #include "OrbitGgp/Instance.h"
@@ -56,8 +57,9 @@ class Client {
     std::string module_name;
     std::string build_id;
   };
-  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>
-  GetSymbolDownloadInfoAsync(const std::vector<SymbolDownloadQuery>& symbol_download_queries) = 0;
+  [[nodiscard]] virtual orbit_base::Future<
+      ErrorMessageOr<orbit_base::NotFoundOr<SymbolDownloadInfo>>>
+  GetSymbolDownloadInfoAsync(const SymbolDownloadQuery& symbol_download_query) = 0;
 };
 
 [[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();

@@ -14,6 +14,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Account.h"
 #include "OrbitGgp/Client.h"
@@ -26,7 +27,10 @@
 namespace orbit_ggp {
 
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
+using orbit_ggp::SymbolDownloadInfo;
 using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 using testing::ElementsAre;
@@ -367,15 +371,46 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"},
-                                                              {"symbol_filename_2", "build_id_2"}};
-  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
+  auto future = client.value()->GetSymbolDownloadInfoAsync({"symbol_filename_0", "build_id_0"});
   future.Then(main_thread_executor_.get(),
-              [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
-                EXPECT_THAT(
-                    symbols,
-                    HasValue(ElementsAre(FieldsAre("symbolFiles/build_id_0/symbol_filename_0",
-                                                   "valid_url_for_symbol_0"))));
+              [](const ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>& query_result) {
+                EXPECT_THAT(query_result, HasNoError());
+                EXPECT_FALSE(orbit_base::IsNotFound(query_result.value()));
+                const auto symbol_download_info = orbit_base::GetFound(query_result.value());
+                EXPECT_EQ(symbol_download_info.file_id, "symbolFiles/build_id_0/symbol_filename_0");
+                EXPECT_EQ(symbol_download_info.url, "valid_url_for_symbol_0");
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncNotFound) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  auto future = client.value()->GetSymbolDownloadInfoAsync({"not_found_filename", "build_id_0"});
+  future.Then(main_thread_executor_.get(),
+              [](const ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>& query_result) {
+                EXPECT_THAT(query_result, HasNoError());
+                EXPECT_TRUE(orbit_base::IsNotFound(query_result.value()));
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncError) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  auto future =
+      client.value()->GetSymbolDownloadInfoAsync({"not_found_filename", "invalid_build_id"});
+  future.Then(main_thread_executor_.get(),
+              [](const ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>& query_result) {
+                EXPECT_THAT(query_result,
+                            HasError("incorrectly formatted build ID \"invalid_build_id\": "
+                                     "encoding/hex: odd length hex string"));
                 QCoreApplication::exit();
               });
 
@@ -388,14 +423,13 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncTimeout) {
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
-  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"}};
-  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
+  auto future = client.value()->GetSymbolDownloadInfoAsync({"symbol_filename_0", "build_id_0"});
   future.Then(main_thread_executor_.get(),
-              [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
-                EXPECT_THAT(symbols,
+              [](const ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>& query_result) {
+                EXPECT_THAT(query_result,
                             HasError("OrbitMockGgpWorking crash-report download-symbols -s "
                                      "--show-url --module build_id_0/symbol_filename_0"));
-                EXPECT_THAT(symbols, HasError("timed out after 5ms"));
+                EXPECT_THAT(query_result, HasError("timed out after 5ms"));
                 QCoreApplication::exit();
               });
 
@@ -403,24 +437,22 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncTimeout) {
 }
 
 TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncClientGetsDestroyed) {
-  Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> future =
-      Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>{ErrorMessage{"Empty Error Message"}};
+  Future<ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>> future = {
+      ErrorMessage{"Empty Error Message"}};
   {
     ErrorMessageOr<std::unique_ptr<Client>> client =
         CreateClient(QString::fromStdString(mock_ggp_working_.string()));
     ASSERT_THAT(client, HasValue());
 
-    std::vector<SymbolDownloadQuery> symbol_download_queries = {
-        {"symbol_filename_0", "build_id_0"}};
-    future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
-    future.Then(main_thread_executor_.get(),
-                [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
-                  EXPECT_THAT(symbols,
-                              HasError("OrbitMockGgpWorking crash-report download-symbols -s "
-                                       "--show-url --module build_id_0/symbol_filename_0"));
-                  EXPECT_THAT(symbols, HasError("killed because the parent object was destroyed"));
-                  QCoreApplication::exit();
-                });
+    future = client.value()->GetSymbolDownloadInfoAsync({"symbol_filename_0", "build_id_0"});
+    future.Then(
+        main_thread_executor_.get(),
+        [](const ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>& query_result) {
+          EXPECT_THAT(query_result, HasError("OrbitMockGgpWorking crash-report download-symbols -s "
+                                             "--show-url --module build_id_0/symbol_filename_0"));
+          EXPECT_THAT(query_result, HasError("killed because the parent object was destroyed"));
+          QCoreApplication::exit();
+        });
   }
 
   QCoreApplication::exec();

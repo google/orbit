@@ -5,6 +5,7 @@
 #include "OrbitGgp/Client.h"
 
 #include <absl/flags/flag.h>
+#include <absl/strings/match.h>
 #include <absl/time/time.h>
 
 #include <QByteArray>
@@ -23,6 +24,7 @@
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
@@ -54,6 +56,7 @@ orbit_base::Future<ErrorMessageOr<T>> RetryTask(
 namespace orbit_ggp {
 
 using orbit_base::Future;
+using orbit_base::NotFoundOr;
 
 class ClientImpl : public Client, public QObject {
  public:
@@ -74,8 +77,8 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
   Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
   Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() override;
-  Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> GetSymbolDownloadInfoAsync(
-      const std::vector<SymbolDownloadQuery>& symbol_download_queries) override;
+  Future<ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>> GetSymbolDownloadInfoAsync(
+      const SymbolDownloadQuery& symbol_download_query) override;
 
  private:
   const QString ggp_program_;
@@ -212,23 +215,48 @@ Future<ErrorMessageOr<Account>> ClientImpl::GetDefaultAccountAsync() {
       });
 }
 
-Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> ClientImpl::GetSymbolDownloadInfoAsync(
-    const std::vector<SymbolDownloadQuery>& symbol_download_queries) {
-  QStringList arguments{"crash-report", "download-symbols", "-s", "--show-url"};
-
-  for (const auto& query : symbol_download_queries) {
-    arguments.push_back("--module");
-    arguments.push_back(QString("%1/%2")
-                            .arg(QString::fromStdString(query.build_id))
-                            .arg(QString::fromStdString(query.module_name)));
-  }
+Future<ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>>> ClientImpl::GetSymbolDownloadInfoAsync(
+    const SymbolDownloadQuery& symbol_download_query) {
+  QStringList arguments{"crash-report",
+                        "download-symbols",
+                        "-s",
+                        "--show-url",
+                        "--module",
+                        QString("%1/%2")
+                            .arg(QString::fromStdString(symbol_download_query.build_id))
+                            .arg(QString::fromStdString(symbol_download_query.module_name))};
 
   orbit_base::ImmediateExecutor executor;
   return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
-      .ThenIfSuccess(&executor,
-                     [](const QByteArray& json) -> ErrorMessageOr<std::vector<SymbolDownloadInfo>> {
-                       return SymbolDownloadInfo::GetListFromJson(json);
-                     });
+      .Then(&executor,
+            [](ErrorMessageOr<QByteArray> call_ggp_result)
+                -> ErrorMessageOr<NotFoundOr<SymbolDownloadInfo>> {
+              if (call_ggp_result.has_error()) {
+                if (absl::StrContains(call_ggp_result.error().message(),
+                                      "some debug symbol files are missing")) {
+                  return orbit_base::NotFound{"Symbols not found in Stadia symbol store"};
+                }
+
+                return ErrorMessage{call_ggp_result.error().message()};
+              }
+
+              ErrorMessageOr<std::vector<SymbolDownloadInfo>> parse_result =
+                  SymbolDownloadInfo::GetListFromJson(call_ggp_result.value());
+              if (parse_result.has_error()) {
+                return ErrorMessage{
+                    absl::StrFormat("Failed to parse symbol download info JSON object: %s",
+                                    parse_result.error().message())};
+              }
+              // We query a single module for each ggp call. If succeeds, the parse result should
+              // always contain a single SymbolDownloadInfo.
+              if (parse_result.value().size() != 1) {
+                return ErrorMessage{
+                    absl::StrFormat("Unexpected parsing result of symbol download info JSON "
+                                    "object: expected 1 symbol download info but actually get %d",
+                                    parse_result.value().size())};
+              }
+              return {std::move(parse_result.value().front())};
+            });
 }
 
 std::chrono::milliseconds GetClientDefaultTimeoutInMs() {

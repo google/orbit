@@ -12,6 +12,7 @@
 #include <optional>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 
@@ -36,9 +37,8 @@ class MockClient : public Client {
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<Instance>>, DescribeInstanceAsync,
               (const QString& /*instance_id*/), (override));
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<Account>>, GetDefaultAccountAsync, (), (override));
-  MOCK_METHOD(orbit_base::Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>,
-              GetSymbolDownloadInfoAsync, ((const std::vector<Client::SymbolDownloadQuery>&)),
-              (override));
+  MOCK_METHOD(orbit_base::Future<ErrorMessageOr<orbit_base::NotFoundOr<SymbolDownloadInfo>>>,
+              GetSymbolDownloadInfoAsync, ((const Client::SymbolDownloadQuery&)), (override));
 };
 }  // namespace orbit_ggp
 
