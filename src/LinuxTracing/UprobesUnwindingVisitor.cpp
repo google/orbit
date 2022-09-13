@@ -277,9 +277,6 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const SchedWakeupWithStackPerfEventData& event_data) {
-  if (event_data.data == nullptr) {
-    return;
-  }
   ThreadStateSliceCallstack thread_state_slice_callstack;
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.woken_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
@@ -295,10 +292,6 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const SchedSwitchWithStackPerfEventData& event_data) {
-  if (event_data.data == nullptr) {
-    return;
-  }
-
   ThreadStateSliceCallstack thread_state_slice_callstack;
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);

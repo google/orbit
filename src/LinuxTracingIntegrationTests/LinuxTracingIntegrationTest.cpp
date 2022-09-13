@@ -439,7 +439,7 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSliceCallstack:
-        // TODO(b/243515756): Add test for scheduling trace points with callstacks
+        // TODO(b/243515756): Add test for scheduling tracepoints with callstacks
         ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         ORBIT_UNREACHABLE();

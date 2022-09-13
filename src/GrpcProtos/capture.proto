@@ -439,7 +439,7 @@ message ThreadStateSliceCallstack {
   // tracepoint events, that needs further processing outside of
   // UprobesUnwindingVisitor.
   // These callstacks will be merged with the events produced by the
-  // SchwitchesStatesNamesVisitor within ProducerEventProcessor, where they'll
+  // SwitchesStatesNamesVisitor within ProducerEventProcessor, where they'll
   // go through the same de-duplication as the callstacks from sampling.
   uint32 thread_state_slice_tid = 1;
   Callstack callstack = 2;

@@ -14,7 +14,7 @@ class TracerListener {
   virtual ~TracerListener() = default;
   virtual void OnSchedulingSlice(orbit_grpc_protos::SchedulingSlice scheduling_slice) = 0;
   virtual void OnCallstackSample(orbit_grpc_protos::FullCallstackSample callstack_sample) = 0;
-  // TODO(kuebler): Make this pure virtual and add implementations. This is up in the next PR.
+  // TODO(b/235554760): Make this pure virtual and add implementations.
   virtual void OnThreadStateSliceCallstack(
       orbit_grpc_protos::ThreadStateSliceCallstack /*callstack*/) {}
   virtual void OnFunctionCall(orbit_grpc_protos::FunctionCall function_call) = 0;
