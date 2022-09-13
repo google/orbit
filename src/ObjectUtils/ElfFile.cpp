@@ -480,6 +480,10 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
       address += eh_frame_address;
     }
 
+    // Note that the DWARF specification says: "If the range of code addresses for a function is not
+    // contiguous, there may be multiple CIEs and FDEs corresponding to the parts of that function."
+    // In such a case, we will produce a separate symbol for each range, but there is not much we
+    // can do about it.
     SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
     // We assign an arbitrary function name, as we want a non-empty and unique name in many places.
     symbol_info->set_demangled_name(absl::StrFormat("[function@%#x]", address));
