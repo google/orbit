@@ -219,7 +219,7 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
 
 template <typename StackPerfEventDataT>
 bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
-                                          Callstack* callstack) {
+                                          Callstack* resulting_callstack) {
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
@@ -238,6 +238,13 @@ bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
     }
   }
 
+  // There might be rare cases where the callstack's pid is "-1". This happens on callstacks on
+  // "sched out" switches where the thread exits. This is not a big problem for unwinding, as
+  // the process id is only used to read from the process' memory as a fallback to the collected
+  // stack slice. When actually attempting to read from pid "-1" we will produce an unwinding error.
+  // But this is not likely to happen.
+  // TODO(b/246519821) It would be possible to retrieve the information from
+  //  SwitchesStatesNamesVisitor::GetPidOfTid, but this requires major refactoring.
   LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event_data.GetCallstackPidOrMinusOne(), current_maps_->Get(),
                         event_data.GetRegistersAsArray(), stack_slices);
@@ -249,13 +256,13 @@ bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
     return false;
   }
 
-  callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
+  resulting_callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     SendFullAddressInfoToListener(libunwindstack_frame);
-    callstack->add_pcs(libunwindstack_frame.pc);
+    resulting_callstack->add_pcs(libunwindstack_frame.pc);
   }
 
-  ORBIT_CHECK(!callstack->pcs().empty());
+  ORBIT_CHECK(!resulting_callstack->pcs().empty());
   return true;
 }
 
@@ -295,6 +302,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   ThreadStateSliceCallstack thread_state_slice_callstack;
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
+
   bool const success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack());
 
   if (!success) {
