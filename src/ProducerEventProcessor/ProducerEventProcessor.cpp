@@ -687,6 +687,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kThreadStateSlice:
       ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
       break;
+    case ProducerCaptureEvent::kThreadStateSliceCallstack:
+      // TODO(b/235554760): Merge callstacks with the thread state slices.
+      break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
       break;

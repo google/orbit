@@ -82,6 +82,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   }
 
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const SchedWakeupWithStackPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const SchedSwitchWithStackPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const CallchainSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UprobesPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UprobesWithStackPerfEventData& event_data) override;
@@ -116,6 +120,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
 
   void SendFullAddressInfoToListener(const unwindstack::FrameData& libunwindstack_frame);
+
+  template <typename StackPerfEventDataT>
+  bool UnwindStack(const StackPerfEventDataT& event,
+                   orbit_grpc_protos::Callstack* resulting_callstack);
 
   TracerListener* listener_;
 
