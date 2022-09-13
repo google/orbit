@@ -238,7 +238,7 @@ int GgpCrashReport(int argc, char* argv[]) {
    "fileId": "symbolFiles/build_id_1/symbol_filename_1"
   })"}};
 
-  int queried_module_count = 0;
+  size_t queried_module_count = 0;
   std::vector<std::string> symbols_to_output;
   for (auto i = 5; i < argc;) {
     if (std::string_view{argv[i]} != "--module") {
