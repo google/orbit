@@ -16,6 +16,8 @@ using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::NotFoundOr;
 using orbit_ggp::SymbolDownloadInfo;
+using orbit_symbol_provider::SymbolLoadingOutcome;
+using orbit_symbol_provider::SymbolLoadingSuccessResult;
 
 namespace orbit_remote_symbol_provider {
 
@@ -31,24 +33,19 @@ StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
   ORBIT_CHECK(ggp_client != nullptr);
 }
 
-// TODO(b/245522908): Treat NotFound as error message now. We will better handle the NotFound case
-// when changing symbol provider to return SymbolLoadingOutcome.
-Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
-StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
+Future<SymbolLoadingOutcome> StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
     const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
   std::filesystem::path module_path(module_id.file_path);
-  orbit_ggp::Client::SymbolDownloadQuery query = {module_path.filename().string(),
-                                                  module_id.build_id};
+  auto call_ggp_future = ggp_client_->GetSymbolDownloadInfoAsync(
+      {module_path.filename().string(), module_id.build_id});
 
-  return orbit_base::UnwrapFuture(ggp_client_->GetSymbolDownloadInfoAsync(query).ThenIfSuccess(
+  return orbit_base::UnwrapFuture(call_ggp_future.ThenIfSuccess(
       main_thread_executor_.get(),
       [this, module_file_path = module_id.file_path, stop_token = std::move(stop_token)](
           const NotFoundOr<SymbolDownloadInfo>& call_ggp_result) mutable
-      -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-        // TODO(b/245522908): Change to return NotFound as soon as SymbolProvider supports
-        // SymbolLoadingOutcome
+      -> Future<SymbolLoadingOutcome> {
         if (orbit_base::IsNotFound(call_ggp_result)) {
-          return ErrorMessage{"Symbols not found in Stadia symbol store"};
+          return {orbit_base::NotFound{"Symbols not found in Stadia symbol store"}};
         }
 
         SymbolDownloadInfo download_info = orbit_base::GetFound(call_ggp_result);
@@ -58,15 +55,16 @@ StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
         return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
             .ThenIfSuccess(
                 main_thread_executor_.get(),
-                [save_file_path =
-                     std::move(save_file_path)](CanceledOr<NotFoundOr<void>> download_result)
-                    -> CanceledOr<std::filesystem::path> {
+                [save_file_path = std::move(save_file_path)](
+                    CanceledOr<NotFoundOr<void>> download_result) -> SymbolLoadingOutcome {
                   if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
 
                   // If symbol not found in Stadia symbol store, no download url will be generated.
                   ORBIT_CHECK(!orbit_base::IsNotFound(orbit_base::GetNotCanceled(download_result)));
 
-                  return {save_file_path};
+                  return {SymbolLoadingSuccessResult{
+                      save_file_path, SymbolLoadingSuccessResult::SymbolSource::kStadiaSymbolStore,
+                      SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile}};
                 });
       }));
 }

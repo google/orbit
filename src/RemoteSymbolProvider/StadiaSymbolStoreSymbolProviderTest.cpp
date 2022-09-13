@@ -28,6 +28,8 @@ using orbit_base::NotFoundOr;
 using orbit_ggp::SymbolDownloadInfo;
 using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 using orbit_symbol_provider::ModuleIdentifier;
+using orbit_symbol_provider::SymbolLoadingOutcome;
+using orbit_symbol_provider::SymbolLoadingSuccessResult;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using ::testing::_;
@@ -113,11 +115,13 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleSuccess) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [this](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasNoError());
-        EXPECT_FALSE(IsCanceled(result.value()));
-        const auto& local_file_path = orbit_base::GetNotCanceled(result.value());
-        EXPECT_EQ(local_file_path, symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
+      .Then(executor_.get(), [this](const SymbolLoadingOutcome& result) {
+        ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
+        SymbolLoadingSuccessResult success_result = orbit_symbol_provider::GetSuccessResult(result);
+        EXPECT_EQ(success_result.path,
+                  symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
+        EXPECT_EQ(success_result.symbol_source,
+                  SymbolLoadingSuccessResult::SymbolSource::kStadiaSymbolStore);
 
         QCoreApplication::exit();
       });
@@ -133,9 +137,8 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleCanceled) {
   // case.
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasNoError());
-        EXPECT_TRUE(IsCanceled(result.value()));
+      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
+        EXPECT_TRUE(orbit_symbol_provider::IsCanceled(result));
 
         QCoreApplication::exit();
       });
@@ -149,7 +152,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleDownloadError) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
+      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
         EXPECT_THAT(result, HasError(kFailedToDownloadMsg));
 
         QCoreApplication::exit();
@@ -164,8 +167,10 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
   const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
-        EXPECT_THAT(result, HasError("not found"));
+      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
+        ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));
+        EXPECT_EQ(orbit_symbol_provider::GetNotFoundMessage(result),
+                  "Symbols not found in Stadia symbol store");
 
         QCoreApplication::exit();
       });
@@ -178,7 +183,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleTimeout) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [](ErrorMessageOr<CanceledOr<std::filesystem::path>> result) {
+      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
         EXPECT_THAT(result, HasError(kGgpTimeoutMsg));
 
         QCoreApplication::exit();

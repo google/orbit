@@ -8,6 +8,7 @@
 #include "Http/DownloadManager.h"
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"
 
@@ -19,9 +20,9 @@ class StadiaSymbolStoreSymbolProvider : public orbit_symbol_provider::SymbolProv
                                            orbit_http::DownloadManager* download_manager,
                                            orbit_ggp::Client* ggp_client);
 
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                  orbit_base::StopToken stop_token) override;
+  [[nodiscard]] orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> RetrieveSymbols(
+      const orbit_symbol_provider::ModuleIdentifier& module_id,
+      orbit_base::StopToken stop_token) override;
 
  private:
   orbit_symbols::SymbolCacheInterface* symbol_cache_;
