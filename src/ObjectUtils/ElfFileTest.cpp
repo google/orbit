@@ -35,6 +35,7 @@ TEST(ElfFile, LoadDebugSymbols) {
   ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
+  EXPECT_TRUE(elf_file->HasDebugSymbols());
   const auto symbols_result = elf_file->LoadDebugSymbols();
   ASSERT_THAT(symbols_result, HasNoError());
 
@@ -53,6 +54,27 @@ TEST(ElfFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_info.size(), 45);
 }
 
+TEST(ElfFile, HasDebugSymbols) {
+  {
+    const std::filesystem::path elf_with_symbols_path =
+        orbit_test::GetTestdataDir() / "hello_world_elf";
+
+    auto elf_with_symbols = CreateElfFile(elf_with_symbols_path);
+    ASSERT_THAT(elf_with_symbols, HasNoError());
+
+    EXPECT_TRUE(elf_with_symbols.value()->HasDebugSymbols());
+  }
+  {
+    const std::filesystem::path elf_without_symbols_path =
+        orbit_test::GetTestdataDir() / "no_symbols_elf";
+
+    auto elf_without_symbols = CreateElfFile(elf_without_symbols_path);
+    ASSERT_THAT(elf_without_symbols, HasNoError());
+
+    EXPECT_FALSE(elf_without_symbols.value()->HasDebugSymbols());
+  }
+}
+
 TEST(ElfFile, LoadSymbolsFromDynsymFails) {
   std::filesystem::path file_path =
       orbit_test::GetTestdataDir() / "hello_world_elf_with_debug_info";
@@ -61,6 +83,7 @@ TEST(ElfFile, LoadSymbolsFromDynsymFails) {
   ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
+  EXPECT_TRUE(elf_file->HasDynsym());
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
   EXPECT_FALSE(symbols_result.has_value());
   EXPECT_THAT(symbols_result.error().message(),
@@ -77,17 +100,86 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
+  EXPECT_TRUE(elf_file->HasDynsym());
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
   ASSERT_THAT(symbols_result, HasNoError());
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 8);
+  ASSERT_EQ(symbol_infos.size(), 8);
 
   SymbolInfo& symbol_info = symbol_infos[7];
   EXPECT_EQ(symbol_info.demangled_name(), "UseTestLib");
   EXPECT_EQ(symbol_info.address(), 0x2670);
   EXPECT_EQ(symbol_info.size(), 591);
+}
+
+TEST(ElfFile, HasDynsym) {
+  {
+    const std::filesystem::path shared_object_path =
+        orbit_test::GetTestdataDir() / "libtest-1.0.so";
+
+    auto shared_object = CreateElfFile(shared_object_path);
+    ASSERT_THAT(shared_object, HasNoError());
+
+    EXPECT_TRUE(shared_object.value()->HasDynsym());
+  }
+  {
+    const std::filesystem::path static_elf_path =
+        orbit_test::GetTestdataDir() / "hello_world_static_elf";
+
+    auto static_elf = CreateElfFile(static_elf_path);
+    ASSERT_THAT(static_elf, HasNoError());
+
+    EXPECT_FALSE(static_elf.value()->HasDynsym());
+  }
+}
+
+static ::testing::Matcher<SymbolInfo> SymbolInfoEq(std::string_view demangled_name,
+                                                   uint64_t address, uint64_t size) {
+  return testing::AllOf(
+      testing::Property("demangled_name", &SymbolInfo::demangled_name, demangled_name),
+      testing::Property("address", &SymbolInfo::address, address),
+      testing::Property("size", &SymbolInfo::size, size));
+}
+
+TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromEhFrame) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "hello_world_elf";
+
+  auto elf_file_result = CreateElfFile(file_path);
+  ASSERT_THAT(elf_file_result, HasNoError());
+  const std::unique_ptr<ElfFile>& elf_file = elf_file_result.value();
+
+  const auto symbols_result = elf_file->LoadEhOrDebugFrameEntriesAsSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  // These can be obtained with `objdump hello_world_elf --dwarf=frames` looking at the FDE entries.
+  EXPECT_THAT(
+      symbol_infos,
+      testing::ElementsAre(SymbolInfoEq("[function@0x1050]", 0x1050, 43),  // `_start`
+                           SymbolInfoEq("[function@0x1020]", 0x1020, 32),  // no function, `.plt`
+                           SymbolInfoEq("[function@0x1040]", 0x1040, 8),  // no function, `.plt.got`
+                           SymbolInfoEq("[function@0x1135]", 0x1135, 35),   // `main`
+                           SymbolInfoEq("[function@0x1160]", 0x1160, 93),   // `__libc_csu_init`
+                           SymbolInfoEq("[function@0x11c0]", 0x11c0, 1)));  // `__libc_csu_fini`
+}
+
+TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromDebugFrame) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "debug_frame";
+
+  auto elf_file_result = CreateElfFile(file_path);
+  ASSERT_THAT(elf_file_result, HasNoError());
+  const std::unique_ptr<ElfFile>& elf_file = elf_file_result.value();
+
+  const auto symbols_result = elf_file->LoadEhOrDebugFrameEntriesAsSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                       symbols_result.value().symbol_infos().end());
+  // There is only one function, the `main` function.
+  EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq("[function@0x1140]", 0x1140, 22)));
 }
 
 TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndImageSize) {
@@ -180,23 +272,6 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
       HasError(absl::StrFormat(
           "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
           test_elf_file.string())));
-}
-
-TEST(ElfFile, HasDebugSymbols) {
-  const std::filesystem::path elf_with_symbols_path =
-      orbit_test::GetTestdataDir() / "hello_world_elf";
-  const std::filesystem::path elf_without_symbols_path =
-      orbit_test::GetTestdataDir() / "no_symbols_elf";
-
-  auto elf_with_symbols = CreateElfFile(elf_with_symbols_path);
-  ASSERT_THAT(elf_with_symbols, HasNoError());
-
-  EXPECT_TRUE(elf_with_symbols.value()->HasDebugSymbols());
-
-  auto elf_without_symbols = CreateElfFile(elf_without_symbols_path);
-  ASSERT_THAT(elf_without_symbols, HasNoError());
-
-  EXPECT_FALSE(elf_without_symbols.value()->HasDebugSymbols());
 }
 
 TEST(ElfFile, GetBuildId) {

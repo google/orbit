@@ -15,6 +15,7 @@
 #include <llvm/DebugInfo/DWARF/DWARFCompileUnit.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugAranges.h>
+#include <llvm/DebugInfo/DWARF/DWARFDebugFrame.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugLine.h>
 #include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
 #include <llvm/DebugInfo/Symbolize/SymbolizableModule.h>
@@ -63,14 +64,16 @@ class ElfFileImpl : public ElfFile {
 
   // Loads symbols from the .symtab section.
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDebugSymbols() override;
+  [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
+  [[nodiscard]] bool HasDynsym() const override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadEhOrDebugFrameEntriesAsSymbols() override;
+
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetImageSize() const override;
   [[nodiscard]] const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& GetObjectSegments()
       const override;
-  [[nodiscard]] bool HasDebugSymbols() const override;
-  [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
   [[nodiscard]] bool HasGnuDebuglink() const override;
   [[nodiscard]] bool Is64Bit() const override;
@@ -412,6 +415,81 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
     return ErrorMessage(
         "Unable to load symbols from .dynsym section, not even a single symbol of type function "
         "found.");
+  }
+  return module_symbols;
+}
+
+template <typename ElfT>
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
+  const std::unique_ptr<llvm::DWARFContext> dwarf_context =
+      llvm::DWARFContext::create(*object_file_);
+  constexpr const char* kErrorMessage =
+      "Unable to load unwind info ranges from the .debug_frame or the .eh_frame section.";
+  if (dwarf_context == nullptr) {
+    return ErrorMessage{kErrorMessage};
+  }
+
+  const llvm::DWARFDebugFrame* debug_or_eh_frame = nullptr;
+  bool is_eh_frame = false;
+
+  // Try .debug_frame first, since it contains the most specific unwind information.
+  if (llvm::Expected<const llvm::DWARFDebugFrame*> debug_frame = dwarf_context->getDebugFrame();
+      debug_frame && !(*debug_frame)->empty()) {
+    debug_or_eh_frame = *debug_frame;
+  } else if (llvm::Expected<const llvm::DWARFDebugFrame*> eh_frame = dwarf_context->getEHFrame();
+             eh_frame && !(*eh_frame)->empty()) {
+    debug_or_eh_frame = *eh_frame;
+    is_eh_frame = true;
+  } else {
+    return ErrorMessage{kErrorMessage};
+  }
+  ORBIT_CHECK(debug_or_eh_frame != nullptr);
+
+  // TODO(b/244411070): This is no longer necessary from LLVM 13, which fixed
+  //  https://bugs.llvm.org/show_bug.cgi?id=46414 with https://reviews.llvm.org/D100328.
+  uint64_t eh_frame_address{};
+  if (is_eh_frame && debug_or_eh_frame->getEHFrameAddress() == 0) {
+    for (const llvm::object::SectionRef& section : object_file_->sections()) {
+      llvm::Expected<llvm::StringRef> section_name = section.getName();
+      if (!section_name) continue;
+      // LLVM applies this logic to remove prefixes of section names before matching them to known
+      // section names, so we do the same.
+      std::string section_name_without_prefix = section_name->str();
+      if (size_t prefix_start = section_name_without_prefix.find_first_not_of("._z");
+          prefix_start < section_name_without_prefix.size()) {
+        section_name_without_prefix = section_name_without_prefix.substr(prefix_start);
+      }
+      if (section_name_without_prefix == "eh_frame") {
+        eh_frame_address = section.getAddress();
+        break;
+      }
+    }
+  }
+
+  ModuleSymbols module_symbols;
+  for (const llvm::dwarf::FrameEntry& entry : *debug_or_eh_frame) {
+    // We are only interested in Frame Descriptor Entries (skip Common Information Entries).
+    if (entry.getKind() != llvm::dwarf::FrameEntry::FK_FDE) continue;
+    const auto& fde = static_cast<const llvm::dwarf::FDE&>(entry);
+
+    uint64_t address = fde.getInitialLocation();
+    // TODO(b/244411070): This is no longer necessary from LLVM 13, which fixed
+    //  https://bugs.llvm.org/show_bug.cgi?id=46414 with https://reviews.llvm.org/D100328.
+    if (is_eh_frame && debug_or_eh_frame->getEHFrameAddress() == 0 &&
+        (fde.getLinkedCIE()->getFDEPointerEncoding() & 0x70) == llvm::dwarf::DW_EH_PE_pcrel) {
+      address += eh_frame_address;
+    }
+
+    // Note that the DWARF specification says: "If the range of code addresses for a function is not
+    // contiguous, there may be multiple CIEs and FDEs corresponding to the parts of that function."
+    // In such a case, we will produce a separate symbol for each range, but there is not much we
+    // can do about it.
+    SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+    // We assign an arbitrary function name, as we want a non-empty and unique name in many places.
+    symbol_info->set_demangled_name(absl::StrFormat("[function@%#x]", address));
+    symbol_info->set_address(address);
+    symbol_info->set_size(fde.getAddressRange());
   }
   return module_symbols;
 }
