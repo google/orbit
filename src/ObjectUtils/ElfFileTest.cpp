@@ -55,20 +55,24 @@ TEST(ElfFile, LoadDebugSymbols) {
 }
 
 TEST(ElfFile, HasDebugSymbols) {
-  const std::filesystem::path elf_with_symbols_path =
-      orbit_test::GetTestdataDir() / "hello_world_elf";
-  const std::filesystem::path elf_without_symbols_path =
-      orbit_test::GetTestdataDir() / "no_symbols_elf";
+  {
+    const std::filesystem::path elf_with_symbols_path =
+        orbit_test::GetTestdataDir() / "hello_world_elf";
 
-  auto elf_with_symbols = CreateElfFile(elf_with_symbols_path);
-  ASSERT_THAT(elf_with_symbols, HasNoError());
+    auto elf_with_symbols = CreateElfFile(elf_with_symbols_path);
+    ASSERT_THAT(elf_with_symbols, HasNoError());
 
-  EXPECT_TRUE(elf_with_symbols.value()->HasDebugSymbols());
+    EXPECT_TRUE(elf_with_symbols.value()->HasDebugSymbols());
+  }
+  {
+    const std::filesystem::path elf_without_symbols_path =
+        orbit_test::GetTestdataDir() / "no_symbols_elf";
 
-  auto elf_without_symbols = CreateElfFile(elf_without_symbols_path);
-  ASSERT_THAT(elf_without_symbols, HasNoError());
+    auto elf_without_symbols = CreateElfFile(elf_without_symbols_path);
+    ASSERT_THAT(elf_without_symbols, HasNoError());
 
-  EXPECT_FALSE(elf_without_symbols.value()->HasDebugSymbols());
+    EXPECT_FALSE(elf_without_symbols.value()->HasDebugSymbols());
+  }
 }
 
 TEST(ElfFile, LoadSymbolsFromDynsymFails) {
