@@ -239,7 +239,7 @@ bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
   }
 
   LibunwindstackResult libunwindstack_result =
-      unwinder_->Unwind(event_data.GetCallstackPid(), current_maps_->Get(),
+      unwinder_->Unwind(event_data.GetCallstackPidOrMinusOne(), current_maps_->Get(),
                         event_data.GetRegistersAsArray(), stack_slices);
 
   if (libunwindstack_result.frames().empty()) {
