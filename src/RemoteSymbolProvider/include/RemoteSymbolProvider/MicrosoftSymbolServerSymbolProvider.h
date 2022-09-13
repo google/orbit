@@ -7,6 +7,7 @@
 
 #include "Http/HttpDownloadManager.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"
 
@@ -17,9 +18,9 @@ class MicrosoftSymbolServerSymbolProvider : public orbit_symbol_provider::Symbol
   explicit MicrosoftSymbolServerSymbolProvider(orbit_symbols::SymbolCacheInterface* symbol_cache,
                                                orbit_http::DownloadManager* download_manager);
 
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                  orbit_base::StopToken stop_token) override;
+  [[nodiscard]] orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> RetrieveSymbols(
+      const orbit_symbol_provider::ModuleIdentifier& module_id,
+      orbit_base::StopToken stop_token) override;
 
  private:
   [[nodiscard]] std::string GetDownloadUrl(

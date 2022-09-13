@@ -9,6 +9,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 
 namespace orbit_symbol_provider {
 
@@ -18,13 +19,8 @@ class SymbolProvider {
  public:
   virtual ~SymbolProvider() = default;
 
-  // Retrieve symbols for the provided module from the SymbolProvider's symbol source. Return:
-  // - A local file path if successfully retrieve symbols;
-  // - A Canceled if the retrieve operation is canceled via the stop_token;
-  // - An ErrorMassage if symbols are not found or error occurs while retrieving symbols.
-  [[nodiscard]] virtual orbit_base::Future<
-      ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveSymbols(const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) = 0;
+  [[nodiscard]] virtual orbit_base::Future<SymbolLoadingOutcome> RetrieveSymbols(
+      const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) = 0;
 };
 
 }  // namespace orbit_symbol_provider
