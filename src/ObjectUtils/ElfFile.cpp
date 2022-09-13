@@ -512,13 +512,14 @@ ElfFileImpl<ElfT>::LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols() {
                                         dynamic_linking_symbols.error().message(),
                                         unwind_ranges_as_symbols.error().message())};
   }
-  ModuleSymbols fallback_symbols;
+  ModuleSymbols dynamic_linking_symbols_and_unwind_ranges_as_symbols;
 
   absl::flat_hash_set<uint64_t> dynamic_linking_addresses;
   if (dynamic_linking_symbols.has_value()) {
     for (SymbolInfo& symbol_info : *dynamic_linking_symbols.value().mutable_symbol_infos()) {
       dynamic_linking_addresses.insert(symbol_info.address());
-      *fallback_symbols.add_symbol_infos() = std::move(symbol_info);
+      *dynamic_linking_symbols_and_unwind_ranges_as_symbols.add_symbol_infos() =
+          std::move(symbol_info);
     }
   }
 
@@ -527,11 +528,12 @@ ElfFileImpl<ElfT>::LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols() {
       if (dynamic_linking_addresses.contains(symbol_info.address())) {
         continue;
       }
-      *fallback_symbols.add_symbol_infos() = std::move(symbol_info);
+      *dynamic_linking_symbols_and_unwind_ranges_as_symbols.add_symbol_infos() =
+          std::move(symbol_info);
     }
   }
 
-  return fallback_symbols;
+  return dynamic_linking_symbols_and_unwind_ranges_as_symbols;
 }
 
 template <typename ElfT>

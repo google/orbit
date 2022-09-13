@@ -706,7 +706,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDynamicLinkingSymbolsAndUnwindRa
                                         dynamic_linking_symbols.error().message(),
                                         unwind_ranges_as_symbols.error().message())};
   }
-  std::vector<SymbolInfo> fallback_symbols;
+  std::vector<SymbolInfo> dynamic_linking_symbols_and_unwind_ranges_as_symbols;
 
   absl::flat_hash_set<uint64_t> dynamic_linking_addresses;
   if (dynamic_linking_symbols.has_value()) {
@@ -719,7 +719,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDynamicLinkingSymbolsAndUnwindRa
       if (symbol_info.size() == 0) {
         symbol_info.set_size(SymbolsFile::kUnknownSymbolSize);
       }
-      fallback_symbols.emplace_back(std::move(symbol_info));
+      dynamic_linking_symbols_and_unwind_ranges_as_symbols.emplace_back(std::move(symbol_info));
     }
   }
 
@@ -728,7 +728,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDynamicLinkingSymbolsAndUnwindRa
       if (dynamic_linking_addresses.contains(symbol_info.address())) {
         continue;
       }
-      fallback_symbols.emplace_back(std::move(symbol_info));
+      dynamic_linking_symbols_and_unwind_ranges_as_symbols.emplace_back(std::move(symbol_info));
     }
   }
 
@@ -736,13 +736,14 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDynamicLinkingSymbolsAndUnwindRa
   // is followed by a non-exported leaf function, the non-exported leaf function won't appear in our
   // symbols (it doesn't have a RUNTIME_FUNCTION), and the size deduced for the exported leaf
   // function will include the non-exported one. This is not ideal, but we have to accept it.
-  DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(&fallback_symbols);
+  DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(
+      &dynamic_linking_symbols_and_unwind_ranges_as_symbols);
 
-  ModuleSymbols fallback_module_symbols;
-  for (SymbolInfo& symbol_info : fallback_symbols) {
-    *fallback_module_symbols.add_symbol_infos() = std::move(symbol_info);
+  ModuleSymbols resulting_module_symbols;
+  for (SymbolInfo& symbol_info : dynamic_linking_symbols_and_unwind_ranges_as_symbols) {
+    *resulting_module_symbols.add_symbol_infos() = std::move(symbol_info);
   }
-  return fallback_module_symbols;
+  return resulting_module_symbols;
 }
 
 const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_path_; }
