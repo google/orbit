@@ -455,8 +455,8 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
       // LLVM applies this logic to remove prefixes of section names before matching them to known
       // section names, so we do the same.
       std::string section_name_without_prefix = section_name->str();
-      size_t prefix_start = section_name_without_prefix.find_first_not_of("._z");
-      if (prefix_start < section_name_without_prefix.size()) {
+      if (size_t prefix_start = section_name_without_prefix.find_first_not_of("._z");
+          prefix_start < section_name_without_prefix.size()) {
         section_name_without_prefix = section_name_without_prefix.substr(prefix_start);
       }
       if (section_name_without_prefix == "eh_frame") {
