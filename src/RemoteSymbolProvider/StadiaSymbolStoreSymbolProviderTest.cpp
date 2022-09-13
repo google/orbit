@@ -116,7 +116,7 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleSuccess) {
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
       .Then(executor_.get(), [this](const SymbolLoadingOutcome& result) {
-        EXPECT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
+        ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         SymbolLoadingSuccessResult success_result = orbit_symbol_provider::GetSuccessResult(result);
         EXPECT_EQ(success_result.path,
                   symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
@@ -168,7 +168,9 @@ TEST_F(StadiaSymbolStoreSymbolProviderTest, RetrieveModuleNotFound) {
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
       .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
-        EXPECT_TRUE(orbit_symbol_provider::IsNotFound(result));
+        ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));
+        EXPECT_EQ(orbit_symbol_provider::GetNotFoundMessage(result),
+                  "Symbols not found in Stadia symbol store");
 
         QCoreApplication::exit();
       });
