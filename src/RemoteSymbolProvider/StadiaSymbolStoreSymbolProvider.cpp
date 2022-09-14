@@ -7,10 +7,9 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 
-#include "OrbitBase/File.h"
-#include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;
@@ -34,7 +33,8 @@ StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
 }
 
 Future<SymbolLoadingOutcome> StadiaSymbolStoreSymbolProvider::RetrieveSymbols(
-    const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
+    const orbit_symbol_provider::ModuleIdentifier& module_id,
+    orbit_base::StopToken stop_token) const {
   std::filesystem::path module_path(module_id.file_path);
   auto call_ggp_future = ggp_client_->GetSymbolDownloadInfoAsync(
       {module_path.filename().string(), module_id.build_id});
