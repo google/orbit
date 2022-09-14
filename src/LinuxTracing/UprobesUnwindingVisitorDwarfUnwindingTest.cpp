@@ -182,7 +182,7 @@ class UprobesUnwindingVisitorDwarfUnwindingTestBase : public ::testing::Test {
       sizeof(perf_event_sample_regs_user_sp) / sizeof(uint64_t);
 };
 
-template <typename PerfEventAndFullCallstackProtoTypePair>
+template <typename>
 class UprobesUnwindingVisitorDwarfUnwindingTest
     : public UprobesUnwindingVisitorDwarfUnwindingTestBase {};
 
