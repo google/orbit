@@ -1820,6 +1820,5 @@ using TestTypes = ::testing::Types<
                            orbit_grpc_protos::ThreadStateSliceCallstack>,
     DwarfUnwindingTestType<SchedSwitchWithStackPerfEvent,
                            orbit_grpc_protos::ThreadStateSliceCallstack>>;
-INSTANTIATE_TYPED_TEST_SUITE_P(UprobesUnwindingVisitorDwarfUnwindingTest,
-                               UprobesUnwindingVisitorDwarfUnwindingTest, TestTypes);
+INSTANTIATE_TYPED_TEST_SUITE_P(TypedTest, UprobesUnwindingVisitorDwarfUnwindingTest, TestTypes);
 }  // namespace orbit_linux_tracing
