@@ -1422,6 +1422,7 @@ TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
   thread_state_slice1->set_switch_out_or_wakeup_callstack_status(
       ThreadStateSlice::kWaitingForCallstack);
   thread_state_slice1->set_switch_out_or_wakeup_callstack_id(0);
+  ThreadStateSlice expected_thread_state_slice1 = *thread_state_slice1;
 
   ProducerCaptureEvent thread_state_slice_callstack_producer_event2;
   ThreadStateSliceCallstack* thread_state_slice_callstack2 =
@@ -1444,6 +1445,7 @@ TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
   thread_state_slice2->set_switch_out_or_wakeup_callstack_status(
       ThreadStateSlice::kWaitingForCallstack);
   thread_state_slice2->set_switch_out_or_wakeup_callstack_id(0);
+  ThreadStateSlice expected_thread_state_slice2 = *thread_state_slice2;
 
   std::vector<ClientCaptureEvent> actual_client_capture_events;
 
@@ -1459,6 +1461,13 @@ TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
         actual_client_capture_events.push_back(std::move(client_capture_event));
       }));
 
+  producer_event_processor->ProcessEvent(1,
+                                         std::move(thread_state_slice_callstack_producer_event1));
+  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event1));
+  producer_event_processor->ProcessEvent(1,
+                                         std::move(thread_state_slice_callstack_producer_event2));
+  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event2));
+
   InternedCallstack expected_interned_callstack;
   expected_interned_callstack.set_key(
       actual_callstack_key);  // We only care that the thread state slices have the same key
@@ -1467,22 +1476,12 @@ TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
   expected_interned_callstack.mutable_intern()->add_pcs(3);
   expected_interned_callstack.mutable_intern()->set_type(Callstack::kComplete);
 
-  ThreadStateSlice expected_thread_state_slice1 = *thread_state_slice1;
   expected_thread_state_slice1.set_switch_out_or_wakeup_callstack_status(
       ThreadStateSlice::kCallstackSet);
   expected_thread_state_slice1.set_switch_out_or_wakeup_callstack_id(actual_callstack_key);
-
-  ThreadStateSlice expected_thread_state_slice2 = *thread_state_slice2;
   expected_thread_state_slice2.set_switch_out_or_wakeup_callstack_status(
       ThreadStateSlice::kCallstackSet);
   expected_thread_state_slice2.set_switch_out_or_wakeup_callstack_id(actual_callstack_key);
-
-  producer_event_processor->ProcessEvent(1,
-                                         std::move(thread_state_slice_callstack_producer_event1));
-  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event1));
-  producer_event_processor->ProcessEvent(1,
-                                         std::move(thread_state_slice_callstack_producer_event2));
-  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event2));
 
   EXPECT_THAT(actual_client_capture_events,
               ElementsAre(ClientCaptureEventsInternedCallstackEq(expected_interned_callstack),
