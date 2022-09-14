@@ -125,16 +125,17 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   return directories;
 }
 
-static std::vector<std::unique_ptr<SymbolProvider>> FindStructuredDebugDirectorySymbolProviders() {
-  std::vector<std::unique_ptr<SymbolProvider>> providers;
+[[nodiscard]] static std::vector<StructuredDebugDirectorySymbolProvider>
+FindStructuredDebugDirectorySymbolProviders() {
+  std::vector<StructuredDebugDirectorySymbolProvider> providers;
 
   const char* const ggp_sdk_path = std::getenv("GGP_SDK_PATH");
   if (ggp_sdk_path != nullptr) {
     auto path = std::filesystem::path{ggp_sdk_path} / "sysroot" / "usr" / "lib" / "debug";
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
-          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk));
+      providers.emplace_back(
+          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
     }
   }
 
@@ -143,8 +144,8 @@ static std::vector<std::unique_ptr<SymbolProvider>> FindStructuredDebugDirectory
                 "lib" / "debug";
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
-          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk));
+      providers.emplace_back(
+          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
     }
   }
 
@@ -153,14 +154,26 @@ static std::vector<std::unique_ptr<SymbolProvider>> FindStructuredDebugDirectory
     std::filesystem::path path{"/usr/lib/debug"};
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
+      providers.emplace_back(
           path,
-          orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kUsrLibDebugDirectory));
+          orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kUsrLibDebugDirectory);
     }
   }
 #endif
 
   return providers;
+}
+
+// TODO(b/246743231): Remove this function when not needed anymore.
+[[nodiscard]] static std::vector<StructuredDebugDirectorySymbolProvider>
+CreateStructuredDebugDirectorySymbolProviders(std::vector<std::filesystem::path> paths) {
+  std::vector<StructuredDebugDirectorySymbolProvider> result;
+  result.reserve(paths.size());
+  for (const auto& path : paths) {
+    result.emplace_back(
+        path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
+  }
+  return result;
 }
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
@@ -193,6 +206,12 @@ SymbolHelper::SymbolHelper(fs::path cache_directory)
     : cache_directory_(std::move(cache_directory)),
       structured_debug_directory_providers_(FindStructuredDebugDirectorySymbolProviders()) {}
 
+SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
+                           std::vector<std::filesystem::path> structured_debug_directories)
+    : cache_directory_(std::move(cache_directory)),
+      structured_debug_directory_providers_(
+          CreateStructuredDebugDirectorySymbolProviders(structured_debug_directories)) {}
+
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, const std::string& build_id,
     const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) const {
@@ -205,11 +224,11 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
   // structured debug directories is only supported for elf files
   if (object_file_type == ModuleInfo::kElfFile) {
-    for (const std::unique_ptr<SymbolProvider>& provider : structured_debug_directory_providers_) {
+    for (const auto& provider : structured_debug_directory_providers_) {
       const ModuleIdentifier module_id{module_path.string(), build_id};
       const orbit_base::StopSource stop_source;
       orbit_base::Future<SymbolLoadingOutcome> future =
-          provider->RetrieveSymbols(module_id, stop_source.GetStopToken());
+          provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
 
       // TODO(antonrohr): This `.Get()` makes this asynchronous future operation a syncronous
       // operation. This is okay for now.

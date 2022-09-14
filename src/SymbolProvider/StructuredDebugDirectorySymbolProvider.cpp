@@ -6,6 +6,8 @@
 
 #include <absl/strings/str_format.h>
 
+#include <string_view>
+
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
@@ -14,12 +16,11 @@ namespace orbit_symbol_provider {
 
 orbit_base::Future<SymbolLoadingOutcome> StructuredDebugDirectorySymbolProvider::RetrieveSymbols(
     const ModuleIdentifier& module_id, orbit_base::StopToken /*stop_token*/) const {
-  const std::string& build_id = module_id.build_id;
-  return {FindSymbolFile(build_id)};
+  return {FindSymbolFile(module_id.build_id)};
 }
 
 [[nodiscard]] SymbolLoadingOutcome StructuredDebugDirectorySymbolProvider::FindSymbolFile(
-    const std::string& build_id) const {
+    std::string_view build_id) const {
   // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
   // generate a proper filename: build_id[0:2]/build_id[2:].debug
   if (build_id.size() < 3) {
@@ -33,7 +34,7 @@ orbit_base::Future<SymbolLoadingOutcome> StructuredDebugDirectorySymbolProvider:
 
   if (file_exists) {
     return SymbolLoadingSuccessResult(
-        full_file_path, symbol_source_,
+        std::move(full_file_path), symbol_source_,
         SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile);
   }
 

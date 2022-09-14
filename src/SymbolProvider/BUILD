@@ -15,6 +15,7 @@ orbit_cc_library(
     name = "SymbolProvider",
     deps = [
         "//src/OrbitBase",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -25,5 +26,6 @@ orbit_cc_test(
         "//src/OrbitBase",
         "//src/TestUtils",
         "@com_google_absl//absl/hash:hash_testing_no_google3",
+        "@com_google_absl//absl/strings",
     ],
 )

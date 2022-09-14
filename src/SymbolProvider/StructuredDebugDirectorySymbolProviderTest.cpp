@@ -40,16 +40,19 @@ TEST(StructuredDebugDirectorySymbolProvider, RetrieveSymbols) {
 
     bool lambda_executed = false;
     orbit_base::ImmediateExecutor executor;
-    future.Then(&executor, [&](const SymbolLoadingOutcome& result) {
-      ASSERT_THAT(result, HasValue());
-      ASSERT_TRUE(IsSuccessResult(result));
-      SymbolLoadingSuccessResult success_result = GetSuccessResult(result);
-      EXPECT_EQ(success_result.path, symbols_path);
-      EXPECT_EQ(success_result.symbol_file_separation,
-                SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile);
-      EXPECT_EQ(success_result.symbol_source, kSymbolSource);
-      lambda_executed = true;
-    });
+    future
+        .Then(&executor,
+              [&](const SymbolLoadingOutcome& result) {
+                ASSERT_THAT(result, HasValue());
+                ASSERT_TRUE(IsSuccessResult(result));
+                SymbolLoadingSuccessResult success_result = GetSuccessResult(result);
+                EXPECT_EQ(success_result.path, symbols_path);
+                EXPECT_EQ(success_result.symbol_file_separation,
+                          SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile);
+                EXPECT_EQ(success_result.symbol_source, kSymbolSource);
+                lambda_executed = true;
+              })
+        .Wait();
     EXPECT_TRUE(lambda_executed);
   }
 
@@ -63,13 +66,16 @@ TEST(StructuredDebugDirectorySymbolProvider, RetrieveSymbols) {
 
     bool lambda_executed = false;
     orbit_base::ImmediateExecutor executor;
-    future.Then(&executor, [&](const SymbolLoadingOutcome& result) {
-      ASSERT_THAT(result, HasValue());
-      ASSERT_TRUE(IsNotFound(result));
-      const std::string& not_found_message = GetNotFoundMessage(result);
-      EXPECT_TRUE(absl::StrContains(not_found_message, "File does not exist"));
-      lambda_executed = true;
-    });
+    future
+        .Then(&executor,
+              [&](const SymbolLoadingOutcome& result) {
+                ASSERT_THAT(result, HasValue());
+                ASSERT_TRUE(IsNotFound(result));
+                const std::string& not_found_message = GetNotFoundMessage(result);
+                EXPECT_TRUE(absl::StrContains(not_found_message, "File does not exist"));
+                lambda_executed = true;
+              })
+        .Wait();
     EXPECT_TRUE(lambda_executed);
   }
 
@@ -83,10 +89,13 @@ TEST(StructuredDebugDirectorySymbolProvider, RetrieveSymbols) {
 
     bool lambda_executed = false;
     orbit_base::ImmediateExecutor executor;
-    future.Then(&executor, [&](const SymbolLoadingOutcome& result) {
-      ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
-      lambda_executed = true;
-    });
+    future
+        .Then(&executor,
+              [&](const SymbolLoadingOutcome& result) {
+                ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
+                lambda_executed = true;
+              })
+        .Wait();
     EXPECT_TRUE(lambda_executed);
   }
 }

@@ -5,6 +5,8 @@
 #ifndef SYMBOL_PROVIDER_STRUCTURED_DEBUG_DIRECTORY_SYMBOL_PROVIDER_H_
 #define SYMBOL_PROVIDER_STRUCTURED_DEBUG_DIRECTORY_SYMBOL_PROVIDER_H_
 
+#include <string_view>
+
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
 #include "SymbolProvider/ModuleIdentifier.h"
@@ -25,7 +27,7 @@ class StructuredDebugDirectorySymbolProvider : public SymbolProvider {
       const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) const override;
 
  private:
-  [[nodiscard]] SymbolLoadingOutcome FindSymbolFile(const std::string& build_id) const;
+  [[nodiscard]] SymbolLoadingOutcome FindSymbolFile(std::string_view build_id) const;
 
   std::filesystem::path directory_;
   SymbolLoadingSuccessResult::SymbolSource symbol_source_;

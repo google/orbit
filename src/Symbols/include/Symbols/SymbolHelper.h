@@ -20,7 +20,7 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
-#include "SymbolProvider/SymbolProvider.h"
+#include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"
 
 namespace orbit_symbols {
@@ -29,10 +29,7 @@ class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
-                        std::vector<std::unique_ptr<orbit_symbol_provider::SymbolProvider>>
-                            structured_debug_directory_providers)
-      : cache_directory_(std::move(cache_directory)),
-        structured_debug_directory_providers_(std::move(structured_debug_directory_providers)){};
+                        std::vector<std::filesystem::path> structured_debug_directories);
 
   ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, const std::string& build_id,
@@ -65,7 +62,7 @@ class SymbolHelper : public SymbolCacheInterface {
 
   const std::filesystem::path cache_directory_;
   // TODO(b/246743231): Move this out of SymbolHelper in a next refactoring step.
-  std::vector<std::unique_ptr<orbit_symbol_provider::SymbolProvider>>
+  std::vector<orbit_symbol_provider::StructuredDebugDirectorySymbolProvider>
       structured_debug_directory_providers_;
 };
 
