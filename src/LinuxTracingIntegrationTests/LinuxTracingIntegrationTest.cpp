@@ -129,6 +129,11 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnThreadStateSliceCallstack(
+      orbit_grpc_protos::ThreadStateSliceCallstack /*thread_state_change_call_stack*/) override {
+    // TODO(b/243515756): Add test for OnThreadStateSliceCallstack
+  }
+
   void OnAddressInfo(orbit_grpc_protos::FullAddressInfo address_info) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_full_address_info() = std::move(address_info);

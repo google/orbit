@@ -62,12 +62,15 @@ using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::ThreadStateSliceCallstack;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using google::protobuf::util::MessageDifferencer;
 using ::testing::ElementsAre;
+using ::testing::ElementsAreArray;
+using ::testing::Invoke;
 using ::testing::SaveArg;
 
 namespace orbit_producer_event_processor {
@@ -1321,33 +1324,188 @@ TEST(ProducerEventProcessor, ThreadNameSmoke) {
   EXPECT_EQ(event.thread_name().name(), "Main Thread");
 }
 
+::testing::Matcher<ThreadStateSlice> ThreadStateSliceEq(const ThreadStateSlice& expected) {
+  return ::testing::AllOf(
+      ::testing::Property("tid", &ThreadStateSlice::tid, expected.tid()),
+      ::testing::Property("thread_state", &ThreadStateSlice::thread_state, expected.thread_state()),
+      ::testing::Property("duration_ns", &ThreadStateSlice::duration_ns, expected.duration_ns()),
+      ::testing::Property("end_timestamp_ns", &ThreadStateSlice::end_timestamp_ns,
+                          expected.end_timestamp_ns()),
+      ::testing::Property("wakeup_reason", &ThreadStateSlice::wakeup_reason,
+                          expected.wakeup_reason()),
+      ::testing::Property("wakeup_tid", &ThreadStateSlice::wakeup_tid, expected.wakeup_tid()),
+      ::testing::Property("wakeup_pid", &ThreadStateSlice::wakeup_pid, expected.wakeup_pid()),
+      ::testing::Property("switch_out_or_wakeup_callstack_status",
+                          &ThreadStateSlice::switch_out_or_wakeup_callstack_status,
+                          expected.switch_out_or_wakeup_callstack_status()),
+      ::testing::Property("switch_out_or_wakeup_callstack_id",
+                          &ThreadStateSlice::switch_out_or_wakeup_callstack_id,
+                          expected.switch_out_or_wakeup_callstack_id()));
+}
+
+::testing::Matcher<Callstack> CallstackEq(const Callstack& expected) {
+  return ::testing::AllOf(
+      ::testing::Property("pcs", &Callstack::pcs, ElementsAreArray(expected.pcs())),
+      ::testing::Property("type", &Callstack::type, expected.type()));
+}
+
+::testing::Matcher<InternedCallstack> InternedCallstackEq(const InternedCallstack& expected) {
+  return ::testing::AllOf(
+      ::testing::Property("key", &InternedCallstack::key, expected.key()),
+      ::testing::Property("intern", &InternedCallstack::intern, CallstackEq(expected.intern())));
+}
+
+::testing::Matcher<ClientCaptureEvent> ClientCaptureEventsTheadStateSliceEq(
+    const ThreadStateSlice& expected_thread_state_slice) {
+  return ::testing::Property("thread_state_slice", &ClientCaptureEvent::thread_state_slice,
+                             ThreadStateSliceEq(expected_thread_state_slice));
+}
+
+::testing::Matcher<ClientCaptureEvent> ClientCaptureEventsInternedCallstackEq(
+    const InternedCallstack& expected_interned_callstack) {
+  return ::testing::Property("interned_callstack", &ClientCaptureEvent::interned_callstack,
+                             InternedCallstackEq(expected_interned_callstack));
+}
+
 TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
   ProducerCaptureEvent producer_event;
-  {
-    ThreadStateSlice* thread_state_slice = producer_event.mutable_thread_state_slice();
-    thread_state_slice->set_pid(kPid1);
-    thread_state_slice->set_tid(kTid1);
-    thread_state_slice->set_thread_state(ThreadStateSlice::kIdle);
-    thread_state_slice->set_duration_ns(kDurationNs1);
-    thread_state_slice->set_end_timestamp_ns(kTimestampNs1);
-  }
+  ThreadStateSlice* producer_thread_state_slice = producer_event.mutable_thread_state_slice();
+  producer_thread_state_slice->set_pid(kPid1);
+  producer_thread_state_slice->set_tid(kTid1);
+  producer_thread_state_slice->set_thread_state(ThreadStateSlice::kIdle);
+  producer_thread_state_slice->set_duration_ns(kDurationNs1);
+  producer_thread_state_slice->set_end_timestamp_ns(kTimestampNs1);
+  producer_thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kNoCallstack);
+  producer_thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
 
   ClientCaptureEvent event;
-
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
 
   producer_event_processor->ProcessEvent(1, std::move(producer_event));
 
   ASSERT_EQ(event.event_case(), ClientCaptureEvent::kThreadStateSlice);
-  const ThreadStateSlice& thread_state_slice = event.thread_state_slice();
-  EXPECT_EQ(thread_state_slice.pid(), kPid1);
-  EXPECT_EQ(thread_state_slice.tid(), kTid1);
-  EXPECT_EQ(thread_state_slice.thread_state(), ThreadStateSlice::kIdle);
-  EXPECT_EQ(thread_state_slice.duration_ns(), kDurationNs1);
-  EXPECT_EQ(thread_state_slice.end_timestamp_ns(), kTimestampNs1);
+  EXPECT_THAT(event, ClientCaptureEventsTheadStateSliceEq(*producer_thread_state_slice));
+}
+
+TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  constexpr uint64_t kCallstackFrame1 = 1;
+  constexpr uint64_t kCallstackFrame2 = 2;
+  constexpr uint64_t kCallstackFrame3 = 3;
+
+  ProducerCaptureEvent thread_state_slice_callstack_producer_event1;
+  ThreadStateSliceCallstack* thread_state_slice_callstack1 =
+      thread_state_slice_callstack_producer_event1.mutable_thread_state_slice_callstack();
+  thread_state_slice_callstack1->set_thread_state_slice_tid(kTid1);
+  thread_state_slice_callstack1->set_timestamp_ns(kTimestampNs1 - kDurationNs1);
+  Callstack* callstack1 = thread_state_slice_callstack1->mutable_callstack();
+  callstack1->add_pcs(kCallstackFrame1);
+  callstack1->add_pcs(kCallstackFrame2);
+  callstack1->add_pcs(kCallstackFrame3);
+
+  ProducerCaptureEvent thread_state_slice_producer_event1;
+  ThreadStateSlice* thread_state_slice1 =
+      thread_state_slice_producer_event1.mutable_thread_state_slice();
+  thread_state_slice1->set_pid(kPid1);
+  thread_state_slice1->set_tid(kTid1);
+  thread_state_slice1->set_thread_state(ThreadStateSlice::kRunnable);
+  thread_state_slice1->set_duration_ns(kDurationNs1);
+  thread_state_slice1->set_end_timestamp_ns(kTimestampNs1);
+  thread_state_slice1->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kWaitingForCallstack);
+  thread_state_slice1->set_switch_out_or_wakeup_callstack_id(0);
+
+  ProducerCaptureEvent thread_state_slice_callstack_producer_event2;
+  ThreadStateSliceCallstack* thread_state_slice_callstack2 =
+      thread_state_slice_callstack_producer_event2.mutable_thread_state_slice_callstack();
+  thread_state_slice_callstack2->set_thread_state_slice_tid(kTid2);
+  thread_state_slice_callstack2->set_timestamp_ns(kTimestampNs2 - kDurationNs2);
+  Callstack* callstack2 = thread_state_slice_callstack2->mutable_callstack();
+  callstack2->add_pcs(kCallstackFrame1);
+  callstack2->add_pcs(kCallstackFrame2);
+  callstack2->add_pcs(kCallstackFrame3);
+
+  ProducerCaptureEvent thread_state_slice_producer_event2;
+  ThreadStateSlice* thread_state_slice2 =
+      thread_state_slice_producer_event2.mutable_thread_state_slice();
+  thread_state_slice2->set_pid(kPid1);
+  thread_state_slice2->set_tid(kTid2);
+  thread_state_slice2->set_thread_state(ThreadStateSlice::kRunnable);
+  thread_state_slice2->set_duration_ns(kDurationNs2);
+  thread_state_slice2->set_end_timestamp_ns(kTimestampNs2);
+  thread_state_slice2->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kWaitingForCallstack);
+  thread_state_slice2->set_switch_out_or_wakeup_callstack_id(0);
+
+  std::vector<ClientCaptureEvent> actual_client_capture_events;
+
+  uint64_t actual_callstack_key = 0;
+  EXPECT_CALL(collector, AddEvent)
+      .Times(3)
+      .WillRepeatedly(Invoke([&actual_client_capture_events,
+                              &actual_callstack_key](ClientCaptureEvent&& client_capture_event) {
+        if (client_capture_event.has_interned_callstack()) {
+          ASSERT_EQ(actual_callstack_key, 0);
+          actual_callstack_key = client_capture_event.interned_callstack().key();
+        }
+        actual_client_capture_events.push_back(std::move(client_capture_event));
+      }));
+
+  producer_event_processor->ProcessEvent(1,
+                                         std::move(thread_state_slice_callstack_producer_event1));
+  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event1));
+  producer_event_processor->ProcessEvent(1,
+                                         std::move(thread_state_slice_callstack_producer_event2));
+  producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event2));
+
+  InternedCallstack expected_interned_callstack;
+  expected_interned_callstack.set_key(
+      actual_callstack_key);  // We only care that the thread state slices have the same key
+  expected_interned_callstack.mutable_intern()->add_pcs(1);
+  expected_interned_callstack.mutable_intern()->add_pcs(2);
+  expected_interned_callstack.mutable_intern()->add_pcs(3);
+  expected_interned_callstack.mutable_intern()->set_type(Callstack::kComplete);
+
+  ThreadStateSlice expected_thread_state_slice1 = *thread_state_slice1;
+  expected_thread_state_slice1.set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kCallstackSet);
+  expected_thread_state_slice1.set_switch_out_or_wakeup_callstack_id(actual_callstack_key);
+
+  ThreadStateSlice expected_thread_state_slice2 = *thread_state_slice2;
+  expected_thread_state_slice2.set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kCallstackSet);
+  expected_thread_state_slice2.set_switch_out_or_wakeup_callstack_id(actual_callstack_key);
+
+  EXPECT_THAT(actual_client_capture_events,
+              ElementsAre(ClientCaptureEventsInternedCallstackEq(expected_interned_callstack),
+                          ClientCaptureEventsTheadStateSliceEq(expected_thread_state_slice1),
+                          ClientCaptureEventsTheadStateSliceEq(expected_thread_state_slice2)));
+}
+
+TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstackFailsWhenNoCallstackWasSeen) {
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  ProducerCaptureEvent thread_state_slice_producer_event;
+  ThreadStateSlice* thread_state_slice =
+      thread_state_slice_producer_event.mutable_thread_state_slice();
+  thread_state_slice->set_pid(kPid1);
+  thread_state_slice->set_tid(kTid1);
+  thread_state_slice->set_thread_state(ThreadStateSlice::kRunnable);
+  thread_state_slice->set_duration_ns(kDurationNs1);
+  thread_state_slice->set_end_timestamp_ns(kTimestampNs1);
+  thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kWaitingForCallstack);
+  thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
+
+  EXPECT_DEATH(
+      producer_event_processor->ProcessEvent(1, std::move(thread_state_slice_producer_event)), "");
 }
 
 TEST(ProducerEventProcessor, ModuleUpdateEventSmoke) {

@@ -53,6 +53,7 @@ using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
+using orbit_grpc_protos::ThreadStateSliceCallstack;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
@@ -150,10 +151,12 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
   void ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
       WarningInstrumentingWithUprobesEvent* warning_event);
+  void ProcessThreadStateSliceCallstackAndTransferOwnership(ThreadStateSliceCallstack* callstack);
   void ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
       WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event);
 
   void SendInternedStringEvent(uint64_t key, std::string value);
+  void MergeThreadStateSliceWithCallstack(ThreadStateSlice* thread_state_slice);
 
   ClientCaptureEventCollector* client_capture_event_collector_;
 
@@ -169,7 +172,56 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // <producer_id, producer_string_id> -> client_string_id
   absl::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t>
       producer_interned_string_id_to_client_string_id_;
+
+  // Needed to allow merging between call stacks and tracepoints, see design doc:
+  // go/stadia-orbit-tracepoint-callstack.
+  // NOTE: A thread state slice always gets constructed using two tracepoint events. It is always
+  // the begin tracepoint event that results in the ThreadStateSliceCallstack, so we will always
+  // see the ThreadStateSliceCallstack before we see the matching ThreadStateSlice. Thus, we do not
+  // need to save the thread state slices to be merged with a callstack later.
+  absl::flat_hash_map<std::pair<pid_t, uint64_t>, ThreadStateSliceCallstack>
+      thread_state_slice_tid_and_begin_timestamp_to_callstack_;
 };
+
+void ProducerEventProcessorImpl::MergeThreadStateSliceWithCallstack(
+    ThreadStateSlice* thread_state_slice) {
+  uint64_t begin_timestamp =
+      thread_state_slice->end_timestamp_ns() - thread_state_slice->duration_ns();
+  auto thread_state_slice_callstack_it =
+      thread_state_slice_tid_and_begin_timestamp_to_callstack_.find(
+          {thread_state_slice->tid(), begin_timestamp});
+
+  // Callstacks on thread state slices always origin from the tracepoint that corresponds to the
+  // slice's begin. Thus, if we see a thread state slice waiting for the callstack to be added,
+  // we know that we have already seen the corresponding callstack.
+  // Also, even if we were missing the end tracepoint, we are not leaking memory in our callstack
+  // map, the SwitchesStatesNamesVisitor takes care of that, and will eventually, create a
+  // thread state slice for that begin tracepoint (worst case at the end of profiling).
+  ORBIT_CHECK(thread_state_slice_callstack_it !=
+              thread_state_slice_tid_and_begin_timestamp_to_callstack_.end());
+
+  const Callstack& callstack = (*thread_state_slice_callstack_it).second.callstack();
+  std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
+      {callstack.pcs().begin(), callstack.pcs().end()}, callstack.type()};
+  auto [callstack_id, assigned] = callstack_pool_.GetOrAssignId(callstack_data);
+
+  if (assigned) {
+    ClientCaptureEvent interned_callstack_event;
+    interned_callstack_event.mutable_interned_callstack()->set_key(callstack_id);
+    interned_callstack_event.mutable_interned_callstack()->set_allocated_intern(
+        (*thread_state_slice_callstack_it).second.release_callstack());
+    client_capture_event_collector_->AddEvent(std::move(interned_callstack_event));
+  }
+
+  thread_state_slice_tid_and_begin_timestamp_to_callstack_.erase(thread_state_slice_callstack_it);
+
+  thread_state_slice->set_switch_out_or_wakeup_callstack_id(callstack_id);
+  thread_state_slice->set_switch_out_or_wakeup_callstack_status(ThreadStateSlice::kCallstackSet);
+
+  ClientCaptureEvent event;
+  event.set_allocated_thread_state_slice(thread_state_slice);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
 
 void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {
   ClientCaptureEvent event;
@@ -270,6 +322,11 @@ void ProducerEventProcessorImpl::ProcessCallstackSampleAndTransferOwnership(
 
 void ProducerEventProcessorImpl::ProcessCaptureFinishedAndTransferOwnership(
     CaptureFinished* capture_finished) {
+  if (!thread_state_slice_tid_and_begin_timestamp_to_callstack_.empty()) {
+    ORBIT_ERROR(
+        "There are cached callstacks for thread state slices left in the cache after the capture "
+        "finished.");
+  }
   ClientCaptureEvent event;
   event.set_allocated_capture_finished(capture_finished);
   client_capture_event_collector_->AddEvent(std::move(event));
@@ -536,9 +593,14 @@ void ProducerEventProcessorImpl::ProcessThreadNamesSnapshotAndTransferOwnership(
 
 void ProducerEventProcessorImpl::ProcessThreadStateSliceAndTransferOwnership(
     ThreadStateSlice* thread_state_slice) {
-  ClientCaptureEvent event;
-  event.set_allocated_thread_state_slice(thread_state_slice);
-  client_capture_event_collector_->AddEvent(std::move(event));
+  if (thread_state_slice->switch_out_or_wakeup_callstack_status() ==
+      ThreadStateSlice::kNoCallstack) {
+    ClientCaptureEvent event;
+    event.set_allocated_thread_state_slice(thread_state_slice);
+    client_capture_event_collector_->AddEvent(std::move(event));
+    return;
+  }
+  MergeThreadStateSliceWithCallstack(thread_state_slice);
 }
 
 void ProducerEventProcessorImpl::ProcessWarningEventAndTransferOwnership(
@@ -553,6 +615,12 @@ void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndT
   ClientCaptureEvent event;
   event.set_allocated_warning_instrumenting_with_uprobes_event(warning_event);
   client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessThreadStateSliceCallstackAndTransferOwnership(
+    ThreadStateSliceCallstack* callstack) {
+  thread_state_slice_tid_and_begin_timestamp_to_callstack_[{
+      callstack->thread_state_slice_tid(), callstack->timestamp_ns()}] = std::move(*callstack);
 }
 
 void ProducerEventProcessorImpl::
@@ -688,7 +756,8 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessThreadStateSliceAndTransferOwnership(event.release_thread_state_slice());
       break;
     case ProducerCaptureEvent::kThreadStateSliceCallstack:
-      // TODO(b/235554760): Merge callstacks with the thread state slices.
+      ProcessThreadStateSliceCallstackAndTransferOwnership(
+          event.release_thread_state_slice_callstack());
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
