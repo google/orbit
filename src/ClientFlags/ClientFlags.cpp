@@ -91,4 +91,4 @@ ABSL_FLAG(bool, time_range_selection, false, "Enable time range selection featur
 ABSL_FLAG(bool, tracepoint_callstack_collection, false,
           "Enable callstack gathering for tracepoints feature.");
 
-ABSL_FLAG(bool, symbol_store, false, "Enable symbol store feature.");
+ABSL_FLAG(bool, symbol_store_support, false, "Enable experimental symbol store support.");
