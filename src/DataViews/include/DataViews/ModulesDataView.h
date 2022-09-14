@@ -21,7 +21,7 @@ namespace orbit_data_views {
 class ModulesDataView : public DataView {
  public:
   explicit ModulesDataView(AppInterface* app,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool new_ui);
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -57,13 +57,6 @@ class ModulesDataView : public DataView {
   }
   [[nodiscard]] std::string GetSymbolLoadingStateForModuleString(
       const orbit_client_data::ModuleData* module);
-
-  // TODO(b/202140068) Remove this method when new ui is activated
-  [[nodiscard, deprecated]] DataView::ActionStatus OldUiGetActionStatus(
-      std::string_view action, int clicked_index, const std::vector<int>& selected_indices);
-
-  // TODO(b/202140068) remove when auto symbol loading is released
-  bool new_ui_;
 
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleInMemory>
       start_address_to_module_in_memory_;
