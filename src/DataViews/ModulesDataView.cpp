@@ -33,19 +33,14 @@ using orbit_client_data::ProcessData;
 namespace orbit_data_views {
 
 ModulesDataView::ModulesDataView(AppInterface* app,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                                 bool new_ui)
-    : DataView(DataViewType::kModules, app, metrics_uploader), new_ui_(new_ui) {}
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : DataView(DataViewType::kModules, app, metrics_uploader) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
-  static const std::vector<Column> columns = [this] {
+  static const std::vector<Column> columns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    if (new_ui_) {
-      columns[kColumnSymbols] = {"Symbols", .175f, SortingOrder::kDescending};
-    } else {
-      columns[kColumnSymbols] = {"Loaded", .0f, SortingOrder::kDescending};
-    }
+    columns[kColumnSymbols] = {"Symbols", .175f, SortingOrder::kDescending};
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
     columns[kColumnPath] = {"Path", .45f, SortingOrder::kAscending};
     columns[kColumnAddressRange] = {"Address Range", .075f, SortingOrder::kAscending};
@@ -66,12 +61,8 @@ std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
 
   switch (col) {
-    case kColumnSymbols: {
-      if (new_ui_) {
-        return GetSymbolLoadingStateForModuleString(module);
-      }
-      return module->is_loaded() ? "*" : "";
-    }
+    case kColumnSymbols:
+      return GetSymbolLoadingStateForModuleString(module);
     case kColumnName:
       return std::filesystem::path(module->file_path()).filename().string();
     case kColumnPath:
@@ -140,8 +131,6 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
     return ActionStatus::kInvisible;
   }
 
-  if (!new_ui_) return OldUiGetActionStatus(action, clicked_index, selected_indices);
-
   // transform selected_indices into modules
   std::vector<const ModuleData*> modules;
   modules.reserve(selected_indices.size());
@@ -190,28 +179,6 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
   }
 
   return DataView::GetActionStatus(action, clicked_index, selected_indices);
-}
-
-DataView::ActionStatus ModulesDataView::OldUiGetActionStatus(
-    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
-  if (action == kMenuActionStopDownload) return ActionStatus::kInvisible;
-
-  std::function<bool(const ModuleData*)> is_visible_action_enabled;
-  if (action == kMenuActionLoadSymbols) {
-    is_visible_action_enabled = [](const ModuleData* module) { return !module->is_loaded(); };
-
-  } else if (action == kMenuActionVerifyFramePointers) {
-    is_visible_action_enabled = [](const ModuleData* module) { return module->is_loaded(); };
-
-  } else {
-    return DataView::GetActionStatus(action, clicked_index, selected_indices);
-  }
-
-  for (int index : selected_indices) {
-    const ModuleData* module = GetModuleDataFromRow(index);
-    if (is_visible_action_enabled(module)) return ActionStatus::kVisibleAndEnabled;
-  }
-  return ActionStatus::kVisibleButDisabled;
 }
 
 void ModulesDataView::OnDoubleClicked(int index) {
@@ -286,21 +253,7 @@ void ModulesDataView::OnRefreshButtonClicked() {
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
   const ModuleData* module = GetModuleDataFromRow(row);
-
-  if (new_ui_) {
-    return app_->GetSymbolLoadingStateForModule(module).GetDisplayColor(red, green, blue);
-  }
-
-  if (module->is_loaded()) {
-    red = 42;
-    green = 218;
-    blue = 130;
-  } else {
-    red = 42;
-    green = 130;
-    blue = 218;
-  }
-  return true;
+  return app_->GetSymbolLoadingStateForModule(module).GetDisplayColor(red, green, blue);
 }
 
 }  // namespace orbit_data_views
