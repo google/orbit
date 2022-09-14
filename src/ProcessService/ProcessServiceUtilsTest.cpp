@@ -27,7 +27,6 @@
 
 namespace orbit_process_service {
 
-using Path = std::filesystem::path;
 using orbit_base::NotFoundOr;
 using orbit_grpc_protos::GetDebugInfoFileRequest;
 using orbit_test_utils::HasError;
@@ -69,10 +68,10 @@ TEST(ProcessServiceUtils, GetCumulativeCpuTimeFromProcess) {
 }
 
 TEST(ProcessServiceUtils, FindSymbolsFilePath) {
-  const Path test_directory = orbit_test::GetTestdataDir();
+  const std::filesystem::path test_directory = orbit_test::GetTestdataDir();
 
   {  // elf - same file
-    const Path module_path = test_directory / "hello_world_elf";
+    const std::filesystem::path module_path = test_directory / "hello_world_elf";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -84,7 +83,7 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // coff - same file (the coff file actually does not include a build id)
-    const Path module_path = test_directory / "libtest.dll";
+    const std::filesystem::path module_path = test_directory / "libtest.dll";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -96,8 +95,8 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // elf - separate file
-    const Path module_path = test_directory / "no_symbols_elf";
-    const Path symbols_path = test_directory / "no_symbols_elf.debug";
+    const std::filesystem::path module_path = test_directory / "no_symbols_elf";
+    const std::filesystem::path symbols_path = test_directory / "no_symbols_elf.debug";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -109,8 +108,8 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // coff/pdb - separate file
-    const Path module_path = test_directory / "dllmain.dll";
-    const Path symbols_path = test_directory / "dllmain.pdb";
+    const std::filesystem::path module_path = test_directory / "dllmain.dll";
+    const std::filesystem::path symbols_path = test_directory / "dllmain.pdb";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -122,7 +121,7 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // non existing module (elf_file)
-    const Path module_path = test_directory / "not_existing_file";
+    const std::filesystem::path module_path = test_directory / "not_existing_file";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -131,7 +130,7 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // elf - no build id, but does include symbols
-    const Path module_path = test_directory / "hello_world_elf_no_build_id";
+    const std::filesystem::path module_path = test_directory / "hello_world_elf_no_build_id";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
@@ -143,7 +142,7 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
   }
 
   {  // elf - no build id, no symbols
-    const Path module_path = test_directory / "no_symbols_no_build_id";
+    const std::filesystem::path module_path = test_directory / "no_symbols_no_build_id";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);

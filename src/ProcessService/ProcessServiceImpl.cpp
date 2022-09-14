@@ -48,13 +48,13 @@ Status ProcessServiceImpl::GetProcessList(ServerContext* /*context*/,
 
     const auto refresh_result = process_list_.Refresh();
     if (refresh_result.has_error()) {
-      return Status(StatusCode::INTERNAL, refresh_result.error().message());
+      return {StatusCode::INTERNAL, refresh_result.error().message()};
     }
   }
 
   const std::vector<ProcessInfo>& processes = process_list_.GetProcesses();
   if (processes.empty()) {
-    return Status(StatusCode::NOT_FOUND, "Error while getting processes.");
+    return {StatusCode::NOT_FOUND, "Error while getting processes."};
   }
 
   for (const auto& process_info : process_list_.GetProcesses()) {
@@ -72,7 +72,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
 
   const auto module_infos = orbit_module_utils::ReadModules(pid);
   if (module_infos.has_error()) {
-    return Status(StatusCode::NOT_FOUND, module_infos.error().message());
+    return {StatusCode::NOT_FOUND, module_infos.error().message()};
   }
 
   for (const auto& module_info : module_infos.value()) {
@@ -97,9 +97,9 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
   response->mutable_memory()->resize(0);
   ORBIT_ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
               request->address(), request->pid());
-  return Status(StatusCode::PERMISSION_DENIED,
-                absl::StrFormat("Could not read %lu bytes from address %#lx of process %u", size,
-                                request->address(), request->pid()));
+  return {StatusCode::PERMISSION_DENIED,
+          absl::StrFormat("Could not read %lu bytes from address %#lx of process %u", size,
+                          request->address(), request->pid())};
 }
 
 Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
@@ -110,7 +110,7 @@ Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
   const ErrorMessageOr<NotFoundOr<std::filesystem::path>>& find_result_or_error =
       FindSymbolsFilePath(*request);
   if (find_result_or_error.has_error()) {
-    return Status{StatusCode::UNKNOWN, find_result_or_error.error().message()};
+    return {StatusCode::UNKNOWN, find_result_or_error.error().message()};
   }
 
   const NotFoundOr<std::filesystem::path>& find_result = find_result_or_error.value();

@@ -150,7 +150,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
   ORBIT_SCOPE_FUNCTION;
   auto symbols_file_or_error = CreateSymbolsFile(symbols_path, ObjectFileInfo());
   if (symbols_file_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\", error: %s",
+    return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\": %s",
                                         symbols_path.string(),
                                         symbols_file_or_error.error().message()));
   }
@@ -159,7 +159,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 
   if (symbols_file->GetBuildId().empty()) {
     return ErrorMessage(
-        absl::StrFormat("Symbols file \"%s\" does not have a build id", symbols_path.string()));
+        absl::StrFormat("Symbols file \"%s\" does not have a build id.", symbols_path.string()));
   }
 
   if (symbols_file->GetBuildId() != build_id) {
@@ -181,7 +181,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   ORBIT_SCOPE_FUNCTION;
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
-        "Could not find symbols file for module \"%s\", because it does not contain a build id",
+        "Could not find symbols file for module \"%s\", because it does not contain a build id.",
         module_path.string()));
   }
 
@@ -220,7 +220,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
     const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
     if (verification_result.has_error()) {
-      ORBIT_LOG("Existing file \"%s\" is not the symbols file for module \"%s\", error: %s",
+      ORBIT_LOG("Existing file \"%s\" is not the symbols file for module \"%s\": %s",
                 symbols_path.string(), module_path.string(), verification_result.error().message());
       continue;
     }
@@ -327,12 +327,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& mo
                                                               Verifier&& verify) const {
   ORBIT_SCOPE_FUNCTION;
   fs::path cache_file_path = GenerateCachedFilePath(module_path);
-  std::error_code error;
   OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
-  if (error) {
-    return ErrorMessage{
-        absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
-  }
   if (!exists) {
     return ErrorMessage(
         absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
@@ -369,7 +364,7 @@ ErrorMessageOr<bool> FileStartsWithDeprecationNote(const std::filesystem::path& 
 ErrorMessageOr<void> AddDeprecationNoteToFile(const std::filesystem::path& file_name) {
   OUTCOME_TRY(auto&& already_contains_note, FileStartsWithDeprecationNote(file_name));
 
-  if (already_contains_note) return ErrorMessage("File already contains deprecation note");
+  if (already_contains_note) return ErrorMessage("File already contains a deprecation note.");
 
   OUTCOME_TRY(auto&& file_content, orbit_base::ReadFileToString(file_name));
 

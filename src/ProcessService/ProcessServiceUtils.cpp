@@ -316,7 +316,7 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
     if (symbols_file->GetBuildId() != build_id) {
       not_found_messages.push_back(absl::StrFormat(
           "Potential symbols file \"%s\" has a different build id than the module requested by "
-          "the client. \"%s\" != \"%s\"",
+          "the client: \"%s\" != \"%s\"",
           search_path, symbols_file->GetBuildId(), build_id));
       continue;
     }

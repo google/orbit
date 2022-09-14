@@ -48,7 +48,7 @@ class ModuleData final {
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;
 
   [[nodiscard]] bool is_loaded() const;
-  // Returns true of module was unloaded and false otherwise
+  // Returns true if the module was unloaded and false otherwise.
   [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);
   // This method does not update module_data in case it needs update and was not loaded.
   // returns true if update was successful or no update was needed and false if module
@@ -71,9 +71,9 @@ class ModuleData final {
   std::map<uint64_t, std::unique_ptr<FunctionInfo>> functions_;
   absl::flat_hash_map<std::string_view, FunctionInfo*> name_to_function_info_map_;
 
-  // TODO(b/168799822) This is a map of hash to function used for preset loading. Currently presets
-  // are based on a hash of the functions pretty name. This should be changed to not use hashes
-  // anymore.
+  // TODO(b/168799822): This is a map of hash to function used for preset loading. Currently,
+  // presets are based on a hash of the functions pretty name. This should be changed to not use
+  // hashes anymore.
   absl::flat_hash_map<uint64_t, FunctionInfo*> hash_to_function_map_;
 };
 
