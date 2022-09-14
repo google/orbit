@@ -528,22 +528,44 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UserSpaceFunctionEntryPerfEventData& event_data) {
-  function_call_manager_->ProcessFunctionEntry(event_data.tid, event_data.function_id,
-                                               event_timestamp, std::nullopt);
+  if (!tid_to_root_namespace_tid_.contains(event_data.tid)) {
+    ORBIT_ERROR(
+        "Recieved function entry event from unknown thread with tid %d. Dropping this event.",
+        event_data.tid);
+    return;
+  }
+  const pid_t tid = tid_to_root_namespace_tid_[event_data.tid];
 
-  return_address_manager_->ProcessFunctionEntry(event_data.tid, event_data.sp,
-                                                event_data.return_address);
+  function_call_manager_->ProcessFunctionEntry(tid, event_data.function_id, event_timestamp,
+                                               std::nullopt);
+
+  return_address_manager_->ProcessFunctionEntry(tid, event_data.sp, event_data.return_address);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UserSpaceFunctionExitPerfEventData& event_data) {
-  std::optional<FunctionCall> function_call = function_call_manager_->ProcessFunctionExit(
-      event_data.pid, event_data.tid, event_timestamp, std::nullopt);
+  if (!tid_to_root_namespace_tid_.contains(event_data.tid)) {
+    ORBIT_ERROR(
+        "Recieved function exit event from unknown thread with tid %d. Dropping this event.",
+        event_data.tid);
+    return;
+  }
+  if (!tid_to_root_namespace_tid_.contains(event_data.pid)) {
+    ORBIT_ERROR(
+        "Recieved function exit event from unknown process with pid %d. Dropping this event.",
+        event_data.pid);
+    return;
+  }
+  const pid_t tid = tid_to_root_namespace_tid_[event_data.tid];
+  const pid_t pid = tid_to_root_namespace_tid_[event_data.pid];
+
+  std::optional<FunctionCall> function_call =
+      function_call_manager_->ProcessFunctionExit(pid, tid, event_timestamp, std::nullopt);
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_->ProcessFunctionExit(event_data.tid);
+  return_address_manager_->ProcessFunctionExit(tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
@@ -757,6 +779,38 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   module_update_event.set_timestamp_ns(event_timestamp);
   *module_update_event.mutable_module() = std::move(module_info_or_error.value());
   listener_->OnModuleUpdate(std::move(module_update_event));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
+                                    const CloneExitPerfEventData& event_data) {
+  // If the return value of clone is zero this tracepoint is hit from the execution path of the
+  // newly created thread. We are not interested in these events and discard them.
+  if (event_data.ret_tid == 0) return;
+
+  const pid_t parent_tid = event_data.tid;
+  const pid_t tid_in_target_process_namespace = event_data.ret_tid;
+  if (!new_task_parent_to_root_namespace_tids_.contains(parent_tid)) {
+    ORBIT_ERROR(
+        "Observed a return from clone without previously seeing a task_newtask from the same "
+        "parent thread. parent_tid was %d clone return was value: %d. We will ignore dynamic "
+        "instrumentation form this thread.",
+        parent_tid, tid_in_target_process_namespace);
+    return;
+  }
+  tid_to_root_namespace_tid_[tid_in_target_process_namespace] =
+      new_task_parent_to_root_namespace_tids_[parent_tid];
+  new_task_parent_to_root_namespace_tids_.erase(parent_tid);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
+                                    const TaskNewtaskPerfEventData& event_data) {
+  if (new_task_parent_to_root_namespace_tids_.contains(event_data.was_created_by_tid)) {
+    ORBIT_ERROR(
+        "Observed a task_newtask event from thread %d without matching clone exit event. This "
+        "should never happen.",
+        event_data.was_created_by_tid);
+  }
+  new_task_parent_to_root_namespace_tids_[event_data.was_created_by_tid] = event_data.new_tid;
 }
 
 }  // namespace orbit_linux_tracing

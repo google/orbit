@@ -377,6 +377,14 @@ struct SchedSwitchWithStackPerfEventData {
 };
 using SchedSwitchWithStackPerfEvent = TypedPerfEvent<SchedSwitchWithStackPerfEventData>;
 
+struct CloneExitPerfEventData {
+  // The tid of the thread invoking clone (in the root namespace).
+  pid_t tid;
+  // The return value of clone. This is the tid of the new thread (in the target process namespace).
+  pid_t ret_tid;
+};
+using CloneExitPerfEvent = TypedPerfEvent<CloneExitPerfEventData>;
+
 // This struct holds the data we need from any of the possible perf_event_open events that we
 // collect. The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all
 // events, while each of the possible `...PerfEventData`s in the `std::variant` contains the data
@@ -411,7 +419,7 @@ struct PerfEvent {
                TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
                SchedSwitchWithStackPerfEventData, SchedWakeupWithStackPerfEventData,
                AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
-               DmaFenceSignaledPerfEventData>
+               DmaFenceSignaledPerfEventData, CloneExitPerfEventData>
       data;
 
   void Accept(PerfEventVisitor* visitor) const;

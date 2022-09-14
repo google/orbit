@@ -9,6 +9,7 @@
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/strings/str_split.h>
 #include <absl/synchronization/mutex.h>
 #include <stddef.h>
 #include <string.h>
@@ -36,6 +37,7 @@
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
@@ -677,6 +679,20 @@ bool TracerImpl::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
   return !tracepoint_event_open_errors;
 }
 
+// We maintain a map of pids from the target process pid namespace to the root namespace. When a new
+// thread is created the new pid in the root namespace is reported by the task:task_newtask which is
+// already opened OpenThreadNameTracepoints. The respective pid in the target process namespace is
+// obtained from the next hit syscalls:sys_exit_clone or syscalls:sys_exit_clone3.
+bool TracerImpl::OpenCloneExitTracepoints(const std::vector<int32_t>& cpus) {
+  ORBIT_SCOPE_FUNCTION;
+  absl::flat_hash_map<int32_t, int> pid_mapping_tracepoint_ring_buffer_fds_per_cpu;
+  return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
+      {{"syscalls", "sys_exit_clone", &sys_exit_clone_ids_},
+       {"syscalls", "sys_exit_clone3", &sys_exit_clone3_ids_}},
+      cpus, &tracing_fds_, CLONE_EXIT_RING_BUFFER_SIZE_KB,
+      &pid_mapping_tracepoint_ring_buffer_fds_per_cpu, &ring_buffers_, stack_dump_size_);
+}
+
 void TracerImpl::InitLostAndDiscardedEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   lost_and_discarded_event_visitor_ = std::make_unique<LostAndDiscardedEventVisitor>(listener_);
@@ -718,6 +734,38 @@ static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t ini
   return thread_names;
 }
 
+// Returns a vector of pairs mapping the tid in the target process namespace to the corresponding
+// tid in the root namespace.
+static std::vector<std::pair<pid_t, pid_t>> RetrieveInitialTidMapping(pid_t target_pid) {
+  std::vector<std::pair<pid_t, pid_t>> tid_mapping;
+  for (pid_t tid : GetTidsOfProcess(target_pid)) {
+    const std::string status_file_name = absl::StrFormat("/proc/%d/status", tid);
+    auto reading_result = orbit_base::ReadFileToString(status_file_name);
+    if (reading_result.has_error()) {
+      // This means the thread exited before we were able to read the status file. It is fine to
+      // just skip this thread.
+      continue;
+    }
+    const std::vector<std::string> lines =
+        absl::StrSplit(reading_result.value(), '\n', absl::SkipEmpty());
+    for (std::string_view line : lines) {
+      if (!absl::StartsWith(line, "NSpid:")) continue;
+      const std::vector<std::string> splits =
+          absl::StrSplit(line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
+      uint32_t tid_in_target_process = 0;
+      if (!absl::SimpleAtoi(splits.back(), &tid_in_target_process)) {
+        ORBIT_ERROR(
+            "Line in /proc/pid/status starting with 'NSpid:' did not end with a pid. Entire line "
+            "was: %s",
+            line);
+        break;
+      }
+      tid_mapping.emplace_back(tid_in_target_process, tid);
+    }
+  }
+  return tid_mapping;
+}
+
 void TracerImpl::Startup() {
   ORBIT_SCOPE_FUNCTION;
   Reset();
@@ -751,6 +799,11 @@ void TracerImpl::Startup() {
 
   bool perf_event_open_errors = false;
   std::vector<std::string> perf_event_open_error_details;
+
+  if (bool opened = OpenCloneExitTracepoints(all_cpus); !opened) {
+    perf_event_open_error_details.emplace_back("clone exit tracepoints");
+    perf_event_open_errors = true;
+  }
 
   if (bool opened = OpenMmapTask(all_cpus); !opened) {
     perf_event_open_error_details.emplace_back("mmap events, fork and exit events");
@@ -835,6 +888,11 @@ void TracerImpl::Startup() {
   }
 
   effective_capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
+
+  // Get the initial mapping of the tids in the target process to the corresponing tids in the
+  // root namespace.
+  const std::vector<std::pair<pid_t, pid_t>> tid_mappings = RetrieveInitialTidMapping(target_pid_);
+  uprobes_unwinding_visitor_->SetInitialTidMapping(tid_mappings);
 
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);
@@ -1120,15 +1178,17 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   bool is_amdgpu_sched_run_job_event = amdgpu_sched_run_job_ids_.contains(stream_id);
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
+  bool is_clone_exit_tracepoint =
+      sys_exit_clone_ids_.contains(stream_id) || sys_exit_clone3_ids_.contains(stream_id);
 
-  ORBIT_CHECK(is_uprobe + is_uprobe_with_args + is_uprobe_with_stack + is_uretprobe +
-                  is_uretprobe_with_retval + is_stack_sample + is_callchain_sample +
-                  is_task_newtask + is_task_rename + is_sched_switch + is_sched_wakeup +
-                  is_sched_switch_with_callchain + is_sched_wakeup_with_callchain +
-                  is_sched_switch_with_stack + is_sched_wakeup_with_stack +
-                  is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event +
-                  is_dma_fence_signaled_event + is_user_instrumented_tracepoint <=
-              1);
+  ORBIT_CHECK(
+      is_uprobe + is_uprobe_with_args + is_uprobe_with_stack + is_uretprobe +
+          is_uretprobe_with_retval + is_stack_sample + is_callchain_sample + is_task_newtask +
+          is_task_rename + is_sched_switch + is_sched_wakeup + is_sched_switch_with_callchain +
+          is_sched_wakeup_with_callchain + is_sched_switch_with_stack + is_sched_wakeup_with_stack +
+          is_amdgpu_cs_ioctl_event + is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
+          is_user_instrumented_tracepoint + is_clone_exit_tracepoint <=
+      1);
 
   int fd = ring_buffer->GetFileDescriptor();
 
@@ -1410,6 +1470,9 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     tracepoint_info->set_category(it->second.category());
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
+  } else if (is_clone_exit_tracepoint) {
+    CloneExitPerfEvent event = ConsumeCloneExitPerfEvent(ring_buffer, header);
+    DeferEvent(std::move(event));
   } else {
     ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);

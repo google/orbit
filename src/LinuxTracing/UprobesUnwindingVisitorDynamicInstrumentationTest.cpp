@@ -48,8 +48,13 @@ class UprobesUnwindingVisitorDynamicInstrumentationTest : public ::testing::Test
 
 TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
        VisitDynamicInstrumentationPerfEventsInVariousCombinationsSendsFunctionCalls) {
+  constexpr pid_t kPidTargetNamespace = 1042;
+  constexpr pid_t kTidTargetNamespace = 1043;
   constexpr pid_t kPid = 42;
   constexpr pid_t kTid = 43;
+  visitor_.SetInitialTidMapping({{kPidTargetNamespace, kPid}, {kTidTargetNamespace, kTid}});
+  constexpr pid_t kPidUnkown = 1044;
+  constexpr pid_t kTidUnkown = 1045;
   constexpr uint32_t kCpu = 1;
 
   {
@@ -106,8 +111,8 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
         .timestamp = 300,
         .data =
             {
-                .pid = kPid,
-                .tid = kTid,
+                .pid = kPidTargetNamespace,
+                .tid = kTidTargetNamespace,
                 .function_id = 3,
                 .sp = 0x30,
                 .return_address = 0x02,
@@ -116,6 +121,24 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
 
     EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTid, 0x30, 0x02)).Times(1);
     PerfEvent{function_entry3}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    UserSpaceFunctionEntryPerfEvent function_entry4{
+        .timestamp = 300,
+        .data =
+            {
+                .pid = kPidUnkown,
+                .tid = kTidUnkown,
+                .function_id = 3,
+                .sp = 0x30,
+                .return_address = 0x02,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(0, 0x30, 0x02)).Times(0);
+    PerfEvent{function_entry4}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -227,8 +250,8 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
         .timestamp = 800,
         .data =
             {
-                .pid = kPid,
-                .tid = kTid,
+                .pid = kPidTargetNamespace,
+                .tid = kTidTargetNamespace,
             },
     };
 
@@ -246,6 +269,24 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
     EXPECT_EQ(actual_function_call.depth(), 2);
     EXPECT_EQ(actual_function_call.return_value(), 0);
     EXPECT_THAT(actual_function_call.registers(), ElementsAre());
+  }
+
+  {
+    UserSpaceFunctionExitPerfEvent function_exit4{
+        .timestamp = 800,
+        .data =
+            {
+                .pid = kPidUnkown,
+                .tid = kTidUnkown,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(0)).Times(0);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(0);
+    PerfEvent{function_exit4}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
   }
 
   {
