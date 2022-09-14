@@ -27,8 +27,7 @@
 
 namespace orbit_linux_tracing {
 
-template <typename PerfEventAndFullCallstackProtoTypePair>
-class UprobesUnwindingVisitorDwarfUnwindingTest : public ::testing::Test {
+class UprobesUnwindingVisitorDwarfUnwindingTestBase : public ::testing::Test {
  protected:
   void SetUp() override {
     EXPECT_CALL(maps_, Find(::testing::AllOf(::testing::Ge(kUprobesMapsStart),
@@ -183,8 +182,12 @@ class UprobesUnwindingVisitorDwarfUnwindingTest : public ::testing::Test {
       sizeof(perf_event_sample_regs_user_sp) / sizeof(uint64_t);
 };
 
+template <typename PerfEventAndFullCallstackProtoTypePair>
+class UprobesUnwindingVisitorDwarfUnwindingTest
+    : public UprobesUnwindingVisitorDwarfUnwindingTestBase {};
+
 template <typename PerfEventType>
-PerfEventType BuildFakeStackContainingPerfEvent() {
+PerfEventType BuildFakePerfEventWithStack() {
   constexpr uint64_t kTotalNumOfRegisters =
       sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
 
@@ -199,13 +202,13 @@ PerfEventType BuildFakeStackContainingPerfEvent() {
           },
   };
 
-  if constexpr (std::is_same<StackSamplePerfEvent, PerfEventType>::value) {
+  if constexpr (std::is_same_v<StackSamplePerfEvent, PerfEventType>) {
     result.data.pid = 10;
     result.data.tid = 11;
-  } else if constexpr (std::is_same<SchedWakeupWithStackPerfEvent, PerfEventType>::value) {
+  } else if constexpr (std::is_same_v<SchedWakeupWithStackPerfEvent, PerfEventType>) {
     result.data.was_unblocked_by_pid = 10;
     result.data.was_unblocked_by_tid = 11;
-  } else if constexpr (std::is_same<SchedSwitchWithStackPerfEvent, PerfEventType>::value) {
+  } else if constexpr (std::is_same_v<SchedSwitchWithStackPerfEvent, PerfEventType>) {
     result.data.prev_pid_or_minus_one = 10;
     result.data.prev_tid = 11;
   }
@@ -217,7 +220,7 @@ TYPED_TEST_SUITE_P(UprobesUnwindingVisitorDwarfUnwindingTest);
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitValidStackSampleWithoutUprobesSendsCompleteCallstackAndAddressInfos) {
-  auto event = BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  auto event = BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -235,8 +238,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -308,10 +311,10 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitTwoValidStackSamplesSendsAddressInfosOnlyOnce) {
-  typename TypeParam::first_type event1 =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
-  typename TypeParam::first_type event2 =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event1 =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
+  typename TypeParam::PerfEventT event2 =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample)
       .Times(2)
@@ -327,12 +330,12 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillRepeatedly(::testing::Return(
           LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  std::vector<typename TypeParam::second_type> actual_callstack_samples;
-  auto save_callstack =
-      [&actual_callstack_samples](typename TypeParam::second_type actual_callstack_sample) {
-        actual_callstack_samples.push_back(std::move(actual_callstack_sample));
-      };
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  std::vector<typename TypeParam::ProducerCaptureEventT> actual_callstack_samples;
+  auto save_callstack = [&actual_callstack_samples](
+                            typename TypeParam::ProducerCaptureEventT actual_callstack_sample) {
+    actual_callstack_samples.push_back(std::move(actual_callstack_sample));
+  };
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(2)
         .WillRepeatedly(::testing::Invoke(save_callstack));
@@ -405,8 +408,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitValidStackSampleWithNullptrMapInfosSendsCompleteCallstackAndAddressInfosWithoutModuleName) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -426,8 +429,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -488,8 +491,8 @@ TYPED_TEST_P(
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitEmptyStackSampleWithoutUprobesDoesNothing) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -502,7 +505,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(
           LibunwindstackResult{empty_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
 
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample).Times(0);
   } else {
     EXPECT_CALL(this->listener_, OnThreadStateSliceCallstack).Times(0);
@@ -523,8 +526,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample)
       .Times(1)
@@ -540,8 +543,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(LibunwindstackResult{
           libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -597,8 +600,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -611,8 +614,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(
           LibunwindstackResult{incomplete_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -658,8 +661,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitSingleFrameStackSampleInFunctionToStopAtSendsCompleteCallstackAndAddressInfos) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   this->absolute_address_to_size_of_functions_to_stop_at_[TestFixture::kTargetAddress1] = 100;
 
@@ -674,8 +677,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -721,8 +724,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitSingleFrameStackSampleOutsideOfAnyFunctionToStopAtSendsUnwindingErrorAndAddressInfos) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   this->absolute_address_to_size_of_functions_to_stop_at_[TestFixture::kTargetAddress2] = 100;
 
@@ -737,8 +740,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -784,8 +787,8 @@ TYPED_TEST_P(
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitStackSampleWithinUprobeSendsInUprobesCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -798,8 +801,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -856,8 +859,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitStackSampleWithinUserSpaceInstrumentationTrampolineSendsInUserSpaceInstrumentationCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -871,8 +874,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -929,8 +932,8 @@ TYPED_TEST_P(
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitStackSampleWithinUserSpaceInstrumentationTrampolineAndLibrarySendsInUserSpaceInstrumentationCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -945,8 +948,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1022,8 +1025,8 @@ TYPED_TEST_P(
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitStackSampleWithinUserSpaceInstrumentationLibraryButNotTrampolineSendsCompleteCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1037,8 +1040,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1103,8 +1106,8 @@ TYPED_TEST_P(
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitStackSampleStoppedAtUprobesSendsPatchingFailedCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1117,8 +1120,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1175,8 +1178,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 TYPED_TEST_P(
     UprobesUnwindingVisitorDwarfUnwindingTest,
     VisitStackSampleStoppedAtUserSpaceInstrumentationTrampolineSendsPatchingFailedCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1190,8 +1193,8 @@ TYPED_TEST_P(
       .WillOnce(::testing::Return(
           LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1246,8 +1249,8 @@ TYPED_TEST_P(
 }
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest, VisitStackSampleUsesUserSpaceStack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1264,8 +1267,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest, VisitStackSampleUsesUser
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1363,8 +1366,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest, VisitStackSampleUsesUser
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitStackSampleUsesLatestUserSpaceCallstack) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1381,8 +1384,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1500,8 +1503,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitStackSampleUsesUserSpaceCallstackOnlyFromSameThread) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1518,8 +1521,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1637,8 +1640,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
 
 TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
              VisitStackSampleUsesUserStackMemoryFromAllStreamIds) {
-  typename TypeParam::first_type event =
-      BuildFakeStackContainingPerfEvent<typename TypeParam::first_type>();
+  typename TypeParam::PerfEventT event =
+      BuildFakePerfEventWithStack<typename TypeParam::PerfEventT>();
 
   EXPECT_CALL(this->return_address_manager_, PatchSample).Times(1).WillOnce(::testing::Return());
   EXPECT_CALL(this->maps_, Get).Times(1).WillOnce(::testing::Return(nullptr));
@@ -1655,8 +1658,8 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
-  typename TypeParam::second_type actual_callstack_sample;
-  if constexpr (std::is_same<StackSamplePerfEvent, typename TypeParam::first_type>::value) {
+  typename TypeParam::ProducerCaptureEventT actual_callstack_sample;
+  if constexpr (std::is_same_v<StackSamplePerfEvent, typename TypeParam::PerfEventT>) {
     EXPECT_CALL(this->listener_, OnCallstackSample)
         .Times(1)
         .WillOnce(::testing::SaveArg<0>(&actual_callstack_sample));
@@ -1805,10 +1808,18 @@ REGISTER_TYPED_TEST_SUITE_P(
     VisitTwoValidStackSamplesSendsAddressInfosOnlyOnce,
     VisitValidStackSampleWithNullptrMapInfosSendsCompleteCallstackAndAddressInfosWithoutModuleName);
 
+template <typename T, typename U>
+struct DwarfUnwindingTestType {
+  using PerfEventT = T;
+  using ProducerCaptureEventT = U;
+};
+
 using TestTypes = ::testing::Types<
-    std::pair<StackSamplePerfEvent, orbit_grpc_protos::FullCallstackSample>,
-    std::pair<SchedWakeupWithStackPerfEvent, orbit_grpc_protos::ThreadStateSliceCallstack>,
-    std::pair<SchedSwitchWithStackPerfEvent, orbit_grpc_protos::ThreadStateSliceCallstack>>;
-INSTANTIATE_TYPED_TEST_SUITE_P(UprobesUnwindingVisitorSampleTestNew,
+    DwarfUnwindingTestType<StackSamplePerfEvent, orbit_grpc_protos::FullCallstackSample>,
+    DwarfUnwindingTestType<SchedWakeupWithStackPerfEvent,
+                           orbit_grpc_protos::ThreadStateSliceCallstack>,
+    DwarfUnwindingTestType<SchedSwitchWithStackPerfEvent,
+                           orbit_grpc_protos::ThreadStateSliceCallstack>>;
+INSTANTIATE_TYPED_TEST_SUITE_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                                UprobesUnwindingVisitorDwarfUnwindingTest, TestTypes);
 }  // namespace orbit_linux_tracing
