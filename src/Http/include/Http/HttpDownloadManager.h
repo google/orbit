@@ -21,7 +21,6 @@
 namespace orbit_http {
 
 class HttpDownloadManager : public QObject, public DownloadManager {
-  Q_OBJECT
  public:
   explicit HttpDownloadManager(QObject* parent = nullptr) : QObject(parent) {}
   ~HttpDownloadManager() override;
