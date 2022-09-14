@@ -16,7 +16,7 @@ namespace orbit_remote_symbol_provider {
 
 class StadiaSymbolStoreSymbolProvider : public orbit_symbol_provider::SymbolProvider {
  public:
-  explicit StadiaSymbolStoreSymbolProvider(orbit_symbols::SymbolCacheInterface* symbol_cache,
+  explicit StadiaSymbolStoreSymbolProvider(const orbit_symbols::SymbolCacheInterface* symbol_cache,
                                            orbit_http::DownloadManager* download_manager,
                                            orbit_ggp::Client* ggp_client);
 
@@ -25,7 +25,7 @@ class StadiaSymbolStoreSymbolProvider : public orbit_symbol_provider::SymbolProv
       orbit_base::StopToken stop_token) const override;
 
  private:
-  orbit_symbols::SymbolCacheInterface* symbol_cache_;
+  const orbit_symbols::SymbolCacheInterface* symbol_cache_;
   orbit_http::DownloadManager* download_manager_;
   orbit_ggp::Client* ggp_client_;
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
