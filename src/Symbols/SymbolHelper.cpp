@@ -30,7 +30,12 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
 #include "OrbitBase/WriteStringToFile.h"
+#include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
+#include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolUtils.h"
 
 using orbit_grpc_protos::ModuleSymbols;
@@ -41,6 +46,10 @@ using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::ElfFile;
 using orbit_object_utils::ObjectFileInfo;
 using orbit_object_utils::SymbolsFile;
+using orbit_symbol_provider::ModuleIdentifier;
+using orbit_symbol_provider::StructuredDebugDirectorySymbolProvider;
+using orbit_symbol_provider::SymbolLoadingOutcome;
+using orbit_symbol_provider::SymbolProvider;
 
 constexpr const char* kDeprecationNote =
     "// !!! Do not remove this comment !!!\n// This file has been migrated in Orbit 1.68. Please "
@@ -116,33 +125,42 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   return directories;
 }
 
-static std::vector<fs::path> FindStructuredDebugDirectories() {
-  std::vector<fs::path> directories;
-
-  const auto add_dir_if_exists = [&](std::filesystem::path&& dir) {
-    std::error_code error{};
-    if (!std::filesystem::is_directory(dir, error)) return;
-    directories.emplace_back(std::move(dir));
-    ORBIT_LOG("Found structured debug store: %s", directories.back().string());
-  };
-
-#ifndef _WIN32
-  add_dir_if_exists(std::filesystem::path{"/usr/lib/debug"});
-#endif
+static std::vector<std::unique_ptr<SymbolProvider>> FindStructuredDebugDirectorySymbolProviders() {
+  std::vector<std::unique_ptr<SymbolProvider>> providers;
 
   const char* const ggp_sdk_path = std::getenv("GGP_SDK_PATH");
   if (ggp_sdk_path != nullptr) {
     auto path = std::filesystem::path{ggp_sdk_path} / "sysroot" / "usr" / "lib" / "debug";
-    add_dir_if_exists(std::move(path));
+    std::error_code error{};
+    if (std::filesystem::is_directory(path, error)) {
+      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
+          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk));
+    }
   }
 
-  {
+  {  // Other way of finding the Stadia SDK, via parent path
     auto path = orbit_base::GetExecutableDir().parent_path().parent_path() / "sysroot" / "usr" /
                 "lib" / "debug";
-    add_dir_if_exists(std::move(path));
+    std::error_code error{};
+    if (std::filesystem::is_directory(path, error)) {
+      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
+          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk));
+    }
   }
 
-  return directories;
+#ifndef _WIN32
+  {
+    std::filesystem::path path{"/usr/lib/debug"};
+    std::error_code error{};
+    if (std::filesystem::is_directory(path, error)) {
+      providers.emplace_back(std::make_unique<StructuredDebugDirectorySymbolProvider>(
+          path,
+          orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kUsrLibDebugDirectory));
+    }
+  }
+#endif
+
+  return providers;
 }
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
@@ -173,7 +191,7 @@ ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_pat
 
 SymbolHelper::SymbolHelper(fs::path cache_directory)
     : cache_directory_(std::move(cache_directory)),
-      structured_debug_directories_(FindStructuredDebugDirectories()) {}
+      structured_debug_directory_providers_(FindStructuredDebugDirectorySymbolProviders()) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, const std::string& build_id,
@@ -187,10 +205,22 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
   // structured debug directories is only supported for elf files
   if (object_file_type == ModuleInfo::kElfFile) {
-    for (const auto& structured_debug_directory : structured_debug_directories_) {
-      auto result = FindDebugInfoFileInDebugStore(structured_debug_directory, build_id);
-      if (result.has_value()) return result;
-      ORBIT_LOG("Debug file search was unsuccessful: %s", result.error().message());
+    for (const std::unique_ptr<SymbolProvider>& provider : structured_debug_directory_providers_) {
+      const ModuleIdentifier module_id{module_path.string(), build_id};
+      const orbit_base::StopSource stop_source;
+      orbit_base::Future<SymbolLoadingOutcome> future =
+          provider->RetrieveSymbols(module_id, stop_source.GetStopToken());
+
+      // TODO(antonrohr): This `.Get()` makes this asynchronous future operation a syncronous
+      // operation. This is okay for now.
+      const SymbolLoadingOutcome& outcome = future.Get();
+      if (orbit_symbol_provider::IsSuccessResult(outcome)) {
+        return orbit_symbol_provider::GetSuccessResult(outcome).path;
+      }
+      if (outcome.has_error()) {
+        ORBIT_ERROR("Error while searching in structured debug directories: %s",
+                    outcome.error().message());
+      }
     }
   }
 
@@ -334,25 +364,6 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& mo
   }
   OUTCOME_TRY(verify(cache_file_path));
   return cache_file_path;
-}
-
-ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
-    const fs::path& debug_directory, std::string_view build_id) {
-  ORBIT_SCOPE_FUNCTION;
-  // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
-  // generate a proper filename: build_id[0:2]/build_id[2:].debug
-  if (build_id.size() < 3) {
-    return ErrorMessage{absl::StrFormat("The build-id \"%s\" is malformed.", build_id)};
-  }
-
-  auto full_file_path = debug_directory / ".build-id" / build_id.substr(0, 2) /
-                        absl::StrFormat("%s.debug", build_id.substr(2));
-
-  OUTCOME_TRY(auto file_exists, orbit_base::FileExists(full_file_path));
-
-  if (file_exists) return full_file_path;
-
-  return ErrorMessage{absl::StrFormat("File does not exist: \"%s\"", full_file_path.string())};
 }
 
 ErrorMessageOr<bool> FileStartsWithDeprecationNote(const std::filesystem::path& file_name) {

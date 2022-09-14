@@ -5,7 +5,6 @@
 #ifndef SYMBOL_PROVIDER_SYMBOL_PROVIDER_H_
 #define SYMBOL_PROVIDER_SYMBOL_PROVIDER_H_
 
-#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "SymbolProvider/ModuleIdentifier.h"

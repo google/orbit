@@ -4,11 +4,13 @@
 
 #include <absl/strings/ascii.h>
 #include <gmock/gmock-matchers.h>
+#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <string>
 
 #include "GrpcProtos/module.pb.h"
@@ -17,7 +19,12 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/TemporaryFile.h"
+#include "SymbolProvider/MockSymbolProvider.h"
+#include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
+#include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolHelper.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
@@ -440,33 +447,38 @@ TEST(SymbolHelper, IsMatchingDebugInfoFile) {
   EXPECT_FALSE(SymbolHelper::IsMatchingDebugInfoFile(non_existing_file_path, kExpectedChecksum));
 }
 
-TEST(SymbolHelper, FindDebugInfoFileInDebugStore) {
-  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
-                                "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
-  const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+TEST(SymbolHelper, FindSymbolsFileLocallyWithSymbolProvider) {
+  const orbit_symbol_provider::ModuleIdentifier kModuleId{
+      "module/path",
+      "build_id",
+  };
 
-  ErrorMessageOr<std::filesystem::path> error_or_path =
-      SymbolHelper::FindDebugInfoFileInDebugStore(testdata_directory / "debugstore", build_id);
+  const std::filesystem::path kTestResultPath{"test/result/path"};
 
-  ASSERT_THAT(error_or_path, HasValue());
-  EXPECT_EQ(error_or_path.value(), symbols_path);
-}
+  std::unique_ptr<orbit_symbol_provider::MockSymbolProvider> mock_provider =
+      std::make_unique<orbit_symbol_provider::MockSymbolProvider>();
+  EXPECT_CALL(*mock_provider, RetrieveSymbols)
+      .WillOnce(
+          [&](const orbit_symbol_provider::ModuleIdentifier& module_id,
+              const orbit_base::StopToken &
+              /*stop_token*/) -> orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> {
+            EXPECT_EQ(module_id, kModuleId);
 
-TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
-  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  SymbolHelper symbol_helper("", {testdata_directory / "debugstore"});
+            return {orbit_symbol_provider::SymbolLoadingSuccessResult{
+                kTestResultPath,
+                orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk,
+                orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolFileSeparation::
+                    kDifferentFile}};
+          });
 
-  const fs::path file_path = testdata_directory / "no_symbols_elf";
-  const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
-                                "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
+  std::vector<std::unique_ptr<orbit_symbol_provider::SymbolProvider>> providers;
+  providers.push_back(std::move(mock_provider));
+  const SymbolHelper symbol_helper{"", std::move(providers)};
 
-  const auto symbols_path_result =
-      symbol_helper.FindSymbolsFileLocally(file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b",
-                                           ModuleInfo::kElfFile, {testdata_directory});
+  const ErrorMessageOr<std::filesystem::path> find_result = symbol_helper.FindSymbolsFileLocally(
+      std::filesystem::path{kModuleId.file_path}, kModuleId.build_id, ModuleInfo::kElfFile, {});
 
-  ASSERT_THAT(symbols_path_result, HasValue());
-  EXPECT_EQ(symbols_path_result.value(), symbols_path);
+  EXPECT_THAT(find_result, HasValue(kTestResultPath));
 }
 
 TEST(FileStartsWithDeprecationNote, FileDoesNotExist) {

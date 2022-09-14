@@ -6,10 +6,13 @@ project(SymbolProvider)
 add_library(SymbolProvider STATIC)
 
 target_sources(SymbolProvider PRIVATE
+        StructuredDebugDirectorySymbolProvider.cpp
         SymbolLoadingOutcome.cpp)
 
 target_sources(SymbolProvider PUBLIC
+        include/SymbolProvider/MockSymbolProvider.h
         include/SymbolProvider/ModuleIdentifier.h
+        include/SymbolProvider/StructuredDebugDirectorySymbolProvider.h
         include/SymbolProvider/SymbolLoadingOutcome.h
         include/SymbolProvider/SymbolProvider.h)
 
@@ -23,10 +26,12 @@ add_executable(SymbolProviderTests)
 
 target_sources(SymbolProviderTests PRIVATE 
         ModuleIdentifierTest.cpp
+        StructuredDebugDirectorySymbolProviderTest.cpp
         SymbolLoadingOutcomeTest.cpp)
 
 target_link_libraries(SymbolProviderTests PRIVATE 
         SymbolProvider 
+        TestUtils
         GTest::Main)
     
 register_test(SymbolProviderTests)
