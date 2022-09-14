@@ -25,6 +25,9 @@ class ObjectFile : public SymbolsFile {
   ~ObjectFile() override = default;
 
   [[nodiscard]] virtual bool HasDebugSymbols() const = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
+  LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols() = 0;
+
   [[nodiscard]] virtual std::string GetName() const = 0;
 
   // Background and some terminology

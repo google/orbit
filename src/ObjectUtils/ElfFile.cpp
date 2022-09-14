@@ -5,6 +5,7 @@
 #include "ObjectUtils/ElfFile.h"
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <llvm/ADT/ArrayRef.h>
@@ -68,6 +69,8 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadEhOrDebugFrameEntriesAsSymbols() override;
+  [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols()
+      override;
 
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
@@ -390,8 +393,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
 
   if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
-        "Unable to load symbols from ELF file, not even a single symbol of "
-        "type function found.");
+        "Unable to load symbols from ELF file: not even a single symbol of type function found.");
   }
   return module_symbols;
 }
@@ -413,7 +415,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
 
   if (module_symbols.symbol_infos_size() == 0) {
     return ErrorMessage(
-        "Unable to load symbols from .dynsym section, not even a single symbol of type function "
+        "Unable to load symbols from .dynsym section: not even a single symbol of type function "
         "found.");
   }
   return module_symbols;
@@ -424,10 +426,10 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
 ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
   const std::unique_ptr<llvm::DWARFContext> dwarf_context =
       llvm::DWARFContext::create(*object_file_);
-  constexpr const char* kErrorMessage =
-      "Unable to load unwind info ranges from the .debug_frame or the .eh_frame section.";
+  constexpr const char* kErrorMessagePrefix =
+      "Unable to load unwind info ranges from the .debug_frame or the .eh_frame section: ";
   if (dwarf_context == nullptr) {
-    return ErrorMessage{kErrorMessage};
+    return ErrorMessage{absl::StrCat(kErrorMessagePrefix, "could not create DWARFContext.")};
   }
 
   const llvm::DWARFDebugFrame* debug_or_eh_frame = nullptr;
@@ -442,7 +444,8 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
     debug_or_eh_frame = *eh_frame;
     is_eh_frame = true;
   } else {
-    return ErrorMessage{kErrorMessage};
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, "no .debug_frame or .eh_frame section found.")};
   }
   ORBIT_CHECK(debug_or_eh_frame != nullptr);
 
@@ -491,7 +494,46 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
     symbol_info->set_address(address);
     symbol_info->set_size(fde.getAddressRange());
   }
+
+  if (module_symbols.symbol_infos().empty()) {
+    return ErrorMessage{
+        absl::StrCat(kErrorMessagePrefix, "not even a single address range found.")};
+  }
   return module_symbols;
+}
+
+template <typename ElfT>
+ErrorMessageOr<ModuleSymbols>
+ElfFileImpl<ElfT>::LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols() {
+  ErrorMessageOr<ModuleSymbols> dynamic_linking_symbols = LoadSymbolsFromDynsym();
+  ErrorMessageOr<ModuleSymbols> unwind_ranges_as_symbols = LoadEhOrDebugFrameEntriesAsSymbols();
+  if (!dynamic_linking_symbols.has_value() && !unwind_ranges_as_symbols.has_value()) {
+    return ErrorMessage{absl::StrFormat("Unable to load fallback symbols: %s %s",
+                                        dynamic_linking_symbols.error().message(),
+                                        unwind_ranges_as_symbols.error().message())};
+  }
+  ModuleSymbols dynamic_linking_symbols_and_unwind_ranges_as_symbols;
+
+  absl::flat_hash_set<uint64_t> dynamic_linking_addresses;
+  if (dynamic_linking_symbols.has_value()) {
+    for (SymbolInfo& symbol_info : *dynamic_linking_symbols.value().mutable_symbol_infos()) {
+      dynamic_linking_addresses.insert(symbol_info.address());
+      *dynamic_linking_symbols_and_unwind_ranges_as_symbols.add_symbol_infos() =
+          std::move(symbol_info);
+    }
+  }
+
+  if (unwind_ranges_as_symbols.has_value()) {
+    for (SymbolInfo& symbol_info : *unwind_ranges_as_symbols.value().mutable_symbol_infos()) {
+      if (dynamic_linking_addresses.contains(symbol_info.address())) {
+        continue;
+      }
+      *dynamic_linking_symbols_and_unwind_ranges_as_symbols.add_symbol_infos() =
+          std::move(symbol_info);
+    }
+  }
+
+  return dynamic_linking_symbols_and_unwind_ranges_as_symbols;
 }
 
 template <typename ElfT>
