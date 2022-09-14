@@ -7,6 +7,7 @@
 #include <absl/strings/substitute.h>
 
 #include "OrbitBase/NotFoundOr.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;
@@ -27,7 +28,7 @@ MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
 }
 
 std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
-    const orbit_symbol_provider::ModuleIdentifier& module_id) const {
+    const orbit_symbol_provider::ModuleIdentifier& module_id) {
   constexpr std::string_view kUrlToSymbolServer = "https://msdl.microsoft.com/download/symbols";
   std::filesystem::path module_path(module_id.file_path);
   return absl::Substitute("$0/$1/$2/$1", kUrlToSymbolServer, module_path.filename().string(),
@@ -35,7 +36,8 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
 }
 
 Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
-    const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
+    const orbit_symbol_provider::ModuleIdentifier& module_id,
+    orbit_base::StopToken stop_token) const {
   std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFilePath(module_id.file_path);
   std::string url = GetDownloadUrl(module_id);
 

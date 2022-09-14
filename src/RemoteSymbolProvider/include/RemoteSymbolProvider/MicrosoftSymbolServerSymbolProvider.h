@@ -5,8 +5,8 @@
 #ifndef REMOTE_SYMBOL_PROVIDER_MICROSOFT_SYMBOL_SERVER_SYMBOL_PROVIDER_H_
 #define REMOTE_SYMBOL_PROVIDER_MICROSOFT_SYMBOL_SERVER_SYMBOL_PROVIDER_H_
 
-#include "Http/HttpDownloadManager.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "Http/DownloadManager.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"
@@ -20,11 +20,11 @@ class MicrosoftSymbolServerSymbolProvider : public orbit_symbol_provider::Symbol
 
   [[nodiscard]] orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> RetrieveSymbols(
       const orbit_symbol_provider::ModuleIdentifier& module_id,
-      orbit_base::StopToken stop_token) override;
+      orbit_base::StopToken stop_token) const override;
 
  private:
-  [[nodiscard]] std::string GetDownloadUrl(
-      const orbit_symbol_provider::ModuleIdentifier& module_id) const;
+  [[nodiscard]] static std::string GetDownloadUrl(
+      const orbit_symbol_provider::ModuleIdentifier& module_id);
 
   orbit_symbols::SymbolCacheInterface* symbol_cache_;
   orbit_http::DownloadManager* download_manager_;

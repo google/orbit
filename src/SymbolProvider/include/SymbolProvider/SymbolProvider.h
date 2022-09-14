@@ -20,7 +20,7 @@ class SymbolProvider {
   virtual ~SymbolProvider() = default;
 
   [[nodiscard]] virtual orbit_base::Future<SymbolLoadingOutcome> RetrieveSymbols(
-      const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) = 0;
+      const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) const = 0;
 };
 
 }  // namespace orbit_symbol_provider
