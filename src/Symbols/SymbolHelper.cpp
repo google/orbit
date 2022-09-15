@@ -50,6 +50,7 @@ using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::StructuredDebugDirectorySymbolProvider;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 using orbit_symbol_provider::SymbolProvider;
+using SymbolSource = orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource;
 
 constexpr const char* kDeprecationNote =
     "// !!! Do not remove this comment !!!\n// This file has been migrated in Orbit 1.68. Please "
@@ -134,8 +135,7 @@ FindStructuredDebugDirectorySymbolProviders() {
     auto path = std::filesystem::path{ggp_sdk_path} / "sysroot" / "usr" / "lib" / "debug";
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(
-          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
+      providers.emplace_back(path, SymbolSource::kLocalStadiaSdk);
     }
   }
 
@@ -144,8 +144,7 @@ FindStructuredDebugDirectorySymbolProviders() {
                 "lib" / "debug";
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(
-          path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
+      providers.emplace_back(path, SymbolSource::kLocalStadiaSdk);
     }
   }
 
@@ -154,9 +153,7 @@ FindStructuredDebugDirectorySymbolProviders() {
     std::filesystem::path path{"/usr/lib/debug"};
     std::error_code error{};
     if (std::filesystem::is_directory(path, error)) {
-      providers.emplace_back(
-          path,
-          orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kUsrLibDebugDirectory);
+      providers.emplace_back(path, SymbolSource::kUsrLibDebugDirectory);
     }
   }
 #endif
@@ -170,8 +167,7 @@ CreateStructuredDebugDirectorySymbolProviders(std::vector<std::filesystem::path>
   std::vector<StructuredDebugDirectorySymbolProvider> result;
   result.reserve(paths.size());
   for (const auto& path : paths) {
-    result.emplace_back(
-        path, orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk);
+    result.emplace_back(path, SymbolSource::kLocalStadiaSdk);
   }
   return result;
 }

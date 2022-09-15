@@ -21,83 +21,89 @@ namespace orbit_symbol_provider {
 constexpr SymbolLoadingSuccessResult::SymbolSource kSymbolSource =
     SymbolLoadingSuccessResult::SymbolSource::kStadiaSymbolStore;
 
-TEST(StructuredDebugDirectorySymbolProvider, RetrieveSymbols) {
-  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  const std::filesystem::path symbols_path = testdata_directory / "debugstore" / ".build-id" /
-                                             "b5" / "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
-  const orbit_base::StopSource stop_source;
+const std::filesystem::path kSymbolsPath = orbit_test::GetTestdataDir() / "debugstore" /
+                                           ".build-id" / "b5" /
+                                           "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
 
-  StructuredDebugDirectorySymbolProvider symbol_provider{testdata_directory / "debugstore",
-                                                         kSymbolSource};
+class StructuredDebugDirectorySymbolProviderTest : public ::testing::Test {
+ public:
+  explicit StructuredDebugDirectorySymbolProviderTest()
+      : symbol_provider_(orbit_test::GetTestdataDir() / "debugstore", kSymbolSource) {}
 
-  // Test 1: Success
-  {
-    const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
-    const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
+ protected:
+  const StructuredDebugDirectorySymbolProvider symbol_provider_;
+  const orbit_base::StopSource stop_source_;
+};
 
-    const orbit_base::Future<SymbolLoadingOutcome> future =
-        symbol_provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsSuccessfully) {
+  const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+  const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-    bool lambda_executed = false;
-    orbit_base::ImmediateExecutor executor;
-    future
-        .Then(&executor,
-              [&](const SymbolLoadingOutcome& result) {
-                ASSERT_THAT(result, HasValue());
-                ASSERT_TRUE(IsSuccessResult(result));
-                SymbolLoadingSuccessResult success_result = GetSuccessResult(result);
-                EXPECT_EQ(success_result.path, symbols_path);
-                EXPECT_EQ(success_result.symbol_file_separation,
-                          SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile);
-                EXPECT_EQ(success_result.symbol_source, kSymbolSource);
-                lambda_executed = true;
-              })
-        .Wait();
-    EXPECT_TRUE(lambda_executed);
-  }
+  const orbit_base::Future<SymbolLoadingOutcome> future =
+      symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
 
-  // Test 2: Not found
-  {
-    const std::string build_id = "different build id";
-    const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
+  bool lambda_executed = false;
+  orbit_base::ImmediateExecutor executor;
+  future
+      .Then(&executor,
+            [&](const SymbolLoadingOutcome& result) {
+              ASSERT_THAT(result, HasValue());
+              ASSERT_TRUE(IsSuccessResult(result));
+              SymbolLoadingSuccessResult success_result = GetSuccessResult(result);
+              const std::filesystem::path symbol_path =
+                  orbit_test::GetTestdataDir() / "debugstore" / ".build-id" / "b5" /
+                  "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
+              EXPECT_EQ(success_result.path, symbol_path);
+              EXPECT_EQ(success_result.symbol_file_separation,
+                        SymbolLoadingSuccessResult::SymbolFileSeparation::kDifferentFile);
+              EXPECT_EQ(success_result.symbol_source, kSymbolSource);
+              lambda_executed = true;
+            })
+      .Wait();
+  EXPECT_TRUE(lambda_executed);
+}
 
-    const orbit_base::Future<SymbolLoadingOutcome> future =
-        symbol_provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsNotFound) {
+  const std::string build_id = "different build id";
+  const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-    bool lambda_executed = false;
-    orbit_base::ImmediateExecutor executor;
-    future
-        .Then(&executor,
-              [&](const SymbolLoadingOutcome& result) {
-                ASSERT_THAT(result, HasValue());
-                ASSERT_TRUE(IsNotFound(result));
-                const std::string& not_found_message = GetNotFoundMessage(result);
-                EXPECT_TRUE(absl::StrContains(not_found_message, "File does not exist"));
-                lambda_executed = true;
-              })
-        .Wait();
-    EXPECT_TRUE(lambda_executed);
-  }
+  const orbit_base::Future<SymbolLoadingOutcome> future =
+      symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
 
-  // Test 3: Error
-  {
-    const std::string build_id = "a";  // build id mal formed (too short)
-    const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
+  bool lambda_executed = false;
+  orbit_base::ImmediateExecutor executor;
+  future
+      .Then(&executor,
+            [&](const SymbolLoadingOutcome& result) {
+              ASSERT_THAT(result, HasValue());
+              ASSERT_TRUE(IsNotFound(result));
+              const std::string& not_found_message = GetNotFoundMessage(result);
+              EXPECT_TRUE(absl::StrContains(not_found_message, "File does not exist"));
+              lambda_executed = true;
+            })
+      .Wait();
+  EXPECT_TRUE(lambda_executed);
+}
 
-    const orbit_base::Future<SymbolLoadingOutcome> future =
-        symbol_provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsError) {
+    {
+      const std::string build_id = "a";  // build id mal formed (too short)
+      const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-    bool lambda_executed = false;
-    orbit_base::ImmediateExecutor executor;
-    future
-        .Then(&executor,
-              [&](const SymbolLoadingOutcome& result) {
-                ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
-                lambda_executed = true;
-              })
-        .Wait();
-    EXPECT_TRUE(lambda_executed);
-  }
+      const orbit_base::Future<SymbolLoadingOutcome> future =
+          symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
+
+      bool lambda_executed = false;
+      orbit_base::ImmediateExecutor executor;
+      future
+          .Then(&executor,
+                [&](const SymbolLoadingOutcome& result) {
+                  ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
+                  lambda_executed = true;
+                })
+          .Wait();
+      EXPECT_TRUE(lambda_executed);
+    }
 }
 
 }  // namespace orbit_symbol_provider

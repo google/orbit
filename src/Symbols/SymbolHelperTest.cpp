@@ -440,41 +440,6 @@ TEST(SymbolHelper, IsMatchingDebugInfoFile) {
   EXPECT_FALSE(SymbolHelper::IsMatchingDebugInfoFile(non_existing_file_path, kExpectedChecksum));
 }
 
-// TEST(SymbolHelper, FindSymbolsFileLocallyWithSymbolProvider) {
-//   const orbit_symbol_provider::ModuleIdentifier kModuleId{
-//       "module/path",
-//       "build_id",
-//   };
-
-//   const std::filesystem::path kTestResultPath{"test/result/path"};
-
-//   std::unique_ptr<orbit_symbol_provider::MockSymbolProvider> mock_provider =
-//       std::make_unique<orbit_symbol_provider::MockSymbolProvider>();
-//   EXPECT_CALL(*mock_provider, RetrieveSymbols)
-//       .WillOnce(
-//           [&](const orbit_symbol_provider::ModuleIdentifier& module_id,
-//               const orbit_base::StopToken &
-//               /*stop_token*/) -> orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome>
-//               {
-//             EXPECT_EQ(module_id, kModuleId);
-
-//             return {orbit_symbol_provider::SymbolLoadingSuccessResult{
-//                 kTestResultPath,
-//                 orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kLocalStadiaSdk,
-//                 orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolFileSeparation::
-//                     kDifferentFile}};
-//           });
-
-//   std::vector<std::unique_ptr<orbit_symbol_provider::SymbolProvider>> providers;
-//   providers.push_back(std::move(mock_provider));
-//   const SymbolHelper symbol_helper{"", std::move(providers)};
-
-//   const ErrorMessageOr<std::filesystem::path> find_result = symbol_helper.FindSymbolsFileLocally(
-//       std::filesystem::path{kModuleId.file_path}, kModuleId.build_id, ModuleInfo::kElfFile, {});
-
-//   EXPECT_THAT(find_result, HasValue(kTestResultPath));
-// }
-
 TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper("", {testdata_directory / "debugstore"});
