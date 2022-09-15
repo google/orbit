@@ -18,3 +18,9 @@ endif()
 add_executable(OrbitTestShortLivedThreads)
 target_sources(OrbitTestShortLivedThreads PRIVATE OrbitTestShortLivedThreads.cpp)
 target_link_libraries(OrbitTestShortLivedThreads PRIVATE Threads::Threads)
+
+add_executable(ThreadDependencyTestApp)
+target_sources(ThreadDependencyTestApp PRIVATE
+        OrbitTestThreadDependencies.cpp)
+target_link_libraries(ThreadDependencyTestApp PRIVATE
+        OrbitBase)
