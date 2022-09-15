@@ -590,7 +590,7 @@ class OrbitApp final : public DataViewFactory,
       const orbit_preset_file::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromRemote(const std::string& module_file_path);
+  RetrieveModuleFromRemote(const std::string& module_file_path, orbit_base::StopToken stop_token);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);

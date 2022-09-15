@@ -99,6 +99,7 @@
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 
@@ -123,6 +124,7 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
+using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadStateSliceInfo;
@@ -130,7 +132,6 @@ using orbit_client_data::TimerBlock;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
-using orbit_symbol_provider::ModuleIdentifier;
 
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetModule;
@@ -141,6 +142,7 @@ using orbit_client_services::TracepointServiceClient;
 
 using orbit_data_views::CallstackDataView;
 using orbit_data_views::DataView;
+using orbit_data_views::DataViewType;
 using orbit_data_views::FunctionsDataView;
 using orbit_data_views::ModulesDataView;
 using orbit_data_views::PresetsDataView;
@@ -165,8 +167,8 @@ using orbit_metrics_uploader::ScopedMetric;
 
 using orbit_preset_file::PresetFile;
 
-using orbit_client_data::ScopeId;
-using orbit_data_views::DataViewType;
+using orbit_symbol_provider::ModuleIdentifier;
+using orbit_symbol_provider::SymbolLoadingOutcome;
 
 using DynamicInstrumentationMethod =
     orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
@@ -1811,7 +1813,8 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 }
 
 orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
-OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
+OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
+                                   orbit_base::StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
 
   const auto it = symbol_files_currently_downloading_.find(module_file_path);
@@ -1830,9 +1833,7 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
             return process_manager->FindDebugInfoFile(module_file_path, additional_instance_folder);
           });
 
-  orbit_base::StopSource stop_source;
-
-  auto download_file = [this, module_file_path, stop_token = stop_source.GetStopToken()](
+  auto download_file = [this, module_file_path, stop_token = std::move(stop_token)](
                            const NotFoundOr<std::filesystem::path>& remote_search_outcome) mutable
       -> orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
     // TODO(b/231455031) As a first step, we treat the not found message as an error
@@ -1855,41 +1856,29 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
                                                std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
-    return copy_result.Then(
-        &immediate_executor,
-        [remote_debug_file_path, local_debug_file_path,
-         copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
-            -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-          if (sftp_result.has_error()) {
-            return ErrorMessage{
-                absl::StrFormat("Could not copy debug info file from the remote: %s",
-                                sftp_result.error().message())};
-          }
-          if (orbit_base::IsCanceled(sftp_result.value())) {
-            return orbit_base::Canceled{};
-          }
-          const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-              std::chrono::steady_clock::now() - copy_begin);
-          ORBIT_LOG("Copying \"%s\" took %.3f ms", remote_debug_file_path.string(),
-                    duration.count());
-          return local_debug_file_path;
-        });
+    return copy_result.Then(&immediate_executor,
+                            [remote_debug_file_path, local_debug_file_path,
+                             copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
+                                -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                              if (sftp_result.has_error()) {
+                                return ErrorMessage{absl::StrFormat(
+                                    "Could not copy debug info file from the remote: %s",
+                                    sftp_result.error().message())};
+                              }
+                              if (orbit_base::IsCanceled(sftp_result.value())) {
+                                return orbit_base::Canceled{};
+                              }
+                              const auto duration =
+                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::steady_clock::now() - copy_begin);
+                              ORBIT_LOG("Copying \"%s\" took %.3f ms",
+                                        remote_debug_file_path.string(), duration.count());
+                              return local_debug_file_path;
+                            });
   };
 
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future = UnwrapFuture(
       check_file_on_remote.ThenIfSuccess(main_thread_executor_, std::move(download_file)));
-
-  symbol_files_currently_downloading_.emplace(
-      module_file_path,
-      OrbitApp::ModuleDownloadOperation{std::move(stop_source), chained_result_future});
-  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
-  chained_result_future.Then(
-      main_thread_executor_,
-      [this,
-       module_file_path](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_downloading_.erase(module_file_path);
-        FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
-      });
 
   return chained_result_future;
 }
@@ -2034,49 +2023,137 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
     return it->second;
   }
 
-  Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
-      FindModuleLocally(module_data);
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_local_future =
+      FindModuleLocally(module_data)
+          .Then(main_thread_executor_,
+                [module_id](const ErrorMessageOr<std::filesystem::path>& retrieve_result)
+                    -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                  if (retrieve_result.has_value()) return {retrieve_result.value()};
 
-  // If --local, Orbit can not download files from the instance, because no ssh channel exists.
-  if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected() ||
-      download_disabled_modules_.contains(module_id.file_path)) {
-    orbit_base::ImmediateExecutor executor;
-    return local_symbols_future.ThenIfSuccess(
-        &executor, [](const std::filesystem::path& result) -> CanceledOr<std::filesystem::path> {
-          return {result};
-        });
-  }
+                  return {ErrorMessage{absl::StrFormat(
+                      "Failed to find symbols for module \"%s\" with build_id=\"%s\"\n"
+                      "- Did not find symbols locally: %s",
+                      module_id.file_path, module_id.build_id, retrieve_result.error().message())}};
+                });
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> final_result =
-      orbit_base::UnwrapFuture(local_symbols_future.Then(
+  if (download_disabled_modules_.contains(module_id.file_path)) return retrieve_from_local_future;
+
+  orbit_base::StopSource stop_source;
+
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_instance_future =
+      orbit_base::UnwrapFuture(retrieve_from_local_future.Then(
           main_thread_executor_,
-          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
-              -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-            if (local_symbols_path.has_value()) return {local_symbols_path.value()};
+          [this, module_id, stop_token = stop_source.GetStopToken()](
+              const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
+          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+            // If --local, Orbit can not download files from the instance, because no ssh channel
+            // exists.
+            if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected()) {
+              return {previous_result};
+            }
 
-            return RetrieveModuleFromRemote(module_id.file_path)
+            if (previous_result.has_value()) return {previous_result.value()};
+
+            return RetrieveModuleFromRemote(module_id.file_path, std::move(stop_token))
+                .Then(
+                    main_thread_executor_,
+                    [module_id, error_msg = previous_result.error().message()](
+                        const ErrorMessageOr<CanceledOr<std::filesystem::path>>&
+                            retrieve_result) mutable
+                    -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                      if (retrieve_result.has_value()) return retrieve_result;
+
+                      error_msg.append(absl::StrFormat("\n- Did not find symbols from instance: %s",
+                                                       retrieve_result.error().message()));
+                      return ErrorMessage{error_msg};
+                    });
+          }));
+
+  auto convert_symbol_provider_retrieve_result =
+      [](const SymbolLoadingOutcome& retrieve_result, std::string symbol_provider_name,
+         std::string error_msg) mutable -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+    if (orbit_symbol_provider::IsSuccessResult(retrieve_result)) {
+      return orbit_symbol_provider::GetSuccessResult(retrieve_result).path;
+    }
+
+    if (orbit_symbol_provider::IsCanceled(retrieve_result)) return orbit_base::Canceled{};
+
+    error_msg.append(
+        absl::StrFormat("\n- Did not find symbols from %s: %s", symbol_provider_name,
+                        orbit_symbol_provider::IsNotFound(retrieve_result)
+                            ? orbit_symbol_provider::GetNotFoundMessage(retrieve_result)
+                            : retrieve_result.error().message()));
+    return ErrorMessage{error_msg};
+  };
+
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_stadia_future =
+      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
+          main_thread_executor_,
+          [this, module_id, stop_token = stop_source.GetStopToken(),
+           &convert_symbol_provider_retrieve_result](
+              const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
+          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+            // TODO(b/239166878) Add a boolean to control enable / disable searching in Stadia
+            // symbol store. Enable the user to set it in the symbol location dialog.
+            if (stadia_symbol_provider_ == std::nullopt) return {previous_result};
+
+            if (previous_result.has_value()) return {previous_result.value()};
+
+            return stadia_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
                 .Then(main_thread_executor_,
-                      [module_id, local_error_message = local_symbols_path.error().message()](
-                          const ErrorMessageOr<CanceledOr<std::filesystem::path>>& remote_result)
-                          -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-                        // If remote loading fails as well, we combine the error messages.
-                        if (remote_result.has_value()) return remote_result;
-                        return {ErrorMessage{
-                            absl::StrFormat("Did not find symbols locally or on remote for module "
-                                            "\"%s\" with build_id=\"%s\": %s\n%s",
-                                            module_id.file_path, module_id.build_id,
-                                            local_error_message, remote_result.error().message())}};
+                      [error_msg = previous_result.error().message(),
+                       &convert_symbol_provider_retrieve_result](
+                          const SymbolLoadingOutcome& retrieve_result) mutable
+                      -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                        return convert_symbol_provider_retrieve_result(
+                            retrieve_result, "Stadia symbol store", std::move(error_msg));
                       });
           }));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, final_result);
-  final_result.Then(
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_microsoft_future =
+      orbit_base::UnwrapFuture(retrieve_from_stadia_future.Then(
+          main_thread_executor_,
+          [this, module_id, stop_token = stop_source.GetStopToken(),
+           &convert_symbol_provider_retrieve_result](
+              const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
+          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+            // TODO(b/239166878) Add a boolean to control enable / disable searching in Microsoft
+            // symbol server. Enable the user to set it in the symbol location dialog.
+            if (microsoft_symbol_provider_ == std::nullopt) return {previous_result};
+
+            if (previous_result.has_value()) return {previous_result.value()};
+
+            return microsoft_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
+                .Then(main_thread_executor_,
+                      [error_msg = previous_result.error().message(),
+                       &convert_symbol_provider_retrieve_result](
+                          const SymbolLoadingOutcome& retrieve_result) mutable
+                      -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                        return convert_symbol_provider_retrieve_result(
+                            retrieve_result, "Microsoft symbol server", std::move(error_msg));
+                      });
+          }));
+
+  symbol_files_currently_downloading_.emplace(
+      module_id.file_path,
+      OrbitApp::ModuleDownloadOperation{std::move(stop_source), retrieve_from_microsoft_future});
+  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
+  retrieve_from_microsoft_future.Then(
+      main_thread_executor_,
+      [this, module_file_path = module_id.file_path](
+          const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
+        symbol_files_currently_downloading_.erase(module_file_path);
+        FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
+      });
+
+  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_microsoft_future);
+  retrieve_from_microsoft_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
         symbol_files_currently_being_retrieved_.erase(module_id);
       });
 
-  return final_result;
+  return retrieve_from_microsoft_future;
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
