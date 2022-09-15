@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
+#include <absl/strings/ascii.h>
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -50,17 +51,18 @@ struct FunctionsDataViewTest : public testing::Test {
     FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()"};
     functions_.emplace_back(std::move(function0));
 
-    FunctionInfo function1{"path/to/other", "buildid2", 0x100, 42, "main(int, char**)"};
+    FunctionInfo function1{"path/to/other", "buildid1", 0x100, 42, "main(int, char**)"};
     functions_.emplace_back(std::move(function1));
 
-    FunctionInfo function2{"/somewhere/else/module", "buildid3", 0x330, 66,
+    FunctionInfo function2{"/somewhere/else/module", "buildid2", 0x330, 66,
                            "operator==(A const&, A const&)"};
     functions_.emplace_back(std::move(function2));
 
-    FunctionInfo function3{"/somewhere/else/foomodule", "buildid4", 0x33, 66, "ffind(int)"};
+    FunctionInfo function3{"/somewhere/else/CapitalizedModule", "buildid3", 0x33, 66, "ffind(int)"};
     functions_.emplace_back(std::move(function3));
 
-    FunctionInfo function4{"/somewhere/else/barmodule", "buildid4", 0x33, 66, "bar(const char*)"};
+    FunctionInfo function4{"/somewhere/else/UPPERCASEMODULE", "buildid4", 0x33, 66,
+                           "bar(const char*)"};
     functions_.emplace_back(std::move(function4));
 
     ModuleInfo module_info0{};
@@ -683,6 +685,11 @@ TEST_F(FunctionsDataViewTest, FilteringByModuleName) {
   view_.OnFilter(std::filesystem::path{functions_[4].module_path()}.filename().string());
   EXPECT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 1), functions_[4].pretty_name());
+
+  view_.OnFilter(absl::AsciiStrToLower(
+      std::filesystem::path{functions_[4].module_path()}.filename().string()));
+  EXPECT_EQ(view_.GetNumElements(), 1);
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[4].pretty_name());
 }
 
 TEST_F(FunctionsDataViewTest, FilteringByFunctionAndModuleName) {
@@ -704,12 +711,12 @@ TEST_F(FunctionsDataViewTest, FilteringByFunctionAndModuleName) {
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
 
-  // ffind is the name of the function while foomodule is the filename of the corresponding module.
-  view_.OnFilter("ffind foomodule");
+  // ffind is the name of the function while CapitalizedModule is the filename of its module.
+  view_.OnFilter("ffind CapitalizedModule");
   EXPECT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
 
   // No results when joining the tokens
-  view_.OnFilter("ffindfoomodule");
+  view_.OnFilter("ffindCapitalizedModule");
   EXPECT_EQ(view_.GetNumElements(), 0);
 }

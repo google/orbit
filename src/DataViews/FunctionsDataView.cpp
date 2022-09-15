@@ -5,6 +5,7 @@
 #include "DataViews/FunctionsDataView.h"
 
 #include <absl/flags/flag.h>
+#include <absl/strings/ascii.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -221,7 +222,8 @@ void FunctionsDataView::DoFilter() {
       for (const FunctionInfo*& function : chunk) {
         ORBIT_CHECK(function != nullptr);
         std::string name = absl::AsciiStrToLower(function->pretty_name());
-        std::string module = std::filesystem::path(function->module_path()).filename().string();
+        std::string module = absl::AsciiStrToLower(
+            std::filesystem::path(function->module_path()).filename().string());
 
         const auto is_token_found = [&name, &module](const std::string& token) {
           return name.find(token) != std::string::npos || module.find(token) != std::string::npos;
