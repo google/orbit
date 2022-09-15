@@ -179,7 +179,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // the begin tracepoint event that results in the ThreadStateSliceCallstack, so we will always
   // see the ThreadStateSliceCallstack before we see the matching ThreadStateSlice. Thus, we do not
   // need to save the thread state slices to be merged with a callstack later.
-  absl::flat_hash_map<std::pair<pid_t, uint64_t>, ThreadStateSliceCallstack>
+  absl::flat_hash_map<std::pair<uint32_t, uint64_t>, ThreadStateSliceCallstack>
       thread_state_slice_tid_and_begin_timestamp_to_callstack_;
 };
 
