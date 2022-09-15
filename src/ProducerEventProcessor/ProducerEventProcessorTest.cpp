@@ -6,6 +6,7 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
+
 #include <optional>
 
 #include "GrpcProtos/Constants.h"
