@@ -28,7 +28,6 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
-using orbit_client_data::ModuleManager;
 
 namespace orbit_data_views {
 
@@ -210,7 +209,7 @@ void FunctionsDataView::DoFilter() {
   ORBIT_SCOPE(absl::StrFormat("FunctionsDataView::DoFilter [%u]", functions_.size()).c_str());
   filter_tokens_ = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  const size_t kNumFunctionsPerTask = 1024;
+  constexpr size_t kNumFunctionsPerTask = 1024;
   std::vector<absl::Span<const FunctionInfo*>> chunks =
       orbit_base::CreateChunksOfSize(functions_, kNumFunctionsPerTask);
   std::vector<std::vector<uint64_t>> task_results(chunks.size());
@@ -248,10 +247,16 @@ void FunctionsDataView::DoFilter() {
 void FunctionsDataView::AddFunctions(
     std::vector<const orbit_client_data::FunctionInfo*> functions) {
   functions_.insert(functions_.end(), functions.begin(), functions.end());
-  indices_.resize(functions_.size());
-  for (size_t i = 0; i < indices_.size(); ++i) {
-    indices_[i] = i;
-  }
+  OnDataChanged();
+}
+
+void FunctionsDataView::RemoveFunctionsOfModule(const std::string& module_path) {
+  functions_.erase(
+      std::remove_if(functions_.begin(), functions_.end(),
+                     [&module_path](const orbit_client_data::FunctionInfo* function_info) {
+                       return function_info->module_path() == module_path;
+                     }),
+      functions_.end());
   OnDataChanged();
 }
 

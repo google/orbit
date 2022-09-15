@@ -35,6 +35,7 @@ class FunctionsDataView : public DataView {
   std::string GetLabel() override { return "Functions"; }
 
   void AddFunctions(std::vector<const orbit_client_data::FunctionInfo*> functions);
+  void RemoveFunctionsOfModule(const std::string& module_path);
   void ClearFunctions();
 
  protected:
