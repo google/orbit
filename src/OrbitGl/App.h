@@ -70,6 +70,7 @@
 #include "GrpcProtos/services.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
+#include "Http/HttpDownloadManager.h"
 #include "IntrospectionWindow.h"
 #include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
@@ -84,8 +85,11 @@
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitGgp/Client.h"
 #include "OrbitPaths/Paths.h"
 #include "QtUtils/Throttle.h"
+#include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
+#include "RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "StringManager/StringManager.h"
@@ -633,6 +637,10 @@ class OrbitApp final : public DataViewFactory,
       const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
       bool origin_is_multiple_threads);
 
+  // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
+  // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
+  void InitRemoteSymbolProviders();
+
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
       orbit_client_data::CaptureData::DataSource::kLiveCapture};
@@ -753,6 +761,15 @@ class OrbitApp final : public DataViewFactory,
 
   static constexpr std::chrono::milliseconds kMaxPostProcessingInterval{1000};
   orbit_qt_utils::Throttle update_after_symbol_loading_throttle_{kMaxPostProcessingInterval};
+
+  // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
+  // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
+  std::optional<orbit_http::HttpDownloadManager> download_manager_;
+  std::unique_ptr<orbit_ggp::Client> ggp_client_;
+  std::optional<orbit_remote_symbol_provider::StadiaSymbolStoreSymbolProvider>
+      stadia_symbol_provider_ = std::nullopt;
+  std::optional<orbit_remote_symbol_provider::MicrosoftSymbolServerSymbolProvider>
+      microsoft_symbol_provider_ = std::nullopt;
 };
 
 #endif  // ORBIT_GL_APP_H_

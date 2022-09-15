@@ -355,6 +355,8 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
         FireRefreshCallbacks();
       },
       Qt::QueuedConnection);
+
+  if (absl::GetFlag(FLAGS_symbol_store_support)) InitRemoteSymbolProviders();
 }
 
 OrbitApp::~OrbitApp() {
@@ -869,6 +871,21 @@ void OrbitApp::PostInit(bool is_connected) {
       FireRefreshCallbacks(DataViewType::kTracepoints);
     });
   });
+}
+
+void OrbitApp::InitRemoteSymbolProviders() {
+  download_manager_.emplace();
+
+  auto client_result = orbit_ggp::CreateClient();
+  if (client_result.has_error()) {
+    ORBIT_ERROR("Error creating ggp client: %s\nStadia symbol provider won't be created.",
+                client_result.error().message());
+  } else {
+    ggp_client_ = std::move(client_result.value());
+    stadia_symbol_provider_.emplace(&symbol_helper_, &*download_manager_, ggp_client_.get());
+  }
+
+  microsoft_symbol_provider_.emplace(&symbol_helper_, &*download_manager_);
 }
 
 static std::vector<std::filesystem::path> ListRegularFilesWithExtension(

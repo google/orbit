@@ -18,7 +18,7 @@ using orbit_symbol_provider::SymbolLoadingSuccessResult;
 namespace orbit_remote_symbol_provider {
 
 MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
-    orbit_symbols::SymbolCacheInterface* symbol_cache,
+    const orbit_symbols::SymbolCacheInterface* symbol_cache,
     orbit_http::DownloadManager* download_manager)
     : symbol_cache_(symbol_cache),
       download_manager_(download_manager),

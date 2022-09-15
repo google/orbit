@@ -99,7 +99,7 @@ class StadiaSymbolStoreSymbolProviderTest : public testing::Test {
   }
 
  protected:
-  orbit_symbols::MockSymbolCache symbol_cache_;
+  const orbit_symbols::MockSymbolCache symbol_cache_;
   StadiaSymbolStoreSymbolProvider symbol_provider_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
 

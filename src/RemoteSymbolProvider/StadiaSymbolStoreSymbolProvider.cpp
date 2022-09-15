@@ -21,7 +21,7 @@ using orbit_symbol_provider::SymbolLoadingSuccessResult;
 namespace orbit_remote_symbol_provider {
 
 StadiaSymbolStoreSymbolProvider::StadiaSymbolStoreSymbolProvider(
-    orbit_symbols::SymbolCacheInterface* symbol_cache,
+    const orbit_symbols::SymbolCacheInterface* symbol_cache,
     orbit_http::DownloadManager* download_manager, orbit_ggp::Client* ggp_client)
     : symbol_cache_(symbol_cache),
       download_manager_(download_manager),

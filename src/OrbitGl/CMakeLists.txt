@@ -172,20 +172,23 @@ target_link_libraries(
          DataViews
          DisplayFormats
          GrpcProtos
+         Http
          MetricsUploader
          OrbitAccessibility
          OrbitBase
+         OrbitGgp
          OrbitPaths
          PresetFile
          StringManager
-         Qt5::Gui
+         RemoteSymbolProvider
          SymbolProvider
          Symbols
          CONAN_PKG::freetype-gl
          CONAN_PKG::freetype
          CONAN_PKG::glad
          CONAN_PKG::imgui
-         gte::gte)
+         gte::gte
+         Qt5::Gui)
 
 add_custom_command(TARGET OrbitGl POST_BUILD COMMAND ${CMAKE_COMMAND}
                    -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/stadia-default-frame-track.opr
