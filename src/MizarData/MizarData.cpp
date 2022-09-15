@@ -53,7 +53,7 @@ absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MizarData::AllAddressToFunc
 }
 
 [[nodiscard]] static std::string GetFilename(const std::string& path) {
-  return std::filesystem::path(path).filename().replace_extension();
+  return std::filesystem::path(path).filename().replace_extension().string();
 }
 
 [[nodiscard]] std::string MizarData::GetModuleFileName(AbsoluteAddress address) const {
