@@ -16,6 +16,7 @@ orbit_cc_library(
     deps = [
         "//src/OrbitBase",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format"
     ],
 )
 
