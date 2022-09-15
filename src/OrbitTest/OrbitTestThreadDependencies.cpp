@@ -9,6 +9,8 @@
 #include <mutex>
 #include <thread>
 
+#include "OrbitBase/ThreadUtils.h"
+
 static std::atomic<bool> exit_requested;
 static std::atomic<int> frame_number;
 
@@ -18,7 +20,7 @@ constexpr int kNumOfThreads = 4;
 
 void DoWork(int thread_number) {
   std::string thread_name = absl::StrFormat("Worker thread %d", thread_number);
-  pthread_setname_np(pthread_self(), thread_name.c_str());
+  orbit_base::SetCurrentThreadName(thread_name.c_str());
   while (true) {
     if (exit_requested.load()) {
       break;
