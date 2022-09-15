@@ -86,24 +86,24 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsNotFound) {
 }
 
 TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsError) {
-    {
-      const std::string build_id = "a";  // build id mal formed (too short)
-      const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
+  {
+    const std::string build_id = "a";  // build id mal formed (too short)
+    const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-      const orbit_base::Future<SymbolLoadingOutcome> future =
-          symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
+    const orbit_base::Future<SymbolLoadingOutcome> future =
+        symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
 
-      bool lambda_executed = false;
-      orbit_base::ImmediateExecutor executor;
-      future
-          .Then(&executor,
-                [&](const SymbolLoadingOutcome& result) {
-                  ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
-                  lambda_executed = true;
-                })
-          .Wait();
-      EXPECT_TRUE(lambda_executed);
-    }
+    bool lambda_executed = false;
+    orbit_base::ImmediateExecutor executor;
+    future
+        .Then(&executor,
+              [&](const SymbolLoadingOutcome& result) {
+                ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
+                lambda_executed = true;
+              })
+        .Wait();
+    EXPECT_TRUE(lambda_executed);
+  }
 }
 
 }  // namespace orbit_symbol_provider
