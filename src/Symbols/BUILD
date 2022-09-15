@@ -37,6 +37,7 @@ orbit_cc_test(
         "//src/GrpcProtos:symbol_cc_proto",
         "//src/ObjectUtils",
         "//src/OrbitBase",
+        "//src/SymbolProvider",
         "//src/TestUtils",
         "@com_google_absl//absl/strings",
     ],

@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include <absl/strings/ascii.h>
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <string>
 
 #include "GrpcProtos/module.pb.h"
@@ -438,19 +438,6 @@ TEST(SymbolHelper, IsMatchingDebugInfoFile) {
   EXPECT_FALSE(
       SymbolHelper::IsMatchingDebugInfoFile(existing_but_wrong_file_path, kExpectedChecksum));
   EXPECT_FALSE(SymbolHelper::IsMatchingDebugInfoFile(non_existing_file_path, kExpectedChecksum));
-}
-
-TEST(SymbolHelper, FindDebugInfoFileInDebugStore) {
-  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
-                                "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
-  const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
-
-  ErrorMessageOr<std::filesystem::path> error_or_path =
-      SymbolHelper::FindDebugInfoFileInDebugStore(testdata_directory / "debugstore", build_id);
-
-  ASSERT_THAT(error_or_path, HasValue());
-  EXPECT_EQ(error_or_path.value(), symbols_path);
 }
 
 TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {

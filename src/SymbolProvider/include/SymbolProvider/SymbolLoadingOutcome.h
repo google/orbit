@@ -25,7 +25,8 @@ struct SymbolLoadingSuccessResult {
     kAdditionalSymbolPathsFlag,
     kStadiaSymbolStore,
     kMicrosoftSymbolServer,
-    kUserDefinedSymbolStore
+    kUserDefinedSymbolStore,
+    kUsrLibDebugDirectory,
   };
   enum class SymbolFileSeparation { kDifferentFile, kModuleFile };
 

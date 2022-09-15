@@ -10,6 +10,7 @@
 #include <llvm/Object/ObjectFile.h>
 
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -17,9 +18,9 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "Introspection/Introspection.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
+#include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"
 
 namespace orbit_symbols {
@@ -28,9 +29,7 @@ class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
-                        std::vector<std::filesystem::path> structured_debug_directories)
-      : cache_directory_(std::move(cache_directory)),
-        structured_debug_directories_{std::move(structured_debug_directories)} {};
+                        std::vector<std::filesystem::path> structured_debug_directories);
 
   ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, const std::string& build_id,
@@ -56,18 +55,15 @@ class SymbolHelper : public SymbolCacheInterface {
       std::string_view filename, uint32_t checksum,
       absl::Span<const std::filesystem::path> directories) const;
 
-  // Check out GDB's documentation for how a debug directory is structured:
-  // https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html
-  [[nodiscard]] static ErrorMessageOr<std::filesystem::path> FindDebugInfoFileInDebugStore(
-      const std::filesystem::path& debug_directory, std::string_view build_id);
-
  private:
   template <typename Verifier>
   ErrorMessageOr<std::filesystem::path> FindSymbolsInCacheImpl(
       const std::filesystem::path& module_path, Verifier&& verify) const;
 
   const std::filesystem::path cache_directory_;
-  const std::vector<std::filesystem::path> structured_debug_directories_;
+  // TODO(b/246743231): Move this out of SymbolHelper in a next refactoring step.
+  std::vector<orbit_symbol_provider::StructuredDebugDirectorySymbolProvider>
+      structured_debug_directory_providers_;
 };
 
 [[nodiscard]] std::vector<std::filesystem::path> ReadSymbolsFile(
