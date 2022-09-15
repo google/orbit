@@ -65,7 +65,10 @@ constexpr std::array<uint64_t, kNumFunctions> kFunctionAddresses{0x5100, 0x7250,
 constexpr std::array<uint64_t, kNumFunctions> kFunctionSizes{0x50, 0x70, 0x60, 0x40};
 
 constexpr size_t kNumModules = 5;
-constexpr std::array<uint64_t, kNumModules> kModuleIsLoaded{true, true, true, true, false};
+constexpr std::array<ModuleData::SymbolCompleteness, kNumModules> kModuleSymbolCompleteness{
+    ModuleData::SymbolCompleteness::kDebugSymbols, ModuleData::SymbolCompleteness::kDebugSymbols,
+    ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo,
+    ModuleData::SymbolCompleteness::kNoSymbols, ModuleData::SymbolCompleteness::kNoSymbols};
 const std::array<std::string, kNumModules> kModuleNames{"foomodule", "somemodule", "ffindmodule",
                                                         "barmodule", "notloadedmodule"};
 const std::array<std::string, kNumModules> kModulePaths{
@@ -105,7 +108,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
     modules.push_back(module_info);
 
-    if (kModuleIsLoaded[i]) {
+    if (kModuleSymbolCompleteness[i] > ModuleData::SymbolCompleteness::kNoSymbols) {
       orbit_grpc_protos::SymbolInfo symbol_info;
       symbol_info.set_demangled_name(kFunctionPrettyNames[i]);
       symbol_info.set_address(kFunctionAddresses[i]);
@@ -117,7 +120,16 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
       orbit_client_data::ModuleData* module_data =
           module_manager->GetMutableModuleByModuleIdentifier(
               orbit_symbol_provider::ModuleIdentifier{kModulePaths[i], kModuleBuildIds[i]});
-      module_data->AddSymbols(module_symbols);
+      switch (kModuleSymbolCompleteness[i]) {
+        case ModuleData::SymbolCompleteness::kNoSymbols:
+          ORBIT_UNREACHABLE();
+        case ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo:
+          module_data->AddFallbackSymbols(module_symbols);
+          break;
+        case ModuleData::SymbolCompleteness::kDebugSymbols:
+          module_data->AddSymbols(module_symbols);
+          break;
+      }
     }
   }
 
@@ -130,7 +142,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   auto capture_data =
       std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
                                     CaptureData::DataSource::kLiveCapture);
-  ProcessData* process = capture_data.get()->mutable_process();
+  ProcessData* process = capture_data->mutable_process();
   process->UpdateModuleInfos(modules);
 
   return capture_data;
@@ -338,22 +350,25 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     for (int selected_index : selected_indices) {
       if (kFrameFunctionNotNull[selected_index] && capture_connected) {
-        // Source code and disassembly actions are availble if and only if: 1) capture is connected
+        // Source code and disassembly actions are available if and only if: 1) capture is connected
         // and 2) there exists a function that is not null.
         source_code_or_disassembly = ContextMenuEntry::kEnabled;
 
-        // Hook action is availble if and only if: 1) capture is connected
+        // Hook action is available if and only if: 1) capture is connected
         // and 2) there exists a function that is not null and also not yet selected.
-        // Unhook action is availble if and only if: 1) capture is connected
+        // Unhook action is available if and only if: 1) capture is connected
         // and 2) there exists a function that is not null and also already selected.
         if (!functions_selected[selected_index]) {
           select = ContextMenuEntry::kEnabled;
         } else {
           unselect = ContextMenuEntry::kEnabled;
         }
-      } else if (kFrameModuleNotNull[selected_index] && !kModuleIsLoaded[selected_index]) {
-        // Load symbols action is available if and only if existing a module that is not null and
-        // not yet loaded.
+      }
+      if (kFrameModuleNotNull[selected_index] &&
+          kModuleSymbolCompleteness[selected_index] <
+              ModuleData::SymbolCompleteness::kDebugSymbols) {
+        // Load symbols action is available if and only if there is a module that is not null and
+        // that doesn't have the full debug symbols loaded.
         load_symbols = ContextMenuEntry::kEnabled;
       }
     }

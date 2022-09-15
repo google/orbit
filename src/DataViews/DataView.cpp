@@ -193,7 +193,7 @@ void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
   std::vector<const ModuleData*> modules_to_load;
   for (int index : selection) {
     const ModuleData* module_data = GetModuleDataFromRow(index);
-    if (module_data != nullptr && !module_data->is_loaded()) {
+    if (module_data != nullptr && !module_data->AreDebugSymbolsLoaded()) {
       modules_to_load.push_back(module_data);
     }
   }

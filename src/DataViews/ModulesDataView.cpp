@@ -96,7 +96,7 @@ void ModulesDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnSymbols:
-      sorter = ORBIT_PROC_SORT(is_loaded());
+      sorter = ORBIT_PROC_SORT(GetLoadedSymbolsCompleteness());
       break;
     case kColumnName:
       sorter = [&](uint64_t a, uint64_t b) {
@@ -143,7 +143,7 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
   if (action == kMenuActionVerifyFramePointers) {
     bool at_least_one_module_is_loaded =
         std::any_of(modules.begin(), modules.end(),
-                    [](const ModuleData* module) { return module->is_loaded(); });
+                    [](const ModuleData* module) { return module->AreDebugSymbolsLoaded(); });
 
     return at_least_one_module_is_loaded ? ActionStatus::kVisibleAndEnabled
                                          : ActionStatus::kVisibleButDisabled;
@@ -151,7 +151,8 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
 
   bool at_least_one_module_can_be_loaded =
       std::any_of(modules.begin(), modules.end(), [this](const ModuleData* module) {
-        return !module->is_loaded() && !app_->IsSymbolLoadingInProgressForModule(module);
+        return !module->AreDebugSymbolsLoaded() &&
+               !app_->IsSymbolLoadingInProgressForModule(module);
       });
 
   bool at_least_one_module_is_downloading =
@@ -183,7 +184,7 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
 
 void ModulesDataView::OnDoubleClicked(int index) {
   ModuleData* module_data = GetModuleDataFromRow(index);
-  if (!module_data->is_loaded()) {
+  if (!module_data->AreDebugSymbolsLoaded()) {
     std::vector<ModuleData*> modules_to_load = {module_data};
     app_->LoadSymbolsManually(modules_to_load);
   }

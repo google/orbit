@@ -65,11 +65,6 @@ uint64_t ModuleData::ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_
   return offset_in_file + load_bias();
 }
 
-bool ModuleData::is_loaded() const {
-  absl::MutexLock lock(&mutex_);
-  return is_loaded_;
-}
-
 bool ModuleData::NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const {
   return name() != info.name() || file_size() != info.file_size() ||
          load_bias() != info.load_bias();
@@ -92,13 +87,13 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   ORBIT_LOG("WARNING: Module \"%s\" changed and will be updated (it does not have build_id).",
             file_path());
 
-  if (!is_loaded_) return false;
+  if (loaded_symbols_completeness_ <= SymbolCompleteness::kNoSymbols) return false;
 
   ORBIT_LOG("Module %s contained symbols. Because the module changed, those are now removed.",
             file_path());
   functions_.clear();
   hash_to_function_map_.clear();
-  is_loaded_ = false;
+  loaded_symbols_completeness_ = SymbolCompleteness::kNoSymbols;
 
   return true;
 }
@@ -115,7 +110,7 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
   // The update only makes sense if build_id is empty.
   ORBIT_CHECK(build_id().empty());
 
-  if (is_loaded_) return false;
+  if (loaded_symbols_completeness_ > SymbolCompleteness::kNoSymbols) return false;
 
   module_info_ = std::move(info);
   return true;
@@ -143,9 +138,56 @@ const FunctionInfo* ModuleData::FindFunctionByVirtualAddress(uint64_t virtual_ad
   return function;
 }
 
-void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+const FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {
   absl::MutexLock lock(&mutex_);
-  ORBIT_CHECK(!is_loaded_);
+  return hash_to_function_map_.contains(hash) ? hash_to_function_map_.at(hash) : nullptr;
+}
+
+const FunctionInfo* ModuleData::FindFunctionFromPrettyName(std::string_view pretty_name) const {
+  absl::MutexLock lock(&mutex_);
+  auto it = name_to_function_info_map_.find(pretty_name);
+  return it != name_to_function_info_map_.end() ? it->second : nullptr;
+}
+
+std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
+  absl::MutexLock lock(&mutex_);
+  std::vector<const FunctionInfo*> result;
+  result.reserve(functions_.size());
+  for (const auto& pair : functions_) {
+    result.push_back(pair.second.get());
+  }
+  return result;
+}
+
+ModuleData::SymbolCompleteness ModuleData::GetLoadedSymbolsCompleteness() const {
+  absl::MutexLock lock(&mutex_);
+  return loaded_symbols_completeness_;
+}
+
+bool ModuleData::AreDebugSymbolsLoaded() const {
+  absl::MutexLock lock(&mutex_);
+  return loaded_symbols_completeness_ >= SymbolCompleteness::kDebugSymbols;
+}
+
+bool ModuleData::AreAtLeastFallbackSymbolsLoaded() const {
+  absl::MutexLock lock(&mutex_);
+  return loaded_symbols_completeness_ >= SymbolCompleteness::kDynamicLinkingAndUnwindInfo;
+}
+
+void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+  AddSymbolsInternal(module_symbols, SymbolCompleteness::kDebugSymbols);
+}
+
+void ModuleData::AddFallbackSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+  AddSymbolsInternal(module_symbols, SymbolCompleteness::kDynamicLinkingAndUnwindInfo);
+}
+
+void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& module_symbols,
+                                    ModuleData::SymbolCompleteness completeness) {
+  absl::MutexLock lock(&mutex_);
+  ORBIT_CHECK(loaded_symbols_completeness_ < completeness);
+  functions_.clear();
+  hash_to_function_map_.clear();
 
   uint32_t address_reuse_counter = 0;
   uint32_t name_reuse_counter = 0;
@@ -177,39 +219,18 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     }
   }
   if (address_reuse_counter != 0) {
-    ORBIT_LOG("Warning: %d absolute addresses are used by more than one symbol",
-              address_reuse_counter);
+    ORBIT_LOG("Warning: %d absolute addresses are used by more than one symbol for \"%s\"",
+              address_reuse_counter, name());
   }
   if (name_reuse_counter != 0) {
     ORBIT_LOG(
-        "Warning: %d function name collisions happened (functions with the same demangled name). "
-        "This is currently not supported by presets, since the presets are based on the demangled "
-        "name.",
-        name_reuse_counter);
+        "Warning: %d function name collisions happened (functions with the same demangled name) "
+        "for \"%s\". This is currently not supported by presets, since presets are based on the "
+        "demangled name.",
+        name_reuse_counter, name());
   }
 
-  is_loaded_ = true;
-}
-
-const FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {
-  absl::MutexLock lock(&mutex_);
-  return hash_to_function_map_.contains(hash) ? hash_to_function_map_.at(hash) : nullptr;
-}
-
-const FunctionInfo* ModuleData::FindFunctionFromPrettyName(std::string_view pretty_name) const {
-  absl::MutexLock lock(&mutex_);
-  auto it = name_to_function_info_map_.find(pretty_name);
-  return it != name_to_function_info_map_.end() ? it->second : nullptr;
-}
-
-std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
-  absl::MutexLock lock(&mutex_);
-  std::vector<const FunctionInfo*> result;
-  result.reserve(functions_.size());
-  for (const auto& pair : functions_) {
-    result.push_back(pair.second.get());
-  }
-  return result;
+  loaded_symbols_completeness_ = completeness;
 }
 
 }  // namespace orbit_client_data

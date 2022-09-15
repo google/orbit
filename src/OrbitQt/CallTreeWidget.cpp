@@ -639,7 +639,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
 
   std::vector<ModuleData*> modules_to_load;
   for (const auto& module : GetModulesFromIndices(app_, selected_tree_indices)) {
-    if (!module->is_loaded()) {
+    if (!module->AreDebugSymbolsLoaded()) {
       modules_to_load.push_back(module);
     }
   }

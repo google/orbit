@@ -110,7 +110,10 @@ constexpr std::array<uint64_t, kNumFunctions> kModuleEndAddresses{0x3900, 0x9500
 constexpr std::array<uint64_t, kNumFunctions> kModuleExecutableSegmentOffsets{0x123, 0x234, 0x135,
                                                                               0x246};
 constexpr std::array<uint64_t, kNumFunctions> kModuleLoadBiases{0x5000, 0x7000, 0x6000, 0x4000};
-constexpr std::array<uint64_t, kNumFunctions> kModuleIsLoaded{true, true, false, false};
+constexpr std::array<ModuleData::SymbolCompleteness, kNumFunctions> kModuleSymbolCompleteness{
+    ModuleData::SymbolCompleteness::kDebugSymbols,
+    ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo,
+    ModuleData::SymbolCompleteness::kNoSymbols, ModuleData::SymbolCompleteness::kNoSymbols};
 
 // Used for setting up SampledFunction
 constexpr std::array<uint64_t, kNumFunctions> kSampledAbsoluteAddresses{0x3140, 0x9260, 0x7750,
@@ -159,7 +162,9 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
   const size_t index = std::distance(std::begin(kSampledAbsoluteAddresses),
                                      std::find(std::begin(kSampledAbsoluteAddresses),
                                                std::end(kSampledAbsoluteAddresses), address));
-  return kModuleIsLoaded[index] ? kFunctionPrettyNames[index] : "???";
+  return (kModuleSymbolCompleteness[index] > ModuleData::SymbolCompleteness::kNoSymbols)
+             ? kFunctionPrettyNames[index]
+             : "???";
 }
 
 [[nodiscard]] std::string BuildExpectedExportEventsToCsvString(std::vector<size_t> indices) {
@@ -212,7 +217,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
     modules.push_back(module_info);
 
-    if (kModuleIsLoaded[i]) {
+    if (kModuleSymbolCompleteness[i] > ModuleData::SymbolCompleteness::kNoSymbols) {
       orbit_grpc_protos::SymbolInfo symbol_info;
       symbol_info.set_demangled_name(kFunctionPrettyNames[i]);
       symbol_info.set_address(kFunctionAddresses[i]);
@@ -223,7 +228,16 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
       ModuleData* module_data = module_manager->GetMutableModuleByModuleIdentifier(
           ModuleIdentifier{kModulePaths[i], kModuleBuildIds[i]});
-      module_data->AddSymbols(module_symbols);
+      switch (kModuleSymbolCompleteness[i]) {
+        case ModuleData::SymbolCompleteness::kNoSymbols:
+          ORBIT_UNREACHABLE();
+        case ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo:
+          module_data->AddFallbackSymbols(module_symbols);
+          break;
+        case ModuleData::SymbolCompleteness::kDebugSymbols:
+          module_data->AddSymbols(module_symbols);
+          break;
+      }
     }
   }
 
@@ -553,7 +567,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     // loaded yet.
     ContextMenuEntry load_symbols = ContextMenuEntry::kDisabled;
     for (int index : selected_indices_with_matching_module) {
-      if (!kModuleIsLoaded[index]) {
+      if (kModuleSymbolCompleteness[index] < ModuleData::SymbolCompleteness::kDebugSymbols) {
         load_symbols = ContextMenuEntry::kEnabled;
         break;
       }

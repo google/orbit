@@ -17,7 +17,7 @@ namespace orbit_data_views {
 // textual description for each state via GetDescription and a color via GetDisplayColor
 struct SymbolLoadingState {
   // TODO(b/202140068) remove unknown when not needed anymore
-  enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded } state;
+  enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded, kFallback } state;
   SymbolLoadingState(State initial_state) : state(initial_state) {}
 
   [[nodiscard]] std::string GetDescription() const {
@@ -34,6 +34,8 @@ struct SymbolLoadingState {
         return "Loading...";
       case kLoaded:
         return "Loaded";
+      case kFallback:
+        return "Partial";
     }
     ORBIT_UNREACHABLE();
   }
@@ -61,6 +63,12 @@ struct SymbolLoadingState {
       case kError: {
         red = 230;
         green = 70;
+        blue = 70;
+        break;
+      }
+      case kFallback: {
+        red = 230;
+        green = 150;
         blue = 70;
         break;
       }

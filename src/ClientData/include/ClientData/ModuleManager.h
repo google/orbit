@@ -34,13 +34,13 @@ class ModuleManager final {
       const orbit_symbol_provider::ModuleIdentifier& module_id);
   // Add new modules for the module_infos that do not exist yet, and update the modules that do
   // exist. If the update changed the module in a way that symbols were not valid anymore, the
-  // symbols are discarded aka the module is not loaded anymore. This method returns the list of
-  // modules that used to be loaded before the call and are not loaded anymore after the call.
+  // symbols are discarded, i.e., the module is no longer loaded. This method returns the list of
+  // modules that used to be loaded before the call and are no longer loaded after the call.
   [[nodiscard]] std::vector<ModuleData*> AddOrUpdateModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
-  // Similar to AddOrUpdateModules except it does not update loaded modules.
-  // Retuns the list of modules that it did not update.
+  // Similar to AddOrUpdateModules, except that it does not update modules that already have
+  // symbols. Returns the list of modules that it did not update.
   [[nodiscard]] std::vector<ModuleData*> AddOrUpdateNotLoadedModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 

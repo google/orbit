@@ -135,9 +135,16 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   const ModuleInMemory& module_in_memory = modules_in_memory_[kIndex];
   ModuleData* module =
       module_manager_.GetMutableModuleByModuleIdentifier(module_in_memory.module_id());
-  module->AddSymbols({});
-  EXPECT_TRUE(module->is_loaded());
 
+  module->AddFallbackSymbols({});
+  EXPECT_EQ(module->GetLoadedSymbolsCompleteness(),
+            ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo);
+  context_menu =
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {kIndex}));
+  CheckSingleAction(context_menu, kMenuActionLoadSymbols, ContextMenuEntry::kEnabled);
+
+  module->AddSymbols({});
+  EXPECT_EQ(module->GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kDebugSymbols);
   context_menu =
       FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {kIndex}));
   CheckSingleAction(context_menu, kMenuActionLoadSymbols, ContextMenuEntry::kDisabled);

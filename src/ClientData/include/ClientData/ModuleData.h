@@ -26,8 +26,7 @@ namespace orbit_client_data {
 // Represents information about module on the client
 class ModuleData final {
  public:
-  explicit ModuleData(orbit_grpc_protos::ModuleInfo info)
-      : module_info_(std::move(info)), is_loaded_(false) {}
+  explicit ModuleData(orbit_grpc_protos::ModuleInfo info) : module_info_(std::move(info)) {}
 
   [[nodiscard]] const std::string& name() const { return module_info_.name(); }
   [[nodiscard]] const std::string& file_path() const { return module_info_.file_path(); }
@@ -47,27 +46,39 @@ class ModuleData final {
   [[nodiscard]] uint64_t ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const;
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;
 
-  [[nodiscard]] bool is_loaded() const;
-  // Returns true if the module was unloaded and false otherwise.
+  // Returns true if the module was unloaded (symbols were removed) and false otherwise.
   [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);
-  // This method does not update module_data in case it needs update and was not loaded.
-  // returns true if update was successful or no update was needed and false if module
-  // cannot be updated because it was loaded.
+  // This method does not update the module in case symbols are already loaded, even if the module
+  // would need to be updated. Returns true if the update was successful or no update was needed,
+  // and false if the module cannot be updated because symbols are already loaded.
   [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
 
   [[nodiscard]] const FunctionInfo* FindFunctionByVirtualAddress(uint64_t virtual_address,
                                                                  bool is_exact) const;
-  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
   [[nodiscard]] const FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const FunctionInfo* FindFunctionFromPrettyName(std::string_view pretty_name) const;
   [[nodiscard]] std::vector<const FunctionInfo*> GetFunctions() const;
 
+  enum class SymbolCompleteness {
+    kNoSymbols = 0,
+    kDynamicLinkingAndUnwindInfo = 1,  // i.e., "fallback symbols"
+    kDebugSymbols = 2,
+  };
+  [[nodiscard]] SymbolCompleteness GetLoadedSymbolsCompleteness() const;
+  [[nodiscard]] bool AreDebugSymbolsLoaded() const;
+  [[nodiscard]] bool AreAtLeastFallbackSymbolsLoaded() const;
+
+  void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
+  void AddFallbackSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
+
  private:
   [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
+  void AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& module_symbols,
+                          SymbolCompleteness completeness);
 
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ModuleInfo module_info_;
-  bool is_loaded_;
+  SymbolCompleteness loaded_symbols_completeness_ = SymbolCompleteness::kNoSymbols;
   std::map<uint64_t, std::unique_ptr<FunctionInfo>> functions_;
   absl::flat_hash_map<std::string_view, FunctionInfo*> name_to_function_info_map_;
 
