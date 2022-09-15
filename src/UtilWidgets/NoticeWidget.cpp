@@ -13,11 +13,10 @@
 #include <QStyleOption>
 #include <QWidget>
 
-#include "CoreMath.h"
 #include "ui_NoticeWidget.h"
 
 namespace {
-const Color kGreen{0, 255, 0, 26};
+const QColor kGreen{0, 255, 0, 26};
 }  // namespace
 namespace orbit_util_widgets {
 
@@ -30,13 +29,13 @@ NoticeWidget::NoticeWidget(QWidget* parent)
 }
 
 void NoticeWidget::Initialize(const std::string& label_text, const std::string& button_text,
-                              const Color& color) {
+                              const QColor& color) {
   ui_->noticeLabel->setText(QString::fromStdString(label_text));
   ui_->noticeButton->setText(QString::fromStdString(button_text));
-  setStyleSheet(QString::fromStdString(
-      absl::StrFormat("QWidget#%s{ border-radius: 5px; border: 1px solid palette(text); "
-                      "background: rgba(%d, %d, %d, %d);}",
-                      objectName().toStdString(), color[0], color[1], color[2], color[3])));
+  setStyleSheet(QString::fromStdString(absl::StrFormat(
+      "QWidget#%s{ border-radius: 5px; border: 1px solid palette(text); "
+      "background: rgba(%d, %d, %d, %d);}",
+      objectName().toStdString(), color.red(), color.green(), color.blue(), color.alpha())));
 }
 
 void NoticeWidget::InitializeAsInspection() {

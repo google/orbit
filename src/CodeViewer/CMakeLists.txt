@@ -10,7 +10,6 @@ add_library(CodeViewer STATIC)
 target_include_directories(CodeViewer PUBLIC include/)
 target_link_libraries(CodeViewer PUBLIC CodeReport
                                         OrbitBase
-                                        OrbitGl
                                         SyntaxHighlighter
                                         Qt5::Widgets)
 

@@ -16,8 +16,7 @@ target_sources(
   PRIVATE include/CommandLineUtils/CommandLineUtils.h
 )
 
-target_link_libraries(CommandLineUtils PUBLIC
-        OrbitQt)
+target_link_libraries(CommandLineUtils PUBLIC Qt5::Core ClientFlags CONAN_PKG::abseil)
 target_include_directories(CommandLineUtils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(CommandLineUtilsTests)

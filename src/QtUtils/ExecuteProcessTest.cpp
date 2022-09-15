@@ -6,8 +6,8 @@
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
 
-#include <QApplication>
 #include <QByteArray>
+#include <QCoreApplication>
 #include <QObject>
 #include <QTimer>
 #include <memory>
@@ -33,7 +33,7 @@ TEST(QtUtilsExecuteProcess, ProgramNotFound) {
   std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess("non_existing_process", QStringList{}, QApplication::instance());
+      ExecuteProcess("non_existing_process", QStringList{}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
   future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
@@ -42,10 +42,10 @@ TEST(QtUtilsExecuteProcess, ProgramNotFound) {
     EXPECT_THAT(result, HasError("Error occurred while executing process"));
     EXPECT_THAT(result, HasError("non_existing_process"));
     EXPECT_THAT(result, HasError("FailedToStart"));
-    QApplication::exit();
+    QCoreApplication::exit();
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -58,17 +58,17 @@ TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{"--exit_code", "240"}, QApplication::instance());
+      ExecuteProcess(program, QStringList{"--exit_code", "240"}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
   future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     EXPECT_THAT(result, HasError("failed with exit code: 240"));
-    QApplication::exit();
+    QCoreApplication::exit();
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -81,7 +81,7 @@ TEST(QtUtilsExecuteProcess, Succeeds) {
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{}, QApplication::instance());
+      ExecuteProcess(program, QStringList{}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
   future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
@@ -89,10 +89,10 @@ TEST(QtUtilsExecuteProcess, Succeeds) {
     lambda_was_called = true;
     ASSERT_THAT(result, HasValue());
     EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Some example output"));
-    QApplication::exit();
+    QCoreApplication::exit();
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -113,10 +113,10 @@ TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
     lambda_was_called = true;
     ASSERT_THAT(result, HasValue());
     EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Some example output"));
-    QApplication::exit();
+    QCoreApplication::exit();
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -129,7 +129,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QApplication::instance());
+      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
   future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
@@ -138,10 +138,10 @@ TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
     ASSERT_THAT(result, HasValue());
     EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Some example output"));
     EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Slept for 200ms"));
-    QApplication::exit();
+    QCoreApplication::exit();
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -154,7 +154,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QApplication::instance(),
+      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QCoreApplication::instance(),
                      absl::Milliseconds(100));
 
   bool lambda_was_called = false;
@@ -165,10 +165,10 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -181,7 +181,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QApplication::instance(),
+      ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QCoreApplication::instance(),
                      absl::ZeroDuration());
 
   bool lambda_was_called = false;
@@ -192,10 +192,10 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -221,11 +221,11 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
   parent_object->deleteLater();
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -251,12 +251,12 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
   QTimer::singleShot(100, parent_object, &QObject::deleteLater);
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -271,7 +271,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
   // Note the sleep for the process and the timer timeout are both 100ms. This means the outcome can
   // be either a success or timeout.
   Future<ErrorMessageOr<QByteArray>> future =
-      ExecuteProcess(program, QStringList{"--sleep_for_ms", "100"}, QApplication::instance(),
+      ExecuteProcess(program, QStringList{"--sleep_for_ms", "100"}, QCoreApplication::instance(),
                      absl::Milliseconds(100));
 
   bool lambda_was_called = false;
@@ -289,10 +289,10 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -326,12 +326,12 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
   QTimer::singleShot(100, parent_object, &QObject::deleteLater);
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }
@@ -366,12 +366,12 @@ TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
-    QTimer::singleShot(5, QApplication::instance(), &QApplication::quit);
+    QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
   QTimer::singleShot(100, parent_object, &QObject::deleteLater);
 
-  QApplication::exec();
+  QCoreApplication::exec();
 
   EXPECT_TRUE(lambda_was_called);
 }

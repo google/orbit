@@ -4,6 +4,7 @@
 
 #include "orbitsamplingreport.h"
 
+#include <QColor>
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QItemSelectionModel>
@@ -31,9 +32,7 @@
 #include "types.h"
 #include "ui_orbitsamplingreport.h"
 
-namespace {
-const Color kRed = Color{255, 0, 0, 26};
-}  // namespace
+const QColor kRed{255, 0, 0, 26};
 
 OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
     : QWidget(parent), ui_(new Ui::OrbitSamplingReport) {
