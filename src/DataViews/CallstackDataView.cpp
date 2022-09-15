@@ -16,7 +16,6 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "CoreMath.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Append.h"
@@ -216,7 +215,7 @@ bool CallstackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& 
                                         unsigned char& green, unsigned char& blue) {
   // Row "0" refers to the program counter and is always "correct".
   if (callstack_->IsUnwindingError() && row != 0) {
-    static const Color kUnwindingErrorColor{255, 128, 0, 255};
+    constexpr std::array<unsigned char, 3> kUnwindingErrorColor{255, 128, 0};
     red = kUnwindingErrorColor[0];
     green = kUnwindingErrorColor[1];
     blue = kUnwindingErrorColor[2];

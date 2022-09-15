@@ -5,12 +5,11 @@
 #ifndef UTIL_WIDGETS_NOTICE_WIDGET_H_
 #define UTIL_WIDGETS_NOTICE_WIDGET_H_
 
+#include <QColor>
 #include <QPaintEvent>
 #include <QWidget>
 #include <memory>
 #include <string>
-
-#include "CoreMath.h"
 
 namespace Ui {
 class NoticeWidget;
@@ -26,7 +25,7 @@ class NoticeWidget : public QWidget {
   ~NoticeWidget() override;
 
   void Initialize(const std::string& label_text, const std::string& button_text,
-                  const Color& color);
+                  const QColor& color);
   void InitializeAsInspection();
 
  signals:

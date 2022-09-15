@@ -8,7 +8,7 @@ project(QtUtils)
 add_library(QtUtils STATIC)
 
 target_include_directories(QtUtils PUBLIC include/)
-target_link_libraries(QtUtils PUBLIC OrbitBase OrbitGl Qt5::Core CONAN_PKG::abseil GTest::GTest)
+target_link_libraries(QtUtils PUBLIC Introspection OrbitBase Qt5::Core CONAN_PKG::abseil GTest::GTest)
 
 target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
                               include/QtUtils/CreateTimeout.h
@@ -36,5 +36,5 @@ target_sources(QtUtilsTests PRIVATE CreateTimeoutTest.cpp
                                     FutureWatcherTest.cpp
                                     MainThreadExecutorImplTest.cpp
                                     ThrottleTest.cpp)
-target_link_libraries(QtUtilsTests PRIVATE ClientFlags TestUtils QtUtils GTest::QtCoreMain)
+target_link_libraries(QtUtilsTests PRIVATE TestUtils QtUtils GTest::QtCoreMain)
 register_test(QtUtilsTests)
