@@ -581,6 +581,13 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
 
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
+  ORBIT_CHECK(thread_state_slice.switch_out_or_wakeup_callstack_status() !=
+              ThreadStateSlice::kWaitingForCallstack);
+  std::optional<uint64_t> triggering_callstack_id =
+      (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
+       ThreadStateSlice::kCallstackSet)
+          ? std::make_optional<uint64_t>(thread_state_slice.switch_out_or_wakeup_callstack_id())
+          : std::nullopt;
   ThreadStateSliceInfo slice_info{
       thread_state_slice.tid(),
       thread_state_slice.thread_state(),
@@ -589,7 +596,16 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       FromGrpcWakeupReasonToInfoWakeupReason(thread_state_slice.wakeup_reason()),
       thread_state_slice.wakeup_tid(),
       thread_state_slice.wakeup_pid(),
+      triggering_callstack_id,
   };
+
+  if (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
+      ThreadStateSlice::kCallstackSet) {
+    uint64_t callstack_id = thread_state_slice.switch_out_or_wakeup_callstack_id();
+    Callstack callstack = callstack_intern_pool.at(callstack_id);
+
+    SendCallstackToListenerIfNecessary(callstack_id, callstack);
+  }
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 
