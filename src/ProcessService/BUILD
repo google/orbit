@@ -22,6 +22,7 @@ orbit_cc_library(
         "//src/ModuleUtils",
         "//src/ObjectUtils",
         "//src/OrbitBase",
+        "//src/SymbolProvider",
         "//src/Symbols",
         "@com_github_grpc_grpc//:grpc",
         "@com_github_grpc_grpc//:grpc++",

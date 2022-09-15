@@ -29,10 +29,16 @@
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolUtils.h"
 #include "absl/strings/str_format.h"
 
@@ -199,29 +205,31 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 }
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
-    const std::filesystem::path& structured_debug_store, std::string_view build_id) {
-  // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
-  // generate a proper filename: build_id[0:2]/build_id[2:].debug
-  if (build_id.size() < 3) {
-    return ErrorMessage{absl::StrFormat("The build-id \"%s\" is malformed.", build_id)};
+    const std::filesystem::path& structured_debug_store,
+    const orbit_symbol_provider::ModuleIdentifier& module_id) {
+  orbit_symbol_provider::StructuredDebugDirectorySymbolProvider provider{
+      structured_debug_store,
+      orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kStadiaInstanceUsrLibDebug};
+  orbit_base::StopSource stop_source;
+  orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> retrieve_future =
+      provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+  // TODO(b/246919095): Do not use `.Get()` and do not do the explicit handling of
+  // success/error/not_found here anymore, as soon as the rest of `FindSymbolsFilePath` is using
+  // SymbolProviders.
+  const orbit_symbol_provider::SymbolLoadingOutcome& retrieve_outcome = retrieve_future.Get();
+
+  if (retrieve_outcome.has_error()) {
+    return ErrorMessage{absl::StrFormat("Error while searching in %s: %s", structured_debug_store,
+                                        retrieve_outcome.error().message())};
   }
 
-  auto path_in_structured_debug_store = structured_debug_store / ".build-id" /
-                                        build_id.substr(0, 2) /
-                                        absl::StrFormat("%s.debug", build_id.substr(2));
-
-  std::error_code error{};
-  if (fs::is_regular_file(path_in_structured_debug_store, error)) {
-    return path_in_structured_debug_store;
+  if (orbit_symbol_provider::IsNotFound(retrieve_outcome)) {
+    return ErrorMessage{orbit_symbol_provider::GetNotFoundMessage(retrieve_outcome)};
   }
 
-  if (error.value() != 0) {
-    return ErrorMessage{absl::StrFormat("Error while checking file \"%s\": %s",
-                                        path_in_structured_debug_store, error.message())};
-  }
+  ORBIT_CHECK(orbit_symbol_provider::IsSuccessResult(retrieve_outcome));
 
-  return ErrorMessage{
-      absl::StrFormat("File does not exist: %s", path_in_structured_debug_store.string())};
+  return orbit_symbol_provider::GetSuccessResult(retrieve_outcome).path;
 }
 
 ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
@@ -251,8 +259,9 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
   // 3. If elf file, search in structured symbols stores.
   if (object_file_or_error.value()->IsElf()) {
     const fs::path structured_debug_store{"/usr/lib/debug"};
+    orbit_symbol_provider::ModuleIdentifier module_id{module_path, build_id};
     ErrorMessageOr<fs::path> debug_store_result =
-        FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, build_id);
+        FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, module_id);
     if (debug_store_result.has_value()) return debug_store_result.value();
 
     not_found_messages.emplace_back(debug_store_result.error().message());

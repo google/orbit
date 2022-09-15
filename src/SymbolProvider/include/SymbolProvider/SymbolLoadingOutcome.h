@@ -27,6 +27,7 @@ struct SymbolLoadingSuccessResult {
     kMicrosoftSymbolServer,
     kUserDefinedSymbolStore,
     kUsrLibDebugDirectory,
+    kStadiaInstanceUsrLibDebug
   };
   enum class SymbolFileSeparation { kDifferentFile, kModuleFile };
 
