@@ -12,6 +12,7 @@
 
 #include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarData/MizarDataProvider.h"
 
 using ::orbit_mizar_base::AbsoluteAddress;
 
@@ -19,20 +20,22 @@ namespace orbit_mizar_data {
 
 using SFID = ::orbit_mizar_base::SFID;
 
-template <typename K, typename V>
-[[nodiscard]] static absl::flat_hash_set<V> ValueSet(const absl::flat_hash_map<K, V>& map) {
-  absl::flat_hash_set<V> result;
+[[nodiscard]] static absl::flat_hash_set<std::string> FunctionNamesSet(
+    absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> map) {
+  absl::flat_hash_set<std::string> result;
   std::transform(std::begin(map), std::end(map), std::inserter(result, std::begin(result)),
-                 [](const std::pair<K, V> pair) { return pair.second; });
+                 [](const std::pair<AbsoluteAddress, FunctionSymbol>& pair) {
+                   return pair.second.function_name;
+                 });
   return result;
 }
 
 static absl::flat_hash_map<AbsoluteAddress, SFID> AddressToSFID(
-    const absl::flat_hash_map<AbsoluteAddress, std::string>& address_to_name,
+    const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& address_to_symbol,
     const absl::flat_hash_map<std::string, SFID>& name_to_sfid) {
   absl::flat_hash_map<AbsoluteAddress, SFID> address_to_sfid;
-  for (const auto& [address, name] : address_to_name) {
-    if (const auto it = name_to_sfid.find(name); it != name_to_sfid.end()) {
+  for (const auto& [address, symbol] : address_to_symbol) {
+    if (const auto it = name_to_sfid.find(symbol.function_name); it != name_to_sfid.end()) {
       address_to_sfid.try_emplace(address, it->second);
     }
   }
@@ -40,10 +43,11 @@ static absl::flat_hash_map<AbsoluteAddress, SFID> AddressToSFID(
 }
 
 [[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(
-    const absl::flat_hash_map<AbsoluteAddress, std::string>& baseline_address_to_name,
-    const absl::flat_hash_map<AbsoluteAddress, std::string>& comparison_address_to_name) {
-  absl::flat_hash_set<std::string> baseline_names = ValueSet(baseline_address_to_name);
-  absl::flat_hash_set<std::string> comparison_names = ValueSet(comparison_address_to_name);
+    const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& baseline_address_to_symbol,
+    const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& comparison_address_to_symbol) {
+  absl::flat_hash_set<std::string> baseline_names = FunctionNamesSet(baseline_address_to_symbol);
+  absl::flat_hash_set<std::string> comparison_names =
+      FunctionNamesSet(comparison_address_to_symbol);
 
   absl::flat_hash_map<std::string, SFID> name_to_sfid;
   absl::flat_hash_map<SFID, std::string> sfid_to_name;
@@ -51,16 +55,16 @@ static absl::flat_hash_map<AbsoluteAddress, SFID> AddressToSFID(
   SFID next_sfid_value{1};
   for (const std::string& name : baseline_names) {
     if (comparison_names.contains(name) && !name_to_sfid.contains(name)) {
-      name_to_sfid.try_emplace(name, SFID(next_sfid_value));
-      sfid_to_name.try_emplace(SFID(next_sfid_value), name);
+      name_to_sfid.try_emplace(name, next_sfid_value);
+      sfid_to_name.try_emplace(next_sfid_value, name);
       ++next_sfid_value;
     }
   }
 
   absl::flat_hash_map<AbsoluteAddress, SFID> baseline_address_to_sfid =
-      AddressToSFID(baseline_address_to_name, name_to_sfid);
+      AddressToSFID(baseline_address_to_symbol, name_to_sfid);
   absl::flat_hash_map<AbsoluteAddress, SFID> comparison_address_to_sfid =
-      AddressToSFID(comparison_address_to_name, name_to_sfid);
+      AddressToSFID(comparison_address_to_symbol, name_to_sfid);
 
   return {std::move(baseline_address_to_sfid), std::move(comparison_address_to_sfid),
           std::move(sfid_to_name)};

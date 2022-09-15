@@ -7,29 +7,34 @@
 #include <absl/container/flat_hash_set.h>
 
 #include <QStringLiteral>
+#include <filesystem>
 #include <iterator>
 #include <memory>
+#include <string>
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "MizarBase/AbsoluteAddress.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::ForEachFrame;
 
 namespace orbit_mizar_data {
-[[nodiscard]] absl::flat_hash_map<AbsoluteAddress, std::string> MizarData::AllAddressToName()
-    const {
-  absl::flat_hash_map<AbsoluteAddress, std::string> result;
+
+absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MizarData::AllAddressToFunctionSymbol() const {
+  absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> result;
 
   GetCaptureData().GetCallstackData().ForEachUniqueCallstack(
       [&result, this](const uint64_t /*callstack_id*/,
@@ -37,12 +42,34 @@ namespace orbit_mizar_data {
         ForEachFrame(info.frames(), [this, &result](const AbsoluteAddress address) {
           std::optional<std::string> name = this->GetFunctionNameFromAddress(address);
           if (name.has_value()) {
-            result.try_emplace(address, std::move(name.value()));
+            std::string module_file_name = GetModuleFileName(address);
+            result.try_emplace(
+                address, FunctionSymbol{std::move(name.value()), std::move(module_file_name)});
           }
         });
       });
 
   return result;
+}
+
+[[nodiscard]] static std::string GetFilename(const std::string& path) {
+  return std::filesystem::path(path).filename().replace_extension();
+}
+
+[[nodiscard]] std::string MizarData::GetModuleFileName(AbsoluteAddress address) const {
+  const absl::flat_hash_map<uint64_t, orbit_client_data::LinuxAddressInfo>& address_infos =
+      GetCaptureData().address_infos();
+  if (const auto it = address_infos.find(*address); it != address_infos.end()) {
+    return GetFilename(it->second.module_path());
+  }
+  const ErrorMessageOr<orbit_client_data::ModuleInMemory> module =
+      GetCaptureData().process()->FindModuleByAddress(*address);
+  if (module.has_error()) {
+    // If a function has a name, we know its module. The branch is here for a future debug purpose.
+    ORBIT_LOG("%s", module.error().message());
+    ORBIT_UNREACHABLE();
+  }
+  return GetFilename(module.value().file_path());
 }
 
 void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,

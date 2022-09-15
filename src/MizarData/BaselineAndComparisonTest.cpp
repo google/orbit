@@ -22,6 +22,7 @@
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarData/MizarDataProvider.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TestUtils/ContainerHelpers.h"
@@ -48,30 +49,38 @@ constexpr std::array<uint64_t, kFunctionNum> kComparisonFunctionAddresses = {0x0
 const std::array<std::string, kFunctionNum> kBaselineFunctionNames = {"foo()", "bar()", "biz()"};
 const std::array<std::string, kFunctionNum> kComparisonFunctionNames = {"foo()", "bar()", "fiz()"};
 
+const std::array<std::string, kFunctionNum> kModuleNames = {"fooM", "barM", "bizM"};
+
 const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
 
 template <size_t N>
-static absl::flat_hash_map<AbsoluteAddress, std::string> MakeAddressToNameMap(
-    const std::array<uint64_t, N>& raw_addresses, const std::array<std::string, N>& names) {
+static absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MakeAddressToSymbolMap(
+    const std::array<uint64_t, N>& raw_addresses,
+    const std::array<std::string, N>& function_names) {
   std::array<AbsoluteAddress, N> addresses;
   absl::c_transform(raw_addresses, std::begin(addresses),
                     [](uint64_t raw) { return AbsoluteAddress(raw); });
-  return MakeMap(addresses, names);
+  std::array<FunctionSymbol, N> symbols;
+  absl::c_transform(function_names, kModuleNames, std::begin(symbols),
+                    [](const std::string& function, const std::string& module) {
+                      return FunctionSymbol{function, module};
+                    });
+  return MakeMap(addresses, symbols);
 }
 
-const absl::flat_hash_map<AbsoluteAddress, std::string> kBaselineAddressToName =
-    MakeAddressToNameMap(kBaselineFunctionAddresses, kBaselineFunctionNames);
-const absl::flat_hash_map<AbsoluteAddress, std::string> kComparisonAddressToName =
-    MakeAddressToNameMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
+const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> kBaselineAddressToSymbol =
+    MakeAddressToSymbolMap(kBaselineFunctionAddresses, kBaselineFunctionNames);
+const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> kComparisonAddressToSymbol =
+    MakeAddressToSymbolMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
 
 static void ExpectCorrectNames(
     const absl::flat_hash_map<AbsoluteAddress, SFID>& address_to_sfid,
     const absl::flat_hash_map<SFID, std::string>& sfid_to_name,
-    const absl::flat_hash_map<AbsoluteAddress, std::string>& address_to_name) {
+    const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& address_to_symbol) {
   for (const auto& [address, sfid] : address_to_sfid) {
     EXPECT_TRUE(sfid_to_name.contains(sfid));
-    EXPECT_EQ(sfid_to_name.at(sfid), address_to_name.at(address));
+    EXPECT_EQ(sfid_to_name.at(sfid), address_to_symbol.at(address).function_name);
   }
 }
 
@@ -85,14 +94,14 @@ template <typename K, typename V>
 
 TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
   const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_name] =
-      AssignSampledFunctionIds(kBaselineAddressToName, kComparisonAddressToName);
+      AssignSampledFunctionIds(kBaselineAddressToSymbol, kComparisonAddressToSymbol);
 
   EXPECT_EQ(baseline_address_to_sfid.size(), kCommonFunctionNames.size());
   EXPECT_EQ(comparison_address_to_sfid.size(), kCommonFunctionNames.size());
   EXPECT_EQ(sfid_to_name.size(), kCommonFunctionNames.size());
 
-  ExpectCorrectNames(baseline_address_to_sfid, sfid_to_name, kBaselineAddressToName);
-  ExpectCorrectNames(comparison_address_to_sfid, sfid_to_name, kComparisonAddressToName);
+  ExpectCorrectNames(baseline_address_to_sfid, sfid_to_name, kBaselineAddressToSymbol);
+  ExpectCorrectNames(comparison_address_to_sfid, sfid_to_name, kComparisonAddressToSymbol);
 
   EXPECT_THAT(Values(baseline_address_to_sfid),
               UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
