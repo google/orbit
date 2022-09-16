@@ -42,6 +42,8 @@ class SymbolHelper : public SymbolCacheInterface {
   static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
       const std::filesystem::path& file_path,
       const orbit_object_utils::ObjectFileInfo& object_file_info);
+  static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadFallbackSymbolsFromFile(
+      const std::filesystem::path& file_path);
   [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
       const std::filesystem::path& file_path) const override;
 

@@ -298,8 +298,8 @@ TEST(SymbolHelper, FindSymbolsInCache) {
 
 TEST(SymbolHelper, LoadSymbolsFromFile) {
   std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  // .debug contains symbols
   {
+    // .debug ELF file contains symbols.
     const fs::path file_path = testdata_directory / "no_symbols_elf.debug";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
 
@@ -308,9 +308,8 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
 
     EXPECT_FALSE(symbols.symbol_infos().empty());
   }
-
-  // .pdb contains symbols
   {
+    // .pdb contains symbols.
     const fs::path file_path = testdata_directory / "dllmain.pdb";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
 
@@ -319,27 +318,62 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
 
     EXPECT_FALSE(symbols.symbol_infos().empty());
   }
-
-  // elf does not contain symbols
   {
+    // ELF file does not contain symbols.
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
-
-  // coff does not contain symbols
   {
+    // COFF file does not contain symbols.
     const fs::path file_path = testdata_directory / "dllmain.dll";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
-
-  // invalid file
   {
+    // File doesn't exist.
     const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
     EXPECT_THAT(result, HasError("Unable to create symbols file"));
     EXPECT_THAT(result, HasError("File does not exist"));
+  }
+}
+
+TEST(SymbolHelper, LoadFallbackSymbolsFromFile) {
+  std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
+  {
+    // ELF file with symbols.
+    const fs::path file_path = testdata_directory / "hello_world_elf";
+    const auto module_symbols_or_error = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
+    EXPECT_THAT(module_symbols_or_error, HasValue());
+    EXPECT_FALSE(module_symbols_or_error.value().symbol_infos().empty());
+  }
+  {
+    // ELF file without symbols.
+    const fs::path file_path = testdata_directory / "no_symbols_elf";
+    const auto module_symbols_or_error = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
+    EXPECT_THAT(module_symbols_or_error, HasValue());
+    EXPECT_FALSE(module_symbols_or_error.value().symbol_infos().empty());
+  }
+  {
+    // COFF file without symbols.
+    const fs::path file_path = testdata_directory / "dllmain.dll";
+    const auto module_symbols_or_error = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
+    EXPECT_THAT(module_symbols_or_error, HasValue());
+    EXPECT_FALSE(module_symbols_or_error.value().symbol_infos().empty());
+  }
+  {
+    // PDB file.
+    const fs::path file_path = testdata_directory / "dllmain.pdb";
+    const auto module_symbols_or_error = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
+    EXPECT_THAT(module_symbols_or_error, HasError("Unable to load object file"));
+  }
+  {
+    // Files doesn't exist.
+    const fs::path file_path = testdata_directory / "file_does_not_exist";
+    const auto result = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
+    EXPECT_THAT(result, HasError("Unable to load object file"));
+    EXPECT_THAT(result, HasError("No such file or directory"));
   }
 }
 
