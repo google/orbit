@@ -1162,7 +1162,8 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithoutCallstacks) {
             running_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_running_thread_state_slice_info->tid(), running_thread_state_slice->tid());
   EXPECT_EQ(actual_running_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunning);
-  EXPECT_EQ(actual_running_thread_state_slice_info->triggering_callstack_id(), std::nullopt);
+  EXPECT_EQ(actual_running_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            std::nullopt);
 
   ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
   EXPECT_EQ(
@@ -1172,7 +1173,8 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithoutCallstacks) {
             runnable_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
-  EXPECT_EQ(actual_runnable_thread_state_slice_info->triggering_callstack_id(), std::nullopt);
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            std::nullopt);
 
   ASSERT_TRUE(actual_dead_thread_state_slice_info.has_value());
   EXPECT_EQ(actual_dead_thread_state_slice_info->begin_timestamp_ns(),
@@ -1181,7 +1183,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithoutCallstacks) {
             dead_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info->tid(), dead_thread_state_slice->tid());
   EXPECT_EQ(actual_dead_thread_state_slice_info->thread_state(), ThreadStateSlice::kDead);
-  EXPECT_EQ(actual_dead_thread_state_slice_info->triggering_callstack_id(), std::nullopt);
+  EXPECT_EQ(actual_dead_thread_state_slice_info->switch_out_or_wakeup_callstack_id(), std::nullopt);
 }
 
 TEST(CaptureEventProcessor, DeathOnThreadStateSlicesWithUnknownCallstack) {
@@ -1242,8 +1244,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithCallstacks) {
   interned_callstack->mutable_intern()->add_pcs(kFrame3);
   interned_callstack->mutable_intern()->set_type(orbit_grpc_protos::Callstack::kComplete);
 
-  ClientCaptureEvent runnable_event;
-  ThreadStateSlice* runnable_thread_state_slice = runnable_event.mutable_thread_state_slice();
+  ClientCaptureEvent runnable_thread_state_slice_event;
+  ThreadStateSlice* runnable_thread_state_slice =
+      runnable_thread_state_slice_event.mutable_thread_state_slice();
   runnable_thread_state_slice->set_duration_ns(100);
   runnable_thread_state_slice->set_end_timestamp_ns(200);
   runnable_thread_state_slice->set_pid(14);
@@ -1265,7 +1268,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithCallstacks) {
       .WillOnce(SaveArg<0>(&actual_runnable_thread_state_slice_info));
 
   event_processor->ProcessEvent(interned_callstack_event);
-  event_processor->ProcessEvent(runnable_event);
+  event_processor->ProcessEvent(runnable_thread_state_slice_event);
 
   ASSERT_TRUE(actual_callstack_id.has_value());
   ASSERT_TRUE(actual_callstack.has_value());
@@ -1284,7 +1287,8 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithCallstacks) {
             runnable_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
-  EXPECT_EQ(actual_runnable_thread_state_slice_info->triggering_callstack_id(), kCallstackId);
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            kCallstackId);
 }
 
 TEST(CaptureEventProcessor, CanHandleWarningEvents) {

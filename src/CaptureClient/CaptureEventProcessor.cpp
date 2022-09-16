@@ -583,7 +583,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
   ORBIT_CHECK(thread_state_slice.switch_out_or_wakeup_callstack_status() !=
               ThreadStateSlice::kWaitingForCallstack);
-  std::optional<uint64_t> triggering_callstack_id =
+  std::optional<uint64_t> switch_out_or_wakeup_callstack_id =
       (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
        ThreadStateSlice::kCallstackSet)
           ? std::make_optional<uint64_t>(thread_state_slice.switch_out_or_wakeup_callstack_id())
@@ -596,7 +596,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       FromGrpcWakeupReasonToInfoWakeupReason(thread_state_slice.wakeup_reason()),
       thread_state_slice.wakeup_tid(),
       thread_state_slice.wakeup_pid(),
-      triggering_callstack_id,
+      switch_out_or_wakeup_callstack_id,
   };
 
   if (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
