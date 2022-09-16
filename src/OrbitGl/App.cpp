@@ -1817,11 +1817,6 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
                                    orbit_base::StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
 
-  const auto it = symbol_files_currently_downloading_.find(module_file_path);
-  if (it != symbol_files_currently_downloading_.end()) {
-    return it->second.future;
-  }
-
   orbit_base::Future<ErrorMessageOr<NotFoundOr<std::filesystem::path>>> check_file_on_remote =
       thread_pool_->Schedule(
           [process_manager = GetProcessManager(),
@@ -2037,6 +2032,11 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
                 });
 
   if (download_disabled_modules_.contains(module_id.file_path)) return retrieve_from_local_future;
+
+  if (const auto it = symbol_files_currently_downloading_.find(module_id.file_path);
+      it != symbol_files_currently_downloading_.end()) {
+    return it->second.future;
+  }
 
   orbit_base::StopSource stop_source;
 
