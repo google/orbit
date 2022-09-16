@@ -57,7 +57,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         report_(std::move(report)),
         is_multiplicity_correction_enabled_(is_multiplicity_correction_enabled),
         significance_level_(significance_level) {
-    for (const auto& [sfid, unused_name] : report_.GetSfidToNames()) {
+    for (const auto& [sfid, unused_symbol] : report_.GetSfidToSymbols()) {
       if (*BaselineExclusiveCount(sfid) > 0 || *ComparisonExclusiveCount(sfid) > 0) {
         sfids_.push_back(sfid);
       }
@@ -191,7 +191,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   [[nodiscard]] QVariant MakeTooltip(const QModelIndex& model_index) const {
     const auto& [sfid, column] = MakeIndex(model_index);
-    const std::string* function_name = &report_.GetSfidToNames().at(sfid);
+    const std::string* function_name = &GetFunctionName(sfid);
 
     switch (column) {
       case Column::kFunctionName:
@@ -247,7 +247,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     const auto [sfid, column] = index;
     switch (column) {
       case Column::kFunctionName:
-        return report_.GetSfidToNames().at(sfid);
+        return GetFunctionName(sfid);
       case Column::kIsSignificant:
         return GetPvalue(sfid) < significance_level_ ? "Yes" : "No";
       default:
@@ -344,6 +344,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       default:
         ORBIT_UNREACHABLE();
     }
+  }
+
+  [[nodiscard]] const std::string& GetFunctionName(SFID sfid) const {
+    // TODO(b/XXX) make it configurable
+    return report_.GetSfidToSymbols().at(sfid).baseline_function_symbol->function_name;
   }
 
   Report report_;

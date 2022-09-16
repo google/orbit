@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
@@ -19,6 +20,7 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/BaselineAndComparison.h"
@@ -30,7 +32,9 @@
 using ::orbit_client_data::ScopeId;
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::Baseline;
+using ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 using ::orbit_mizar_base::Comparison;
+using ::orbit_mizar_base::FunctionSymbol;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
 using ::orbit_mizar_base::RelativeTimeNs;
@@ -55,17 +59,24 @@ const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
 
 template <size_t N>
+static std::array<FunctionSymbol, N> MakeFunctionSymbols(
+    const std::array<std::string, N>& functions) {
+  std::array<FunctionSymbol, N> symbols;
+  absl::c_transform(functions, kModuleNames, std::begin(symbols),
+                    [](const std::string& function, const std::string& module) {
+                      return FunctionSymbol{function, module};
+                    });
+  return symbols;
+}
+
+template <size_t N>
 static absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MakeAddressToSymbolMap(
     const std::array<uint64_t, N>& raw_addresses,
     const std::array<std::string, N>& function_names) {
   std::array<AbsoluteAddress, N> addresses;
   absl::c_transform(raw_addresses, std::begin(addresses),
                     [](uint64_t raw) { return AbsoluteAddress(raw); });
-  std::array<FunctionSymbol, N> symbols;
-  absl::c_transform(function_names, kModuleNames, std::begin(symbols),
-                    [](const std::string& function, const std::string& module) {
-                      return FunctionSymbol{function, module};
-                    });
+  std::array<FunctionSymbol, N> symbols = MakeFunctionSymbols(function_names);
   return MakeMap(addresses, symbols);
 }
 
@@ -76,11 +87,15 @@ const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> kComparisonAddressToS
 
 static void ExpectCorrectNames(
     const absl::flat_hash_map<AbsoluteAddress, SFID>& address_to_sfid,
-    const absl::flat_hash_map<SFID, std::string>& sfid_to_name,
+    const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>& sfid_to_symbols,
     const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& address_to_symbol) {
   for (const auto& [address, sfid] : address_to_sfid) {
-    EXPECT_TRUE(sfid_to_name.contains(sfid));
-    EXPECT_EQ(sfid_to_name.at(sfid), address_to_symbol.at(address).function_name);
+    EXPECT_TRUE(sfid_to_symbols.contains(sfid));
+    const BaselineAndComparisonFunctionSymbols& symbols = sfid_to_symbols.at(sfid);
+    EXPECT_EQ(symbols.baseline_function_symbol->function_name,
+              address_to_symbol.at(address).function_name);
+    EXPECT_EQ(symbols.comparison_function_symbol->function_name,
+              address_to_symbol.at(address).function_name);
   }
 }
 
@@ -93,15 +108,15 @@ template <typename K, typename V>
 }
 
 TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
-  const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_name] =
+  const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_symbols] =
       AssignSampledFunctionIds(kBaselineAddressToSymbol, kComparisonAddressToSymbol);
 
   EXPECT_EQ(baseline_address_to_sfid.size(), kCommonFunctionNames.size());
   EXPECT_EQ(comparison_address_to_sfid.size(), kCommonFunctionNames.size());
-  EXPECT_EQ(sfid_to_name.size(), kCommonFunctionNames.size());
+  EXPECT_EQ(sfid_to_symbols.size(), kCommonFunctionNames.size());
 
-  ExpectCorrectNames(baseline_address_to_sfid, sfid_to_name, kBaselineAddressToSymbol);
-  ExpectCorrectNames(comparison_address_to_sfid, sfid_to_name, kComparisonAddressToSymbol);
+  ExpectCorrectNames(baseline_address_to_sfid, sfid_to_symbols, kBaselineAddressToSymbol);
+  ExpectCorrectNames(comparison_address_to_sfid, sfid_to_symbols, kComparisonAddressToSymbol);
 
   EXPECT_THAT(Values(baseline_address_to_sfid),
               UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
@@ -112,7 +127,18 @@ constexpr SFID kSfidFirst = SFID(1);
 constexpr SFID kSfidSecond = SFID(2);
 constexpr SFID kSfidThird = SFID(3);
 constexpr std::array<SFID, kSfidCount> kSfids = {kSfidFirst, kSfidSecond, kSfidThird};
-const absl::flat_hash_map<SFID, std::string> kSfidToName = MakeMap(kSfids, kBaselineFunctionNames);
+
+const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> kFunctionSymbols = [] {
+  absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> result;
+  absl::c_transform(kSfids, MakeFunctionSymbols(kBaselineFunctionNames),
+                    std::inserter(result, std::begin(result)),
+                    [](SFID sfid, const FunctionSymbol& symbol) {
+                      BaselineAndComparisonFunctionSymbols symbols{
+                          Baseline<FunctionSymbol>(symbol), Comparison<FunctionSymbol>(symbol)};
+                      return std::make_pair(sfid, symbols);
+                    });
+  return result;
+}();
 
 const std::vector<std::vector<SFID>> kCallstacks = {
     std::vector<SFID>{kSfidThird, kSfidSecond, kSfidFirst}, {kSfidSecond}, {}};
@@ -202,7 +228,7 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   auto empty = MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, kEmptyScopeStats);
 
   BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator, MockCorrection> bac(
-      std::move(full), std::move(empty), {kSfidToName});
+      std::move(full), std::move(empty), kFunctionSymbols);
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
           absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, RelativeTimeNs(0),

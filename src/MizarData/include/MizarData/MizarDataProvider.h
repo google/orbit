@@ -13,14 +13,10 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/CaptureDataHolder.h"
 #include "MizarBase/AbsoluteAddress.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/Time.h"
 
 namespace orbit_mizar_data {
-
-struct FunctionSymbol {
-  std::string function_name;
-  std::string module_file_name;
-};
 
 // Handles one of the two datasets Mizar operates on
 class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
@@ -43,7 +39,7 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
 
   [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
       AbsoluteAddress address) const = 0;
-  [[nodiscard]] virtual absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>
+  [[nodiscard]] virtual absl::flat_hash_map<AbsoluteAddress, orbit_mizar_base::FunctionSymbol>
   AllAddressToFunctionSymbol() const = 0;
 
   [[nodiscard]] virtual orbit_mizar_base::TimestampNs GetCaptureStartTimestampNs() const = 0;

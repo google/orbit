@@ -22,12 +22,12 @@ using Comparison = orbit_base::Typedef<ComparisonTag, T>;
 
 template <typename T, typename... Args>
 [[nodiscard]] Baseline<T> MakeBaseline(Args&&... args) {
-  return Baseline<T>(T(std::forward<Args>(args)...));
+  return Baseline<T>(T{std::forward<Args>(args)...});
 }
 
 template <typename T, typename... Args>
 [[nodiscard]] Comparison<T> MakeComparison(Args&&... args) {
-  return Comparison<T>(T(std::forward<Args>(args)...));
+  return Comparison<T>(T{std::forward<Args>(args)...});
 }
 
 }  // namespace orbit_mizar_base
