@@ -347,7 +347,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
   [[nodiscard]] const std::string& GetFunctionName(SFID sfid) const {
-    // TODO(b/XXX) make it configurable
+    // TODO(b/247072330) make it configurable
     return report_.GetSfidToSymbols().at(sfid).baseline_function_symbol->function_name;
   }
 
