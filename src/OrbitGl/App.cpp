@@ -100,6 +100,7 @@
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
+#include "Symbols/SymbolUtils.h"
 #include "TimeGraph.h"
 
 using orbit_base::CanceledOr;
@@ -2176,8 +2177,8 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     error_message += "\n* " + symbols_path.error().message();
   }
   if (absl::GetFlag(FLAGS_local)) {
-    const auto symbols_included_in_module = orbit_symbols::SymbolHelper::VerifySymbolsFile(
-        module_data.file_path(), module_data.build_id());
+    const auto symbols_included_in_module =
+        orbit_symbols::VerifySymbolFile(module_data.file_path(), module_data.build_id());
     if (symbols_included_in_module.has_value()) {
       ORBIT_LOG("Found symbols included in module: \"%s\"", module_data.file_path());
       return module_data.file_path();

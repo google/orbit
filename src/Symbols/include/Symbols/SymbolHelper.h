@@ -42,10 +42,6 @@ class SymbolHelper : public SymbolCacheInterface {
   static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
       const std::filesystem::path& file_path,
       const orbit_object_utils::ObjectFileInfo& object_file_info);
-  static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
-                                                const std::string& build_id);
-  static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
-                                                uint64_t expected_file_size);
   [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
       const std::filesystem::path& file_path) const override;
 

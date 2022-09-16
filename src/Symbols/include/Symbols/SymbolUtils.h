@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_symbols {
 
@@ -19,6 +20,17 @@ namespace orbit_symbols {
 [[nodiscard]] std::vector<std::filesystem::path> GetStandardSymbolFilenamesForModule(
     const std::filesystem::path& module_path,
     const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type);
+
+// Checks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
+// the build id of the file with module_build_id. Returns void if build ids are the same,
+// ErrorMessage otherwise.
+[[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
+                                                    const std::string& module_build_id);
+// Checks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
+// the size of the file with expected_file_size. Returns void if the sizes are the same ErrorMessage
+// otherwise.
+[[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
+                                                    uint64_t expected_file_size);
 
 }  // namespace orbit_symbols
 
