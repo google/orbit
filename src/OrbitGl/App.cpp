@@ -106,6 +106,7 @@
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::NotFoundOr;
+using orbit_base::StopToken;
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
@@ -1168,7 +1169,7 @@ void OrbitApp::RequestUpdatePrimitives() {
 }
 
 void OrbitApp::SetSamplingReport(
-    const orbit_client_data::CallstackData* callstack_data,
+    const CallstackData* callstack_data,
     const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ORBIT_SCOPE_FUNCTION;
   // clear old sampling report
@@ -1194,7 +1195,7 @@ void OrbitApp::ClearSamplingReport() {
 }
 
 void OrbitApp::SetSelectionReport(
-    const orbit_client_data::CallstackData* selection_callstack_data,
+    const CallstackData* selection_callstack_data,
     const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data,
     bool has_summary) {
   // clear old selection report
@@ -1421,8 +1422,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
   return load_future;
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(
-    const std::filesystem::path& src, const std::filesystem::path& dest) {
+Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(const std::filesystem::path& src,
+                                                       const std::filesystem::path& dest) {
   std::optional<absl::Duration> capture_length =
       capture_file_info_manager_.GetCaptureLengthByPath(src);
   return thread_pool_->Schedule([src, dest]() { return orbit_base::MoveOrRenameFile(src, dest); })
@@ -1812,12 +1813,11 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
   metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
 }
 
-orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
-OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
-                                   orbit_base::StopToken stop_token) {
+Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleFromRemote(
+    const std::string& module_file_path, StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
 
-  orbit_base::Future<ErrorMessageOr<NotFoundOr<std::filesystem::path>>> check_file_on_remote =
+  Future<ErrorMessageOr<NotFoundOr<std::filesystem::path>>> check_file_on_remote =
       thread_pool_->Schedule(
           [process_manager = GetProcessManager(),
            module_file_path]() -> ErrorMessageOr<NotFoundOr<std::filesystem::path>> {
@@ -1830,7 +1830,7 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
 
   auto download_file = [this, module_file_path, stop_token = std::move(stop_token)](
                            const NotFoundOr<std::filesystem::path>& remote_search_outcome) mutable
-      -> orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
+      -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
     // TODO(b/231455031) As a first step, we treat the not found message as an error
     if (orbit_base::IsNotFound(remote_search_outcome)) {
       return {ErrorMessage{orbit_base::GetNotFoundMessage(remote_search_outcome)}};
@@ -1846,9 +1846,8 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", remote_debug_file_path.string());
-    orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> copy_result =
-        main_window_->DownloadFileFromInstance(remote_debug_file_path, local_debug_file_path,
-                                               std::move(stop_token));
+    Future<ErrorMessageOr<CanceledOr<void>>> copy_result = main_window_->DownloadFileFromInstance(
+        remote_debug_file_path, local_debug_file_path, std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(&immediate_executor,
@@ -1878,12 +1877,11 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path,
   return chained_result_future;
 }
 
-orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
-    absl::Span<const ModuleData* const> modules) {
+Future<void> OrbitApp::LoadSymbolsManually(absl::Span<const ModuleData* const> modules) {
   // Use a set, to filter out duplicates
   absl::flat_hash_set<const ModuleData*> modules_set(modules.begin(), modules.end());
 
-  std::vector<orbit_base::Future<void>> futures;
+  std::vector<Future<void>> futures;
   futures.reserve(modules_set.size());
 
   orbit_base::ImmediateExecutor immediate_executor;
@@ -1901,7 +1899,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
   return orbit_base::WhenAll(futures);
 }
 
-orbit_base::Future<OrbitApp::SymbolLoadingAndErrorHandlingResult>
+Future<OrbitApp::SymbolLoadingAndErrorHandlingResult>
 OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
   Future<ErrorMessageOr<CanceledOr<void>>> load_future = RetrieveModuleAndLoadSymbols(module);
 
@@ -1943,12 +1941,12 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
   return orbit_base::UnwrapFuture(chained_load_future);
 }
 
-orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
+Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const ModuleData* module) {
   return RetrieveModuleAndLoadSymbols(module->module_id());
 }
 
-orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
+Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
@@ -1972,7 +1970,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
     return it->second;
   }
 
-  orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> load_result =
+  Future<ErrorMessageOr<CanceledOr<void>>> load_result =
       orbit_base::UnwrapFuture(RetrieveModule(module_id).ThenIfSuccess(
           main_thread_executor_,
           [this, module_id](const CanceledOr<std::filesystem::path>& load_result_or_canceled)
@@ -2004,7 +2002,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAnd
   return load_result;
 }
 
-orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModule(
+Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModule(
     const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
   const ModuleData* module_data = GetModuleByModuleIdentifier(module_id);
@@ -2156,7 +2154,7 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
   return retrieve_from_microsoft_future;
 }
 
-orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
+Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
     const ModuleData* module_data) {
   return RetrieveModuleWithDebugInfo(module_data->module_id());
 }
@@ -2295,8 +2293,8 @@ void OrbitApp::AddSymbols(const ModuleIdentifier& module_id,
   UpdateAfterSymbolLoadingThrottled();
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
-    const std::filesystem::path& symbols_path, const ModuleIdentifier& module_id) {
+Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(const std::filesystem::path& symbols_path,
+                                                   const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
 
   auto load_symbols_from_file = thread_pool_->Schedule([this, symbols_path, module_id]() {
@@ -2341,8 +2339,8 @@ ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
   return result;
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
-    const std::filesystem::path& module_path, const PresetFile& preset_file) {
+Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(const std::filesystem::path& module_path,
+                                                        const PresetFile& preset_file) {
   auto modules_data_or_error = GetLoadedModulesByPath(module_path);
 
   if (modules_data_or_error.has_error()) {
@@ -2451,9 +2449,9 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
   }
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file) {
+Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_PRESET_LOAD};
-  std::vector<orbit_base::Future<std::string>> load_module_results{};
+  std::vector<Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
   load_module_results.reserve(module_paths.size());
 
@@ -2543,7 +2541,7 @@ void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
 
   SendErrorToUi("%s", "Unable to show preset file in explorer.");
 }
-orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
+Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
   ORBIT_SCOPE_FUNCTION;
   functions_data_view_->ClearFunctions();
 
@@ -2672,7 +2670,7 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   FireRefreshCallbacks();
 }
 
-orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
+Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     absl::Span<const ModuleInfo> module_infos) {
   ProcessData* process = GetMutableTargetProcess();
 
@@ -2720,7 +2718,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     }
   }
 
-  std::vector<orbit_base::Future<ErrorMessageOr<void>>> reloaded_modules;
+  std::vector<Future<ErrorMessageOr<void>>> reloaded_modules;
   reloaded_modules.reserve(modules_to_reload.size());
 
   for (const auto& module_to_reload : modules_to_reload) {
