@@ -1402,7 +1402,7 @@ TEST(ProducerEventProcessor, ThreadStateSliceSmoke) {
   EXPECT_THAT(event.thread_state_slice(), ThreadStateSliceEq(expected_thread_state_slice));
 }
 
-TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
+TEST(ProducerEventProcessor, MergingThreadStateSliceWithCallstack) {
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
@@ -1500,7 +1500,8 @@ TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstack) {
                           ClientCaptureEventsTheadStateSliceEq(expected_thread_state_slice2)));
 }
 
-TEST(ProducerEventProcessor, ThreadStateSliceMergesCallstackFailsGracefullyWhenNoCallstackWasSeen) {
+TEST(ProducerEventProcessor,
+     MergingThreadStateSliceWithCallstackFailsGracefullyWhenNoCallstackWasSeen) {
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
 
