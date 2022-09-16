@@ -267,4 +267,14 @@ ErrorMessageOr<absl::Time> GetFileDateModified(const std::filesystem::path& path
   return absl::FromTimeT(to_time_t(ftime));
 }
 
+ErrorMessageOr<bool> IsDirectory(const std::filesystem::path& path) {
+  std::error_code error;
+  bool result = std::filesystem::is_directory(path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return result;
+}
+
 }  // namespace orbit_base

@@ -7,6 +7,7 @@
 #include <string>
 #include <system_error>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"

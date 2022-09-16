@@ -428,4 +428,15 @@ TEST(File, GetFileDateModified) {
   EXPECT_LE(file_time_or_error.value() - now, absl::Seconds(1));
 }
 
+TEST(File, IsDirectory) {
+  auto tmp_file_or_error = TemporaryFile::Create();
+  ASSERT_THAT(tmp_file_or_error, HasNoError());
+
+  std::filesystem::path tmp_file_path = tmp_file_or_error.value().file_path();
+
+  EXPECT_THAT(IsDirectory(tmp_file_path), HasValue(false));
+
+  EXPECT_THAT(IsDirectory(tmp_file_path.parent_path()), HasValue(true));
+}
+
 }  // namespace orbit_base
