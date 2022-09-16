@@ -1855,25 +1855,25 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
                                                std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
-    return copy_result.Then(
-        &immediate_executor,
-        [remote_debug_file_path, local_debug_file_path,
-         copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
-            -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-          if (sftp_result.has_error()) {
-            return ErrorMessage{
-                absl::StrFormat("Could not copy debug info file from the remote: %s",
-                                sftp_result.error().message())};
-          }
-          if (orbit_base::IsCanceled(sftp_result.value())) {
-            return orbit_base::Canceled{};
-          }
-          const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-              std::chrono::steady_clock::now() - copy_begin);
-          ORBIT_LOG("Copying \"%s\" took %.3f ms", remote_debug_file_path.string(),
-                    duration.count());
-          return local_debug_file_path;
-        });
+    return copy_result.Then(&immediate_executor,
+                            [remote_debug_file_path, local_debug_file_path,
+                             copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
+                                -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                              if (sftp_result.has_error()) {
+                                return ErrorMessage{absl::StrFormat(
+                                    "Could not copy debug info file from the remote: %s",
+                                    sftp_result.error().message())};
+                              }
+                              if (orbit_base::IsCanceled(sftp_result.value())) {
+                                return orbit_base::Canceled{};
+                              }
+                              const auto duration =
+                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::steady_clock::now() - copy_begin);
+                              ORBIT_LOG("Copying \"%s\" took %.3f ms",
+                                        remote_debug_file_path.string(), duration.count());
+                              return local_debug_file_path;
+                            });
   };
 
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future = UnwrapFuture(
@@ -1908,7 +1908,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
 
     // Explicitly do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
@@ -2583,6 +2583,9 @@ void OrbitApp::AddDefaultFrameTrackOrLogError() {
 void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetTargetProcess());
 
+  // TODO(b/247069854): Avoid FunctionsDataView::ClearFunctions: use
+  //  FunctionsDataView::RemoveFunctionsOfModule for the modules that changed or are no longer
+  //  loaded, followed by FunctionsDataView::AddFunctions only for the modules that changed.
   functions_data_view_->ClearFunctions();
   auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
   for (const ModuleIdentifier& module_id : module_ids) {
