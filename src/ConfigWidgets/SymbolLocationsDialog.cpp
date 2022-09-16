@@ -39,6 +39,11 @@ constexpr const char* kNewInfoLabelTemplate =
     "filenames and build IDs must match the module's name and build ID. Supported file extensions "
     "are “.so”, “.debug”, “.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a "
     "symbol file with a different filename%1</p>";
+constexpr const char* kSymbolStoreInfo =
+    "<p>If enable searching for symbols in Stadia symbol store / Microsoft symbol server, Orbit "
+    "also supports retrieving symbols from Stadia symbol store / Microsoft symbol server. Note "
+    "that <b>the module's name and build ID will be used to request symbols from symbol "
+    "stores</b>.</p>";
 constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
 constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
@@ -109,6 +114,13 @@ namespace orbit_config_widgets {
 SymbolLocationsDialog::~SymbolLocationsDialog() {
   persistent_storage_manager_->SavePaths(GetSymbolPathsFromListWidget());
   persistent_storage_manager_->SaveModuleSymbolFileMappings(module_symbol_file_mappings_);
+
+  if (absl::GetFlag(FLAGS_symbol_store_support)) {
+    persistent_storage_manager_->SaveEnableStadiaSymbolStore(
+        ui_->enableStadiaSymbolStoreCheckBox->isChecked());
+    persistent_storage_manager_->SaveEnableMicrosoftSymbolServer(
+        ui_->enableMicrosoftSymbolServerCheckBox->isChecked());
+  }
 }
 
 SymbolLocationsDialog::SymbolLocationsDialog(
@@ -136,6 +148,15 @@ SymbolLocationsDialog::SymbolLocationsDialog(
 
   ui_->setupUi(this);
   SetUpInfoLabel();
+  if (!absl::GetFlag(FLAGS_symbol_store_support)) {
+    ui_->enableStadiaSymbolStoreCheckBox->hide();
+    ui_->enableMicrosoftSymbolServerCheckBox->hide();
+  } else {
+    ui_->enableStadiaSymbolStoreCheckBox->setChecked(
+        persistent_storage_manager_->LoadEnableStadiaSymbolStore());
+    ui_->enableMicrosoftSymbolServerCheckBox->setChecked(
+        persistent_storage_manager_->LoadEnableMicrosoftSymbolServer());
+  }
 
   if (allow_unsafe_symbols_) AddModuleSymbolFileMappingsToList();
   AddSymbolPathsToListWidget(persistent_storage_manager_->LoadPaths());
@@ -429,6 +450,7 @@ void SymbolLocationsDialog::SetUpInfoLabel() {
   } else {
     label_text = label_text.arg(kInfoLabelArgumentNoBuildIdOverride);
   }
+  if (absl::GetFlag(FLAGS_symbol_store_support)) label_text.append(kSymbolStoreInfo);
   ui_->infoLabel->setText(label_text);
 }
 
