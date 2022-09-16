@@ -51,7 +51,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
     return source_to_present_events_;
   }
 
-  [[nodiscard]] absl::flat_hash_map<AbsoluteAddress, std::string> AllAddressToName() const override;
+  [[nodiscard]] absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> AllAddressToFunctionSymbol()
+      const override;
 
   [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
       AbsoluteAddress address) const override;
@@ -84,6 +85,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo module_info) override {
+    GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
     UpdateModules({module_info});
   }
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
@@ -124,6 +126,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void LoadSymbolsForAllModules();
 
   void LoadSymbols(orbit_client_data::ModuleData& module_data);
+
+  [[nodiscard]] std::string GetModuleFilenameWithoutExtension(AbsoluteAddress address) const;
 
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};

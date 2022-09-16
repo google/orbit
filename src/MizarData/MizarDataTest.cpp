@@ -4,7 +4,6 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
@@ -14,6 +13,7 @@
 #include <iterator>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/CallstackInfo.h"
@@ -26,6 +26,7 @@
 
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::testing::Invoke;
+using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedPointwise;
 
@@ -55,6 +56,7 @@ constexpr std::array<TimerInfo::Type, kTimersNum> kTypesToIgnore{
     TimerInfo::kApiEvent};
 constexpr uint64_t kFunctionId = 1;
 const std::string kFunctionName = "foo()";
+const std::string kAnotherFunctionName = "food()";
 const std::string kMSName = "ManualScope";
 constexpr uint32_t kTID = 123;
 
@@ -137,8 +139,24 @@ TEST(MizarDataTest, OnTimerAddsDAndMSAndOnlyThem) {
 constexpr AbsoluteAddress kFunctionAddress(0xBEAF);
 constexpr AbsoluteAddress kAnotherFunctionAddress(0xF00D);
 constexpr AbsoluteAddress kUnknownFunctionAddress(0xBAD);
-const orbit_client_data::LinuxAddressInfo kLinuxAddressInfo(*kFunctionAddress, 0, "/module/path",
+constexpr std::string_view kModulePath = "/module/path/name.exe";
+constexpr std::string_view kAnotherModulePath = "/module/path/another_name";
+constexpr std::string_view kModuleName = "name";
+constexpr std::string_view kAnotherModuleName = "another_name";
+const orbit_client_data::LinuxAddressInfo kLinuxAddressInfo(*kFunctionAddress, 0,
+                                                            std::string(kModulePath),
                                                             kFunctionName);
+
+const orbit_grpc_protos::ModuleInfo kAnotherModuleInfo = [] {
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_file_path(std::string(kAnotherModulePath));
+  module_info.set_address_start(*kAnotherFunctionAddress - 10);
+  module_info.set_address_end(*kAnotherFunctionAddress + 10);
+  return module_info;
+}();
+
+const FunctionSymbol kFunctionSymbol{kFunctionName, std::string(kModuleName)};
+const FunctionSymbol kAnotherFunctionSymbol{kAnotherFunctionName, std::string(kAnotherModuleName)};
 
 TEST(MizarDataTest, GetFunctionNameFromAddressIsCorrect) {
   MizarData data;
@@ -154,12 +172,18 @@ TEST(MizarDataTest, GetFunctionNameFromAddressIsCorrect) {
 
 const uint64_t kTime = 951753;
 const orbit_client_data::CallstackInfo kCallstackInfo({*kFunctionAddress, *kUnknownFunctionAddress,
-                                                       *kFunctionAddress},
+                                                       *kAnotherFunctionAddress},
                                                       orbit_client_data::CallstackType::kComplete);
 constexpr uint64_t kCallstackId = 0xCA11;
 static const orbit_client_data::CallstackEvent kCallstackEvent(kTime, kCallstackId, kTID);
 static const absl::flat_hash_map<AbsoluteAddress, std::string> kSymbolsTable = {
-    {kFunctionAddress, kFunctionName}, {kAnotherFunctionAddress, "food()"}};
+    {kFunctionAddress, kFunctionName}, {kAnotherFunctionAddress, kAnotherFunctionName}};
+
+MATCHER_P(FunctionSymbolEq, that, "") {
+  const FunctionSymbol& a = arg;
+  const FunctionSymbol& b = that;
+  return a.function_name == b.function_name && a.module_file_name == b.module_file_name;
+}
 
 TEST(MizarDataTest, AllAddressToNameIsCorrect) {
   MockMizarData data;
@@ -177,7 +201,13 @@ TEST(MizarDataTest, AllAddressToNameIsCorrect) {
   data.OnCallstackEvent(kCallstackEvent);
   data.OnCaptureFinished({});
 
-  EXPECT_THAT(data.AllAddressToName(),
-              UnorderedElementsAre(std::make_pair(kFunctionAddress, kFunctionName)));
+  data.OnModuleUpdate(0, kAnotherModuleInfo);
+
+  data.OnAddressInfo(kLinuxAddressInfo);
+
+  EXPECT_THAT(data.AllAddressToFunctionSymbol(),
+              UnorderedElementsAre(
+                  Pair(kFunctionAddress, FunctionSymbolEq(kFunctionSymbol)),
+                  Pair(kAnotherFunctionAddress, FunctionSymbolEq(kAnotherFunctionSymbol))));
 }
 }  // namespace orbit_mizar_data
