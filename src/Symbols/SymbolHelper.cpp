@@ -172,32 +172,6 @@ CreateStructuredDebugDirectorySymbolProviders(std::vector<std::filesystem::path>
   return result;
 }
 
-ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
-                                                     const std::string& build_id) {
-  ORBIT_SCOPE_FUNCTION;
-  auto symbols_file_or_error = CreateSymbolsFile(symbols_path, ObjectFileInfo());
-  if (symbols_file_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\": %s",
-                                        symbols_path.string(),
-                                        symbols_file_or_error.error().message()));
-  }
-
-  const std::unique_ptr<SymbolsFile>& symbols_file{symbols_file_or_error.value()};
-
-  if (symbols_file->GetBuildId().empty()) {
-    return ErrorMessage(
-        absl::StrFormat("Symbols file \"%s\" does not have a build id.", symbols_path.string()));
-  }
-
-  if (symbols_file->GetBuildId() != build_id) {
-    return ErrorMessage(
-        absl::StrFormat(R"(Symbols file "%s" has a different build id: "%s" != "%s")",
-                        symbols_path.string(), build_id, symbols_file->GetBuildId()));
-  }
-
-  return outcome::success();
-}
-
 SymbolHelper::SymbolHelper(fs::path cache_directory)
     : cache_directory_(std::move(cache_directory)),
       structured_debug_directory_providers_(FindStructuredDebugDirectorySymbolProviders()) {}
@@ -263,7 +237,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
     if (!exists) continue;
 
-    const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
+    const auto verification_result = VerifySymbolFile(symbols_path, build_id);
     if (verification_result.has_error()) {
       ORBIT_LOG("Existing file \"%s\" is not the symbols file for module \"%s\": %s",
                 symbols_path.string(), module_path.string(), verification_result.error().message());
@@ -284,25 +258,15 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module
                                                           const std::string& build_id) const {
   return FindSymbolsInCacheImpl(module_path,
                                 [&build_id](const std::filesystem::path& cache_file_path) {
-                                  return VerifySymbolsFile(cache_file_path, build_id);
+                                  return VerifySymbolFile(cache_file_path, build_id);
                                 });
-}
-
-ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const std::filesystem::path& symbols_path,
-                                                     uint64_t expected_file_size) {
-  OUTCOME_TRY(const uint64_t actual_file_size, orbit_base::FileSize(symbols_path));
-  if (actual_file_size != expected_file_size) {
-    return ErrorMessage(absl::StrFormat("Symbol file size doesn't match. Expected: %u, Actual: %u ",
-                                        expected_file_size, actual_file_size));
-  }
-  return outcome::success();
 }
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
                                                           uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
       module_path, [&expected_file_size](const std::filesystem::path& cache_file_path) {
-        return VerifySymbolsFile(cache_file_path, expected_file_size);
+        return VerifySymbolFile(cache_file_path, expected_file_size);
       });
 }
 
