@@ -29,8 +29,6 @@ using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenu;
 using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
-using orbit_data_views::GetActionIndexOnMenu;
-using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionDisableFrameTrack;
 using orbit_data_views::kMenuActionDisassembly;
@@ -89,8 +87,6 @@ struct FunctionsDataViewTest : public testing::Test {
     module_info2.set_address_start(0x3456);
     module_infos_.emplace_back(std::move(module_info2));
   }
-
-  ~FunctionsDataViewTest() override {}
 
  protected:
   orbit_data_views::MockAppInterface app_;
@@ -173,6 +169,30 @@ TEST_F(FunctionsDataViewTest, ClearFunctionsRemovesAllElements) {
 
   view_.ClearFunctions();
   ASSERT_EQ(view_.GetNumElements(), 0);
+}
+
+TEST_F(FunctionsDataViewTest, RemoveFunctionsOfModule) {
+  view_.AddFunctions(
+      {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  ASSERT_EQ(view_.GetNumElements(), 5);
+
+  view_.RemoveFunctionsOfModule(functions_[2].module_path());
+  ASSERT_EQ(view_.GetNumElements(), 4);
+  EXPECT_THAT(
+      (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1),
+                  view_.GetValue(3, 1)}),
+      testing::UnorderedElementsAre(functions_[0].pretty_name(), functions_[1].pretty_name(),
+                                    functions_[3].pretty_name(), functions_[4].pretty_name()));
+
+  view_.RemoveFunctionsOfModule(functions_[3].module_path());
+  ASSERT_EQ(view_.GetNumElements(), 3);
+  EXPECT_THAT(
+      (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1)}),
+      testing::UnorderedElementsAre(functions_[0].pretty_name(), functions_[1].pretty_name(),
+                                    functions_[4].pretty_name()));
+
+  view_.RemoveFunctionsOfModule(functions_[3].module_path());  // Should do nothing.
+  ASSERT_EQ(view_.GetNumElements(), 3);
 }
 
 const std::string kSelectedFunctionString = "H";
@@ -359,7 +379,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
-  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
+  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
     FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
         view_.GetContextMenuWithGrouping(0, selected_indices));
 
