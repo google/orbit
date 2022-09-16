@@ -2583,6 +2583,9 @@ void OrbitApp::AddDefaultFrameTrackOrLogError() {
 void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetTargetProcess());
 
+  // TODO(b/247069854): Avoid FunctionsDataView::ClearFunctions: use
+  //  FunctionsDataView::RemoveFunctionsOfModule for the modules that changed or are no longer
+  //  loaded, followed by FunctionsDataView::AddFunctions only for the modules that changed.
   functions_data_view_->ClearFunctions();
   auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
   for (const ModuleIdentifier& module_id : module_ids) {
