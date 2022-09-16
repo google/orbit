@@ -221,6 +221,11 @@ void TracerImpl::InitUprobesEventVisitor() {
       &absolute_address_to_size_of_functions_to_stop_unwinding_at_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
+  // Get the initial mapping of the tids in the target process to the corresponing tids in the
+  // root namespace.
+  absl::flat_hash_map<pid_t, pid_t> tid_mappings =
+      RetrieveInitialTidToRootNamespaceTidMapping(target_pid_);
+  uprobes_unwinding_visitor_->SetInitialTidToRootNamespaceTidMapping(std::move(tid_mappings));
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
@@ -855,12 +860,6 @@ void TracerImpl::Startup() {
   }
 
   effective_capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
-
-  // Get the initial mapping of the tids in the target process to the corresponing tids in the
-  // root namespace.
-  absl::flat_hash_map<pid_t, pid_t> tid_mappings =
-      RetrieveInitialTidToRootNamespaceTidMapping(target_pid_);
-  uprobes_unwinding_visitor_->SetInitialTidToRootNamespaceTidMapping(std::move(tid_mappings));
 
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);
