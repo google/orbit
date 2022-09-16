@@ -173,7 +173,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   absl::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t>
       producer_interned_string_id_to_client_string_id_;
 
-  // Needed to allow merging between call stacks and tracepoints, see design doc:
+  // Needed to allow merging of thread state slices and their callstacks, see:
   // http://go/stadia-orbit-tracepoint-callstack.
   // NOTE: A thread state slice always gets constructed using two tracepoint events. It is always
   // the begin tracepoint event that results in the ThreadStateSliceCallstack, so we will always
@@ -191,17 +191,18 @@ void ProducerEventProcessorImpl::MergeThreadStateSliceWithCallstackAndTransferOw
   // slice's begin. Thus, if we see a thread state slice waiting for the callstack to be added,
   // we know that we have already seen the corresponding callstack.
   // Also, even if we were missing the end tracepoint, we are not leaking memory in our callstack
-  // map--the SwitchesStatesNamesVisitor takes care of that--and will eventually create a
-  // thread state slice for that begin tracepoint (worst case at the end of profiling).
+  // map. The SwitchesStatesNamesVisitor will eventually create a thread state slice for that begin
+  // tracepoint--worst case at the end of profiling--, such that we can erase the mapping.
   auto thread_state_slice_callstack_it =
       thread_state_slice_tid_and_begin_timestamp_to_callstack_id_.find(
           {thread_state_slice->tid(), begin_timestamp});
 
   // There are rare situations where we do not have a callstack even though the thread state slice
-  // is waiting for it. Mostly, because unwinding failed completely.
+  // is waiting for it. This happens when unwinding failed completely.
   // Let's "fail" gracefully here, by not assigning a callstack.
   if (thread_state_slice_callstack_it ==
       thread_state_slice_tid_and_begin_timestamp_to_callstack_id_.end()) {
+    ORBIT_ERROR("Missing callstack for thread state slice waiting for it");
     thread_state_slice->set_switch_out_or_wakeup_callstack_status(ThreadStateSlice::kNoCallstack);
     thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
     ClientCaptureEvent event;
@@ -323,8 +324,8 @@ void ProducerEventProcessorImpl::ProcessCaptureFinishedAndTransferOwnership(
     CaptureFinished* capture_finished) {
   if (!thread_state_slice_tid_and_begin_timestamp_to_callstack_id_.empty()) {
     ORBIT_ERROR(
-        "There are saved callstacks for thread state slices left being not merged to the slice "
-        "after the capture finished.");
+        "Some saved callstacks for thread state slices are left not merged to any slice after the "
+        "capture finished.");
   }
   ClientCaptureEvent event;
   event.set_allocated_capture_finished(capture_finished);
@@ -634,6 +635,8 @@ void ProducerEventProcessorImpl::ProcessThreadStateSliceCallstack(
     client_capture_event_collector_->AddEvent(std::move(interned_callstack_event));
   }
 
+  // We are sending the callstack our right away (if necessary) and only keep the callsack id to
+  // attach it to the matching thread state slice.
   thread_state_slice_tid_and_begin_timestamp_to_callstack_id_[{
       thread_state_slice_callstack->thread_state_slice_tid(),
       thread_state_slice_callstack->timestamp_ns()}] = callstack_id;
