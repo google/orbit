@@ -127,7 +127,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   void LoadSymbols(orbit_client_data::ModuleData& module_data);
 
-  [[nodiscard]] std::string GetModuleFileName(AbsoluteAddress address) const;
+  [[nodiscard]] std::string GetModuleFilenameWithoutExtension(AbsoluteAddress address) const;
 
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};

@@ -42,7 +42,7 @@ absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MizarData::AllAddressToFunc
         ForEachFrame(info.frames(), [this, &result](const AbsoluteAddress address) {
           std::optional<std::string> name = this->GetFunctionNameFromAddress(address);
           if (name.has_value()) {
-            std::string module_file_name = GetModuleFileName(address);
+            std::string module_file_name = GetModuleFilenameWithoutExtension(address);
             result.try_emplace(
                 address, FunctionSymbol{std::move(name.value()), std::move(module_file_name)});
           }
@@ -52,20 +52,21 @@ absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MizarData::AllAddressToFunc
   return result;
 }
 
-[[nodiscard]] static std::string GetFilename(const std::string& path) {
+[[nodiscard]] static std::string GetFilenameWithoutExtension(const std::string& path) {
   return std::filesystem::path(path)
       .filename()
-      .replace_extension()  // remove extention, so `app.exe` on Windows would match `app` on Linux
+      .replace_extension()  // remove extension, so `app.exe` on Windows would match `app` on
+                            // Linux
       .string();
 }
 
-std::string MizarData::GetModuleFileName(AbsoluteAddress address) const {
+std::string MizarData::GetModuleFilenameWithoutExtension(AbsoluteAddress address) const {
   const std::string& path =
       orbit_client_data::GetModulePathByAddress(*module_manager_, GetCaptureData(), *address);
   // If a function has a name, we know its module. The branch is here for a future debug purpose.
   ORBIT_CHECK(path != orbit_client_data::kUnknownFunctionOrModuleName);
 
-  return GetFilename(path);
+  return GetFilenameWithoutExtension(path);
 }
 
 void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
