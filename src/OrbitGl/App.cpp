@@ -2002,6 +2002,116 @@ Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
   return load_result;
 }
 
+Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleViaDownload(
+    const ModuleIdentifier& module_id) {
+  if (const auto it = symbol_files_currently_downloading_.find(module_id.file_path);
+      it != symbol_files_currently_downloading_.end()) {
+    return it->second.future;
+  }
+
+  orbit_base::StopSource stop_source;
+
+  using SymbolRetrieveResult = ErrorMessageOr<CanceledOr<std::filesystem::path>>;
+  Future<SymbolRetrieveResult> retrieve_from_instance_future =
+      orbit_base::UnwrapFuture(main_thread_executor_->Schedule(
+          [this, module_id,
+           stop_token = stop_source.GetStopToken()]() mutable -> Future<SymbolRetrieveResult> {
+            // If --local, Orbit cannot download files from the instance, because no ssh channel
+            // exists. We still return an ErrorMessage to enable continuing searching for symbols
+            // from other symbol sources.
+            if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected()) {
+              return {ErrorMessage{"\n- Not able to search for symbols from instance"}};
+            }
+
+            return RetrieveModuleFromRemote(module_id.file_path, std::move(stop_token))
+                .Then(main_thread_executor_,
+                      [module_id](const SymbolRetrieveResult& retrieve_result) mutable
+                      -> SymbolRetrieveResult {
+                        if (retrieve_result.has_value()) return retrieve_result;
+
+                        return ErrorMessage{
+                            absl::StrFormat("\n- Did not find symbols from instance: %s",
+                                            retrieve_result.error().message())};
+                      });
+          }));
+
+  auto convert_symbol_provider_retrieve_result =
+      [](const SymbolLoadingOutcome& retrieve_result, std::string symbol_provider_name,
+         std::string error_msg) mutable -> SymbolRetrieveResult {
+    if (orbit_symbol_provider::IsSuccessResult(retrieve_result)) {
+      return orbit_symbol_provider::GetSuccessResult(retrieve_result).path;
+    }
+
+    if (orbit_symbol_provider::IsCanceled(retrieve_result)) return orbit_base::Canceled{};
+
+    error_msg.append(
+        absl::StrFormat("\n- Did not find symbols from %s: %s", symbol_provider_name,
+                        orbit_symbol_provider::IsNotFound(retrieve_result)
+                            ? orbit_symbol_provider::GetNotFoundMessage(retrieve_result)
+                            : retrieve_result.error().message()));
+    return ErrorMessage{error_msg};
+  };
+
+  Future<SymbolRetrieveResult> retrieve_from_stadia_future =
+      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
+          main_thread_executor_,
+          [this, module_id, stop_token = stop_source.GetStopToken(),
+           &convert_symbol_provider_retrieve_result](
+              const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
+            // TODO(b/239166878) Add a boolean to control enable / disable searching in Stadia
+            // symbol store. Enable the user to set it in the symbol location dialog.
+            if (stadia_symbol_provider_ == std::nullopt) return {previous_result};
+
+            if (previous_result.has_value()) return {previous_result.value()};
+
+            return stadia_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
+                .Then(main_thread_executor_,
+                      [error_msg = previous_result.error().message(),
+                       &convert_symbol_provider_retrieve_result](
+                          const SymbolLoadingOutcome& retrieve_result) mutable
+                      -> SymbolRetrieveResult {
+                        return convert_symbol_provider_retrieve_result(
+                            retrieve_result, "Stadia symbol store", std::move(error_msg));
+                      });
+          }));
+
+  Future<SymbolRetrieveResult> retrieve_from_microsoft_future =
+      orbit_base::UnwrapFuture(retrieve_from_stadia_future.Then(
+          main_thread_executor_,
+          [this, module_id, stop_token = stop_source.GetStopToken(),
+           &convert_symbol_provider_retrieve_result](
+              const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
+            // TODO(b/239166878) Add a boolean to control enable / disable searching in Microsoft
+            // symbol server. Enable the user to set it in the symbol location dialog.
+            if (microsoft_symbol_provider_ == std::nullopt) return {previous_result};
+
+            if (previous_result.has_value()) return {previous_result.value()};
+
+            return microsoft_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
+                .Then(main_thread_executor_,
+                      [error_msg = previous_result.error().message(),
+                       &convert_symbol_provider_retrieve_result](
+                          const SymbolLoadingOutcome& retrieve_result) mutable
+                      -> SymbolRetrieveResult {
+                        return convert_symbol_provider_retrieve_result(
+                            retrieve_result, "Microsoft symbol server", std::move(error_msg));
+                      });
+          }));
+
+  symbol_files_currently_downloading_.emplace(
+      module_id.file_path,
+      OrbitApp::ModuleDownloadOperation{std::move(stop_source), retrieve_from_microsoft_future});
+  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
+  retrieve_from_microsoft_future.Then(
+      main_thread_executor_,
+      [this, module_file_path = module_id.file_path](const SymbolRetrieveResult& /*result*/) {
+        symbol_files_currently_downloading_.erase(module_file_path);
+        FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
+      });
+
+  return retrieve_from_microsoft_future;
+}
+
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModule(
     const ModuleIdentifier& module_id) {
   ORBIT_SCOPE_FUNCTION;
@@ -2031,127 +2141,35 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
 
   if (download_disabled_modules_.contains(module_id.file_path)) return retrieve_from_local_future;
 
-  if (const auto it = symbol_files_currently_downloading_.find(module_id.file_path);
-      it != symbol_files_currently_downloading_.end()) {
-    return it->second.future;
-  }
-
-  orbit_base::StopSource stop_source;
-
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_instance_future =
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_via_download_future =
       orbit_base::UnwrapFuture(retrieve_from_local_future.Then(
           main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken()](
+          [this, module_id](
               const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
           -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-            // If --local, Orbit can not download files from the instance, because no ssh channel
-            // exists.
-            if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected()) {
-              return {previous_result};
-            }
-
             if (previous_result.has_value()) return {previous_result.value()};
 
-            return RetrieveModuleFromRemote(module_id.file_path, std::move(stop_token))
-                .Then(
-                    main_thread_executor_,
-                    [module_id, error_msg = previous_result.error().message()](
-                        const ErrorMessageOr<CanceledOr<std::filesystem::path>>&
-                            retrieve_result) mutable
-                    -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-                      if (retrieve_result.has_value()) return retrieve_result;
+            return RetrieveModuleViaDownload(module_id).Then(
+                main_thread_executor_,
+                [module_id, error_msg = previous_result.error().message()](
+                    const ErrorMessageOr<CanceledOr<std::filesystem::path>>&
+                        retrieve_result) mutable
+                -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
+                  if (retrieve_result.has_value()) return retrieve_result;
 
-                      error_msg.append(absl::StrFormat("\n- Did not find symbols from instance: %s",
-                                                       retrieve_result.error().message()));
-                      return ErrorMessage{error_msg};
-                    });
+                  error_msg.append(retrieve_result.error().message());
+                  return ErrorMessage{error_msg};
+                });
           }));
 
-  auto convert_symbol_provider_retrieve_result =
-      [](const SymbolLoadingOutcome& retrieve_result, std::string symbol_provider_name,
-         std::string error_msg) mutable -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-    if (orbit_symbol_provider::IsSuccessResult(retrieve_result)) {
-      return orbit_symbol_provider::GetSuccessResult(retrieve_result).path;
-    }
-
-    if (orbit_symbol_provider::IsCanceled(retrieve_result)) return orbit_base::Canceled{};
-
-    error_msg.append(
-        absl::StrFormat("\n- Did not find symbols from %s: %s", symbol_provider_name,
-                        orbit_symbol_provider::IsNotFound(retrieve_result)
-                            ? orbit_symbol_provider::GetNotFoundMessage(retrieve_result)
-                            : retrieve_result.error().message()));
-    return ErrorMessage{error_msg};
-  };
-
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_stadia_future =
-      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
-          main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken(),
-           &convert_symbol_provider_retrieve_result](
-              const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
-          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-            // TODO(b/239166878) Add a boolean to control enable / disable searching in Stadia
-            // symbol store. Enable the user to set it in the symbol location dialog.
-            if (stadia_symbol_provider_ == std::nullopt) return {previous_result};
-
-            if (previous_result.has_value()) return {previous_result.value()};
-
-            return stadia_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
-                .Then(main_thread_executor_,
-                      [error_msg = previous_result.error().message(),
-                       &convert_symbol_provider_retrieve_result](
-                          const SymbolLoadingOutcome& retrieve_result) mutable
-                      -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-                        return convert_symbol_provider_retrieve_result(
-                            retrieve_result, "Stadia symbol store", std::move(error_msg));
-                      });
-          }));
-
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_microsoft_future =
-      orbit_base::UnwrapFuture(retrieve_from_stadia_future.Then(
-          main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken(),
-           &convert_symbol_provider_retrieve_result](
-              const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
-          -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
-            // TODO(b/239166878) Add a boolean to control enable / disable searching in Microsoft
-            // symbol server. Enable the user to set it in the symbol location dialog.
-            if (microsoft_symbol_provider_ == std::nullopt) return {previous_result};
-
-            if (previous_result.has_value()) return {previous_result.value()};
-
-            return microsoft_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token))
-                .Then(main_thread_executor_,
-                      [error_msg = previous_result.error().message(),
-                       &convert_symbol_provider_retrieve_result](
-                          const SymbolLoadingOutcome& retrieve_result) mutable
-                      -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
-                        return convert_symbol_provider_retrieve_result(
-                            retrieve_result, "Microsoft symbol server", std::move(error_msg));
-                      });
-          }));
-
-  symbol_files_currently_downloading_.emplace(
-      module_id.file_path,
-      OrbitApp::ModuleDownloadOperation{std::move(stop_source), retrieve_from_microsoft_future});
-  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
-  retrieve_from_microsoft_future.Then(
-      main_thread_executor_,
-      [this, module_file_path = module_id.file_path](
-          const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_downloading_.erase(module_file_path);
-        FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
-      });
-
-  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_microsoft_future);
-  retrieve_from_microsoft_future.Then(
+  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_via_download_future);
+  retrieve_via_download_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
         symbol_files_currently_being_retrieved_.erase(module_id);
       });
 
-  return retrieve_from_microsoft_future;
+  return retrieve_via_download_future;
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
