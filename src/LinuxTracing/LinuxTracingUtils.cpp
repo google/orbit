@@ -28,6 +28,7 @@
 #include "ModuleUtils/ReadLinuxMaps.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecuteCommand.h"
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
@@ -331,6 +332,38 @@ std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMess
   }
 
   return function_ids_to_error_messages;
+}
+
+absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(pid_t target_pid) {
+  absl::flat_hash_map<pid_t, pid_t> tid_mapping;
+  for (pid_t tid : orbit_base::GetTidsOfProcess(target_pid)) {
+    const std::string status_file_name = absl::StrFormat("/proc/%d/status", tid);
+    auto reading_result = orbit_base::ReadFileToString(status_file_name);
+    if (reading_result.has_error()) {
+      // This means the thread exited before we were able to read the status file. It is fine to
+      // just skip this thread.
+      continue;
+    }
+    const std::vector<std::string> lines =
+        absl::StrSplit(reading_result.value(), '\n', absl::SkipEmpty());
+    for (std::string_view line : lines) {
+      if (!absl::StartsWith(line, "NSpid:")) continue;
+      // The line in the status file looks like this:
+      // NSpid:  pid pid_1 ... pid_n
+      // where pid is the pid in the root namespace, pid_1 is the pid in the first nested namespace
+      // and pid_n is the pid in the innermost namespace.
+      const std::vector<std::string> splits =
+          absl::StrSplit(line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
+      uint32_t tid_in_target_process_namespace = 0;
+      if (!absl::SimpleAtoi(splits.back(), &tid_in_target_process_namespace)) {
+        ORBIT_ERROR("Line in %s starting with 'NSpid:' did not end with a pid. Entire line was: %s",
+                    status_file_name, line);
+        break;
+      }
+      tid_mapping[tid_in_target_process_namespace] = tid;
+    }
+  }
+  return tid_mapping;
 }
 
 }  // namespace orbit_linux_tracing

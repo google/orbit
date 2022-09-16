@@ -81,10 +81,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
     samples_in_uretprobes_counter_ = samples_in_uretprobes_counter;
   }
 
-  void SetInitialTidMapping(const std::vector<std::pair<pid_t, pid_t>>& tid_mappings) {
-    for (const auto& tid_mapping : tid_mappings) {
-      tid_to_root_namespace_tid_[tid_mapping.first] = tid_mapping.second;
-    }
+  void SetInitialTidToRootNamespaceTidMapping(absl::flat_hash_map<pid_t, pid_t>&& tid_mappings) {
+    tid_to_root_namespace_tid_ = tid_mappings;
   }
 
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
@@ -105,8 +103,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp,
              const UserSpaceFunctionExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
-  void Visit(uint64_t event_timestamp, const CloneExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const CloneExitPerfEventData& event_data) override;
 
  private:
   // This struct holds a copy of some stack data collected from the target process.

@@ -405,4 +405,13 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleNotInMaps) {
                                "not loaded by the process."));
 }
 
+TEST(RetrieveInitialTidToRootNamespaceTidMapping, TrivialMapFromTestProcess) {
+  const pid_t pid = orbit_base::ToNativeThreadId(orbit_base::GetCurrentProcessId());
+  const auto tid_mappings = RetrieveInitialTidToRootNamespaceTidMapping(pid);
+  EXPECT_FALSE(tid_mappings.empty());
+  for (const auto& tid_mapping : tid_mappings) {
+    EXPECT_EQ(tid_mapping.first, tid_mapping.second);
+  }
+}
+
 }  // namespace orbit_linux_tracing

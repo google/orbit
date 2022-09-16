@@ -37,7 +37,6 @@
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
@@ -679,10 +678,10 @@ bool TracerImpl::OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus) {
   return !tracepoint_event_open_errors;
 }
 
-// We maintain a map of pids from the target process pid namespace to the root namespace. When a new
-// thread is created the new pid in the root namespace is reported by the task:task_newtask which is
-// already opened OpenThreadNameTracepoints. The respective pid in the target process namespace is
-// obtained from the next hit syscalls:sys_exit_clone or syscalls:sys_exit_clone3.
+// We maintain a map of tids from the target process pid namespace to the root namespace. When a new
+// thread is created the new tid in the root namespace is reported by the task:task_newtask which is
+// already opened by OpenThreadNameTracepoints. The respective tid in the target process namespace
+// is obtained from the next hit to syscalls:sys_exit_clone or syscalls:sys_exit_clone3.
 bool TracerImpl::OpenCloneExitTracepoints(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> pid_mapping_tracepoint_ring_buffer_fds_per_cpu;
@@ -732,38 +731,6 @@ static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t ini
   }
 
   return thread_names;
-}
-
-// Returns a vector of pairs mapping the tid in the target process namespace to the corresponding
-// tid in the root namespace.
-static std::vector<std::pair<pid_t, pid_t>> RetrieveInitialTidMapping(pid_t target_pid) {
-  std::vector<std::pair<pid_t, pid_t>> tid_mapping;
-  for (pid_t tid : GetTidsOfProcess(target_pid)) {
-    const std::string status_file_name = absl::StrFormat("/proc/%d/status", tid);
-    auto reading_result = orbit_base::ReadFileToString(status_file_name);
-    if (reading_result.has_error()) {
-      // This means the thread exited before we were able to read the status file. It is fine to
-      // just skip this thread.
-      continue;
-    }
-    const std::vector<std::string> lines =
-        absl::StrSplit(reading_result.value(), '\n', absl::SkipEmpty());
-    for (std::string_view line : lines) {
-      if (!absl::StartsWith(line, "NSpid:")) continue;
-      const std::vector<std::string> splits =
-          absl::StrSplit(line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
-      uint32_t tid_in_target_process = 0;
-      if (!absl::SimpleAtoi(splits.back(), &tid_in_target_process)) {
-        ORBIT_ERROR(
-            "Line in /proc/pid/status starting with 'NSpid:' did not end with a pid. Entire line "
-            "was: %s",
-            line);
-        break;
-      }
-      tid_mapping.emplace_back(tid_in_target_process, tid);
-    }
-  }
-  return tid_mapping;
 }
 
 void TracerImpl::Startup() {
@@ -891,8 +858,9 @@ void TracerImpl::Startup() {
 
   // Get the initial mapping of the tids in the target process to the corresponing tids in the
   // root namespace.
-  const std::vector<std::pair<pid_t, pid_t>> tid_mappings = RetrieveInitialTidMapping(target_pid_);
-  uprobes_unwinding_visitor_->SetInitialTidMapping(tid_mappings);
+  absl::flat_hash_map<pid_t, pid_t> tid_mappings =
+      RetrieveInitialTidToRootNamespaceTidMapping(target_pid_);
+  uprobes_unwinding_visitor_->SetInitialTidToRootNamespaceTidMapping(std::move(tid_mappings));
 
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);

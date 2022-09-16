@@ -48,13 +48,9 @@ class UprobesUnwindingVisitorDynamicInstrumentationTest : public ::testing::Test
 
 TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
        VisitDynamicInstrumentationPerfEventsInVariousCombinationsSendsFunctionCalls) {
-  constexpr pid_t kPidTargetNamespace = 1042;
-  constexpr pid_t kTidTargetNamespace = 1043;
   constexpr pid_t kPid = 42;
   constexpr pid_t kTid = 43;
-  visitor_.SetInitialTidMapping({{kPidTargetNamespace, kPid}, {kTidTargetNamespace, kTid}});
-  constexpr pid_t kPidUnkown = 1044;
-  constexpr pid_t kTidUnkown = 1045;
+  visitor_.SetInitialTidToRootNamespaceTidMapping({{kPid, kPid}, {kTid, kTid}});
   constexpr uint32_t kCpu = 1;
 
   {
@@ -111,8 +107,8 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
         .timestamp = 300,
         .data =
             {
-                .pid = kPidTargetNamespace,
-                .tid = kTidTargetNamespace,
+                .pid = kPid,
+                .tid = kTid,
                 .function_id = 3,
                 .sp = 0x30,
                 .return_address = 0x02,
@@ -121,24 +117,6 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
 
     EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTid, 0x30, 0x02)).Times(1);
     PerfEvent{function_entry3}.Accept(&visitor_);
-    Mock::VerifyAndClearExpectations(&return_address_manager_);
-  }
-
-  {
-    UserSpaceFunctionEntryPerfEvent function_entry4{
-        .timestamp = 300,
-        .data =
-            {
-                .pid = kPidUnkown,
-                .tid = kTidUnkown,
-                .function_id = 3,
-                .sp = 0x30,
-                .return_address = 0x02,
-            },
-    };
-
-    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(0, 0x30, 0x02)).Times(0);
-    PerfEvent{function_entry4}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
@@ -250,8 +228,8 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
         .timestamp = 800,
         .data =
             {
-                .pid = kPidTargetNamespace,
-                .tid = kTidTargetNamespace,
+                .pid = kPid,
+                .tid = kTid,
             },
     };
 
@@ -269,24 +247,6 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
     EXPECT_EQ(actual_function_call.depth(), 2);
     EXPECT_EQ(actual_function_call.return_value(), 0);
     EXPECT_THAT(actual_function_call.registers(), ElementsAre());
-  }
-
-  {
-    UserSpaceFunctionExitPerfEvent function_exit4{
-        .timestamp = 800,
-        .data =
-            {
-                .pid = kPidUnkown,
-                .tid = kTidUnkown,
-            },
-    };
-
-    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(0)).Times(0);
-    orbit_grpc_protos::FunctionCall actual_function_call;
-    EXPECT_CALL(listener_, OnFunctionCall).Times(0);
-    PerfEvent{function_exit4}.Accept(&visitor_);
-    Mock::VerifyAndClearExpectations(&return_address_manager_);
-    Mock::VerifyAndClearExpectations(&listener_);
   }
 
   {
@@ -336,6 +296,167 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
     EXPECT_EQ(actual_function_call.function_id(), 1);
     EXPECT_EQ(actual_function_call.duration_ns(), 900);
     EXPECT_EQ(actual_function_call.end_timestamp_ns(), 1000);
+    EXPECT_EQ(actual_function_call.depth(), 0);
+    EXPECT_EQ(actual_function_call.return_value(), 0);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre());
+  }
+}
+
+TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
+       VisitDynamicInstrumentationPerfEventsWithTidNamespaceTranslation) {
+  constexpr pid_t kPidTargetNamespace = 42;
+  constexpr pid_t kTidTargetNamespace = 43;
+  constexpr pid_t kPidRootNamespace = 1042;
+  constexpr pid_t kTidRootNamespace = 1043;
+  visitor_.SetInitialTidToRootNamespaceTidMapping(
+      {{kPidTargetNamespace, kPidRootNamespace}, {kTidTargetNamespace, kTidRootNamespace}});
+
+  constexpr pid_t kPidUnkown = 44;
+  constexpr pid_t kTidUnkown = 45;
+
+  constexpr pid_t kTidNewTargetNamespace = 54;
+  constexpr pid_t kTidNewRootNamespace = 1054;
+
+  {
+    UserSpaceFunctionEntryPerfEvent function_entry1{
+        .timestamp = 300,
+        .data =
+            {
+                .pid = kPidTargetNamespace,
+                .tid = kTidTargetNamespace,
+                .function_id = 1,
+                .sp = 0x30,
+                .return_address = 0x02,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTidRootNamespace, 0x30, 0x02))
+        .Times(1);
+    PerfEvent{function_entry1}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    UserSpaceFunctionExitPerfEvent function_exit1{
+        .timestamp = 800,
+        .data =
+            {
+                .pid = kPidTargetNamespace,
+                .tid = kTidTargetNamespace,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(kTidRootNamespace)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    PerfEvent{function_exit1}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPidRootNamespace);
+    EXPECT_EQ(actual_function_call.tid(), kTidRootNamespace);
+    EXPECT_EQ(actual_function_call.function_id(), 1);
+    EXPECT_EQ(actual_function_call.duration_ns(), 500);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 800);
+    EXPECT_EQ(actual_function_call.depth(), 0);
+    EXPECT_EQ(actual_function_call.return_value(), 0);
+    EXPECT_THAT(actual_function_call.registers(), ElementsAre());
+  }
+
+  {
+    UserSpaceFunctionEntryPerfEvent function_entry2{
+        .timestamp = 300,
+        .data =
+            {
+                .pid = kPidUnkown,
+                .tid = kTidUnkown,
+                .function_id = 1,
+                .sp = 0x30,
+                .return_address = 0x02,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTidUnkown, 0x30, 0x02)).Times(0);
+    PerfEvent{function_entry2}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    UserSpaceFunctionExitPerfEvent function_exit2{
+        .timestamp = 800,
+        .data =
+            {
+                .pid = kPidUnkown,
+                .tid = kTidUnkown,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(kTidUnkown)).Times(0);
+    EXPECT_CALL(listener_, OnFunctionCall).Times(0);
+    PerfEvent{function_exit2}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+  }
+
+  {
+    TaskNewtaskPerfEvent task_newtask{
+        .timestamp = 1000,
+        .data =
+            {
+                .new_tid = kTidNewRootNamespace,
+                .was_created_by_tid = kTidRootNamespace,
+            },
+    };
+    PerfEvent{task_newtask}.Accept(&visitor_);
+    CloneExitPerfEvent clone_exit_event{
+        .timestamp = 1001,
+        .data =
+            {
+                .tid = kTidRootNamespace,
+                .ret_tid = kTidNewTargetNamespace,
+            },
+    };
+    PerfEvent{clone_exit_event}.Accept(&visitor_);
+  }
+
+  {
+    UserSpaceFunctionEntryPerfEvent function_entry3{
+        .timestamp = 1300,
+        .data =
+            {
+                .pid = kPidTargetNamespace,
+                .tid = kTidNewTargetNamespace,
+                .function_id = 3,
+                .sp = 0x30,
+                .return_address = 0x02,
+            },
+    };
+    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTidNewRootNamespace, 0x30, 0x02))
+        .Times(1);
+    PerfEvent{function_entry3}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+  }
+
+  {
+    UserSpaceFunctionExitPerfEvent function_exit3{
+        .timestamp = 1800,
+        .data =
+            {
+                .pid = kPidTargetNamespace,
+                .tid = kTidNewTargetNamespace,
+            },
+    };
+
+    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(kTidNewRootNamespace)).Times(1);
+    orbit_grpc_protos::FunctionCall actual_function_call;
+    EXPECT_CALL(listener_, OnFunctionCall).Times(1).WillOnce(SaveArg<0>(&actual_function_call));
+    PerfEvent{function_exit3}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&return_address_manager_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(actual_function_call.pid(), kPidRootNamespace);
+    EXPECT_EQ(actual_function_call.tid(), kTidNewRootNamespace);
+    EXPECT_EQ(actual_function_call.function_id(), 3);
+    EXPECT_EQ(actual_function_call.duration_ns(), 500);
+    EXPECT_EQ(actual_function_call.end_timestamp_ns(), 1800);
     EXPECT_EQ(actual_function_call.depth(), 0);
     EXPECT_EQ(actual_function_call.return_value(), 0);
     EXPECT_THAT(actual_function_call.registers(), ElementsAre());
