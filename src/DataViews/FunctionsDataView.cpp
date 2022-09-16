@@ -251,12 +251,11 @@ void FunctionsDataView::AddFunctions(
 }
 
 void FunctionsDataView::RemoveFunctionsOfModule(const std::string& module_path) {
-  functions_.erase(
-      std::remove_if(functions_.begin(), functions_.end(),
-                     [&module_path](const orbit_client_data::FunctionInfo* function_info) {
-                       return function_info->module_path() == module_path;
-                     }),
-      functions_.end());
+  functions_.erase(std::remove_if(functions_.begin(), functions_.end(),
+                                  [&module_path](const FunctionInfo* function_info) {
+                                    return function_info->module_path() == module_path;
+                                  }),
+                   functions_.end());
   OnDataChanged();
 }
 
