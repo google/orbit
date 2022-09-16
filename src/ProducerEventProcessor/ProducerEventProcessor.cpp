@@ -323,6 +323,8 @@ void ProducerEventProcessorImpl::ProcessCallstackSampleAndTransferOwnership(
 void ProducerEventProcessorImpl::ProcessCaptureFinishedAndTransferOwnership(
     CaptureFinished* capture_finished) {
   if (!thread_state_slice_tid_and_begin_timestamp_to_callstack_id_.empty()) {
+    // We don't expect this to happen because SwitchesNamesStateVisitor always produces a slice from
+    // the remaining begin tracepoints at the end of the capture.
     ORBIT_ERROR(
         "Some saved callstacks for thread state slices are left not merged to any slice after the "
         "capture finished.");
@@ -635,8 +637,8 @@ void ProducerEventProcessorImpl::ProcessThreadStateSliceCallstack(
     client_capture_event_collector_->AddEvent(std::move(interned_callstack_event));
   }
 
-  // We are sending the callstack our right away (if necessary) and only keep the callsack id to
-  // attach it to the matching thread state slice.
+  // We are sending the callstack right away (if necessary) and only keep the callstack id to attach
+  // it to the matching thread state slice.
   thread_state_slice_tid_and_begin_timestamp_to_callstack_id_[{
       thread_state_slice_callstack->thread_state_slice_tid(),
       thread_state_slice_callstack->timestamp_ns()}] = callstack_id;
