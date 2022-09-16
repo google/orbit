@@ -119,7 +119,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   std::optional<std::filesystem::path> file_path_;
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
-  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::Callstack> callstack_intern_pool_;
   absl::flat_hash_map<uint64_t, std::string> string_intern_pool_;
   CaptureListener* capture_listener_ = nullptr;
 
@@ -291,17 +291,17 @@ void CaptureEventProcessorForListener::ProcessSchedulingSlice(
 
 void CaptureEventProcessorForListener::ProcessInternedCallstack(
     InternedCallstack interned_callstack) {
-  if (callstack_intern_pool.contains(interned_callstack.key())) {
+  if (callstack_intern_pool_.contains(interned_callstack.key())) {
     ORBIT_ERROR("Overwriting InternedCallstack with key %llu", interned_callstack.key());
   }
-  callstack_intern_pool.emplace(interned_callstack.key(),
-                                std::move(*interned_callstack.mutable_intern()));
+  callstack_intern_pool_.emplace(interned_callstack.key(),
+                                 std::move(*interned_callstack.mutable_intern()));
 }
 
 void CaptureEventProcessorForListener::ProcessCallstackSample(
     const CallstackSample& callstack_sample) {
   uint64_t callstack_id = callstack_sample.callstack_id();
-  Callstack callstack = callstack_intern_pool[callstack_id];
+  Callstack callstack = callstack_intern_pool_[callstack_id];
 
   SendCallstackToListenerIfNecessary(callstack_id, callstack);
 
@@ -581,6 +581,13 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
 
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
+  ORBIT_CHECK(thread_state_slice.switch_out_or_wakeup_callstack_status() !=
+              ThreadStateSlice::kWaitingForCallstack);
+  std::optional<uint64_t> switch_out_or_wakeup_callstack_id =
+      (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
+       ThreadStateSlice::kCallstackSet)
+          ? std::make_optional<uint64_t>(thread_state_slice.switch_out_or_wakeup_callstack_id())
+          : std::nullopt;
   ThreadStateSliceInfo slice_info{
       thread_state_slice.tid(),
       thread_state_slice.thread_state(),
@@ -589,7 +596,18 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       FromGrpcWakeupReasonToInfoWakeupReason(thread_state_slice.wakeup_reason()),
       thread_state_slice.wakeup_tid(),
       thread_state_slice.wakeup_pid(),
+      switch_out_or_wakeup_callstack_id,
   };
+
+  if (thread_state_slice.switch_out_or_wakeup_callstack_status() ==
+      ThreadStateSlice::kCallstackSet) {
+    uint64_t callstack_id = thread_state_slice.switch_out_or_wakeup_callstack_id();
+    auto callstack_it = callstack_intern_pool_.find(callstack_id);
+    ORBIT_CHECK(callstack_it != callstack_intern_pool_.end());
+    const Callstack& callstack = callstack_it->second;
+
+    SendCallstackToListenerIfNecessary(callstack_id, callstack);
+  }
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 

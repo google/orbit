@@ -1103,7 +1103,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
                            kTimelineKey, actual_marker_key);
 }
 
-TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
+TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithoutCallstacks) {
   MockCaptureListener listener;
   auto event_processor =
       CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
@@ -1115,6 +1115,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   running_thread_state_slice->set_pid(14);
   running_thread_state_slice->set_tid(24);
   running_thread_state_slice->set_thread_state(ThreadStateSlice::kRunning);
+  running_thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kNoCallstack);
+  running_thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
 
   ClientCaptureEvent runnable_event;
   ThreadStateSlice* runnable_thread_state_slice = runnable_event.mutable_thread_state_slice();
@@ -1123,6 +1126,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   runnable_thread_state_slice->set_pid(14);
   runnable_thread_state_slice->set_tid(24);
   runnable_thread_state_slice->set_thread_state(ThreadStateSlice::kRunnable);
+  runnable_thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kNoCallstack);
+  runnable_thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
 
   ClientCaptureEvent dead_event;
   ThreadStateSlice* dead_thread_state_slice = dead_event.mutable_thread_state_slice();
@@ -1131,6 +1137,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   dead_thread_state_slice->set_pid(14);
   dead_thread_state_slice->set_tid(24);
   dead_thread_state_slice->set_thread_state(ThreadStateSlice::kDead);
+  dead_thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kNoCallstack);
+  running_thread_state_slice->set_switch_out_or_wakeup_callstack_id(0);
 
   std::optional<ThreadStateSliceInfo> actual_running_thread_state_slice_info{};
   std::optional<ThreadStateSliceInfo> actual_runnable_thread_state_slice_info{};
@@ -1153,6 +1162,8 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
             running_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_running_thread_state_slice_info->tid(), running_thread_state_slice->tid());
   EXPECT_EQ(actual_running_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunning);
+  EXPECT_EQ(actual_running_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            std::nullopt);
 
   ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
   EXPECT_EQ(
@@ -1162,6 +1173,8 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
             runnable_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            std::nullopt);
 
   ASSERT_TRUE(actual_dead_thread_state_slice_info.has_value());
   EXPECT_EQ(actual_dead_thread_state_slice_info->begin_timestamp_ns(),
@@ -1170,6 +1183,112 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
             dead_thread_state_slice->end_timestamp_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info->tid(), dead_thread_state_slice->tid());
   EXPECT_EQ(actual_dead_thread_state_slice_info->thread_state(), ThreadStateSlice::kDead);
+  EXPECT_EQ(actual_dead_thread_state_slice_info->switch_out_or_wakeup_callstack_id(), std::nullopt);
+}
+
+TEST(CaptureEventProcessor, DeathOnThreadStateSlicesWithUnknownCallstack) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  constexpr uint64_t kCallstackId = 24;
+
+  ClientCaptureEvent thread_state_slice_without_known_callstack_id_event;
+  ThreadStateSlice* thread_state_slice_without_known_callstack_id =
+      thread_state_slice_without_known_callstack_id_event.mutable_thread_state_slice();
+  thread_state_slice_without_known_callstack_id->set_duration_ns(100);
+  thread_state_slice_without_known_callstack_id->set_end_timestamp_ns(200);
+  thread_state_slice_without_known_callstack_id->set_pid(14);
+  thread_state_slice_without_known_callstack_id->set_tid(24);
+  thread_state_slice_without_known_callstack_id->set_thread_state(ThreadStateSlice::kRunnable);
+  thread_state_slice_without_known_callstack_id->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kCallstackSet);
+  thread_state_slice_without_known_callstack_id->set_switch_out_or_wakeup_callstack_id(
+      kCallstackId);
+
+  ClientCaptureEvent thread_state_slice_waiting_for_callstack_event;
+  ThreadStateSlice* thread_state_slice_waiting_for_callstack =
+      thread_state_slice_waiting_for_callstack_event.mutable_thread_state_slice();
+  thread_state_slice_waiting_for_callstack->set_duration_ns(100);
+  thread_state_slice_waiting_for_callstack->set_end_timestamp_ns(200);
+  thread_state_slice_waiting_for_callstack->set_pid(14);
+  thread_state_slice_waiting_for_callstack->set_tid(24);
+  thread_state_slice_waiting_for_callstack->set_thread_state(ThreadStateSlice::kInterruptibleSleep);
+  thread_state_slice_waiting_for_callstack->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kWaitingForCallstack);
+  thread_state_slice_waiting_for_callstack->set_switch_out_or_wakeup_callstack_id(0);
+
+  EXPECT_CALL(listener, OnUniqueCallstack).Times(0);
+  EXPECT_CALL(listener, OnThreadStateSlice).Times(0);
+
+  EXPECT_DEATH(event_processor->ProcessEvent(thread_state_slice_without_known_callstack_id_event),
+               "");
+  EXPECT_DEATH(event_processor->ProcessEvent(thread_state_slice_waiting_for_callstack_event), "");
+}
+
+TEST(CaptureEventProcessor, CanHandleThreadStateSlicesWithCallstacks) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  constexpr uint64_t kCallstackId = 24;
+  constexpr uint64_t kFrame1 = 1;
+  constexpr uint64_t kFrame2 = 2;
+  constexpr uint64_t kFrame3 = 3;
+
+  ClientCaptureEvent interned_callstack_event;
+  InternedCallstack* interned_callstack = interned_callstack_event.mutable_interned_callstack();
+  interned_callstack->set_key(kCallstackId);
+  interned_callstack->mutable_intern()->add_pcs(kFrame1);
+  interned_callstack->mutable_intern()->add_pcs(kFrame2);
+  interned_callstack->mutable_intern()->add_pcs(kFrame3);
+  interned_callstack->mutable_intern()->set_type(orbit_grpc_protos::Callstack::kComplete);
+
+  ClientCaptureEvent runnable_thread_state_slice_event;
+  ThreadStateSlice* runnable_thread_state_slice =
+      runnable_thread_state_slice_event.mutable_thread_state_slice();
+  runnable_thread_state_slice->set_duration_ns(100);
+  runnable_thread_state_slice->set_end_timestamp_ns(200);
+  runnable_thread_state_slice->set_pid(14);
+  runnable_thread_state_slice->set_tid(24);
+  runnable_thread_state_slice->set_thread_state(ThreadStateSlice::kRunnable);
+  runnable_thread_state_slice->set_switch_out_or_wakeup_callstack_status(
+      ThreadStateSlice::kCallstackSet);
+  runnable_thread_state_slice->set_switch_out_or_wakeup_callstack_id(kCallstackId);
+
+  std::optional<uint64_t> actual_callstack_id;
+  std::optional<CallstackInfo> actual_callstack;
+  EXPECT_CALL(listener, OnUniqueCallstack)
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
+
+  std::optional<ThreadStateSliceInfo> actual_runnable_thread_state_slice_info{};
+  EXPECT_CALL(listener, OnThreadStateSlice)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_runnable_thread_state_slice_info));
+
+  event_processor->ProcessEvent(interned_callstack_event);
+  event_processor->ProcessEvent(runnable_thread_state_slice_event);
+
+  ASSERT_TRUE(actual_callstack_id.has_value());
+  ASSERT_TRUE(actual_callstack.has_value());
+  EXPECT_EQ(actual_callstack_id.value(), kCallstackId);
+  EXPECT_EQ(actual_callstack->type(), orbit_client_data::CallstackType::kComplete);
+  EXPECT_EQ(actual_callstack->frames().size(), 3);
+  EXPECT_EQ(actual_callstack->frames()[0], kFrame1);
+  EXPECT_EQ(actual_callstack->frames()[1], kFrame2);
+  EXPECT_EQ(actual_callstack->frames()[2], kFrame3);
+
+  ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
+  EXPECT_EQ(
+      actual_runnable_thread_state_slice_info->begin_timestamp_ns(),
+      runnable_thread_state_slice->end_timestamp_ns() - runnable_thread_state_slice->duration_ns());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->end_timestamp_ns(),
+            runnable_thread_state_slice->end_timestamp_ns());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->switch_out_or_wakeup_callstack_id(),
+            kCallstackId);
 }
 
 TEST(CaptureEventProcessor, CanHandleWarningEvents) {
