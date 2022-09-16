@@ -26,11 +26,15 @@ namespace orbit_symbols {
 // ErrorMessage otherwise.
 [[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
                                                     const std::string& module_build_id);
-// Checks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
-// the size of the file with expected_file_size. Returns void if the sizes are the same ErrorMessage
+// Checks if the file at object_file_path can be read as an object file (elf, coff) and compares the
+// build id of the file with module_build_id. Returns void if build ids are the same, ErrorMessage
 // otherwise.
-[[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
-                                                    uint64_t expected_file_size);
+[[nodiscard]] ErrorMessageOr<void> VerifyObjectFile(const std::filesystem::path& object_file_path,
+                                                    const std::string& build_id);
+// Checks if the file at file_path has size expected_file_size. Returns void if the sizes are the
+// same, ErrorMessage otherwise.
+[[nodiscard]] ErrorMessageOr<void> VerifyFileSize(const std::filesystem::path& file_path,
+                                                  uint64_t expected_file_size);
 
 }  // namespace orbit_symbols
 

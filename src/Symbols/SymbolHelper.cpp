@@ -47,11 +47,9 @@ using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::ElfFile;
 using orbit_object_utils::ObjectFileInfo;
-using orbit_object_utils::SymbolsFile;
 using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::StructuredDebugDirectorySymbolProvider;
 using orbit_symbol_provider::SymbolLoadingOutcome;
-using orbit_symbol_provider::SymbolProvider;
 using SymbolSource = orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource;
 
 constexpr const char* kDeprecationNote =
@@ -165,7 +163,7 @@ FindStructuredDebugDirectorySymbolProviders() {
 
 // TODO(b/246743231): Remove this function when not needed anymore.
 [[nodiscard]] static std::vector<StructuredDebugDirectorySymbolProvider>
-CreateStructuredDebugDirectorySymbolProviders(std::vector<std::filesystem::path> paths) {
+CreateStructuredDebugDirectorySymbolProviders(const std::vector<std::filesystem::path>& paths) {
   std::vector<StructuredDebugDirectorySymbolProvider> result;
   result.reserve(paths.size());
   for (const auto& path : paths) {
@@ -179,7 +177,7 @@ SymbolHelper::SymbolHelper(fs::path cache_directory)
       structured_debug_directory_providers_(FindStructuredDebugDirectorySymbolProviders()) {}
 
 SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
-                           std::vector<std::filesystem::path> structured_debug_directories)
+                           const std::vector<std::filesystem::path>& structured_debug_directories)
     : cache_directory_(std::move(cache_directory)),
       structured_debug_directory_providers_(
           CreateStructuredDebugDirectorySymbolProviders(structured_debug_directories)) {}
@@ -268,8 +266,39 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module
                                                           uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
       module_path, [&expected_file_size](const std::filesystem::path& cache_file_path) {
-        return VerifySymbolFile(cache_file_path, expected_file_size);
+        return VerifyFileSize(cache_file_path, expected_file_size);
       });
+}
+
+ErrorMessageOr<std::filesystem::path> SymbolHelper::FindObjectInCache(
+    const std::filesystem::path& module_path, const std::string& build_id,
+    uint64_t expected_file_size) const {
+  return FindSymbolsInCacheImpl(
+      module_path,
+      [&build_id,
+       expected_file_size](const std::filesystem::path& cache_file_path) -> ErrorMessageOr<void> {
+        OUTCOME_TRY(VerifyFileSize(cache_file_path, expected_file_size));
+        return VerifyObjectFile(cache_file_path, build_id);
+      });
+}
+
+template <typename Verifier>
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
+                                                              Verifier&& verify) const {
+  ORBIT_SCOPE_FUNCTION;
+  fs::path cache_file_path = GenerateCachedFilePath(module_path);
+  OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
+  if (!exists) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
+  }
+  OUTCOME_TRY(verify(cache_file_path));
+  return cache_file_path;
+}
+
+fs::path SymbolHelper::GenerateCachedFilePath(const fs::path& file_path) const {
+  auto file_name = absl::StrReplaceAll(file_path.string(), {{"/", "_"}});
+  return cache_directory_ / file_name;
 }
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
@@ -288,11 +317,6 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolHelper::LoadFallbackSymbo
 
   OUTCOME_TRY(auto object_file, CreateObjectFile(file_path));
   return object_file->LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols();
-}
-
-fs::path SymbolHelper::GenerateCachedFilePath(const fs::path& file_path) const {
-  auto file_name = absl::StrReplaceAll(file_path.string(), {{"/", "_"}});
-  return cache_directory_ / file_name;
 }
 
 [[nodiscard]] bool SymbolHelper::IsMatchingDebugInfoFile(
@@ -332,7 +356,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
     search_paths.insert(directory / filename);
   }
 
-  ORBIT_LOG("Trying to find debuginfo file with filename \"%s\"", filename);
+  ORBIT_LOG("Trying to find debug info file with filename \"%s\"", filename);
   for (const auto& debuginfo_file_path : search_paths) {
     if (IsMatchingDebugInfoFile(debuginfo_file_path, checksum)) return debuginfo_file_path;
   }
@@ -340,20 +364,6 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
   return ErrorMessage{
       absl::StrFormat("Could not find a file with debug info with filename \"%s\" and checksum %#x",
                       filename, checksum)};
-}
-
-template <typename Verifier>
-ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
-                                                              Verifier&& verify) const {
-  ORBIT_SCOPE_FUNCTION;
-  fs::path cache_file_path = GenerateCachedFilePath(module_path);
-  OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
-  if (!exists) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
-  }
-  OUTCOME_TRY(verify(cache_file_path));
-  return cache_file_path;
 }
 
 ErrorMessageOr<bool> FileStartsWithDeprecationNote(const std::filesystem::path& file_name) {

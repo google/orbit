@@ -225,74 +225,155 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
   }
 }
 
-constexpr uint64_t kNoSymbolsElfDebugFileSize = 45856;
-constexpr uint64_t kIncorrectSymbolsFileSize = 123456;
-
-TEST(SymbolHelper, FindSymbolsInCache) {
+TEST(SymbolHelper, FindSymbolsInCacheBySize) {
+  constexpr uint64_t kNoSymbolsElfDebugFileSize = 45856;
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper(testdata_directory, {});
-
-  // This is more of a smoke test (looking for the same-size file)
   {
+    // Same-size ELF file (smoke test).
     const fs::path file = "no_symbols_elf.debug";
     const auto result = symbol_helper.FindSymbolsInCache(file, kNoSymbolsElfDebugFileSize);
     ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), testdata_directory / file);
   }
-
-  // This is more of a smoke test (looking for the same elf file)
   {
-    const fs::path file = "no_symbols_elf.debug";
-    const auto result =
-        symbol_helper.FindSymbolsInCache(file, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-    ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), testdata_directory / file);
-  }
-
-  // This is more of a smoke test (looking for the same pdb file)
-  {
-    const fs::path file = "dllmain.pdb";
-    const auto result =
-        symbol_helper.FindSymbolsInCache(file, "efaecd92f773bb4ebcf213b84f43b322-3");
-    ASSERT_THAT(result, HasValue());
-    EXPECT_THAT(result.value(), testdata_directory / file);
-  }
-
-  // a file in cache has different size
-  {
+    // File in cache has different size.
     const fs::path file_path = "no_symbols_elf.debug";
-    const auto result = symbol_helper.FindSymbolsInCache(file_path, kIncorrectSymbolsFileSize);
-    EXPECT_THAT(result, HasError("Symbol file size doesn't match"));
+    const auto result = symbol_helper.FindSymbolsInCache(file_path, kNoSymbolsElfDebugFileSize + 1);
+    EXPECT_THAT(result, HasError("File size doesn't match"));
   }
+}
 
-  // elf file in cache does not have symbols
+TEST(SymbolHelper, FindSymbolsInCache) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
+  SymbolHelper symbol_helper(testdata_directory, {});
   {
-    const fs::path file_path = "no_symbols_elf";
+    // Same ELF file (smoke test).
+    const fs::path file_name = "no_symbols_elf.debug";
     const auto result =
-        symbol_helper.FindSymbolsInCache(file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+        symbol_helper.FindSymbolsInCache(file_name, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
+    ASSERT_THAT(result, HasValue());
+    EXPECT_EQ(result.value(), testdata_directory / file_name);
+  }
+  {
+    // Same PDB file (smoke test).
+    const fs::path file_name = "dllmain.pdb";
+    const auto result =
+        symbol_helper.FindSymbolsInCache(file_name, "efaecd92f773bb4ebcf213b84f43b322-3");
+    ASSERT_THAT(result, HasValue());
+    EXPECT_THAT(result.value(), testdata_directory / file_name);
+  }
+  {
+    // ELF file in cache does not have symbols.
+    const fs::path file_name = "no_symbols_elf";
+    const auto result =
+        symbol_helper.FindSymbolsInCache(file_name, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
-
-  // coff file in cache does not have symbols
   {
-    const fs::path file_path = "dllmain.dll";
+    // COFF file in cache does not have symbols.
+    const fs::path file_name = "dllmain.dll";
     const auto result =
-        symbol_helper.FindSymbolsInCache(file_path, "efaecd92f773bb4ebcf213b84f43b322-3");
+        symbol_helper.FindSymbolsInCache(file_name, "efaecd92f773bb4ebcf213b84f43b322-3");
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
-
-  // elf file in cache has different build id
   {
-    const fs::path file_path = "no_symbols_elf.debug";
-    const auto result = symbol_helper.FindSymbolsInCache(file_path, "non matching build id");
+    // ELF file in cache has different build id.
+    const fs::path file_name = "no_symbols_elf.debug";
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, "non matching build id");
     EXPECT_THAT(result, HasError("has a different build id"));
   }
-
-  // pdb in cache has different build id
   {
-    const fs::path file_path = "dllmain.pdb";
-    const auto result = symbol_helper.FindSymbolsInCache(file_path, "non matching build id");
+    // PDB in cache has different build id.
+    const fs::path file_name = "dllmain.pdb";
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, "non matching build id");
     EXPECT_THAT(result, HasError("has a different build id"));
+  }
+}
+
+TEST(SymbolHelper, FindObjectInCache) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
+  SymbolHelper symbol_helper(testdata_directory, {});
+  {
+    // ELF file.
+    const fs::path file_name = "hello_world_elf";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindObjectInCache(
+        file_name, "d12d54bc5b72ccce54a408bdeda65e2530740ac8", file_size.value());
+    ASSERT_THAT(result, HasValue());
+    EXPECT_EQ(result.value(), file_path);
+  }
+  {
+    // ELF file has a different build id.
+    const fs::path file_name = "hello_world_elf";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result =
+        symbol_helper.FindObjectInCache(file_name, "non-matching build id", file_size.value());
+    ASSERT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // ELF file has a different size.
+    const fs::path file_name = "hello_world_elf";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindObjectInCache(
+        file_name, "d12d54bc5b72ccce54a408bdeda65e2530740ac8", file_size.value() + 1);
+    ASSERT_THAT(result, HasError("File size doesn't match"));
+  }
+  {
+    // COFF file.
+    const fs::path file_name = "dllmain.dll";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindObjectInCache(
+        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value());
+    ASSERT_THAT(result, HasValue());
+    EXPECT_EQ(result.value(), file_path);
+  }
+  {
+    // COFF file has a different build id.
+    const fs::path file_name = "dllmain.dll";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result =
+        symbol_helper.FindObjectInCache(file_name, "non-matching build id", file_size.value());
+    ASSERT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // COFF file has a different size.
+    const fs::path file_name = "dllmain.dll";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindObjectInCache(
+        file_name, "efaecd92f773bb4ebcf213b84f43b322", file_size.value() + 1);
+    ASSERT_THAT(result, HasError("File size doesn't match"));
+  }
+  {
+    // PDB file.
+    const fs::path file_name = "dllmain.pdb";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindObjectInCache(
+        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value());
+    EXPECT_THAT(result, HasError("The file was not recognized as a valid object file"));
+  }
+  {
+    // File doesn't exist.
+    const fs::path file_name = "non-existing_file";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasError(""));
+    const auto result = symbol_helper.FindObjectInCache(file_name, "unimportant build id", 42);
+    EXPECT_THAT(result, HasError("Unable to find"));
   }
 }
 
