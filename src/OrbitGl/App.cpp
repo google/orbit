@@ -274,7 +274,7 @@ ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForMod
 
   std::filesystem::path symbol_file_path = mappings[module_data.file_path()];
 
-  OUTCOME_TRY(bool file_exists, orbit_base::FileExists(symbol_file_path));
+  OUTCOME_TRY(bool file_exists, orbit_base::FileOrDirectoryExists(symbol_file_path));
 
   if (!file_exists) {
     return ErrorMessage{absl::StrFormat(
@@ -1456,7 +1456,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
 
   uint64_t suffix_number = 0;
   while (true) {
-    auto file_exists_or_error = orbit_base::FileExists(file_path);
+    auto file_exists_or_error = orbit_base::FileOrDirectoryExists(file_path);
     if (file_exists_or_error.has_error()) {
       ORBIT_ERROR("Unable to check for existence of \"%s\": %s", file_path.string(),
                   file_exists_or_error.error().message());
@@ -2529,7 +2529,7 @@ Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file)
 }
 
 void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
-  const auto file_exists = orbit_base::FileExists(preset.file_path());
+  const auto file_exists = orbit_base::FileOrDirectoryExists(preset.file_path());
   if (file_exists.has_error()) {
     SendErrorToUi("Unable to find preset file: %s", file_exists.error().message());
     return;

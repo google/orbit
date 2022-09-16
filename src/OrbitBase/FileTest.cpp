@@ -303,22 +303,22 @@ TEST(File, MoveOrRenameFile) {
   new_file.CloseAndRemove();
   std::filesystem::path new_path = new_file.file_path();
 
-  auto exists_or_error = FileExists(new_path);
+  auto exists_or_error = FileOrDirectoryExists(new_path);
   ASSERT_THAT(exists_or_error, HasNoError());
   ASSERT_FALSE(exists_or_error.value());
 
-  exists_or_error = FileExists(tmp_file.file_path());
+  exists_or_error = FileOrDirectoryExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_TRUE(exists_or_error.value());
 
   auto move_result = MoveOrRenameFile(tmp_file.file_path(), new_path);
   ASSERT_THAT(move_result, HasNoError());
 
-  exists_or_error = FileExists(new_path);
+  exists_or_error = FileOrDirectoryExists(new_path);
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_TRUE(exists_or_error.value());
 
-  exists_or_error = FileExists(tmp_file.file_path());
+  exists_or_error = FileOrDirectoryExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_FALSE(exists_or_error.value());
 }
@@ -339,7 +339,7 @@ TEST(File, RemoveFile) {
   ASSERT_THAT(removed_or_error, HasNoError());
   EXPECT_TRUE(removed_or_error.value());
 
-  auto exists_or_error = FileExists(tmp_file.file_path());
+  auto exists_or_error = FileOrDirectoryExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());
   ASSERT_FALSE(exists_or_error.value());
 }
@@ -355,7 +355,7 @@ TEST(File, CreateDirectories) {
   ASSERT_THAT(directories_created_or_error, HasNoError());
   EXPECT_TRUE(directories_created_or_error.value());
 
-  auto exists_or_error = FileExists(tmp_file.file_path());
+  auto exists_or_error = FileOrDirectoryExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_TRUE(exists_or_error.value());
 

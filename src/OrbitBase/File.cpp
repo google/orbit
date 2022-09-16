@@ -165,7 +165,7 @@ ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size
   return ReadFully(fd, buffer, size);
 }
 
-ErrorMessageOr<bool> FileExists(const std::filesystem::path& path) {
+ErrorMessageOr<bool> FileOrDirectoryExists(const std::filesystem::path& path) {
   std::error_code error;
   bool result = std::filesystem::exists(path, error);
   if (error) {

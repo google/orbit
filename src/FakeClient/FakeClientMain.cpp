@@ -151,7 +151,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
   }
 
   for (const std::filesystem::path& candidate_path : candidate_paths) {
-    ErrorMessageOr<bool> error_or_exists = orbit_base::FileExists(candidate_path);
+    ErrorMessageOr<bool> error_or_exists = orbit_base::FileOrDirectoryExists(candidate_path);
     ORBIT_FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
     if (!error_or_exists.value()) {
       continue;

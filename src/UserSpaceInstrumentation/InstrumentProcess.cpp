@@ -74,7 +74,7 @@ ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
 
 bool ProcessWithPidExists(pid_t pid) {
   const std::string pid_dirname = absl::StrFormat("/proc/%d", pid);
-  auto result = orbit_base::FileExists(pid_dirname);
+  auto result = orbit_base::FileOrDirectoryExists(pid_dirname);
   ORBIT_FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname,
                 result.error().message());
   return result.value();
@@ -729,7 +729,7 @@ ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options) {
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
-  OUTCOME_TRY(auto&& exists, orbit_base::FileExists(absl::StrFormat("/proc/%d", pid)));
+  OUTCOME_TRY(auto&& exists, orbit_base::FileOrDirectoryExists(absl::StrFormat("/proc/%d", pid)));
   if (!exists) {
     return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
   }

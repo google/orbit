@@ -18,7 +18,7 @@
 namespace orbit_move_files_to_documents {
 
 static bool IsDirectoryEmpty(const std::filesystem::path& directory) {
-  auto exists_or_error = orbit_base::FileExists(directory);
+  auto exists_or_error = orbit_base::FileOrDirectoryExists(directory);
   if (exists_or_error.has_error()) {
     ORBIT_ERROR("Unable to check for existence of \"%s\": %s", directory.string(),
                 exists_or_error.error().message());

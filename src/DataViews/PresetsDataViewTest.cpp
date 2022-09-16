@@ -333,7 +333,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
     view_.OnContextMenu(std::string{kMenuActionDeletePreset}, delete_preset_index, {0});
 
-    const auto file_exists = orbit_base::FileExists(preset_filename0);
+    const auto file_exists = orbit_base::FileOrDirectoryExists(preset_filename0);
     ASSERT_THAT(file_exists, orbit_test_utils::HasNoError());
     EXPECT_FALSE(file_exists.value());
 

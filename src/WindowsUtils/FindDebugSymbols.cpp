@@ -70,7 +70,7 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
   std::vector<std::string> error_messages;
 
   for (const auto& search_path : search_paths) {
-    ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
+    ErrorMessageOr<bool> file_exists = orbit_base::FileOrDirectoryExists(search_path);
 
     if (file_exists.has_error()) {
       ORBIT_ERROR("%s", file_exists.error().message());
