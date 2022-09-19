@@ -10,25 +10,30 @@
 #include <stdint.h>
 
 #include <string>
+#include <tuple>
 
 #include "MizarBase/AbsoluteAddress.h"
+#include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarDataProvider.h"
 
 namespace orbit_mizar_data {
 
-struct AddressToIdAndIdToName {
+struct AddressToIdAndIdToSymbol {
   absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
       baseline_address_to_sfid;
   absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
       comparison_address_to_sfid;
-  absl::flat_hash_map<orbit_mizar_base::SFID, std::string> sfid_to_name;
+  absl::flat_hash_map<orbit_mizar_base::SFID,
+                      orbit_mizar_base::BaselineAndComparisonFunctionSymbols>
+      sfid_to_symbols;
 };
 
-[[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(
-    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, FunctionSymbol>&
+[[nodiscard]] AddressToIdAndIdToSymbol AssignSampledFunctionIds(
+    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::FunctionSymbol>&
         baseline_address_to_symbol,
-    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, FunctionSymbol>&
+    const absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::FunctionSymbol>&
         comparison_address_to_symbol);
 
 }  // namespace orbit_mizar_data

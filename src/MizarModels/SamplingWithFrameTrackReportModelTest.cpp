@@ -16,16 +16,19 @@
 #include <vector>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/SamplingWithFrameTrackReportModel.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
+using ::orbit_mizar_base::FunctionSymbol;
 using ::testing::StrNe;
 using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 using SFID = ::orbit_mizar_base::SFID;
 using Counts = ::orbit_mizar_data::SamplingCounts;
+using ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
 using ::orbit_test_utils::MakeMap;
@@ -65,7 +68,29 @@ constexpr size_t kFunctionCount = 4;
 constexpr std::array<SFID, kFunctionCount> kSfids = {SFID(1), SFID(2), SFID(3), SFID(4)};
 constexpr std::array<uint64_t, kFunctionCount> kBaselineCounts = {0, 0, 4, 3};
 constexpr std::array<uint64_t, kFunctionCount> kComparisonCounts = {0, 5, 0, 2};
-const std::vector<std::string> kFunctionNames = {"foo", "bar", "biz", "fiz"};
+const std::vector<std::string> kFunctionBaselineNames = {"baseline_foo", "baseline_bar",
+                                                         "baseline_biz", "baseline_fiz"};
+const std::vector<std::string> kFunctionComparisonNames = {"baseline_foo", "baseline_bar",
+                                                           "baseline_biz", "baseline_fiz"};
+
+const std::vector<std::string> kBaselineModules = {"baseline_M1", "baseline_M1", "baseline_M2",
+                                                   "baseline_M2"};
+const std::vector<std::string> kComparisonModules = {"comparison_M1", "comparison_M1",
+                                                     "comparison_M2", "comparison_M2"};
+
+const std::vector<BaselineAndComparisonFunctionSymbols> kSymbols = [] {
+  std::vector<BaselineAndComparisonFunctionSymbols> result;
+  for (size_t i = 0; i < kFunctionCount; ++i) {
+    auto baseline_symbol =
+        MakeBaseline<FunctionSymbol>(kFunctionBaselineNames[i], kBaselineModules[i]);
+    auto comparison_symbol =
+        MakeComparison<FunctionSymbol>(kFunctionComparisonNames[i], kComparisonModules[i]);
+    BaselineAndComparisonFunctionSymbols symbols{baseline_symbol, comparison_symbol};
+    result.emplace_back(symbols);
+  }
+  return result;
+}();
+
 orbit_mizar_data::CorrectedComparisonResult res = {{0, 1}, 1};
 constexpr std::array<orbit_mizar_data::CorrectedComparisonResult, kFunctionCount>
     kComparisonResults = {orbit_mizar_data::CorrectedComparisonResult{{0, 0.1}, 0.2},
@@ -77,8 +102,12 @@ constexpr int kExpectedReportSize = 3;
 const absl::flat_hash_map<SFID, uint64_t> kSfidToBaselineCounts = MakeMap(kSfids, kBaselineCounts);
 const absl::flat_hash_map<SFID, uint64_t> kSfidToComparisonCounts =
     MakeMap(kSfids, kComparisonCounts);
-const absl::flat_hash_map<SFID, std::string> kSfidToName = MakeMap(kSfids, kFunctionNames);
-const absl::flat_hash_map<std::string, SFID> kNameToSfid = MakeMap(kFunctionNames, kSfids);
+const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> kSfidToBaselineName =
+    MakeMap(kSfids, kSymbols);
+const absl::flat_hash_map<std::string, SFID> kBaselineNameToSfid =
+    MakeMap(kFunctionBaselineNames, kSfids);
+const absl::flat_hash_map<std::string, SFID> kComparisonNameToSfid =
+    MakeMap(kFunctionComparisonNames, kSfids);
 const absl::flat_hash_map<SFID, orbit_mizar_data::CorrectedComparisonResult>
     kSfidToComparisonResult = MakeMap(kSfids, kComparisonResults);
 
@@ -116,9 +145,9 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
       MakeComparison<MockCounts>(kCallstacksCount, kSfidToComparisonCounts);
 
   Baseline<MockFrameTrackStats> baseline_frame_track_stats_ =
-      MakeBaseline<MockFrameTrackStats>(kBaselineFrameTime);
+      MakeBaseline<MockFrameTrackStats>(static_cast<double>(kBaselineFrameTime));
   Comparison<MockFrameTrackStats> comparison_frame_track_stats_ =
-      MakeComparison<MockFrameTrackStats>(kComparisonFrameTime);
+      MakeComparison<MockFrameTrackStats>(static_cast<double>(kComparisonFrameTime));
 
   [[nodiscard]] QString DisplayedString(int row, Column column) const {
     return model_.data(MakeIndex(row, column), Qt::DisplayRole).toString();
@@ -156,8 +185,8 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     for (int row = 0; row < model_.rowCount({}); ++row) {
       const QString name = DisplayedString(row, Column::kFunctionName);
 
-      ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));
-      const SFID sfid = kNameToSfid.at(name.toStdString());
+      ASSERT_THAT(kFunctionBaselineNames, Contains(name.toStdString()));
+      const SFID sfid = kBaselineNameToSfid.at(name.toStdString());
 
       const orbit_mizar_data::CorrectedComparisonResult& comparison_result =
           kSfidToComparisonResult.at(sfid);
@@ -194,7 +223,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
 
   Report report_{baseline_counts_,        baseline_frame_track_stats_,
                  comparison_counts_,      comparison_frame_track_stats_,
-                 kSfidToComparisonResult, &kSfidToName};
+                 kSfidToComparisonResult, &kSfidToBaselineName};
 
   Model model_{report_, true, 0.05};
 };
@@ -207,11 +236,11 @@ TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
   for (int row = 0; row < model_.rowCount({}); ++row) {
     const QString name = DisplayedString(row, Column::kFunctionName);
 
-    ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));
+    ASSERT_THAT(kFunctionBaselineNames, Contains(name.toStdString()));
 
     EXPECT_EQ(name.toLower(), SortValue(row, Column::kFunctionName));
 
-    const SFID sfid = kNameToSfid.at(name.toStdString());
+    const SFID sfid = kBaselineNameToSfid.at(name.toStdString());
     observed_sfids.insert(sfid);
     const uint64_t expected_baseline_count = kSfidToBaselineCounts.at(sfid);
     const uint64_t expected_comparison_count = kSfidToComparisonCounts.at(sfid);

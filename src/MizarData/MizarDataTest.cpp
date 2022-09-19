@@ -25,6 +25,7 @@
 #include "MizarData/MizarData.h"
 
 using ::orbit_mizar_base::AbsoluteAddress;
+using ::orbit_mizar_base::FunctionSymbol;
 using ::testing::Invoke;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;

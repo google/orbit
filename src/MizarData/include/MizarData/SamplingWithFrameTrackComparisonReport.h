@@ -15,6 +15,7 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
@@ -101,6 +102,8 @@ class SamplingWithFrameTrackComparisonReportTmpl {
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
   using SFID = ::orbit_mizar_base::SFID;
+  using BaselineAndComparisonFunctionSymbols =
+      ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 
   explicit SamplingWithFrameTrackComparisonReportTmpl(
       Baseline<Counts> baseline_sampling_counts,
@@ -108,13 +111,13 @@ class SamplingWithFrameTrackComparisonReportTmpl {
       Comparison<Counts> comparison_sampling_counts,
       Comparison<FrameTrackStats> comparison_frame_track_stats,
       absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results,
-      const absl::flat_hash_map<SFID, std::string>* sfid_to_names)
+      const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>* sfid_to_symbol)
       : baseline_sampling_counts_(std::move(baseline_sampling_counts)),
         baseline_frame_track_stats_(std::move(baseline_frame_track_stats)),
         comparison_sampling_counts_(std::move(comparison_sampling_counts)),
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
         fid_to_corrected_comparison_results_(std::move(fid_to_corrected_comparison_results)),
-        sfid_to_names_(sfid_to_names) {}
+        sfid_to_symbols_(sfid_to_symbol) {}
 
   [[nodiscard]] const Baseline<Counts>& GetBaselineSamplingCounts() const {
     return baseline_sampling_counts_;
@@ -134,8 +137,9 @@ class SamplingWithFrameTrackComparisonReportTmpl {
     return fid_to_corrected_comparison_results_.at(sfid);
   }
 
-  [[nodiscard]] const absl::flat_hash_map<SFID, std::string>& GetSfidToNames() const {
-    return *sfid_to_names_;
+  [[nodiscard]] const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>&
+  GetSfidToSymbols() const {
+    return *sfid_to_symbols_;
   }
 
  private:
@@ -147,7 +151,7 @@ class SamplingWithFrameTrackComparisonReportTmpl {
 
   absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results_;
 
-  const absl::flat_hash_map<SFID, std::string>* sfid_to_names_;
+  const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>* sfid_to_symbols_;
 };
 
 // The production code should rely on this alias, changes to RHS are not planned

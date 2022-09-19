@@ -34,16 +34,20 @@ class BaselineAndComparisonTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
+  using BaselineAndComparisonFunctionSymbols =
+      ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 
  public:
-  BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
-                            absl::flat_hash_map<SFID, std::string> sfid_to_name)
+  BaselineAndComparisonTmpl(
+      Baseline<PairedData> baseline, Comparison<PairedData> comparison,
+      absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> sfid_to_symbols)
       : baseline_(std::move(baseline)),
         comparison_(std::move(comparison)),
-        sfid_to_name_(std::move(sfid_to_name)) {}
+        sfid_to_symbols_(std::move(sfid_to_symbols)) {}
 
-  [[nodiscard]] const absl::flat_hash_map<SFID, std::string>& sfid_to_name() const {
-    return sfid_to_name_;
+  [[nodiscard]] const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>&
+  sfid_to_symbols() const {
+    return sfid_to_symbols_;
   }
 
   [[nodiscard]] SamplingWithFrameTrackComparisonReport MakeSamplingWithFrameTrackReport(
@@ -68,7 +72,7 @@ class BaselineAndComparisonTmpl {
     return SamplingWithFrameTrackComparisonReport(
         std::move(baseline_sampling_counts), std::move(baseline_frame_stats),
         std::move(comparison_sampling_counts), std::move(comparison_frame_stats),
-        std::move(sfid_to_corrected_comparison_result), &sfid_to_name_);
+        std::move(sfid_to_corrected_comparison_result), &sfid_to_symbols_);
   }
 
   [[nodiscard]] const Baseline<PairedData>& GetBaselineData() const { return baseline_; }
@@ -79,7 +83,7 @@ class BaselineAndComparisonTmpl {
       const FunctionTimeComparator& comparator) const {
     absl::flat_hash_map<SFID, orbit_mizar_statistics::ComparisonResult> results;
     absl::flat_hash_map<SFID, double> pvalues;
-    for (const auto& [sfid, unused_name] : sfid_to_name_) {
+    for (const auto& [sfid, unused_name] : sfid_to_symbols_) {
       orbit_mizar_statistics::ComparisonResult result = comparator.Compare(sfid);
       results.try_emplace(sfid, result);
       pvalues.try_emplace(sfid, result.pvalue);
@@ -122,7 +126,7 @@ class BaselineAndComparisonTmpl {
 
   Baseline<PairedData> baseline_;
   Comparison<PairedData> comparison_;
-  absl::flat_hash_map<SFID, std::string> sfid_to_name_;
+  absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> sfid_to_symbols_;
 };
 
 using ActiveFunctionTimePerFrameComparator =

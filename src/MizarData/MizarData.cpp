@@ -30,6 +30,7 @@
 
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::ForEachFrame;
+using ::orbit_mizar_base::FunctionSymbol;
 
 namespace orbit_mizar_data {
 

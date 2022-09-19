@@ -35,6 +35,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   using PresentEvent = ::orbit_grpc_protos::PresentEvent;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
   using AbsoluteAddress = ::orbit_mizar_base::AbsoluteAddress;
+  using FunctionSymbol = ::orbit_mizar_base::FunctionSymbol;
 
  public:
   MizarData() = default;
