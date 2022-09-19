@@ -46,7 +46,7 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
     scope_id_to_info.try_emplace(scope_id, scope_info);
     scope_info_to_id.try_emplace(scope_info, scope_id);
     scope_id_to_function_info.try_emplace(
-        scope_id, /* piecewise_construct FunctionInfo */ instrumented_function.file_path(),
+        scope_id, /* in-place FunctionInfo construction */ instrumented_function.file_path(),
         instrumented_function.file_build_id(), instrumented_function.function_virtual_address(),
         instrumented_function.function_size(), instrumented_function.function_name());
   }
