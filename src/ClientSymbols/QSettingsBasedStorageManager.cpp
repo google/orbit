@@ -18,6 +18,8 @@ constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
     "module_symbol_file_mapping_symbol_file_key";
 constexpr const char* kDisabledModulesKey = "disabled_modules_key";
 constexpr const char* kDisabledModuleKey = "disabled_module_key";
+constexpr const char* kEnableStadiaSymbolStoreKey = "enable_stadia_symbol_store_key";
+constexpr const char* kEnableMicrosoftSymbolServerKey = "enable_microsoft_symbol_server_key";
 
 namespace orbit_client_symbols {
 
@@ -56,8 +58,7 @@ void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
   settings_.endArray();
 }
 
-[[nodiscard]] ModuleSymbolFileMappings
-QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
+ModuleSymbolFileMappings QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   const int size = settings_.beginReadArray(kModuleSymbolFileMappingKey);
   ModuleSymbolFileMappings mappings;
   mappings.reserve(size);
@@ -85,8 +86,7 @@ void QSettingsBasedStorageManager::SaveDisabledModulePaths(absl::flat_hash_set<s
   settings_.endArray();
 }
 
-[[nodiscard]] absl::flat_hash_set<std::string>
-QSettingsBasedStorageManager::LoadDisabledModulePaths() {
+absl::flat_hash_set<std::string> QSettingsBasedStorageManager::LoadDisabledModulePaths() {
   const int size = settings_.beginReadArray(kDisabledModulesKey);
   absl::flat_hash_set<std::string> paths;
   paths.reserve(size);
@@ -96,6 +96,23 @@ QSettingsBasedStorageManager::LoadDisabledModulePaths() {
   }
   settings_.endArray();
   return paths;
+}
+
+void QSettingsBasedStorageManager::SaveEnableStadiaSymbolStore(bool enable_stadia_symbol_store) {
+  settings_.setValue(kEnableStadiaSymbolStoreKey, enable_stadia_symbol_store);
+}
+
+bool QSettingsBasedStorageManager::LoadEnableStadiaSymbolStore() {
+  return settings_.value(kEnableStadiaSymbolStoreKey, false).toBool();
+}
+
+void QSettingsBasedStorageManager::SaveEnableMicrosoftSymbolServer(
+    bool enable_microsoft_symbol_server) {
+  settings_.setValue(kEnableMicrosoftSymbolServerKey, enable_microsoft_symbol_server);
+}
+
+bool QSettingsBasedStorageManager::LoadEnableMicrosoftSymbolServer() {
+  return settings_.value(kEnableMicrosoftSymbolServerKey, false).toBool();
 }
 
 }  // namespace orbit_client_symbols
