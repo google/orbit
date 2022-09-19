@@ -80,7 +80,7 @@ inline size_t GetPageSize() {
 // Returns the map of tids in the target process namespace to the corresponding tids in the root
 // namespace.
 [[nodiscard]] absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(
-    pid_t target_pid);
+    pid_t pid_in_root_namespace);
 
 }  // namespace orbit_linux_tracing
 

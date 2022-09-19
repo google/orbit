@@ -82,7 +82,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   }
 
   void SetInitialTidToRootNamespaceTidMapping(absl::flat_hash_map<pid_t, pid_t>&& tid_mappings) {
-    tid_to_root_namespace_tid_ = tid_mappings;
+    tid_to_root_namespace_tid_ = std::move(tid_mappings);
   }
 
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
@@ -156,11 +156,11 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   // tid_to_root_namespace_tid_ holds a mapping from all tids in the target process namespace to the
   // corresponding tids in the root namespace.
   // We obtain the initial state of this mapping at the beginning of the capture via
-  // SetInitialTidMapping. During the capture we observe task_newtask and clone{3} tracepoints to
-  // keep track of new threads (new_task_parent_to_root_namespace_tids_ is required for this
-  // bookkeeping).
+  // SetInitialTidToRootNamespaceTidMapping. During the capture we observe task_newtask and clone{3}
+  // tracepoints to keep track of new threads
+  // (new_task_root_namespace_parent_tid_to_root_namespace_tid_ is required for this bookkeeping).
   absl::flat_hash_map<pid_t, pid_t> tid_to_root_namespace_tid_;
-  absl::flat_hash_map<pid_t, pid_t> new_task_parent_to_root_namespace_tids_;
+  absl::flat_hash_map<pid_t, pid_t> new_task_root_namespace_parent_tid_to_root_namespace_tid_;
 };
 
 }  // namespace orbit_linux_tracing

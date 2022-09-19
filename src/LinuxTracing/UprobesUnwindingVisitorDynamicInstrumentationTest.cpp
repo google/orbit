@@ -311,8 +311,8 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
   visitor_.SetInitialTidToRootNamespaceTidMapping(
       {{kPidTargetNamespace, kPidRootNamespace}, {kTidTargetNamespace, kTidRootNamespace}});
 
-  constexpr pid_t kPidUnkown = 44;
-  constexpr pid_t kTidUnkown = 45;
+  constexpr pid_t kPidUnknown = 44;
+  constexpr pid_t kTidUnknown = 45;
 
   constexpr pid_t kTidNewTargetNamespace = 54;
   constexpr pid_t kTidNewRootNamespace = 1054;
@@ -364,33 +364,33 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
 
   {
     UserSpaceFunctionEntryPerfEvent function_entry2{
-        .timestamp = 300,
+        .timestamp = 900,
         .data =
             {
-                .pid = kPidUnkown,
-                .tid = kTidUnkown,
+                .pid = kPidUnknown,
+                .tid = kTidUnknown,
                 .function_id = 1,
                 .sp = 0x30,
                 .return_address = 0x02,
             },
     };
 
-    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTidUnkown, 0x30, 0x02)).Times(0);
+    EXPECT_CALL(return_address_manager_, ProcessFunctionEntry(kTidUnknown, 0x30, 0x02)).Times(0);
     PerfEvent{function_entry2}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
   }
 
   {
     UserSpaceFunctionExitPerfEvent function_exit2{
-        .timestamp = 800,
+        .timestamp = 1000,
         .data =
             {
-                .pid = kPidUnkown,
-                .tid = kTidUnkown,
+                .pid = kPidUnknown,
+                .tid = kTidUnknown,
             },
     };
 
-    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(kTidUnkown)).Times(0);
+    EXPECT_CALL(return_address_manager_, ProcessFunctionExit(kTidUnknown)).Times(0);
     EXPECT_CALL(listener_, OnFunctionCall).Times(0);
     PerfEvent{function_exit2}.Accept(&visitor_);
     Mock::VerifyAndClearExpectations(&return_address_manager_);
@@ -399,7 +399,7 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
 
   {
     TaskNewtaskPerfEvent task_newtask{
-        .timestamp = 1000,
+        .timestamp = 1100,
         .data =
             {
                 .new_tid = kTidNewRootNamespace,
@@ -408,7 +408,7 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
     };
     PerfEvent{task_newtask}.Accept(&visitor_);
     CloneExitPerfEvent clone_exit_event{
-        .timestamp = 1001,
+        .timestamp = 1101,
         .data =
             {
                 .tid = kTidRootNamespace,

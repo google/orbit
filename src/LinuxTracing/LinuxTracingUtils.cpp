@@ -334,10 +334,11 @@ std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMess
   return function_ids_to_error_messages;
 }
 
-absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(pid_t target_pid) {
+absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(
+    pid_t pid_in_root_namespace) {
   absl::flat_hash_map<pid_t, pid_t> tid_mapping;
-  for (pid_t tid : orbit_base::GetTidsOfProcess(target_pid)) {
-    const std::string status_file_name = absl::StrFormat("/proc/%d/status", tid);
+  for (pid_t tid_in_root_namespace : orbit_base::GetTidsOfProcess(pid_in_root_namespace)) {
+    const std::string status_file_name = absl::StrFormat("/proc/%d/status", tid_in_root_namespace);
     auto reading_result = orbit_base::ReadFileToString(status_file_name);
     if (reading_result.has_error()) {
       // This means the thread exited before we were able to read the status file. It is fine to
@@ -354,13 +355,13 @@ absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(pi
       // and pid_n is the pid in the innermost namespace.
       const std::vector<std::string> splits =
           absl::StrSplit(line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
-      uint32_t tid_in_target_process_namespace = 0;
+      pid_t tid_in_target_process_namespace = 0;
       if (!absl::SimpleAtoi(splits.back(), &tid_in_target_process_namespace)) {
         ORBIT_ERROR("Line in %s starting with 'NSpid:' did not end with a pid. Entire line was: %s",
                     status_file_name, line);
         break;
       }
-      tid_mapping[tid_in_target_process_namespace] = tid;
+      tid_mapping[tid_in_target_process_namespace] = tid_in_root_namespace;
     }
   }
   return tid_mapping;
