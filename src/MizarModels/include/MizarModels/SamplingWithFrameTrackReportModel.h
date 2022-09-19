@@ -33,6 +33,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
   using SFID = ::orbit_mizar_base::SFID;
+  using BaselineAndComparisonFunctionSymbols =
+      orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 
  public:
   enum class Column {
@@ -47,16 +49,20 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     kPercentOfSlowdown
   };
 
+  enum class FunctionNameToShow { kBaseline, kComparison };
+
   static constexpr int kColumnsCount = 9;
 
   explicit SamplingWithFrameTrackReportModelTmpl(Report report,
                                                  bool is_multiplicity_correction_enabled,
                                                  double significance_level,
+                                                 FunctionNameToShow function_name_to_show,
                                                  QObject* parent = nullptr)
       : QAbstractTableModel(parent),
         report_(std::move(report)),
         is_multiplicity_correction_enabled_(is_multiplicity_correction_enabled),
-        significance_level_(significance_level) {
+        significance_level_(significance_level),
+        function_name_to_show_(function_name_to_show) {
     for (const auto& [sfid, unused_symbol] : report_.GetSfidToSymbols()) {
       if (*BaselineExclusiveCount(sfid) > 0 || *ComparisonExclusiveCount(sfid) > 0) {
         sfids_.push_back(sfid);
@@ -72,6 +78,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   void SetSignificanceLevel(double significance_level) {
     significance_level_ = significance_level;
     EmitDataChanged(Column::kIsSignificant);
+  }
+
+  void SetFunctionNameToShow(FunctionNameToShow function_name_to_show) {
+    function_name_to_show_ = function_name_to_show;
+    EmitDataChanged(Column::kFunctionName);
   }
 
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override {
@@ -347,14 +358,23 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
   [[nodiscard]] const std::string& GetFunctionName(SFID sfid) const {
-    // TODO(b/247072330) make it configurable
-    return report_.GetSfidToSymbols().at(sfid).baseline_function_symbol->function_name;
+    const orbit_mizar_base::BaselineAndComparisonFunctionSymbols& symbols =
+        report_.GetSfidToSymbols().at(sfid);
+    switch (function_name_to_show_) {
+      case FunctionNameToShow::kBaseline:
+        return symbols.baseline_function_symbol->function_name;
+      case FunctionNameToShow::kComparison:
+        return symbols.comparison_function_symbol->function_name;
+      default:
+        ORBIT_UNREACHABLE();
+    }
   }
 
   Report report_;
   std::vector<SFID> sfids_;
   bool is_multiplicity_correction_enabled_;
   double significance_level_;
+  FunctionNameToShow function_name_to_show_;
 };
 
 using SamplingWithFrameTrackReportModel =

@@ -11,6 +11,8 @@
 #include <QVariant>
 #include <Qt>
 #include <cstdint>
+#include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -24,6 +26,7 @@
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::FunctionSymbol;
+using ::testing::Ne;
 using ::testing::StrNe;
 using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 using SFID = ::orbit_mizar_base::SFID;
@@ -70,8 +73,8 @@ constexpr std::array<uint64_t, kFunctionCount> kBaselineCounts = {0, 0, 4, 3};
 constexpr std::array<uint64_t, kFunctionCount> kComparisonCounts = {0, 5, 0, 2};
 const std::vector<std::string> kFunctionBaselineNames = {"baseline_foo", "baseline_bar",
                                                          "baseline_biz", "baseline_fiz"};
-const std::vector<std::string> kFunctionComparisonNames = {"baseline_foo", "baseline_bar",
-                                                           "baseline_biz", "baseline_fiz"};
+const std::vector<std::string> kFunctionComparisonNames = {"comparison_foo", "comparison_bar",
+                                                           "comparison_biz", "comparison_fiz"};
 
 const std::vector<std::string> kBaselineModules = {"baseline_M1", "baseline_M1", "baseline_M2",
                                                    "baseline_M2"};
@@ -225,60 +228,89 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
                  comparison_counts_,      comparison_frame_track_stats_,
                  kSfidToComparisonResult, &kSfidToBaselineName};
 
-  Model model_{report_, true, 0.05};
+  Model model_{report_, /*is_multiplicity_correction_enabled=*/true, /*significance_level=*/0.05,
+               Model::FunctionNameToShow::kBaseline};
 };
+
+using FunctionNameToShow = SamplingWithFrameTrackReportModelTest::Model::FunctionNameToShow;
+
+[[nodiscard]] static std::optional<SFID> DisplayedNameToSfid(
+    const absl::flat_hash_map<std::string, SFID>& name_to_sfid, const QString& name) {
+  if (const auto it = name_to_sfid.find(name.toStdString()); it != name_to_sfid.end()) {
+    return it->second;
+  }
+  return std::nullopt;
+}
+
+[[nodiscard]] static std::optional<SFID> DisplayedNameToSfid(
+    FunctionNameToShow function_name_to_show, const QString& actual_name) {
+  switch (function_name_to_show) {
+    case FunctionNameToShow::kBaseline:
+      return DisplayedNameToSfid(kBaselineNameToSfid, actual_name);
+    case FunctionNameToShow::kComparison:
+      return DisplayedNameToSfid(kComparisonNameToSfid, actual_name);
+    default:
+      ORBIT_UNREACHABLE();
+  }
+}
 
 TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
   EXPECT_EQ(model_.rowCount({}), kExpectedReportSize);
 
   absl::flat_hash_set<SFID> observed_sfids;
 
-  for (int row = 0; row < model_.rowCount({}); ++row) {
-    const QString name = DisplayedString(row, Column::kFunctionName);
+  for (FunctionNameToShow function_name_to_show :
+       {FunctionNameToShow::kBaseline, FunctionNameToShow::kComparison}) {
+    for (int row = 0; row < model_.rowCount({}); ++row) {
+      model_.SetFunctionNameToShow(function_name_to_show);
+      const QString name = DisplayedString(row, Column::kFunctionName);
+      const std::optional<SFID> optional_sfid = DisplayedNameToSfid(function_name_to_show, name);
 
-    ASSERT_THAT(kFunctionBaselineNames, Contains(name.toStdString()));
+      ASSERT_THAT(optional_sfid, Ne(std::nullopt));
+      const SFID sfid = *optional_sfid;
 
-    EXPECT_EQ(name.toLower(), SortValue(row, Column::kFunctionName));
+      EXPECT_EQ(name.toLower(), SortValue(row, Column::kFunctionName));
 
-    const SFID sfid = kBaselineNameToSfid.at(name.toStdString());
-    observed_sfids.insert(sfid);
-    const uint64_t expected_baseline_count = kSfidToBaselineCounts.at(sfid);
-    const uint64_t expected_comparison_count = kSfidToComparisonCounts.at(sfid);
+      observed_sfids.insert(sfid);
+      const uint64_t expected_baseline_count = kSfidToBaselineCounts.at(sfid);
+      const uint64_t expected_comparison_count = kSfidToComparisonCounts.at(sfid);
 
-    const double expected_baseline_exclusive_percent =
-        static_cast<double>(expected_baseline_count) / kCallstacksCount * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
-        row, Column::kBaselineExclusivePercent, expected_baseline_exclusive_percent);
+      const double expected_baseline_exclusive_percent =
+          static_cast<double>(expected_baseline_count) / kCallstacksCount * 100;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+          row, Column::kBaselineExclusivePercent, expected_baseline_exclusive_percent);
 
-    constexpr double kNsInUs = 1'000;
+      constexpr double kNsInUs = 1'000;
 
-    const double expected_baseline_time_per_frame = static_cast<double>(expected_baseline_count) /
-                                                    kCallstacksCount * kBaselineFrameTime / kNsInUs;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
-        row, Column::kBaselineExclusiveTimePerFrame, expected_baseline_time_per_frame);
+      const double expected_baseline_time_per_frame = static_cast<double>(expected_baseline_count) /
+                                                      kCallstacksCount * kBaselineFrameTime /
+                                                      kNsInUs;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+          row, Column::kBaselineExclusiveTimePerFrame, expected_baseline_time_per_frame);
 
-    const double expected_comparison_exclusive_percent =
-        static_cast<double>(expected_comparison_count) / kCallstacksCount * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
-        row, Column::kComparisonExclusivePercent, expected_comparison_exclusive_percent);
+      const double expected_comparison_exclusive_percent =
+          static_cast<double>(expected_comparison_count) / kCallstacksCount * 100;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+          row, Column::kComparisonExclusivePercent, expected_comparison_exclusive_percent);
 
-    const double expected_comparison_time_per_frame =
-        static_cast<double>(expected_comparison_count) / kCallstacksCount * kComparisonFrameTime /
-        kNsInUs;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
-        row, Column::kComparisonExclusiveTimePerFrame, expected_comparison_time_per_frame);
+      const double expected_comparison_time_per_frame =
+          static_cast<double>(expected_comparison_count) / kCallstacksCount * kComparisonFrameTime /
+          kNsInUs;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+          row, Column::kComparisonExclusiveTimePerFrame, expected_comparison_time_per_frame);
 
-    const double expected_slowdown =
-        expected_comparison_time_per_frame - expected_baseline_time_per_frame;
-    const double expected_slowdown_percent =
-        expected_slowdown / expected_baseline_time_per_frame * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kSlowdownPercent,
-                                                                    expected_slowdown_percent);
+      const double expected_slowdown =
+          expected_comparison_time_per_frame - expected_baseline_time_per_frame;
+      const double expected_slowdown_percent =
+          expected_slowdown / expected_baseline_time_per_frame * 100;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kSlowdownPercent,
+                                                                      expected_slowdown_percent);
 
-    const double frame_time_slowdown = (kComparisonFrameTime - kBaselineFrameTime) / kNsInUs;
-    const double expected_percent_of_slowdown = expected_slowdown / frame_time_slowdown * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kPercentOfSlowdown,
-                                                                    expected_percent_of_slowdown);
+      const double frame_time_slowdown = (kComparisonFrameTime - kBaselineFrameTime) / kNsInUs;
+      const double expected_percent_of_slowdown = expected_slowdown / frame_time_slowdown * 100;
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+          row, Column::kPercentOfSlowdown, expected_percent_of_slowdown);
+    }
   }
 
   EXPECT_EQ(observed_sfids.size(), kExpectedReportSize);

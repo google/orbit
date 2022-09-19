@@ -31,7 +31,8 @@ SamplingWithFrameTrackOutputWidget::~SamplingWithFrameTrackOutputWidget() = defa
 
 void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
   model_ = new SamplingWithFrameTrackReportModel(  // NOLINT
-      std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
+      std::move(report), is_multiplicity_correction_enabled_, confidence_level_,
+      function_name_to_show_, this);
 
   auto* proxy_model = new QSortFilterProxyModel(this);  // NOLINT
   proxy_model->setSourceModel(model_);
