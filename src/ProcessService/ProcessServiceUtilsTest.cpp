@@ -120,13 +120,13 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     EXPECT_EQ(result_path, symbols_path);
   }
 
-  {  // non existing module (elf_file)
+  {  // non existing module
     const std::filesystem::path module_path = test_directory / "not_existing_file";
     GetDebugInfoFileRequest request;
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
     const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
-    EXPECT_THAT(result, HasError("Unable to load ELF file"));
+    EXPECT_THAT(result, HasError("Unable to load object file"));
   }
 
   {  // elf - no build id, but does include symbols

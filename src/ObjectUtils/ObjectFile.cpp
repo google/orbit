@@ -31,7 +31,7 @@ ErrorMessageOr<std::unique_ptr<ObjectFile>> CreateObjectFile(
       llvm::object::ObjectFile::createObjectFile(file_path_llvm);
 
   if (!object_file_or_error) {
-    return ErrorMessage(absl::StrFormat("Unable to load ELF file \"%s\": %s", file_path.string(),
+    return ErrorMessage(absl::StrFormat("Unable to load object file \"%s\": %s", file_path.string(),
                                         llvm::toString(object_file_or_error.takeError())));
   }
 

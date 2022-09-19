@@ -24,6 +24,7 @@
 
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
@@ -42,6 +43,7 @@ using orbit_grpc_protos::ModuleSymbols;
 
 namespace fs = std::filesystem;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::ElfFile;
 using orbit_object_utils::ObjectFileInfo;
@@ -277,6 +279,15 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
 
   OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path, object_file_info));
   return symbols_file->LoadDebugSymbols();
+}
+
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolHelper::LoadFallbackSymbolsFromFile(
+    const std::filesystem::path& file_path) {
+  ORBIT_SCOPE_FUNCTION;
+  ORBIT_SCOPED_TIMED_LOG("LoadFallbackSymbolsFromFile: %s", file_path.string());
+
+  OUTCOME_TRY(auto object_file, CreateObjectFile(file_path));
+  return object_file->LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols();
 }
 
 fs::path SymbolHelper::GenerateCachedFilePath(const fs::path& file_path) const {
