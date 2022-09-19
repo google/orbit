@@ -44,6 +44,8 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
   SamplingWithFrameTrackReportModel* model_{};
   bool is_multiplicity_correction_enabled_ = true;
   double confidence_level_ = 0.05;
+  SamplingWithFrameTrackReportModel::FunctionNameToShow function_name_to_show_ =
+      SamplingWithFrameTrackReportModel::FunctionNameToShow::kBaseline;
   std::unique_ptr<Ui::SamplingWithFrameTrackOutputWidget> ui_;
 };
 
