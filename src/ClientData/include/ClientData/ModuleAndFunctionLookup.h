@@ -13,7 +13,7 @@
 
 namespace orbit_client_data {
 
-const std::string kUnknownFunctionOrModuleName{"???"};
+inline const std::string kUnknownFunctionOrModuleName{"???"};
 
 [[nodiscard]] const std::string& GetFunctionNameByAddress(const ModuleManager& module_manager,
                                                           const CaptureData& capture_data,

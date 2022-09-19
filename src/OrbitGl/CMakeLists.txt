@@ -23,6 +23,7 @@ target_sources(
          BatcherInterface.h
          Button.h
          CallstackThreadBar.h
+         CallstackTooltipUtils.h
          CallTreeView.h
          CaptureStats.h
          CaptureViewElement.h
@@ -102,6 +103,7 @@ target_sources(
           BasicPageFaultsTrack.cpp
           Button.cpp
           CallstackThreadBar.cpp
+          CallstackTooltipUtils.cpp
           CallTreeView.cpp
           CaptureStats.cpp
           CaptureViewElement.cpp
@@ -216,6 +218,7 @@ target_sources(OrbitGlTests PRIVATE
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                ButtonTest.cpp
+               CallstackTooltipUtilsTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
