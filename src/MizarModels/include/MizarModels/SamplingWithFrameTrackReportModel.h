@@ -365,9 +365,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         return symbols.baseline_function_symbol->function_name;
       case FunctionNameToShow::kComparison:
         return symbols.comparison_function_symbol->function_name;
-      default:
-        ORBIT_UNREACHABLE();
     }
+    ORBIT_UNREACHABLE();
   }
 
   Report report_;
