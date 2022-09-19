@@ -590,7 +590,7 @@ class OrbitApp final : public DataViewFactory,
       const orbit_preset_file::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromRemote(const std::string& module_file_path);
+  RetrieveModuleFromRemote(const std::string& module_file_path, orbit_base::StopToken stop_token);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
@@ -640,6 +640,10 @@ class OrbitApp final : public DataViewFactory,
   // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
   // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
   void InitRemoteSymbolProviders();
+  // TODO(b/243520787) Rename existing `RetrieveModuleFromRemote` as `RetrieveModuleFromInstance`
+  // and rename this `RetrieveModuleViaDownload` to `RetrieveModuleFromRemote`.
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
+  RetrieveModuleViaDownload(const orbit_symbol_provider::ModuleIdentifier& module_id);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
