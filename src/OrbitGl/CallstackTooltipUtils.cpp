@@ -161,8 +161,8 @@ FormattedModuleAndFunctionName FormatInnermostFrameOfCallstackForTooltip(
       FormatModuleName(innermost_module_and_function_name);
 
   return {
-      .module_name = innermost_formatted_module_name,
-      .function_name = innermost_formatted_function_name,
+      innermost_formatted_module_name,
+      innermost_formatted_function_name,
   };
 }
 
