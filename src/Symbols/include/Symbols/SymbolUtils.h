@@ -22,12 +22,12 @@ namespace orbit_symbols {
     const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type);
 
 // Checks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
-// the build id of the file with module_build_id. Returns void if build ids are the same,
-// ErrorMessage otherwise.
+// the build id of the file with build_id. Returns void if build ids are the same, ErrorMessage
+// otherwise.
 [[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
-                                                    const std::string& module_build_id);
+                                                    const std::string& build_id);
 // Checks if the file at object_file_path can be read as an object file (elf, coff) and compares the
-// build id of the file with module_build_id. Returns void if build ids are the same, ErrorMessage
+// build id of the file with build_id. Returns void if build ids are the same, ErrorMessage
 // otherwise.
 [[nodiscard]] ErrorMessageOr<void> VerifyObjectFile(const std::filesystem::path& object_file_path,
                                                     const std::string& build_id);
