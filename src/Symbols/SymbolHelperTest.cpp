@@ -373,7 +373,7 @@ TEST(SymbolHelper, LoadFallbackSymbolsFromFile) {
     const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
     EXPECT_THAT(result, HasError("Unable to load object file"));
-    EXPECT_THAT(result, HasError("No such file or directory"));
+    EXPECT_THAT(result, HasError("such file or directory"));
   }
 }
 
