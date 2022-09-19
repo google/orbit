@@ -226,20 +226,33 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
 }
 
 TEST(SymbolHelper, FindSymbolsInCacheBySize) {
-  constexpr uint64_t kNoSymbolsElfDebugFileSize = 45856;
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper(testdata_directory, {});
   {
     // Same-size ELF file (smoke test).
-    const fs::path file = "no_symbols_elf.debug";
-    const auto result = symbol_helper.FindSymbolsInCache(file, kNoSymbolsElfDebugFileSize);
+    const fs::path file_name = "no_symbols_elf.debug";
+    const fs::path file_path = testdata_directory / file_name;
+    const auto file_size = orbit_base::FileSize(file_path);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value());
     ASSERT_THAT(result, HasValue());
-    EXPECT_EQ(result.value(), testdata_directory / file);
+    EXPECT_EQ(result.value(), file_path);
+  }
+  {
+    // File in cache does not contain symbols.
+    const fs::path file_name = "no_symbols_elf";
+    const auto file_size = orbit_base::FileSize(testdata_directory / file_name);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value());
+    EXPECT_THAT(result, HasError("Unable to load symbols file"));
+    EXPECT_THAT(result, HasError("File does not contain symbols"));
   }
   {
     // File in cache has different size.
-    const fs::path file_path = "no_symbols_elf.debug";
-    const auto result = symbol_helper.FindSymbolsInCache(file_path, kNoSymbolsElfDebugFileSize + 1);
+    const fs::path file_name = "no_symbols_elf.debug";
+    const auto file_size = orbit_base::FileSize(testdata_directory / file_name);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value() + 1);
     EXPECT_THAT(result, HasError("File size doesn't match"));
   }
 }
