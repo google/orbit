@@ -81,6 +81,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
     samples_in_uretprobes_counter_ = samples_in_uretprobes_counter;
   }
 
+  void SetInitialTidToRootNamespaceTidMapping(absl::flat_hash_map<pid_t, pid_t>&& tid_mappings) {
+    tid_to_root_namespace_tid_ = std::move(tid_mappings);
+  }
+
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const SchedWakeupWithStackPerfEventData& event_data) override;
@@ -99,6 +103,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp,
              const UserSpaceFunctionExitPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const CloneExitPerfEventData& event_data) override;
 
  private:
   // This struct holds a copy of some stack data collected from the target process.
@@ -146,6 +152,15 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   absl::flat_hash_map<pid_t, absl::flat_hash_map<uint64_t, StackSlice>>
       thread_id_stream_id_to_stack_slices_{};
+
+  // tid_to_root_namespace_tid_ holds a mapping from all tids in the target process namespace to the
+  // corresponding tids in the root namespace.
+  // We obtain the initial state of this mapping at the beginning of the capture via
+  // SetInitialTidToRootNamespaceTidMapping. During the capture we observe task_newtask and clone{3}
+  // tracepoints to keep track of new threads
+  // (new_task_root_namespace_parent_tid_to_root_namespace_tid_ is required for this bookkeeping).
+  absl::flat_hash_map<pid_t, pid_t> tid_to_root_namespace_tid_;
+  absl::flat_hash_map<pid_t, pid_t> new_task_root_namespace_parent_tid_to_root_namespace_tid_;
 };
 
 }  // namespace orbit_linux_tracing

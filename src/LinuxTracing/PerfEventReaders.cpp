@@ -685,4 +685,27 @@ ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                                                    header);
 }
 
+[[nodiscard]] CloneExitPerfEvent ConsumeCloneExitPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                           const perf_event_header& header) {
+  const perf_event_attr flags{
+      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+  };
+
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+
+  syscall_exit_tracepoint sys_exit;
+  std::memcpy(&sys_exit, res.raw_data.get(), sizeof(syscall_exit_tracepoint));
+
+  ring_buffer->SkipRecord(header);
+  return CloneExitPerfEvent{
+      .timestamp = res.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .tid = static_cast<pid_t>(res.tid),
+              .ret_tid = static_cast<pid_t>(sys_exit.ret),
+          },
+  };
+}
+
 }  // namespace orbit_linux_tracing

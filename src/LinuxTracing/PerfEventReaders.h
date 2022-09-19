@@ -69,6 +69,9 @@ AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer
 
 DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                            const perf_event_header& header);
+
+CloneExitPerfEvent ConsumeCloneExitPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                             const perf_event_header& header);
 }  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_PERF_EVENT_READERS_H_

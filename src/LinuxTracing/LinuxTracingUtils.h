@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_LINUX_TRACING_UTILS_H_
 #define LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <unistd.h>
 
 #include <ctime>
@@ -75,6 +76,11 @@ inline size_t GetPageSize() {
     const std::vector<orbit_module_utils::LinuxMemoryMapping>& maps,
     const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
     const std::vector<orbit_grpc_protos::InstrumentedFunction>& functions);
+
+// Returns the map of tids in the target process namespace to the corresponding tids in the root
+// namespace.
+[[nodiscard]] absl::flat_hash_map<pid_t, pid_t> RetrieveInitialTidToRootNamespaceTidMapping(
+    pid_t pid_in_root_namespace);
 
 }  // namespace orbit_linux_tracing
 
