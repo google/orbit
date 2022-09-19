@@ -33,12 +33,6 @@ constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
-// TODO(b/202140068), remove this constant when auto symbol loading is released
-constexpr const char* kOldInfoLabelTemplate =
-    "<p>Add folders and files to the symbol locations Orbit loads from:</p><p><b>Add Folder</b> to "
-    "add a symbol location. The symbol files' filenames and build IDs must match the module's name "
-    "and build ID. Supported file extensions are “.so”, “.debug”, “.so.debug”, “.dll” and "
-    "“.pdb”.</p><p><b>Add File</b> to load from a symbol file with a different filename%1</p>";
 constexpr const char* kNewInfoLabelTemplate =
     "<p>Orbit loads most symbols automatically. Add folders and files to the symbol locations "
     "Orbit loads from:</p><p><b>Add Folder</b> to add a symbol location. The symbol files' "
@@ -429,8 +423,7 @@ void SymbolLocationsDialog::DisableAddFolder() {
 }
 
 void SymbolLocationsDialog::SetUpInfoLabel() {
-  QString label_text =
-      absl::GetFlag(FLAGS_auto_symbol_loading) ? kNewInfoLabelTemplate : kOldInfoLabelTemplate;
+  QString label_text = kNewInfoLabelTemplate;
   if (allow_unsafe_symbols_) {
     label_text = label_text.arg(kInfoLabelArgumentWithBuildIdOverride);
   } else {
