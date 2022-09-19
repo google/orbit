@@ -2610,7 +2610,7 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
 
     loading_futures.push_back(RetrieveModuleAndLoadSymbols(module));
   }
-  if (GetEnableAutoFrameTrack()) {
+  if (data_manager_->enable_auto_frame_track()) {
     // Orbit will try to add the default frame track while loading all symbols.
     AddDefaultFrameTrackOrLogError();
   }

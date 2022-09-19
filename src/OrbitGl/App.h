@@ -439,11 +439,7 @@ class OrbitApp final : public DataViewFactory,
   void SetStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
-
   void SetEnableAutoFrameTrack(bool enable_auto_frame_track);
-  [[nodiscard]] bool GetEnableAutoFrameTrack() const {
-    return data_manager_->enable_auto_frame_track();
-  }
   void SetCollectMemoryInfo(bool collect_memory_info) {
     data_manager_->set_collect_memory_info(collect_memory_info);
   }
