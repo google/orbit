@@ -25,7 +25,6 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
-#include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
@@ -34,11 +33,9 @@
 #include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
-#include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
 #include "ClientData/TimerDataManager.h"
 #include "ClientData/TimestampIntervalSet.h"
-#include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
@@ -83,6 +80,8 @@ class CaptureData {
 
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
       uint64_t function_id) const;
+
+  const FunctionInfo* GetFunctionInfoByScopeId(ScopeId scope_id) const;
 
   void ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(const ModuleManager& module_manager);
 

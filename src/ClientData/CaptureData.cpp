@@ -17,7 +17,6 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
-#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Result.h"
 
 using orbit_grpc_protos::CaptureStarted;
@@ -45,8 +44,6 @@ CaptureData::CaptureData(CaptureStarted capture_started,
   process_info.set_name(executable_path.filename().string());
   process_info.set_is_64_bit(true);
   process_.SetProcessInfo(process_info);
-
-  absl::flat_hash_map<uint64_t, FunctionInfo> instrumented_functions;
 
   for (const auto& instrumented_function :
        capture_started_.capture_options().instrumented_functions()) {
@@ -124,6 +121,10 @@ const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t fu
     return nullptr;
   }
   return &instrumented_functions_it->second;
+}
+
+const FunctionInfo* CaptureData::GetFunctionInfoByScopeId(ScopeId scope_id) const {
+  return scope_id_provider_->GetFunctionInfo(scope_id);
 }
 
 // InstrumentedFunction::function_virtual_address() was added in 1.82: if this is not available,

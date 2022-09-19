@@ -27,7 +27,6 @@
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
@@ -249,7 +248,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumFunctions);
-      view_.AddFunction(kScopeIds[index], functions_.at(kScopeIds[index]));
+      view_.AddScope(kScopeIds[index]);
     }
   }
 

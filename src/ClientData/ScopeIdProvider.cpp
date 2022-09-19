@@ -13,8 +13,10 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/Constants.h"
@@ -35,17 +37,23 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info;
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id;
+  absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info;
 
   for (const auto& instrumented_function : instrumented_functions) {
     const ScopeId scope_id{instrumented_function.function_id()};
     const ScopeInfo scope_info(instrumented_function.function_name(),
                                ScopeType::kDynamicallyInstrumentedFunction);
-    scope_id_to_info.emplace(scope_id, scope_info);
-    scope_info_to_id.emplace(scope_info, scope_id);
+    scope_id_to_info.try_emplace(scope_id, scope_info);
+    scope_info_to_id.try_emplace(scope_info, scope_id);
+    scope_id_to_function_info.try_emplace(
+        scope_id, /* in-place FunctionInfo construction */ instrumented_function.file_path(),
+        instrumented_function.file_build_id(), instrumented_function.function_virtual_address(),
+        instrumented_function.function_size(), instrumented_function.function_name());
   }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(new NameEqualityScopeIdProvider(
-      max_id + 1, std::move(scope_info_to_id), std::move(scope_id_to_info)));
+      max_id + 1, std::move(scope_info_to_id), std::move(scope_id_to_info),
+      std::move(scope_id_to_function_info)));
 }
 
 std::optional<ScopeId> NameEqualityScopeIdProvider::FunctionIdToScopeId(
@@ -128,6 +136,14 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::GetExistingScopeId(
     return it->second;
   }
   return std::nullopt;
+}
+
+const FunctionInfo* NameEqualityScopeIdProvider::GetFunctionInfo(ScopeId scope_id) const {
+  const auto it = scope_id_to_function_info_.find(scope_id);
+  if (it != scope_id_to_function_info_.end()) {
+    return &it->second;
+  }
+  return nullptr;
 }
 
 }  // namespace orbit_client_data
