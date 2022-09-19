@@ -353,7 +353,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     const auto file_size = orbit_base::FileSize(file_path);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
-        file_name, "efaecd92f773bb4ebcf213b84f43b322", file_size.value() + 1);
+        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value() + 1);
     ASSERT_THAT(result, HasError("File size doesn't match"));
   }
   {

@@ -5,6 +5,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
+#include "OrbitBase/File.h"
 #include "Symbols/SymbolUtils.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
@@ -57,7 +58,7 @@ TEST(GetStandardSymbolFilenamesForModule, CoffFile) {
   }
 }
 
-TEST(SymbolUtils, VerifySymbolFile) {
+TEST(SymbolUtils, VerifySymbolFileByBuildId) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   {
     // ELF file with symbols and matching build id.
@@ -110,66 +111,106 @@ TEST(SymbolUtils, VerifySymbolFile) {
   }
 }
 
+TEST(SymbolUtils, VerifySymbolFileBySize) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
+  {
+    // Symbol file of matching file size.
+    std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf.debug";
+    const auto file_size = orbit_base::FileSize(symbols_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifySymbolFile(symbols_file, file_size.value());
+    EXPECT_THAT(result, HasNoError());
+  }
+  {
+    // File of matching file size, but without symbols.
+    std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf";
+    const auto file_size = orbit_base::FileSize(symbols_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifySymbolFile(symbols_file, file_size.value());
+    EXPECT_THAT(result, HasError("Unable to load symbols file"));
+    EXPECT_THAT(result, HasError("File does not contain symbols"));
+  }
+  {
+    // File with symbols, but of mis-matching file size.
+    std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf.debug";
+    const auto file_size = orbit_base::FileSize(symbols_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifySymbolFile(symbols_file, file_size.value() + 1);
+    EXPECT_THAT(result, HasError("File size doesn't match"));
+  }
+}
+
 TEST(SymbolUtils, VerifyObjectFile) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   {
     // ELF file with matching build id.
     const std::filesystem::path object_file = testdata_directory / "hello_world_elf";
     const std::string build_id = "d12d54bc5b72ccce54a408bdeda65e2530740ac8";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
     EXPECT_THAT(result, HasNoError());
   }
   {
     // ELF file with mis-matching build id.
     const std::filesystem::path object_file = testdata_directory / "hello_world_elf";
     const std::string build_id = "incorrect build-id";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
     EXPECT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // ELF file with mis-matching size.
+    const std::filesystem::path object_file = testdata_directory / "hello_world_elf";
+    const std::string build_id = "d12d54bc5b72ccce54a408bdeda65e2530740ac8";
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value() + 1);
+    EXPECT_THAT(result, HasError("File size doesn't match"));
   }
   {
     // COFF file with matching build id.
     const std::filesystem::path object_file = testdata_directory / "dllmain.dll";
     const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
     EXPECT_THAT(result, HasNoError());
   }
   {
     // COFF file with mis-matching build id.
     const std::filesystem::path object_file = testdata_directory / "dllmain.dll";
     const std::string build_id = "incorrect build-id";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
     EXPECT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // COFF file with mis-matching size.
+    const std::filesystem::path object_file = testdata_directory / "dllmain.dll";
+    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value() + 1);
+    EXPECT_THAT(result, HasError("File size doesn't match"));
   }
   {
     // PDB file.
     const std::filesystem::path object_file = testdata_directory / "dllmain.pdb";
     const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto file_size = orbit_base::FileSize(object_file);
+    ASSERT_THAT(file_size, HasNoError());
+    const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
     EXPECT_THAT(result, HasError("The file was not recognized as a valid object file"));
   }
   {
     // File doesn't exist.
     const std::filesystem::path object_file = "path/to/nothing";
     const std::string build_id = "build id does not matter";
-    const auto result = VerifyObjectFile(object_file, build_id);
+    const auto result = VerifyObjectFile(object_file, build_id, 42);
     EXPECT_THAT(result, HasError("Unable to load object file"));
-  }
-}
-
-TEST(SymbolUtils, VerifyFileSize) {
-  constexpr uint64_t kNoSymbolsElfDebugFileSize = 45856;
-  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  {
-    // File of matching file size.
-    std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf.debug";
-    const auto result = VerifyFileSize(symbols_file, kNoSymbolsElfDebugFileSize);
-    EXPECT_THAT(result, HasNoError());
-  }
-  {
-    // File of mis-matching file size.
-    std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf.debug";
-    const auto result = VerifyFileSize(symbols_file, kNoSymbolsElfDebugFileSize + 1);
-    EXPECT_THAT(result, HasError("File size doesn't match"));
   }
 }
 

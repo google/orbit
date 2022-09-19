@@ -44,7 +44,7 @@ namespace orbit_symbols {
 }
 
 template <typename FileT>
-ErrorMessageOr<void> VerifySymbolsOrObjectFileImpl(
+ErrorMessageOr<void> VerifySymbolOrObjectFileWithBuildId(
     const std::filesystem::path& symbols_or_object_path, const std::string& build_id,
     const std::function<ErrorMessageOr<std::unique_ptr<FileT>>(const std::filesystem::path&)>&
         create_symbols_or_object_file) {
@@ -71,30 +71,44 @@ ErrorMessageOr<void> VerifySymbolsOrObjectFileImpl(
   return outcome::success();
 }
 
-ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbols_path,
-                                      const std::string& build_id) {
-  return VerifySymbolsOrObjectFileImpl<orbit_object_utils::SymbolsFile>(
-      symbols_path, build_id, [](const std::filesystem::path& object_path) {
-        return CreateSymbolsFile(object_path, orbit_object_utils::ObjectFileInfo{});
-      });
-}
-
-ErrorMessageOr<void> VerifyObjectFile(const std::filesystem::path& object_path,
-                                      const std::string& build_id) {
-  return VerifySymbolsOrObjectFileImpl<orbit_object_utils::ObjectFile>(
-      object_path, build_id, [](const std::filesystem::path& object_path) {
-        return orbit_object_utils::CreateObjectFile(object_path);
-      });
-}
-
-ErrorMessageOr<void> VerifyFileSize(const std::filesystem::path& file_path,
-                                    uint64_t expected_file_size) {
-  OUTCOME_TRY(const uint64_t actual_file_size, orbit_base::FileSize(file_path));
+static ErrorMessageOr<void> VerifyFileSize(const std::filesystem::path& symbols_or_object_path,
+                                           uint64_t expected_file_size) {
+  OUTCOME_TRY(const uint64_t actual_file_size, orbit_base::FileSize(symbols_or_object_path));
   if (actual_file_size != expected_file_size) {
     return ErrorMessage(absl::StrFormat("File size doesn't match. Expected: %u, Actual: %u",
                                         expected_file_size, actual_file_size));
   }
   return outcome::success();
+}
+
+ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
+                                      const std::string& build_id) {
+  return VerifySymbolOrObjectFileWithBuildId<orbit_object_utils::SymbolsFile>(
+      symbol_file_path, build_id, [](const std::filesystem::path& symbols_path) {
+        return CreateSymbolsFile(symbols_path, orbit_object_utils::ObjectFileInfo{});
+      });
+}
+
+ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
+                                      uint64_t expected_file_size) {
+  if (auto symbols_file_or_error =
+          CreateSymbolsFile(symbol_file_path, orbit_object_utils::ObjectFileInfo{});
+      symbols_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\": %s",
+                                        symbol_file_path.string(),
+                                        symbols_file_or_error.error().message()));
+  }
+
+  return VerifyFileSize(symbol_file_path, expected_file_size);
+}
+
+ErrorMessageOr<void> VerifyObjectFile(const std::filesystem::path& object_file_path,
+                                      const std::string& build_id, uint64_t expected_file_size) {
+  OUTCOME_TRY(VerifySymbolOrObjectFileWithBuildId<orbit_object_utils::ObjectFile>(
+      object_file_path, build_id, [](const std::filesystem::path& object_path) {
+        return orbit_object_utils::CreateObjectFile(object_path);
+      }));
+  return VerifyFileSize(object_file_path, expected_file_size);
 }
 
 }  // namespace orbit_symbols

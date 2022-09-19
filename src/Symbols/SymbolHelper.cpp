@@ -266,7 +266,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module
                                                           uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
       module_path, [&expected_file_size](const std::filesystem::path& cache_file_path) {
-        return VerifyFileSize(cache_file_path, expected_file_size);
+        return VerifySymbolFile(cache_file_path, expected_file_size);
       });
 }
 
@@ -277,8 +277,7 @@ ErrorMessageOr<std::filesystem::path> SymbolHelper::FindObjectInCache(
       module_path,
       [&build_id,
        expected_file_size](const std::filesystem::path& cache_file_path) -> ErrorMessageOr<void> {
-        OUTCOME_TRY(VerifyFileSize(cache_file_path, expected_file_size));
-        return VerifyObjectFile(cache_file_path, build_id);
+        return VerifyObjectFile(cache_file_path, build_id, expected_file_size);
       });
 }
 
