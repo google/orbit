@@ -87,6 +87,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   ScopeId max_instrumented_function_id_{};
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_ ABSL_GUARDED_BY(mutex_);
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info_ ABSL_GUARDED_BY(mutex_);
+  /// TODO(http://b/247467504): Add FunctionInfo to ScopeInfo.
   absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info_;
   mutable absl::Mutex mutex_;
 };

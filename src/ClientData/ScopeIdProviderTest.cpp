@@ -115,18 +115,29 @@ TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferen
 constexpr size_t kFunctionCount = 3;
 constexpr std::array<uint64_t, kFunctionCount> kFunctionIds = {10, 13, 15};
 const std::array<std::string, kFunctionCount> kFunctionNames = {"foo()", "bar()", "baz()"};
+const std::array<std::string, kFunctionCount> kFilePaths = {"path1", "path2", "path3"};
+const std::array<std::string, kFunctionCount> kFileBuildId = {"123", "345", "567"};
+const std::array<uint64_t, kFunctionCount> kFunctionVirtualAddress = {111, 333, 999};
+const std::array<uint64_t, kFunctionCount> kFunctionSize = {57, 108, 23};
 
 static void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
-                                    uint64_t function_id, const std::string& name) {
+                                    uint64_t function_id, const std::string& name,
+                                    const std::string& file_path, const std::string& build_id,
+                                    uint64_t virtual_address, uint64_t size) {
   orbit_grpc_protos::InstrumentedFunction* function = capture_options.add_instrumented_functions();
   function->set_function_id(function_id);
   function->set_function_name(name);
+  function->set_file_path(file_path);
+  function->set_file_build_id(build_id);
+  function->set_function_virtual_address(virtual_address);
+  function->set_function_size(size);
 }
 
 TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   orbit_grpc_protos::CaptureOptions capture_options;
   for (size_t i = 0; i < kFunctionCount; ++i) {
-    AddInstrumentedFunction(capture_options, kFunctionIds[i], kFunctionNames[i]);
+    AddInstrumentedFunction(capture_options, kFunctionIds[i], kFunctionNames[i], kFilePaths[i],
+                            kFileBuildId[i], kFunctionVirtualAddress[i], kFunctionSize[i]);
   }
 
   auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
@@ -138,6 +149,10 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   for (size_t i = 0; i < kFunctionCount; ++i) {
     const ScopeInfo expected{kFunctionNames[i], ScopeType::kDynamicallyInstrumentedFunction};
     EXPECT_EQ(id_provider->GetScopeInfo(ScopeId(kFunctionIds[i])), expected);
+    const FunctionInfo expect_function_info{kFilePaths[i], kFileBuildId[i],
+                                            kFunctionVirtualAddress[i], kFunctionSize[i],
+                                            kFunctionNames[i]};
+    EXPECT_EQ(*id_provider->GetFunctionInfo(ScopeId(kFunctionIds[i])), expect_function_info);
   }
 }
 

@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
@@ -42,9 +43,9 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
     const ScopeId scope_id{instrumented_function.function_id()};
     const ScopeInfo scope_info(instrumented_function.function_name(),
                                ScopeType::kDynamicallyInstrumentedFunction);
-    scope_id_to_info.emplace(scope_id, scope_info);
-    scope_info_to_id.emplace(scope_info, scope_id);
-    scope_id_to_function_info.emplace(
+    scope_id_to_info.try_emplace(scope_id, scope_info);
+    scope_info_to_id.try_emplace(scope_info, scope_id);
+    scope_id_to_function_info.try_emplace(
         scope_id,
         FunctionInfo{instrumented_function.file_path(), instrumented_function.file_build_id(),
                      instrumented_function.function_virtual_address(),

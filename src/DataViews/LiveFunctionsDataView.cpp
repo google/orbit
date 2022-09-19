@@ -463,7 +463,7 @@ void LiveFunctionsDataView::DoFilter() {
     }
 
     if (match) {
-      AddToIndices(scope_id);
+      AddScope(scope_id);
     }
   }
 
@@ -486,7 +486,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 
   std::vector<ScopeId> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
   for (ScopeId scope_id : all_scope_ids) {
-    AddToIndices(scope_id);
+    AddScope(scope_id);
   }
 
   DataView::OnDataChanged();
@@ -499,7 +499,7 @@ void LiveFunctionsDataView::OnTimer() {
 
   indices_.reserve(indices_.size() + missing_scope_ids.size());
   for (ScopeId scope_id : missing_scope_ids) {
-    AddToIndices(scope_id);
+    AddScope(scope_id);
   }
 
   OnSort(sorting_column_, {});

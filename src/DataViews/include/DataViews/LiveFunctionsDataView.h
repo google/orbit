@@ -60,7 +60,7 @@ class LiveFunctionsDataView : public DataView {
 
   std::string GetToolTip(int /*row*/, int column) override;
 
-  void AddToIndices(ScopeId scope_id) {
+  void AddScope(ScopeId scope_id) {
     ORBIT_CHECK(app_->HasCaptureData());
     const ScopeId max_scope_id = app_->GetCaptureData().GetMaxId();
     ORBIT_CHECK(scope_id <= max_scope_id);
