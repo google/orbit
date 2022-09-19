@@ -26,7 +26,7 @@ namespace orbit_symbols {
 // otherwise.
 [[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
                                                     const std::string& build_id);
-// CChecks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
+// Checks if the file at symbol_file_path can be read as symbol file (elf, coff, pdb) and compares
 // the size of the file with expected_file_size. Returns void if the sizes are the same,
 // ErrorMessage otherwise.
 [[nodiscard]] ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
