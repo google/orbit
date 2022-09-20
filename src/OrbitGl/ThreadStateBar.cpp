@@ -14,7 +14,6 @@
 
 #include "App.h"
 #include "AsyncTrack.h"
-#include "CallstackTooltipUtils.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
@@ -23,6 +22,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "FormatCallstackForTooltip.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -219,7 +219,8 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
     static const std::string unknown_return_text = "Function call information missing";
 
-    tooltip += "<b>Triggering callstack:</b><br/>";
+    tooltip +=
+        "<b>This thread switched to the state on executing the following callstack:</b><br/>";
     if (callstack == nullptr) {
       tooltip += unknown_return_text;
     } else {

@@ -5,29 +5,23 @@
 #include "CallstackThreadBar.h"
 
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_replace.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include "App.h"
-#include "CallstackTooltipUtils.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "FormatCallstackForTooltip.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
-#include "ShortenStringWithEllipsis.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"

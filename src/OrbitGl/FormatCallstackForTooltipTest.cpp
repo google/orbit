@@ -5,8 +5,8 @@
 #include <absl/strings/str_join.h>
 #include <gtest/gtest.h>
 
-#include "CallstackTooltipUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "FormatCallstackForTooltip.h"
 
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
@@ -40,7 +40,7 @@ TEST(CallstackTooltipUtils,
             absl::StrCat("<i>", orbit_client_data::kUnknownFunctionOrModuleName, "</i>"));
 }
 
-TEST(CallstackTooltipUtils, FormatInnermostFrameOfCallstackForTooltipPerformsHTMLEscaping) {
+TEST(CallstackTooltipUtils, FormatInnermostFrameOfCallstackForTooltipPerformsHtmlEscaping) {
   CallstackInfo empty_callstack{{kFrame1}, CallstackType::kComplete};
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
   orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,
@@ -64,7 +64,7 @@ TEST(CallstackTooltipUtils, FormatEmptyCallstackForTooltipYieldsEmptyString) {
   EXPECT_EQ(formatted_callstack, "");
 }
 
-TEST(CallstackTooltipUtils, FormatCallstackForTooltipPerformsHTMLEscaping) {
+TEST(CallstackTooltipUtils, FormatCallstackForTooltipPerformsHtmlEscaping) {
   CallstackInfo empty_callstack{{kFrame1}, CallstackType::kComplete};
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
   orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,

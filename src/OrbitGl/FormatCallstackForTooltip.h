@@ -1,8 +1,9 @@
 // Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-#ifndef ORBIT_GL_CALLSTACK_TOOLTIP_UTILS_H_
-#define ORBIT_GL_CALLSTACK_TOOLTIP_UTILS_H_
+
+#ifndef ORBIT_GL_FORMAT_CALLSTACK_FOR_TOOLTIP_H_
+#define ORBIT_GL_FORMAT_CALLSTACK_FOR_TOOLTIP_H_
 
 #include <string>
 
@@ -34,4 +35,4 @@ struct FormattedModuleAndFunctionName {
 
 }  // namespace orbit_gl
 
-#endif  // ORBIT_GL_CALLSTACK_TOOLTIP_UTILS_H_
+#endif  // ORBIT_GL_FORMAT_CALLSTACK_FOR_TOOLTIP_H_

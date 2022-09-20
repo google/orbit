@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallstackTooltipUtils.h"
+#include "FormatCallstackForTooltip.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
@@ -160,10 +160,7 @@ FormattedModuleAndFunctionName FormatInnermostFrameOfCallstackForTooltip(
   std::string innermost_formatted_module_name =
       FormatModuleName(innermost_module_and_function_name);
 
-  return {
-      innermost_formatted_module_name,
-      innermost_formatted_function_name,
-  };
+  return {innermost_formatted_module_name, innermost_formatted_function_name};
 }
 
 }  // namespace orbit_gl

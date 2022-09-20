@@ -23,7 +23,6 @@ target_sources(
          BatcherInterface.h
          Button.h
          CallstackThreadBar.h
-         CallstackTooltipUtils.h
          CallTreeView.h
          CaptureStats.h
          CaptureViewElement.h
@@ -31,6 +30,7 @@ target_sources(
          CGroupAndProcessMemoryTrack.h
          CoreMath.h
          DrawingInterface.h
+         FormatCallstackForTooltip.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -103,12 +103,12 @@ target_sources(
           BasicPageFaultsTrack.cpp
           Button.cpp
           CallstackThreadBar.cpp
-          CallstackTooltipUtils.cpp
           CallTreeView.cpp
           CaptureStats.cpp
           CaptureViewElement.cpp
           CaptureWindow.cpp
           CGroupAndProcessMemoryTrack.cpp
+          FormatCallstackForTooltip.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
@@ -218,12 +218,12 @@ target_sources(OrbitGlTests PRIVATE
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
                ButtonTest.cpp
-               CallstackTooltipUtilsTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
                CaptureWindowTest.cpp
                CoreMathTest.cpp
+               FormatCallstackForTooltipTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MockBatcher.cpp
