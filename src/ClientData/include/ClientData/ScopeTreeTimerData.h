@@ -74,7 +74,7 @@ class ScopeTreeTimerData final : public TimerDataInterface {
   const int64_t thread_id_;
   mutable absl::Mutex scope_tree_mutex_;
   orbit_containers::ScopeTree<const orbit_client_protos::TimerInfo> scope_tree_
-      GUARDED_BY(scope_tree_mutex_);
+      ABSL_GUARDED_BY(scope_tree_mutex_);
   ScopeTreeUpdateType scope_tree_update_type_;
 
   TimerData timer_data_;

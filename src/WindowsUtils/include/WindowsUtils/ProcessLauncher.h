@@ -43,7 +43,7 @@ class ProcessLauncher {
 
   absl::Mutex mutex_;
   absl::flat_hash_map<uint32_t, std::unique_ptr<orbit_windows_utils::BusyLoopLauncher>>
-      busy_loop_launchers_by_pid_ GUARDED_BY(mutex_);
+      busy_loop_launchers_by_pid_ ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_windows_utils

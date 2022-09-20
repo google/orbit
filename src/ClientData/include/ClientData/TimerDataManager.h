@@ -44,7 +44,7 @@ class TimerDataManager final {
 
  private:
   mutable absl::Mutex mutex_;
-  std::vector<std::unique_ptr<TimerData>> timer_data_ GUARDED_BY(mutex_);
+  std::vector<std::unique_ptr<TimerData>> timer_data_ ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_client_data

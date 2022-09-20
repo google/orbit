@@ -136,9 +136,9 @@ class MultivariateTimeSeries {
   }
 
   mutable absl::Mutex mutex_;
-  std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_ GUARDED_BY(mutex_);
-  double min_ GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
-  double max_ GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
+  std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_ ABSL_GUARDED_BY(mutex_);
+  double min_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
+  double max_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
 
   const std::array<std::string, Dimension> series_names_;
   const uint8_t value_decimal_digits_;
