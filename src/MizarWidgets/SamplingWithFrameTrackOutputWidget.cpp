@@ -74,4 +74,12 @@ void SamplingWithFrameTrackOutputWidget::OnSignificanceLevelChanged(double signi
   }
 }
 
+void SamplingWithFrameTrackOutputWidget::SetFunctionNameToShow(
+    FunctionNameToShow function_name_to_show) {
+  function_name_to_show_ = function_name_to_show;
+  if (model_ != nullptr) {
+    model_->SetFunctionNameToShow(function_name_to_show);
+  }
+}
+
 }  // namespace orbit_mizar_widgets

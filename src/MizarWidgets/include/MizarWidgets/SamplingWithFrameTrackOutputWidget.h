@@ -25,6 +25,7 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
+  using FunctionNameToShow = SamplingWithFrameTrackReportModel::FunctionNameToShow;
 
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
@@ -34,6 +35,7 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
  public slots:
   void SetMultiplicityCorrectionEnabled(bool checked);
   void OnSignificanceLevelChanged(double significance_level);
+  void SetFunctionNameToShow(FunctionNameToShow function_name_to_show);
 
  protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -44,8 +46,7 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
   SamplingWithFrameTrackReportModel* model_{};
   bool is_multiplicity_correction_enabled_ = true;
   double confidence_level_ = 0.05;
-  SamplingWithFrameTrackReportModel::FunctionNameToShow function_name_to_show_ =
-      SamplingWithFrameTrackReportModel::FunctionNameToShow::kBaseline;
+  FunctionNameToShow function_name_to_show_ = FunctionNameToShow::kBaseline;
   std::unique_ptr<Ui::SamplingWithFrameTrackOutputWidget> ui_;
 };
 
