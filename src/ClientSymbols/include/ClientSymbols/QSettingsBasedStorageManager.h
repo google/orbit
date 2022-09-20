@@ -32,6 +32,11 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   void SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) override;
   [[nodiscard]] absl::flat_hash_set<std::string> LoadDisabledModulePaths() override;
 
+  void SaveEnableStadiaSymbolStore(bool enable_stadia_symbol_store) override;
+  [[nodiscard]] bool LoadEnableStadiaSymbolStore() override;
+  void SaveEnableMicrosoftSymbolServer(bool enable_microsoft_symbol_server) override;
+  [[nodiscard]] bool LoadEnableMicrosoftSymbolServer() override;
+
  private:
   QSettings settings_;
 };
