@@ -19,34 +19,34 @@ using orbit_grpc_protos::SymbolInfo;
 namespace orbit_client_data {
 
 TEST(ModuleData, Constructor) {
-  std::string name = "Example Name";
-  std::string file_path = "/test/file/path";
-  uint64_t file_size = 1000;
-  std::string build_id = "test build id";
-  uint64_t load_bias = 4000;
+  constexpr const char* kName = "Example Name";
+  constexpr const char* kFilePath = "/test/file/path";
+  constexpr uint64_t kFileSize = 1000;
+  constexpr const char* kBuildId = "test build id";
+  constexpr uint64_t kLoadBias = 4000;
   ModuleInfo::ObjectSegment object_segment;
   object_segment.set_offset_in_file(0x200);
   object_segment.set_size_in_file(0x2FFF);
   object_segment.set_address(0x1000);
   object_segment.set_size_in_memory(0x3000);
-  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
+  constexpr ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
-  module_info.set_name(name);
-  module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
-  module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(kBuildId);
+  module_info.set_load_bias(kLoadBias);
   *module_info.add_object_segments() = object_segment;
   module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
 
-  EXPECT_EQ(module.name(), name);
-  EXPECT_EQ(module.file_path(), file_path);
-  EXPECT_EQ(module.file_size(), file_size);
-  EXPECT_EQ(module.build_id(), build_id);
-  EXPECT_EQ(module.load_bias(), load_bias);
+  EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.file_path(), kFilePath);
+  EXPECT_EQ(module.file_size(), kFileSize);
+  EXPECT_EQ(module.build_id(), kBuildId);
+  EXPECT_EQ(module.load_bias(), kLoadBias);
   EXPECT_EQ(module.object_file_type(), object_file_type);
   ASSERT_EQ(module.GetObjectSegments().size(), 1);
   EXPECT_EQ(module.GetObjectSegments()[0].offset_in_file(), object_segment.offset_in_file());
@@ -105,11 +105,11 @@ TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaPeNoSections
 }
 
 TEST(ModuleData, AddSymbolsAndAddFallbackSymbols) {
-  // Setup ModuleData.
+  // Set up ModuleData.
   constexpr const char* kBuildId = "build_id";
-  std::string module_file_path = "/test/file/path";
+  constexpr const char* kModuleFilePath = "/test/file/path";
   ModuleInfo module_info{};
-  module_info.set_file_path(module_file_path);
+  module_info.set_file_path(kModuleFilePath);
   module_info.set_build_id(kBuildId);
   ModuleData module{module_info};
 
@@ -128,7 +128,7 @@ TEST(ModuleData, AddSymbolsAndAddFallbackSymbols) {
   const auto verify_get_functions = [&]() {
     const FunctionInfo* function = module.GetFunctions()[0];
     EXPECT_EQ(function->pretty_name(), kSymbolPrettyName);
-    EXPECT_EQ(function->module_path(), module_file_path);
+    EXPECT_EQ(function->module_path(), kModuleFilePath);
     EXPECT_EQ(function->module_build_id(), kBuildId);
     EXPECT_EQ(function->address(), kSymbolAddress);
     EXPECT_EQ(function->size(), kSymbolSize);
@@ -181,28 +181,28 @@ TEST(ModuleData, FindFunctionFromHash) {
 }
 
 TEST(ModuleData, UpdateIfChangedAndUnload) {
-  std::string name = "Example Name";
-  std::string file_path = "/test/file/path";
-  uint64_t file_size = 1000;
-  std::string build_id{};
-  uint64_t load_bias = 4000;
-  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
+  constexpr const char* kName = "Example Name";
+  constexpr const char* kFilePath = "/test/file/path";
+  constexpr uint64_t kFileSize = 1000;
+  constexpr const char* kBuildId = "";
+  constexpr uint64_t kLoadBias = 4000;
+  constexpr ModuleInfo::ObjectFileType kObjectFileType = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
-  module_info.set_name(name);
-  module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
-  module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
-  module_info.set_object_file_type(object_file_type);
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(kBuildId);
+  module_info.set_load_bias(kLoadBias);
+  module_info.set_object_file_type(kObjectFileType);
 
   ModuleData module{module_info};
-  EXPECT_EQ(module.name(), name);
-  EXPECT_EQ(module.file_path(), file_path);
-  EXPECT_EQ(module.file_size(), file_size);
-  EXPECT_EQ(module.build_id(), build_id);
-  EXPECT_EQ(module.load_bias(), load_bias);
-  EXPECT_EQ(module.object_file_type(), object_file_type);
+  EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.file_path(), kFilePath);
+  EXPECT_EQ(module.file_size(), kFileSize);
+  EXPECT_EQ(module.build_id(), kBuildId);
+  EXPECT_EQ(module.load_bias(), kLoadBias);
+  EXPECT_EQ(module.object_file_type(), kObjectFileType);
   EXPECT_EQ(module.GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kNoSymbols);
   EXPECT_EQ(module.GetFunctions().size(), 0);
 
@@ -262,28 +262,28 @@ TEST(ModuleData, UpdateIfChangedAndUnload) {
 }
 
 TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
-  std::string name = "Example Name";
-  std::string file_path = "/test/file/path";
-  uint64_t file_size = 1000;
-  std::string build_id{};
-  uint64_t load_bias = 4000;
-  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
+  constexpr const char* kName = "Example Name";
+  constexpr const char* kFilePath = "/test/file/path";
+  constexpr uint64_t kFileSize = 1000;
+  constexpr const char* kBuildId = "";
+  constexpr uint64_t kLoadBias = 4000;
+  ModuleInfo::ObjectFileType kObjectFileType = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
-  module_info.set_name(name);
-  module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
-  module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
-  module_info.set_object_file_type(object_file_type);
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(kBuildId);
+  module_info.set_load_bias(kLoadBias);
+  module_info.set_object_file_type(kObjectFileType);
 
   ModuleData module{module_info};
-  EXPECT_EQ(module.name(), name);
-  EXPECT_EQ(module.file_path(), file_path);
-  EXPECT_EQ(module.file_size(), file_size);
-  EXPECT_EQ(module.build_id(), build_id);
-  EXPECT_EQ(module.load_bias(), load_bias);
-  EXPECT_EQ(module.object_file_type(), object_file_type);
+  EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.file_path(), kFilePath);
+  EXPECT_EQ(module.file_size(), kFileSize);
+  EXPECT_EQ(module.build_id(), kBuildId);
+  EXPECT_EQ(module.load_bias(), kLoadBias);
+  EXPECT_EQ(module.object_file_type(), kObjectFileType);
   EXPECT_EQ(module.GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kNoSymbols);
   EXPECT_EQ(module.GetFunctions().size(), 0);
 
@@ -351,29 +351,29 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
 }
 
 TEST(ModuleData, UpdateIfChangedWithBuildId) {
-  std::string name = "Example Name";
-  std::string file_path = "/test/file/path";
-  uint64_t file_size = 1000;
-  std::string build_id = "build_id_27";
-  uint64_t load_bias = 4000;
-  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
+  constexpr const char* kName = "Example Name";
+  constexpr const char* kFilePath = "/test/file/path";
+  constexpr uint64_t kFileSize = 1000;
+  constexpr const char* kBuildId = "build_id_27";
+  constexpr uint64_t kLoadBias = 4000;
+  constexpr ModuleInfo::ObjectFileType kObjectFileType = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
-  module_info.set_name(name);
-  module_info.set_file_path(file_path);
-  module_info.set_file_size(file_size);
-  module_info.set_build_id(build_id);
-  module_info.set_load_bias(load_bias);
-  module_info.set_object_file_type(object_file_type);
+  module_info.set_name(kName);
+  module_info.set_file_path(kFilePath);
+  module_info.set_file_size(kFileSize);
+  module_info.set_build_id(kBuildId);
+  module_info.set_load_bias(kLoadBias);
+  module_info.set_object_file_type(kObjectFileType);
 
   ModuleData module{module_info};
 
-  EXPECT_EQ(module.name(), name);
-  EXPECT_EQ(module.file_path(), file_path);
-  EXPECT_EQ(module.file_size(), file_size);
-  EXPECT_EQ(module.build_id(), build_id);
-  EXPECT_EQ(module.load_bias(), load_bias);
-  EXPECT_EQ(module.object_file_type(), object_file_type);
+  EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.file_path(), kFilePath);
+  EXPECT_EQ(module.file_size(), kFileSize);
+  EXPECT_EQ(module.build_id(), kBuildId);
+  EXPECT_EQ(module.load_bias(), kLoadBias);
+  EXPECT_EQ(module.object_file_type(), kObjectFileType);
   EXPECT_EQ(module.GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kNoSymbols);
   EXPECT_TRUE(module.GetFunctions().empty());
 
