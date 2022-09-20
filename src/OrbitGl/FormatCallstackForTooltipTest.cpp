@@ -142,7 +142,7 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
         absl::StrCat(kModuleName, " | ", kFunction11, "<br/>"),
         absl::StrCat(kExpectedModuleName2, " | ", kFunction12, "<br/>"),
     };
-    expected_formatted_callstack = absl::StrJoin(expected_formatted_callstack, "");
+    expected_formatted_callstack = absl::StrJoin(expected_formatted_callstack_frames, "");
   }
 
   EXPECT_EQ(formatted_callstack, expected_formatted_callstack);
