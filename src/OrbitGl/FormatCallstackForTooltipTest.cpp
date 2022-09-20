@@ -98,10 +98,9 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
   constexpr uint64_t kFrame2to10 = 0x1ADD5E55;
   constexpr uint64_t kFrame11 = 0x2ADD5E55;
   constexpr uint64_t kFrame12 = 0x3ADD5E55;
-  CallstackInfo empty_callstack{
-      {kFrame1, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10,
-       kFrame2to10, kFrame2to10, kFrame2to10, kFrame11, kFrame12},
-      CallstackType::kComplete};
+  CallstackInfo callstack{{kFrame1, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10,
+                           kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame11, kFrame12},
+                          CallstackType::kComplete};
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
 
   constexpr const char* kFunction1 = "void foo(int,int)";
@@ -127,7 +126,7 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
 
   ModuleManager module_manager{};
   std::string formatted_callstack = FormatCallstackForTooltip(
-      empty_callstack, capture_data, module_manager, std::numeric_limits<size_t>::max(), 6, 2);
+      callstack, capture_data, module_manager, std::numeric_limits<size_t>::max(), 6, 2);
 
   constexpr const char* kExpectedModuleName2 = "module2";
 
