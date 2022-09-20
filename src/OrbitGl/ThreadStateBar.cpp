@@ -209,7 +209,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
   tooltip += absl::StrFormat(
       "<br/>"
       "<b>Time:</b> %s"
-      "<br/>",
+      "<br/><br/>",
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
 
   if (thread_state_slice->switch_out_or_wakeup_callstack_id().has_value()) {
