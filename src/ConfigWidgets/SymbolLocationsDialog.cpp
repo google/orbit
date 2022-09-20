@@ -34,16 +34,10 @@ constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
 constexpr const char* kNewInfoLabelTemplate =
-    "<p>Orbit loads most symbols automatically. Add folders and files to the symbol locations "
-    "Orbit loads from:</p><p><b>Add Folder</b> to add a symbol location. The symbol files' "
+    "<p>Orbit loads from:</p><p><b>Add Folder</b> to add a symbol location. The symbol files' "
     "filenames and build IDs must match the module's name and build ID. Supported file extensions "
     "are “.so”, “.debug”, “.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a "
     "symbol file with a different filename%1</p>";
-constexpr const char* kSymbolStoreInfo =
-    "<p>If enable searching for symbols in Stadia symbol store / Microsoft symbol server, Orbit "
-    "also supports retrieving symbols from Stadia symbol store / Microsoft symbol server. Note "
-    "that <b>the module's name and build ID will be used to request symbols from symbol "
-    "stores</b>.</p>";
 constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
 constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
@@ -149,8 +143,7 @@ SymbolLocationsDialog::SymbolLocationsDialog(
   ui_->setupUi(this);
   SetUpInfoLabel();
   if (!absl::GetFlag(FLAGS_symbol_store_support)) {
-    ui_->enableStadiaSymbolStoreCheckBox->hide();
-    ui_->enableMicrosoftSymbolServerCheckBox->hide();
+    ui_->symbolStoreGroupBox->hide();
   } else {
     ui_->enableStadiaSymbolStoreCheckBox->setChecked(
         persistent_storage_manager_->LoadEnableStadiaSymbolStore());
@@ -450,7 +443,6 @@ void SymbolLocationsDialog::SetUpInfoLabel() {
   } else {
     label_text = label_text.arg(kInfoLabelArgumentNoBuildIdOverride);
   }
-  if (absl::GetFlag(FLAGS_symbol_store_support)) label_text.append(kSymbolStoreInfo);
   ui_->infoLabel->setText(label_text);
 }
 
