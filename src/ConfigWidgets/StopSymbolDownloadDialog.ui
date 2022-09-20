@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Symbols for this module are still being downloaded</string>
+      <string>Symbols for this module are still being downloaded:</string>
      </property>
     </widget>
    </item>

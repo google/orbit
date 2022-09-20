@@ -26,6 +26,7 @@ class ModulesDataView : public DataView {
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
   std::string GetValue(int row, int column) override;
+  std::string GetToolTip(int row, int column) override;
 
   void OnDoubleClicked(int index) override;
   bool WantsDisplayColor() override { return true; }
@@ -55,8 +56,6 @@ class ModulesDataView : public DataView {
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return start_address_to_module_.at(indices_[row]);
   }
-  [[nodiscard]] std::string GetSymbolLoadingStateForModuleString(
-      const orbit_client_data::ModuleData* module);
 
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleInMemory>
       start_address_to_module_in_memory_;

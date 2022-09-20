@@ -295,7 +295,7 @@ class CaptureData {
 
   // For each thread, assume sorted by timestamp and not overlapping.
   absl::flat_hash_map<uint32_t, std::vector<ThreadStateSliceInfo>> thread_state_slices_
-      GUARDED_BY(thread_state_slices_mutex_);
+      ABSL_GUARDED_BY(thread_state_slices_mutex_);
   mutable absl::Mutex thread_state_slices_mutex_;
 
   // Only access this field from the main thread.

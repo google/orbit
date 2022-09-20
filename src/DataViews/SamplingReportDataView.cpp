@@ -227,7 +227,9 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
   if (action == kMenuActionLoadSymbols) {
     for (int index : selected_indices) {
       const ModuleData* module = GetModuleDataFromRow(index);
-      if (module != nullptr && !module->is_loaded()) return ActionStatus::kVisibleAndEnabled;
+      if (module != nullptr && !module->AreDebugSymbolsLoaded()) {
+        return ActionStatus::kVisibleAndEnabled;
+      }
     }
     return ActionStatus::kVisibleButDisabled;
   }

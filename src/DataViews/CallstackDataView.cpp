@@ -121,7 +121,7 @@ DataView::ActionStatus CallstackDataView::GetActionStatus(
   std::function<bool(const FunctionInfo*, const ModuleData*)> is_visible_action_enabled;
   if (action == kMenuActionLoadSymbols) {
     is_visible_action_enabled = [](const FunctionInfo* /*function*/, const ModuleData* module) {
-      return module != nullptr && !module->is_loaded();
+      return module != nullptr && !module->AreDebugSymbolsLoaded();
     };
 
   } else if (action == kMenuActionSelect) {

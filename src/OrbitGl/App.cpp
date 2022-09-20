@@ -1964,7 +1964,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
   modules_with_symbol_loading_error_.erase(module_id);
 
-  if (module_data->is_loaded()) return {outcome::success()};
+  if (module_data->AreDebugSymbolsLoaded()) return {outcome::success()};
 
   const auto it = symbols_currently_loading_.find(module_id);
   if (it != symbols_currently_loading_.end()) {
@@ -2607,7 +2607,7 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
   std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> loading_futures;
 
   for (const ModuleData* module : sorted_module_list) {
-    if (module->is_loaded()) continue;
+    if (module->AreAtLeastFallbackSymbolsLoaded()) continue;
 
     loading_futures.push_back(RetrieveModuleAndLoadSymbols(module));
   }
@@ -2681,7 +2681,7 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
   for (const ModuleIdentifier& module_id : module_ids) {
     ModuleData* module = GetMutableModuleByModuleIdentifier(module_id);
-    if (module->is_loaded()) {
+    if (module->AreAtLeastFallbackSymbolsLoaded()) {
       functions_data_view_->AddFunctions(module->GetFunctions());
     }
   }
@@ -2713,11 +2713,11 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
     const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
-    // (A) deselect functions when the module is not loaded by the process anymore
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
+      // (A) deselect functions when the module is not loaded by the process anymore
       data_manager_->DeselectFunction(func);
-    } else if (!module->is_loaded()) {
-      // (B) deselect when module does not have functions anymore (!is_loaded())
+    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
+      // (B) deselect when module does not have functions anymore
       data_manager_->DeselectFunction(func);
       // (C) Save function hashes, so they can be hooked again after reload
       function_hashes_to_hook_map[module->file_path()].push_back(func.GetPrettyNameHash());
@@ -2731,7 +2731,7 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     // loaded by the process.
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
       RemoveFrameTrack(func);
-    } else if (!module->is_loaded()) {
+    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
       RemoveFrameTrack(func);
       frame_track_function_hashes_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
@@ -3494,7 +3494,14 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
     return SymbolLoadingState::kLoading;
   }
 
-  if (module->is_loaded()) return SymbolLoadingState::kLoaded;
+  switch (module->GetLoadedSymbolsCompleteness()) {
+    case ModuleData::SymbolCompleteness::kNoSymbols:
+      break;
+    case ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo:
+      return SymbolLoadingState::kFallback;
+    case ModuleData::SymbolCompleteness::kDebugSymbols:
+      return SymbolLoadingState::kLoaded;
+  }
 
   if (download_disabled_modules_.contains(module->file_path())) {
     return SymbolLoadingState::kDisabled;

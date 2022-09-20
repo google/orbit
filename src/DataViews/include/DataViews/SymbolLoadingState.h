@@ -14,13 +14,13 @@
 namespace orbit_data_views {
 
 // Class to represent the current state of symbol loading for a certain module. Also provides a
-// textual description for each state via GetDescription and a color via GetDisplayColor
+// textual description for each state via GetName and a color via GetDisplayColor
 struct SymbolLoadingState {
   // TODO(b/202140068) remove unknown when not needed anymore
-  enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded } state;
+  enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded, kFallback } state;
   SymbolLoadingState(State initial_state) : state(initial_state) {}
 
-  [[nodiscard]] std::string GetDescription() const {
+  [[nodiscard]] std::string GetName() const {
     switch (state) {
       case kUnknown:
         return "";
@@ -34,6 +34,32 @@ struct SymbolLoadingState {
         return "Loading...";
       case kLoaded:
         return "Loaded";
+      case kFallback:
+        return "Partial";
+    }
+    ORBIT_UNREACHABLE();
+  }
+
+  [[nodiscard]] std::string GetDescription() const {
+    switch (state) {
+      case kUnknown:
+        return "";
+      case kDisabled:
+        return "Loading symbols automatically is always disabled for this module.";
+      case kDownloading:
+        return "A file containing symbol information for this module has been found and is being "
+               "downloaded.";
+      case kError:
+        return "No symbols could be found for this module.";
+      case kLoading:
+        return "Symbols for this module are now being loaded from a file.";
+      case kLoaded:
+        return "Debug symbols for this module have been loaded successfully.";
+      case kFallback:
+        return "No debug symbols could be found for this module. Nonetheless, some substitute "
+               "information could still be extracted from the module itself, namely from symbols "
+               "for dynamic linking and/or from stack unwinding information. Note that this "
+               "information might be inaccurate.";
     }
     ORBIT_UNREACHABLE();
   }
@@ -61,6 +87,12 @@ struct SymbolLoadingState {
       case kError: {
         red = 230;
         green = 70;
+        blue = 70;
+        break;
+      }
+      case kFallback: {
+        red = 230;
+        green = 150;
         blue = 70;
         break;
       }
