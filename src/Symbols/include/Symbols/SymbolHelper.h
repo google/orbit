@@ -29,7 +29,7 @@ class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
-                        std::vector<std::filesystem::path> structured_debug_directories);
+                        const std::vector<std::filesystem::path>& structured_debug_directories);
 
   ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, const std::string& build_id,
@@ -39,13 +39,17 @@ class SymbolHelper : public SymbolCacheInterface {
                                                            const std::string& build_id) const;
   ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(const std::filesystem::path& module_path,
                                                            uint64_t expected_file_size) const;
+  ErrorMessageOr<std::filesystem::path> FindObjectInCache(const std::filesystem::path& module_path,
+                                                          const std::string& build_id,
+                                                          uint64_t expected_file_size) const;
+  [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
+      const std::filesystem::path& file_path) const override;
+
   static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
       const std::filesystem::path& file_path,
       const orbit_object_utils::ObjectFileInfo& object_file_info);
   static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadFallbackSymbolsFromFile(
       const std::filesystem::path& file_path);
-  [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
-      const std::filesystem::path& file_path) const override;
 
   [[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& file_path,
                                                     uint32_t checksum);
