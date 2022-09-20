@@ -86,7 +86,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
     pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
     const std::filesystem::path& path, uint32_t flag) {
   // Make sure file exists.
-  auto file_exists_or_error = orbit_base::FileExists(path);
+  auto file_exists_or_error = orbit_base::FileOrDirectoryExists(path);
   if (file_exists_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to access library at \"%s\": %s", path,
                                         file_exists_or_error.error().message()));

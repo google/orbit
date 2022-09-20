@@ -30,7 +30,7 @@ orbit_base::Future<SymbolLoadingOutcome> StructuredDebugDirectorySymbolProvider:
   auto full_file_path = directory_ / ".build-id" / build_id.substr(0, 2) /
                         absl::StrFormat("%s.debug", build_id.substr(2));
 
-  OUTCOME_TRY(const bool file_exists, orbit_base::FileExists(full_file_path));
+  OUTCOME_TRY(const bool file_exists, orbit_base::FileOrDirectoryExists(full_file_path));
 
   if (file_exists) {
     return SymbolLoadingSuccessResult(

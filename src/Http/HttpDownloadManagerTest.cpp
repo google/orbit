@@ -30,7 +30,7 @@
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_http {
-using orbit_base::FileExists;
+using orbit_base::FileOrDirectoryExists;
 using orbit_base::Future;
 using orbit_base::GetNotCanceled;
 using orbit_base::IsCanceled;
@@ -64,7 +64,7 @@ static void VerifyDownloadSucceeded(const DownloadResult& result,
   EXPECT_FALSE(IsCanceled(result.value()));
   EXPECT_FALSE(IsNotFound(GetNotCanceled(result.value())));
 
-  auto exists_or_error = FileExists(local_path);
+  auto exists_or_error = FileOrDirectoryExists(local_path);
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_TRUE(exists_or_error.value());
 }

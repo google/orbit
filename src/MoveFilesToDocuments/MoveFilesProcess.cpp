@@ -40,7 +40,7 @@ void MoveFilesProcess::ReportError(const std::string& error_message) {
 void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::path& src_dir,
                                                         const std::filesystem::path& dest_dir) {
   if (interruption_requested_) return;
-  auto file_exists_or_error = orbit_base::FileExists(src_dir);
+  auto file_exists_or_error = orbit_base::FileOrDirectoryExists(src_dir);
   if (file_exists_or_error.has_error()) {
     ReportError(absl::StrFormat("Unable to check for existence of \"%s\": %s", src_dir.string(),
                                 file_exists_or_error.error().message()));

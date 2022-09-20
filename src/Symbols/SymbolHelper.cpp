@@ -286,7 +286,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& mo
                                                               Verifier&& verify) const {
   ORBIT_SCOPE_FUNCTION;
   fs::path cache_file_path = GenerateCachedFilePath(module_path);
-  OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
+  OUTCOME_TRY(const bool exists, orbit_base::FileOrDirectoryExists(cache_file_path));
   if (!exists) {
     return ErrorMessage(
         absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));

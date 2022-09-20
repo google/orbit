@@ -119,7 +119,7 @@ ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, int64_t offset) {
 }
 
 // Following functions make sure we call stl in exception-free manner
-ErrorMessageOr<bool> FileExists(const std::filesystem::path& path);
+ErrorMessageOr<bool> FileOrDirectoryExists(const std::filesystem::path& path);
 ErrorMessageOr<void> MoveOrRenameFile(const std::filesystem::path& from,
                                       const std::filesystem::path& to);
 ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path);

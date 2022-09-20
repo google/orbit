@@ -288,7 +288,7 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
   }
 
   for (const auto& search_path : search_paths) {
-    ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
+    ErrorMessageOr<bool> file_exists = orbit_base::FileOrDirectoryExists(search_path);
 
     if (file_exists.has_error()) {
       std::string not_found_message{

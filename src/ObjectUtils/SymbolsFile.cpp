@@ -24,7 +24,7 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
   std::string error_message{
       absl::StrFormat("Unable to create symbols file from \"%s\":", file_path.string())};
 
-  OUTCOME_TRY(auto file_exists, orbit_base::FileExists(file_path));
+  OUTCOME_TRY(auto file_exists, orbit_base::FileOrDirectoryExists(file_path));
 
   if (!file_exists) {
     error_message.append("\n* File does not exist.");

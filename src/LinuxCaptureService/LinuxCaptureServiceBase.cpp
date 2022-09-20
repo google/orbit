@@ -183,7 +183,7 @@ TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
   result.termination_signal = CaptureFinished::kTerminationSignalInternalError;
 
   const std::string pid_dir_name = absl::StrFormat("/proc/%i", pid);
-  auto exists_or_error = orbit_base::FileExists(pid_dir_name);
+  auto exists_or_error = orbit_base::FileOrDirectoryExists(pid_dir_name);
   if (exists_or_error.has_error()) {
     ORBIT_ERROR("Unable to check for existence of \"%s\": %s", pid_dir_name,
                 exists_or_error.error().message());
