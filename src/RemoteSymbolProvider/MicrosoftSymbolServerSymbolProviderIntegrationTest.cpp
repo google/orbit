@@ -25,6 +25,7 @@ namespace orbit_remote_symbol_provider {
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLoadDebugSymbols) {
   auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
@@ -59,12 +60,11 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
             orbit_symbol_provider::GetSuccessResult(result);
 
         auto exists_or_error = orbit_base::FileExists(success_result.path);
-        ASSERT_THAT(exists_or_error, HasNoError());
-        EXPECT_TRUE(exists_or_error.value());
+        ASSERT_THAT(exists_or_error, HasValue(true));
 
-        constexpr uint64_t kLoadBias = 0x10000;
+        constexpr uint64_t kImageBase = 0x10000;
         auto symbols_file_or_error = orbit_object_utils::CreateSymbolsFile(
-            success_result.path, orbit_object_utils::ObjectFileInfo{kLoadBias});
+            success_result.path, orbit_object_utils::ObjectFileInfo{kImageBase});
         ASSERT_THAT(symbols_file_or_error, HasNoError());
 
         auto symbols_result = symbols_file_or_error.value()->LoadDebugSymbols();
@@ -74,16 +74,17 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
         for (const SymbolInfo& symbol_info : symbols_result.value().symbol_infos()) {
           symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
         }
+        ASSERT_EQ(symbol_infos_by_address.size(), 9573);
 
         {
-          const SymbolInfo* symbol = symbol_infos_by_address[0x4aa90 + kLoadBias];
+          const SymbolInfo* symbol = symbol_infos_by_address[0x4aa90 + kImageBase];
           ASSERT_NE(symbol, nullptr);
           EXPECT_EQ(symbol->demangled_name(), "D3D11CreateDevice");
           EXPECT_EQ(symbol->size(), 0x100);
         }
 
         {
-          const SymbolInfo* symbol = symbol_infos_by_address[0x3a800 + kLoadBias];
+          const SymbolInfo* symbol = symbol_infos_by_address[0x3a800 + kImageBase];
           ASSERT_NE(symbol, nullptr);
           EXPECT_EQ(symbol->demangled_name(), "CContext::ValidateReclaimResources");
           EXPECT_EQ(symbol->size(), 0x100);
