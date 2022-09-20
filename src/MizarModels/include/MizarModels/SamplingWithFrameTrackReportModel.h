@@ -81,8 +81,10 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
   void SetFunctionNameToShow(FunctionNameToShow function_name_to_show) {
-    function_name_to_show_ = function_name_to_show;
-    EmitDataChanged(Column::kFunctionName);
+    if (function_name_to_show_ != function_name_to_show) {
+      function_name_to_show_ = function_name_to_show;
+      EmitDataChanged(Column::kFunctionName);
+    }
   }
 
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override {

@@ -59,6 +59,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   [[nodiscard]] static ErrorMessageOr<void> IsDataValid(
       const orbit_mizar_data::MizarPairedData& data, std::string_view data_title);
   void ProcessDataValidationOutcome(const ErrorMessageOr<void>& outcome) const;
+  void SetFunctionNameToShow();
 
   const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
   std::unique_ptr<Ui::SamplingWithFrameTrackWidget> ui_;

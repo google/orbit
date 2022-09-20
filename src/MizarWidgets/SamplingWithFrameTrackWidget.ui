@@ -92,6 +92,29 @@
        </item>
       </widget>
      </item>
+     <item>
+      <widget class="QComboBox" name="use_symbols_toggle_">
+       <property name="maximumSize">
+        <size>
+         <width>190</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="currentText">
+        <string>Use Baseline symbols</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Use Baseline symbols</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Use Comparison symbols</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

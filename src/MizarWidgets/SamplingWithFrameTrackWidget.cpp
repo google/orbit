@@ -4,20 +4,21 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 
+#include <QComboBox>
 #include <QObject>
 #include <QWidget>
+#include <Qt>
 #include <memory>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarModels/SamplingWithFrameTrackReportModel.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
-
-namespace orbit_mizar_widgets {
 
 using ::orbit_base::LiftAndApply;
 using ::orbit_mizar_base::Baseline;
@@ -25,6 +26,12 @@ using ::orbit_mizar_base::Comparison;
 using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 using ::orbit_mizar_base::kBaselineTitle;
 using ::orbit_mizar_base::kComparisonTitle;
+using FunctionNameToShow =
+    ::orbit_mizar_widgets::SamplingWithFrameTrackReportModel::FunctionNameToShow;
+
+Q_DECLARE_METATYPE(FunctionNameToShow);
+
+namespace orbit_mizar_widgets {
 
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
@@ -42,8 +49,20 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
   QObject::connect(ui_->update_button_, &QPushButton::clicked, this,
                    &SamplingWithFrameTrackWidget::OnUpdateButtonClicked);
 
+  ui_->use_symbols_toggle_->setItemData(0, QVariant::fromValue(FunctionNameToShow::kBaseline));
+  ui_->use_symbols_toggle_->setItemData(1, QVariant::fromValue(FunctionNameToShow::kComparison));
+
+  QObject::connect(ui_->use_symbols_toggle_, qOverload<int>(&QComboBox::currentIndexChanged), this,
+                   [this](int /*index*/) { SetFunctionNameToShow(); });
+
   ui_->output_->SetMultiplicityCorrectionEnabled(true);
   ui_->output_->OnSignificanceLevelChanged(kDefaultSignificanceLevel);
+  SetFunctionNameToShow();
+}
+
+void SamplingWithFrameTrackWidget::SetFunctionNameToShow() {
+  ui_->output_->SetFunctionNameToShow(
+      ui_->use_symbols_toggle_->currentData().value<FunctionNameToShow>());
 }
 
 void SamplingWithFrameTrackWidget::Init(
