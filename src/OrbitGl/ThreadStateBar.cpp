@@ -233,8 +233,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
     std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
     tooltip += absl::StrFormat(
         "This thread switched to the <i>%s</i> state when thread <b>%s [%d]</b> of process <b>%s "
-        "[%d]</b>"
-        " executed the following <b>callstack</b>:<br/>",
+        "[%d]</b> executed the following <b>callstack</b>:<br/>",
         GetThreadStateName(thread_state_slice->thread_state()), thread_name,
         thread_state_slice->wakeup_tid(), process_name, thread_state_slice->wakeup_pid());
   } else {
