@@ -2623,10 +2623,10 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
     const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
-    // (A) deselect functions when the module is not loaded by the process anymore
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
+      // (A) deselect functions when the module is not loaded by the process anymore
       data_manager_->DeselectFunction(func);
-    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {  // TODO: Is this correct?
+    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
       // (B) deselect when module does not have functions anymore
       data_manager_->DeselectFunction(func);
       // (C) Save function hashes, so they can be hooked again after reload
@@ -2641,7 +2641,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     // loaded by the process.
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
       RemoveFrameTrack(func);
-    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {  // TODO: Is this correct?
+    } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
       RemoveFrameTrack(func);
       frame_track_function_hashes_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
