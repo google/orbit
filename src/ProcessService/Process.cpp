@@ -15,6 +15,7 @@
 
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -47,7 +48,8 @@ void Process::UpdateCpuUsage(Jiffies process_cpu_time, TotalCpuTime total_cpu_ti
 ErrorMessageOr<Process> Process::FromPid(uint32_t pid) {
   const auto path = std::filesystem::path{"/proc"} / std::to_string(pid);
 
-  if (!std::filesystem::is_directory(path)) {
+  OUTCOME_TRY(const bool is_directory, orbit_base::IsDirectory(path));
+  if (!is_directory) {
     return ErrorMessage{absl::StrFormat("PID %u does not exist", pid)};
   }
 
