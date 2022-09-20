@@ -219,8 +219,20 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
     static const std::string unknown_return_text = "Function call information missing";
 
-    tooltip +=
-        "<b>This thread switched to the state on executing the following callstack:</b><br/>";
+    if (thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
+      std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
+      std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
+      tooltip += absl::StrFormat(
+          "<b>This thread switched to the \"%s\" state when thread %s [%d] of process %s [%d] "
+          "hit/executed the following callstack:</b><br/>",
+          GetThreadStateName(thread_state_slice->thread_state()), thread_name,
+          thread_state_slice->wakeup_tid(), process_name, thread_state_slice->wakeup_pid());
+    } else {
+      tooltip += absl::StrFormat(
+          "<b>This thread switched to the \"%s\" state on hitting/executing the following "
+          "callstack:</b><br/>",
+          GetThreadStateName(thread_state_slice->thread_state()));
+    }
     if (callstack == nullptr) {
       tooltip += unknown_return_text;
     } else {
