@@ -17,76 +17,68 @@ using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
 
-ModuleData::ModuleData(ModuleInfo module_info)
-    : name_(std::move(*module_info.mutable_name())),
-      file_path_(std::move(*module_info.mutable_file_path())),
-      file_size_{module_info.file_size()},
-      build_id_{std::move(*module_info.mutable_build_id())},
-      load_bias_{module_info.load_bias()},
-      object_file_type_{module_info.object_file_type()},
-      executable_segment_offset_{module_info.executable_segment_offset()},
-      object_segments_{module_info.object_segments().begin(), module_info.object_segments().end()} {
-}
-
-orbit_symbol_provider::ModuleIdentifier ModuleData::module_id() const {
-  absl::MutexLock lock(&mutex_);
-  return orbit_symbol_provider::ModuleIdentifier{file_path_, build_id_};
-}
-
-const std::vector<ModuleInfo::ObjectSegment>& ModuleData::GetObjectSegments() const {
-  absl::MutexLock lock(&mutex_);
-  return object_segments_;
-}
+ModuleData::ModuleData(ModuleInfo module_info) : module_info_{std::move(module_info)} {}
 
 const std::string& ModuleData::name() const {
   absl::MutexLock lock(&mutex_);
-  return name_;
+  return module_info_.name();
 }
 
 const std::string& ModuleData::file_path() const {
   absl::MutexLock lock(&mutex_);
-  return file_path_;
+  return module_info_.file_path();
 }
 
 uint64_t ModuleData::file_size() const {
   absl::MutexLock lock(&mutex_);
-  return file_size_;
+  return module_info_.file_size();
 }
 
 const std::string& ModuleData::build_id() const {
   absl::MutexLock lock(&mutex_);
-  return build_id_;
+  return module_info_.build_id();
 }
 
 uint64_t ModuleData::load_bias() const {
   absl::MutexLock lock(&mutex_);
-  return load_bias_;
-}
-
-ModuleInfo::ObjectFileType ModuleData::object_file_type() const {
-  absl::MutexLock lock(&mutex_);
-  return object_file_type_;
+  return module_info_.load_bias();
 }
 
 uint64_t ModuleData::executable_segment_offset() const {
   absl::MutexLock lock(&mutex_);
-  return executable_segment_offset_;
+  return module_info_.executable_segment_offset();
+}
+
+ModuleInfo::ObjectFileType ModuleData::object_file_type() const {
+  absl::MutexLock lock(&mutex_);
+  return module_info_.object_file_type();
+}
+
+std::vector<ModuleInfo::ObjectSegment> ModuleData::GetObjectSegments() const {
+  absl::MutexLock lock(&mutex_);
+  return {module_info_.object_segments().begin(), module_info_.object_segments().end()};
+}
+
+orbit_symbol_provider::ModuleIdentifier ModuleData::module_id() const {
+  absl::MutexLock lock(&mutex_);
+  return orbit_symbol_provider::ModuleIdentifier{module_info_.file_path(), module_info_.build_id()};
 }
 
 uint64_t ModuleData::ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const {
   absl::MutexLock lock(&mutex_);
 
-  if (object_file_type_ == orbit_grpc_protos::ModuleInfo::kElfFile) {
+  if (module_info_.object_file_type() == orbit_grpc_protos::ModuleInfo::kElfFile) {
     // For ELF files, we define the load bias as the difference between the executable loadable
     // segment's address and its offset. So note how, for the executable loadable segment (which we
     // assume functions belong to), this computation and the generic one below are equivalent:
     // load_bias = executable_loadable_segment_address - executable_loadable_segment_offset
     // function_address - load_bias = function_address - executable_loadable_segment_address +
     //                                executable_loadable_segment_offset
-    return virtual_address - load_bias_;
+    return virtual_address - module_info_.load_bias();
   }
 
-  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment : object_segments_) {
+  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment :
+       module_info_.object_segments()) {
     if (segment.address() <= virtual_address &&
         virtual_address < segment.address() + segment.size_in_memory()) {
       return virtual_address - segment.address() + segment.offset_in_file();
@@ -94,64 +86,55 @@ uint64_t ModuleData::ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_ad
   }
 
   // Fall back to the ELF-specific computation if we didn't find a containing segment.
-  return virtual_address - load_bias_;
+  return virtual_address - module_info_.load_bias();
 }
 
 uint64_t ModuleData::ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const {
   absl::MutexLock lock(&mutex_);
 
-  if (object_file_type_ == orbit_grpc_protos::ModuleInfo::kElfFile) {
-    return offset_in_file + load_bias_;
+  if (module_info_.object_file_type() == orbit_grpc_protos::ModuleInfo::kElfFile) {
+    return offset_in_file + module_info_.load_bias();
   }
 
-  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment : object_segments_) {
+  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment :
+       module_info_.object_segments()) {
     if (segment.offset_in_file() <= offset_in_file &&
         offset_in_file < segment.offset_in_file() + segment.size_in_file()) {
       return offset_in_file - segment.offset_in_file() + segment.address();
     }
   }
 
-  return offset_in_file + load_bias_;
+  return offset_in_file + module_info_.load_bias();
 }
 
-bool ModuleData::NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const {
+bool ModuleData::NeedsUpdate(const orbit_grpc_protos::ModuleInfo& new_module_info) const {
   mutex_.AssertHeld();
-  return name_ != info.name() || file_size_ != info.file_size() || load_bias_ != info.load_bias();
+  return module_info_.name() != new_module_info.name() ||
+         module_info_.file_size() != new_module_info.file_size() ||
+         module_info_.load_bias() != new_module_info.load_bias();
 }
 
-void ModuleData::UpdateFromModuleInfo(ModuleInfo module_info) {
-  mutex_.AssertHeld();
-  name_ = std::move(*module_info.mutable_name());
-  file_path_ = std::move(*module_info.mutable_file_path());
-  file_size_ = module_info.file_size();
-  build_id_ = std::move(*module_info.mutable_build_id());
-  load_bias_ = module_info.load_bias();
-  object_file_type_ = module_info.object_file_type();
-  executable_segment_offset_ = module_info.executable_segment_offset();
-  object_segments_ = {module_info.object_segments().begin(), module_info.object_segments().end()};
-}
-
-bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
+bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo new_module_info) {
   absl::MutexLock lock(&mutex_);
 
-  ORBIT_CHECK(file_path_ == info.file_path());
-  ORBIT_CHECK(build_id_ == info.build_id());
-  ORBIT_CHECK(object_file_type_ == info.object_file_type());
+  ORBIT_CHECK(module_info_.file_path() == new_module_info.file_path());
+  ORBIT_CHECK(module_info_.build_id() == new_module_info.build_id());
+  ORBIT_CHECK(module_info_.object_file_type() == new_module_info.object_file_type());
 
-  if (!NeedsUpdate(info)) return false;
+  if (!NeedsUpdate(new_module_info)) return false;
 
   // The update only makes sense if build_id is empty.
-  ORBIT_CHECK(build_id_.empty());
+  ORBIT_CHECK(module_info_.build_id().empty());
 
-  UpdateFromModuleInfo(std::move(info));
+  module_info_ = std::move(new_module_info);
 
   ORBIT_LOG("WARNING: Module \"%s\" changed and will be updated (it does not have build_id).",
-            file_path_);
+            module_info_.file_path());
 
   if (loaded_symbols_completeness_ <= SymbolCompleteness::kNoSymbols) return false;
 
   ORBIT_LOG("Module %s contained symbols. Because the module changed, those are now removed.",
-            file_path_);
+            module_info_.file_path());
   functions_.clear();
   hash_to_function_map_.clear();
   loaded_symbols_completeness_ = SymbolCompleteness::kNoSymbols;
@@ -159,21 +142,21 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   return true;
 }
 
-bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info) {
+bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo new_module_info) {
   absl::MutexLock lock(&mutex_);
 
-  ORBIT_CHECK(file_path_ == info.file_path());
-  ORBIT_CHECK(build_id_ == info.build_id());
-  ORBIT_CHECK(object_file_type_ == info.object_file_type());
+  ORBIT_CHECK(module_info_.file_path() == new_module_info.file_path());
+  ORBIT_CHECK(module_info_.build_id() == new_module_info.build_id());
+  ORBIT_CHECK(module_info_.object_file_type() == new_module_info.object_file_type());
 
-  if (!NeedsUpdate(info)) return true;
+  if (!NeedsUpdate(new_module_info)) return true;
 
   // The update only makes sense if build_id is empty.
-  ORBIT_CHECK(build_id_.empty());
+  ORBIT_CHECK(module_info_.build_id().empty());
 
   if (loaded_symbols_completeness_ > SymbolCompleteness::kNoSymbols) return false;
 
-  UpdateFromModuleInfo(std::move(info));
+  module_info_ = std::move(new_module_info);
   return true;
 }
 
@@ -256,7 +239,8 @@ void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& modu
   uint32_t name_reuse_counter = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     auto [inserted_it, success_functions] = functions_.try_emplace(
-        symbol_info.address(), std::make_unique<FunctionInfo>(symbol_info, file_path_, build_id_));
+        symbol_info.address(), std::make_unique<FunctionInfo>(symbol_info, module_info_.file_path(),
+                                                              module_info_.build_id()));
     FunctionInfo* function = inserted_it->second.get();
     // It happens that the same address has multiple symbol names associated
     // with it. For example: (all the same address)
@@ -282,14 +266,14 @@ void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& modu
   }
   if (address_reuse_counter != 0) {
     ORBIT_LOG("Warning: %d absolute addresses are used by more than one symbol for \"%s\"",
-              address_reuse_counter, name_);
+              address_reuse_counter, module_info_.name());
   }
   if (name_reuse_counter != 0) {
     ORBIT_LOG(
         "Warning: %d function name collisions happened (functions with the same demangled name) "
         "for \"%s\". This is currently not supported by presets, since presets are based on the "
         "demangled name.",
-        name_reuse_counter, name_);
+        name_reuse_counter, module_info_.name());
   }
 
   loaded_symbols_completeness_ = completeness;

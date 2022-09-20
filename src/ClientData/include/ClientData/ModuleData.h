@@ -33,10 +33,9 @@ class ModuleData final {
   [[nodiscard]] uint64_t file_size() const;
   [[nodiscard]] const std::string& build_id() const;
   [[nodiscard]] uint64_t load_bias() const;
-  [[nodiscard]] orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type() const;
   [[nodiscard]] uint64_t executable_segment_offset() const;
-  [[nodiscard]] const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& GetObjectSegments()
-      const;
+  [[nodiscard]] orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type() const;
+  [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> GetObjectSegments() const;
 
   [[nodiscard]] orbit_symbol_provider::ModuleIdentifier module_id() const;
 
@@ -44,11 +43,11 @@ class ModuleData final {
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;
 
   // Returns true if the module was unloaded (symbols were removed) and false otherwise.
-  [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);
+  [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo new_module_info);
   // This method does not update the module in case symbols are already loaded, even if the module
   // would need to be updated. Returns true if the update was successful or no update was needed,
   // and false if the module cannot be updated because symbols are already loaded.
-  [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
+  [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo new_module_info);
 
   [[nodiscard]] const FunctionInfo* FindFunctionByVirtualAddress(uint64_t virtual_address,
                                                                  bool is_exact) const;
@@ -69,23 +68,13 @@ class ModuleData final {
   void AddFallbackSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
 
  private:
-  [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& module_info) const;
-  void UpdateFromModuleInfo(orbit_grpc_protos::ModuleInfo module_info);
+  [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& new_module_info) const;
 
   void AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& module_symbols,
                           SymbolCompleteness completeness);
 
   mutable absl::Mutex mutex_;
-
-  std::string name_ ABSL_GUARDED_BY(mutex_);
-  std::string file_path_ ABSL_GUARDED_BY(mutex_);
-  uint64_t file_size_ ABSL_GUARDED_BY(mutex_);
-  std::string build_id_ ABSL_GUARDED_BY(mutex_);
-  uint64_t load_bias_ ABSL_GUARDED_BY(mutex_);
-  orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type_ ABSL_GUARDED_BY(mutex_);
-  uint64_t executable_segment_offset_ ABSL_GUARDED_BY(mutex_);
-  std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> object_segments_
-      ABSL_GUARDED_BY(mutex_);
+  orbit_grpc_protos::ModuleInfo module_info_ ABSL_GUARDED_BY(mutex_);
 
   SymbolCompleteness loaded_symbols_completeness_ ABSL_GUARDED_BY(mutex_) =
       SymbolCompleteness::kNoSymbols;
