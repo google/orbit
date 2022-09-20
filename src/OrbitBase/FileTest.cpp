@@ -429,14 +429,28 @@ TEST(File, GetFileDateModified) {
 }
 
 TEST(File, IsDirectory) {
-  auto tmp_file_or_error = TemporaryFile::Create();
-  ASSERT_THAT(tmp_file_or_error, HasNoError());
+  {
+    // existing file & directory
+    auto tmp_file_or_error = TemporaryFile::Create();
+    ASSERT_THAT(tmp_file_or_error, HasNoError());
 
-  std::filesystem::path tmp_file_path = tmp_file_or_error.value().file_path();
+    std::filesystem::path tmp_file_path = tmp_file_or_error.value().file_path();
 
-  EXPECT_THAT(IsDirectory(tmp_file_path), HasValue(false));
+    EXPECT_THAT(IsDirectory(tmp_file_path), HasValue(false));
+    EXPECT_THAT(IsDirectory(tmp_file_path.parent_path()), HasValue(true));
+  }
 
-  EXPECT_THAT(IsDirectory(tmp_file_path.parent_path()), HasValue(true));
+  {
+    // not existing file & directory
+
+    // Note:
+    // On Windows the error message is: "The system cannot find the file specified."
+    // On Linux it is: "No such file or directory"
+    EXPECT_THAT(IsDirectory(std::filesystem::path{"/tmp/complicated/non/existing/path/to/file"}),
+                HasError("file"));
+    EXPECT_THAT(IsDirectory(std::filesystem::path{"/tmp/complicated/non/existing/path/to/folder/"}),
+                HasError("file"));
+  }
 }
 
 }  // namespace orbit_base
