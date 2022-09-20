@@ -2046,7 +2046,8 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
             // If --local, Orbit cannot download files from the instance, because no ssh channel
             // exists. We still return an ErrorMessage to enable continuing searching for symbols
             // from other symbol sources.
-            if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected()) {
+            if (absl::GetFlag(FLAGS_local) || !main_window_->IsConnected() ||
+                absl::GetFlag(FLAGS_disable_instance_symbols)) {
               return {ErrorMessage{"\n- Not able to search for symbols from instance"}};
             }
 

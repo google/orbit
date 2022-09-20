@@ -76,7 +76,10 @@ ABSL_DECLARE_FLAG(bool, time_range_selection);
 // Enables callstack gathering with tracepoints.
 ABSL_DECLARE_FLAG(bool, tracepoint_callstack_collection);
 
-// Enable experimental symbol store support.
+// Enables experimental symbol store support.
 ABSL_DECLARE_FLAG(bool, symbol_store_support);
+
+// Disables retrieving symbols from the instance.
+ABSL_DECLARE_FLAG(bool, disable_instance_symbols);
 
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

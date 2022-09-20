@@ -92,3 +92,6 @@ ABSL_FLAG(bool, tracepoint_callstack_collection, false,
           "Enable callstack gathering for tracepoints feature.");
 
 ABSL_FLAG(bool, symbol_store_support, false, "Enable experimental symbol store support.");
+
+// Disables retrieving symbols from the instance. This is intended for symbol store e2e tests.
+ABSL_FLAG(bool, disable_instance_symbols, false, "Disable retrieving symbols from the instance.");
