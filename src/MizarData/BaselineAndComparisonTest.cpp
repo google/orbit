@@ -125,7 +125,7 @@ class MockFunctionSymbolToKey {
       ExpectCall(symbol);
     }
 
-    // the only symbol in comparison data, that isn't also present in baseline
+    // The only symbol in comparison data, that isn't also present in baseline
     ExpectCall(FunctionSymbol{"fiz()", "bizM"});
   }
 

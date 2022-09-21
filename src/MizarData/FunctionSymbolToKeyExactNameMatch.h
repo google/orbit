@@ -9,6 +9,8 @@
 
 namespace orbit_mizar_data {
 
+// The class returns the function_name` as the key, so that the two functions from two captures are
+// matched (assigned the same SFID) iff. they have the same name.
 class FunctionSymbolToKeyExactNameMatch {
  public:
   [[nodiscard]] std::string GetKey(const orbit_mizar_base::FunctionSymbol& symbol) const {
