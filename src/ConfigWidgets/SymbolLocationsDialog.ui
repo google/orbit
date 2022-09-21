@@ -15,6 +15,13 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="moduleHeadlineLabel">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_0">
      <item>
       <widget class="QLabel" name="generalInfoLabel">
@@ -25,7 +32,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Orbit loads most symbols automatically.</string>
+        <string>Orbit loads most symbols automatically. Configure additional symbol locations here.</string>
        </property>
        <property name="wordWrap">
         <bool>false</bool>
@@ -69,10 +76,10 @@
    <item>
     <widget class="QGroupBox" name="symbolLocationGroupBox">
      <property name="title">
-      <string>Add folders and files to the symbol locations.</string>
+      <string>Local symbol locations</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="infoLabel">
         <property name="text">
          <string/>
@@ -82,17 +89,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QListWidget" name="listWidget"/>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="moduleHeadlineLabel">
-        <property name="visible">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QPushButton" name="addFolderButton">
@@ -139,7 +139,7 @@
    <item>
     <widget class="QGroupBox" name="symbolStoreGroupBox">
      <property name="title">
-      <string>Enable symbol stores where Orbit can search for symbols.</string>
+      <string>Symbol stores</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_1">
       <item>
@@ -148,7 +148,7 @@
          <string>EnableStadiaSymbolStoreCheckBox</string>
         </property>
         <property name="text">
-         <string>Enable searching for symbols in Stadia symbol store</string>
+         <string>Enable Stadia symbol store</string>
         </property>
        </widget>
       </item>
@@ -158,15 +158,14 @@
          <string>EnableMicrosoftSymbolServerCheckBox</string>
         </property>
         <property name="text">
-         <string>Enable searching for symbols in Microsoft public symbol server</string>
+         <string>Enable Microsoft public symbol server</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="symbolStoreInfoLabel">
         <property name="text">
-         <string>Orbit supports retrieving symbols from Stadia symbol store / Microsoft symbol server if they are enabled.
-Note that the module's name and build ID will be used to request symbols from symbol stores.</string>
+         <string>Orbit supports retrieving symbols from symbol stores. Note that the module's name and build ID will be used to send requests to symbol stores.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>

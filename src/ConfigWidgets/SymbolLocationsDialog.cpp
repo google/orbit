@@ -29,15 +29,16 @@
 #include "ui_SymbolLocationsDialog.h"
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
-constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64646\">%1</font>";
+constexpr const char* kModuleHeadlineLabel =
+    "Orbit was not able to load symbols for <font color=\"#E64646\">%1</font>";
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
 constexpr const char* kNewInfoLabelTemplate =
-    "<p>Orbit loads from:</p><p><b>Add Folder</b> to add a symbol location. The symbol files' "
-    "filenames and build IDs must match the module's name and build ID. Supported file extensions "
-    "are “.so”, “.debug”, “.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a "
-    "symbol file with a different filename%1</p>";
+    "<p>Add folders and files to the symbol locations Orbit loads from:</p><p><b>Add Folder</b> to "
+    "add a symbol location. The symbol files' filenames and build IDs must match the module's name "
+    "and build ID. Supported file extensions are “.so”, “.debug”, “.so.debug”, “.dll” and "
+    "“.pdb”.</p><p><b>Add File</b> to load from a symbol file with a different filename%1</p>";
 constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
 constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
