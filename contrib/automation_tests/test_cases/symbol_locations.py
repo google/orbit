@@ -92,3 +92,19 @@ class ClearAllSymbolLocations(E2ETestCase):
         self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
                        'List is empty')
         self.find_control('Button', 'Done', parent=ui).click_input()
+
+class EnableStadiaSymbolStore(E2ETestCase):
+    """
+    Set the "Enable Stadia symbol store" option. 
+
+    If the symbol locations window is not open, it will be opened automatically. Regardless of the previous
+    state, that window will be closed after the test is done.
+    """
+
+    def _execute(self, enable_stadia_symbol_store: bool = False):
+        ui = _show_and_get_symbol_location_ui(self.suite.top_window())
+        checkbox = self.find_control('CheckBox', 'EnableStadiaSymbolStoreCheckBox', parent=ui)
+        if checkbox.get_toggle_state() != enable_stadia_symbol_store:
+            logging.info('Toggling "Enable Stadia symbol store" checkbox to {}.'.format(enable_stadia_symbol_store))
+            checkbox.click_input()
+        self.find_control('Button', 'Done', parent=ui).click_input()
