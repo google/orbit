@@ -50,7 +50,7 @@ message FunctionToRecordAdditionalStackOn {
   uint64 file_offset = 2;
 }
 
-// NextId: 21
+// NextId: 23
 message CaptureOptions {
   reserved 17;
 
@@ -107,7 +107,9 @@ message CaptureOptions {
   }
 
   ThreadStateChangeCallStackCollection
-      thread_state_change_call_stack_collection = 21;
+      thread_state_change_callstack_collection = 21;
+  // Expected to be "uint16".
+  uint32 thread_state_change_callstack_stack_dump_size = 22;
 }
 
 // For CaptureEvents with a duration, excluding for now GPU-related ones, we
