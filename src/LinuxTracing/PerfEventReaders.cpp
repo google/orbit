@@ -71,7 +71,8 @@ struct PerfRecordSample {
 
 [[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
                                                           const perf_event_header& header,
-                                                          perf_event_attr flags) {
+                                                          perf_event_attr flags,
+                                                          bool copy_stack_related_data = true) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
@@ -132,10 +133,13 @@ struct PerfRecordSample {
 
   if (flags.sample_type & PERF_SAMPLE_CALLCHAIN) {
     ring_buffer->ReadRawAtOffset(&event.ips_size, current_offset, sizeof(uint64_t));
+
     current_offset += sizeof(uint64_t);
-    event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
-    ring_buffer->ReadRawAtOffset(event.ips.get(), current_offset,
-                                 event.ips_size * sizeof(uint64_t));
+    if (copy_stack_related_data) {
+      event.ips = make_unique_for_overwrite<uint64_t[]>(event.ips_size);
+      ring_buffer->ReadRawAtOffset(event.ips.get(), current_offset,
+                                   event.ips_size * sizeof(uint64_t));
+    }
     current_offset += event.ips_size * sizeof(uint64_t);
   }
 
@@ -150,12 +154,15 @@ struct PerfRecordSample {
 
   if (flags.sample_type & PERF_SAMPLE_REGS_USER) {
     ring_buffer->ReadRawAtOffset(&event.abi, current_offset, sizeof(uint64_t));
+
     current_offset += sizeof(uint64_t);
     if (event.abi != PERF_SAMPLE_REGS_ABI_NONE) {
       const int num_of_regs = std::bitset<64>(flags.sample_regs_user).count();
-      event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs * sizeof(uint64_t));
-      ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
-                                   num_of_regs * sizeof(uint64_t));
+      if (copy_stack_related_data) {
+        event.regs = make_unique_for_overwrite<uint64_t[]>(num_of_regs * sizeof(uint64_t));
+        ring_buffer->ReadRawAtOffset(event.regs.get(), current_offset,
+                                     num_of_regs * sizeof(uint64_t));
+      }
       current_offset += num_of_regs * sizeof(uint64_t);
     }
   }
@@ -163,7 +170,7 @@ struct PerfRecordSample {
   if (flags.sample_type & PERF_SAMPLE_STACK_USER) {
     ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
-    if (event.stack_size != 0u) {
+    if (event.stack_size != 0u && copy_stack_related_data) {
       // dyn_size comes after the actual stack but we read it first so
       // we can use it to not copy unnessary parts of the stack.
       ring_buffer->ReadRawAtOffset(
@@ -480,7 +487,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 [[nodiscard]] PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -488,7 +496,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
                                              PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
                               .sample_regs_user = SAMPLE_REGS_USER_ALL};
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
   sched_wakeup_tracepoint_fixed sched_wakeup;
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
@@ -497,7 +505,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 
   // If we did not receive the necessary data for a callstack, there is no need to return a
   // SchedWakeupWithStackPerfEvent.
-  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
+  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr ||
+      !copy_stack_related_data) {
     return SchedWakeupPerfEvent{
         .timestamp = res.time,
         .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
@@ -528,7 +537,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 [[nodiscard]] PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(
-    PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data) {
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
@@ -536,7 +546,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
                                              PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
                               .sample_regs_user = SAMPLE_REGS_USER_ALL};
 
-  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
+  PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
   sched_switch_tracepoint sched_wakeup;
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
@@ -545,7 +555,8 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 
   // If we did not receive the necessary data for a callstack, there is no need to return a
   // SchedSwitchWithStackPerfEvent.
-  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr) {
+  if (res.dyn_size == 0 || res.stack_data == nullptr || res.regs == nullptr ||
+      !copy_stack_related_data) {
     return SchedSwitchPerfEvent{
         .timestamp = res.time,
         .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
