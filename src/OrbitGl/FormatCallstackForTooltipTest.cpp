@@ -24,15 +24,20 @@ constexpr const char* kModulePath = "/path/to/module";
 constexpr const char* kModuleName = "module";
 constexpr const char* kFunctionNameWithSpecialChars = "void foo<int>(const Foo&)";
 constexpr const char* kEscapedFunctionName = "void foo&lt;int&gt;(const Foo&amp;)";
+
+const CallstackInfo kEmptyCallstack{{}, CallstackType::kDwarfUnwindingError};
+const CaptureData kEmptyCaptureData{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+const ModuleManager kModuleManager{};
+
+const CallstackInfo kOneFrameCallstack{{kFrame1}, CallstackType::kComplete};
+
+const orbit_client_data::LinuxAddressInfo kAddressInfoForFunctionNameWithSpecialChars{
+    kFrame1, kOffsetInFunction, kModulePath, kFunctionNameWithSpecialChars};
 }  // namespace
 
-TEST(CallstackTooltipUtils,
-     FormatInnermostFrameOfEmptyCallstackForTooltipYieldsUnkownModuleAndFunctionName) {
-  CallstackInfo empty_callstack{{}, CallstackType::kDwarfUnwindingError};
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-  ModuleManager module_manager{};
+TEST(FormatInnermostFrameOfCallstackForTooltip, EmptyCallstackYieldsUnkownModuleAndFunctionName) {
   FormattedModuleAndFunctionName module_and_function_name =
-      FormatInnermostFrameOfCallstackForTooltip(empty_callstack, capture_data, module_manager);
+      FormatInnermostFrameOfCallstackForTooltip(kEmptyCallstack, kEmptyCaptureData, kModuleManager);
 
   EXPECT_EQ(module_and_function_name.module_name,
             absl::StrCat("<i>", orbit_client_data::kUnknownFunctionOrModuleName, "</i>"));
@@ -40,61 +45,49 @@ TEST(CallstackTooltipUtils,
             absl::StrCat("<i>", orbit_client_data::kUnknownFunctionOrModuleName, "</i>"));
 }
 
-TEST(CallstackTooltipUtils, FormatInnermostFrameOfCallstackForTooltipPerformsHtmlEscaping) {
-  CallstackInfo callstack{{kFrame1}, CallstackType::kComplete};
+TEST(FormatInnermostFrameOfCallstackForTooltip, PerformsHtmlEscaping) {
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-  orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,
-                                                   kFunctionNameWithSpecialChars};
-  capture_data.InsertAddressInfo(address_info);
-  ModuleManager module_manager{};
+  capture_data.InsertAddressInfo(kAddressInfoForFunctionNameWithSpecialChars);
   FormattedModuleAndFunctionName module_and_function_name =
-      FormatInnermostFrameOfCallstackForTooltip(callstack, capture_data, module_manager);
+      FormatInnermostFrameOfCallstackForTooltip(kOneFrameCallstack, capture_data, kModuleManager);
 
   EXPECT_EQ(module_and_function_name.module_name, kModuleName);
   EXPECT_EQ(module_and_function_name.function_name, kEscapedFunctionName);
 }
 
-TEST(CallstackTooltipUtils, FormatEmptyCallstackForTooltipYieldsEmptyString) {
-  CallstackInfo empty_callstack{{}, CallstackType::kDwarfUnwindingError};
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-  ModuleManager module_manager{};
+TEST(FormatCallstackForTooltip, EmptyCallstackYieldsEmptyString) {
   std::string formatted_callstack =
-      FormatCallstackForTooltip(empty_callstack, capture_data, module_manager);
+      FormatCallstackForTooltip(kEmptyCallstack, kEmptyCaptureData, kModuleManager);
 
   EXPECT_EQ(formatted_callstack, "");
 }
 
-TEST(CallstackTooltipUtils, FormatCallstackForTooltipPerformsHtmlEscaping) {
-  CallstackInfo callstack{{kFrame1}, CallstackType::kComplete};
+TEST(FormatCallstackForTooltip, PerformsHtmlEscaping) {
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-  orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,
-                                                   kFunctionNameWithSpecialChars};
-  capture_data.InsertAddressInfo(address_info);
-  ModuleManager module_manager{};
+  capture_data.InsertAddressInfo(kAddressInfoForFunctionNameWithSpecialChars);
+
   std::string formatted_callstack =
-      FormatCallstackForTooltip(callstack, capture_data, module_manager);
+      FormatCallstackForTooltip(kOneFrameCallstack, capture_data, kModuleManager);
 
   EXPECT_EQ(formatted_callstack, absl::StrCat(kModuleName, " | ", kEscapedFunctionName, "<br/>"));
 }
 
-TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongFunctionNames) {
-  CallstackInfo callstack{{kFrame1}, CallstackType::kComplete};
+TEST(FormatCallstackForTooltip, ShortensLongFunctionNames) {
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
   constexpr const char* kLongFunctionName = "void very_very_very_very_long_function_name(int,int)";
   orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,
                                                    kLongFunctionName};
   capture_data.InsertAddressInfo(address_info);
-  ModuleManager module_manager{};
   constexpr size_t kMaxLineLength = 24;
   std::string formatted_callstack =
-      FormatCallstackForTooltip(callstack, capture_data, module_manager, kMaxLineLength);
+      FormatCallstackForTooltip(kOneFrameCallstack, capture_data, kModuleManager, kMaxLineLength);
 
   constexpr const char* kShortenedFunctionName = "void v...t,int)";
   EXPECT_EQ(formatted_callstack, absl::StrCat(kModuleName, " | ", kShortenedFunctionName, "<br/>"));
   EXPECT_EQ(formatted_callstack.size(), kMaxLineLength + std::strlen("<br/>"));
 }
 
-TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
+TEST(FormatCallstackForTooltip, ShortensLongCallstacks) {
   constexpr uint64_t kFrame2to10 = 0x1ADD5E55;
   constexpr uint64_t kFrame11 = 0x2ADD5E55;
   constexpr uint64_t kFrame12 = 0x3ADD5E55;
@@ -124,9 +117,8 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
                                                      kFunction12};
   capture_data.InsertAddressInfo(address_info12);
 
-  ModuleManager module_manager{};
   std::string formatted_callstack = FormatCallstackForTooltip(
-      callstack, capture_data, module_manager, std::numeric_limits<size_t>::max(), 6, 2);
+      callstack, capture_data, kModuleManager, std::numeric_limits<size_t>::max(), 6, 2);
 
   constexpr const char* kExpectedModuleName2 = "module2";
 
@@ -147,7 +139,7 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipShortensLongCallstacks) {
   EXPECT_EQ(formatted_callstack, expected_formatted_callstack);
 }
 
-TEST(CallstackTooltipUtils, FormatCallstackForTooltipColorUnwindingErrors) {
+TEST(FormatCallstackForTooltip, ColorsUnwindingErrors) {
   constexpr uint64_t kFrame2 = 0x1ADD5E55;
   constexpr uint64_t kFrame3 = 0x2ADD5E55;
   constexpr uint64_t kFrame4 = 0x3ADD5E55;
@@ -177,9 +169,8 @@ TEST(CallstackTooltipUtils, FormatCallstackForTooltipColorUnwindingErrors) {
                                                     kFunction4};
   capture_data.InsertAddressInfo(address_info4);
 
-  ModuleManager module_manager{};
   std::string formatted_callstack =
-      FormatCallstackForTooltip(callstack, capture_data, module_manager);
+      FormatCallstackForTooltip(callstack, capture_data, kModuleManager);
 
   std::vector<std::string> expected_formatted_callstack{};
   expected_formatted_callstack.push_back(absl::StrCat(kModuleName, " | ", kFunction1, "<br/>"));
