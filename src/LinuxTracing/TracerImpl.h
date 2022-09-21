@@ -88,11 +88,7 @@ class TracerImpl : public Tracer {
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
   void InitSwitchesStatesNamesVisitor();
-  bool OpenContextSwitchAndThreadStateTracepoints(
-      const std::vector<int32_t>& cpus,
-      orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
-          thread_state_change_callstack_collection,
-      orbit_grpc_protos::CaptureOptions::UnwindingMethod thread_state_change_callstack_method);
+  bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
 
   void InitGpuTracepointEventVisitor();
   bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
@@ -156,6 +152,7 @@ class TracerImpl : public Tracer {
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
       thread_state_change_callstack_collection_;
+  uint16_t thread_state_change_callstack_stack_dump_size_;
   std::vector<orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   std::vector<orbit_grpc_protos::FunctionToRecordAdditionalStackOn>
       functions_to_record_additional_stack_on_;
