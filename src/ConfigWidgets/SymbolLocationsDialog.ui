@@ -22,6 +22,19 @@
     </widget>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background: #353535</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_0">
      <item>
       <widget class="QLabel" name="generalInfoLabel">

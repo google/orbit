@@ -35,10 +35,10 @@ constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
 constexpr const char* kNewInfoLabelTemplate =
-    "<p>Add folders and files to the symbol locations Orbit loads from:</p><p><b>Add Folder</b> to "
-    "add a symbol location. The symbol files' filenames and build IDs must match the module's name "
-    "and build ID. Supported file extensions are “.so”, “.debug”, “.so.debug”, “.dll” and "
-    "“.pdb”.</p><p><b>Add File</b> to load from a symbol file with a different filename%1</p>";
+    "<p><b>Add Folder</b> to add a symbol location. The symbol files' filenames and build IDs must "
+    "match the module's name and build ID. Supported file extensions are “.so”, “.debug”, "
+    "“.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a symbol file with a "
+    "different filename%1</p>";
 constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
 constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
@@ -424,6 +424,7 @@ void SymbolLocationsDialog::SetUpModuleHeadlineLabel() {
       QString(kModuleHeadlineLabel)
           .arg(QString::fromStdString(
               std::filesystem::path(module_.value()->file_path()).filename().string())));
+  ui_->line->setVisible(true);
 }
 
 void SymbolLocationsDialog::DisableAddFolder() {
