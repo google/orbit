@@ -13,7 +13,6 @@ using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleManager;
-using orbit_grpc_protos::CaptureStarted;
 
 namespace orbit_gl {
 
@@ -48,6 +47,7 @@ TEST(FormatInnermostFrameOfCallstackForTooltip, EmptyCallstackYieldsUnkownModule
 TEST(FormatInnermostFrameOfCallstackForTooltip, PerformsHtmlEscaping) {
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
   capture_data.InsertAddressInfo(kAddressInfoForFunctionNameWithSpecialChars);
+
   FormattedModuleAndFunctionName module_and_function_name =
       FormatInnermostFrameOfCallstackForTooltip(kOneFrameCallstack, capture_data, kModuleManager);
 
@@ -75,10 +75,10 @@ TEST(FormatCallstackForTooltip, PerformsHtmlEscaping) {
 TEST(FormatCallstackForTooltip, ShortensLongFunctionNames) {
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
   constexpr const char* kLongFunctionName = "void very_very_very_very_long_function_name(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath,
-                                                   kLongFunctionName};
+  const LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath, kLongFunctionName};
   capture_data.InsertAddressInfo(address_info);
   constexpr size_t kMaxLineLength = 24;
+
   std::string formatted_callstack =
       FormatCallstackForTooltip(kOneFrameCallstack, capture_data, kModuleManager, kMaxLineLength);
 
@@ -91,30 +91,28 @@ TEST(FormatCallstackForTooltip, ShortensLongCallstacks) {
   constexpr uint64_t kFrame2to10 = 0x1ADD5E55;
   constexpr uint64_t kFrame11 = 0x2ADD5E55;
   constexpr uint64_t kFrame12 = 0x3ADD5E55;
-  CallstackInfo callstack{{kFrame1, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10,
-                           kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame11, kFrame12},
-                          CallstackType::kComplete};
+  const CallstackInfo callstack{
+      {kFrame1, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10,
+       kFrame2to10, kFrame2to10, kFrame2to10, kFrame11, kFrame12},
+      CallstackType::kComplete};
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
 
   constexpr const char* kFunction1 = "void foo(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath,
-                                                    kFunction1};
+  const LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath, kFunction1};
   capture_data.InsertAddressInfo(address_info1);
 
   constexpr const char* kFunction2to10 = "void bar(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info2to10{kFrame2to10, kOffsetInFunction, kModulePath,
-                                                        kFunction2to10};
+  const LinuxAddressInfo address_info2to10{kFrame2to10, kOffsetInFunction, kModulePath,
+                                           kFunction2to10};
   capture_data.InsertAddressInfo(address_info2to10);
 
   constexpr const char* kFunction11 = "void baz(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info11{kFrame11, kOffsetInFunction, kModulePath,
-                                                     kFunction11};
+  const LinuxAddressInfo address_info11{kFrame11, kOffsetInFunction, kModulePath, kFunction11};
   capture_data.InsertAddressInfo(address_info11);
 
   constexpr const char* kFunction12 = "void bazbaz(int,int)";
   constexpr const char* kModulePath2 = "/path/to/module2";
-  orbit_client_data::LinuxAddressInfo address_info12{kFrame12, kOffsetInFunction, kModulePath2,
-                                                     kFunction12};
+  const LinuxAddressInfo address_info12{kFrame12, kOffsetInFunction, kModulePath2, kFunction12};
   capture_data.InsertAddressInfo(address_info12);
 
   std::string formatted_callstack = FormatCallstackForTooltip(
@@ -143,30 +141,26 @@ TEST(FormatCallstackForTooltip, ColorsUnwindingErrors) {
   constexpr uint64_t kFrame2 = 0x1ADD5E55;
   constexpr uint64_t kFrame3 = 0x2ADD5E55;
   constexpr uint64_t kFrame4 = 0x3ADD5E55;
-  CallstackInfo callstack{{kFrame1, kFrame2, kFrame3, kFrame4},
-                          CallstackType::kDwarfUnwindingError};
+  const CallstackInfo callstack{{kFrame1, kFrame2, kFrame3, kFrame4},
+                                CallstackType::kDwarfUnwindingError};
   CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
 
   constexpr const char* kFunction1 = "void foo(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath,
-                                                    kFunction1};
+  const LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath, kFunction1};
   capture_data.InsertAddressInfo(address_info1);
 
   constexpr const char* kFunction2 = "void bar(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info2{kFrame2, kOffsetInFunction, kModulePath,
-                                                    kFunction2};
+  const LinuxAddressInfo address_info2{kFrame2, kOffsetInFunction, kModulePath, kFunction2};
   capture_data.InsertAddressInfo(address_info2);
 
   constexpr const char* kFunction3 = "void baz(int,int)";
-  orbit_client_data::LinuxAddressInfo address_info3{kFrame3, kOffsetInFunction, kModulePath,
-                                                    kFunction3};
+  const LinuxAddressInfo address_info3{kFrame3, kOffsetInFunction, kModulePath, kFunction3};
   capture_data.InsertAddressInfo(address_info3);
 
   constexpr const char* kFunction4 = "void bazbaz(int,int)";
   constexpr const char* kModulePath2 = "/path/to/module2";
   constexpr const char* kModuleName2 = "module2";
-  orbit_client_data::LinuxAddressInfo address_info4{kFrame4, kOffsetInFunction, kModulePath2,
-                                                    kFunction4};
+  const LinuxAddressInfo address_info4{kFrame4, kOffsetInFunction, kModulePath2, kFunction4};
   capture_data.InsertAddressInfo(address_info4);
 
   std::string formatted_callstack =
