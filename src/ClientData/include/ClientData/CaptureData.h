@@ -101,8 +101,6 @@ class CaptureData {
 
   void InsertAddressInfo(LinuxAddressInfo address_info);
 
-  static const std::string kUnknownFunctionOrModuleName;
-
   [[nodiscard]] const absl::flat_hash_map<uint32_t, std::string>& thread_names() const {
     return thread_names_;
   }

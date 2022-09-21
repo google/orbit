@@ -15,12 +15,14 @@
 #include "App.h"
 #include "AsyncTrack.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "FormatCallstackForTooltip.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -206,8 +208,51 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
   uint64_t end_ns = thread_state_slice->end_timestamp_ns();
   tooltip += absl::StrFormat(
       "<br/>"
-      "<b>Time:</b> %s",
+      "<b>Time:</b> %s"
+      "<br/><br/>",
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
+
+  if (!thread_state_slice->switch_out_or_wakeup_callstack_id().has_value()) {
+    return tooltip;
+  }
+
+  const orbit_client_data::CallstackData& callstack_data = capture_data_->GetCallstackData();
+  const uint64_t callstack_id = thread_state_slice->switch_out_or_wakeup_callstack_id().value();
+  const orbit_client_data::CallstackInfo* callstack = callstack_data.GetCallstack(callstack_id);
+
+  if (callstack == nullptr) {
+    return tooltip;
+  }
+
+  // If "wakeup reason" applies, this thread state slice corresponds to a slice that was "woken up"
+  // by a different thread (e.g. because of a mutex was released by the other thread). In this case
+  // we want to inform the user about the fact that the callstack of this thread state slice
+  // belongs to this other thread that woke up the current thread.
+  if (thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
+    std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
+    std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
+    tooltip += absl::StrFormat(
+        "This thread switched to the <i>%s</i> state when thread <b>%s [%d]</b> of process <b>%s "
+        "[%d]</b> executed the following <b>callstack</b>:<br/>",
+        GetThreadStateName(thread_state_slice->thread_state()), thread_name,
+        thread_state_slice->wakeup_tid(), process_name, thread_state_slice->wakeup_pid());
+  } else {
+    tooltip += absl::StrFormat(
+        "This thread switched to this <i>%s</i> state on executing the following "
+        "<b>callstack</b>:<br/>",
+        GetThreadStateName(thread_state_slice->thread_state()));
+  }
+
+  if (callstack->IsUnwindingError()) {
+    tooltip += absl::StrFormat("<span style=\"color:%s;\">", kUnwindErrorColorString);
+    tooltip += "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>";
+    tooltip += orbit_client_data::CallstackTypeToDescription(callstack->type());
+    tooltip += "</span><br/>";
+    tooltip += "<br/>";
+  }
+  tooltip += FormatCallstackForTooltip(*callstack, *capture_data_, *module_manager_);
+
+  tooltip += "<br/>";
 
   return tooltip;
 }

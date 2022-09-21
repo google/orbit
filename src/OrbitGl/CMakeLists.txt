@@ -30,6 +30,7 @@ target_sources(
          CGroupAndProcessMemoryTrack.h
          CoreMath.h
          DrawingInterface.h
+         FormatCallstackForTooltip.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -107,6 +108,7 @@ target_sources(
           CaptureViewElement.cpp
           CaptureWindow.cpp
           CGroupAndProcessMemoryTrack.cpp
+          FormatCallstackForTooltip.cpp
           FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
@@ -221,6 +223,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTester.cpp
                CaptureWindowTest.cpp
                CoreMathTest.cpp
+               FormatCallstackForTooltipTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MockBatcher.cpp
