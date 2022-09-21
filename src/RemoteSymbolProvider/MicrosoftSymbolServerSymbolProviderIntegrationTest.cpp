@@ -59,7 +59,7 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
         orbit_symbol_provider::SymbolLoadingSuccessResult success_result =
             orbit_symbol_provider::GetSuccessResult(result);
 
-        auto exists_or_error = orbit_base::FileExists(success_result.path);
+        auto exists_or_error = orbit_base::FileOrDirectoryExists(success_result.path);
         ASSERT_THAT(exists_or_error, HasValue(true));
 
         constexpr uint64_t kImageBase = 0x10000;
