@@ -20,9 +20,10 @@ namespace orbit_mizar_data {
 
 orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(
     std::unique_ptr<MizarDataProvider> baseline, std::unique_ptr<MizarDataProvider> comparison) {
+  BaselineAndComparisonHelper helper;
   auto [baseline_address_sfid, comparison_address_to_sfid, sfid_to_symbols] =
-      AssignSampledFunctionIds(baseline->AllAddressToFunctionSymbol(),
-                               comparison->AllAddressToFunctionSymbol());
+      helper.AssignSampledFunctionIds(baseline->AllAddressToFunctionSymbol(),
+                                      comparison->AllAddressToFunctionSymbol());
 
   return {orbit_mizar_base::MakeBaseline<MizarPairedData>(std::move(baseline),
                                                           std::move(baseline_address_sfid)),
