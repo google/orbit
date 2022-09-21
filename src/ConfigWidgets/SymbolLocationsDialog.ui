@@ -6,40 +6,75 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>614</width>
+    <width>634</width>
     <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Symbol Locations</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QListWidget" name="listWidget"/>
-   </item>
-   <item row="4" column="1">
-    <widget class="QPushButton" name="doneButton">
-     <property name="text">
-      <string>Done</string>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="moduleHeadlineLabel">
+     <property name="visible">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <item>
+    <widget class="Line" name="line">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background: #353535</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_0">
      <item>
-      <widget class="QPushButton" name="moreInfoButton">
-       <property name="styleSheet">
-        <string notr="true">border: none; color: #4F9CFF; font-weight: bold; text-decoration: underline</string>
+      <widget class="QLabel" name="generalInfoLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
        <property name="text">
-        <string>More information on symbol loading</string>
+        <string>Orbit loads most symbols automatically. Configure additional symbol locations here.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_2">
+      <widget class="QPushButton" name="moreInfoButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: none; color: #4F9CFF; font-weight: bold; text-decoration: underline</string>
+       </property>
+       <property name="text">
+        <string>(learn more)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_0">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Expanding</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -51,63 +86,134 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="infoLabel">
-     <property name="text">
-      <string/>
+   <item>
+    <widget class="QGroupBox" name="symbolLocationGroupBox">
+     <property name="title">
+      <string>Local symbol locations</string>
      </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="infoLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QListWidget" name="listWidget"/>
+      </item>
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QPushButton" name="addFolderButton">
+          <property name="text">
+           <string>Add Folder</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="addFileButton">
+          <property name="text">
+           <string>Add File</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="1" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="symbolStoreGroupBox">
+     <property name="title">
+      <string>Symbol stores</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_1">
+      <item>
+       <widget class="QCheckBox" name="enableStadiaSymbolStoreCheckBox">
+        <property name="accessibleName">
+         <string>EnableStadiaSymbolStoreCheckBox</string>
+        </property>
+        <property name="text">
+         <string>Enable Stadia symbol store</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="enableMicrosoftSymbolServerCheckBox">
+        <property name="accessibleName">
+         <string>EnableMicrosoftSymbolServerCheckBox</string>
+        </property>
+        <property name="text">
+         <string>Enable Microsoft public symbol server</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="symbolStoreInfoLabel">
+        <property name="text">
+         <string>Orbit supports retrieving symbols from symbol stores. Note that the module's name and build ID will be used to send requests to symbol stores.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_1">
      <item>
-      <widget class="QPushButton" name="addFolderButton">
-       <property name="text">
-        <string>Add Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="addFileButton">
-       <property name="text">
-        <string>Add File</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="removeButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Remove</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
+      <spacer name="horizontalSpacer_1">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Expanding</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>20</width>
-         <height>40</height>
+         <width>40</width>
+         <height>20</height>
         </size>
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QPushButton" name="doneButton">
+       <property name="text">
+        <string>Done</string>
+       </property>
+      </widget>
+     </item>
     </layout>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="moduleHeadlineLabel">
-     <property name="visible">
-      <bool>false</bool>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
@@ -116,8 +222,6 @@
   <tabstop>addFileButton</tabstop>
   <tabstop>removeButton</tabstop>
   <tabstop>listWidget</tabstop>
-  <tabstop>moreInfoButton</tabstop>
-  <tabstop>doneButton</tabstop>
  </tabstops>
  <resources/>
  <connections>

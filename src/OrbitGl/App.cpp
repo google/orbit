@@ -2068,9 +2068,11 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
           main_thread_executor_,
           [this, module_id, stop_token = stop_source.GetStopToken()](
               const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
-            // TODO(b/239166878) Add a boolean to control enable / disable searching in Stadia
-            // symbol store. Enable the user to set it in the symbol location dialog.
-            if (stadia_symbol_provider_ == std::nullopt) return {previous_result};
+            if (orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+                stadia_symbol_provider_ == std::nullopt ||
+                !storage_manager.LoadEnableStadiaSymbolStore()) {
+              return {previous_result};
+            }
 
             if (previous_result.has_value()) return {previous_result.value()};
 
@@ -2084,9 +2086,11 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
           main_thread_executor_,
           [this, module_id, stop_token = stop_source.GetStopToken()](
               const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
-            // TODO(b/239166878) Add a boolean to control enable / disable searching in Microsoft
-            // symbol server. Enable the user to set it in the symbol location dialog.
-            if (microsoft_symbol_provider_ == std::nullopt) return {previous_result};
+            if (orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+                microsoft_symbol_provider_ == std::nullopt ||
+                !storage_manager.LoadEnableMicrosoftSymbolServer()) {
+              return {previous_result};
+            }
 
             if (previous_result.has_value()) return {previous_result.value()};
 

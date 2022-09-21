@@ -29,16 +29,16 @@
 #include "ui_SymbolLocationsDialog.h"
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
-constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64646\">%1</font>";
+constexpr const char* kModuleHeadlineLabel =
+    "Orbit was not able to load symbols for <font color=\"#E64646\">%1</font>";
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
 constexpr const char* kNewInfoLabelTemplate =
-    "<p>Orbit loads most symbols automatically. Add folders and files to the symbol locations "
-    "Orbit loads from:</p><p><b>Add Folder</b> to add a symbol location. The symbol files' "
-    "filenames and build IDs must match the module's name and build ID. Supported file extensions "
-    "are “.so”, “.debug”, “.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a "
-    "symbol file with a different filename%1</p>";
+    "<p><b>Add Folder</b> to add a symbol location. The symbol files' filenames and build IDs must "
+    "match the module's name and build ID. Supported file extensions are “.so”, “.debug”, "
+    "“.so.debug”, “.dll” and “.pdb”.</p><p><b>Add File</b> to load from a symbol file with a "
+    "different filename%1</p>";
 constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
 constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
@@ -109,6 +109,13 @@ namespace orbit_config_widgets {
 SymbolLocationsDialog::~SymbolLocationsDialog() {
   persistent_storage_manager_->SavePaths(GetSymbolPathsFromListWidget());
   persistent_storage_manager_->SaveModuleSymbolFileMappings(module_symbol_file_mappings_);
+
+  if (absl::GetFlag(FLAGS_symbol_store_support)) {
+    persistent_storage_manager_->SaveEnableStadiaSymbolStore(
+        ui_->enableStadiaSymbolStoreCheckBox->isChecked());
+    persistent_storage_manager_->SaveEnableMicrosoftSymbolServer(
+        ui_->enableMicrosoftSymbolServerCheckBox->isChecked());
+  }
 }
 
 SymbolLocationsDialog::SymbolLocationsDialog(
@@ -136,6 +143,14 @@ SymbolLocationsDialog::SymbolLocationsDialog(
 
   ui_->setupUi(this);
   SetUpInfoLabel();
+  if (!absl::GetFlag(FLAGS_symbol_store_support)) {
+    ui_->symbolStoreGroupBox->hide();
+  } else {
+    ui_->enableStadiaSymbolStoreCheckBox->setChecked(
+        persistent_storage_manager_->LoadEnableStadiaSymbolStore());
+    ui_->enableMicrosoftSymbolServerCheckBox->setChecked(
+        persistent_storage_manager_->LoadEnableMicrosoftSymbolServer());
+  }
 
   if (allow_unsafe_symbols_) AddModuleSymbolFileMappingsToList();
   AddSymbolPathsToListWidget(persistent_storage_manager_->LoadPaths());
@@ -409,6 +424,7 @@ void SymbolLocationsDialog::SetUpModuleHeadlineLabel() {
       QString(kModuleHeadlineLabel)
           .arg(QString::fromStdString(
               std::filesystem::path(module_.value()->file_path()).filename().string())));
+  ui_->line->setVisible(true);
 }
 
 void SymbolLocationsDialog::DisableAddFolder() {
