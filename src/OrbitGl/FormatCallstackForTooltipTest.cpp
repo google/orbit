@@ -118,7 +118,7 @@ TEST(FormatCallstackForTooltip, ShortensLongCallstacks) {
   std::string formatted_callstack = FormatCallstackForTooltip(
       callstack, capture_data, kModuleManager, std::numeric_limits<size_t>::max(), 6, 2);
 
-  constexpr const char* kExpectedModuleName2 = "module2";
+  constexpr const char* kModuleName2 = "module2";
 
   std::string expected_formatted_callstack{};
   {
@@ -129,7 +129,7 @@ TEST(FormatCallstackForTooltip, ShortensLongCallstacks) {
         absl::StrCat(kModuleName, " | ", kFunction2to10, "<br/>"),
         absl::StrCat("<i>... shortened for readability ...</i><br/>"),
         absl::StrCat(kModuleName, " | ", kFunction11, "<br/>"),
-        absl::StrCat(kExpectedModuleName2, " | ", kFunction12, "<br/>"),
+        absl::StrCat(kModuleName2, " | ", kFunction12, "<br/>"),
     };
     expected_formatted_callstack = absl::StrJoin(expected_formatted_callstack_frames, "");
   }
