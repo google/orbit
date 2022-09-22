@@ -84,3 +84,37 @@ class EndSession(E2ETestCase):
             lambda: self.suite.application.top_window().class_name() ==
             "orbit_session_setup::SessionSetupDialog", 30)
         self.suite.top_window(force_update=True)
+
+
+class DismissDialog(E2ETestCase):
+    """
+    Find a dialog, compare the title and dismiss it by clicking 'OK'.
+    """
+
+    def _execute(self, title_contains: str):
+        searchRegex = ".*" + title_contains + ".*"
+        dialog_box = self.suite.top_window().child_window(title_re=searchRegex,
+                                                          control_type="Window")
+        self.expect_true(dialog_box is not None, 'Dialog found.')
+        ok_button = dialog_box.descendants(control_type='Button', title='OK')[0]
+        self.expect_true(ok_button is not None, 'OK Button found.')
+        ok_button.click_input()
+
+
+class RenameMoveCaptureFile(E2ETestCase):
+    """
+    Click menu entry "Rename/Move Capture File", enter new_capture_path and confirm it.
+    """
+
+    def _execute(self, new_capture_path):
+        app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+        app_menu.item_by_path("File->Rename/Move Capture File").click_input()
+
+        wait_for_condition(lambda: self.find_control('Edit', 'File name:') is not None,
+                           max_seconds=120)
+        file_name_edit = self.find_control('Edit', 'File name:')
+
+        file_name_edit.set_edit_text(new_capture_path)
+
+        save_button = self.find_control('Button', 'Save')
+        save_button.click_input()
