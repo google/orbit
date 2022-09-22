@@ -42,7 +42,11 @@ using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
 using ::orbit_test_utils::Commons;
 using ::orbit_test_utils::MakeMap;
+using ::testing::_;
+using ::testing::AtLeast;
 using ::testing::DoubleNear;
+using ::testing::Invoke;
+using ::testing::Return;
 using ::testing::UnorderedElementsAreArray;
 
 namespace orbit_mizar_data {
@@ -107,9 +111,44 @@ template <typename K, typename V>
   return values;
 }
 
+MATCHER_P(FunctionSymbolEq, expected, "") {
+  const FunctionSymbol& symbol = std::get<0>(arg);
+  return symbol.function_name == expected.function_name &&
+         symbol.module_file_name == expected.module_file_name;
+}
+
+namespace {
+class MockFunctionSymbolToKey {
+ public:
+  MockFunctionSymbolToKey() {
+    for (const auto& [unused_address, symbol] : kBaselineAddressToSymbol) {
+      ExpectCall(symbol);
+    }
+
+    // The only symbol in comparison data, that isn't also present in baseline
+    ExpectCall(FunctionSymbol{"fiz()", "bizM"});
+  }
+
+  MOCK_METHOD(int, GetKey, (FunctionSymbol), (const));
+
+ private:
+  void ExpectCall(const FunctionSymbol& symbol) {
+    EXPECT_CALL(*this, GetKey(_))
+        .With(FunctionSymbolEq(symbol))
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(next_key_++));
+  }
+
+  int next_key_ = 1;
+};
+
+}  // namespace
+
 TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
+  BaselineAndComparisonHelperTmpl<MockFunctionSymbolToKey, int> helper;
+
   const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_symbols] =
-      AssignSampledFunctionIds(kBaselineAddressToSymbol, kComparisonAddressToSymbol);
+      helper.AssignSampledFunctionIds(kBaselineAddressToSymbol, kComparisonAddressToSymbol);
 
   EXPECT_EQ(baseline_address_to_sfid.size(), kCommonFunctionNames.size());
   EXPECT_EQ(comparison_address_to_sfid.size(), kCommonFunctionNames.size());

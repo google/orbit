@@ -20,7 +20,7 @@ target_include_directories(MizarData PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_sources(MizarData PRIVATE
                 BaselineAndComparison.cpp
                 BaselineAndComparisonHelper.h
-                BaselineAndComparisonHelper.cpp
+                FunctionSymbolToKeyExactNameMatch.h
                 GetCallstackSamplingIntervals.cpp
                 MizarData.cpp)
 
