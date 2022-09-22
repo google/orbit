@@ -145,7 +145,7 @@ class MockFunctionSymbolToKey {
 }  // namespace
 
 TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
-  BaselineAndComparisonHelperTmpl<MockFunctionSymbolToKey> helper;
+  BaselineAndComparisonHelperTmpl<MockFunctionSymbolToKey, int> helper;
 
   const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_symbols] =
       helper.AssignSampledFunctionIds(kBaselineAddressToSymbol, kComparisonAddressToSymbol);

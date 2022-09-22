@@ -35,7 +35,7 @@ struct AddressToIdAndIdToSymbol {
 // `FunctionSymbolToKey` is default-constructible and defines `Key GetKey(const FunctionSymbol&)`
 // method. `Key` must be absl-hashable and define `operator==`. The functions with `FunctionSymbols`
 // mapped to equal `Key` will be assigned the same `SFID`.
-template <typename FunctionSymbolToKey>
+template <typename FunctionSymbolToKey, typename Key>
 class BaselineAndComparisonHelperTmpl {
   template <typename T>
   using Baseline = ::orbit_mizar_base::Baseline<T>;
@@ -46,10 +46,6 @@ class BaselineAndComparisonHelperTmpl {
       ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
   using FunctionSymbol = ::orbit_mizar_base::FunctionSymbol;
   using SFID = ::orbit_mizar_base::SFID;
-
-  // Infer the type returned by `FunctionSymbolToKey::GetKey`, using `std::declval` for the lack of
-  // actual instances of `FunctionSymbolToKey` and `FunctionSymbol`.
-  using Key = decltype(std::declval<FunctionSymbolToKey>().GetKey(std::declval<FunctionSymbol>()));
 
  public:
   [[nodiscard]] AddressToIdAndIdToSymbol AssignSampledFunctionIds(
@@ -120,7 +116,7 @@ class BaselineAndComparisonHelperTmpl {
 
 // The instantiation used in production
 using BaselineAndComparisonHelper =
-    BaselineAndComparisonHelperTmpl<FunctionSymbolToKeyExactNameMatch>;
+    BaselineAndComparisonHelperTmpl<FunctionSymbolToKeyExactNameMatch, std::string>;
 
 }  // namespace orbit_mizar_data
 
