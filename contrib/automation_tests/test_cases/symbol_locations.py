@@ -92,5 +92,3 @@ class ClearAllSymbolLocations(E2ETestCase):
         self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
                        'List is empty')
         self.find_control('Button', 'Done', parent=ui).click_input()
-        wait_for_condition(
-            lambda: self.find_control('Button', 'Done', parent=ui, raise_on_failure=False) is None)
