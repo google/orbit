@@ -21,10 +21,6 @@ namespace orbit_symbol_provider {
 constexpr SymbolLoadingSuccessResult::SymbolSource kSymbolSource =
     SymbolLoadingSuccessResult::SymbolSource::kStadiaSymbolStore;
 
-const std::filesystem::path kSymbolsPath = orbit_test::GetTestdataDir() / "debugstore" /
-                                           ".build-id" / "b5" /
-                                           "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
-
 class StructuredDebugDirectorySymbolProviderTest : public ::testing::Test {
  public:
   explicit StructuredDebugDirectorySymbolProviderTest()
