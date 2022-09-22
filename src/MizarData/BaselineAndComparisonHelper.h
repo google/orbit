@@ -47,6 +47,8 @@ class BaselineAndComparisonHelperTmpl {
   using FunctionSymbol = ::orbit_mizar_base::FunctionSymbol;
   using SFID = ::orbit_mizar_base::SFID;
 
+  // Infer the type returned by `FunctionSymbolToKey::GetKey`, using `std::declval` for the lack of
+  // actual instances of `FunctionSymbolToKey` and `FunctionSymbol`.
   using Key = decltype(std::declval<FunctionSymbolToKey>().GetKey(std::declval<FunctionSymbol>()));
 
  public:
@@ -54,6 +56,7 @@ class BaselineAndComparisonHelperTmpl {
       const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& baseline_address_to_symbol,
       const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& comparison_address_to_symbol)
       const {
+    // TODO(b/248266436) the code needs to be commented
     absl::flat_hash_map<Key, FunctionSymbol> comparison_key_to_symbol =
         KeyToSymbol(comparison_address_to_symbol);
 
