@@ -18,12 +18,12 @@ const std::string kMappedFunction = "foo";
 const std::string kAnotherMappedFunction = "boo";
 const std::string kNotMappedFunction = "bar";
 
-static const absl::flat_hash_map<std::string, std::string> kNameToKey{
+static const auto* kNameToKey = new absl::flat_hash_map<std::string, std::string>{
     {kMappedFunction, "key1"}, {kAnotherMappedFunction, "key2"}};
 
 const std::string kMappableModuleName = "mappable";
 const std::string kNonMappableModuleName = "nonmappable";
-static const absl::flat_hash_set<std::string> kMappableModules = {kMappableModuleName};
+static const auto* kMappableModules = new absl::flat_hash_set<std::string>{kMappableModuleName};
 
 using SymbolToKey = DummyFunctionSymbolToKey<kNameToKey, kMappableModules>;
 
@@ -31,8 +31,8 @@ void ExpectCorrectKey(const SymbolToKey& symbol_to_key, const std::string& funct
                       const std::string& module_name) {
   FunctionSymbol symbol{function_name, module_name};
   const std::string key = symbol_to_key.GetKey(symbol);
-  if (kMappableModules.contains(module_name) && kNameToKey.contains(function_name)) {
-    EXPECT_EQ(key, kNameToKey.at(function_name));
+  if (kMappableModules->contains(module_name) && kNameToKey->contains(function_name)) {
+    EXPECT_EQ(key, kNameToKey->at(function_name));
   } else {
     EXPECT_EQ(key, function_name);
   }

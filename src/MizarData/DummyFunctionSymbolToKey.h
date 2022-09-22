@@ -13,7 +13,7 @@
 #include "MizarBase/FunctionSymbols.h"
 
 namespace orbit_mizar_data_internal {
-static const absl::flat_hash_map<std::string, std::string> kDirectXToDxvkNames = {
+static const auto* kDirectXToDxvkNames = new absl::flat_hash_map<std::string, std::string>{
     {"CContext::TID3D11DeviceContext_ClearRenderTargetView_<1>",
      "dxvk::D3D11DeviceContext::ClearRenderTargetView(ID3D11RenderTargetView*, float const*)"},
     {"CContext::TID3D11DeviceContext_SetShader_<1,0>",
@@ -27,7 +27,7 @@ static const absl::flat_hash_map<std::string, std::string> kDirectXToDxvkNames =
     {"CDXGISwapChain::Present",
      "dxvk::D3D11SwapChain::Present(unsigned int, unsigned int, DXGI_PRESENT_PARAMETERS const*)"}};
 
-static const absl::flat_hash_set<std::string> kMappableModules = {"d3d11", "dxgi"};
+static const auto* kMappableModules = new absl::flat_hash_set<std::string>{"d3d11", "dxgi"};
 
 }  // namespace orbit_mizar_data_internal
 
@@ -40,9 +40,9 @@ class DummyFunctionSymbolToKey {
 
  public:
   [[nodiscard]] std::string GetKey(const FunctionSymbol& symbol) const {
-    if (mappableModules.contains(symbol.module_file_name)) {
-      if (const auto it = functionNameToKey.find(symbol.function_name);
-          it != functionNameToKey.end()) {
+    if (mappableModules->contains(symbol.module_file_name)) {
+      if (const auto it = functionNameToKey->find(symbol.function_name);
+          it != functionNameToKey->end()) {
         return it->second;
       }
     }
