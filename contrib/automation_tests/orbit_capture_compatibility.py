@@ -14,11 +14,10 @@ from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 """Verify Capture compatibility
 
 This script contains functionality to record a capture with one (new) version of Orbit and then
-test that that this capture can be loaded with another (old) version of Orbit. This is used to test
-that a capture file produces by a (new) Orbit can be read by another (old) version of Orbit.
+test that this capture can be loaded with another (old) version of Orbit.
 
-This needs to be called with one of two values, `record_capture` or `load_capture` and a path to
-where the capture will be saved / from where it will be loaded.
+This needs to be called with one of two arguments: 1) one of `record_capture` or `load_capture`,
+and 2) a path to where the capture will be saved / from where it will be loaded.
 
 Before the record part of this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started. Further, (new) Orbit needs to be started.
@@ -34,7 +33,8 @@ to be run from 64 bit python.
 def main(argv):
     if len(argv) < 3:
         raise RuntimeError(
-            "Missing argument: You need to pass 2 arguments. The first is `record_capture` or `load_capture` and the second a path to save/load the capture file"
+            "Missing argument: You need to pass 2 arguments. The first is `record_capture` or " \
+            "`load_capture` and the second a path to save/load the capture file"
         )
     if argv[1] == "record_capture":
         test_cases = [

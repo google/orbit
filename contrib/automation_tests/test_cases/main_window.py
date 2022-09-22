@@ -118,3 +118,9 @@ class RenameMoveCaptureFile(E2ETestCase):
 
         save_button = self.find_control('Button', 'Save')
         save_button.click_input()
+
+        # This waits until no more "Window"s can be found. That means only the OrbitMainWindow is
+        # visible, no warnings, errors or progression dialogs
+        wait_for_condition(
+            lambda: self.find_control(control_type="Window", raise_on_failure=False) is None,
+            max_seconds=30)
