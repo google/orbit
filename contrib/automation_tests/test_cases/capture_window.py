@@ -556,9 +556,8 @@ class CaptureRepeatedly(E2ETestCase):
 
         self._stop_capture_if_necessary(capture_tab)
 
-        wait_for_condition(lambda: self.find_control(
-            'Window', 'Finalizing capture', recurse=False, raise_on_failure=False) is None,
-                           max_seconds=120)
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        wait_for_condition(lambda: capture_options_button.is_enabled() is True, max_seconds=30)
 
 
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
