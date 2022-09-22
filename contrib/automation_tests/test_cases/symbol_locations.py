@@ -93,6 +93,7 @@ class ClearAllSymbolLocations(E2ETestCase):
                        'List is empty')
         self.find_control('Button', 'Done', parent=ui).click_input()
 
+
 class ToggleEnableStadiaSymbolStore(E2ETestCase):
     """
     Set the "Enable Stadia symbol store" option. 
@@ -108,3 +109,5 @@ class ToggleEnableStadiaSymbolStore(E2ETestCase):
             logging.info('Toggling "Enable Stadia symbol store" checkbox to {}.'.format(enable_stadia_symbol_store))
             checkbox.click_input()
         self.find_control('Button', 'Done', parent=ui).click_input()
+        wait_for_condition(
+            lambda: self.find_control('Button', 'Done', parent=ui, raise_on_failure=False) is None)

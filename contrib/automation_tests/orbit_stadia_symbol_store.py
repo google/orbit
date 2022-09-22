@@ -45,7 +45,7 @@ def main(argv):
         LoadSymbols(module_search_string="libggp", expect_fail=True),
         ToggleEnableStadiaSymbolStore(enable_stadia_symbol_store=True),
         WaitForLoadingSymbolsAndCheckModule(module_search_string="libggp"),
-        ToggleEnableStadiaSymbolStore(enable_stadia_symbol_store=False),
+        ToggleEnableStadiaSymbolStore(enable_stadia_symbol_store=False)
     ]
     suite = E2ETestSuite(test_name="Stadia symbol store", test_cases=test_cases)
     suite.execute()
