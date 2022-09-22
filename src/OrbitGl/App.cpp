@@ -1603,6 +1603,8 @@ void OrbitApp::StartCapture() {
   options.dynamic_instrumentation_method = data_manager_->dynamic_instrumentation_method();
   options.samples_per_second = data_manager_->samples_per_second();
   options.stack_dump_size = data_manager_->stack_dump_size();
+  options.thread_state_change_callstack_stack_dump_size =
+      data_manager_->thread_state_change_callstack_stack_dump_size();
   options.unwinding_method = data_manager_->unwinding_method();
   options.max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
@@ -2807,6 +2809,10 @@ void OrbitApp::SetStackDumpSize(uint16_t stack_dump_size) {
 
 void OrbitApp::SetUnwindingMethod(UnwindingMethod unwinding_method) {
   data_manager_->set_unwinding_method(unwinding_method);
+}
+
+void OrbitApp::SetThreadStateChangeCallstackStackDumpSize(uint16_t stack_dump_size) {
+  data_manager_->set_thread_state_change_callstack_stack_dump_size(stack_dump_size);
 }
 
 void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(

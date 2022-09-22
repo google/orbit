@@ -102,6 +102,9 @@ class DataManager final {
   void set_stack_dump_size(uint16_t stack_dump_size);
   [[nodiscard]] uint16_t stack_dump_size() const;
 
+  void set_thread_state_change_callstack_stack_dump_size(uint16_t stack_dump_size);
+  [[nodiscard]] uint16_t thread_state_change_callstack_stack_dump_size() const;
+
   void set_unwinding_method(orbit_grpc_protos::CaptureOptions::UnwindingMethod method);
   [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method() const;
 
@@ -154,6 +157,7 @@ class DataManager final {
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   uint16_t stack_dump_size_ = 0;
+  uint16_t thread_state_change_callstack_stack_dump_size_ = 0;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_{};
 
   bool enable_auto_frame_track_ = false;
