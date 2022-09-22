@@ -31,6 +31,11 @@ def _verify_symbols_list_contains(symbol_path_list, location):
 
     raise OrbitE2EError("Found symbol file location {} in the list".format(location))
 
+def _wait_for_symbol_location_ui_close(top_window):
+    wait_for_condition(
+        lambda: find_control(top_window, "Window", "Symbol Locations", raise_on_failure=False) is None,
+        max_seconds=30)
+
 
 class AddSymbolLocation(E2ETestCase):
     """
@@ -50,6 +55,7 @@ class AddSymbolLocation(E2ETestCase):
         symbol_path_list = self.find_control('List', parent=ui)
         _verify_symbols_list_contains(symbol_path_list, location)
         self.find_control('Button', 'Done', parent=ui).click_input()
+        _wait_for_symbol_location_ui_close(self.suite.top_window())
 
 
 class AddSymbolFile(E2ETestCase):
@@ -73,6 +79,7 @@ class AddSymbolFile(E2ETestCase):
         symbol_path_list = self.find_control('List', parent=ui)
         _verify_symbols_list_contains(symbol_path_list, location)
         self.find_control('Button', 'Done', parent=ui).click_input()
+        _wait_for_symbol_location_ui_close(self.suite.top_window())
 
 
 class ClearAllSymbolLocations(E2ETestCase):
@@ -92,6 +99,7 @@ class ClearAllSymbolLocations(E2ETestCase):
         self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
                        'List is empty')
         self.find_control('Button', 'Done', parent=ui).click_input()
+        _wait_for_symbol_location_ui_close(self.suite.top_window())
 
 
 class ToggleEnableStadiaSymbolStore(E2ETestCase):
@@ -109,5 +117,4 @@ class ToggleEnableStadiaSymbolStore(E2ETestCase):
             logging.info('Toggling "Enable Stadia symbol store" checkbox to {}.'.format(enable_stadia_symbol_store))
             checkbox.click_input()
         self.find_control('Button', 'Done', parent=ui).click_input()
-        wait_for_condition(
-            lambda: self.find_control('Button', 'Done', parent=ui, raise_on_failure=False) is None)
+        _wait_for_symbol_location_ui_close(self.suite.top_window())
