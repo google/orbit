@@ -1466,7 +1466,7 @@ void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
                                    QString::fromStdString(current_file_path.string()), "*.orbit");
 
   // Return if the rename operation is cancelled
-  if (file_path.isEmpty() || file_path.isNull()) return;
+  if (file_path.isNull()) return;
 
   std::filesystem::path new_file_path{file_path.toStdString()};
 
