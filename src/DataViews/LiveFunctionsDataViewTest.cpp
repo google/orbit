@@ -203,6 +203,11 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
       std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
                                     CaptureData::DataSource::kLiveCapture);
 
+  for (const TimerInfo* timer_info : kTimerPointers) {
+    capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
+    capture_data->UpdateScopeStats(*timer_info);
+  }
+
   for (size_t i = 0; i < kNumFunctions; i++) {
     ScopeStats stats;
     stats.set_count(kCounts[i]);
@@ -211,10 +216,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_max_ns(kMaxNs[i]);
     stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
     capture_data->AddScopeStats(kScopeIds[i], std::move(stats));
-  }
-
-  for (const TimerInfo* timer_info : kTimerPointers) {
-    capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
   }
 
   capture_data->OnCaptureComplete();

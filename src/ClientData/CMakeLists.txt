@@ -28,6 +28,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
+        include/ClientData/ScopeCollection.h
         include/ClientData/ScopeId.h
         include/ClientData/ScopeIdProvider.h
         include/ClientData/ScopeInfo.h
@@ -60,6 +61,7 @@ target_sources(ClientData PRIVATE
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
+        ScopeCollection.cpp
         ScopeIdProvider.cpp
         ScopeStats.cpp
         ScopeTreeTimerData.cpp
@@ -94,6 +96,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
+        ScopeCollectionTest.cpp
         ScopeIdProviderTest.cpp
         ScopeInfoTest.cpp
         ScopeTreeTimerDataTest.cpp
