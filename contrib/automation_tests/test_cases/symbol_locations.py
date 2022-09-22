@@ -93,7 +93,7 @@ class ClearAllSymbolLocations(E2ETestCase):
                        'List is empty')
         self.find_control('Button', 'Done', parent=ui).click_input()
 
-class EnableStadiaSymbolStore(E2ETestCase):
+class ToggleEnableStadiaSymbolStore(E2ETestCase):
     """
     Set the "Enable Stadia symbol store" option. 
 
@@ -101,7 +101,7 @@ class EnableStadiaSymbolStore(E2ETestCase):
     state, that window will be closed after the test is done.
     """
 
-    def _execute(self, enable_stadia_symbol_store: bool = False):
+    def _execute(self, enable_stadia_symbol_store: bool = True):
         ui = _show_and_get_symbol_location_ui(self.suite.top_window())
         checkbox = self.find_control('CheckBox', 'EnableStadiaSymbolStoreCheckBox', parent=ui)
         if checkbox.get_toggle_state() != enable_stadia_symbol_store:
