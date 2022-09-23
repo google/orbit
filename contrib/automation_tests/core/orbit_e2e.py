@@ -132,7 +132,6 @@ class CloseOrbit(E2ETestCase):
         return False
 
     def _execute(self):
-
         # The sending of Alt + F4 (see below) only works if OrbitMainWindow is in focus. The next line checks
         # that no other dialog, warning or error is open
         wait_for_condition(
