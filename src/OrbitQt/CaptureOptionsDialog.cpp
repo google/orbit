@@ -56,6 +56,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled),
                    ui_->threadStateChangeCallstackCollectionCheckBox, &QCheckBox::setEnabled);
+  QObject::connect(ui_->threadStateChangeCallstackCollectionCheckBox,
+                   qOverload<bool>(&QCheckBox::toggled),
+                   ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget, [this](bool checked) {
+                     ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(checked);
+                   });
 
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
@@ -78,6 +83,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->threadStateChangeCallstackCollectionCheckBox->setEnabled(
       ui_->threadStateCheckBox->isChecked());
 
+  ui_->threadStateChangeCallstackMaxCopyRawStackSizeSpinBox->setValue(
+      kThreadStateChangeCallstackMaxCopyRawStackSizeDefaultValue);
+  ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(
+      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
+
   if (!absl::GetFlag(FLAGS_auto_frame_track)) {
     ui_->autoFrameTrackGroupBox->hide();
   }
@@ -97,6 +107,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   if (!absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
     ui_->threadStateChangeCallstackCollectionCheckBox->hide();
+    ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->hide();
   }
 }
 
@@ -146,6 +157,18 @@ void CaptureOptionsDialog::SetMaxCopyRawStackSize(uint16_t stack_dump_size) {
 
 uint16_t CaptureOptionsDialog::GetMaxCopyRawStackSize() const {
   uint16_t result = ui_->maxCopyRawStackSizeSpinBox->value();
+  ORBIT_CHECK(result % 8 == 0);
+  return result;
+}
+
+void CaptureOptionsDialog::SetThreadStateChangeCallstackMaxCopyRawStackSize(
+    uint16_t stack_dump_size) {
+  ORBIT_CHECK(stack_dump_size % 8 == 0);
+  ui_->threadStateChangeCallstackMaxCopyRawStackSizeSpinBox->setValue(stack_dump_size);
+}
+
+uint16_t CaptureOptionsDialog::GetThreadStateChangeCallstackMaxCopyRawStackSize() const {
+  uint16_t result = ui_->threadStateChangeCallstackMaxCopyRawStackSizeSpinBox->value();
   ORBIT_CHECK(result % 8 == 0);
   return result;
 }

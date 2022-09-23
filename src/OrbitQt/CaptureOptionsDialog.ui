@@ -66,9 +66,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
+        <y>-430</y>
         <width>502</width>
-        <height>1098</height>
+        <height>1136</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -544,14 +544,74 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QCheckBox" name="threadStateChangeCallstackCollectionCheckBox">
             <property name="toolTip">
-             <string>This allows capturing call stacks when threads change their states</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This allows capturing callstacks when threads become runnable or stop running.&lt;/p&gt;&lt;p&gt;Collecting callstacks on thread state changes introduces significant performance overhead. Consider reducing the &lt;span style=&quot; font-style:italic;&quot;&gt;raw stack size to copy&lt;/span&gt; below.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Collect call stacks on thread state changes</string>
+             <string>Collect callstacks on thread state changes (expensive) ⓘ</string>
             </property>
             <property name="checked">
              <bool>true</bool>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="threadStateChangeCallstackMaxCopyRawStackSizeWidget" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="leftMargin">
+              <number>20</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="threadStateChangeCallstackMaxCopyRawStackSizeLabel">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In order to compute the callstack on thread state changes, we need to copy a portion of the raw stack. Specify how much data Orbit should maximally copy. A smaller value reduces the number of computed call frames, but also reduces the performance overhead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Max raw stack size to copy (multiple of 8 Bytes):</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="orbit_qt::MultipleOfSpinBox" name="threadStateChangeCallstackMaxCopyRawStackSizeSpinBox">
+               <property name="accessibleName">
+                <string>ThreadStateChangeCallstackMaxCopyRawStackSizeSpinBox</string>
+               </property>
+               <property name="minimum">
+                <number>16</number>
+               </property>
+               <property name="maximum">
+                <number>65528</number>
+               </property>
+               <property name="singleStep">
+                <number>8</number>
+               </property>
+               <property name="value">
+                <number>256</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="threadStateChangeCallstackMaxCopyRawStackSizeHorizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
