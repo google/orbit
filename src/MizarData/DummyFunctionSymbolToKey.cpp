@@ -22,7 +22,8 @@ std::string DummyFunctionSymbolToKey::GetKey(const FunctionSymbol& symbol) const
   return symbol.function_name;
 }
 
-const auto* D3D11DummyFunctionSymbolToKey::kDirectXToDxvkNames =
+const absl::flat_hash_map<std::string,
+                          std::string>* D3D11DummyFunctionSymbolToKey::kDirectXToDxvkNames =
     new absl::flat_hash_map<std::string, std::string>{
         {"CContext::TID3D11DeviceContext_ClearRenderTargetView_<1>",
          "dxvk::D3D11DeviceContext::ClearRenderTargetView(ID3D11RenderTargetView*, float const*)"},
@@ -39,7 +40,7 @@ const auto* D3D11DummyFunctionSymbolToKey::kDirectXToDxvkNames =
          "dxvk::D3D11SwapChain::Present(unsigned int, unsigned int, DXGI_PRESENT_PARAMETERS "
          "const*)"}};
 
-const auto* D3D11DummyFunctionSymbolToKey::kMappableModules =
+const absl::flat_hash_set<std::string>* D3D11DummyFunctionSymbolToKey::kMappableModules =
     new absl::flat_hash_set<std::string>{"d3d11", "dxgi"};
 
 }  // namespace orbit_mizar_data
