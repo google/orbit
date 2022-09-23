@@ -366,6 +366,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
 OrbitApp::~OrbitApp() {
   AbortCapture();
   RequestSymbolDownloadStop(module_manager_->GetAllModuleData(), false);
+  thread_pool_->ShutdownAndWait();
 }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
