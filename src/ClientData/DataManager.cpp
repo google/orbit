@@ -254,6 +254,16 @@ uint16_t DataManager::stack_dump_size() const {
   return stack_dump_size_;
 }
 
+void DataManager::set_thread_state_change_callstack_stack_dump_size(uint16_t stack_dump_size) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  thread_state_change_callstack_stack_dump_size_ = stack_dump_size;
+}
+
+uint16_t DataManager::thread_state_change_callstack_stack_dump_size() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return thread_state_change_callstack_stack_dump_size_;
+}
+
 void DataManager::set_unwinding_method(orbit_grpc_protos::CaptureOptions::UnwindingMethod method) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   unwinding_method_ = method;

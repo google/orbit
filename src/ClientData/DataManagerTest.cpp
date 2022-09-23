@@ -80,6 +80,10 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::samples_per_second);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_stack_dump_size, 0);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::stack_dump_size);
+  CallMethodOnDifferentThreadAndExpectDeath(
+      data_manager, &DataManager::set_thread_state_change_callstack_stack_dump_size, 0);
+  CallMethodOnDifferentThreadAndExpectDeath(
+      data_manager, &DataManager::thread_state_change_callstack_stack_dump_size);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_unwinding_method,
                                             orbit_grpc_protos::CaptureOptions::kUndefined);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::unwinding_method);

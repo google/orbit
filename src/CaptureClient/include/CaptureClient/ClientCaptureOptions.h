@@ -34,6 +34,7 @@ struct ClientCaptureOptions {
           orbit_grpc_protos::CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified;
 
   uint16_t stack_dump_size = 0;
+  uint16_t thread_state_change_callstack_stack_dump_size = 0;
   uint64_t max_local_marker_depth_per_command_buffer = 0;
   uint64_t memory_sampling_period_ms = 0;
   double samples_per_second = 0;

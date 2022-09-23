@@ -437,6 +437,7 @@ class OrbitApp final : public DataViewFactory,
   void SetWineSyscallHandlingMethod(orbit_client_data::WineSyscallHandlingMethod method);
   void SetSamplesPerSecond(double samples_per_second);
   void SetStackDumpSize(uint16_t stack_dump_size);
+  void SetThreadStateChangeCallstackStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
   void SetEnableAutoFrameTrack(bool enable_auto_frame_track);

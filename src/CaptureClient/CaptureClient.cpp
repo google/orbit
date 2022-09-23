@@ -108,6 +108,8 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
   ORBIT_CHECK(options.unwinding_method != CaptureOptions::kUndefined);
   capture_options.set_unwinding_method(options.unwinding_method);
   capture_options.set_stack_dump_size(options.stack_dump_size);
+  capture_options.set_thread_state_change_callstack_stack_dump_size(
+      options.thread_state_change_callstack_stack_dump_size);
   capture_options.set_samples_per_second(options.samples_per_second);
 
   capture_options.set_collect_memory_info(options.collect_memory_info);
