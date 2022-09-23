@@ -33,7 +33,8 @@ static const auto* kMappableModules = new absl::flat_hash_set<std::string>{"d3d1
 
 namespace orbit_mizar_data {
 
-//
+// If a function comes from `mappableModules`, the key from `functionNameToKey` is returned if
+// present. Defaulting to the function name as the key.
 template <auto& functionNameToKey, auto& mappableModules>
 class DummyFunctionSymbolToKey {
   using FunctionSymbol = ::orbit_mizar_base::FunctionSymbol;
