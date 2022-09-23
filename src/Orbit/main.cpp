@@ -173,6 +173,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
     ORBIT_UNREACHABLE();
   }
 
+  ORBIT_LOG("End of Orbit main()");
   return 0;
 }
 
