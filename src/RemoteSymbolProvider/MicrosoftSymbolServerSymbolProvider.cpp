@@ -4,6 +4,7 @@
 
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
 
+#include <absl/strings/str_replace.h>
 #include <absl/strings/substitute.h>
 
 #include "OrbitBase/NotFoundOr.h"
@@ -31,8 +32,10 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
     const orbit_symbol_provider::ModuleIdentifier& module_id) {
   constexpr std::string_view kUrlToSymbolServer = "https://msdl.microsoft.com/download/symbols";
   std::filesystem::path module_path(module_id.file_path);
-  return absl::Substitute("$0/$1/$2/$1", kUrlToSymbolServer, module_path.filename().string(),
-                          module_id.build_id);
+  std::filesystem::path symbol_filename = module_path.filename();
+  symbol_filename.replace_extension(".pdb");
+  std::string build_id = absl::StrReplaceAll(module_id.build_id, {{"-", ""}});
+  return absl::Substitute("$0/$1/$2/$1", kUrlToSymbolServer, symbol_filename.string(), build_id);
 }
 
 Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(

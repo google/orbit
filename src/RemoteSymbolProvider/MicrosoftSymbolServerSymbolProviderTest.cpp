@@ -38,8 +38,8 @@ const std::string kValidModuleBuildId{"ABCD12345678"};
 const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
                                       kValidModuleBuildId};
 const std::string kValidModuleDownloadUrl{
-    absl::StrFormat("https://msdl.microsoft.com/download/symbols/%s/%s/%s", kValidModuleName,
-                    kValidModuleBuildId, kValidModuleName)};
+    absl::StrFormat("https://msdl.microsoft.com/download/symbols/%s.pdb/%s/%s.pdb",
+                    kValidModuleName, kValidModuleBuildId, kValidModuleName)};
 
 class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
  public:
@@ -112,8 +112,8 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
 TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
   const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
   const std::string expected_url{
-      "https://msdl.microsoft.com/download/symbols/some_module_name/some_build_id/"
-      "some_module_name"};
+      "https://msdl.microsoft.com/download/symbols/some_module_name.pdb/some_build_id/"
+      "some_module_name.pdb"};
   SetUpDownloadManager(DownloadResultState::kNotFound, expected_url);
 
   orbit_base::StopSource stop_source{};

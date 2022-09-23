@@ -84,7 +84,7 @@ TEST(SymbolUtils, VerifySymbolFileByBuildId) {
   {
     // PDB file with symbols and matching build id.
     const std::filesystem::path symbols_file = testdata_directory / "dllmain.pdb";
-    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto result = VerifySymbolFile(symbols_file, build_id);
     EXPECT_THAT(result, HasValue());
   }
@@ -98,7 +98,7 @@ TEST(SymbolUtils, VerifySymbolFileByBuildId) {
   {
     // COFF file with matching build id, but no symbols.
     const std::filesystem::path symbols_file = testdata_directory / "dllmain.dll";
-    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto result = VerifySymbolFile(symbols_file, build_id);
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
@@ -172,7 +172,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
   {
     // COFF file with matching build id.
     const std::filesystem::path object_file = testdata_directory / "dllmain.dll";
-    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
@@ -190,7 +190,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
   {
     // COFF file with mis-matching size.
     const std::filesystem::path object_file = testdata_directory / "dllmain.dll";
-    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value() + 1);
@@ -199,7 +199,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
   {
     // PDB file.
     const std::filesystem::path object_file = testdata_directory / "dllmain.pdb";
-    const std::string build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+    const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
