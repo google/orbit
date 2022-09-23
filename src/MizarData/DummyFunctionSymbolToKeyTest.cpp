@@ -25,7 +25,10 @@ const std::string kMappableModuleName = "mappable";
 const std::string kNonMappableModuleName = "nonmappable";
 static const auto* kMappableModules = new absl::flat_hash_set<std::string>{kMappableModuleName};
 
-using SymbolToKey = DummyFunctionSymbolToKey<kNameToKey, kMappableModules>;
+class SymbolToKey : public DummyFunctionSymbolToKey {
+ public:
+  SymbolToKey() : DummyFunctionSymbolToKey(kNameToKey, kMappableModules) {}
+};
 
 void ExpectCorrectKey(const SymbolToKey& symbol_to_key, const std::string& function_name,
                       const std::string& module_name) {
@@ -39,7 +42,7 @@ void ExpectCorrectKey(const SymbolToKey& symbol_to_key, const std::string& funct
 }
 
 TEST(DummyFunctionSymbolToKey, GetKey) {
-  DummyFunctionSymbolToKey<kNameToKey, kMappableModules> symbol_to_key;
+  SymbolToKey symbol_to_key;
 
   for (const std::string& function :
        {kMappedFunction, kAnotherMappedFunction, kNonMappableModuleName}) {
