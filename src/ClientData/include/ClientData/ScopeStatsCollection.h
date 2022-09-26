@@ -29,9 +29,9 @@ class ScopeStatsCollection {
   // Calling this function causes the timer durations to no longer be sorted. SortTimers() *must* be
   // called after UpdateScopeStats and before GetSortedTimerDurationsForScopeId().
   void UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer);
+  // TODO(b/249046906): Remove this test-only function.
   void SetScopeStats(ScopeId scope_id, ScopeStats stats);
-
-  void SortTimers();
+  void OnDataChanged();
 
  private:
   absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;

@@ -93,7 +93,7 @@ void CaptureData::AddScopeStats(ScopeId scope_id, ScopeStats stats) {
 
 void CaptureData::OnCaptureComplete() {
   thread_track_data_provider_->OnCaptureComplete();
-  all_scopes_->SortTimers();
+  all_scopes_->OnDataChanged();
 }
 
 void CaptureData::FilterBrokenCallstacks() {

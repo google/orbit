@@ -52,20 +52,20 @@ const TimerInfo kTimerScopeId2 = []() {
   return timer;
 }();
 
-static void AssertStatsAreEqual(ScopeStats actual, ScopeStats expect) {
-  ASSERT_EQ(actual.count(), expect.count());
-  ASSERT_EQ(actual.max_ns(), expect.max_ns());
-  ASSERT_EQ(actual.min_ns(), expect.min_ns());
-  ASSERT_EQ(actual.total_time_ns(), expect.total_time_ns());
-  ASSERT_EQ(actual.variance_ns(), expect.variance_ns());
+static void ExpectStatsAreEqual(ScopeStats actual, ScopeStats expect) {
+  EXPECT_EQ(actual.count(), expect.count());
+  EXPECT_EQ(actual.max_ns(), expect.max_ns());
+  EXPECT_EQ(actual.min_ns(), expect.min_ns());
+  EXPECT_EQ(actual.total_time_ns(), expect.total_time_ns());
+  EXPECT_EQ(actual.variance_ns(), expect.variance_ns());
 }
 
 TEST(ScopeStatsCollectionTest, CreateEmpty) {
   ScopeStatsCollection collection = ScopeStatsCollection();
   ASSERT_TRUE(collection.GetAllProvidedScopeIds().empty());
   ScopeStats stats = collection.GetScopeStatsOrDefault(kScopeId1);
-  AssertStatsAreEqual(stats, kDefaultScopeStats);
-  ASSERT_EQ(collection.GetSortedTimerDurationsForScopeId(kScopeId1), nullptr);
+  ExpectStatsAreEqual(stats, kDefaultScopeStats);
+  EXPECT_EQ(collection.GetSortedTimerDurationsForScopeId(kScopeId1), nullptr);
 }
 
 TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
@@ -73,18 +73,18 @@ TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
   for (TimerInfo timer : kTimersScopeId1) {
     collection.UpdateScopeStats(kScopeId1, timer);
   }
-  ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 1);
+  EXPECT_EQ(collection.GetAllProvidedScopeIds().size(), 1);
 
   collection.UpdateScopeStats(kScopeId2, kTimerScopeId2);
-  ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
+  EXPECT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
 
-  AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
+  ExpectStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
 
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_EQ(timer_durations, nullptr);
-  collection.SortTimers();
+  EXPECT_EQ(timer_durations, nullptr);
+  collection.OnDataChanged();
   timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
+  EXPECT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
 }
 
 TEST(ScopeStatsCollectionTest, CreateWithTimers) {
@@ -101,10 +101,10 @@ TEST(ScopeStatsCollectionTest, CreateWithTimers) {
       .WillRepeatedly(Return(kScopeId1));
   ScopeStatsCollection collection = ScopeStatsCollection(mock_scope_id_provider, timers);
 
-  ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
-  AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
+  EXPECT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
+  ExpectStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
+  EXPECT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
 }
 
 }  // namespace orbit_client_data

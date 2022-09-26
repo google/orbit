@@ -20,7 +20,7 @@ ScopeStatsCollection::ScopeStatsCollection(ScopeIdProvider& scope_id_provider,
     }
   }
 
-  SortTimers();
+  OnDataChanged();
 }
 
 void ScopeStatsCollection::UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer) {
@@ -31,7 +31,6 @@ void ScopeStatsCollection::UpdateScopeStats(ScopeId scope_id, const TimerInfo& t
   timer_durations_are_sorted_ = false;
 }
 
-// TODO(b/249046906): Remove this test-only function.
 void ScopeStatsCollection::SetScopeStats(ScopeId scope_id, const ScopeStats stats) {
   scope_stats_.insert_or_assign(scope_id, stats);
 }
@@ -54,7 +53,7 @@ const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForSco
     ScopeId scope_id) {
   if (!timer_durations_are_sorted_) {
     ORBIT_ERROR(
-        "Calling GetSortedTimerDurationsForScopeId on unsorted timers. Must call SortTimers() "
+        "Calling GetSortedTimerDurationsForScopeId on unsorted timers. Must call OnDataChanged() "
         "first.");
     return nullptr;
   }
@@ -65,7 +64,7 @@ const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForSco
   return nullptr;
 }
 
-void ScopeStatsCollection::SortTimers() {
+void ScopeStatsCollection::OnDataChanged() {
   if (timer_durations_are_sorted_) return;
 
   for (auto& [_, timer_durations] : scope_id_to_timer_durations_) {
