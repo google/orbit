@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-actions.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -14,6 +15,9 @@
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
+
+using ::testing::ElementsAre;
+using ::testing::Return;
 
 static const ScopeStats kDefaultScopeStats;
 static const uint64_t kFunctionId1 = 1;
@@ -80,7 +84,7 @@ TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
   ASSERT_EQ(timer_durations, nullptr);
   collection.SortTimers();
   timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_THAT(*timer_durations, testing::ElementsAre(9, 500, 3000));
+  ASSERT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
 }
 
 TEST(ScopeStatsCollectionTest, CreateWithTimers) {
@@ -91,16 +95,16 @@ TEST(ScopeStatsCollectionTest, CreateWithTimers) {
     const TimerInfo* timer = &kTimersScopeId1.at(i);
     timers.push_back(timer);
   }
-  EXPECT_CALL(mock_scope_id_provider, ProvideId(testing::_))
+  EXPECT_CALL(mock_scope_id_provider, ProvideId)
       .Times(4)
-      .WillOnce(testing::Return(kScopeId2))
-      .WillRepeatedly(testing::Return(kScopeId1));
+      .WillOnce(Return(kScopeId2))
+      .WillRepeatedly(Return(kScopeId1));
   ScopeStatsCollection collection = ScopeStatsCollection(mock_scope_id_provider, timers);
 
   ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
   AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_THAT(*timer_durations, testing::ElementsAre(9, 500, 3000));
+  ASSERT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
 }
 
 }  // namespace orbit_client_data

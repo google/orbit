@@ -3,12 +3,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_API_MOCK_SCOPE_ID_PROVIDER_H_
-#define ORBIT_CLIENT_DATA_API_MOCK_SCOPE_ID_PROVIDER_H_
+#ifndef ORBIT_CLIENT_DATA_MOCK_SCOPE_ID_PROVIDER_H_
+#define ORBIT_CLIENT_DATA_MOCK_SCOPE_ID_PROVIDER_H_
 
 #include <gmock/gmock.h>
-
-#include <cstdint>
+#include <stdint.h>
 
 #include "ClientData/ScopeIdProvider.h"
 
@@ -27,4 +26,4 @@ class MockScopeIdProvider : public ScopeIdProvider {
 
 }  // namespace orbit_client_data
 
-#endif  // ORBIT_CLIENT_DATA_API_MOCK_SCOPE_ID_PROVIDER_H_
+#endif  // ORBIT_CLIENT_DATA_MOCK_SCOPE_ID_PROVIDER_H_
