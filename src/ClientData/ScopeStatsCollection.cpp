@@ -67,7 +67,7 @@ const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForSco
 void ScopeStatsCollection::OnDataChanged() {
   if (timer_durations_are_sorted_) return;
 
-  for (auto& [_, timer_durations] : scope_id_to_timer_durations_) {
+  for (auto& [unused_id, timer_durations] : scope_id_to_timer_durations_) {
     absl::c_sort(timer_durations);
   }
   timer_durations_are_sorted_ = true;

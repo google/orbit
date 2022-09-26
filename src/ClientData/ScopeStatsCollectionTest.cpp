@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -15,6 +16,7 @@
 namespace orbit_client_data {
 
 using ::testing::ElementsAre;
+using ::testing::IsNull;
 using ::testing::Return;
 
 static const ScopeStats kDefaultScopeStats;
@@ -26,7 +28,8 @@ static const ScopeId kScopeId2 = ScopeId(kFunctionId2);
 constexpr size_t kNumTimers = 3;
 constexpr std::array<uint64_t, kNumTimers> kStarts = {1000, 2050, 6789};
 constexpr std::array<uint64_t, kNumTimers> kEnds = {1500, 2059, 9789};
-const std::array<TimerInfo, kNumTimers> kTimersScopeId1 = []() {
+constexpr std::array<uint64_t, kNumTimers> kOrderedDiffs = {9, 500, 3000};
+const std::array<TimerInfo, kNumTimers> kTimersScopeId1 = [] {
   std::array<TimerInfo, kNumTimers> timers;
   for (size_t i = 0; i < kNumTimers; i++) {
     timers[i].set_start(kStarts[i]);
@@ -35,14 +38,14 @@ const std::array<TimerInfo, kNumTimers> kTimersScopeId1 = []() {
   }
   return timers;
 }();
-const ScopeStats kScope1Stats = []() {
+const ScopeStats kScope1Stats = [] {
   ScopeStats stats;
   for (TimerInfo timer : kTimersScopeId1) {
     stats.UpdateStats(timer.end() - timer.start());
   }
   return stats;
 }();
-const TimerInfo kTimerScopeId2 = []() {
+const TimerInfo kTimerScopeId2 = [] {
   TimerInfo timer;
   timer.set_start(100);
   timer.set_end(320);
@@ -63,7 +66,7 @@ TEST(ScopeStatsCollectionTest, CreateEmpty) {
   ASSERT_TRUE(collection.GetAllProvidedScopeIds().empty());
   ScopeStats stats = collection.GetScopeStatsOrDefault(kScopeId1);
   ExpectStatsAreEqual(stats, kDefaultScopeStats);
-  EXPECT_EQ(collection.GetSortedTimerDurationsForScopeId(kScopeId1), nullptr);
+  EXPECT_THAT(collection.GetSortedTimerDurationsForScopeId(kScopeId1), IsNull());
 }
 
 TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
@@ -79,10 +82,10 @@ TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
   ExpectStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
 
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  EXPECT_EQ(timer_durations, nullptr);
+  EXPECT_THAT(timer_durations, IsNull());
   collection.OnDataChanged();
   timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  EXPECT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
+  EXPECT_THAT(*timer_durations, ElementsAre(kOrderedDiffs[0], kOrderedDiffs[1], kOrderedDiffs[2]));
 }
 
 TEST(ScopeStatsCollectionTest, CreateWithTimers) {
@@ -102,7 +105,7 @@ TEST(ScopeStatsCollectionTest, CreateWithTimers) {
   EXPECT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
   ExpectStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  EXPECT_THAT(*timer_durations, ElementsAre(9, 500, 3000));
+  EXPECT_THAT(*timer_durations, ElementsAre(kOrderedDiffs[0], kOrderedDiffs[1], kOrderedDiffs[2]));
 }
 
 }  // namespace orbit_client_data
