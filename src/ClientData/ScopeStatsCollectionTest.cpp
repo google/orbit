@@ -75,7 +75,11 @@ TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
   ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
 
   AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
+
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
+  ASSERT_EQ(timer_durations, nullptr);
+  collection.SortTimers();
+  timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
   ASSERT_THAT(*timer_durations, testing::ElementsAre(9, 500, 3000));
 }
 

@@ -26,8 +26,8 @@ class ScopeStatsCollection {
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(ScopeId scope_id);
 
-  // This causes the timers to no longer be sorted. Recognize that SortTImers() needs to be called
-  // and will take time before GetSortedTimerDurationsForScopeId can be called/returned.
+  // Calling this function causes the timer durations to no longer be sorted. SortTimers() *must* be
+  // called after UpdateScopeStats and before GetSortedTimerDurationsForScopeId().
   void UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer);
   void SetScopeStats(ScopeId scope_id, ScopeStats stats);
 

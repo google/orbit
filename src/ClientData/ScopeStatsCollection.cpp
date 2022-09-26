@@ -5,6 +5,8 @@
 
 #include "ClientData/ScopeStatsCollection.h"
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_client_data {
 
 static const ScopeStats kDefaultScopeStats;
@@ -29,6 +31,7 @@ void ScopeStatsCollection::UpdateScopeStats(ScopeId scope_id, const TimerInfo& t
   timer_durations_are_sorted_ = false;
 }
 
+// TODO(b/249046906): Remove this test-only function.
 void ScopeStatsCollection::SetScopeStats(ScopeId scope_id, const ScopeStats stats) {
   scope_stats_.insert_or_assign(scope_id, stats);
 }
@@ -50,7 +53,10 @@ const ScopeStats& ScopeStatsCollection::GetScopeStatsOrDefault(ScopeId scope_id)
 const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForScopeId(
     ScopeId scope_id) {
   if (!timer_durations_are_sorted_) {
-    SortTimers();
+    ORBIT_ERROR(
+        "Calling GetSortedTimerDurationsForScopeId on unsorted timers. Must call SortTimers() "
+        "first.");
+    return nullptr;
   }
   if (const auto durations_it = scope_id_to_timer_durations_.find(scope_id);
       durations_it != scope_id_to_timer_durations_.end()) {
@@ -60,6 +66,8 @@ const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForSco
 }
 
 void ScopeStatsCollection::SortTimers() {
+  if (timer_durations_are_sorted_) return;
+
   for (auto& [_, timer_durations] : scope_id_to_timer_durations_) {
     absl::c_sort(timer_durations);
   }
