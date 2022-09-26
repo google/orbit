@@ -20,23 +20,20 @@ class ScopeCollection {
  public:
   explicit ScopeCollection() = default;
   explicit ScopeCollection(ScopeIdProvider& scope_id_provider,
-                           std::vector<const TimerInfo*>& timers);
+                           const std::vector<const TimerInfo*>& timers);
 
   [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const;
-  [[nodiscard]] const orbit_client_data::ScopeStats& GetScopeStatsOrDefault(
-      orbit_client_data::ScopeId scope_id) const;
-  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      orbit_client_data::ScopeId scope_id);
+  [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;
+  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(ScopeId scope_id);
 
   void UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer);
   void SetScopeStats(ScopeId scope_id, ScopeStats stats);
 
- private:
   void SortTimers();
 
-  absl::flat_hash_map<orbit_client_data::ScopeId, orbit_client_data::ScopeStats> scope_stats_;
-  absl::flat_hash_map<orbit_client_data::ScopeId, std::vector<uint64_t>>
-      scope_id_to_timer_durations_;
+ private:
+  absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;
+  absl::flat_hash_map<ScopeId, std::vector<uint64_t>> scope_id_to_timer_durations_;
   bool timers_are_sorted_ = true;
 };
 

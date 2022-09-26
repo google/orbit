@@ -91,7 +91,10 @@ void CaptureData::AddScopeStats(ScopeId scope_id, ScopeStats stats) {
   all_scopes_->SetScopeStats(scope_id, stats);
 }
 
-void CaptureData::OnCaptureComplete() { thread_track_data_provider_->OnCaptureComplete(); }
+void CaptureData::OnCaptureComplete() {
+  thread_track_data_provider_->OnCaptureComplete();
+  all_scopes_->SortTimers();
+}
 
 void CaptureData::FilterBrokenCallstacks() {
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at{};
