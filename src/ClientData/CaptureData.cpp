@@ -37,7 +37,7 @@ CaptureData::CaptureData(CaptureStarted capture_started,
       scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started_.capture_options())),
       thread_track_data_provider_(
           std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)),
-      all_scopes_(std::make_shared<ScopeCollection>()) {
+      all_scopes_(std::make_shared<ScopeStatsCollection>()) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started_.process_id());
   std::filesystem::path executable_path{capture_started_.executable_path()};

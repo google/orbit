@@ -9,7 +9,7 @@
 #include <iterator>
 
 #include "ClientData/MockScopeIdProvider.h"
-#include "ClientData/ScopeCollection.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 
@@ -56,16 +56,16 @@ static void AssertStatsAreEqual(ScopeStats actual, ScopeStats expect) {
   ASSERT_EQ(actual.variance_ns(), expect.variance_ns());
 }
 
-TEST(ScopeCollectionTest, CreateEmpty) {
-  ScopeCollection collection = ScopeCollection();
+TEST(ScopeStatsCollectionTest, CreateEmpty) {
+  ScopeStatsCollection collection = ScopeStatsCollection();
   ASSERT_TRUE(collection.GetAllProvidedScopeIds().empty());
   ScopeStats stats = collection.GetScopeStatsOrDefault(kScopeId1);
   AssertStatsAreEqual(stats, kDefaultScopeStats);
   ASSERT_EQ(collection.GetSortedTimerDurationsForScopeId(kScopeId1), nullptr);
 }
 
-TEST(ScopeCollectionTest, AddTimersWithUpdateStats) {
-  ScopeCollection collection = ScopeCollection();
+TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
+  ScopeStatsCollection collection = ScopeStatsCollection();
   for (TimerInfo timer : kTimersScopeId1) {
     collection.UpdateScopeStats(kScopeId1, timer);
   }
@@ -76,12 +76,10 @@ TEST(ScopeCollectionTest, AddTimersWithUpdateStats) {
 
   AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_NE(timer_durations, nullptr);
-  ASSERT_EQ(timer_durations->size(), kNumTimers);
   ASSERT_THAT(*timer_durations, testing::ElementsAre(9, 500, 3000));
 }
 
-TEST(ScopeCollectionTest, CreateWithTimers) {
+TEST(ScopeStatsCollectionTest, CreateWithTimers) {
   MockScopeIdProvider mock_scope_id_provider;
   std::vector<const TimerInfo*> timers;
   timers.push_back(&kTimerScopeId2);
@@ -93,13 +91,11 @@ TEST(ScopeCollectionTest, CreateWithTimers) {
       .Times(4)
       .WillOnce(testing::Return(kScopeId2))
       .WillRepeatedly(testing::Return(kScopeId1));
-  ScopeCollection collection = ScopeCollection(mock_scope_id_provider, timers);
+  ScopeStatsCollection collection = ScopeStatsCollection(mock_scope_id_provider, timers);
 
   ASSERT_EQ(collection.GetAllProvidedScopeIds().size(), 2);
   AssertStatsAreEqual(collection.GetScopeStatsOrDefault(kScopeId1), kScope1Stats);
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
-  ASSERT_NE(timer_durations, nullptr);
-  ASSERT_EQ(timer_durations->size(), kNumTimers);
   ASSERT_THAT(*timer_durations, testing::ElementsAre(9, 500, 3000));
 }
 

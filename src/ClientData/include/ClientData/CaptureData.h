@@ -28,7 +28,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeCollection.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
@@ -307,7 +307,7 @@ class CaptureData {
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
 
-  std::shared_ptr<ScopeCollection> all_scopes_;
+  std::shared_ptr<ScopeStatsCollection> all_scopes_;
 };
 
 }  // namespace orbit_client_data
