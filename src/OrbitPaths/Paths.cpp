@@ -23,6 +23,7 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StringConversion.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
@@ -205,7 +206,7 @@ static std::filesystem::path GetDocumentsPath() {
   std::wstring wpath = ppszPath;
   CoTaskMemFree(ppszPath);
   std::filesystem::path path{wpath};
-  ORBIT_LOG("Path to Documents: %s", path.string());
+  ORBIT_LOG("Path to Documents: %s", orbit_base::ToStdString(path.wstring()));
   return path;
 #else
   return std::filesystem::path(GetEnvVar("HOME")) / "Documents";
