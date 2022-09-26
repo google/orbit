@@ -3,10 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_SCOPE_COLLECTION_H_
-#define CLIENT_DATA_SCOPE_COLLECTION_H_
-
-#include <cmath>
+#ifndef CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
+#define CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
 
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
@@ -14,7 +12,7 @@
 
 namespace orbit_client_data {
 
-// ScopeCollection holds a subset of all Scopes in a capture keeping track of their stats and
+// ScopeStatsCollection holds a subset of all Scopes in a capture keeping track of their stats and
 // ordered durations.
 class ScopeStatsCollection {
  public:
@@ -41,4 +39,4 @@ class ScopeStatsCollection {
 
 }  // namespace orbit_client_data
 
-#endif  // CLIENT_DATA_SCOPE_COLLECTION_H_
+#endif  // CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
