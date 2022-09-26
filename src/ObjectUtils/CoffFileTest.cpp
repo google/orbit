@@ -296,7 +296,7 @@ TEST(CoffFile, GetsCorrectBuildIdIfPdbInfoIsPresent) {
   auto coff_file_or_error = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_or_error, HasNoError());
 
-  EXPECT_EQ("4f9ad6af397f504e88fc34477bd0bae3-1", coff_file_or_error.value()->GetBuildId());
+  EXPECT_EQ("afd69a4f7f394e5088fc34477bd0bae3-1", coff_file_or_error.value()->GetBuildId());
 }
 
 TEST(CoffFile, GetsEmptyBuildIdIfPdbInfoIsNotPresent) {

@@ -128,7 +128,7 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
   const std::string no_symbols_elf_build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
   const fs::path dllmain_dll = testdata_directory / "dllmain.dll";
   const fs::path dllmain_pdb = testdata_directory / "dllmain.pdb";
-  const std::string dllmain_build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+  const std::string dllmain_build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
 
   SymbolHelper symbol_helper("", {});
 
@@ -272,7 +272,7 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     // Same PDB file (smoke test).
     const fs::path file_name = "dllmain.pdb";
     const auto result =
-        symbol_helper.FindSymbolsInCache(file_name, "efaecd92f773bb4ebcf213b84f43b322-3");
+        symbol_helper.FindSymbolsInCache(file_name, "92cdaeef73f74ebbbcf213b84f43b322-3");
     ASSERT_THAT(result, HasValue());
     EXPECT_THAT(result.value(), testdata_directory / file_name);
   }
@@ -287,7 +287,7 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     // COFF file in cache does not have symbols.
     const fs::path file_name = "dllmain.dll";
     const auto result =
-        symbol_helper.FindSymbolsInCache(file_name, "efaecd92f773bb4ebcf213b84f43b322-3");
+        symbol_helper.FindSymbolsInCache(file_name, "92cdaeef73f74ebbbcf213b84f43b322-3");
     EXPECT_THAT(result, HasError("does not contain symbols"));
   }
   {
@@ -345,7 +345,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     const auto file_size = orbit_base::FileSize(file_path);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
-        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value());
+        file_name, "92cdaeef73f74ebbbcf213b84f43b322-3", file_size.value());
     ASSERT_THAT(result, HasValue());
     EXPECT_EQ(result.value(), file_path);
   }
@@ -366,7 +366,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     const auto file_size = orbit_base::FileSize(file_path);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
-        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value() + 1);
+        file_name, "92cdaeef73f74ebbbcf213b84f43b322-3", file_size.value() + 1);
     ASSERT_THAT(result, HasError("File size doesn't match"));
   }
   {
@@ -376,7 +376,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     const auto file_size = orbit_base::FileSize(file_path);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
-        file_name, "efaecd92f773bb4ebcf213b84f43b322-3", file_size.value());
+        file_name, "92cdaeef73f74ebbbcf213b84f43b322-3", file_size.value());
     EXPECT_THAT(result, HasError("The file was not recognized as a valid object file"));
   }
   {
