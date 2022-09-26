@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
-#define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
+#ifndef MIZAR_MODELS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
+#define MIZAR_MODELS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
@@ -21,7 +21,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
 
-namespace orbit_mizar_widgets {
+namespace orbit_mizar_models {
 
 // The class implements the model for the instance of `QTableView` owned by
 // `SamplingWithFrameTrackOutputWidget`. It represents the results of comparison based on sampling
@@ -383,6 +383,6 @@ using SamplingWithFrameTrackReportModel =
                                           orbit_mizar_data::SamplingCounts,
                                           orbit_client_data::ScopeStats>;
 
-}  // namespace orbit_mizar_widgets
+}  // namespace orbit_mizar_models
 
-#endif  // MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
+#endif  // MIZAR_MODELS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_

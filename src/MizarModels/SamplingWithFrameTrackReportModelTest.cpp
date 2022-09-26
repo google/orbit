@@ -65,7 +65,7 @@ class MockFrameTrackStats {
 
 }  // namespace
 
-namespace orbit_mizar_widgets {
+namespace orbit_mizar_models {
 
 constexpr size_t kFunctionCount = 4;
 constexpr std::array<SFID, kFunctionCount> kSfids = {SFID(1), SFID(2), SFID(3), SFID(4)};
@@ -340,4 +340,4 @@ TEST_F(SamplingWithFrameTrackReportModelTest, PvalueAndIsSignificantAreCorrect) 
                                          /*significance_level=*/0.01);
 }
 
-}  // namespace orbit_mizar_widgets
+}  // namespace orbit_mizar_models

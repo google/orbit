@@ -27,7 +27,7 @@ using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 using ::orbit_mizar_base::kBaselineTitle;
 using ::orbit_mizar_base::kComparisonTitle;
 using FunctionNameToShow =
-    ::orbit_mizar_widgets::SamplingWithFrameTrackReportModel::FunctionNameToShow;
+    ::orbit_mizar_models::SamplingWithFrameTrackReportModel::FunctionNameToShow;
 
 Q_DECLARE_METATYPE(FunctionNameToShow);
 

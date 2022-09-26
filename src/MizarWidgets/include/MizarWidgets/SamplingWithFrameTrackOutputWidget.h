@@ -25,7 +25,9 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
-  using FunctionNameToShow = SamplingWithFrameTrackReportModel::FunctionNameToShow;
+  using SamplingWithFrameTrackReportModel = ::orbit_mizar_models::SamplingWithFrameTrackReportModel;
+  using FunctionNameToShow =
+      ::orbit_mizar_models::SamplingWithFrameTrackReportModel::FunctionNameToShow;
 
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
