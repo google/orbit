@@ -551,11 +551,26 @@ class LoadPreset(E2ETestCase):
         status_text = presets_panel.get_item_at(preset_row, 0).texts()[0]
 
         if 'No' in status_text:
+            logging.info("About to click File->OpenPreset...")
             app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
             app_menu.item_by_path("File->Open Preset...").click_input()
-            dialog = self.suite.top_window().child_window(title_re="Select a file*")
-            dialog.FileNameEdit.type_keys(preset_name)
-            dialog.FileNameEdit.type_keys('{DOWN}{ENTER}')
+
+            def get_open_file_dialog():
+                return self.find_control(control_type="Window",
+                                        name_contains="Select a file",
+                                        parent=self.suite.top_window(),
+                                        recurse=False)
+
+            logging.info("Waiting for the file open dialog to appear")
+            wait_for_condition(lambda: get_open_file_dialog().is_visible())
+            dialog = get_open_file_dialog()
+
+            file_edit = self.find_control(control_type="Edit",
+                                name="File name:",
+                                parent=dialog,
+                                recurse=True)
+            file_edit.type_keys(preset_name)
+            file_edit.type_keys('{DOWN}{ENTER}')
 
             message_box = self.suite.top_window().child_window(title_re="Preset loading failed*")
             self.expect_true(message_box is not None, 'Message box found.')
