@@ -129,7 +129,7 @@ const FunctionInfo* CaptureData::GetFunctionInfoByScopeId(ScopeId scope_id) cons
 void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
     const ModuleManager& module_manager) {
   uint64_t updated_function_count = 0;
-  for (auto& [unused_function_id, instrumented_function] : instrumented_functions_) {
+  for (auto& [function_id, instrumented_function] : instrumented_functions_) {
     if (instrumented_function.function_virtual_address() != 0) {
       continue;
     }
@@ -144,6 +144,12 @@ void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
         module_data->ConvertFromOffsetInFileToVirtualAddress(instrumented_function.file_offset());
     instrumented_function.set_function_virtual_address(virtual_address);
     ++updated_function_count;
+
+    ORBIT_CHECK(scope_id_provider_);
+    auto scope_id = scope_id_provider_->FunctionIdToScopeId(function_id);
+    if (scope_id.has_value()) {
+      scope_id_provider_->UpdateFunctionInfoAddress(scope_id.value(), virtual_address);
+    }
   }
 
   if (updated_function_count > 0) {

@@ -37,7 +37,7 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info;
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id;
-  absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info;
+  absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info;
 
   for (const auto& instrumented_function : instrumented_functions) {
     const ScopeId scope_id{instrumented_function.function_id()};
@@ -144,6 +144,13 @@ const FunctionInfo* NameEqualityScopeIdProvider::GetFunctionInfo(ScopeId scope_i
     return &it->second;
   }
   return nullptr;
+}
+
+void NameEqualityScopeIdProvider::UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) {
+  const auto it = scope_id_to_function_info_.find(scope_id);
+  if (it != scope_id_to_function_info_.end()) {
+    it->second.SetAddress(address);
+  }
 }
 
 }  // namespace orbit_client_data

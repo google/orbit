@@ -40,6 +40,7 @@ class ScopeIdProvider {
   [[nodiscard]] virtual const ScopeInfo& GetScopeInfo(ScopeId scope_id) const = 0;
 
   [[nodiscard]] virtual const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const = 0;
+  virtual void UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) = 0;
 };
 
 // This class, unless the timer does already have an id (`function_id`), it assigning an id for
@@ -68,12 +69,13 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   [[nodiscard]] const ScopeInfo& GetScopeInfo(ScopeId scope_id) const override;
 
   [[nodiscard]] const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const override;
+  void UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) override;
 
  private:
   explicit NameEqualityScopeIdProvider(
       uint64_t start_id, absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id,
       absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info,
-      absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info)
+      absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info)
       : next_id_(ScopeId(start_id)),
         max_instrumented_function_id_(ScopeId(start_id - 1)),
         scope_info_to_id_(std::move(scope_info_to_id)),
@@ -88,7 +90,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id_ ABSL_GUARDED_BY(mutex_);
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info_ ABSL_GUARDED_BY(mutex_);
   /// TODO(http://b/247467504): Add FunctionInfo to ScopeInfo.
-  absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info_;
+  absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info_;
   mutable absl::Mutex mutex_;
 };
 
