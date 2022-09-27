@@ -256,7 +256,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
                                                           const std::string& build_id) const {
-  return FindSymbolsInCacheImpl(module_path,
+  return FindSymbolsInCacheImpl(module_path, "symbols",
                                 [&build_id](const std::filesystem::path& cache_file_path) {
                                   return VerifySymbolFile(cache_file_path, build_id);
                                 });
@@ -265,7 +265,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
                                                           uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
-      module_path, [&expected_file_size](const std::filesystem::path& cache_file_path) {
+      module_path, "symbols", [&expected_file_size](const std::filesystem::path& cache_file_path) {
         return VerifySymbolFile(cache_file_path, expected_file_size);
       });
 }
@@ -274,7 +274,7 @@ ErrorMessageOr<std::filesystem::path> SymbolHelper::FindObjectInCache(
     const std::filesystem::path& module_path, const std::string& build_id,
     uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
-      module_path,
+      module_path, "object file",
       [&build_id,
        expected_file_size](const std::filesystem::path& cache_file_path) -> ErrorMessageOr<void> {
         return VerifyObjectFile(cache_file_path, build_id, expected_file_size);
@@ -282,14 +282,15 @@ ErrorMessageOr<std::filesystem::path> SymbolHelper::FindObjectInCache(
 }
 
 template <typename Verifier>
-ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
-                                                              Verifier&& verify) const {
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(
+    const fs::path& module_path, std::string_view searchee_for_error_message,
+    Verifier&& verify) const {
   ORBIT_SCOPE_FUNCTION;
   fs::path cache_file_path = GenerateCachedFilePath(module_path);
   OUTCOME_TRY(const bool exists, orbit_base::FileOrDirectoryExists(cache_file_path));
   if (!exists) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
+    return ErrorMessage(absl::StrFormat("Unable to find %s in cache for module \"%s\"",
+                                        searchee_for_error_message, module_path.string()));
   }
   OUTCOME_TRY(verify(cache_file_path));
   return cache_file_path;

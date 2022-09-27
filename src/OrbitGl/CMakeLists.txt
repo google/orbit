@@ -203,7 +203,7 @@ elseif(TARGET OpenGL::GL)
 endif()
 
 if(WIN32)
-  target_compile_options(OrbitGl PRIVATE "$<$<CONFIG:Debug>:/bigobj>")
+  target_compile_options(OrbitGl PRIVATE /bigobj)
 endif()
 
 

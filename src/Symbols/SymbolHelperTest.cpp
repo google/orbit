@@ -255,6 +255,12 @@ TEST(SymbolHelper, FindSymbolsInCacheBySize) {
     const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value() + 1);
     EXPECT_THAT(result, HasError("File size doesn't match"));
   }
+  {
+    // File doesn't exist.
+    const fs::path file_name = "non-existing_file";
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, 42);
+    EXPECT_THAT(result, HasError("Unable to find symbols in cache"));
+  }
 }
 
 TEST(SymbolHelper, FindSymbolsInCache) {
@@ -301,6 +307,12 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     const fs::path file_name = "dllmain.pdb";
     const auto result = symbol_helper.FindSymbolsInCache(file_name, "non matching build id");
     EXPECT_THAT(result, HasError("has a different build id"));
+  }
+  {
+    // File doesn't exist.
+    const fs::path file_name = "non-existing_file";
+    const auto result = symbol_helper.FindSymbolsInCache(file_name, "unimportant build id");
+    EXPECT_THAT(result, HasError("Unable to find symbols in cache"));
   }
 }
 
@@ -386,7 +398,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     const auto file_size = orbit_base::FileSize(file_path);
     ASSERT_THAT(file_size, HasError(""));
     const auto result = symbol_helper.FindObjectInCache(file_name, "unimportant build id", 42);
-    EXPECT_THAT(result, HasError("Unable to find"));
+    EXPECT_THAT(result, HasError("Unable to find object file in cache"));
   }
 }
 
