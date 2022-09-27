@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "ClientData/ScopeIdProvider.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
 
@@ -22,6 +23,8 @@ class MockScopeIdProvider : public ScopeIdProvider {
   MOCK_METHOD(std::vector<ScopeId>, GetAllProvidedScopeIds, (), (const, override));
   MOCK_METHOD(const ScopeInfo&, GetScopeInfo, (ScopeId), (const, override));
   MOCK_METHOD(const FunctionInfo*, GetFunctionInfo, (ScopeId), (const, override));
+  MOCK_METHOD(void, UpdateFunctionInfoAddress, (orbit_grpc_protos::InstrumentedFunction),
+              (override));
 };
 
 }  // namespace orbit_client_data

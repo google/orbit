@@ -40,7 +40,8 @@ class ScopeIdProvider {
   [[nodiscard]] virtual const ScopeInfo& GetScopeInfo(ScopeId scope_id) const = 0;
 
   [[nodiscard]] virtual const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const = 0;
-  virtual void UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) = 0;
+  virtual void UpdateFunctionInfoAddress(
+      orbit_grpc_protos::InstrumentedFunction instrumented_function) = 0;
 };
 
 // This class, unless the timer does already have an id (`function_id`), it assigning an id for
@@ -69,7 +70,8 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   [[nodiscard]] const ScopeInfo& GetScopeInfo(ScopeId scope_id) const override;
 
   [[nodiscard]] const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const override;
-  void UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) override;
+  void UpdateFunctionInfoAddress(
+      orbit_grpc_protos::InstrumentedFunction instrumented_function) override;
 
  private:
   explicit NameEqualityScopeIdProvider(

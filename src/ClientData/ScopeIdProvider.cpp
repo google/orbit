@@ -24,6 +24,8 @@
 
 namespace orbit_client_data {
 
+using orbit_grpc_protos::InstrumentedFunction;
+
 std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create(
     const orbit_grpc_protos::CaptureOptions& capture_options) {
   const auto& instrumented_functions = capture_options.instrumented_functions();
@@ -146,10 +148,14 @@ const FunctionInfo* NameEqualityScopeIdProvider::GetFunctionInfo(ScopeId scope_i
   return nullptr;
 }
 
-void NameEqualityScopeIdProvider::UpdateFunctionInfoAddress(ScopeId scope_id, uint64_t address) {
-  const auto it = scope_id_to_function_info_.find(scope_id);
-  if (it != scope_id_to_function_info_.end()) {
-    it->second.SetAddress(address);
+void NameEqualityScopeIdProvider::UpdateFunctionInfoAddress(
+    InstrumentedFunction instrumented_function) {
+  if (auto scope_id = FunctionIdToScopeId(instrumented_function.function_id());
+      scope_id.has_value()) {
+    if (const auto it = scope_id_to_function_info_.find(scope_id.value());
+        it != scope_id_to_function_info_.end()) {
+      it->second.SetAddress(instrumented_function.function_virtual_address());
+    }
   }
 }
 
