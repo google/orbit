@@ -36,7 +36,8 @@ CaptureData::CaptureData(CaptureStarted capture_started,
       file_path_{std::move(file_path)},
       scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started_.capture_options())),
       thread_track_data_provider_(
-          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
+          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)),
+      all_scopes_(std::make_shared<ScopeStatsCollection>()) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started_.process_id());
   std::filesystem::path executable_path{capture_started_.executable_path()};
@@ -76,30 +77,23 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
 }
 
 const ScopeStats& CaptureData::GetScopeStatsOrDefault(ScopeId scope_id) const {
-  static const ScopeStats kDefaultScopeStats;
-  auto scope_stats_it = scope_stats_.find(scope_id);
-  if (scope_stats_it == scope_stats_.end()) {
-    return kDefaultScopeStats;
-  }
-  return scope_stats_it->second;
+  return all_scopes_->GetScopeStatsOrDefault(scope_id);
 }
 
 void CaptureData::UpdateScopeStats(const TimerInfo& timer_info) {
   const std::optional<ScopeId> scope_id = ProvideScopeId(timer_info);
   if (!scope_id.has_value()) return;
 
-  ScopeStats& stats = scope_stats_[scope_id.value()];
-  const uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-  stats.UpdateStats(elapsed_nanos);
+  all_scopes_->UpdateScopeStats(scope_id.value(), timer_info);
 }
 
 void CaptureData::AddScopeStats(ScopeId scope_id, ScopeStats stats) {
-  scope_stats_.insert_or_assign(scope_id, stats);
+  all_scopes_->SetScopeStats(scope_id, stats);
 }
 
 void CaptureData::OnCaptureComplete() {
   thread_track_data_provider_->OnCaptureComplete();
-  UpdateTimerDurations();
+  all_scopes_->OnCaptureComplete();
 }
 
 void CaptureData::FilterBrokenCallstacks() {
@@ -228,9 +222,7 @@ uint64_t CaptureData::ScopeIdToFunctionId(ScopeId scope_id) const {
 
 const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
     ScopeId scope_id) const {
-  const auto it = scope_id_to_timer_durations_.find(scope_id);
-  if (it == scope_id_to_timer_durations_.end()) return nullptr;
-  return &it->second;
+  return all_scopes_->GetSortedTimerDurationsForScopeId(scope_id);
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(
@@ -260,23 +252,6 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
   }
 
   return result;
-}
-
-void CaptureData::UpdateTimerDurations() {
-  ORBIT_SCOPE_FUNCTION;
-  scope_id_to_timer_durations_.clear();
-
-  for (const TimerInfo* timer : GetAllScopeTimers(kAllValidScopeTypes)) {
-    const std::optional<ScopeId> scope_id = ProvideScopeId(*timer);
-
-    if (scope_id.has_value()) {
-      scope_id_to_timer_durations_[scope_id.value()].push_back(timer->end() - timer->start());
-    }
-  }
-
-  for (auto& [id, timer_durations] : scope_id_to_timer_durations_) {
-    std::sort(timer_durations.begin(), timer_durations.end());
-  }
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetTimersForScope(

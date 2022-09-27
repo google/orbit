@@ -31,6 +31,7 @@
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerData.h"
@@ -267,8 +268,6 @@ class CaptureData {
       int64_t thread_id, uint64_t timestamp) const;
 
  private:
-  void UpdateTimerDurations();
-
   orbit_grpc_protos::CaptureStarted capture_started_;
 
   orbit_client_data::ProcessData process_;
@@ -286,8 +285,6 @@ class CaptureData {
   TracepointData tracepoint_data_;
 
   absl::flat_hash_map<uint64_t, LinuxAddressInfo> address_infos_;
-
-  absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;
 
   absl::flat_hash_map<uint32_t, std::string> thread_names_;
 
@@ -310,7 +307,7 @@ class CaptureData {
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
 
-  absl::flat_hash_map<ScopeId, std::vector<uint64_t>> scope_id_to_timer_durations_;
+  std::shared_ptr<ScopeStatsCollection> all_scopes_;
 };
 
 }  // namespace orbit_client_data

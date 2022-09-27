@@ -23,6 +23,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/DataManager.h
         include/ClientData/FunctionInfo.h
         include/ClientData/LinuxAddressInfo.h
+        include/ClientData/MockScopeIdProvider.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
         include/ClientData/ModuleManager.h
@@ -32,6 +33,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ScopeIdProvider.h
         include/ClientData/ScopeInfo.h
         include/ClientData/ScopeStats.h
+        include/ClientData/ScopeStatsCollection.h
         include/ClientData/ScopeTreeTimerData.h
         include/ClientData/ThreadStateSliceInfo.h
         include/ClientData/ThreadTrackDataManager.h
@@ -62,6 +64,7 @@ target_sources(ClientData PRIVATE
         ProcessData.cpp
         ScopeIdProvider.cpp
         ScopeStats.cpp
+        ScopeStatsCollection.cpp
         ScopeTreeTimerData.cpp
         ThreadTrackDataProvider.cpp
         TimerChain.cpp
@@ -96,6 +99,7 @@ target_sources(ClientDataTests PRIVATE
         ProcessDataTest.cpp
         ScopeIdProviderTest.cpp
         ScopeInfoTest.cpp
+        ScopeStatsCollectionTest.cpp
         ScopeTreeTimerDataTest.cpp
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
