@@ -35,6 +35,10 @@ class TracerListener {
   virtual void OnWarningInstrumentingWithUprobesEvent(
       orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
           warning_instrumenting_with_uprobes_event) = 0;
+  virtual void OnTidNamespaceMapping(
+      orbit_grpc_protos::TidNamespaceMapping tid_namespace_mapping) = 0;
+  virtual void OnTidNamespaceMappingSnapshot(
+      orbit_grpc_protos::TidNamespaceMappingSnapshot tid_namespace_mapping_snapshot) = 0;
 };
 
 }  // namespace orbit_linux_tracing

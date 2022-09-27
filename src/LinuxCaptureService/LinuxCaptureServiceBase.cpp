@@ -84,7 +84,8 @@ CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
         ProducerCaptureEvent capture_event;
         std::visit(
             [&capture_event](const auto& api_event) {
-              orbit_api::FillProducerCaptureEventFromApiEvent(api_event, &capture_event);
+              orbit_api::FillIntrospectionProducerCaptureEventFromApiEvent(api_event,
+                                                                           &capture_event);
             },
             api_event_variant);
         producer_event_processor->ProcessEvent(orbit_grpc_protos::kIntrospectionProducerId,

@@ -151,4 +151,18 @@ void TracingHandler::OnWarningInstrumentingWithUprobesEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void TracingHandler::OnTidNamespaceMapping(
+    orbit_grpc_protos::TidNamespaceMapping tid_namespace_mapping) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_tid_namespace_mapping() = std::move(tid_namespace_mapping);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnTidNamespaceMappingSnapshot(
+    orbit_grpc_protos::TidNamespaceMappingSnapshot tid_namespace_mapping_snapshot) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_tid_namespace_mapping_snapshot() = std::move(tid_namespace_mapping_snapshot);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_linux_capture_service

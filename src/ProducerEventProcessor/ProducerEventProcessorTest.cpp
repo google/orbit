@@ -65,6 +65,8 @@ using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::ThreadStateSliceCallstack;
+using orbit_grpc_protos::TidNamespaceMapping;
+using orbit_grpc_protos::TidNamespaceMappingSnapshot;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
@@ -151,6 +153,30 @@ constexpr const char* kExecutablePath = "/path/to/executable";
 constexpr const char* kBuildId1 = "build_id_1";
 constexpr const char* kBuildId2 = "build_id_2";
 
+void SetTidNamespaceMappingSnapshotInProducerEventProcessor(
+    ProducerEventProcessor* producer_event_processor,
+    const std::vector<std::pair<std::uint32_t, std::uint32_t>>& tid_mappings) {
+  ProducerCaptureEvent event;
+  TidNamespaceMappingSnapshot* snapshot = event.mutable_tid_namespace_mapping_snapshot();
+  for (const auto& mapping : tid_mappings) {
+    TidNamespaceMapping* tid_mapping = snapshot->add_tid_namespace_mappings();
+    tid_mapping->set_tid_in_target_process_namespace(mapping.first);
+    tid_mapping->set_tid_in_root_namespace(mapping.second);
+  }
+  producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(event));
+}
+
+void SetTidNamespaceMappingsInProducerEventProcessor(
+    ProducerEventProcessor* producer_event_processor,
+    const std::vector<std::pair<std::uint32_t, std::uint32_t>>& tid_mappings) {
+  for (const auto& mapping : tid_mappings) {
+    ProducerCaptureEvent tid_mapping_event;
+    TidNamespaceMapping* tid_mapping = tid_mapping_event.mutable_tid_namespace_mapping();
+    tid_mapping->set_tid_in_target_process_namespace(mapping.first);
+    tid_mapping->set_tid_in_root_namespace(mapping.second);
+    producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(tid_mapping_event));
+  }
+}
 }  // namespace
 
 TEST(ProducerEventProcessor, OneSchedulingSliceEvent) {
@@ -1915,6 +1941,8 @@ TEST(ProducerEventProcessor, ApiScopeStart) {
 
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+  SetTidNamespaceMappingSnapshotInProducerEventProcessor(producer_event_processor.get(),
+                                                         {{kPid1, kPid1}, {kTid1, kTid1}});
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
@@ -1934,6 +1962,8 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
 
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+  SetTidNamespaceMappingSnapshotInProducerEventProcessor(producer_event_processor.get(),
+                                                         {{kPid1, kPid1}, {kTid1, kTid1}});
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
@@ -2334,6 +2364,76 @@ TEST(ProducerEventProcessor, OutOfOrderEventsDiscardedEvent) {
       client_capture_event.out_of_order_events_discarded_event();
   EXPECT_EQ(actual_out_of_order_events_discarded_event.duration_ns(), kDurationNs1);
   EXPECT_EQ(actual_out_of_order_events_discarded_event.end_timestamp_ns(), kTimestampNs1);
+}
+
+TEST(ProducerEventProcessor, BufferedAndResolveApiScope) {
+  ProducerCaptureEvent producer_capture_event_start;
+  ApiScopeStart* api_scope_start = producer_capture_event_start.mutable_api_scope_start();
+  api_scope_start->set_pid(kPid1);
+  api_scope_start->set_tid(kTid1);
+  api_scope_start->set_timestamp_ns(kTimestampNs1);
+  ProducerCaptureEvent producer_capture_event_start_copy = producer_capture_event_start;
+
+  ProducerCaptureEvent producer_capture_event_stop;
+  ApiScopeStop* api_scope_stop = producer_capture_event_stop.mutable_api_scope_stop();
+  api_scope_stop->set_pid(kPid1);
+  api_scope_stop->set_tid(kTid1);
+  api_scope_stop->set_timestamp_ns(kTimestampNs2);
+  ProducerCaptureEvent producer_capture_event_stop_copy = producer_capture_event_stop;
+
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  // Verify no events arrived yet (since they are buffered).
+  EXPECT_CALL(collector, AddEvent).Times(0);
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_start));
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_stop));
+  testing::Mock::VerifyAndClearExpectations(&collector);
+
+  // Verify the events arrive after the tid namespace mapping gets set and the tids are translated
+  // properly.
+  std::vector<ClientCaptureEvent> actual_client_capture_events;
+  EXPECT_CALL(collector, AddEvent)
+      .Times(2)
+      .WillRepeatedly(
+          Invoke([&actual_client_capture_events](ClientCaptureEvent&& client_capture_event) {
+            actual_client_capture_events.push_back(std::move(client_capture_event));
+          }));
+  SetTidNamespaceMappingSnapshotInProducerEventProcessor(producer_event_processor.get(),
+                                                         {{kPid1, kPid2}, {kTid1, kTid2}});
+  EXPECT_EQ(2, actual_client_capture_events.size());
+  EXPECT_EQ(ClientCaptureEvent::kApiScopeStart, actual_client_capture_events[0].event_case());
+  EXPECT_EQ(kPid2, actual_client_capture_events[0].api_scope_start().pid());
+  EXPECT_EQ(kTid2, actual_client_capture_events[0].api_scope_start().tid());
+  EXPECT_EQ(ClientCaptureEvent::kApiScopeStop, actual_client_capture_events[1].event_case());
+  EXPECT_EQ(kPid2, actual_client_capture_events[1].api_scope_stop().pid());
+  EXPECT_EQ(kTid2, actual_client_capture_events[1].api_scope_stop().tid());
+  testing::Mock::VerifyAndClearExpectations(&collector);
+
+  // Verify that we can also resolve the tid mapping via sending one by one. Above we were sending
+  // them using the snapshot mehod.
+  actual_client_capture_events.clear();
+  EXPECT_CALL(collector, AddEvent)
+      .Times(2)
+      .WillRepeatedly(
+          Invoke([&actual_client_capture_events](ClientCaptureEvent&& client_capture_event) {
+            actual_client_capture_events.push_back(std::move(client_capture_event));
+          }));
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_start_copy));
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_stop_copy));
+  SetTidNamespaceMappingsInProducerEventProcessor(producer_event_processor.get(),
+                                                  {{kPid1, kPid2}, {kTid1, kTid2}});
+  EXPECT_EQ(2, actual_client_capture_events.size());
+  EXPECT_EQ(ClientCaptureEvent::kApiScopeStart, actual_client_capture_events[0].event_case());
+  EXPECT_EQ(kPid2, actual_client_capture_events[0].api_scope_start().pid());
+  EXPECT_EQ(kTid2, actual_client_capture_events[0].api_scope_start().tid());
+  EXPECT_EQ(ClientCaptureEvent::kApiScopeStop, actual_client_capture_events[1].event_case());
+  EXPECT_EQ(kPid2, actual_client_capture_events[1].api_scope_stop().pid());
+  EXPECT_EQ(kTid2, actual_client_capture_events[1].api_scope_stop().tid());
 }
 
 }  // namespace orbit_producer_event_processor

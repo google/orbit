@@ -134,6 +134,26 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     // TODO(b/243515756): Add test for OnThreadStateSliceCallstack
   }
 
+  void OnTidNamespaceMapping(
+      orbit_grpc_protos::TidNamespaceMapping tid_namespace_mapping) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_tid_namespace_mapping() = std::move(tid_namespace_mapping);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnTidNamespaceMappingSnapshot(
+      orbit_grpc_protos::TidNamespaceMappingSnapshot tid_namespace_mapping_snapshot) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_tid_namespace_mapping_snapshot() = std::move(tid_namespace_mapping_snapshot);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   void OnAddressInfo(orbit_grpc_protos::FullAddressInfo address_info) override {
     orbit_grpc_protos::ProducerCaptureEvent event;
     *event.mutable_full_address_info() = std::move(address_info);
@@ -404,6 +424,28 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
         ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiScopeStart:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiScopeStartAsync:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiScopeStop:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiScopeStopAsync:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiStringEvent:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackDouble:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackFloat:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackInt:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackInt64:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackUint:
+        ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kIntrospectionApiTrackUint64:
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kLostPerfRecordsEvent:
         EXPECT_GE(event.lost_perf_records_event().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.lost_perf_records_event().end_timestamp_ns();
@@ -446,6 +488,17 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadStateSliceCallstack:
         // TODO(b/243515756): Add test for scheduling tracepoints with callstacks
         ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kTidNamespaceMapping:
+        EXPECT_EQ(event.tid_namespace_mapping().tid_in_root_namespace(),
+                  event.tid_namespace_mapping().tid_in_target_process_namespace());
+        break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kTidNamespaceMappingSnapshot:
+        EXPECT_FALSE(event.tid_namespace_mapping_snapshot().tid_namespace_mappings().empty());
+        for (const auto& mapping :
+             event.tid_namespace_mapping_snapshot().tid_namespace_mappings()) {
+          EXPECT_EQ(mapping.tid_in_root_namespace(), mapping.tid_in_target_process_namespace());
+        }
+        break;
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningInstrumentingWithUprobesEvent:

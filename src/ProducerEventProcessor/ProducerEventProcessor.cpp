@@ -6,6 +6,12 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <cstdint>
+#include <iterator>
+#include <list>
+#include <optional>
+#include <utility>
+
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
@@ -54,6 +60,8 @@ using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::ThreadStateSliceCallstack;
+using orbit_grpc_protos::TidNamespaceMapping;
+using orbit_grpc_protos::TidNamespaceMappingSnapshot;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
@@ -136,6 +144,28 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // and producer_interned_string_id_to_client_string_id_.
   void ProcessInternedCallstack(uint64_t producer_id, InternedCallstack* interned_callstack);
   void ProcessInternedString(uint64_t producer_id, InternedString* interned_string);
+  void ProcessIntrospectionApiScopeStartAndTransferOwnership(
+      ApiScopeStart* introspection_api_scope_start);
+  void ProcessIntrospectionApiScopeStartAsyncAndTransferOwnership(
+      ApiScopeStartAsync* introspection_api_scope_start_async);
+  void ProcessIntrospectionApiScopeStopAndTransferOwnership(
+      ApiScopeStop* introspection_api_scope_stop);
+  void ProcessIntrospectionApiScopeStopAsyncAndTransferOwnership(
+      ApiScopeStopAsync* introspection_api_scope_stop_async);
+  void ProcessIntrospectionApiStringEventAndTransferOwnership(
+      ApiStringEvent* introspection_api_string_event);
+  void ProcessIntrospectionApiTrackDoubleAndTransferOwnership(
+      ApiTrackDouble* introspection_api_track_double);
+  void ProcessIntrospectionApiTrackFloatAndTransferOwnership(
+      ApiTrackFloat* introspection_api_track_float);
+  void ProcessIntrospectionApiTrackIntAndTransferOwnership(
+      ApiTrackInt* introspection_api_track_int);
+  void ProcessIntrospectionApiTrackInt64AndTransferOwnership(
+      ApiTrackInt64* introspection_api_track_int64);
+  void ProcessIntrospectionApiTrackUintAndTransferOwnership(
+      ApiTrackUint* introspection_api_track_uint);
+  void ProcessIntrospectionApiTrackUint64AndTransferOwnership(
+      ApiTrackUint64* introspection_api_track_uint64);
   void ProcessLostPerfRecordsEventAndTransferOwnership(
       LostPerfRecordsEvent* lost_perf_records_event);
   void ProcessMemoryUsageEventAndTransferOwnership(MemoryUsageEvent* memory_usage_event);
@@ -149,6 +179,9 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadNamesSnapshotAndTransferOwnership(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSliceAndTransferOwnership(ThreadStateSlice* thread_state_slice);
   void ProcessThreadStateSliceCallstack(ThreadStateSliceCallstack* thread_state_slice_callstack);
+  void ProcessTidNamespaceMapping(TidNamespaceMapping* tid_namespace_mapping);
+  void ProcessTidNamespaceMappingSnapshot(
+      TidNamespaceMappingSnapshot* tid_namespace_mapping_snapshot);
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
   void ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
       WarningInstrumentingWithUprobesEvent* warning_event);
@@ -157,6 +190,8 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
 
   void SendInternedStringEvent(uint64_t key, std::string value);
   void MergeThreadStateSliceWithCallstackAndTransferOwnership(ThreadStateSlice* thread_state_slice);
+  std::optional<std::pair<uint32_t, uint32_t>> TranslatePidAndTid(uint32_t pid, uint32_t tid);
+  void TranslateSendAndDeleteEvents(std::list<ClientCaptureEvent>& events);
 
   ClientCaptureEventCollector* client_capture_event_collector_;
 
@@ -181,6 +216,10 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   // need to save the thread state slices to be merged with a callstack later.
   absl::flat_hash_map<std::pair<uint32_t, uint64_t>, uint64_t>
       thread_state_slice_tid_and_begin_timestamp_to_callstack_id_;
+
+  absl::Mutex target_process_namespace_tid_to_root_namespace_tid_mutex_;
+  absl::flat_hash_map<uint32_t, uint32_t> target_process_namespace_tid_to_root_namespace_tid_;
+  absl::flat_hash_map<uint32_t, std::list<ClientCaptureEvent>> buffered_api_events_;
 };
 
 void ProducerEventProcessorImpl::MergeThreadStateSliceWithCallstackAndTransferOwnership(
@@ -223,6 +262,62 @@ void ProducerEventProcessorImpl::MergeThreadStateSliceWithCallstackAndTransferOw
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+std::optional<std::pair<uint32_t, uint32_t>> ProducerEventProcessorImpl::TranslatePidAndTid(
+    uint32_t pid, uint32_t tid) {
+  auto pid_it = target_process_namespace_tid_to_root_namespace_tid_.find(pid);
+  auto tid_it = target_process_namespace_tid_to_root_namespace_tid_.find(tid);
+  if (pid_it == target_process_namespace_tid_to_root_namespace_tid_.end() ||
+      tid_it == target_process_namespace_tid_to_root_namespace_tid_.end()) {
+    return std::nullopt;
+  }
+  return std::pair<uint32_t, uint32_t>(pid_it->second, tid_it->second);
+}
+
+// TranslateAndSendEvents will substitute the pid/tid of the stored events with the tids from the
+// root namespace, send them to client_capture_event_collector_ and delete the events from the
+// buffer.
+// If for an event either the pid or the tid cannot be translated nothing is send and the event will
+// remain in the buffer.
+void ProducerEventProcessorImpl::TranslateSendAndDeleteEvents(
+    std::list<ClientCaptureEvent>& events) {
+  auto event_it = events.begin();
+  while (event_it != events.end()) {
+    std::optional<std::pair<uint32_t, uint32_t>> pid_tid;
+    switch (event_it->event_case()) {
+      case ClientCaptureEvent::kApiScopeStart:
+        pid_tid = TranslatePidAndTid(event_it->api_scope_start().pid(),
+                                     event_it->api_scope_start().tid());
+        if (pid_tid.has_value()) {
+          event_it->mutable_api_scope_start()->set_pid(pid_tid.value().first);
+          event_it->mutable_api_scope_start()->set_tid(pid_tid.value().second);
+          auto to_be_deleted = event_it;
+          client_capture_event_collector_->AddEvent(std::move(*event_it));
+          event_it++;
+          events.erase(to_be_deleted);
+        } else {
+          event_it++;
+        }
+        break;
+      case ClientCaptureEvent::kApiScopeStop:
+        pid_tid =
+            TranslatePidAndTid(event_it->api_scope_stop().pid(), event_it->api_scope_stop().tid());
+        if (pid_tid.has_value()) {
+          event_it->mutable_api_scope_stop()->set_pid(pid_tid.value().first);
+          event_it->mutable_api_scope_stop()->set_tid(pid_tid.value().second);
+          client_capture_event_collector_->AddEvent(std::move(*event_it));
+          auto to_be_deleted = event_it;
+          event_it++;
+          events.erase(to_be_deleted);
+        } else {
+          event_it++;
+        }
+        break;
+      default:
+        ORBIT_FATAL("Nah!");
+    }
+  }
+}
+
 void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {
   ClientCaptureEvent event;
   event.set_allocated_api_event(api_event);
@@ -232,8 +327,17 @@ void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* a
 void ProducerEventProcessorImpl::ProcessApiScopeStartAndTransferOwnership(
     ApiScopeStart* api_scope_start) {
   ClientCaptureEvent event;
-  event.set_allocated_api_scope_start(api_scope_start);
-  client_capture_event_collector_->AddEvent(std::move(event));
+  absl::MutexLock lock{&target_process_namespace_tid_to_root_namespace_tid_mutex_};
+  auto pid_tid = TranslatePidAndTid(api_scope_start->pid(), api_scope_start->tid());
+  if (pid_tid.has_value()) {
+    api_scope_start->set_pid(pid_tid.value().first);
+    api_scope_start->set_tid(pid_tid.value().second);
+    event.set_allocated_api_scope_start(api_scope_start);
+    client_capture_event_collector_->AddEvent(std::move(event));
+  } else {
+    event.set_allocated_api_scope_start(api_scope_start);
+    buffered_api_events_[api_scope_start->tid()].push_back(event);
+  }
 }
 
 void ProducerEventProcessorImpl::ProcessApiScopeStartAsyncAndTransferOwnership(
@@ -246,8 +350,17 @@ void ProducerEventProcessorImpl::ProcessApiScopeStartAsyncAndTransferOwnership(
 void ProducerEventProcessorImpl::ProcessApiScopeStopAndTransferOwnership(
     ApiScopeStop* api_scope_stop) {
   ClientCaptureEvent event;
-  event.set_allocated_api_scope_stop(api_scope_stop);
-  client_capture_event_collector_->AddEvent(std::move(event));
+  absl::MutexLock lock{&target_process_namespace_tid_to_root_namespace_tid_mutex_};
+  auto pid_tid = TranslatePidAndTid(api_scope_stop->pid(), api_scope_stop->tid());
+  if (pid_tid.has_value()) {
+    api_scope_stop->set_pid(pid_tid.value().first);
+    api_scope_stop->set_tid(pid_tid.value().second);
+    event.set_allocated_api_scope_stop(api_scope_stop);
+    client_capture_event_collector_->AddEvent(std::move(event));
+  } else {
+    event.set_allocated_api_scope_stop(api_scope_stop);
+    buffered_api_events_[api_scope_stop->tid()].push_back(event);
+  }
 }
 
 void ProducerEventProcessorImpl::ProcessApiScopeStopAsyncAndTransferOwnership(
@@ -531,6 +644,83 @@ void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessIntrospectionApiScopeStartAndTransferOwnership(
+    ApiScopeStart* introspection_api_scope_start) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_start(introspection_api_scope_start);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiScopeStartAsyncAndTransferOwnership(
+    ApiScopeStartAsync* introspection_api_scope_start_async) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_start_async(introspection_api_scope_start_async);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiScopeStopAndTransferOwnership(
+    ApiScopeStop* introspection_api_scope_stop) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_stop(introspection_api_scope_stop);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiScopeStopAsyncAndTransferOwnership(
+    ApiScopeStopAsync* introspection_api_scope_stop_async) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_scope_stop_async(introspection_api_scope_stop_async);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiStringEventAndTransferOwnership(
+    ApiStringEvent* introspection_api_string_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_string_event(introspection_api_string_event);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackDoubleAndTransferOwnership(
+    ApiTrackDouble* introspection_api_track_double) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_double(introspection_api_track_double);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackFloatAndTransferOwnership(
+    ApiTrackFloat* introspection_api_track_float) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_float(introspection_api_track_float);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackIntAndTransferOwnership(
+    ApiTrackInt* introspection_api_track_int) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_int(introspection_api_track_int);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackInt64AndTransferOwnership(
+    ApiTrackInt64* introspection_api_track_int64) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_int64(introspection_api_track_int64);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackUintAndTransferOwnership(
+    ApiTrackUint* introspection_api_track_uint) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_uint(introspection_api_track_uint);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
+void ProducerEventProcessorImpl::ProcessIntrospectionApiTrackUint64AndTransferOwnership(
+    ApiTrackUint64* introspection_api_track_uint64) {
+  ClientCaptureEvent event;
+  event.set_allocated_api_track_uint64(introspection_api_track_uint64);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessLostPerfRecordsEventAndTransferOwnership(
     LostPerfRecordsEvent* lost_perf_records_event) {
   ClientCaptureEvent event;
@@ -605,6 +795,52 @@ void ProducerEventProcessorImpl::ProcessThreadStateSliceAndTransferOwnership(
     return;
   }
   MergeThreadStateSliceWithCallstackAndTransferOwnership(thread_state_slice);
+}
+
+void ProducerEventProcessorImpl::ProcessTidNamespaceMapping(
+    TidNamespaceMapping* tid_namespace_mapping) {
+  // Store the new mapping in target_process_namespace_tid_to_root_namespace_tid_.
+  const uint32_t tid_in_root = tid_namespace_mapping->tid_in_root_namespace();
+  const uint32_t tid_in_target_process = tid_namespace_mapping->tid_in_target_process_namespace();
+  absl::MutexLock lock{&target_process_namespace_tid_to_root_namespace_tid_mutex_};
+  target_process_namespace_tid_to_root_namespace_tid_[tid_in_target_process] = tid_in_root;
+
+  // And process the buffered events for tid_in_target_process (if any).
+  auto tid_it = buffered_api_events_.find(tid_in_target_process);
+  if (tid_it == buffered_api_events_.end()) {
+    return;
+  }
+  std::list<ClientCaptureEvent>& buffered_events = tid_it->second;
+  TranslateSendAndDeleteEvents(buffered_events);
+  if (buffered_events.empty()) {
+    buffered_api_events_.erase(tid_it);
+  }
+}
+
+void ProducerEventProcessorImpl::ProcessTidNamespaceMappingSnapshot(
+    TidNamespaceMappingSnapshot* tid_namespace_mapping_snapshot) {
+  // Store all the new tid mapping in target_process_namespace_tid_to_root_namespace_tid_.
+  absl::MutexLock lock{&target_process_namespace_tid_to_root_namespace_tid_mutex_};
+  for (const auto& mapping : tid_namespace_mapping_snapshot->tid_namespace_mappings()) {
+    const uint32_t tid_in_target_process_namespace = mapping.tid_in_target_process_namespace();
+    const uint32_t tid_in_root_namespace = mapping.tid_in_root_namespace();
+    target_process_namespace_tid_to_root_namespace_tid_[tid_in_target_process_namespace] =
+        tid_in_root_namespace;
+  }
+
+  // If any events were buffered before the snapshot arrived this might have been due to the pid
+  // of the target process was unknown. We have to go through all of the events to get these
+  // translated.
+  std::vector<uint32_t> to_be_deleted;
+  for (auto& tid_and_events : buffered_api_events_) {
+    TranslateSendAndDeleteEvents(tid_and_events.second);
+    if (tid_and_events.second.empty()) {
+      to_be_deleted.push_back(tid_and_events.first);
+    }
+  }
+  for (auto tid : to_be_deleted) {
+    buffered_api_events_.erase(tid);
+  }
 }
 
 void ProducerEventProcessorImpl::ProcessWarningEventAndTransferOwnership(
@@ -745,6 +981,50 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kInternedString:
       ProcessInternedString(producer_id, event.mutable_interned_string());
       break;
+    case ProducerCaptureEvent::kIntrospectionApiScopeStart:
+      ProcessIntrospectionApiScopeStartAndTransferOwnership(
+          event.release_introspection_api_scope_start());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiScopeStartAsync:
+      ProcessIntrospectionApiScopeStartAsyncAndTransferOwnership(
+          event.release_introspection_api_scope_start_async());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiScopeStop:
+      ProcessIntrospectionApiScopeStopAndTransferOwnership(
+          event.release_introspection_api_scope_stop());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiScopeStopAsync:
+      ProcessIntrospectionApiScopeStopAsyncAndTransferOwnership(
+          event.release_introspection_api_scope_stop_async());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiStringEvent:
+      ProcessIntrospectionApiStringEventAndTransferOwnership(
+          event.release_introspection_api_string_event());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackDouble:
+      ProcessIntrospectionApiTrackDoubleAndTransferOwnership(
+          event.release_introspection_api_track_double());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackFloat:
+      ProcessIntrospectionApiTrackFloatAndTransferOwnership(
+          event.release_introspection_api_track_float());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackInt:
+      ProcessIntrospectionApiTrackIntAndTransferOwnership(
+          event.release_introspection_api_track_int());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackInt64:
+      ProcessIntrospectionApiTrackInt64AndTransferOwnership(
+          event.release_introspection_api_track_int64());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackUint:
+      ProcessIntrospectionApiTrackUintAndTransferOwnership(
+          event.release_introspection_api_track_uint());
+      break;
+    case ProducerCaptureEvent::kIntrospectionApiTrackUint64:
+      ProcessIntrospectionApiTrackUint64AndTransferOwnership(
+          event.release_introspection_api_track_uint64());
+      break;
     case ProducerCaptureEvent::kLostPerfRecordsEvent:
       ProcessLostPerfRecordsEventAndTransferOwnership(event.release_lost_perf_records_event());
       break;
@@ -778,6 +1058,12 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kThreadStateSliceCallstack:
       ProcessThreadStateSliceCallstack(event.mutable_thread_state_slice_callstack());
+      break;
+    case ProducerCaptureEvent::kTidNamespaceMapping:
+      ProcessTidNamespaceMapping(event.mutable_tid_namespace_mapping());
+      break;
+    case ProducerCaptureEvent::kTidNamespaceMappingSnapshot:
+      ProcessTidNamespaceMappingSnapshot(event.mutable_tid_namespace_mapping_snapshot());
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());

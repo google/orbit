@@ -50,9 +50,23 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
+using orbit_grpc_protos::TidNamespaceMappingSnapshot;
 using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
 
 namespace orbit_linux_tracing {
+
+namespace {
+
+static TidNamespaceMappingSnapshot InitialTidToRootNamespaceTidMappingToProto(
+    const absl::flat_hash_map<pid_t, pid_t>& tid_mappings) {
+  TidNamespaceMappingSnapshot snapshot;
+  for (auto [tid, root_tid] : tid_mappings) {
+    auto* mapping = snapshot.add_tid_namespace_mappings();
+    mapping->set_tid_in_root_namespace(root_tid);
+    mapping->set_tid_in_target_process_namespace(tid);
+  }
+  return snapshot;
+}
 
 static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency) {
   double period_ns_dbl = 1'000'000'000 / sampling_frequency;
@@ -62,6 +76,8 @@ static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency
   }
   return std::nullopt;
 }
+
+}  // namespace
 
 TracerImpl::TracerImpl(
     const CaptureOptions& capture_options,
@@ -222,9 +238,13 @@ void TracerImpl::InitUprobesEventVisitor() {
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
   // Get the initial mapping of the tids in the target process to the corresponing tids in the
-  // root namespace.
+  // root namespace. The mapping needs to be set to the uprobes_unwinding_visitor_ to handle the
+  // user space instrumentation events and also to the listener_ which needs it to process the
+  // manual instrumentation and the events from the Vulkan layer.
   absl::flat_hash_map<pid_t, pid_t> tid_mappings =
       RetrieveInitialTidToRootNamespaceTidMapping(target_pid_);
+  listener_->OnTidNamespaceMappingSnapshot(
+      InitialTidToRootNamespaceTidMappingToProto(tid_mappings));
   uprobes_unwinding_visitor_->SetInitialTidToRootNamespaceTidMapping(std::move(tid_mappings));
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }

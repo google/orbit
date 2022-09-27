@@ -65,6 +65,10 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   void OnWarningInstrumentingWithUprobesEvent(
       orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
           warning_instrumenting_with_uprobes_event) override;
+  virtual void OnTidNamespaceMapping(
+      orbit_grpc_protos::TidNamespaceMapping tid_namespace_mapping) override;
+  virtual void OnTidNamespaceMappingSnapshot(
+      orbit_grpc_protos::TidNamespaceMappingSnapshot tid_namespace_mapping_snapshot) override;
 
   void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
     tracer_->ProcessFunctionEntry(function_entry);

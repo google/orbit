@@ -178,4 +178,78 @@ void FillProducerCaptureEventFromApiEvent(
   ORBIT_UNREACHABLE();
 }
 
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiScopeStart& scope_start, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_scope_start();
+  scope_start.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiScopeStop& scope_stop, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_scope_stop();
+  scope_stop.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiScopeStartAsync& scope_start_async,
+    orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_scope_start_async();
+  scope_start_async.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiScopeStopAsync& scope_stop_async,
+    orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_scope_stop_async();
+  scope_stop_async.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiStringEvent& string_event, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_string_event();
+  string_event.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackDouble& track_double, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_double();
+  track_double.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackFloat& track_float, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_float();
+  track_float.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackInt& track_int, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_int();
+  track_int.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackInt64& track_int64, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_int64();
+  track_int64.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackUint& track_uint, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_uint();
+  track_uint.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const ApiTrackUint64& track_uint64, orbit_grpc_protos::ProducerCaptureEvent* capture_event) {
+  auto* api_event = capture_event->mutable_introspection_api_track_uint64();
+  track_uint64.CopyToGrpcProto(api_event);
+}
+
+void FillIntrospectionProducerCaptureEventFromApiEvent(
+    const std::monostate& /*monostate*/,
+    orbit_grpc_protos::ProducerCaptureEvent* /*capture_event*/) {
+  ORBIT_UNREACHABLE();
+}
+
 }  // namespace orbit_api

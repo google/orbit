@@ -857,6 +857,17 @@ message OutOfOrderEventsDiscardedEvent {
   uint64 end_timestamp_ns = 2;
 }
 
+message TidNamespaceMapping {
+  uint32 tid_in_target_process_namespace = 1;
+  uint32 tid_in_root_namespace = 2;
+}
+
+message TidNamespaceMappingSnapshot {
+  uint64 timestamp_ns = 1;
+  uint32 pid_in_root_namespace = 2;
+  repeated TidNamespaceMapping tid_namespace_mappings = 3;
+}
+
 message ClientCaptureEvent {
   reserved 20, 23, 28, 29, 30;
 
@@ -928,7 +939,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15.
-    // Next lower-frequency ID: 51
+    // Next lower-frequency ID: 64
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -965,6 +976,17 @@ message ProducerCaptureEvent {
     GpuQueueSubmission gpu_queue_submission = 6;
     InternedCallstack interned_callstack = 7;
     InternedString interned_string = 18;
+    ApiScopeStart introspection_api_scope_start = 53;
+    ApiScopeStartAsync introspection_api_scope_start_async = 54;
+    ApiScopeStop introspection_api_scope_stop = 55;
+    ApiScopeStopAsync introspection_api_scope_stop_async = 56;
+    ApiStringEvent introspection_api_string_event = 57;
+    ApiTrackDouble introspection_api_track_double = 58;
+    ApiTrackFloat introspection_api_track_float = 59;
+    ApiTrackInt introspection_api_track_int = 60;
+    ApiTrackInt64 introspection_api_track_int64 = 61;
+    ApiTrackUint introspection_api_track_uint = 62;
+    ApiTrackUint64 introspection_api_track_uint64 = 63;
     LostPerfRecordsEvent lost_perf_records_event = 34;
     MemoryUsageEvent memory_usage_event = 29;
     ModulesSnapshot modules_snapshot = 25;
@@ -976,6 +998,8 @@ message ProducerCaptureEvent {
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
     ThreadStateSliceCallstack thread_state_slice_callstack = 50;
+    TidNamespaceMapping tid_namespace_mapping = 51;
+    TidNamespaceMappingSnapshot tid_namespace_mapping_snapshot = 52;
     WarningEvent warning_event = 30;
     WarningInstrumentingWithUprobesEvent
         warning_instrumenting_with_uprobes_event = 49;

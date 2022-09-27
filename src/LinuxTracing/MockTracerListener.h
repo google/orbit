@@ -31,6 +31,9 @@ class MockTracerListener : public TracerListener {
               (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent), (override));
   MOCK_METHOD(void, OnWarningInstrumentingWithUprobesEvent,
               (orbit_grpc_protos::WarningInstrumentingWithUprobesEvent), (override));
+  MOCK_METHOD(void, OnTidNamespaceMapping, (orbit_grpc_protos::TidNamespaceMapping), (override));
+  MOCK_METHOD(void, OnTidNamespaceMappingSnapshot, (orbit_grpc_protos::TidNamespaceMappingSnapshot),
+              (override));
 };
 
 }  // namespace orbit_linux_tracing

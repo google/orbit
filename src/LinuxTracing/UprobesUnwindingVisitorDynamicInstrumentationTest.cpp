@@ -406,7 +406,6 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
                 .was_created_by_tid = kTidRootNamespace,
             },
     };
-    PerfEvent{task_newtask}.Accept(&visitor_);
     CloneExitPerfEvent clone_exit_event{
         .timestamp = 1101,
         .data =
@@ -415,7 +414,17 @@ TEST_F(UprobesUnwindingVisitorDynamicInstrumentationTest,
                 .ret_tid = kTidNewTargetNamespace,
             },
     };
+    orbit_grpc_protos::TidNamespaceMapping actual_tid_namespace_mapping_event;
+    EXPECT_CALL(listener_, OnTidNamespaceMapping)
+        .Times(1)
+        .WillOnce(SaveArg<0>(&actual_tid_namespace_mapping_event));
+
+    PerfEvent{task_newtask}.Accept(&visitor_);
     PerfEvent{clone_exit_event}.Accept(&visitor_);
+    Mock::VerifyAndClearExpectations(&listener_);
+    EXPECT_EQ(kTidNewRootNamespace, actual_tid_namespace_mapping_event.tid_in_root_namespace());
+    EXPECT_EQ(kTidNewTargetNamespace,
+              actual_tid_namespace_mapping_event.tid_in_target_process_namespace());
   }
 
   {

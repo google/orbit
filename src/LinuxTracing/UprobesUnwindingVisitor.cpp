@@ -26,6 +26,7 @@
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 
 namespace orbit_linux_tracing {
@@ -35,6 +36,7 @@ using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ThreadStateSliceCallstack;
+using orbit_grpc_protos::TidNamespaceMapping;
 
 static bool CallstackIsInUserSpaceInstrumentation(
     const std::vector<unwindstack::FrameData>& frames,
@@ -830,10 +832,18 @@ void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
         parent_tid, tid_in_target_process_namespace);
     return;
   }
-  tid_to_root_namespace_tid_[tid_in_target_process_namespace] =
+  const pid_t tid_in_root_namespace =
       new_task_root_namespace_parent_tid_to_root_namespace_tid_it->second;
   new_task_root_namespace_parent_tid_to_root_namespace_tid_.erase(
       new_task_root_namespace_parent_tid_to_root_namespace_tid_it);
+  tid_to_root_namespace_tid_[tid_in_target_process_namespace] = tid_in_root_namespace;
+
+  TidNamespaceMapping tid_namespace_mapping_event;
+  tid_namespace_mapping_event.set_tid_in_target_process_namespace(
+      orbit_base::FromNativeThreadId(tid_in_target_process_namespace));
+  tid_namespace_mapping_event.set_tid_in_root_namespace(
+      orbit_base::FromNativeThreadId(tid_in_root_namespace));
+  listener_->OnTidNamespaceMapping(tid_namespace_mapping_event);
 }
 
 }  // namespace orbit_linux_tracing
