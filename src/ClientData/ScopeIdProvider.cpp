@@ -24,6 +24,8 @@
 
 namespace orbit_client_data {
 
+using orbit_grpc_protos::InstrumentedFunction;
+
 std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create(
     const orbit_grpc_protos::CaptureOptions& capture_options) {
   const auto& instrumented_functions = capture_options.instrumented_functions();
@@ -37,7 +39,7 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 
   absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info;
   absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id;
-  absl::flat_hash_map<ScopeId, const FunctionInfo> scope_id_to_function_info;
+  absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info;
 
   for (const auto& instrumented_function : instrumented_functions) {
     const ScopeId scope_id{instrumented_function.function_id()};
@@ -144,6 +146,17 @@ const FunctionInfo* NameEqualityScopeIdProvider::GetFunctionInfo(ScopeId scope_i
     return &it->second;
   }
   return nullptr;
+}
+
+void NameEqualityScopeIdProvider::UpdateFunctionInfoAddress(
+    InstrumentedFunction instrumented_function) {
+  if (auto scope_id = FunctionIdToScopeId(instrumented_function.function_id());
+      scope_id.has_value()) {
+    if (const auto it = scope_id_to_function_info_.find(scope_id.value());
+        it != scope_id_to_function_info_.end()) {
+      it->second.SetAddress(instrumented_function.function_virtual_address());
+    }
+  }
 }
 
 }  // namespace orbit_client_data
