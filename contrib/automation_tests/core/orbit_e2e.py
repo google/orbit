@@ -132,6 +132,12 @@ class CloseOrbit(E2ETestCase):
         return False
 
     def _execute(self):
+        # The sending of Alt + F4 (see below) only works if OrbitMainWindow is in focus. The next line checks
+        # that no other dialog, warning or error is open
+        wait_for_condition(
+            lambda: self.find_control(control_type="Window", raise_on_failure=False) is None,
+            max_seconds=30)
+
         # For some reason the line below does NOT work when Orbit is maximized - this is actually consistent with
         # the results of AccessibilityInsights as the close button seems to have no on-screen rect...
         # self.find_control("Button", "Close").click_input()
