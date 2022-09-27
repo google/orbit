@@ -149,6 +149,10 @@ void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
     const uint64_t virtual_address =
         module_data->ConvertFromOffsetInFileToVirtualAddress(instrumented_function.file_offset());
     instrumented_function.set_function_virtual_address(virtual_address);
+
+    ORBIT_CHECK(scope_id_provider_);
+    scope_id_provider_->UpdateFunctionInfoAddress(instrumented_function);
+
     ++updated_function_count;
   }
 

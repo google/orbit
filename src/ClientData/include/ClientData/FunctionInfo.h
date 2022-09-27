@@ -67,6 +67,8 @@ class FunctionInfo {
 
   [[nodiscard]] bool IsFunctionSelectable() const;
 
+  void SetAddress(uint64_t address) { address_ = address; }
+
   [[nodiscard]] friend bool operator==(const FunctionInfo& lhs, const FunctionInfo& rhs) {
     // Compare functions by module path, build_id and address. Explicitly ignore function name and
     // size.
