@@ -24,12 +24,12 @@ class ScopeStatsCollection {
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(ScopeId scope_id);
 
-  // Calling this function causes the timer durations to no longer be sorted. SortTimers() *must* be
-  // called after UpdateScopeStats and before GetSortedTimerDurationsForScopeId().
+  // Calling this function causes the timer durations to no longer be sorted. OnCaptureComplete()
+  // *must* be called after UpdateScopeStats and before GetSortedTimerDurationsForScopeId().
   void UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer);
   // TODO(b/249046906): Remove this test-only function.
   void SetScopeStats(ScopeId scope_id, ScopeStats stats);
-  void OnDataChanged();
+  void OnCaptureComplete();
 
  private:
   absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;

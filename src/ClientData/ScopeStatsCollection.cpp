@@ -20,7 +20,7 @@ ScopeStatsCollection::ScopeStatsCollection(ScopeIdProvider& scope_id_provider,
     }
   }
 
-  OnDataChanged();
+  OnCaptureComplete();
 }
 
 void ScopeStatsCollection::UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer) {
@@ -64,7 +64,7 @@ const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForSco
   return nullptr;
 }
 
-void ScopeStatsCollection::OnDataChanged() {
+void ScopeStatsCollection::OnCaptureComplete() {
   if (timer_durations_are_sorted_) return;
 
   for (auto& [unused_id, timer_durations] : scope_id_to_timer_durations_) {

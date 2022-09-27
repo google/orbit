@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -63,7 +62,7 @@ static void ExpectStatsAreEqual(ScopeStats actual, ScopeStats expect) {
 
 TEST(ScopeStatsCollectionTest, CreateEmpty) {
   ScopeStatsCollection collection = ScopeStatsCollection();
-  ASSERT_TRUE(collection.GetAllProvidedScopeIds().empty());
+  EXPECT_TRUE(collection.GetAllProvidedScopeIds().empty());
   ScopeStats stats = collection.GetScopeStatsOrDefault(kScopeId1);
   ExpectStatsAreEqual(stats, kDefaultScopeStats);
   EXPECT_THAT(collection.GetSortedTimerDurationsForScopeId(kScopeId1), IsNull());
@@ -83,7 +82,7 @@ TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
 
   const auto* timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
   EXPECT_THAT(timer_durations, IsNull());
-  collection.OnDataChanged();
+  collection.OnCaptureComplete();
   timer_durations = collection.GetSortedTimerDurationsForScopeId(kScopeId1);
   EXPECT_THAT(*timer_durations, ElementsAre(kOrderedDiffs[0], kOrderedDiffs[1], kOrderedDiffs[2]));
 }
