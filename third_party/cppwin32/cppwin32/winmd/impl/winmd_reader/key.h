@@ -114,6 +114,16 @@ namespace winmd::reader
         return get_row<reader::TypeDef>();
     }
 
+    inline auto typed_index<MemberForwarded>::Field() const
+    {
+        return get_row<reader::Field>();
+    }
+
+    inline auto typed_index<MemberForwarded>::MethodDef() const
+    {
+        return get_row<reader::MethodDef>();
+    }
+
     inline bool TypeDef::is_enum() const
     {
         return extends_type(*this, "System"sv, "Enum"sv);

@@ -206,6 +206,14 @@ namespace winmd::reader
         auto TypeDef() const;
     };
 
+    template <> struct typed_index<MemberForwarded> : index_base<MemberForwarded>
+    {
+        using index_base<MemberForwarded>::index_base;
+
+        auto Field() const;
+        auto MethodDef() const;
+    };
+
     template <typename T>
     struct coded_index : typed_index<T>
     {

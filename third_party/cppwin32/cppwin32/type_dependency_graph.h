@@ -105,7 +105,14 @@ namespace cppwin32
                     }
                 }
             };
-            add_param(method_signature.return_signature().Type());
+
+            const RetTypeSig& return_signature = method_signature.return_signature();
+            // "RetTypeSig" has "operator bool()" that checks if "Type()" returns a valid type.
+            // Without checking, calling "Type()" could be dereferencing a std::nullopt.
+            if(return_signature) {
+                add_param(return_signature.Type());
+            }
+
             for (auto const& [param, param_sig] : method_signature.params())
             {
                 add_param(param_sig->Type());
