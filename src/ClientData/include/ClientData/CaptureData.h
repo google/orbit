@@ -272,6 +272,7 @@ class CaptureData {
   orbit_grpc_protos::CaptureStarted capture_started_;
 
   orbit_client_data::ProcessData process_;
+  // TODO(b/249262736): Replace this map in favor of ScopeIdProvider's scope_id_to_function_info_.
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   uint64_t memory_warning_threshold_kb_;
 
