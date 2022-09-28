@@ -1936,20 +1936,43 @@ TEST(ProducerEventProcessor, ApiScopeStart) {
   api_scope_start->set_encoded_name_7(kEncodedName7);
   api_scope_start->set_encoded_name_8(kEncodedName8);
   api_scope_start->add_encoded_name_additional(kEncodedNameAdditional1);
-
-  ApiScopeStart api_scope_start_copy = *api_scope_start;
+  ProducerCaptureEvent producer_capture_event_introspection;
+  *producer_capture_event_introspection.mutable_introspection_api_scope_start() = *api_scope_start;
+  const ApiScopeStart api_scope_start_copy = *api_scope_start;
 
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   SetTidNamespaceMappingSnapshotInProducerEventProcessor(producer_event_processor.get(),
-                                                         {{kPid1, kPid1}, {kTid1, kTid1}});
+                                                         {{kPid1, kPid2}, {kTid1, kTid2}});
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStart);
   const ApiScopeStart& actual_event = client_capture_event.api_scope_start();
-  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_copy, actual_event));
+  EXPECT_EQ(kPid2, actual_event.pid());
+  EXPECT_EQ(kTid2, actual_event.tid());
+  EXPECT_EQ(kTimestampNs1, actual_event.timestamp_ns());
+  EXPECT_EQ(kColor1, actual_event.color_rgba());
+  EXPECT_EQ(kGroupId1, actual_event.group_id());
+  EXPECT_EQ(kEncodedName1, actual_event.encoded_name_1());
+  EXPECT_EQ(kEncodedName2, actual_event.encoded_name_2());
+  EXPECT_EQ(kEncodedName3, actual_event.encoded_name_3());
+  EXPECT_EQ(kEncodedName4, actual_event.encoded_name_4());
+  EXPECT_EQ(kEncodedName5, actual_event.encoded_name_5());
+  EXPECT_EQ(kEncodedName6, actual_event.encoded_name_6());
+  EXPECT_EQ(kEncodedName7, actual_event.encoded_name_7());
+  EXPECT_EQ(kEncodedName8, actual_event.encoded_name_8());
+  EXPECT_EQ(kEncodedNameAdditional1, actual_event.encoded_name_additional());
+  testing::Mock::VerifyAndClearExpectations(&collector);
+
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_introspection));
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStart);
+  const ApiScopeStart& actual_event_introspection = client_capture_event.api_scope_start();
+  testing::Mock::VerifyAndClearExpectations(&collector);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_start_copy, actual_event_introspection));
 }
 
 TEST(ProducerEventProcessor, ApiScopeStop) {
@@ -1958,19 +1981,31 @@ TEST(ProducerEventProcessor, ApiScopeStop) {
   api_scope_stop->set_pid(kPid1);
   api_scope_stop->set_tid(kTid1);
   api_scope_stop->set_timestamp_ns(kTimestampNs1);
-  ApiScopeStop api_scope_stop_copy = *api_scope_stop;
+  ProducerCaptureEvent producer_capture_event_introspection;
+  *producer_capture_event_introspection.mutable_introspection_api_scope_stop() = *api_scope_stop;
+  const ApiScopeStop api_scope_stop_copy = *api_scope_stop;
 
   MockClientCaptureEventCollector collector;
   auto producer_event_processor = ProducerEventProcessor::Create(&collector);
   SetTidNamespaceMappingSnapshotInProducerEventProcessor(producer_event_processor.get(),
-                                                         {{kPid1, kPid1}, {kTid1, kTid1}});
+                                                         {{kPid1, kPid2}, {kTid1, kTid2}});
   ClientCaptureEvent client_capture_event;
   EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
 
   producer_event_processor->ProcessEvent(kDefaultProducerId, std::move(producer_capture_event));
   ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStop);
   const ApiScopeStop& actual_event = client_capture_event.api_scope_stop();
-  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_copy, actual_event));
+  EXPECT_EQ(kPid2, actual_event.pid());
+  EXPECT_EQ(kTid2, actual_event.tid());
+  EXPECT_EQ(kTimestampNs1, actual_event.timestamp_ns());
+  testing::Mock::VerifyAndClearExpectations(&collector);
+
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&client_capture_event));
+  producer_event_processor->ProcessEvent(kDefaultProducerId,
+                                         std::move(producer_capture_event_introspection));
+  ASSERT_EQ(client_capture_event.event_case(), ClientCaptureEvent::kApiScopeStop);
+  const ApiScopeStop& actual_event_introspection = client_capture_event.api_scope_stop();
+  EXPECT_TRUE(MessageDifferencer::Equivalent(api_scope_stop_copy, actual_event_introspection));
 }
 
 TEST(ProducerEventProcessor, ApiScopeStartAsync) {
