@@ -33,6 +33,7 @@ This automation script covers a basic workflow:
  - (post clean up) disable stadia symbol store
 """
 
+
 def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
