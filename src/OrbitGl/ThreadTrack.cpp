@@ -17,25 +17,23 @@
 #include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
-#include "Introspection/Introspection.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "TimerTrack.h"
-#include "TriangleToggle.h"
 #include "Viewport.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ScopeId;
 using orbit_client_data::TimerChain;
 
@@ -127,8 +125,7 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
     return "";
   }
 
-  const InstrumentedFunction* func =
-      capture_data_->GetInstrumentedFunctionById(timer_info->function_id());
+  const FunctionInfo* func = capture_data_->GetFunctionInfoById(timer_info->function_id());
 
   std::string label;
   bool is_manual = timer_info->type() == TimerInfo::kApiScope;
@@ -140,13 +137,13 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
   if (is_manual) {
     label = timer_info->api_scope_name();
   } else {
-    label = func->function_name();
+    label = func->pretty_name();
   }
 
   std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
   std::string function_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (func != nullptr) {
-    module_name = std::filesystem::path(func->file_path()).filename().string();
+    module_name = std::filesystem::path(func->module_path()).filename().string();
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
     module_name = std::filesystem::path(
@@ -299,10 +296,10 @@ std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetAllChildren() const {
 std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   std::string time = GetDisplayTime(timer_info);
 
-  const InstrumentedFunction* func = app_->GetInstrumentedFunction(timer_info.function_id());
+  const FunctionInfo* func = capture_data_->GetFunctionInfoById(timer_info.function_id());
   if (func != nullptr) {
     std::string extra_info = GetExtraInfo(timer_info);
-    const std::string& name = func->function_name();
+    const std::string& name = func->pretty_name();
     return absl::StrFormat("%s %s %s", name, extra_info.c_str(), time);
   }
   if (timer_info.type() == TimerInfo::kApiScope) {
@@ -311,7 +308,7 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
   }
 
   ORBIT_ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
-              func->function_name(), static_cast<int>(timer_info.type()));
+              func->pretty_name(), static_cast<int>(timer_info.type()));
   return "";
 }
 

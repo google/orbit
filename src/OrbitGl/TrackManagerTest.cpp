@@ -41,6 +41,7 @@ class TrackManagerTest : public ::testing::Test {
     timer.set_processor(0);
     timer.set_depth(0);
     timer.set_type(TimerInfo::kCoreActivity);
+    timer.set_function_id(TrackTestData::kFunctionId);
 
     scheduler_track->OnTimer(timer);
     timer.set_type(TimerInfo::kCoreActivity);
@@ -50,6 +51,7 @@ class TrackManagerTest : public ::testing::Test {
     scheduler_track->OnTimer(timer);
     timer.set_type(TimerInfo::kCoreActivity);
     timer_only_thread_track->OnTimer(timer);
+    capture_data_->UpdateScopeStats(timer);
   }
 
   TimeGraphLayout layout_;
@@ -71,8 +73,7 @@ TEST_F(TrackManagerTest, FrameTracksAreReportedWithAllTracks) {
 
   track_manager_.GetOrCreateSchedulerTrack();
   EXPECT_EQ(1ull, track_manager_.GetAllTracks().size());
-  orbit_grpc_protos::InstrumentedFunction function;
-  track_manager_.GetOrCreateFrameTrack(function);
+  track_manager_.GetOrCreateFrameTrack(TrackTestData::kFunctionId);
   EXPECT_EQ(2ull, track_manager_.GetAllTracks().size());
 }
 

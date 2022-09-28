@@ -18,7 +18,6 @@
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
 #include "ClientData/ScopeId.h"
-#include "ClientFlags/ClientFlags.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
@@ -34,6 +33,7 @@
 namespace orbit_gl {
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ScopeId;
 using orbit_client_protos::TimerInfo;
@@ -120,10 +120,8 @@ void TrackContainer::UpdateTracksPosition() {
 
 namespace {
 
-[[nodiscard]] std::string GetLabelBetweenIterators(const InstrumentedFunction& function_a,
-                                                   const InstrumentedFunction& function_b) {
-  const std::string& function_from = function_a.function_name();
-  const std::string& function_to = function_b.function_name();
+[[nodiscard]] std::string GetLabelBetweenIterators(const std::string& function_from,
+                                                   const std::string& function_to) {
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -232,13 +230,12 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
                 iterator_id_to_function_scope_id_.end());
     ScopeId function_a_scope_id = iterator_id_to_function_scope_id_.at(id_a);
     ScopeId function_b_scope_id = iterator_id_to_function_scope_id_.at(id_b);
-    const InstrumentedFunction* function_a = capture_data_->GetInstrumentedFunctionById(
-        capture_data_->ScopeIdToFunctionId(function_a_scope_id));
-    const InstrumentedFunction* function_b = capture_data_->GetInstrumentedFunctionById(
-        capture_data_->ScopeIdToFunctionId(function_b_scope_id));
+    const FunctionInfo* function_a = capture_data_->GetFunctionInfoByScopeId(function_a_scope_id);
+    const FunctionInfo* function_b = capture_data_->GetFunctionInfoByScopeId(function_b_scope_id);
     ORBIT_CHECK(function_a != nullptr);
     ORBIT_CHECK(function_b != nullptr);
-    const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
+    const std::string& label =
+        GetLabelBetweenIterators(function_a->pretty_name(), function_b->pretty_name());
     const std::string& time = GetTimeString(*timers[k - 1].second, *timers[k].second);
 
     // The height of text is chosen such that the text of the last box drawn is

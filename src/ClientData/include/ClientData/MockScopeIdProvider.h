@@ -25,6 +25,8 @@ class MockScopeIdProvider : public ScopeIdProvider {
   MOCK_METHOD(const FunctionInfo*, GetFunctionInfo, (ScopeId), (const, override));
   MOCK_METHOD(void, UpdateFunctionInfoAddress, (orbit_grpc_protos::InstrumentedFunction),
               (override));
+  MOCK_METHOD(std::optional<uint64_t>, FindFunctionIdSlow, (const FunctionInfo&),
+              (const, override));
 };
 
 }  // namespace orbit_client_data

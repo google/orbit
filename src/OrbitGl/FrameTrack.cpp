@@ -21,6 +21,7 @@
 #include "TriangleToggle.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_gl::PrimitiveAssembler;
@@ -60,12 +61,13 @@ float FrameTrack::GetAverageBoxHeight() const {
 
 FrameTrack::FrameTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
-                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                       InstrumentedFunction function, OrbitApp* app,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint64_t function_id,
+                       FunctionInfo function, OrbitApp* app,
                        const orbit_client_data::ModuleManager* module_manager,
                        const CaptureData* capture_data, orbit_client_data::TimerData* timer_data)
     : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
                  timer_data),
+      function_id_(function_id),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
 
@@ -151,7 +153,7 @@ std::string FrameTrack::GetTimesliceText(const TimerInfo& timer_info) const {
 }
 
 std::string FrameTrack::GetTooltip() const {
-  const std::string& function_name = function_.function_name();
+  const std::string& function_name = function_.pretty_name();
   return absl::StrFormat(
       "<b>Frame track</b><br/>"
       "<i>Shows frame timings based on subsequent callst to %s. "
@@ -170,7 +172,7 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Minimum frame time:</b> %s<br/>"
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      std::filesystem::path(function_.file_path()).filename().string(), stats_.count(),
+      std::filesystem::path(function_.module_path()).filename().string(), stats_.count(),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.max_ns())),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.min_ns())),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs())));
@@ -183,7 +185,7 @@ std::string FrameTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assemb
     return "";
   }
   // TODO(b/169554463): Support manual instrumentation.
-  const std::string& function_name = function_.function_name();
+  const std::string& function_name = function_.pretty_name();
 
   return absl::StrFormat(
       "<b>Frame time</b><br/>"
@@ -196,7 +198,8 @@ std::string FrameTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assemb
       "<b>Frame:</b> #%u<br/>"
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      std::filesystem::path(function_.file_path()).filename().string(), timer_info->user_data_key(),
+      std::filesystem::path(function_.module_path()).filename().string(),
+      timer_info->user_data_key(),
       orbit_display_formats::GetDisplayTime(
           TicksToDuration(timer_info->start(), timer_info->end())));
 }

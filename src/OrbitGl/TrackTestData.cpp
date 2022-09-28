@@ -8,6 +8,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "GrpcProtos/capture.pb.h"
 
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
@@ -16,9 +17,13 @@ using orbit_client_data::LinuxAddressInfo;
 namespace orbit_gl {
 
 std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
-  auto capture_data = std::make_unique<CaptureData>(orbit_grpc_protos::CaptureStarted{},
-                                                    std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kLiveCapture);
+  orbit_grpc_protos::CaptureStarted capture_started;
+  orbit_grpc_protos::InstrumentedFunction* func =
+      capture_started.mutable_capture_options()->mutable_instrumented_functions()->Add();
+  func->set_function_id(kFunctionId);
+  auto capture_data =
+      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+                                    CaptureData::DataSource::kLiveCapture);
 
   // AddressInfo
   LinuxAddressInfo address_info{kInstructionAbsoluteAddress,

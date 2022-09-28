@@ -158,15 +158,4 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
                                                                     absolute_address);
 }
 
-std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const CaptureData& capture_data,
-                                                       const FunctionInfo& function_info) {
-  for (const auto& [function_id, candidate_function] : capture_data.instrumented_functions()) {
-    if (candidate_function.file_path() == function_info.module_path() &&
-        candidate_function.function_virtual_address() == function_info.address()) {
-      return function_id;
-    }
-  }
-  return std::nullopt;
-}
-
 }  // namespace orbit_client_data

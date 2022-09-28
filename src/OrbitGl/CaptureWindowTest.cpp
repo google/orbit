@@ -114,7 +114,7 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
   void AddTimers() {
     auto timers = TrackTestData::GenerateTimers();
     for (auto& timer : timers) {
-      time_graph_->ProcessTimer(timer, nullptr);
+      time_graph_->ProcessTimer(timer);
     }
   }
 };

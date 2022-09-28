@@ -159,4 +159,15 @@ void NameEqualityScopeIdProvider::UpdateFunctionInfoAddress(
   }
 }
 
+std::optional<uint64_t> NameEqualityScopeIdProvider::FindFunctionIdSlow(
+    const FunctionInfo& function_info) const {
+  for (const auto& [scope_id, candidate_function] : scope_id_to_function_info_) {
+    if (candidate_function.module_path() == function_info.module_path() &&
+        candidate_function.address() == function_info.address()) {
+      return ScopeIdToFunctionId(scope_id);
+    }
+  }
+  return std::nullopt;
+}
+
 }  // namespace orbit_client_data

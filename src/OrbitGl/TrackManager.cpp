@@ -417,8 +417,7 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
     case TimerInfo::kCoreActivity:
       return GetOrCreateSchedulerTrack();
     case TimerInfo::kFrame:
-      return GetOrCreateFrameTrack(
-          capture_data_->instrumented_functions().at(timer_info.function_id()));
+      return GetOrCreateFrameTrack(timer_info.function_id());
     case TimerInfo::kGpuActivity:
     case TimerInfo::kGpuCommandBuffer:
     case TimerInfo::kGpuDebugMarker:
@@ -517,23 +516,24 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   return track.get();
 }
 
-FrameTrack* TrackManager::GetOrCreateFrameTrack(
-    const orbit_grpc_protos::InstrumentedFunction& function) {
+FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  auto track_it = frame_tracks_.find(function.function_id());
+  auto track_it = frame_tracks_.find(function_id);
   if (track_it != frame_tracks_.end()) {
     return track_it->second.get();
   }
 
+  const auto function = capture_data_->GetFunctionInfoById(function_id);
+  ORBIT_CHECK(function != nullptr);
   auto [unused, timer_data] = capture_data_->CreateTimerData();
-  auto track =
-      std::make_shared<FrameTrack>(track_container_, timeline_info_, viewport_, layout_, function,
-                                   app_, module_manager_, capture_data_, timer_data);
+  auto track = std::make_shared<FrameTrack>(track_container_, timeline_info_, viewport_, layout_,
+                                            function_id, *function, app_, module_manager_,
+                                            capture_data_, timer_data);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks. Also, we don't want to
   // trigger a sorting in all the tracks.
-  frame_tracks_[function.function_id()] = track;
+  frame_tracks_[function_id] = track;
   AddFrameTrack(track);
 
   return track.get();

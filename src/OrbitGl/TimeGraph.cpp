@@ -284,7 +284,7 @@ double TimeGraph::GetTime(double ratio) const {
   return min_time_us_ + delta;
 }
 
-void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunction* function) {
+void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
   TrackManager* track_manager = GetTrackManager();
   // TODO(b/175869409): Change the way to create and get the tracks. Move this part to TrackManager.
   switch (timer_info.type()) {
@@ -298,10 +298,10 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kFrame: {
-      if (function == nullptr) {
+      if (timer_info.function_id() == orbit_grpc_protos::kInvalidFunctionId) {
         break;
       }
-      FrameTrack* track = track_manager->GetOrCreateFrameTrack(*function);
+      FrameTrack* track = track_manager->GetOrCreateFrameTrack(timer_info.function_id());
       track->OnTimer(timer_info);
       break;
     }
