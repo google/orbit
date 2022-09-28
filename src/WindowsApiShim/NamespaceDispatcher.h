@@ -30,7 +30,7 @@ class WindowsApiHelper {
       const std::string& function_key) const {
     auto it = function_key_to_namespace_map_.find(function_key);
     if (it != function_key_to_namespace_map_.end()) return it->second;
-    ORBIT_SHIM_ERROR("Could not find namespace associated with function key %s", function_key);
+    ORBIT_SHIM_ERROR("Could not find namespace associated with function key: %s", function_key);
     return std::nullopt;
   }
 
@@ -38,7 +38,7 @@ class WindowsApiHelper {
       const std::string& name_space) const {
     auto it = namespace_to_functions_keys_map_.find(name_space);
     if (it != namespace_to_functions_keys_map_.end()) return it->second;
-    ORBIT_SHIM_ERROR("Could not find function keys associated with namespace %s", name_space);
+    ORBIT_SHIM_ERROR("Could not find function keys associated with namespace: %s", name_space);
     return std::nullopt;
   }
 

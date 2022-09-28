@@ -99,7 +99,7 @@ void write_class_method_with_orbit_instrumentation(
   std::optional<uint32_t> function_id = function_id_generator.GetFunctionIdFromKey(function_key);
 
   if (!function_id.has_value()) {
-    ORBIT_LOG("Warning: Could not find function id for \"%s\"", function_key);
+    ORBIT_LOG("Warning: Could not find function id for \\\"%s\\\"", function_key);
   }
 
   w.write("% __stdcall ORBIT_IMPL_%(%) noexcept {\n%\n  %g_api_table.%(%);\n%%\n}\n",
@@ -199,7 +199,7 @@ void WriteNamespaceGetTrampolineInfo(cppwin32::writer& w, TypeDef const& type,
   }
 
   w.write(
-      "  ORBIT_SHIM_ERROR(\"Could not find function \"%s\" in current namespace\", "
+      "  ORBIT_SHIM_ERROR(\"Could not find function \\\"%s\\\" in current namespace\", "
       "function_key);\n");
   w.write("  return false;\n}\n\n");
 }
@@ -246,7 +246,6 @@ void FileWriter::WriteCodeFiles() {
     for (auto& entry : win_md_cache_->GetCacheEntries()) {
       task_group.AddTask([&, &ns = entry.namespace_name, &members = *entry.namespace_members] {
         cppwin32::write_namespace_0_h(ns, members);
-        cppwin32::write_namespace_1_h(ns, members);
         WriteNamespaceHeader(entry);
         WriteNamespaceCpp(entry);
       });
@@ -344,7 +343,6 @@ void FileWriter::WriteCmakeFile() {
   for (const auto& entry : win_md_cache_->GetCacheEntries()) {
     public_headers.push_back(absl::StrFormat("%s.h", entry.namespace_name));
     private_source.push_back(absl::StrFormat("%s.0.h", entry.namespace_name));
-    private_source.push_back(absl::StrFormat("%s.1.h", entry.namespace_name));
     private_source.push_back(absl::StrFormat("%s.cpp", entry.namespace_name));
   }
 
@@ -468,7 +466,7 @@ void FileWriter::WriteComplexInterfaceHeader() {
   write_open_file_guard(w, "complex_interfaces");
 
   for (auto& depends : w.depends) {
-    w.write_depends(depends.first, '1');
+    w.write_depends(depends.first, '0');
   }
   // Workaround for https://github.com/microsoft/cppwin32/issues/2
   for (auto& extern_depends : w.extern_depends) {
@@ -543,7 +541,7 @@ void FileWriter::WriteNamespaceCpp(const WinMdCache::Entry& cache_entry) {
   w.write("\n#pragma warning(push)");
   w.write("\n#pragma warning(disable : 4369)\n");
   w.write_depends(w.type_namespace);
-  w.write_depends(w.type_namespace, '1');
+  w.write_depends(w.type_namespace, '0');
   w.write("#pragma warning(pop)\n\n");
   w.write_depends("manifest");
   w.write("\n#include <functional>\n");

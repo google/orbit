@@ -8,11 +8,13 @@
 #include <iostream>
 
 #include "ApiInterface/Orbit.h"
+#include "OrbitBase/Logging.h"
 
 // These are not yet implemented but we generated the empty code preemptively.
 #define ORBIT_TRACK_PARAM(x)
 #define ORBIT_TRACK_RET(x)
-#define ORBIT_SHIM_ERROR(x, ...)
+
+#define ORBIT_SHIM_ERROR ORBIT_ERROR
 
 // struct OrbitShimFunctionInfo {
 struct TrampolineInfo {
