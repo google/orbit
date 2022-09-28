@@ -64,11 +64,6 @@ class CaptureData {
   [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_; }
   [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_; }
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
-  instrumented_functions() const {
-    return instrumented_functions_;
-  }
-
   [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const {
     return capture_started_.capture_options().memory_sampling_period_ns();
   }
@@ -79,8 +74,8 @@ class CaptureData {
     memory_warning_threshold_kb_ = memory_warning_threshold_kb;
   }
 
-  [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
-      uint64_t function_id) const;
+  [[nodiscard]] const FunctionInfo* GetFunctionInfoById(uint64_t function_id) const;
+  [[nodiscard]] std::optional<uint64_t> FindFunctionIdSlow(const FunctionInfo& function_info) const;
 
   const FunctionInfo* GetFunctionInfoByScopeId(ScopeId scope_id) const;
 

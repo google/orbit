@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionInfo.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {
@@ -37,10 +36,9 @@ FrameTrackOnlineProcessor::FrameTrackOnlineProcessor(
   }
 }
 
-void FrameTrackOnlineProcessor::ProcessTimer(
-    const orbit_client_protos::TimerInfo& timer_info,
-    const orbit_grpc_protos::InstrumentedFunction& function) {
+void FrameTrackOnlineProcessor::ProcessTimer(const orbit_client_protos::TimerInfo& timer_info) {
   uint64_t function_id = timer_info.function_id();
+
   if (!current_frame_track_function_ids_.contains(function_id)) {
     return;
   }
@@ -54,7 +52,7 @@ void FrameTrackOnlineProcessor::ProcessTimer(
     orbit_client_protos::TimerInfo frame_timer;
     CreateFrameTrackTimer(function_id, previous_timestamp_ns, timer_info.start(),
                           current_frame_index_++, &frame_timer);
-    time_graph_->ProcessTimer(frame_timer, &function);
+    time_graph_->ProcessTimer(frame_timer);
     function_id_to_previous_timestamp_ns_[function_id] = timer_info.start();
   }
 }

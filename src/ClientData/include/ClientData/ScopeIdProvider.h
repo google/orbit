@@ -40,6 +40,10 @@ class ScopeIdProvider {
   [[nodiscard]] virtual const ScopeInfo& GetScopeInfo(ScopeId scope_id) const = 0;
 
   [[nodiscard]] virtual const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const = 0;
+
+  [[nodiscard]] virtual std::optional<uint64_t> FindFunctionIdSlow(
+      const FunctionInfo& function_info) const = 0;
+
   virtual void UpdateFunctionInfoAddress(
       orbit_grpc_protos::InstrumentedFunction instrumented_function) = 0;
 };
@@ -70,6 +74,10 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   [[nodiscard]] const ScopeInfo& GetScopeInfo(ScopeId scope_id) const override;
 
   [[nodiscard]] const FunctionInfo* GetFunctionInfo(ScopeId scope_id) const override;
+
+  [[nodiscard]] std::optional<uint64_t> FindFunctionIdSlow(
+      const FunctionInfo& function_info) const override;
+
   void UpdateFunctionInfoAddress(
       orbit_grpc_protos::InstrumentedFunction instrumented_function) override;
 

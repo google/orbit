@@ -25,8 +25,7 @@ class FrameTrackOnlineProcessor {
   FrameTrackOnlineProcessor() = default;
   FrameTrackOnlineProcessor(const orbit_client_data::CaptureData& capture_data,
                             TimeGraph* time_graph);
-  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
-                    const orbit_grpc_protos::InstrumentedFunction& function);
+  void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
 
   void AddFrameTrack(uint64_t function_id);
   void RemoveFrameTrack(uint64_t function_id);

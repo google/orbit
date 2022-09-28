@@ -109,12 +109,18 @@ void CaptureData::FilterBrokenCallstacks() {
       absolute_address_to_size_of_functions_to_stop_unwinding_at);
 }
 
-const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
-  auto instrumented_functions_it = instrumented_functions_.find(function_id);
-  if (instrumented_functions_it == instrumented_functions_.end()) {
-    return nullptr;
+const FunctionInfo* CaptureData::GetFunctionInfoById(uint64_t function_id) const {
+  ORBIT_CHECK(scope_id_provider_);
+  auto scope_id = scope_id_provider_->FunctionIdToScopeId(function_id);
+  if (scope_id.has_value()) {
+    return GetFunctionInfoByScopeId(scope_id.value());
   }
-  return &instrumented_functions_it->second;
+  return nullptr;
+}
+
+std::optional<uint64_t> CaptureData::FindFunctionIdSlow(const FunctionInfo& function_info) const {
+  ORBIT_CHECK(scope_id_provider_);
+  return scope_id_provider_->FindFunctionIdSlow(function_info);
 }
 
 const FunctionInfo* CaptureData::GetFunctionInfoByScopeId(ScopeId scope_id) const {
@@ -182,10 +188,11 @@ std::string CaptureData::process_name() const { return process_.name(); }
 
 void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {
-    const auto* function = GetInstrumentedFunctionById(instrumented_function_id);
-    ORBIT_CHECK(function != nullptr);
-    ORBIT_LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
-              function->function_name());
+    const auto* function = GetFunctionInfoById(instrumented_function_id);
+    if (function != nullptr) {
+      ORBIT_LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
+                function->pretty_name());
+    }
     return;
   }
   frame_track_function_ids_.insert(instrumented_function_id);

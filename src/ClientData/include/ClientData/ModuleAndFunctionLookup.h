@@ -42,9 +42,6 @@ FindModulePathAndBuildIdByAddress(const ModuleManager& module_manager,
 [[nodiscard]] const orbit_client_data::ModuleData* FindModuleByAddress(
     const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address);
 
-[[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
-    const CaptureData& capture_data, const FunctionInfo& function_info);
-
 }  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_

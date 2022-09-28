@@ -468,7 +468,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         ORBIT_CHECK(capture_started_callback_ != nullptr);
         capture_started_callback_(file_path);
 
-        if (!GetCaptureData().instrumented_functions().empty()) {
+        if (!GetCaptureData().GetAllProvidedScopeIds().empty()) {
           ORBIT_CHECK(select_live_tab_callback_);
           select_live_tab_callback_();
         }
@@ -578,18 +578,10 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   CaptureMetricProcessTimer(timer_info);
 
-  CaptureData& capture_data = GetMutableCaptureData();
-  capture_data.UpdateScopeStats(timer_info);
+  GetMutableCaptureData().UpdateScopeStats(timer_info);
 
-  if (timer_info.function_id() == 0) {
-    GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
-    return;
-  }
-
-  const InstrumentedFunction& func =
-      capture_data.instrumented_functions().at(timer_info.function_id());
-  GetMutableTimeGraph()->ProcessTimer(timer_info, &func);
-  frame_track_online_processor_.ProcessTimer(timer_info, func);
+  GetMutableTimeGraph()->ProcessTimer(timer_info);
+  frame_track_online_processor_.ProcessTimer(timer_info);
 }
 
 void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) {
@@ -2872,10 +2864,6 @@ void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
   return data_manager_->IsFunctionSelected(*function);
 }
 
-const InstrumentedFunction* OrbitApp::GetInstrumentedFunction(uint64_t function_id) const {
-  return HasCaptureData() ? GetCaptureData().GetInstrumentedFunctionById(function_id) : nullptr;
-}
-
 void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) {
   data_manager_->set_visible_scope_ids(std::move(visible_scope_ids));
   RequestUpdatePrimitives();
@@ -3177,8 +3165,7 @@ void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
-  std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
+  std::optional<uint64_t> instrumented_function_id = GetCaptureData().FindFunctionIdSlow(function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
@@ -3212,14 +3199,14 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
     return;
   }
 
-  const InstrumentedFunction* function =
-      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
+  const FunctionInfo* function = GetCaptureData().GetFunctionInfoByScopeId(scope_id.value());
+  ORBIT_CHECK(function);
   constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
   const std::string title = "Frame track not added";
   const std::string message = absl::StrFormat(
       "Frame track enabled for function \"%s\", but since the function does not have any hits in "
       "the current capture, a frame track was not added to the capture.",
-      function->function_name());
+      function->pretty_name());
   main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
       title, message, kDontShowAgainEmptyFrameTrackWarningKey);
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
@@ -3229,8 +3216,7 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   // Ignore this call if there is no capture data
   if (!HasCaptureData()) return;
 
-  std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
+  std::optional<uint64_t> instrumented_function_id = GetCaptureData().FindFunctionIdSlow(function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
@@ -3331,15 +3317,11 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
   }
   std::sort(all_start_times.begin(), all_start_times.end());
 
-  const InstrumentedFunction* function =
-      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
-  ORBIT_CHECK(function != nullptr);
-
   for (size_t k = 0; k < all_start_times.size() - 1; ++k) {
     TimerInfo frame_timer;
     orbit_gl::CreateFrameTrackTimer(instrumented_function_id, all_start_times[k],
                                     all_start_times[k + 1], k, &frame_timer);
-    GetMutableTimeGraph()->ProcessTimer(frame_timer, function);
+    GetMutableTimeGraph()->ProcessTimer(frame_timer);
   }
 }
 

@@ -67,7 +67,7 @@ class TrackManager {
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
-  FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
+  FrameTrack* GetOrCreateFrameTrack(uint64_t function_id);
   [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const {
     return system_memory_track_.get();
   }

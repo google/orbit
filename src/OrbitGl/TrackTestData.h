@@ -16,6 +16,7 @@ namespace orbit_gl {
 
 struct TrackTestData {
   static constexpr uint64_t kCallstackId = 1;
+  static constexpr uint64_t kFunctionId = 1;
   static constexpr uint64_t kFunctionAbsoluteAddress = 0x30;
   static constexpr uint64_t kInstructionAbsoluteAddress = 0x31;
   static constexpr int32_t kThreadId = 42;

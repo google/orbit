@@ -474,8 +474,6 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool IsFunctionSelected(
       const orbit_client_data::SampledFunction& func) const override;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
-  [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
-      uint64_t function_id) const;
 
   void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) override;
   [[nodiscard]] bool IsScopeVisible(ScopeId scope_id) const;

@@ -11,9 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "CallstackThreadBar.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeStats.h"
-#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
@@ -27,17 +26,17 @@ class FrameTrack : public TimerTrack {
  public:
   explicit FrameTrack(CaptureViewElement* parent,
                       const orbit_gl::TimelineInfoInterface* timeline_info,
-                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                      orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
+                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint64_t function_id,
+                      orbit_client_data::FunctionInfo function, OrbitApp* app,
                       const orbit_client_data::ModuleManager* module_manager,
                       const orbit_client_data::CaptureData* capture_data,
                       orbit_client_data::TimerData* timer_data);
 
   [[nodiscard]] std::string GetName() const override {
-    return absl::StrFormat("Frame track based on %s", function_.function_name());
+    return absl::StrFormat("Frame track based on %s", function_.pretty_name());
   }
   [[nodiscard]] Type GetType() const override { return Type::kFrameTrack; }
-  [[nodiscard]] uint64_t GetFunctionId() const { return function_.function_id(); }
+  [[nodiscard]] uint64_t GetFunctionId() const { return function_id_; }
   [[nodiscard]] bool IsCollapsible() const override {
     return GetCappedMaximumToAverageRatio() > 0.f;
   }
@@ -74,7 +73,8 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetMaximumBoxHeight() const;
   [[nodiscard]] float GetAverageBoxHeight() const;
 
-  orbit_grpc_protos::InstrumentedFunction function_;
+  uint64_t function_id_;
+  orbit_client_data::FunctionInfo function_;
   orbit_client_data::ScopeStats stats_;
 };
 
