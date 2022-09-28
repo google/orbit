@@ -1,8 +1,11 @@
 #pragma once
 
+#include "type_dependency_graph.h"
 #include "type_writers.h"
 
 #include <unordered_set>
+
+#define CPPWIN32_VERSION_STRING "0.0.0.1"
 
 namespace cppwin32
 {

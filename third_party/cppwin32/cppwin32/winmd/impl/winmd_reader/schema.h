@@ -417,11 +417,18 @@ namespace winmd::reader
     {
         using row_base::row_base;
 
+        // https://github.com/stakx/ecma-335/blob/master/docs/ii.22.31-moduleref-0x1a.md
+        auto Name() const { return get_string(0); }
+
         auto CustomAttribute() const;
     };
 
     struct ImplMap : row_base<ImplMap>
     {
+        // https://github.com/stakx/ecma-335/blob/master/docs/ii.22.22-implmap-0x1c.md
+        auto MemberForwarded() const { return get_coded_index<winmd::reader::MemberForwarded>(1); }
+        auto ImportName() const { return get_string(2); }
+        auto ImportScope() const { return get_coded_index<ModuleRef>(3); };
         using row_base::row_base;
     };
 

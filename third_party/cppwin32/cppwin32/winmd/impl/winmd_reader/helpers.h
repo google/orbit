@@ -126,39 +126,4 @@ namespace winmd::reader
 
         return false;
     };
-
-    TypeDef find_non_nested_root(TypeDef const& type)
-    {
-        if (is_nested(type))
-        {
-            return find_non_nested_root(type.EnclosingType());
-        }
-        return type;
-    }
-
-    TypeDef find_non_nested_root(TypeRef const& type)
-    {
-        if (is_nested(type))
-        {
-            return find_non_nested_root(type.ResolutionScope().TypeRef());
-        }
-        return find(type);
-    }
-
-    TypeDef find_non_nested_root(coded_index<TypeDefOrRef> const& type)
-    {
-        if (type.type() == TypeDefOrRef::TypeDef)
-        {
-            return find_non_nested_root(type.TypeDef());
-        }
-        else if (type.type() == TypeDefOrRef::TypeRef)
-        {
-            return find_non_nested_root(type.TypeRef());
-        }
-        else
-        {
-            XLANG_ASSERT(false);
-            return {};
-        }
-    }
 }
