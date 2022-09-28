@@ -6,9 +6,11 @@
 #define LIVE_FUNCTIONS_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <sys/types.h>
 
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <optional>
 #include <utility>
 
@@ -44,6 +46,9 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
       std::function<void(uint64_t, const orbit_client_data::FunctionInfo*)> callback) {
     add_iterator_callback_ = std::move(callback);
   }
+
+  void SetScopeStatsCollection(
+      std::shared_ptr<orbit_client_data::ScopeStatsCollection> scope_collection);
 
   [[nodiscard]] uint64_t GetCaptureMin() const;
   [[nodiscard]] uint64_t GetCaptureMax() const;

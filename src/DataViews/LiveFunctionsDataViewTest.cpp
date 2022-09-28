@@ -7,6 +7,8 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
+#include <gmock/gmock-actions.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -28,10 +30,12 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/MockScopeStatsCollection.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -54,7 +58,7 @@ using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
-using orbit_client_data::ModuleData;
+using orbit_client_data::MockScopeStatsCollection;
 using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
 
@@ -176,6 +180,18 @@ const std::vector<uint64_t> kDurations = []() {
   return durations;
 }();
 
+const std::array<ScopeStats, kNumFunctions> kScopeStats = [] {
+  std::array<ScopeStats, kNumFunctions> scope_stats;
+  for (size_t i = 0; i < kNumFunctions; i++) {
+    scope_stats[i].set_count(kCounts[i]);
+    scope_stats[i].set_total_time_ns(kTotalTimeNs[i]);
+    scope_stats[i].set_min_ns(kMinNs[i]);
+    scope_stats[i].set_max_ns(kMaxNs[i]);
+    scope_stats[i].set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
+  }
+  return scope_stats;
+}();
+
 std::string GetExpectedDisplayTime(uint64_t time_ns) {
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(time_ns));
 }
@@ -262,18 +278,26 @@ class LiveFunctionsDataViewTest : public testing::Test {
                             /*size=*/0,      kPrettyNames[i], /*is_hotpatchable=*/false};
       functions_.insert_or_assign(kScopeIds[i], std::move(function));
     }
+    view_.SetScopeStatsCollection(capture_data_->GetAllScopeStatsCollection());
   }
 
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
-    std::set index_set(indices.begin(), indices.end());
-    for (size_t index : index_set) {
-      ORBIT_CHECK(index < kNumFunctions);
-      view_.AddScope(kScopeIds[index]);
+    scope_stats_collection_ = std::make_shared<MockScopeStatsCollection>();
+    std::vector<ScopeId> ids;
+    absl::c_transform(indices, std::back_inserter(ids),
+                      [](const size_t index) { return ScopeId(kScopeIds[index]); });
+    EXPECT_CALL(*scope_stats_collection_, GetAllProvidedScopeIds).WillRepeatedly(Return(ids));
+    for (size_t index : indices) {
+      EXPECT_CALL(*scope_stats_collection_, GetScopeStatsOrDefault(kScopeIds[index]))
+          .WillRepeatedly(testing::ReturnRef(kScopeStats[index]));
     }
+
+    view_.SetScopeStatsCollection(scope_stats_collection_);
   }
 
  protected:
   MockLiveFunctionsInterface live_functions_;
+  std::shared_ptr<orbit_client_data::MockScopeStatsCollection> scope_stats_collection_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::LiveFunctionsDataView view_;
 
@@ -877,8 +901,10 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
     return timer.function_id();
   }));
 
-  view_.OnDataChanged();
   AddFunctionsByIndices({0});
+
+  EXPECT_CALL(*scope_stats_collection_, GetSortedTimerDurationsForScopeId(kScopeIds[0]))
+      .WillRepeatedly(Return(&kDurations));
 
   EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0],
                                   std::optional<ScopeId>(kScopeIds[0])))

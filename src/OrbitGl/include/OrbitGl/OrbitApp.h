@@ -551,6 +551,9 @@ class OrbitApp final : public DataViewFactory,
   // list of auto-loadable presets.
   void AddDefaultFrameTrackOrLogError();
 
+  void OnTimeRangeSelection(uint64_t min, uint64_t max);
+  void ClearTimeRangeSelection();
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);

@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -23,6 +24,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
@@ -64,6 +66,9 @@ class LiveFunctionsDataView : public DataView {
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
   void UpdateHistogramWithScopeIds(const std::vector<ScopeId>& scope_ids);
+
+  void SetScopeStatsCollection(
+      std::shared_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection);
 
   std::string GetToolTip(int /*row*/, int column) override;
 
@@ -147,6 +152,9 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] std::vector<ScopeId> FetchMissingScopeIds() const;
 
   [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(ScopeId scope_id) const;
+
+  std::shared_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection_ =
+      std::make_shared<orbit_client_data::ScopeStatsCollection>();
 };
 
 }  // namespace orbit_data_views

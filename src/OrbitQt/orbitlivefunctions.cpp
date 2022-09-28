@@ -173,3 +173,8 @@ void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data, std::s
                                        std::optional<orbit_client_data::ScopeId> scope_id) {
   ui_->histogram_widget_->UpdateData(data, std::move(scope_name), scope_id);
 }
+
+void OrbitLiveFunctions::SetScopeStatsCollection(
+    std::shared_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) {
+  live_functions_->SetScopeStatsCollection(std::move(scope_collection));
+}
