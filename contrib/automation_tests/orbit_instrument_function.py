@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, ExpandTrack, SetEnableAutoFrameTrack
 from test_cases.main_window import EndSession
-from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModuleState, FilterAndHookFunction
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function in Orbit using pywinauto.
 
@@ -33,7 +33,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="hello_ggp"),
         # Setting enable auto frame track to false, so there is no hooked functions.
         SetEnableAutoFrameTrack(enable_auto_frame_track=False),
         # Ending and opening a new session. New session won't have default frame track neither hooked function.

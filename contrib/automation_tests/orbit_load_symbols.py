@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.symbols_tab import ClearSymbolCache, LoadSymbols, MODULE_STATE_PARTIAL, VerifySymbolsLoaded, \
-    WaitForLoadingSymbolsAndCheckModule, WaitForLoadingSymbolsAndCheckNoErrors
+    WaitForLoadingSymbolsAndCheckModuleState, WaitForLoadingSymbolsAndCheckNoErrorStates
 from test_cases.symbol_locations import ClearAllSymbolLocations
 """
 Test symbol loading.
@@ -37,11 +37,11 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter='no_symbols_elf'),
         ClearSymbolCache(),
         ClearAllSymbolLocations(),
-        WaitForLoadingSymbolsAndCheckNoErrors(),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="libc"),
+        WaitForLoadingSymbolsAndCheckNoErrorStates(),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="libc"),
         VerifySymbolsLoaded(symbol_search_string="fprintf{ }libc"),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="no_symbols_elf",
-                                            expected_state=MODULE_STATE_PARTIAL),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="no_symbols_elf",
+                                                 expected_state=MODULE_STATE_PARTIAL),
         VerifySymbolsLoaded(
             symbol_search_string="[function@0x2974]{ }no_symbols_elf"),  # Corresponds to `main`.
         LoadSymbols(module_search_string="no_symbols_elf", expect_fail=True),

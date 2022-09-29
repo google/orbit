@@ -215,7 +215,7 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
                         expected=expected_duration, last=last_duration, cur=current_duration))
 
 
-class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
+class WaitForLoadingSymbolsAndCheckModuleState(E2ETestCase):
     """
     Waits for automatically loading all symbol files and checks if the specified module was loaded successfully
     (or is in the desired "Symbols" state).
@@ -223,11 +223,11 @@ class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
 
     def _execute(self, module_search_string: str, expected_state: str = MODULE_STATE_LOADED):
         _wait_for_loading_and_measure_time(self.suite.top_window())
-        VerifyModuleLoaded(module_search_string=module_search_string,
-                           expected_state=expected_state).execute(self.suite)
+        VerifyModuleState(module_search_string=module_search_string,
+                          expected_state=expected_state).execute(self.suite)
 
 
-class WaitForLoadingSymbolsAndCheckNoErrors(E2ETestCase):
+class WaitForLoadingSymbolsAndCheckNoErrorStates(E2ETestCase):
     """
     Waits for automatically loading all symbol files and checks that no module is in the "Error" state.
     """
@@ -287,7 +287,7 @@ class LoadSymbols(E2ETestCase):
             VerifySymbolsLoaded(symbol_search_string=module_search_string).execute(self.suite)
 
 
-class VerifyModuleLoaded(E2ETestCase):
+class VerifyModuleState(E2ETestCase):
     """
     Verifies whether a module with the given search string is loaded (or in the desired "Symbols" state).
     """

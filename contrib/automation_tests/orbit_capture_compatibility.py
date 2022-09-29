@@ -10,7 +10,7 @@ from test_cases.capture_window import Capture
 from test_cases.connection_window import ConnectToStadiaInstance, FilterAndSelectFirstProcess, LoadCapture
 from test_cases.live_tab import VerifyOneFunctionWasHit
 from test_cases.main_window import DismissDialog, RenameMoveCaptureFile
-from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModuleState
 """Verify Capture compatibility
 
 This script contains functionality to record a capture with one (new) version of Orbit and then
@@ -33,14 +33,14 @@ to be run from 64 bit python.
 def main(argv):
     if len(argv) < 3:
         raise RuntimeError(
-            "Missing argument: You need to pass 2 arguments. The first is `record_capture` or " \
+            "Missing argument: You need to pass 2 arguments. The first is `record_capture` or "
             "`load_capture` and the second a path to save/load the capture file"
         )
     if argv[1] == "record_capture":
         test_cases = [
             ConnectToStadiaInstance(),
             FilterAndSelectFirstProcess(process_filter='hello_'),
-            WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
+            WaitForLoadingSymbolsAndCheckModuleState(module_search_string="hello_ggp"),
             Capture(length_in_seconds=5),
             VerifyOneFunctionWasHit(function_name_contains="vulkan"),
             RenameMoveCaptureFile(new_capture_path=argv[2])
