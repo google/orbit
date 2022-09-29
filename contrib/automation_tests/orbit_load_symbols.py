@@ -23,7 +23,7 @@ to be run from 64 bit python.
 
 This automation script covers a basic workflow:
  - connect to a gamelet
- - delete all symbol locations
+ - clear symbol cache and delete all symbol locations
  - verify no modules have symbols in the "Error" state
  - verify symbols for "libc" are in the "Loaded" state, and functions are present
  - verify symbols for "no_symbols_elf" are in the "Partial" state, and functions are present
@@ -46,7 +46,7 @@ def main(argv):
             symbol_search_string="[function@0x2974]{ }no_symbols_elf"),  # Corresponds to `main`.
         LoadSymbols(module_search_string="no_symbols_elf", expect_fail=True),
     ]
-    suite = E2ETestSuite(test_name="Custom symbol locations", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Automatic symbol loading", test_cases=test_cases)
     suite.execute()
 
 
