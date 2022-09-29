@@ -29,8 +29,11 @@ MODULE_STATE_DOWNLOADING = "Downloading..."
 MODULE_STATE_ERROR = "Error"
 MODULE_STATE_LOADING = "Loading..."
 MODULE_STATE_LOADED = "Loaded"
+MODULE_STATE_PARTIAL = "Partial"
 
-MODULE_FINAL_STATES = [MODULE_STATE_DISABLED, MODULE_STATE_ERROR, MODULE_STATE_LOADED]
+MODULE_FINAL_STATES = [
+    MODULE_STATE_DISABLED, MODULE_STATE_ERROR, MODULE_STATE_LOADED, MODULE_STATE_PARTIAL
+]
 
 
 def _show_symbols_and_functions_tabs(top_window):
@@ -264,13 +267,13 @@ class LoadSymbols(E2ETestCase):
             wait_for_condition(
                 lambda: modules_dataview.get_item_at(0, 0).texts()[0] == MODULE_STATE_LOADED, 100)
 
-        VerifySymbolsLoaded(symbol_search_string=module_search_string,
-                            expect_loaded=not expect_fail).execute(self.suite)
+        if not expect_fail:
+            VerifySymbolsLoaded(symbol_search_string=module_search_string).execute(self.suite)
 
 
 class VerifyModuleLoaded(E2ETestCase):
     """
-    Verifies whether a module with the give search string is loaded.
+    Verifies whether a module with the given search string is loaded.
     """
 
     def _execute(self, module_search_string: str, expect_loaded: bool = True):
@@ -290,26 +293,19 @@ class VerifyModuleLoaded(E2ETestCase):
 
 class VerifySymbolsLoaded(E2ETestCase):
 
-    def _execute(self, symbol_search_string: str, expect_loaded: bool = True):
-        logging.info(
-            'Start verifying symbols with substring %s are {}loaded'.format(
-                "" if expect_loaded else "not "), symbol_search_string)
+    def _execute(self, symbol_search_string: str):
+        logging.info('Start verifying symbols with substring %s are loaded', symbol_search_string)
         functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Filtering symbols')
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(symbol_search_string)
-        if expect_loaded:
-            logging.info('Verifying at least one symbol with substring %s has been loaded',
-                         symbol_search_string)
-            wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
-            logging.info("Found expected symbol(s)")
-        else:
-            logging.info('Verifying no symbols with substring %s has been loaded',
-                         symbol_search_string)
-            wait_for_condition(lambda: functions_dataview.get_row_count() == 0)
-            logging.info("Found no symbols")
+
+        logging.info('Verifying at least one symbol with substring %s has been loaded',
+                     symbol_search_string)
+        wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
+        logging.info("Found expected symbol(s)")
 
 
 selected_function_string: str = 'H'
