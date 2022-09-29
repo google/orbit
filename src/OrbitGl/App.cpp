@@ -1809,7 +1809,7 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
   metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
 }
 
-Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleFromRemote(
+Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleFromInstance(
     const std::string& module_file_path, StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
@@ -2241,7 +2241,7 @@ ConvertSymbolProviderRetrieveFuture(const Future<SymbolLoadingOutcome>& future,
       });
 };
 
-Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleViaDownload(
+Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModuleFromRemote(
     const ModuleIdentifier& module_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
@@ -2265,7 +2265,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
           return {ErrorMessage{"\n- Not able to search for symbols on the instance."}};
         }
 
-        return RetrieveModuleFromRemote(module_id.file_path, std::move(stop_token))
+        return RetrieveModuleFromInstance(module_id.file_path, std::move(stop_token))
             .Then(main_thread_executor_,
                   [](const SymbolRetrieveResult& retrieve_result) mutable -> SymbolRetrieveResult {
                     if (retrieve_result.has_value()) return retrieve_result;
@@ -2355,7 +2355,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
                       module_id.file_path, module_id.build_id, retrieve_result.error().message())}};
                 });
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_via_download_future =
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_remote_future =
       orbit_base::UnwrapFuture(retrieve_from_local_future.Then(
           main_thread_executor_,
           [this, module_id](
@@ -2365,7 +2365,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
 
             if (previous_result.has_value()) return {previous_result.value()};
 
-            return RetrieveModuleViaDownload(module_id).Then(
+            return RetrieveModuleFromRemote(module_id).Then(
                 main_thread_executor_,
                 [module_id, current_message = previous_result.error().message()](
                     const ErrorMessageOr<CanceledOr<std::filesystem::path>>&
@@ -2378,13 +2378,13 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
                 });
           }));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_via_download_future);
-  retrieve_via_download_future.Then(
+  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_remote_future);
+  retrieve_from_remote_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
         symbol_files_currently_being_retrieved_.erase(module_id);
       });
-  return retrieve_via_download_future;
+  return retrieve_from_remote_future;
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
