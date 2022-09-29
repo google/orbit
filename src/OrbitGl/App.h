@@ -602,12 +602,10 @@ class OrbitApp final : public DataViewFactory,
   // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
   // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
   void InitRemoteSymbolProviders();
-  // TODO(b/243520787) Rename existing `RetrieveModuleFromRemote` as `RetrieveModuleFromInstance`
-  // and rename this `RetrieveModuleViaDownload` to `RetrieveModuleFromRemote`.
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleViaDownload(const orbit_symbol_provider::ModuleIdentifier& module_id);
+  RetrieveModuleFromRemote(const orbit_symbol_provider::ModuleIdentifier& module_id);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromRemote(const std::string& module_file_path, orbit_base::StopToken stop_token);
+  RetrieveModuleFromInstance(const std::string& module_file_path, orbit_base::StopToken stop_token);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleItself(const orbit_symbol_provider::ModuleIdentifier& module_id,
                        uint64_t module_file_size);
