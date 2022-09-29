@@ -338,23 +338,6 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
-  enum class SymbolLoadingAndErrorHandlingResult {
-    kSymbolsLoadedSuccessfully,
-    kCanceled,
-  };
-  // RetrieveModuleAndLoadSymbolsAndHandleError attempts to retrieve the module and loads the
-  // symbols via RetrieveModuleAndLoadSymbols, and when that fails it handles the error with
-  // symbol_loading_error_callback_. This might result in another loading attempt (another call to
-  // RetrieveModuleAndLoadSymbolsAndHandleError).
-  orbit_base::Future<SymbolLoadingAndErrorHandlingResult>
-  RetrieveModuleAndLoadSymbolsAndHandleError(const orbit_client_data::ModuleData* module);
-
-  // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
-  // `RetrieveModuleSymbolsAndLoadSymbols`. If this fails, it falls back on
-  // `RetrieveModuleItselfAndLoadFallbackSymbols`.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
-      const orbit_client_data::ModuleData* module_data);
-
   // This method is pretty similar to `RetrieveModuleSymbols`, but it also requires debug
   // information to be present.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
@@ -574,25 +557,31 @@ class OrbitApp final : public DataViewFactory,
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>> GetLoadedModulesByPath(
       const std::filesystem::path& module_path);
-  ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
-      const orbit_preset_file::PresetFile& preset_file);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
   void SelectFunctionsByName(const orbit_client_data::ModuleData* module,
                              absl::Span<const std::string> function_names);
 
+  enum class SymbolLoadingAndErrorHandlingResult {
+    kSymbolsLoadedSuccessfully,
+    kCanceled,
+  };
+  // RetrieveModuleAndLoadSymbolsAndHandleError attempts to retrieve the module and loads the
+  // symbols via RetrieveModuleAndLoadSymbols, and when that fails it handles the error with
+  // symbol_loading_error_callback_. This might result in another loading attempt (another call to
+  // RetrieveModuleAndLoadSymbolsAndHandleError).
+  orbit_base::Future<SymbolLoadingAndErrorHandlingResult>
+  RetrieveModuleAndLoadSymbolsAndHandleError(const orbit_client_data::ModuleData* module);
+  // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
+  // `RetrieveModuleSymbolsAndLoadSymbols`. If this fails, it falls back on
+  // `RetrieveModuleItselfAndLoadFallbackSymbols`.
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
+      const orbit_client_data::ModuleData* module_data);
   // RetrieveModuleSymbolsAndLoadSymbols retrieves the module symbols by calling
   // `RetrieveModuleSymbols` and afterwards loads the symbols by calling `LoadSymbols`.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
   RetrieveModuleSymbolsAndLoadSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id);
-  // RetrieveModuleItselfAndLoadFallbackSymbols retrieves the module's binary by calling
-  // `RetrieveModuleItself` and afterwards load the fallback symbols by calling
-  // `LoadFallbackSymbols`.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
-  RetrieveModuleItselfAndLoadFallbackSymbols(
-      const orbit_symbol_provider::ModuleIdentifier& module_id, uint64_t module_file_size);
-
   // RetrieveModuleSymbols retrieves a module file and returns the local file path (potentially from
   // the local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
@@ -606,6 +595,13 @@ class OrbitApp final : public DataViewFactory,
   RetrieveModuleFromRemote(const orbit_symbol_provider::ModuleIdentifier& module_id);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleFromInstance(const std::string& module_file_path, orbit_base::StopToken stop_token);
+
+  // RetrieveModuleItselfAndLoadFallbackSymbols retrieves the module's binary by calling
+  // `RetrieveModuleItself` and afterwards load the fallback symbols by calling
+  // `LoadFallbackSymbols`.
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
+  RetrieveModuleItselfAndLoadFallbackSymbols(
+      const orbit_symbol_provider::ModuleIdentifier& module_id, uint64_t module_file_size);
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleItself(const orbit_symbol_provider::ModuleIdentifier& module_id,
                        uint64_t module_file_size);
@@ -618,14 +614,19 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadFallbackSymbols(
       const std::filesystem::path& object_path,
       const orbit_symbol_provider::ModuleIdentifier& module_id);
+
   void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
                   const orbit_grpc_protos::ModuleSymbols& module_symbols);
   void AddFallbackSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
                           const orbit_grpc_protos::ModuleSymbols& fallback_symbols);
 
+  void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
+                                 bool show_dialog);
+
   static ErrorMessageOr<orbit_preset_file::PresetFile> ReadPresetFromFile(
       const std::filesystem::path& filename);
-
+  ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
+      const orbit_preset_file::PresetFile& preset_file);
   ErrorMessageOr<void> SavePreset(const std::string& filename);
 
   void AddFrameTrack(uint64_t instrumented_function_id);
@@ -650,8 +651,6 @@ class OrbitApp final : public DataViewFactory,
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                      std::optional<ScopeId> scope_id) override;
 
-  void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
-                                 bool show_dialog);
   // Sets CaptureData's selection_callstack_data and selection_post_processed_sampling_data.
   void SetCaptureDataSelectionFields(
       const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
