@@ -40,12 +40,11 @@ constexpr const char* kNamespaceDispatcherHeader = R"(
 
 namespace orbit_windows_api_shim {
 
-  bool FindTrampolineInfo(const char* function_key,
-                                TrampolineInfo& out_trampoline_info) {
+  std::optional<TrampolineInfo> FindTrampolineInfo(const char* function_key) {
     std::optional<std::string> name_space = WindowsApiHelper::Get().GetNamespaceFromFunctionKey(function_key);
-    if (!name_space.has_value()) return false;
+    if (!name_space.has_value()) return std::nullopt;
     
-    typedef bool (*FunctionType)(const char* function_key, TrampolineInfo& out_trampoline_info);
+    typedef std::optional<TrampolineInfo> (*FunctionType)(const char* function_key);
 
     static const std::unordered_map<std::string, FunctionType> dispatcher = {{
 )";
@@ -54,8 +53,8 @@ constexpr const char* kNamespaceDispatcherFooter = R"(
       }};
 
       const auto function_it = dispatcher.find(name_space.value());
-      if (function_it == dispatcher.end()) return false;
-      return function_it->second(function_key, out_trampoline_info);
+      if (function_it == dispatcher.end()) return std::nullopt;
+      return function_it->second(function_key);
     }
 }  // namespace orbit_windows_api_shim
 )";
@@ -171,37 +170,37 @@ void write_class_abi(cppwin32::writer& w, TypeDef const& type, const WinMdHelper
     w.write("\n");
   }
 
-  w.write(
-      "bool GetTrampolineInfo(const char* function_key, TrampolineInfo& "
-      "out_trampoline_info);\n");
+  w.write("std::optional<TrampolineInfo> GetTrampolineInfo(const char* function_key);\n");
 }
 
 void WriteNamespaceGetTrampolineInfo(cppwin32::writer& w, TypeDef const& type,
                                      const WinMdHelper& win_md_helper) {
-  w.write(
-      "\nbool GetTrampolineInfo(const char* function_key, TrampolineInfo& "
-      "out_function_info)\n{\n");
+  w.write("std::optional<TrampolineInfo> GetTrampolineInfo(const char* function_key)\n{\n");
 
   if (!IsWindMdListEmpty(type.MethodList())) {
     w.write(
-        "  static std::unordered_map<std::string, std::function<void(TrampolineInfo&)>> "
+        "  static std::unordered_map<std::string, std::function<TrampolineInfo()>> "
         "function_dispatcher = {\n");
 
     for (auto&& method : type.MethodList()) {
       if (!IsX64(method)) continue;
-      w.write("    ORBIT_DISPATCH_ENTRY(%),\n", win_md_helper.GetFunctionKeyFromMethodDef(method));
+      std::string function_key = win_md_helper.GetFunctionKeyFromMethodDef(method);
+      w.write(
+          "    {\"%\", [](){ return TrampolineInfo{reinterpret_cast<void*>(&ORBIT_IMPL_%), "
+          "reinterpret_cast<void**>(&g_api_table.%)}; }},\n",
+          function_key, function_key, function_key);
     }
 
     w.write("  };\n\n");
     w.write("  auto it = function_dispatcher.find(function_key);\n");
     w.write("  if(it != function_dispatcher.end()) {\n");
-    w.write("    it->second(out_function_info);\n    return true;\n  }\n\n");
+    w.write("    return it->second();\n  }\n\n");
   }
 
   w.write(
       "  ORBIT_SHIM_ERROR(\"Could not find function \\\"%s\\\" in current namespace\", "
       "function_key);\n");
-  w.write("  return false;\n}\n\n");
+  w.write("  return std::nullopt;\n}\n\n");
 }
 
 struct FunctionInfo {
@@ -398,16 +397,10 @@ inline bool is_x64_struct(const TypeDef& method) {
       get_attribute(method, "Windows.Win32.Interop", "SupportedArchitectureAttribute");
   if (attr) {
     CustomAttributeSig attr_sig = attr.Value();
-    // PRINT_VAR(attr_sig.FixedArgs().size());
-    // PRINT_VAR(attr_sig.NamedArgs().size());
     FixedArgSig fixed_arg = attr_sig.FixedArgs()[0];
     ElemSig elem_sig = std::get<ElemSig>(fixed_arg.value);
     ElemSig::EnumValue enum_value = std::get<ElemSig::EnumValue>(elem_sig.value);
     auto const arch_flags = std::get<int32_t>(enum_value.value);
-    // PRINT_VAR(arch_flags);
-    // PRINT_VAR("Found Supported Arch Attr");
-    // method_signature signature{ method };
-    // PRINT_VAR(method.Name());
     if ((arch_flags & 2) == 0)  // x64
       return false;
   }

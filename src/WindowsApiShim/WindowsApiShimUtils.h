@@ -25,19 +25,6 @@ struct TrampolineInfo {
   void** original_function_relay;
 };
 
-// inline void FillOrbitShimFunctionInfo(FunctionType detour, FunctionType* original,
-template <typename FunctionType>
-inline void FillTrampolineInfo(FunctionType detour, FunctionType* original,
-                               TrampolineInfo& out_trampoline_info) {
-  out_trampoline_info.detour_function = reinterpret_cast<void*>(detour);
-  out_trampoline_info.original_function_relay = reinterpret_cast<void**>(original);
-}
-
-#define ORBIT_DISPATCH_ENTRY(function_name)                                                                                                             \
-  {                                                                                                                                                     \
-#function_name, [](TrampolineInfo &trampoline_info) { FillTrampolineInfo(&ORBIT_IMPL_##function_name, &g_api_table.##function_name, trampoline_info); } \
-  }
-
 [[nodiscard]] inline void* GetThreadLocalStoragePointer() {
   // Equivalent of "mov rax, gs:58h".
   return *(void**)__readgsqword(88);
