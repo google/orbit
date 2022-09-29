@@ -60,7 +60,8 @@ class SymbolHelper : public SymbolCacheInterface {
  private:
   template <typename Verifier>
   ErrorMessageOr<std::filesystem::path> FindSymbolsInCacheImpl(
-      const std::filesystem::path& module_path, Verifier&& verify) const;
+      const std::filesystem::path& module_path, std::string_view searchee_for_error_message,
+      Verifier&& verify) const;
 
   const std::filesystem::path cache_directory_;
   // TODO(b/246743231): Move this out of SymbolHelper in a next refactoring step.

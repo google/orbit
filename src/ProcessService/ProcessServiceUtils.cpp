@@ -334,10 +334,10 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
   }
 
   std::string not_found_message_for_client{absl::StrFormat(
-      "Unable to find debug symbols on the instance for module \"%s\".", module_path)};
+      "Unable to find debug symbols on the instance for module \"%s\"", module_path)};
   if (!not_found_messages.empty()) {
-    absl::StrAppend(&not_found_message_for_client, "\nDetails:\n* ",
-                    absl::StrJoin(not_found_messages, "\n* "));
+    absl::StrAppend(&not_found_message_for_client, ":\n  * ",
+                    absl::StrJoin(not_found_messages, "\n  * "));
   }
   return orbit_base::NotFound{not_found_message_for_client};
 }

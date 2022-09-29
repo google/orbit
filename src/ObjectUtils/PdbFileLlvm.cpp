@@ -415,15 +415,15 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(
   llvm::Error error =
       llvm::pdb::loadDataForPDB(llvm::pdb::PDB_ReaderType::Native, pdb_path, session);
   if (error) {
-    return ErrorMessage(absl::StrFormat("Unable to load PDB file %s with error: %s",
-                                        file_path.string(), llvm::toString(std::move(error))));
+    return ErrorMessage(absl::StrFormat("Unable to load PDB file \"%s\": %s", file_path.string(),
+                                        llvm::toString(std::move(error))));
   }
 
   // We need the debug info stream to retrieve the correct age information (which is used in the
   // build-id). See: https://github.com/llvm/llvm-project/issues/57300
   if (!PdbHasDbiStream(session.get())) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to load PDB file %s: PDB has no Dbi Stream", file_path.string()));
+    return ErrorMessage(absl::StrFormat("Unable to load PDB file \"%s\": PDB has no Dbi Stream.",
+                                        file_path.string()));
   }
 
   return absl::WrapUnique<PdbFileLlvm>(

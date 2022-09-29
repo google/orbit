@@ -56,10 +56,13 @@ struct SymbolLoadingState {
       case kLoaded:
         return "Debug symbols for this module have been loaded successfully.";
       case kFallback:
-        return "No debug symbols could be found for this module. Nonetheless, some substitute "
-               "information could still be extracted from the module itself, namely from symbols "
-               "for dynamic linking and/or from stack unwinding information. Note that this "
-               "information might be inaccurate.";
+        return "No debug symbols could be found for this module.\n"
+               "Nonetheless, some substitute information could still be extracted from the module "
+               "itself,\n"
+               "namely from symbols for dynamic linking and/or from stack unwinding "
+               "information.\n"
+               "\n"
+               "Note that this information might be inaccurate.";
     }
     ORBIT_UNREACHABLE();
   }
