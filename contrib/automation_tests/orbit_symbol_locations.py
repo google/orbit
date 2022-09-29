@@ -18,7 +18,7 @@ Test symbol loading from custom symbol locations.
 
 Before this script is run there needs to be a gamelet reserved and
 "no_symbols_elf" has to be started (can be downloaded from GCS). 
-Test data needs to be available in  "testdata/symbol_location_tests" (part of our git repo).
+Test data needs to be available in "testdata/symbol_location_tests" (part of our git repo).
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test, it needs
