@@ -2355,7 +2355,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
                       module_id.file_path, module_id.build_id, retrieve_result.error().message())}};
                 });
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_via_download_future =
+  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_remote_future =
       orbit_base::UnwrapFuture(retrieve_from_local_future.Then(
           main_thread_executor_,
           [this, module_id](
@@ -2378,13 +2378,13 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
                 });
           }));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_via_download_future);
-  retrieve_via_download_future.Then(
+  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_remote_future);
+  retrieve_from_remote_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
         symbol_files_currently_being_retrieved_.erase(module_id);
       });
-  return retrieve_via_download_future;
+  return retrieve_from_remote_future;
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
