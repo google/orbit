@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers
-from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModuleState, FilterAndHookFunction
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function using user space instrumentation on Silenus.
 
@@ -33,7 +33,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="triangle.exe"),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="triangle.exe"),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="triangle.exe"),
         FilterAndHookFunction(function_search_string="Render{ }triangle.exe"),
         Capture(user_space_instrumentation=True),
         CheckTimers(track_name_filter="triangle.exe", require_all=False),

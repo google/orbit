@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import ClearSymbolCache, LoadSymbols, WaitForLoadingSymbolsAndCheckModule
+from test_cases.symbols_tab import ClearSymbolCache, LoadSymbols, WaitForLoadingSymbolsAndCheckModuleState
 from test_cases.symbol_locations import ClearAllSymbolLocations, ToggleEnableStadiaSymbolStore
 from test_cases.main_window import EndSession
 """
@@ -45,7 +45,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         LoadSymbols(module_search_string="libggp", expect_fail=True),
         ToggleEnableStadiaSymbolStore(enable_stadia_symbol_store=True),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="libggp"),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="libggp"),
         ToggleEnableStadiaSymbolStore(enable_stadia_symbol_store=False)
     ]
     suite = E2ETestSuite(test_name="Stadia symbol store", test_cases=test_cases)

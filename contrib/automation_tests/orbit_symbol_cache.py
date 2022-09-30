@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import WaitForLoadingSymbolsAndVerifyCache, ClearSymbolCache, VerifyModuleLoaded
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndVerifyCache, ClearSymbolCache, VerifyModuleState
 from test_cases.main_window import EndSession
 """
 Test symbol loading with and without local caching.
@@ -41,7 +41,7 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         WaitForLoadingSymbolsAndVerifyCache(),
-        VerifyModuleLoaded(module_search_string="libggp"),
+        VerifyModuleState(module_search_string="libggp"),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         WaitForLoadingSymbolsAndVerifyCache(expected_duration_difference_ratio=0.99),

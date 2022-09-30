@@ -215,15 +215,31 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
                         expected=expected_duration, last=last_duration, cur=current_duration))
 
 
-class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
+class WaitForLoadingSymbolsAndCheckModuleState(E2ETestCase):
     """
-    Waits for automatically loading all symbol files and checks if the specified module was loaded
-    successfully.
+    Waits for automatically loading all symbol files and checks if the specified module was loaded successfully
+    (or is in the desired "Symbols" state).
     """
 
-    def _execute(self, module_search_string: str):
+    def _execute(self, module_search_string: str, expected_state: str = MODULE_STATE_LOADED):
         _wait_for_loading_and_measure_time(self.suite.top_window())
-        VerifyModuleLoaded(module_search_string=module_search_string).execute(self.suite)
+        VerifyModuleState(module_search_string=module_search_string,
+                          expected_state=expected_state).execute(self.suite)
+
+
+class WaitForLoadingSymbolsAndCheckNoErrorStates(E2ETestCase):
+    """
+    Waits for automatically loading all symbol files and checks that no module is in the "Error" state.
+    """
+
+    def _execute(self):
+        _wait_for_loading_and_measure_time(self.suite.top_window())
+        logging.info("Verifying that no module is in the 'Error' state...")
+        modules = _gather_module_states(self.suite.top_window())
+        self.expect_true(len(modules) > 0, "At least one module is present")
+        self.expect_eq(sum(module.state == MODULE_STATE_ERROR for module in modules), 0,
+                       "No module is in the 'Error' state")
+        logging.info("Verified that no module is in the 'Error' state")
 
 
 class LoadSymbols(E2ETestCase):
@@ -271,24 +287,23 @@ class LoadSymbols(E2ETestCase):
             VerifySymbolsLoaded(symbol_search_string=module_search_string).execute(self.suite)
 
 
-class VerifyModuleLoaded(E2ETestCase):
+class VerifyModuleState(E2ETestCase):
     """
-    Verifies whether a module with the given search string is loaded.
+    Verifies whether a module with the given search string is loaded (or in the desired "Symbols" state).
     """
 
-    def _execute(self, module_search_string: str, expect_loaded: bool = True):
+    def _execute(self, module_search_string: str, expected_state: str = MODULE_STATE_LOADED):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Start verifying module %s is %s.', module_search_string,
-                     "loaded" if expect_loaded else "not loaded")
+        logging.info('Start verifying module %s is in state %s.', module_search_string,
+                     expected_state)
         modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0, 100)
         modules_dataview.filter.set_focus()
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        wait_for_condition(
-            lambda: MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0])
+        wait_for_condition(lambda: expected_state in modules_dataview.get_item_at(0, 0).texts()[0])
 
 
 class VerifySymbolsLoaded(E2ETestCase):
@@ -553,18 +568,18 @@ class LoadPreset(E2ETestCase):
 
             def get_open_file_dialog():
                 return self.find_control(control_type="Window",
-                                        name_contains="Select a file",
-                                        parent=self.suite.top_window(),
-                                        recurse=False)
+                                         name_contains="Select a file",
+                                         parent=self.suite.top_window(),
+                                         recurse=False)
 
             logging.info("Waiting for the file open dialog to appear")
             wait_for_condition(lambda: get_open_file_dialog().is_visible())
             dialog = get_open_file_dialog()
 
             file_edit = self.find_control(control_type="Edit",
-                                name="File name:",
-                                parent=dialog,
-                                recurse=True)
+                                          name="File name:",
+                                          parent=dialog,
+                                          recurse=True)
             file_edit.type_keys(preset_name)
             file_edit.type_keys('{DOWN}{ENTER}')
 

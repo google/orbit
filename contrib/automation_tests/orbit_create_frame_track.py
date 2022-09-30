@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, FilterTracks, CheckTimers, SetEnableAutoFrameTrack, VerifyTracksExist
 from test_cases.main_window import EndSession
-from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModuleState, FilterAndHookFunction
 from test_cases.live_tab import AddFrameTrack
 """Create a frame track in Orbit using pywinauto.
 
@@ -34,7 +34,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
-        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
+        WaitForLoadingSymbolsAndCheckModuleState(module_search_string="hello_ggp"),
         # Setting enable auto frame track to false to only have the created Frame Track.
         SetEnableAutoFrameTrack(enable_auto_frame_track=False),
         # Ending and opening a new session. The auto frame track won't appear.
