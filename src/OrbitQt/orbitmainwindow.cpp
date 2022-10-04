@@ -1169,35 +1169,28 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   app_->SetEnableApi(settings.value(kEnableApiSettingKey, true).toBool());
   app_->SetEnableIntrospection(settings.value(kEnableIntrospectionSettingKey, false).toBool());
 
-  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    CaptureOptions::ThreadStateChangeCallStackCollection const
-        collect_callstack_on_thread_state_change =
-            static_cast<CaptureOptions::ThreadStateChangeCallStackCollection>(
-                settings
-                    .value(kEnableCallStackCollectionOnThreadStateChanges,
-                           orbit_qt::CaptureOptionsDialog::
-                               kThreadStateChangeCallStackCollectionDefaultValue)
-                    .toInt());
-    if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
-      app_->SetThreadStateChangeCallstackCollection(collect_callstack_on_thread_state_change);
-    } else {
-      app_->SetThreadStateChangeCallstackCollection(
-          CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
-    }
-
-    uint16_t stack_dump_size = static_cast<uint16_t>(
-        settings
-            .value(
-                kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
-                orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
-            .toUInt());
-    app_->SetThreadStateChangeCallstackStackDumpSize(stack_dump_size);
+  CaptureOptions::ThreadStateChangeCallStackCollection const
+      collect_callstack_on_thread_state_change = static_cast<
+          CaptureOptions::ThreadStateChangeCallStackCollection>(
+          settings
+              .value(
+                  kEnableCallStackCollectionOnThreadStateChanges,
+                  orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
+              .toInt());
+  if (settings.value(kCollectThreadStatesSettingKey, false).toBool()) {
+    app_->SetThreadStateChangeCallstackCollection(collect_callstack_on_thread_state_change);
   } else {
     app_->SetThreadStateChangeCallstackCollection(
         CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
-
-    app_->SetThreadStateChangeCallstackStackDumpSize(std::numeric_limits<uint16_t>::max());
   }
+
+  uint16_t thread_state_change_stack_dump_size = static_cast<uint16_t>(
+      settings
+          .value(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
+                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
+          .toUInt());
+  app_->SetThreadStateChangeCallstackStackDumpSize(thread_state_change_stack_dump_size);
+
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings
           .value(kDynamicInstrumentationMethodSettingKey,
@@ -1337,25 +1330,22 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                  QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
           .toULongLong());
 
-  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    CaptureOptions::ThreadStateChangeCallStackCollection collect_callstack_on_thread_state_change =
-        static_cast<CaptureOptions::ThreadStateChangeCallStackCollection>(
-            settings
-                .value(kEnableCallStackCollectionOnThreadStateChanges,
-                       orbit_qt::CaptureOptionsDialog::
-                           kThreadStateChangeCallStackCollectionDefaultValue)
-                .toInt());
-    dialog.SetEnableCallStackCollectionOnThreadStateChanges(
-        collect_callstack_on_thread_state_change ==
-        CaptureOptions::kThreadStateChangeCallStackCollection);
+  CaptureOptions::ThreadStateChangeCallStackCollection collect_callstack_on_thread_state_change =
+      static_cast<CaptureOptions::ThreadStateChangeCallStackCollection>(
+          settings
+              .value(
+                  kEnableCallStackCollectionOnThreadStateChanges,
+                  orbit_qt::CaptureOptionsDialog::kThreadStateChangeCallStackCollectionDefaultValue)
+              .toInt());
+  dialog.SetEnableCallStackCollectionOnThreadStateChanges(
+      collect_callstack_on_thread_state_change ==
+      CaptureOptions::kThreadStateChangeCallStackCollection);
 
-    dialog.SetThreadStateChangeCallstackMaxCopyRawStackSize(static_cast<uint16_t>(
-        settings
-            .value(
-                kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
-                orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
-            .toUInt()));
-  }
+  dialog.SetThreadStateChangeCallstackMaxCopyRawStackSize(static_cast<uint16_t>(
+      settings
+          .value(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
+                 orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
+          .toUInt()));
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -1387,15 +1377,14 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                     dialog.GetLimitLocalMarkerDepthPerCommandBuffer());
   settings.setValue(kMaxLocalMarkerDepthPerCommandBufferSettingsKey,
                     QString::number(dialog.GetMaxLocalMarkerDepthPerCommandBuffer()));
-  if (absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    settings.setValue(
-        kEnableCallStackCollectionOnThreadStateChanges,
-        static_cast<int>(dialog.GetEnableCallStackCollectionOnThreadStateChanges()
-                             ? CaptureOptions::kThreadStateChangeCallStackCollection
-                             : CaptureOptions::kNoThreadStateChangeCallStackCollection));
-    settings.setValue(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
-                      static_cast<int>(dialog.GetThreadStateChangeCallstackMaxCopyRawStackSize()));
-  }
+  settings.setValue(
+      kEnableCallStackCollectionOnThreadStateChanges,
+      static_cast<int>(dialog.GetEnableCallStackCollectionOnThreadStateChanges()
+                           ? CaptureOptions::kThreadStateChangeCallStackCollection
+                           : CaptureOptions::kNoThreadStateChangeCallStackCollection));
+  settings.setValue(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
+                    static_cast<int>(dialog.GetThreadStateChangeCallstackMaxCopyRawStackSize()));
+
   LoadCaptureOptionsIntoApp();
 }
 

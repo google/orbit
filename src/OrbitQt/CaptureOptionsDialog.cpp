@@ -111,11 +111,6 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->devModeGroupBox->hide();
     ui_->wineNoneRadioButton->hide();
   }
-
-  if (!absl::GetFlag(FLAGS_tracepoint_callstack_collection)) {
-    ui_->threadStateChangeCallstackCollectionCheckBox->hide();
-    ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->hide();
-  }
 }
 
 void CaptureOptionsDialog::SetEnableSampling(bool enable_sampling) {
