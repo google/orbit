@@ -56,10 +56,16 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled),
                    ui_->threadStateChangeCallstackCollectionCheckBox, &QCheckBox::setEnabled);
+  QObject::connect(ui_->threadStateCheckBox, qOverload<bool>(&QCheckBox::toggled),
+                   ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget, [this](bool checked) {
+                     ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(
+                         checked && ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
+                   });
   QObject::connect(ui_->threadStateChangeCallstackCollectionCheckBox,
                    qOverload<bool>(&QCheckBox::toggled),
                    ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget, [this](bool checked) {
-                     ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(checked);
+                     ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(
+                         checked && ui_->threadStateCheckBox->isChecked());
                    });
 
   ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
@@ -84,9 +90,10 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
       ui_->threadStateCheckBox->isChecked());
 
   ui_->threadStateChangeCallstackMaxCopyRawStackSizeSpinBox->setValue(
-      kThreadStateChangeCallstackMaxCopyRawStackSizeDefaultValue);
+      kThreadStateChangeMaxCopyRawStackSizeDefaultValue);
   ui_->threadStateChangeCallstackMaxCopyRawStackSizeWidget->setEnabled(
-      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked());
+      ui_->threadStateChangeCallstackCollectionCheckBox->isChecked() &&
+      ui_->threadStateCheckBox->isChecked());
 
   if (!absl::GetFlag(FLAGS_auto_frame_track)) {
     ui_->autoFrameTrackGroupBox->hide();

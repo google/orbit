@@ -1187,9 +1187,9 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
 
     uint16_t stack_dump_size = static_cast<uint16_t>(
         settings
-            .value(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
-                   orbit_qt::CaptureOptionsDialog::
-                       kThreadStateChangeCallstackMaxCopyRawStackSizeDefaultValue)
+            .value(
+                kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
+                orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
             .toUInt());
     app_->SetThreadStateChangeCallstackStackDumpSize(stack_dump_size);
   } else {
@@ -1351,9 +1351,9 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
     dialog.SetThreadStateChangeCallstackMaxCopyRawStackSize(static_cast<uint16_t>(
         settings
-            .value(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
-                   orbit_qt::CaptureOptionsDialog::
-                       kThreadStateChangeCallstackMaxCopyRawStackSizeDefaultValue)
+            .value(
+                kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
+                orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
             .toUInt()));
   }
 
