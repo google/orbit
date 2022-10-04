@@ -53,7 +53,6 @@ class PerfEventVisitor {
                      const DmaFenceSignaledPerfEventData& /*event_data*/) {}
   virtual void Visit(uint64_t /*event_timestamp*/,
                      const GenericTracepointPerfEventData& /*event_data*/) {}
-  virtual void Visit(uint64_t /*event_timestamp*/, const CloneExitPerfEventData& /*event_data*/) {}
 };
 
 }  // namespace orbit_linux_tracing

@@ -531,50 +531,22 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UserSpaceFunctionEntryPerfEventData& event_data) {
-  const auto& tid_to_root_namespace_tid_it = tid_to_root_namespace_tid_.find(event_data.tid);
-  if (tid_to_root_namespace_tid_it == tid_to_root_namespace_tid_.end()) {
-    ORBIT_ERROR_ONCE(
-        "Received function entry event from unknown thread with tid %d. Dropping this event and "
-        "also all subsequent events from unknown threads.",
-        event_data.tid);
-    return;
-  }
-  const pid_t tid = tid_to_root_namespace_tid_it->second;
+  function_call_manager_->ProcessFunctionEntry(event_data.tid, event_data.function_id,
+                                               event_timestamp, std::nullopt);
 
-  function_call_manager_->ProcessFunctionEntry(tid, event_data.function_id, event_timestamp,
-                                               std::nullopt);
-
-  return_address_manager_->ProcessFunctionEntry(tid, event_data.sp, event_data.return_address);
+  return_address_manager_->ProcessFunctionEntry(event_data.tid, event_data.sp,
+                                                event_data.return_address);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const UserSpaceFunctionExitPerfEventData& event_data) {
-  const auto& tid_to_root_namespace_tid_it = tid_to_root_namespace_tid_.find(event_data.tid);
-  if (tid_to_root_namespace_tid_it == tid_to_root_namespace_tid_.end()) {
-    ORBIT_ERROR_ONCE(
-        "Received function exit event from unknown thread with tid %d. Dropping this event and "
-        "also all subsequent user space dynamic instrumentation events from unknown threads.",
-        event_data.tid);
-    return;
-  }
-  const auto& pid_to_root_namespace_pid_it = tid_to_root_namespace_tid_.find(event_data.pid);
-  if (pid_to_root_namespace_pid_it == tid_to_root_namespace_tid_.end()) {
-    ORBIT_ERROR_ONCE(
-        "Received function exit event from unknown process with pid %d. Dropping this event and "
-        "also all subsequent user space dynamic instrumentation events from unknown processes.",
-        event_data.pid);
-    return;
-  }
-  const pid_t tid = tid_to_root_namespace_tid_it->second;
-  const pid_t pid = pid_to_root_namespace_pid_it->second;
-
-  std::optional<FunctionCall> function_call =
-      function_call_manager_->ProcessFunctionExit(pid, tid, event_timestamp, std::nullopt);
+  std::optional<FunctionCall> function_call = function_call_manager_->ProcessFunctionExit(
+      event_data.pid, event_data.tid, event_timestamp, std::nullopt);
   if (function_call.has_value()) {
     listener_->OnFunctionCall(std::move(function_call.value()));
   }
 
-  return_address_manager_->ProcessFunctionExit(tid);
+  return_address_manager_->ProcessFunctionExit(event_data.tid);
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
@@ -788,55 +760,6 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   module_update_event.set_timestamp_ns(event_timestamp);
   *module_update_event.mutable_module() = std::move(module_info_or_error.value());
   listener_->OnModuleUpdate(std::move(module_update_event));
-}
-
-// We observe the task_newtask tracepoint. This gets triggered for each new thread that is created.
-// It reports the tid of the parent thread and the tid of the new thread, both in the root
-// namespace. We store the mapping from parent tid to new tid in
-// new_task_root_namespace_parent_tid_to_root_namespace_tid_.
-// Immediately after this the clone or clone3 syscall that caused the creation of the new thread
-// returns. We also observe the tracepoint that tracks the return from the clone call (see below).
-// The clone tracepoint also provides the pid of the parent thread (in the root namespace) and the
-// return value of clone which is the tid of the new thread in the namespace of the target process.
-// We use the parent tid to match these two tracepoints and by that obtain the mapping from the tid
-// in the namespace of the target process to the tid in the root namespace. This mapping is stored
-// in tid_to_root_namespace_tid_.
-void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
-                                    const TaskNewtaskPerfEventData& event_data) {
-  if (new_task_root_namespace_parent_tid_to_root_namespace_tid_.contains(
-          event_data.was_created_by_tid)) {
-    ORBIT_ERROR(
-        "Observed a task_newtask event from thread %d without matching clone exit event. This "
-        "should never happen.",
-        event_data.was_created_by_tid);
-  }
-  new_task_root_namespace_parent_tid_to_root_namespace_tid_[event_data.was_created_by_tid] =
-      event_data.new_tid;
-}
-
-void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
-                                    const CloneExitPerfEventData& event_data) {
-  // If the return value of clone is zero this tracepoint is hit from the execution path of the
-  // newly created thread. We are not interested in these events and discard them.
-  if (event_data.ret_tid == 0) return;
-
-  const pid_t parent_tid = event_data.tid;
-  const pid_t tid_in_target_process_namespace = event_data.ret_tid;
-  const auto& new_task_root_namespace_parent_tid_to_root_namespace_tid_it =
-      new_task_root_namespace_parent_tid_to_root_namespace_tid_.find(parent_tid);
-  if (new_task_root_namespace_parent_tid_to_root_namespace_tid_it ==
-      new_task_root_namespace_parent_tid_to_root_namespace_tid_.end()) {
-    ORBIT_ERROR(
-        "Observed a return from clone without previously seeing a task_newtask from the same "
-        "parent thread. parent_tid was %d; clone return was %d. We will ignore user space dynamic "
-        "instrumentation form this thread.",
-        parent_tid, tid_in_target_process_namespace);
-    return;
-  }
-  tid_to_root_namespace_tid_[tid_in_target_process_namespace] =
-      new_task_root_namespace_parent_tid_to_root_namespace_tid_it->second;
-  new_task_root_namespace_parent_tid_to_root_namespace_tid_.erase(
-      new_task_root_namespace_parent_tid_to_root_namespace_tid_it);
 }
 
 }  // namespace orbit_linux_tracing

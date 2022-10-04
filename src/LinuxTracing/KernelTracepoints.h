@@ -105,10 +105,4 @@ struct __attribute__((__packed__)) dma_fence_signaled_tracepoint {
   uint32_t seqno;
 };
 
-struct __attribute__((__packed__)) syscall_exit_tracepoint {
-  tracepoint_common common;
-  uint64_t syscall_nr;
-  uint64_t ret;
-};
-
 #endif  // LINUX_TRACING_KERNEL_TRACEPOINTS_H_
