@@ -55,6 +55,8 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod GetUnwindingMethod() const;
   void SetMaxCopyRawStackSize(uint16_t stack_dump_size);
   [[nodiscard]] uint16_t GetMaxCopyRawStackSize() const;
+  void SetThreadStateChangeCallstackMaxCopyRawStackSize(uint16_t stack_dump_size);
+  [[nodiscard]] uint16_t GetThreadStateChangeCallstackMaxCopyRawStackSize() const;
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   [[nodiscard]] bool GetCollectSchedulerInfo() const;
   void SetCollectThreadStates(bool collect_thread_state);
@@ -111,6 +113,7 @@ class CaptureOptionsDialog : public QDialog {
   // `PerfEventOpen.cpp`).
   static constexpr uint16_t kMaxCopyRawStackSizeMaxValue = 65000;
   static constexpr uint16_t kMaxCopyRawStackSizeDefaultValue = 512;
+  static constexpr uint16_t kThreadStateChangeMaxCopyRawStackSizeDefaultValue = 256;
 
  public slots:
   void ResetLocalMarkerDepthLineEdit();
