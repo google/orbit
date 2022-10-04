@@ -219,7 +219,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
 
 template <typename StackPerfEventDataT>
 bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
-                                          Callstack* resulting_callstack) {
+                                          Callstack* resulting_callstack,
+                                          bool offline_memory_only) {
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
@@ -247,7 +248,7 @@ bool UprobesUnwindingVisitor::UnwindStack(const StackPerfEventDataT& event_data,
   //  SwitchesStatesNamesVisitor::GetPidOfTid, but this requires major refactoring.
   LibunwindstackResult libunwindstack_result =
       unwinder_->Unwind(event_data.GetCallstackPidOrMinusOne(), current_maps_->Get(),
-                        event_data.GetRegistersAsArray(), stack_slices);
+                        event_data.GetRegistersAsArray(), stack_slices, offline_memory_only);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
@@ -288,7 +289,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.woken_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
-  const bool success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack());
+  const bool success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack(),
+                                   /*offline_memory_only=*/true);
 
   if (!success) {
     return;
@@ -303,7 +305,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
-  bool const success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack());
+  bool const success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack(),
+                                   /*offline_memory_only=*/true);
 
   if (!success) {
     return;

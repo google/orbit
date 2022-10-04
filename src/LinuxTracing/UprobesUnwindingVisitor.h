@@ -129,7 +129,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   template <typename StackPerfEventDataT>
   bool UnwindStack(const StackPerfEventDataT& event,
-                   orbit_grpc_protos::Callstack* resulting_callstack);
+                   orbit_grpc_protos::Callstack* resulting_callstack,
+                   bool offline_memory_only = false);
 
   TracerListener* listener_;
 
