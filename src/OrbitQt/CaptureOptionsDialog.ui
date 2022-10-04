@@ -66,7 +66,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-430</y>
+        <y>-351</y>
         <width>502</width>
         <height>1136</height>
        </rect>
@@ -572,7 +572,7 @@ p, li { white-space: pre-wrap; }
              <item>
               <widget class="QLabel" name="threadStateChangeCallstackMaxCopyRawStackSizeLabel">
                <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In order to compute the callstack on thread state changes, we need to copy a portion of the raw stack. Specify how much data Orbit should maximally copy. A smaller value reduces the number of computed call frames, but also reduces the performance overhead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In order to compute the callstack on thread state changes, we need to copy a portion of the raw stack. Specify how much data Orbit should maximally copy. A smaller value reduces the number of computed call frames, but also reduces the performance overhead.&lt;/p&gt;&lt;p&gt;The default value is 256 bytes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
                 <string>Max raw stack size to copy (multiple of 8 Bytes):</string>
