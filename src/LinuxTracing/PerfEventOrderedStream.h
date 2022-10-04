@@ -26,6 +26,10 @@ class PerfEventOrderedStream {
     return PerfEventOrderedStream{OrderType::kOrderedInThreadId, tid};
   }
 
+  static PerfEventOrderedStream ManualInstrumentationThreadId(pid_t tid) {
+    return PerfEventOrderedStream{OrderType::kOrderedInManualInstrumentationThreadId, tid};
+  }
+
   // Make this class hashable for use as key in an absl::flat_hash_map.
   template <typename H>
   friend H AbslHashValue(H state, const PerfEventOrderedStream& order) {
@@ -45,6 +49,7 @@ class PerfEventOrderedStream {
     kNotOrdered = 0,
     kOrderedInFileDescriptor,
     kOrderedInThreadId,
+    kOrderedInManualInstrumentationThreadId,
   };
 
   // The internal representation need not and should not be externally accessible. From the outside,

@@ -105,6 +105,17 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const TaskNewtaskPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const CloneExitPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiScopeStartPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiScopeStartAsyncPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiScopeStopPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiScopeStopAsyncPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiStringEventPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackDoublePerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackFloatPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackIntPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackInt64PerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackUintPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const ApiTrackUint64PerfEventData& event_data) override;
 
  private:
   // This struct holds a copy of some stack data collected from the target process.
@@ -131,6 +142,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   bool UnwindStack(const StackPerfEventDataT& event,
                    orbit_grpc_protos::Callstack* resulting_callstack,
                    bool offline_memory_only = false);
+
+  std::optional<std::pair<uint32_t, uint32_t>> TranslatePidAndTid(pid_t pid, pid_t tid);
 
   TracerListener* listener_;
 

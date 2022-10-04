@@ -38,6 +38,7 @@
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "PerfEvent.h"
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
@@ -150,6 +151,165 @@ void TracerImpl::Stop() {
   stop_run_thread_ = true;
   ORBIT_CHECK(run_thread_.joinable());
   run_thread_.join();
+}
+
+// The ProcessApi* methods below convert api event protos to PerfEvent's. Since many fields are
+// shared between the different event the code is very repeatative. The templated function below
+// eliminates the boilerplate.
+template <typename ApiProto, typename SomePerfEventData>
+static void SetCommonFieldsInApiEvent(const ApiProto& api_proto,
+                                      TypedPerfEvent<SomePerfEventData>& event) {
+  event.data.pid = orbit_base::ToNativeProcessId(api_proto.pid());
+  event.data.tid = orbit_base::ToNativeThreadId(api_proto.tid());
+  event.data.encoded_name_1 = api_proto.encoded_name_1();
+  event.data.encoded_name_2 = api_proto.encoded_name_2();
+  event.data.encoded_name_3 = api_proto.encoded_name_3();
+  event.data.encoded_name_4 = api_proto.encoded_name_4(),
+  event.data.encoded_name_5 = api_proto.encoded_name_5();
+  event.data.encoded_name_6 = api_proto.encoded_name_6(),
+  event.data.encoded_name_7 = api_proto.encoded_name_7();
+  event.data.encoded_name_8 = api_proto.encoded_name_8(),
+  event.data.encoded_name_additional_length = api_proto.encoded_name_additional_size();
+  event.data.color_rgba = api_proto.color_rgba();
+
+  if (api_proto.encoded_name_additional_size() > 0) {
+    event.data.encoded_name_additional =
+        std::make_unique<uint64_t[]>(api_proto.encoded_name_additional_size());
+    memcpy(event.data.encoded_name_additional.get(), api_proto.encoded_name_additional().data(),
+           api_proto.encoded_name_additional_size());
+  }
+}
+
+void TracerImpl::ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& api_scope_start) {
+  ApiScopeStartPerfEvent event{
+      .data =
+          ApiScopeStartPerfEventData{
+              .group_id = api_scope_start.group_id(),
+              .address_in_function = api_scope_start.address_in_function(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_scope_start, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiScopeStartAsync(
+    const orbit_grpc_protos::ApiScopeStartAsync& api_scope_start_async) {
+  ApiScopeStartAsyncPerfEvent event{
+      .data =
+          ApiScopeStartAsyncPerfEventData{
+              .id = api_scope_start_async.id(),
+              .address_in_function = api_scope_start_async.address_in_function(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_scope_start_async, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& api_scope_stop) {
+  ApiScopeStopPerfEvent event{
+      .timestamp = api_scope_stop.timestamp_ns(),
+      .ordered_stream = PerfEventOrderedStream::ManualInstrumentationThreadId(
+          orbit_base::ToNativeThreadId(api_scope_stop.tid())),
+      .data =
+          ApiScopeStopPerfEventData{
+              .pid = orbit_base::ToNativeProcessId(api_scope_stop.pid()),
+              .tid = orbit_base::ToNativeThreadId(api_scope_stop.tid()),
+          },
+  };
+  DeferEvent(event);
+}
+
+void TracerImpl::ProcessApiScopeStopAsync(
+    const orbit_grpc_protos::ApiScopeStopAsync& api_scope_stop_async) {
+  ApiScopeStopAsyncPerfEvent event{
+      .timestamp = api_scope_stop_async.timestamp_ns(),
+      .ordered_stream = PerfEventOrderedStream::ManualInstrumentationThreadId(
+          orbit_base::ToNativeThreadId(api_scope_stop_async.tid())),
+      .data =
+          ApiScopeStopAsyncPerfEventData{
+              .pid = orbit_base::ToNativeProcessId(api_scope_stop_async.pid()),
+              .tid = orbit_base::ToNativeThreadId(api_scope_stop_async.tid()),
+              .id = api_scope_stop_async.id(),
+          },
+  };
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiStringEvent(const orbit_grpc_protos::ApiStringEvent& api_string_event) {
+  ApiStringEventPerfEvent event{
+      .data =
+          ApiStringEventPerfEventData{
+              .id = api_string_event.id(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_string_event, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackDouble(const orbit_grpc_protos::ApiTrackDouble& api_track_double) {
+  ApiTrackDoublePerfEvent event{
+      .data =
+          ApiTrackDoublePerfEventData{
+              .data = api_track_double.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_double, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackFloat(const orbit_grpc_protos::ApiTrackFloat& api_track_float) {
+  ApiTrackFloatPerfEvent event{
+      .data =
+          ApiTrackFloatPerfEventData{
+              .data = api_track_float.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_float, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackInt(const orbit_grpc_protos::ApiTrackInt& api_track_int) {
+  ApiTrackIntPerfEvent event{
+      .data =
+          ApiTrackIntPerfEventData{
+              .data = api_track_int.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_int, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackInt64(const orbit_grpc_protos::ApiTrackInt64& api_track_int64) {
+  ApiTrackInt64PerfEvent event{
+      .data =
+          ApiTrackInt64PerfEventData{
+              .data = api_track_int64.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_int64, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& api_track_uint) {
+  ApiTrackUintPerfEvent event{
+      .data =
+          ApiTrackUintPerfEventData{
+              .data = api_track_uint.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_uint, event);
+  DeferEvent(std::move(event));
+}
+
+void TracerImpl::ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& api_track_uint64) {
+  ApiTrackUint64PerfEvent event{
+      .data =
+          ApiTrackUint64PerfEventData{
+              .data = api_track_uint64.data(),
+          },
+  };
+  SetCommonFieldsInApiEvent(api_track_uint64, event);
+  DeferEvent(std::move(event));
 }
 
 void TracerImpl::ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {

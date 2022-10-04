@@ -65,7 +65,54 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
   void OnWarningInstrumentingWithUprobesEvent(
       orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
           warning_instrumenting_with_uprobes_event) override;
+  void OnApiScopeStart(orbit_grpc_protos::ApiScopeStart api_scope_start) override;
+  void OnApiScopeStartAsync(orbit_grpc_protos::ApiScopeStartAsync api_scope_start_async) override;
+  void OnApiScopeStop(orbit_grpc_protos::ApiScopeStop api_scope_stop) override;
+  void OnApiScopeStopAsync(orbit_grpc_protos::ApiScopeStopAsync api_scope_stop_async) override;
+  void OnApiStringEvent(orbit_grpc_protos::ApiStringEvent api_string_event) override;
+  void OnApiTrackDouble(orbit_grpc_protos::ApiTrackDouble api_track_double) override;
+  void OnApiTrackFloat(orbit_grpc_protos::ApiTrackFloat api_track_float) override;
+  void OnApiTrackInt(orbit_grpc_protos::ApiTrackInt api_track_int) override;
+  void OnApiTrackInt64(orbit_grpc_protos::ApiTrackInt64 api_track_int64) override;
+  void OnApiTrackUint(orbit_grpc_protos::ApiTrackUint api_track_uint) override;
+  void OnApiTrackUint64(orbit_grpc_protos::ApiTrackUint64 api_track_uint64) override;
 
+  // The Proceess* methods are used to pipe back grpc protos from external producers to linux
+  // tracing. Compare code in ProducerEventProcessorHijackingForLinuxTracing.
+  void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& api_scope_start) {
+    tracer_->ProcessApiScopeStart(api_scope_start);
+  }
+  void ProcessApiScopeStartAsync(
+      const orbit_grpc_protos::ApiScopeStartAsync& api_scope_start_async) {
+    tracer_->ProcessApiScopeStartAsync(api_scope_start_async);
+  }
+  void ProcessApiScopeStop(const orbit_grpc_protos::ApiScopeStop& api_scope_stop) {
+    tracer_->ProcessApiScopeStop(api_scope_stop);
+  }
+  void ProcessApiScopeStopAsync(const orbit_grpc_protos::ApiScopeStopAsync& api_scope_stop_async) {
+    tracer_->ProcessApiScopeStopAsync(api_scope_stop_async);
+  }
+  void ProcessApiStringEvent(const orbit_grpc_protos::ApiStringEvent& api_string_event) {
+    tracer_->ProcessApiStringEvent(api_string_event);
+  }
+  void ProcessApiTrackDouble(const orbit_grpc_protos::ApiTrackDouble& api_track_double) {
+    tracer_->ProcessApiTrackDouble(api_track_double);
+  }
+  void ProcessApiTrackFloat(const orbit_grpc_protos::ApiTrackFloat& api_track_float) {
+    tracer_->ProcessApiTrackFloat(api_track_float);
+  }
+  void ProcessApiTrackInt(const orbit_grpc_protos::ApiTrackInt& api_track_int) {
+    tracer_->ProcessApiTrackInt(api_track_int);
+  }
+  void ProcessApiTrackInt64(const orbit_grpc_protos::ApiTrackInt64& api_track_int64) {
+    tracer_->ProcessApiTrackInt64(api_track_int64);
+  }
+  void ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& api_track_uint) {
+    tracer_->ProcessApiTrackUint(api_track_uint);
+  }
+  void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& api_track_uint64) {
+    tracer_->ProcessApiTrackUint64(api_track_uint64);
+  }
   void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
     tracer_->ProcessFunctionEntry(function_entry);
   }

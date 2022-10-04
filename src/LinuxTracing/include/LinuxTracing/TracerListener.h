@@ -35,6 +35,18 @@ class TracerListener {
   virtual void OnWarningInstrumentingWithUprobesEvent(
       orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
           warning_instrumenting_with_uprobes_event) = 0;
+  virtual void OnApiScopeStart(orbit_grpc_protos::ApiScopeStart api_scope_start) = 0;
+  virtual void OnApiScopeStartAsync(
+      orbit_grpc_protos::ApiScopeStartAsync api_scope_start_async) = 0;
+  virtual void OnApiScopeStop(orbit_grpc_protos::ApiScopeStop api_scope_stop) = 0;
+  virtual void OnApiScopeStopAsync(orbit_grpc_protos::ApiScopeStopAsync api_scope_stop_async) = 0;
+  virtual void OnApiStringEvent(orbit_grpc_protos::ApiStringEvent api_string_event) = 0;
+  virtual void OnApiTrackDouble(orbit_grpc_protos::ApiTrackDouble api_track_double) = 0;
+  virtual void OnApiTrackFloat(orbit_grpc_protos::ApiTrackFloat api_track_float) = 0;
+  virtual void OnApiTrackInt(orbit_grpc_protos::ApiTrackInt api_track_int) = 0;
+  virtual void OnApiTrackInt64(orbit_grpc_protos::ApiTrackInt64 api_track_int64) = 0;
+  virtual void OnApiTrackUint(orbit_grpc_protos::ApiTrackUint api_track_uint) = 0;
+  virtual void OnApiTrackUint64(orbit_grpc_protos::ApiTrackUint64 api_track_uint64) = 0;
 };
 
 }  // namespace orbit_linux_tracing

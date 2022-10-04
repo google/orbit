@@ -385,6 +385,101 @@ struct CloneExitPerfEventData {
 };
 using CloneExitPerfEvent = TypedPerfEvent<CloneExitPerfEventData>;
 
+// All Api*PerfEvent perf events other than ApiScopeStopPerfEvent and ApiScopeStopAsynPerfEvent have
+// the fields in API_PID_TID_ENCODED_NAMES_AND_COLOR in common. So the macro is saving us some
+// boilerplate. The same could be achieved with a common base class for the Api*PerfEvent. We use
+// the macro to avoid weird compiler choices for the memory layout.
+
+#if defined(API_PID_TID_ENCODED_NAMES_AND_COLOR)
+#error "Local macro name already defined"
+#endif
+
+#define API_PID_TID_ENCODED_NAMES_AND_COLOR            \
+  pid_t pid;                                           \
+  pid_t tid;                                           \
+  uint64_t encoded_name_1;                             \
+  uint64_t encoded_name_2;                             \
+  uint64_t encoded_name_3;                             \
+  uint64_t encoded_name_4;                             \
+  uint64_t encoded_name_5;                             \
+  uint64_t encoded_name_6;                             \
+  uint64_t encoded_name_7;                             \
+  uint64_t encoded_name_8;                             \
+  std::unique_ptr<uint64_t[]> encoded_name_additional; \
+  int encoded_name_additional_length;                  \
+  uint32_t color_rgba;
+
+struct ApiScopeStartPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  uint64_t group_id;
+  uint64_t address_in_function;
+};
+using ApiScopeStartPerfEvent = TypedPerfEvent<ApiScopeStartPerfEventData>;
+
+struct ApiScopeStartAsyncPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  uint64_t id;
+  uint64_t address_in_function;
+};
+using ApiScopeStartAsyncPerfEvent = TypedPerfEvent<ApiScopeStartAsyncPerfEventData>;
+
+struct ApiScopeStopPerfEventData {
+  pid_t pid;
+  pid_t tid;
+};
+using ApiScopeStopPerfEvent = TypedPerfEvent<ApiScopeStopPerfEventData>;
+
+struct ApiScopeStopAsyncPerfEventData {
+  pid_t pid;
+  pid_t tid;
+  uint64_t id;
+};
+using ApiScopeStopAsyncPerfEvent = TypedPerfEvent<ApiScopeStopAsyncPerfEventData>;
+
+struct ApiStringEventPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  uint64_t id;
+};
+using ApiStringEventPerfEvent = TypedPerfEvent<ApiStringEventPerfEventData>;
+
+struct ApiTrackDoublePerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  double data;
+};
+using ApiTrackDoublePerfEvent = TypedPerfEvent<ApiTrackDoublePerfEventData>;
+
+struct ApiTrackFloatPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  float data;
+};
+using ApiTrackFloatPerfEvent = TypedPerfEvent<ApiTrackFloatPerfEventData>;
+
+struct ApiTrackIntPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  int32_t data;
+};
+using ApiTrackIntPerfEvent = TypedPerfEvent<ApiTrackIntPerfEventData>;
+
+struct ApiTrackInt64PerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  int64_t data;
+};
+using ApiTrackInt64PerfEvent = TypedPerfEvent<ApiTrackInt64PerfEventData>;
+
+struct ApiTrackUintPerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  uint32_t data;
+};
+using ApiTrackUintPerfEvent = TypedPerfEvent<ApiTrackUintPerfEventData>;
+
+struct ApiTrackUint64PerfEventData {
+  API_PID_TID_ENCODED_NAMES_AND_COLOR
+  uint64_t data;
+};
+using ApiTrackUint64PerfEvent = TypedPerfEvent<ApiTrackUint64PerfEventData>;
+
+#undef API_PID_TID_ENCODED_NAMES_AND_COLOR
+
 // This struct holds the data we need from any of the possible perf_event_open events that we
 // collect. The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all
 // events, while each of the possible `...PerfEventData`s in the `std::variant` contains the data
@@ -419,7 +514,11 @@ struct PerfEvent {
                TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
                SchedSwitchWithStackPerfEventData, SchedWakeupWithStackPerfEventData,
                AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
-               DmaFenceSignaledPerfEventData, CloneExitPerfEventData>
+               DmaFenceSignaledPerfEventData, CloneExitPerfEventData, ApiScopeStartPerfEventData,
+               ApiScopeStartAsyncPerfEventData, ApiScopeStopPerfEventData,
+               ApiScopeStopAsyncPerfEventData, ApiStringEventPerfEventData,
+               ApiTrackDoublePerfEventData, ApiTrackFloatPerfEventData, ApiTrackIntPerfEventData,
+               ApiTrackInt64PerfEventData, ApiTrackUintPerfEventData, ApiTrackUint64PerfEventData>
       data;
 
   void Accept(PerfEventVisitor* visitor) const;

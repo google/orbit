@@ -31,6 +31,22 @@ class MockTracerListener : public TracerListener {
               (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent), (override));
   MOCK_METHOD(void, OnWarningInstrumentingWithUprobesEvent,
               (orbit_grpc_protos::WarningInstrumentingWithUprobesEvent), (override));
+  MOCK_METHOD(void, OnApiScopeStart, (orbit_grpc_protos::ApiScopeStart), (override));
+  MOCK_METHOD(void, OnApiScopeStartAsync, (orbit_grpc_protos::ApiScopeStartAsync), (override));
+  MOCK_METHOD(void, OnApiScopeStop, (orbit_grpc_protos::ApiScopeStop), (override));
+  MOCK_METHOD(void, OnApiScopeStopAsync, (orbit_grpc_protos::ApiScopeStopAsync), (override));
+  MOCK_METHOD(void, OnApiStringEvent, (orbit_grpc_protos::ApiStringEvent api_string_event),
+              (override));
+  MOCK_METHOD(void, OnApiTrackDouble, (orbit_grpc_protos::ApiTrackDouble api_track_double),
+              (override));
+  MOCK_METHOD(void, OnApiTrackFloat, (orbit_grpc_protos::ApiTrackFloat api_track_float),
+              (override));
+  MOCK_METHOD(void, OnApiTrackInt, (orbit_grpc_protos::ApiTrackInt api_track_int), (override));
+  MOCK_METHOD(void, OnApiTrackInt64, (orbit_grpc_protos::ApiTrackInt64 api_track_int64),
+              (override));
+  MOCK_METHOD(void, OnApiTrackUint, (orbit_grpc_protos::ApiTrackUint api_track_uint), (override));
+  MOCK_METHOD(void, OnApiTrackUint64, (orbit_grpc_protos::ApiTrackUint64 api_track_uint64),
+              (override));
 };
 
 }  // namespace orbit_linux_tracing

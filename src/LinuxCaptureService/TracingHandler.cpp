@@ -151,4 +151,73 @@ void TracingHandler::OnWarningInstrumentingWithUprobesEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void TracingHandler::OnApiScopeStart(orbit_grpc_protos::ApiScopeStart api_scope_start) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_scope_start() = std::move(api_scope_start);
+
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiScopeStartAsync(
+    orbit_grpc_protos::ApiScopeStartAsync api_scope_start_async) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_scope_start_async() = std::move(api_scope_start_async);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiScopeStop(orbit_grpc_protos::ApiScopeStop api_scope_stop) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_scope_stop() = std::move(api_scope_stop);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiScopeStopAsync(
+    orbit_grpc_protos::ApiScopeStopAsync api_scope_stop_async) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_scope_stop_async() = std::move(api_scope_stop_async);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiStringEvent(orbit_grpc_protos::ApiStringEvent api_string_event) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_string_event() = std::move(api_string_event);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackDouble(orbit_grpc_protos::ApiTrackDouble api_track_double) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_double() = std::move(api_track_double);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackFloat(orbit_grpc_protos::ApiTrackFloat api_track_float) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_float() = std::move(api_track_float);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackInt(orbit_grpc_protos::ApiTrackInt api_track_int) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_int() = std::move(api_track_int);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackInt64(orbit_grpc_protos::ApiTrackInt64 api_track_int64) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_int64() = std::move(api_track_int64);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackUint(orbit_grpc_protos::ApiTrackUint api_track_uint) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_uint() = std::move(api_track_uint);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
+void TracingHandler::OnApiTrackUint64(orbit_grpc_protos::ApiTrackUint64 api_track_uint64) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_api_track_uint64() = std::move(api_track_uint64);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_linux_capture_service

@@ -124,17 +124,19 @@ void StopInternalProducersAndCaptureStartStopListenersInParallel(
   }
 }
 
-// This class hijacks FunctionEntry and FunctionExit events before they reach the
-// ProducerEventProcessor, and sends them to LinuxTracing instead, so that they can be processed
-// like u(ret)probes. All the other events are forwarded to the ProducerEventProcessor normally.
-class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
-    : public ProducerEventProcessor {
+// This class hijacks events from the external producers (user space instrumentation, manual
+// instrumentation and the Vulkan layer) before they reach the ProducerEventProcessor, and sends
+// them to LinuxTracing instead. All these events need to have their pid/tid entries translated into
+// the root namespace. Additionally, the events from user space instrumentation need to be processed
+// like u(ret)probes.
+// All the other events are forwarded to the ProducerEventProcessor normally.
+class ProducerEventProcessorHijackingForLinuxTracing : public ProducerEventProcessor {
  public:
-  ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing(
+  ProducerEventProcessorHijackingForLinuxTracing(
       ProducerEventProcessor* original_producer_event_processor, TracingHandler* tracing_handler)
       : producer_event_processor_{original_producer_event_processor},
         tracing_handler_{tracing_handler} {}
-  ~ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing() override = default;
+  ~ProducerEventProcessorHijackingForLinuxTracing() override = default;
 
   void ProcessEvent(uint64_t producer_id, ProducerCaptureEvent&& event) override {
     switch (event.event_case()) {
@@ -143,6 +145,39 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
         break;
       case ProducerCaptureEvent::kFunctionExit:
         tracing_handler_->ProcessFunctionExit(event.function_exit());
+        break;
+      case ProducerCaptureEvent::kApiScopeStart:
+        tracing_handler_->ProcessApiScopeStart(event.api_scope_start());
+        break;
+      case ProducerCaptureEvent::kApiScopeStartAsync:
+        tracing_handler_->ProcessApiScopeStartAsync(event.api_scope_start_async());
+        break;
+      case ProducerCaptureEvent::kApiScopeStop:
+        tracing_handler_->ProcessApiScopeStop(event.api_scope_stop());
+        break;
+      case ProducerCaptureEvent::kApiScopeStopAsync:
+        tracing_handler_->ProcessApiScopeStopAsync(event.api_scope_stop_async());
+        break;
+      case ProducerCaptureEvent::kApiStringEvent:
+        tracing_handler_->ProcessApiStringEvent(event.api_string_event());
+        break;
+      case ProducerCaptureEvent::kApiTrackDouble:
+        tracing_handler_->ProcessApiTrackDouble(event.api_track_double());
+        break;
+      case ProducerCaptureEvent::kApiTrackFloat:
+        tracing_handler_->ProcessApiTrackFloat(event.api_track_float());
+        break;
+      case ProducerCaptureEvent::kApiTrackInt:
+        tracing_handler_->ProcessApiTrackInt(event.api_track_int());
+        break;
+      case ProducerCaptureEvent::kApiTrackInt64:
+        tracing_handler_->ProcessApiTrackInt64(event.api_track_int64());
+        break;
+      case ProducerCaptureEvent::kApiTrackUint:
+        tracing_handler_->ProcessApiTrackUint(event.api_track_uint());
+        break;
+      case ProducerCaptureEvent::kApiTrackUint64:
+        tracing_handler_->ProcessApiTrackUint64(event.api_track_uint64());
         break;
       case ProducerCaptureEvent::EVENT_NOT_SET:
         ORBIT_UNREACHABLE();
@@ -321,7 +356,7 @@ void LinuxCaptureServiceBase::DoCapture(
   const absl::flat_hash_set<std::string> old_core_files = ListFileNamesOfAllMinidumps();
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
-  ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
+  ProducerEventProcessorHijackingForLinuxTracing function_entry_exit_hijacker{
       producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 

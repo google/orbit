@@ -91,6 +91,7 @@ target_sources(LinuxTracingTests PRIVATE
         ThreadStateManagerTest.cpp
         UprobesFunctionCallManagerTest.cpp
         UprobesReturnAddressManagerTest.cpp
+        UprobesUnwindingVisitorApiTest.cpp
         UprobesUnwindingVisitorCallchainTest.cpp
         UprobesUnwindingVisitorDwarfUnwindingTest.cpp
         UprobesUnwindingVisitorDynamicInstrumentationTest.cpp

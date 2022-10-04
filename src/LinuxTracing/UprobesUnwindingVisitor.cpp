@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <string>
@@ -30,6 +31,17 @@
 
 namespace orbit_linux_tracing {
 
+using orbit_grpc_protos::ApiScopeStart;
+using orbit_grpc_protos::ApiScopeStartAsync;
+using orbit_grpc_protos::ApiScopeStop;
+using orbit_grpc_protos::ApiScopeStopAsync;
+using orbit_grpc_protos::ApiStringEvent;
+using orbit_grpc_protos::ApiTrackDouble;
+using orbit_grpc_protos::ApiTrackFloat;
+using orbit_grpc_protos::ApiTrackInt;
+using orbit_grpc_protos::ApiTrackInt64;
+using orbit_grpc_protos::ApiTrackUint;
+using orbit_grpc_protos::ApiTrackUint64;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
@@ -837,6 +849,199 @@ void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
       new_task_root_namespace_parent_tid_to_root_namespace_tid_it->second;
   new_task_root_namespace_parent_tid_to_root_namespace_tid_.erase(
       new_task_root_namespace_parent_tid_to_root_namespace_tid_it);
+}
+
+// TODO: Currently we drop events with unknown tid or pid. Alternatively we could just not translate
+// them; I guess this is a better experience then loosing events.
+std::optional<std::pair<uint32_t, uint32_t>> UprobesUnwindingVisitor::TranslatePidAndTid(
+    pid_t pid, pid_t tid) {
+  const auto pid_it = tid_to_root_namespace_tid_.find(pid);
+  if (pid_it == tid_to_root_namespace_tid_.end()) {
+    ORBIT_ERROR_ONCE(
+        "Received manual instrumentation event from unknown process with pid %d. Dropping this "
+        "event and also all subsequent events from unknown processes.",
+        pid);
+    return std::nullopt;
+  }
+  const auto tid_it = tid_to_root_namespace_tid_.find(tid);
+  if (tid_it == tid_to_root_namespace_tid_.end()) {
+    ORBIT_ERROR_ONCE(
+        "Received manual instrumentation event from unknown thread with tid %d. Dropping this "
+        "event and also all subsequent events from unknown threads.",
+        tid);
+    return std::nullopt;
+  }
+  return std::pair<uint32_t, uint32_t>(pid_it->second, tid_it->second);
+}
+
+template <typename ApiProto, typename PerfEventData>
+static void SetCommonFieldsInApiProto(uint64_t event_timestamp, uint32_t pid, uint32_t tid,
+                                      const PerfEventData& event_data, ApiProto& api_proto) {
+  api_proto.set_timestamp_ns(event_timestamp);
+  api_proto.set_pid(pid);
+  api_proto.set_tid(tid);
+  api_proto.set_encoded_name_1(event_data.encoded_name_1);
+  api_proto.set_encoded_name_2(event_data.encoded_name_2);
+  api_proto.set_encoded_name_3(event_data.encoded_name_3);
+  api_proto.set_encoded_name_4(event_data.encoded_name_4);
+  api_proto.set_encoded_name_5(event_data.encoded_name_5);
+  api_proto.set_encoded_name_6(event_data.encoded_name_6);
+  api_proto.set_encoded_name_7(event_data.encoded_name_7);
+  api_proto.set_encoded_name_8(event_data.encoded_name_8);
+  if (event_data.encoded_name_additional_length > 0) {
+    api_proto.mutable_encoded_name_additional()->Resize(event_data.encoded_name_additional_length,
+                                                        0);
+    memcpy(api_proto.mutable_encoded_name_additional()->mutable_data(),
+           event_data.encoded_name_additional.get(),
+           event_data.encoded_name_additional_length * sizeof(uint64_t));
+  }
+  api_proto.set_color_rgba(event_data.color_rgba);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiScopeStartPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiScopeStart api_scope_start;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_scope_start);
+  api_scope_start.set_group_id(event_data.group_id);
+  api_scope_start.set_address_in_function(event_data.address_in_function);
+  listener_->OnApiScopeStart(std::move(api_scope_start));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiScopeStartAsyncPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiScopeStartAsync api_scope_start_async;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_scope_start_async);
+  api_scope_start_async.set_id(event_data.id);
+  api_scope_start_async.set_address_in_function(event_data.address_in_function);
+  listener_->OnApiScopeStartAsync(std::move(api_scope_start_async));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiScopeStopPerfEventData& event_data) {
+  ApiScopeStop api_scope_stop;
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  api_scope_stop.set_timestamp_ns(event_timestamp);
+  api_scope_stop.set_pid(pid_tid->first);
+  api_scope_stop.set_tid(pid_tid->second);
+  listener_->OnApiScopeStop(std::move(api_scope_stop));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiScopeStopAsyncPerfEventData& event_data) {
+  ApiScopeStopAsync api_scope_stop_async;
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  api_scope_stop_async.set_timestamp_ns(event_timestamp);
+  api_scope_stop_async.set_pid(pid_tid->first);
+  api_scope_stop_async.set_tid(pid_tid->second);
+  api_scope_stop_async.set_id(event_data.id);
+  listener_->OnApiScopeStopAsync(std::move(api_scope_stop_async));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiStringEventPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiStringEvent api_string_event;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_string_event);
+  api_string_event.set_id(event_data.id);
+  listener_->OnApiStringEvent(std::move(api_string_event));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackDoublePerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackDouble api_track_double;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_double);
+  api_track_double.set_data(event_data.data);
+  listener_->OnApiTrackDouble(std::move(api_track_double));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackFloatPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackFloat api_track_float;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_float);
+  api_track_float.set_data(event_data.data);
+  listener_->OnApiTrackFloat(std::move(api_track_float));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackIntPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackInt api_track_int;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_int);
+  api_track_int.set_data(event_data.data);
+  listener_->OnApiTrackInt(std::move(api_track_int));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackInt64PerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackInt64 api_track_int64;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_int64);
+  api_track_int64.set_data(event_data.data);
+  listener_->OnApiTrackInt64(std::move(api_track_int64));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackUintPerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackUint api_track_uint;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_uint);
+  api_track_uint.set_data(event_data.data);
+  listener_->OnApiTrackUint(std::move(api_track_uint));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const ApiTrackUint64PerfEventData& event_data) {
+  auto pid_tid = TranslatePidAndTid(event_data.pid, event_data.tid);
+  if (!pid_tid.has_value()) {
+    return;
+  }
+  ApiTrackUint64 api_track_uint64;
+  SetCommonFieldsInApiProto(event_timestamp, pid_tid->first, pid_tid->second, event_data,
+                            api_track_uint64);
+  api_track_uint64.set_data(event_data.data);
+  listener_->OnApiTrackUint64(std::move(api_track_uint64));
 }
 
 }  // namespace orbit_linux_tracing

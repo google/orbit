@@ -214,6 +214,105 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnApiScopeStart(orbit_grpc_protos::ApiScopeStart api_scope_start) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_scope_start() = std::move(api_scope_start);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiScopeStartAsync(orbit_grpc_protos::ApiScopeStartAsync api_scope_start_async) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_scope_start_async() = std::move(api_scope_start_async);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiScopeStop(orbit_grpc_protos::ApiScopeStop api_scope_stop) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_scope_stop() = std::move(api_scope_stop);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiScopeStopAsync(orbit_grpc_protos::ApiScopeStopAsync api_scope_stop_async) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_scope_stop_async() = std::move(api_scope_stop_async);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiStringEvent(orbit_grpc_protos::ApiStringEvent api_string_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_string_event() = std::move(api_string_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackDouble(orbit_grpc_protos::ApiTrackDouble api_track_double) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_double() = std::move(api_track_double);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackFloat(orbit_grpc_protos::ApiTrackFloat api_track_float) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_float() = std::move(api_track_float);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackInt(orbit_grpc_protos::ApiTrackInt api_track_int) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_int() = std::move(api_track_int);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackInt64(orbit_grpc_protos::ApiTrackInt64 api_track_int64) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_int64() = std::move(api_track_int64);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackUint(orbit_grpc_protos::ApiTrackUint api_track_uint) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_uint() = std::move(api_track_uint);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
+  void OnApiTrackUint64(orbit_grpc_protos::ApiTrackUint64 api_track_uint64) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_api_track_uint64() = std::move(api_track_uint64);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);

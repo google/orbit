@@ -54,6 +54,28 @@ class PerfEventVisitor {
   virtual void Visit(uint64_t /*event_timestamp*/,
                      const GenericTracepointPerfEventData& /*event_data*/) {}
   virtual void Visit(uint64_t /*event_timestamp*/, const CloneExitPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiScopeStartPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiScopeStartAsyncPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiScopeStopPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiScopeStopAsyncPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiStringEventPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/, const ApiTrackIntPerfEventData& /*event_data*/) {
+  }
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiTrackInt64PerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiTrackUintPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiTrackUint64PerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiTrackFloatPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const ApiTrackDoublePerfEventData& /*event_data*/) {}
 };
 
 }  // namespace orbit_linux_tracing
