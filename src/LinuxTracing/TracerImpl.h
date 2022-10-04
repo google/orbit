@@ -95,8 +95,6 @@ class TracerImpl : public Tracer {
 
   bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
 
-  bool OpenCloneExitTracepoints(const std::vector<int32_t>& cpus);
-
   void InitLostAndDiscardedEventVisitor();
 
   [[nodiscard]] uint64_t ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
@@ -133,7 +131,6 @@ class TracerImpl : public Tracer {
   static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
   static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t CLONE_EXIT_RING_BUFFER_SIZE_KB = 64;
   static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_STACKS_RING_BUFFER_SIZE_KB =
       64 * 1024;
@@ -191,8 +188,6 @@ class TracerImpl : public Tracer {
   absl::flat_hash_set<uint64_t> amdgpu_cs_ioctl_ids_;
   absl::flat_hash_set<uint64_t> amdgpu_sched_run_job_ids_;
   absl::flat_hash_set<uint64_t> dma_fence_signaled_ids_;
-  absl::flat_hash_set<uint64_t> sys_exit_clone_ids_;
-  absl::flat_hash_set<uint64_t> sys_exit_clone3_ids_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::TracepointInfo> ids_to_tracepoint_info_;
 
   uint64_t effective_capture_start_timestamp_ns_ = 0;
