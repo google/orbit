@@ -1184,12 +1184,12 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
         CaptureOptions::kThreadStateChangeCallStackCollectionUnspecified);
   }
 
-  uint16_t stack_dump_size = static_cast<uint16_t>(
+  uint16_t thread_state_change_stack_dump_size = static_cast<uint16_t>(
       settings
           .value(kThreadStateChangeCallstackMaxCopyRawStackSizeSettingKey,
                  orbit_qt::CaptureOptionsDialog::kThreadStateChangeMaxCopyRawStackSizeDefaultValue)
           .toUInt());
-  app_->SetThreadStateChangeCallstackStackDumpSize(stack_dump_size);
+  app_->SetThreadStateChangeCallstackStackDumpSize(thread_state_change_stack_dump_size);
 
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings
