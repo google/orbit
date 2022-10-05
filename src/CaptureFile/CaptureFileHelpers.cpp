@@ -7,6 +7,8 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include "CaptureFile/CaptureFile.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 
 namespace orbit_capture_file {
 

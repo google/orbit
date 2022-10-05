@@ -7,6 +7,11 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
+#include <cstdint>
+#include <optional>
+
+#include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
 #include "CaptureFileConstants.h"
 #include "OrbitBase/Align.h"
 #include "OrbitBase/File.h"
@@ -51,6 +56,8 @@ class CaptureFileImpl : public CaptureFile {
 
   [[nodiscard]] std::optional<uint64_t> FindSectionByType(uint64_t section_type) const override;
 
+  [[nodiscard]] std::vector<uint64_t> FindAllSectionsByType(uint64_t section_type) const override;
+
   ErrorMessageOr<void> ReadFromSection(uint64_t section_number, uint64_t offset_in_section,
                                        void* data, size_t size) override;
 
@@ -81,6 +88,9 @@ class CaptureFileImpl : public CaptureFile {
   // message to detect the last message for the capture section.
   uint64_t capture_section_size_ = 0;
 
+  // This is the list of sections, which does not contain the section_list itself, nor the capture
+  // section. The section_list is ordered by section offset. Meaning a section with lower offset
+  // will come before a section with higher offset.
   std::vector<CaptureFileSection> section_list_;
 };
 
@@ -262,12 +272,17 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
     }
   }
 
+  // If there are additional sections, the section list needs to be the last section, so it can be
+  // amended.
+  if (!section_list.empty() && IsThereSectionWithOffsetAfterSectionList()) {
+    return ErrorMessage{
+        "Cannot add USER_DATA section - there are sections behind the section list"};
+  }
+
   uint64_t section_list_offset = header_.section_list_offset;
 
-  // If we don't have any additional sections or if there are any sections starting after
-  // section_list move section list to the end of the file.
-  if (header_.section_list_offset == 0 || IsThereSectionWithOffsetAfterSectionList()) {
-    ORBIT_CHECK(section_list.empty());
+  // If no section list existed before, it is written at the end of the file
+  if (header_.section_list_offset == 0) {
     OUTCOME_TRY(auto&& end_of_file, GetEndOfFileOffset(fd_));
     section_list_offset = orbit_base::AlignUp<8>(end_of_file);
   }
@@ -277,15 +292,16 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   uint64_t section_list_size =
       sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
 
-  uint64_t new_section_offset = orbit_base::AlignUp<8>(section_list_offset + section_list_size);
+  uint64_t user_data_section_offset =
+      orbit_base::AlignUp<8>(section_list_offset + section_list_size);
 
   // Add USER_DATA section to the end of file - after section list
   section_list.push_back(CaptureFileSection{/*.type = */ kSectionTypeUserData,
-                                            /*.offset = */ new_section_offset,
+                                            /*.offset = */ user_data_section_offset,
                                             /*.size = */ section_size});
 
   // Resize the file
-  OUTCOME_TRY(orbit_base::ResizeFile(file_path_, new_section_offset + section_size));
+  OUTCOME_TRY(orbit_base::ResizeFile(file_path_, user_data_section_offset + section_size));
 
   OUTCOME_TRY(WriteSectionList(section_list, section_list_offset));
 
@@ -347,6 +363,18 @@ std::optional<uint64_t> CaptureFileImpl::FindSectionByType(uint64_t section_type
   }
 
   return std::nullopt;
+}
+
+std::vector<uint64_t> CaptureFileImpl::FindAllSectionsByType(uint64_t section_type) const {
+  std::vector<uint64_t> result_indices;
+
+  for (size_t i = 0; i < section_list_.size(); ++i) {
+    if (section_list_[i].type == section_type) {
+      result_indices.push_back(i);
+    }
+  }
+
+  return result_indices;
 }
 
 const std::filesystem::path& CaptureFileImpl::GetFilePath() const { return file_path_; }

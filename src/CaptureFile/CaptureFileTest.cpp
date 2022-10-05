@@ -112,6 +112,34 @@ class CaptureFileTest : public CaptureFileHeaderTest {
     capture_file_ = std::move(capture_file_or_error.value());
   }
 
+  void VerifySectionReadable(uint64_t section_index, size_t section_size) {
+    EXPECT_EQ(capture_file_->GetSectionList()[section_index].size, section_size);
+    std::vector<char> data;
+    data.reserve(section_size);
+    const ErrorMessageOr<void> read_result =
+        capture_file_->ReadFromSection(section_index, 0, data.data(), section_size);
+    EXPECT_THAT(read_result, HasNoError());
+  }
+
+  void VerifySingleUserDataSectionExistsAtEnd(size_t user_data_section_size) {
+    ASSERT_GE(capture_file_->GetSectionList().size(), 1);
+
+    const uint64_t last_section_index = capture_file_->GetSectionList().size() - 1;
+
+    const CaptureFileSection section_list_entry =
+        capture_file_->GetSectionList()[last_section_index];
+    EXPECT_EQ(section_list_entry.type, kSectionTypeUserData);
+    EXPECT_EQ(section_list_entry.size, user_data_section_size);
+
+    EXPECT_EQ(capture_file_->FindSectionByType(kSectionTypeUserData), last_section_index);
+
+    ASSERT_EQ(capture_file_->FindAllSectionsByType(kSectionTypeUserData).size(), 1);
+    EXPECT_EQ(capture_file_->FindAllSectionsByType(kSectionTypeUserData).front(),
+              last_section_index);
+
+    VerifySectionReadable(last_section_index, user_data_section_size);
+  }
+
  protected:
   std::unique_ptr<CaptureFile> capture_file_;
 
@@ -127,13 +155,17 @@ TEST_F(CaptureFileTest, CreateCaptureFileAndReadMainSection) {
 }
 
 TEST_F(CaptureFileTest, CreateCaptureFileWriteAdditionalSectionAndReadMainSection) {
-  auto section_number_or_error = capture_file_->AddUserDataSection(333);
-  ASSERT_THAT(section_number_or_error, HasNoError());
+  constexpr size_t kUserDataSectionSize = 333;
+  auto section_number_or_error = capture_file_->AddUserDataSection(kUserDataSectionSize);
+  ASSERT_THAT(section_number_or_error, HasValue(0));
   ASSERT_EQ(capture_file_->GetSectionList().size(), 1);
-  EXPECT_EQ(section_number_or_error.value(), 0);
+
+  VerifySingleUserDataSectionExistsAtEnd(kUserDataSectionSize);
 
   // Reopen the file to make sure this information was saved
   OpenTemporayFileAsCaptureFile();
+
+  VerifySingleUserDataSectionExistsAtEnd(kUserDataSectionSize);
 
   auto capture_section = capture_file_->CreateCaptureSectionInputStream();
 
@@ -178,7 +210,8 @@ TEST_F(CaptureFileTest, CreateCaptureFileAndAddUserDataSection) {
     ASSERT_THAT(section_number_or_error, HasValue(0));
     ASSERT_EQ(capture_file_->GetSectionList().size(), 1);
 
-    EXPECT_EQ(capture_file_->FindSectionByType(kSectionTypeUserData), 0);
+    VerifySingleUserDataSectionExistsAtEnd(buf_size);
+
     // Write something to the section
     const std::string something{"something"};
     constexpr uint64_t kOffsetInSection = 5;
@@ -207,6 +240,8 @@ TEST_F(CaptureFileTest, CreateCaptureFileAndAddUserDataSection) {
     EXPECT_EQ(capture_file_section.type, kSectionTypeUserData);
   }
 
+  VerifySingleUserDataSectionExistsAtEnd(buf_size);
+
   // Reopen the file to make sure this information was saved
   OpenTemporayFileAsCaptureFile();
 
@@ -218,7 +253,7 @@ TEST_F(CaptureFileTest, CreateCaptureFileAndAddUserDataSection) {
     EXPECT_EQ(capture_file_section.size, buf_size);
   }
 
-  ASSERT_EQ(capture_file_->FindSectionByType(kSectionTypeUserData), 0);
+  VerifySingleUserDataSectionExistsAtEnd(buf_size);
 
   {
     auto section_input_stream = capture_file_->CreateProtoSectionInputStream(0);
