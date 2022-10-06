@@ -36,9 +36,9 @@
 #endif
 
 #include "AccessibilityAdapter.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ImGuiOrbit.h"
 #include "MetricsUploader/MetricsUploader.h"
-#include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitPaths/Paths.h"
@@ -56,13 +56,6 @@
 #include "Style/Style.h"
 #include "opengldetect.h"
 #include "orbitmainwindow.h"
-
-#ifdef ORBIT_CRASH_HANDLING
-#include "CrashHandler/CrashHandler.h"
-#include "CrashHandler/CrashOptions.h"
-#endif
-
-#include "ClientFlags/ClientFlags.h"
 
 // This flag is needed by the E2E tests to ensure a clean state before running.
 ABSL_FLAG(bool, clear_source_paths_mappings, false, "Clear all the stored source paths mappings");
@@ -86,7 +79,6 @@ static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifie
 
 int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                   const Context* ssh_context, const QStringList& command_line_flags,
-                  const orbit_base::CrashHandler* crash_handler,
                   const std::filesystem::path& capture_file_path,
                   std::optional<orbit_session_setup::ConnectionTarget> maybe_connection_target) {
   qRegisterMetaType<std::error_code>();
@@ -147,7 +139,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
     {  // Scoping of QT UI Resources
 
-      OrbitMainWindow w(std::move(target_config.value()), crash_handler, metrics_uploader.get(),
+      OrbitMainWindow w(std::move(target_config.value()), metrics_uploader.get(),
                         command_line_flags);
       w.show();
       w.raise();
@@ -283,23 +275,6 @@ int main(int argc, char* argv[]) {
   QApplication::setApplicationDisplayName(display_name);
   QApplication::setApplicationVersion(version_string);
 
-  auto crash_handler = std::make_unique<orbit_base::CrashHandler>();
-#ifdef ORBIT_CRASH_HANDLING
-  const std::string dump_path = orbit_paths::CreateOrGetDumpDirUnsafe().string();
-#ifdef _WIN32
-  const char* handler_name = "crashpad_handler.exe";
-#else
-  const char* handler_name = "crashpad_handler";
-#endif
-  const std::string handler_path =
-      QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(handler_name).toStdString();
-  const std::string crash_server_url = orbit_crash_handler::GetServerUrl();
-  const std::vector<std::string> attachments = {log_file.string()};
-
-  crash_handler = std::make_unique<orbit_crash_handler::CrashHandler>(
-      dump_path, handler_path, crash_server_url, attachments);
-#endif  // ORBIT_CRASH_HANDLING
-
   orbit_base::ThreadPool::InitializeDefaultThreadPool();
 
   if (absl::GetFlag(FLAGS_clear_source_paths_mappings)) {
@@ -408,6 +383,5 @@ int main(int argc, char* argv[]) {
       orbit_command_line_utils::RemoveFlagsNotPassedToMainWindow(command_line_flags);
 
   return RunUiInstance(deployment_configuration, &context.value(), command_line_flags,
-                       crash_handler.get(), capture_file_paths.empty() ? "" : capture_file_paths[0],
-                       target);
+                       capture_file_paths.empty() ? "" : capture_file_paths[0], target);
 }

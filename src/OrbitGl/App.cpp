@@ -301,11 +301,9 @@ bool DoZoom = false;
 
 OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
                    orbit_base::MainThreadExecutor* main_thread_executor,
-                   const orbit_base::CrashHandler* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : main_window_{main_window},
       main_thread_executor_(main_thread_executor),
-      crash_handler_(crash_handler),
       metrics_uploader_(metrics_uploader) {
   ORBIT_CHECK(main_window_ != nullptr);
 
@@ -786,10 +784,8 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 std::unique_ptr<OrbitApp> OrbitApp::Create(
     orbit_gl::MainWindowInterface* main_window,
     orbit_base::MainThreadExecutor* main_thread_executor,
-    const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  return std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
-                                    metrics_uploader);
+  return std::make_unique<OrbitApp>(main_window, main_thread_executor, metrics_uploader);
 }
 
 void OrbitApp::PostInit(bool is_connected) {
@@ -1886,7 +1882,6 @@ ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
     if (module_data == nullptr) {
       ORBIT_ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
                   module_path.string());
-      crash_handler_->DumpWithoutCrash();
       return ErrorMessage{"Unexpected error while loading preset."};
     }
 

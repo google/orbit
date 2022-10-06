@@ -26,8 +26,6 @@ class OrbitConan(ConanFile):
     options = {"system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
                "fPIC": [True, False],
-               "crashdump_server": "ANY",
-               "with_crash_handling": [True, False],
                "run_tests": [True, False],
                "run_python_tests": [True, False],
                "build_target": "ANY",
@@ -35,8 +33,6 @@ class OrbitConan(ConanFile):
     default_options = {"system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
-                       "crashdump_server": "",
-                       "with_crash_handling": True,
                        "run_tests": True,
                        "run_python_tests": False,
                        "build_target": None,
@@ -57,11 +53,6 @@ class OrbitConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-        if not self.options.with_gui:
-            del self.options.with_crash_handling
-            del self.options.crashdump_server
-        elif not self.options.with_crash_handling:
-            del self.options.crashdump_server
 
     def build_requirements(self):
         self.build_requires('protoc_installer/3.9.1@bincrafters/stable#0')
@@ -93,9 +84,6 @@ class OrbitConan(ConanFile):
             self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f", override=True)
-
-        if self.options.with_gui and self.options.with_crash_handling:
-            self.requires("crashpad/20200624@{}".format(self._orbit_channel))
 
         if self.options.with_gui:
             self.requires("freetype/2.10.0@bincrafters/stable#0", override=True)
@@ -154,13 +142,6 @@ class OrbitConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_GUI"] = "ON" if self.options.with_gui else "OFF"
-        if self.options.with_gui:
-            if self.options.with_crash_handling:
-                cmake.definitions["WITH_CRASH_HANDLING"] = "ON"
-                cmake.definitions["CRASHDUMP_SERVER"] = self.options.crashdump_server
-            else:
-                cmake.definitions["WITH_CRASH_HANDLING"] = "OFF"
-
         cmake.configure()
         cmake.build(target=str(self.options.build_target) if self.options.build_target else None)
         if self.options.run_tests and not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
@@ -170,8 +151,6 @@ class OrbitConan(ConanFile):
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        self.copy("crashpad_handler*", src="@bindirs",
-                  dst=dest, root_package="crashpad")
         if self.options.with_gui:
             for path in self.deps_cpp_info["freetype-gl"].resdirs:
                 self.copy("Vera.ttf", src=path, dst="{}/fonts/".format(dest))
@@ -285,8 +264,6 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitClientGgp", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.exe", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.debug", src="bin/", dst="bin")
-        self.copy("crashpad_handler", src="bin/", dst="bin")
-        self.copy("crashpad_handler.exe", src="bin/", dst="bin")
         self.copy("NOTICE")
         self.copy("NOTICE.Chromium")
         self.copy("NOTICE.Chromium.csv")
