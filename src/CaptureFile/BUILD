@@ -27,6 +27,7 @@ orbit_cc_test(
     name = "CaptureFileTests",
     deps = [
         ":CaptureFile",
+        "//src/GrpcProtos:capture_cc_proto",
         "//src/OrbitBase",
         "//src/TestUtils",
         "@com_google_absl//absl/base",
