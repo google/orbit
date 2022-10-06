@@ -42,6 +42,10 @@ class PerfEventVisitor {
   virtual void Visit(uint64_t /*event_timestamp*/, const SchedWakeupPerfEventData& /*event_data*/) {
   }
   virtual void Visit(uint64_t /*event_timestamp*/,
+                     const SchedWakeupWithCallchainPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
+                     const SchedSwitchWithCallchainPerfEventData& /*event_data*/) {}
+  virtual void Visit(uint64_t /*event_timestamp*/,
                      const SchedWakeupWithStackPerfEventData& /*event_data*/) {}
   virtual void Visit(uint64_t /*event_timestamp*/,
                      const SchedSwitchWithStackPerfEventData& /*event_data*/) {}

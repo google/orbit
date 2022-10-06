@@ -83,6 +83,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
+             const SchedWakeupWithCallchainPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
+             const SchedSwitchWithCallchainPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp,
              const SchedWakeupWithStackPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const SchedSwitchWithStackPerfEventData& event_data) override;
@@ -116,8 +120,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType ComputeCallstackTypeFromStackSample(
       const LibunwindstackResult& libunwindstack_result);
+
+  template <typename CallchainPerfEventDataT>
   [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
-  ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
+  ComputeCallstackTypeFromCallchainAndPatch(const CallchainPerfEventDataT& event_data);
 
   void SendFullAddressInfoToListener(const unwindstack::FrameData& libunwindstack_frame);
 
@@ -125,6 +131,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   bool UnwindStack(const StackPerfEventDataT& event,
                    orbit_grpc_protos::Callstack* resulting_callstack,
                    bool offline_memory_only = false);
+
+  template <typename CallchainPerfEventDataT>
+  bool VisitCallchainEventInternally(const CallchainPerfEventDataT& event_data,
+                                     orbit_grpc_protos::Callstack* resulting_callstack);
 
   TracerListener* listener_;
 
