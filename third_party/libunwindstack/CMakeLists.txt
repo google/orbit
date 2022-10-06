@@ -155,7 +155,7 @@ target_compile_features(libunwindstack_common PUBLIC cxx_std_17)
 target_link_libraries(libunwindstack_common PRIVATE
   CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
-  CONAN_PKG::lzma_sdk)
+  LZMA::LZMA)
 
 # Clang >= 8.0
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
@@ -182,7 +182,7 @@ find_library(liblog_static log_static REQUIRED)
 target_link_libraries(libunwindstack PUBLIC
   CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
-  CONAN_PKG::lzma_sdk
+  LZMA::LZMA
   ${liblog_static})
 target_include_directories(libunwindstack PUBLIC include/)
 
@@ -300,7 +300,7 @@ find_library(liblog_shared log_shared REQUIRED)
 target_link_libraries(libunwindstack_tests PRIVATE
   CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
-  CONAN_PKG::lzma_sdk
+  LZMA::LZMA
   CONAN_PKG::zlib
   ${liblog_shared}
   GTest::Main)
@@ -355,7 +355,7 @@ add_library(libunwindstack_local SHARED
 
 target_link_libraries(libunwindstack_local PRIVATE
   CONAN_PKG::libunwindstack-android-dependencies
-  CONAN_PKG::lzma_sdk
+  LZMA::LZMA
   ${liblog_static})
 
 target_include_directories(libunwindstack_local PRIVATE include/)
