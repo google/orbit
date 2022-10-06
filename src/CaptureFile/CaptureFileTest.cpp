@@ -23,6 +23,7 @@
 
 namespace orbit_capture_file {
 
+using orbit_base::TemporaryFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
@@ -47,14 +48,13 @@ class CaptureFileHeaderTest : public testing::Test {
  public:
   void SetUp() override {
     // ASSERT_THAT cannot be used in the constructor, hence this work is done in SetUp.
-    auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+    auto tmp_file_or_error = TemporaryFile::Create();
     ASSERT_THAT(tmp_file_or_error, HasNoError());
-    temporary_file_ =
-        std::make_unique<orbit_base::TemporaryFile>(std::move(tmp_file_or_error.value()));
+    temporary_file_ = std::make_unique<TemporaryFile>(std::move(tmp_file_or_error.value()));
   }
 
  protected:
-  std::unique_ptr<orbit_base::TemporaryFile> temporary_file_;
+  std::unique_ptr<TemporaryFile> temporary_file_;
 };
 
 class CaptureFileTest : public CaptureFileHeaderTest {
@@ -62,6 +62,7 @@ class CaptureFileTest : public CaptureFileHeaderTest {
   explicit CaptureFileTest()
       : test_event_1(CreateInternedStringCaptureEvent(kAnswerKey, kAnswerString)),
         test_event_2(CreateInternedStringCaptureEvent(kNotAnAnswerKey, kNotAnAnswerString)) {}
+
   void SetUp() override {
     CaptureFileHeaderTest::SetUp();
     temporary_file_->CloseAndRemove();
@@ -69,6 +70,7 @@ class CaptureFileTest : public CaptureFileHeaderTest {
     AddCaptureSection();
     OpenTemporayFileAsCaptureFile();
   }
+
   void AddCaptureSection() {
     auto output_stream_or_error =
         CaptureFileOutputStream::Create(temporary_file_->file_path().string());
@@ -81,12 +83,14 @@ class CaptureFileTest : public CaptureFileHeaderTest {
     ASSERT_THAT(output_stream->WriteCaptureEvent(test_event_2), HasNoError());
     ASSERT_THAT(output_stream->Close(), HasNoError());
   }
+
   static void VerifyEventEquals(const ClientCaptureEvent& lhs, const ClientCaptureEvent& rhs) {
     ASSERT_EQ(lhs.event_case(), ClientCaptureEvent::kInternedString);
     ASSERT_EQ(rhs.event_case(), ClientCaptureEvent::kInternedString);
     EXPECT_EQ(lhs.interned_string().key(), rhs.interned_string().key());
     EXPECT_EQ(lhs.interned_string().intern(), rhs.interned_string().intern());
   }
+
   void VerifyCaptureSectionContent(
       const std::unique_ptr<ProtoSectionInputStream>& capture_section) {
     {
@@ -101,6 +105,7 @@ class CaptureFileTest : public CaptureFileHeaderTest {
       VerifyEventEquals(event, test_event_2);
     }
   }
+
   void OpenTemporayFileAsCaptureFile() {
     auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
     ASSERT_THAT(capture_file_or_error, HasNoError());
