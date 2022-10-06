@@ -73,11 +73,9 @@ class OrbitConan(ConanFile):
         self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
         self.requires("c-ares/1.15.0", override=True)
         self.requires("llvm-core/12.0.0@{}".format(self._orbit_channel))
-        self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd", override=True)
+        self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
         self.requires("openssl/1.1.1k", override=True)
         self.requires("outcome/2.2.0")
-        self.requires(
-            "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
         if self.settings.os != "Windows":
             self.requires(
                 "libunwindstack-android-dependencies/20210709@{}".format(self._orbit_channel))
