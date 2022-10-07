@@ -51,11 +51,6 @@ for profile in ${profiles[@]}; do
     conan_profile_exists "$profile" || create_conan_profile "$profile"
   fi
 
-  mkdir -p build_$profile/ || exit $?
-  conan lock create "$DIR/conanfile.py" --user=orbitdeps --channel=stable \
-    --build=outdated \
-    --lockfile="$DIR/third_party/conan/lockfiles/base.lock" -pr $profile \
-    --lockfile-out=build_$profile/conan.lock || exit $?
-  conan install -if build_$profile/ --build outdated --lockfile=build_$profile/conan.lock "$DIR" || exit $?
+  conan install -pr $profile -if build_$profile/ --build outdated "$DIR" || exit $?
   conan build -bf build_$profile/ "$DIR" || exit $?
 done

@@ -145,24 +145,6 @@ if [ -n "$1" ]; then
   until [ ${RET} -eq 0 ]; do
     RETRIES=$(($RETRIES - 1))
     if [ $RETRIES -eq 0 ]; then
-      echo "Number of conan lock retries exceeded. Exiting..."
-      exit 1
-    fi
-
-    echo "Invoking conan lock."
-    RET=0
-    conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
-      ${BUILD_OPTION} \
-      --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
-      --lockfile-out="${REPO_ROOT}/build/conan.lock" || RET=$?
-  done
-
-  RET=1
-  RETRIES=4
-
-  until [ ${RET} -eq 0 ]; do
-    RETRIES=$(($RETRIES - 1))
-    if [ $RETRIES -eq 0 ]; then
       echo "Number of conan install retries exceeded. Exiting..."
       exit 1
     fi
@@ -170,8 +152,8 @@ if [ -n "$1" ]; then
     echo "Installs the requirements (conan install)."
     RET=0
     conan install -if "${REPO_ROOT}/build/" \
+          -pr ${CONAN_PROFILE} \
           ${BUILD_OPTION} \
-          --lockfile="${REPO_ROOT}/build/conan.lock" \
           "${REPO_ROOT}" || RET=${PIPESTATUS[0]}
   done
 

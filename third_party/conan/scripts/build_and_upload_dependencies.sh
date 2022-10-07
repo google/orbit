@@ -19,7 +19,7 @@ readonly SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh
 export CONAN_USE_ALWAYS_SHORT_PATHS=1
 
 if [[ -v IN_DOCKER ]]; then
-  pip3 install conan==1.46.0
+  pip3 install conan==1.53.0
   export QT_QPA_PLATFORM=offscreen
 
   if [[ -v ORBIT_PUBLIC_BUILD ]]; then
@@ -40,15 +40,7 @@ if [[ -v IN_DOCKER ]]; then
       platform="windows"
     fi
 
-    mkdir -p build_$profile/ || exit $?
-    conan lock create "$REPO_ROOT/conanfile.py" --user=orbitdeps --channel=stable \
-      --build=outdated \
-      --lockfile="$REPO_ROOT/third_party/conan/lockfiles/base.lock" -pr $profile \
-      --lockfile-out=build_$profile/conan.lock || exit $?
-
-    LOCKFILE="$(pwd)/build_$profile/conan.lock"
-
-    PACKAGES=$(conan info -l $LOCKFILE $REPO_ROOT -j 2>/dev/null \
+    PACKAGES=$(conan info -pr $profile $REPO_ROOT -j 2>/dev/null \
                | grep build_id \
                | jq '.[] | select(.is_ref) | select(.binary != "Download" and .binary != "Cache" and .binary != "Skip") | .reference + ":" + .id' \
                | { grep -v 'llvm/' || true; } \
@@ -61,7 +53,7 @@ if [[ -v IN_DOCKER ]]; then
     else
       echo -e "The following binary packages need to be uploaded:\n$PACKAGES"
 
-      conan install -if build_$profile/ --build=outdated -l $LOCKFILE $REPO_ROOT || exit $?
+      conan install -if build_$profile/ --build=outdated -pr $profile -o run_tests=False $REPO_ROOT || exit $?
       conan build -bf build_$profile/ $REPO_ROOT || exit $?
 
       echo "$PACKAGES" | while read package; do
