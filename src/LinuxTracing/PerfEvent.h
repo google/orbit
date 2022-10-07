@@ -105,6 +105,8 @@ struct CallchainSamplePerfEventData {
   [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() const {
     return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
   }
+  [[nodiscard]] pid_t GetCallstackPidOrMinusOne() const { return pid; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return tid; }
 
   pid_t pid;
   pid_t tid;
@@ -279,6 +281,8 @@ struct SchedWakeupWithCallchainPerfEventData {
   [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() const {
     return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
   }
+  [[nodiscard]] pid_t GetCallstackPidOrMinusOne() const { return was_unblocked_by_pid; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return was_unblocked_by_tid; }
 
   pid_t woken_tid;
   pid_t was_unblocked_by_tid;
@@ -310,6 +314,8 @@ struct SchedSwitchWithCallchainPerfEventData {
   [[nodiscard]] std::vector<uint64_t> CopyOfIpsAsVector() const {
     return std::vector<uint64_t>(ips.get(), ips.get() + ips_size);
   }
+  [[nodiscard]] pid_t GetCallstackPidOrMinusOne() const { return prev_pid_or_minus_one; }
+  [[nodiscard]] pid_t GetCallstackTid() const { return prev_tid; }
 
   uint32_t cpu;
   pid_t prev_pid_or_minus_one;
@@ -409,6 +415,7 @@ struct PerfEvent {
                UserSpaceFunctionEntryPerfEventData, UserSpaceFunctionExitPerfEventData,
                MmapPerfEventData, GenericTracepointPerfEventData, TaskNewtaskPerfEventData,
                TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
+               SchedSwitchWithCallchainPerfEventData, SchedWakeupWithCallchainPerfEventData,
                SchedSwitchWithStackPerfEventData, SchedWakeupWithStackPerfEventData,
                AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
                DmaFenceSignaledPerfEventData>

@@ -315,9 +315,10 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   listener_->OnThreadStateSliceCallstack(std::move(thread_state_slice_callstack));
 }
 
-[[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
+template <typename CallchainPerfEventDataT>
+orbit_grpc_protos::Callstack::CallstackType
 UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
-    const CallchainSamplePerfEventData& event_data) {
+    const CallchainPerfEventDataT& event_data) {
   // Callstacks with only two frames (the first is in the kernel, the second is the sampled address)
   // are unwinding errors.
   // Note that this doesn't exclude samples inside the main function of any thread as the main
@@ -399,7 +400,7 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
     }
   }
 
-  if (!return_address_manager_->PatchCallchain(event_data.tid, event_data.ips.get(),
+  if (!return_address_manager_->PatchCallchain(event_data.GetCallstackTid(), event_data.ips.get(),
                                                event_data.GetCallchainSize(), current_maps_)) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
@@ -411,28 +412,20 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
   return Callstack::kComplete;
 }
 
-void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
-                                    const CallchainSamplePerfEventData& event_data) {
-  ORBIT_CHECK(listener_ != nullptr);
-  ORBIT_CHECK(current_maps_ != nullptr);
-
+template <typename CallchainPerfEventDataT>
+bool UprobesUnwindingVisitor::VisitCallchainEvent(const CallchainPerfEventDataT& event_data,
+                                                  Callstack* resulting_callstack) {
   // The top of a callchain is always inside the kernel code and we don't expect samples to be only
   // inside the kernel. Do nothing in case this happens anyway for some reason.
   if (event_data.GetCallchainSize() <= 1) {
     ORBIT_ERROR("Callchain has only %lu frames", event_data.GetCallchainSize());
-    return;
+    return false;
   }
 
-  FullCallstackSample sample;
-  sample.set_pid(event_data.pid);
-  sample.set_tid(event_data.tid);
-  sample.set_timestamp_ns(event_timestamp);
-
-  Callstack* callstack = sample.mutable_callstack();
-  callstack->set_type(ComputeCallstackTypeFromCallchainAndPatch(event_data));
+  resulting_callstack->set_type(ComputeCallstackTypeFromCallchainAndPatch(event_data));
 
   // Skip the first frame as the top of a perf_event_open callchain is always inside kernel code.
-  callstack->add_pcs(event_data.GetCallchain()[1]);
+  resulting_callstack->add_pcs(event_data.GetCallchain()[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding
   // uses the return address of a function call as the caller's address.
   // However, the actual address of the call instruction is before that.
@@ -440,11 +433,62 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // return address. This way we fall into the range of the call instruction.
   // Note: This is also done the same way in Libunwindstack.
   for (uint64_t frame_index = 2; frame_index < event_data.GetCallchainSize(); ++frame_index) {
-    callstack->add_pcs(event_data.GetCallchain()[frame_index] - 1);
+    resulting_callstack->add_pcs(event_data.GetCallchain()[frame_index] - 1);
+  }
+
+  return true;
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const CallchainSamplePerfEventData& event_data) {
+  ORBIT_CHECK(listener_ != nullptr);
+  ORBIT_CHECK(current_maps_ != nullptr);
+
+  FullCallstackSample sample;
+  sample.set_pid(event_data.pid);
+  sample.set_tid(event_data.tid);
+  sample.set_timestamp_ns(event_timestamp);
+  Callstack* callstack = sample.mutable_callstack();
+
+  bool success = VisitCallchainEvent(event_data, callstack);
+  if (!success) {
+    return;
   }
 
   ORBIT_CHECK(!callstack->pcs().empty());
   listener_->OnCallstackSample(std::move(sample));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const SchedWakeupWithCallchainPerfEventData& event_data) {
+  ThreadStateSliceCallstack thread_state_slice_callstack;
+  thread_state_slice_callstack.set_thread_state_slice_tid(event_data.woken_tid);
+  thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
+
+  const bool success =
+      VisitCallchainEvent(event_data, thread_state_slice_callstack.mutable_callstack());
+
+  if (!success) {
+    return;
+  }
+
+  listener_->OnThreadStateSliceCallstack(std::move(thread_state_slice_callstack));
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
+                                    const SchedSwitchWithCallchainPerfEventData& event_data) {
+  ThreadStateSliceCallstack thread_state_slice_callstack;
+  thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
+  thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
+
+  bool const success =
+      VisitCallchainEvent(event_data, thread_state_slice_callstack.mutable_callstack());
+
+  if (!success) {
+    return;
+  }
+
+  listener_->OnThreadStateSliceCallstack(std::move(thread_state_slice_callstack));
 }
 
 void UprobesUnwindingVisitor::OnUprobes(

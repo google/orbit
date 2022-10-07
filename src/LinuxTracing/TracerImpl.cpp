@@ -1371,14 +1371,25 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch_with_callchain) {
-    // TODO(b/243510000): the implementation of this case will be added later
+    // When the switch out is caused by the thread exiting, the sample record's pid is "-1".
+    // For simplicity, we accept that we discard the callstack in this case.
+    pid_t pid_or_minus_one = ReadSampleRecordPid(ring_buffer);
+    bool copy_stack_related_data = pid_or_minus_one == target_pid_;
+    PerfEvent event = ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(ring_buffer, header,
+                                                                        copy_stack_related_data);
+    DeferEvent(std::move(event));
+    ++stats_.sched_switch_count;
 
   } else if (is_sched_wakeup_with_callchain) {
-    // TODO(b/243510000): the implementation of this case will be added later
-
-  } else if (is_sched_switch_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     bool copy_stack_related_data = pid == target_pid_;
+    PerfEvent event = ConsumeSchedWakeupWithOrWithoutCallchainPerfEvent(ring_buffer, header,
+                                                                        copy_stack_related_data);
+    DeferEvent(std::move(event));
+  } else if (is_sched_switch_with_stack) {
+    // See comment in "is_sched_switch_with_stack" case above for reasoning about "-1".
+    pid_t pid_or_minus_one = ReadSampleRecordPid(ring_buffer);
+    bool copy_stack_related_data = pid_or_minus_one == target_pid_;
     PerfEvent event =
         ConsumeSchedSwitchWithOrWithoutStackPerfEvent(ring_buffer, header, copy_stack_related_data);
     DeferEvent(std::move(event));

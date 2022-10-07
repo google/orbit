@@ -23,54 +23,56 @@ namespace orbit_linux_tracing {
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
                          perf_event_sample_id_tid_time_streamid_cpu* sample_id);
 
-uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer);
+[[nodiscard]] uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer);
 
-uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer);
+[[nodiscard]] uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer);
 
-pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
+[[nodiscard]] pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer);
 
-uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
+[[nodiscard]] uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
 
-MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                   const perf_event_header& header);
-
-UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                          const perf_event_header& header);
-
-StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+[[nodiscard]] MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header);
 
-CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                         const perf_event_header& header);
-
-GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header);
-
-SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                 const perf_event_header& header);
-
-SchedWakeupWithCallchainPerfEvent ConsumeSchedWakeupWithCallchainPerfEvent(
+[[nodiscard]] UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-SchedSwitchWithCallchainPerfEvent ConsumeSchedSwitchWithCallchainPerfEvent(
+[[nodiscard]] StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                               const perf_event_header& header);
+
+[[nodiscard]] CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(
     PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                        const perf_event_header& header,
-                                                        bool copy_stack_related_data);
+[[nodiscard]] GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 
-PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                        const perf_event_header& header,
-                                                        bool copy_stack_related_data);
+[[nodiscard]] SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                               const perf_event_header& header);
 
-AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                     const perf_event_header& header);
+[[nodiscard]] PerfEvent ConsumeSchedWakeupWithOrWithoutCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data);
 
-AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                             const perf_event_header& header);
+[[nodiscard]] PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data);
 
-DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
-                                                           const perf_event_header& header);
+[[nodiscard]] PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data);
+
+[[nodiscard]] PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
+    bool copy_stack_related_data);
+
+[[nodiscard]] AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                                   const perf_event_header& header);
+
+[[nodiscard]] AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
+
+[[nodiscard]] DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(
+    PerfEventRingBuffer* ring_buffer, const perf_event_header& header);
 }  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_PERF_EVENT_READERS_H_

@@ -1,52 +1,15 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "LeafFunctionCallManager.h"
 
-#include <absl/base/casts.h>
-#include <asm/perf_regs.h>
-#include <stddef.h>
 #include <sys/mman.h>
-#include <unwindstack/MapInfo.h>
-#include <unwindstack/Unwinder.h>
-
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <memory>
-#include <vector>
-
-#include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Logging.h"
 
 namespace orbit_linux_tracing {
-
-using orbit_grpc_protos::Callstack;
-
-// Let's unwind one frame using libunwindstack. With that unwinding step, the registers will get
-// updated and we can detect if $rbp was modified.
-// (1) If $rbp did not change: We are in a leaf function, which has not modified $rbp. The leaf's
-//     caller is missing in the callchain and needs to be patched in. The updated $rip (pc) from
-//     the unwinding step contains the leaf's caller.
-// (2) If $rbp was modified, this can either be:
-//     (a) We are in a non-leaf function and the callchain is already correct.
-//     (b) We are in a leaf function that modified $rbp. The complete callchain is broken and should
-//         be reported as unwinding error.
-// As libunwindstack does not report us the canonical frame address (CFA) from an unwinding step, we
-// cannot differentiate between (2a) and (2b) reliably. However, we do perform the following
-// validity checks (for the reasoning remember that the stack grows downwards):
-// (I)   If the CFA is computed using $rbp + 16, we know the $rbp was correct, i.e. case (2a)
-// (II)  If $rbp is below $rsp, $rbp is not a frame pointer, i.e. case (2b)
-// (III) If $rbp moves up the stack after unwinding, the sampled $rbp is not a frame pointer (2b)
-//
-// Note that we cannot simply set libunwindstack to unwind always two frames and compare the outer
-// frame with the respective one in the callchain carried by the perf_event_open event, as in case
-// of uprobes overriding the return addresses, both addresses would be identical even if the actual
-// addresses (after uprobe patching) are not.
-// More (internal) documentation on this in: go/stadia-orbit-leaf-frame-pointer
-Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
-    const CallchainSamplePerfEventData* event_data, LibunwindstackMaps* current_maps,
+template <typename CallchainPerfEventDataT>
+orbit_grpc_protos::Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunctionImpl(
+    const CallchainPerfEventDataT* event_data, LibunwindstackMaps* current_maps,
     LibunwindstackUnwinder* unwinder) {
   ORBIT_CHECK(event_data != nullptr);
   ORBIT_CHECK(current_maps != nullptr);
@@ -57,21 +20,21 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   const uint64_t rip = event_data->GetRegisters().ip;
 
   if (rbp < rsp) {
-    return Callstack::kFramePointerUnwindingError;
+    return orbit_grpc_protos::Callstack::kFramePointerUnwindingError;
   }
 
-  std::optional<bool> has_frame_pointer_or_error =
-      unwinder->HasFramePointerSet(rip, event_data->pid, current_maps->Get());
+  std::optional<bool> has_frame_pointer_or_error = unwinder->HasFramePointerSet(
+      rip, event_data->GetCallstackPidOrMinusOne(), current_maps->Get());
 
   // If retrieving the debug information already failed here, we don't need to try unwinding.
   if (!has_frame_pointer_or_error.has_value()) {
-    return Callstack::kStackTopDwarfUnwindingError;
+    return orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError;
   }
 
   // If the frame pointer register is set correctly at the current instruction, there is no need
   // to patch the callstack and we can early out.
   if (*has_frame_pointer_or_error) {
-    return Callstack::kComplete;
+    return orbit_grpc_protos::Callstack::kComplete;
   }
 
   // Perform one unwinding step. We will only need the memory from $rbp + 16 to $rsp (ensure to
@@ -83,13 +46,13 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
                              event_data->data.get()};
   std::vector<StackSliceView> stack_slices{stack_slice};
   const LibunwindstackResult& libunwindstack_result =
-      unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegistersAsArray(),
-                       stack_slices, true, /*max_frames=*/1);
+      unwinder->Unwind(event_data->GetCallstackPidOrMinusOne(), current_maps->Get(),
+                       event_data->GetRegistersAsArray(), stack_slices, true, /*max_frames=*/1);
 
   // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. we don't
   // have a caller to patch in.
   if (libunwindstack_result.IsSuccess()) {
-    return Callstack::kComplete;
+    return orbit_grpc_protos::Callstack::kComplete;
   }
 
   unwindstack::RegsX86_64 new_regs = libunwindstack_result.regs();
@@ -99,23 +62,24 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     // If the error was because the stack sample was too small, the user can act and increase the
     // stack size. So we report that case separately.
     if (stack_size > stack_dump_size_) {
-      return Callstack::kStackTopForDwarfUnwindingTooSmall;
+      return orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall;
     }
-    return Callstack::kStackTopDwarfUnwindingError;
+    return orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError;
   }
 
   uint64_t new_rbp = new_regs[unwindstack::X86_64_REG_RBP];
-  // $rbp changed during unwinding (case (2)), i.e. either it was a valid frame pointer and thus the
-  // callchain is already correct, or it was modified as general purpose register (unwinding error).
+  // $rbp changed during unwinding (case (2)), i.e. either it was a valid frame pointer and thus
+  // the callchain is already correct, or it was modified as general purpose register (unwinding
+  // error).
   if (new_rbp != rbp) {
-    // If the $rbp after unwinding is below the sampled $rbp, the sampled $rbp could not be a valid
-    // frame pointer (remember the stack grows downwards).
+    // If the $rbp after unwinding is below the sampled $rbp, the sampled $rbp could not be a
+    // valid frame pointer (remember the stack grows downwards).
     // Note that, in addition to this check, we also check if the complete callchain is in
     // executable code in the UprobesUnwindingVisitor.
     if (new_rbp < rbp) {
-      return Callstack::kFramePointerUnwindingError;
+      return orbit_grpc_protos::Callstack::kFramePointerUnwindingError;
     }
-    return Callstack::kComplete;
+    return orbit_grpc_protos::Callstack::kComplete;
   }
 
   // $rbp did non change during unwinding, i.e. we are in a leaf function. We need to patch in the
@@ -138,9 +102,9 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     // As above, if the error was because the stack sample was too small, the user can act and
     // increase the stack size. So we report that case separately.
     if (stack_size > stack_dump_size_) {
-      return Callstack::kStackTopForDwarfUnwindingTooSmall;
+      return orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall;
     }
-    return Callstack::kStackTopDwarfUnwindingError;
+    return orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError;
   }
 
   result.push_back(libunwindstack_leaf_caller_pc);
@@ -151,7 +115,21 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
 
   event_data->SetIps(result);
 
-  return Callstack::kComplete;
+  return orbit_grpc_protos::Callstack::kComplete;
 }
 
-}  // namespace orbit_linux_tracing
+template orbit_grpc_protos::Callstack::CallstackType
+LeafFunctionCallManager::PatchCallerOfLeafFunctionImpl<CallchainSamplePerfEventData>(
+    const CallchainSamplePerfEventData* event_data, LibunwindstackMaps* current_maps,
+    LibunwindstackUnwinder* unwinder);
+
+template orbit_grpc_protos::Callstack::CallstackType
+LeafFunctionCallManager::PatchCallerOfLeafFunctionImpl<SchedWakeupWithCallchainPerfEventData>(
+    const SchedWakeupWithCallchainPerfEventData* event_data, LibunwindstackMaps* current_maps,
+    LibunwindstackUnwinder* unwinder);
+
+template orbit_grpc_protos::Callstack::CallstackType
+LeafFunctionCallManager::PatchCallerOfLeafFunctionImpl<SchedSwitchWithCallchainPerfEventData>(
+    const SchedSwitchWithCallchainPerfEventData* event_data, LibunwindstackMaps* current_maps,
+    LibunwindstackUnwinder* unwinder);
+}  //  namespace orbit_linux_tracing
