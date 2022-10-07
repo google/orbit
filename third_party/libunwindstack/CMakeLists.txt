@@ -154,7 +154,8 @@ target_include_directories(libunwindstack_common PUBLIC include/)
 target_compile_features(libunwindstack_common PUBLIC cxx_std_17)
 target_link_libraries(libunwindstack_common PRIVATE
   CONAN_PKG::capstone
-  CONAN_PKG::libunwindstack-android-dependencies
+  libbase
+  libprocinfo
   LZMA::LZMA)
 
 # Clang >= 8.0
@@ -175,15 +176,14 @@ add_library(libunwindstack STATIC
   $<TARGET_OBJECTS:libunwindstack_common>
   LogStdout.cpp)
 
-# liblog_static is not automatically included in the
-# CONAN_PKG::libunwindstack-android-dependencies target,
-# so we link to it explicitly here.
-find_library(liblog_static log_static REQUIRED)
 target_link_libraries(libunwindstack PUBLIC
   CONAN_PKG::capstone
-  CONAN_PKG::libunwindstack-android-dependencies
-  LZMA::LZMA
-  ${liblog_static})
+  libbase
+  libprocinfo
+
+  # liblog_static needs to be listed AFTER libbase and libprocinfo due to cyclic depdendencies.
+  liblog_static
+  LZMA::LZMA)
 target_include_directories(libunwindstack PUBLIC include/)
 
 # Clang >= 8.0
@@ -293,16 +293,13 @@ target_sources(libunwindstack_tests PRIVATE
 # dynamic linker.
 target_link_libraries(libunwindstack_tests PRIVATE ${CMAKE_DL_LIBS})
 
-# liblog_shared is not automatically included in the
-# CONAN_PKG::libunwindstack-android-dependencies target,
-# so we link to it explicitly here.
-find_library(liblog_shared log_shared REQUIRED)
 target_link_libraries(libunwindstack_tests PRIVATE
+  liblog_shared
+  libbase
+  libprocinfo
   CONAN_PKG::capstone
-  CONAN_PKG::libunwindstack-android-dependencies
   LZMA::LZMA
   CONAN_PKG::zlib
-  ${liblog_shared}
   GTest::Main)
 
 target_include_directories(libunwindstack_tests PRIVATE
@@ -354,9 +351,11 @@ add_library(libunwindstack_local SHARED
   tests/TestLocal.cpp)
 
 target_link_libraries(libunwindstack_local PRIVATE
-  CONAN_PKG::libunwindstack-android-dependencies
-  LZMA::LZMA
-  ${liblog_static})
+  libbase
+
+  # liblog_static needs to be listed AFTER libbase due to cyclic depdendencies.
+  liblog_static
+  LZMA::LZMA)
 
 target_include_directories(libunwindstack_local PRIVATE include/)
 
