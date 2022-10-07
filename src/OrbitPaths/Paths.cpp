@@ -35,7 +35,6 @@ constexpr std::string_view kDumpsFolderName{"dumps"};
 constexpr std::string_view kLogsFolderName{"logs"};
 constexpr std::string_view kConfigFolderName{"config"};
 constexpr std::string_view kSymbolPathsFileName{"SymbolPaths.txt"};
-constexpr std::string_view kOutputFolderName{"output"};
 
 namespace orbit_paths {
 
@@ -104,24 +103,6 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDir() {
   std::filesystem::path cache_dir = app_data_dir / kCacheFolderName;
   OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(cache_dir));
   return cache_dir;
-}
-
-std::filesystem::path GetPresetDirPriorTo1_66Unsafe() {
-  return CreateOrGetOrbitAppDataDirUnsafe() / kPresetsFolderName;
-}
-
-ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
-  return app_data_dir / kPresetsFolderName;
-}
-
-std::filesystem::path GetCaptureDirPriorTo1_66Unsafe() {
-  return CreateOrGetOrbitAppDataDirUnsafe() / kOutputFolderName;
-}
-
-ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
-  return app_data_dir / kOutputFolderName;
 }
 
 std::filesystem::path CreateOrGetPresetDirUnsafe() {

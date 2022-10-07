@@ -45,14 +45,6 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetLogDir();
 [[nodiscard, deprecated]] std::filesystem::path GetLogFilePathUnsafe();
 ErrorMessageOr<std::filesystem::path> GetLogFilePath();
 
-// TODO(b/238986346) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetPresetDirPriorTo1_66Unsafe();
-ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66();
-
-// TODO(b/238986348) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetCaptureDirPriorTo1_66Unsafe();
-ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66();
-
 }  // namespace orbit_paths
 
 #endif  // ORBIT_PATHS_PATHS_H_
