@@ -187,7 +187,7 @@ target_link_libraries(
          RemoteSymbolProvider
          SymbolProvider
          Symbols
-         CONAN_PKG::freetype-gl
+         freetype-gl::freetype-gl
          CONAN_PKG::freetype
          CONAN_PKG::glad
          CONAN_PKG::imgui
