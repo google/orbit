@@ -1,0 +1,9 @@
+prefix=@PKG_CONFIG_PREFIX@
+exec_prefix=@PKG_CONFIG_EXEC_PREFIX@
+libdir=@PKG_CONFIG_LIBDIR@
+includedir=@PKG_CONFIG_INCLUDEDIR@
+
+Name: freetype-gl
+Description: OpenGL text using one vertex buffer, one texture and FreeType
+Libs: -L${libdir} -lfreetype-gl
+Cflags: -I${includedir}
