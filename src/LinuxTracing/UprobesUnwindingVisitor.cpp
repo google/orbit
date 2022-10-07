@@ -413,8 +413,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
 }
 
 template <typename CallchainPerfEventDataT>
-bool UprobesUnwindingVisitor::VisitCallchainEventInternally(
-    const CallchainPerfEventDataT& event_data, Callstack* resulting_callstack) {
+bool UprobesUnwindingVisitor::VisitCallchainEvent(const CallchainPerfEventDataT& event_data,
+                                                  Callstack* resulting_callstack) {
   // The top of a callchain is always inside the kernel code and we don't expect samples to be only
   // inside the kernel. Do nothing in case this happens anyway for some reason.
   if (event_data.GetCallchainSize() <= 1) {
@@ -450,7 +450,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   sample.set_timestamp_ns(event_timestamp);
   Callstack* callstack = sample.mutable_callstack();
 
-  bool success = VisitCallchainEventInternally(event_data, callstack);
+  bool success = VisitCallchainEvent(event_data, callstack);
   if (!success) {
     return;
   }
@@ -466,7 +466,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
   const bool success =
-      VisitCallchainEventInternally(event_data, thread_state_slice_callstack.mutable_callstack());
+      VisitCallchainEvent(event_data, thread_state_slice_callstack.mutable_callstack());
 
   if (!success) {
     return;
@@ -482,7 +482,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
   bool const success =
-      VisitCallchainEventInternally(event_data, thread_state_slice_callstack.mutable_callstack());
+      VisitCallchainEvent(event_data, thread_state_slice_callstack.mutable_callstack());
 
   if (!success) {
     return;

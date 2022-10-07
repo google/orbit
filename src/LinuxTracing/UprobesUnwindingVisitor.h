@@ -128,13 +128,13 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void SendFullAddressInfoToListener(const unwindstack::FrameData& libunwindstack_frame);
 
   template <typename StackPerfEventDataT>
-  bool UnwindStack(const StackPerfEventDataT& event,
-                   orbit_grpc_protos::Callstack* resulting_callstack,
-                   bool offline_memory_only = false);
+  [[nodiscard]] bool UnwindStack(const StackPerfEventDataT& event,
+                                 orbit_grpc_protos::Callstack* resulting_callstack,
+                                 bool offline_memory_only = false);
 
   template <typename CallchainPerfEventDataT>
-  bool VisitCallchainEventInternally(const CallchainPerfEventDataT& event_data,
-                                     orbit_grpc_protos::Callstack* resulting_callstack);
+  [[nodiscard]] bool VisitCallchainEvent(const CallchainPerfEventDataT& event_data,
+                                         orbit_grpc_protos::Callstack* resulting_callstack);
 
   TracerListener* listener_;
 

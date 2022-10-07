@@ -69,9 +69,10 @@ struct PerfRecordSample {
   // uint64_t cgroup;                     /* if PERF_SAMPLE_CGROUP */
 };
 
-static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
-                                            const perf_event_header& header, perf_event_attr flags,
-                                            bool copy_stack_related_data = true) {
+[[nodiscard]] static PerfRecordSample ConsumeRecordSample(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header,
+                                                          perf_event_attr flags,
+                                                          bool copy_stack_related_data = true) {
   ORBIT_CHECK(header.size >
               sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
 
@@ -634,12 +635,7 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
         .data =
             {
                 .cpu = res.cpu,
-                // As the tracepoint data does not include the pid of the process that the thread
-                // being switched out belongs to, we use the pid set by perf_event_open in the
-                // corresponding generic field of the PERF_RECORD_SAMPLE.
-                // Note, though, that this value is -1 when the switch out is caused by the thread
-                // exiting. This is not the case for data.prev_pid, whose value is always correct as
-                // it comes directly from the tracepoint data.
+                // See ConsumeSchedSwitchWithOrWithoutStackPerfEvent for why the pid can be -1.
                 .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
                 .prev_tid = sched_switch.prev_pid,
                 .prev_state = sched_switch.prev_state,
@@ -654,12 +650,7 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
       .data =
           {
               .cpu = res.cpu,
-              // As the tracepoint data does not include the pid of the process that the thread
-              // being switched out belongs to, we use the pid set by perf_event_open in the
-              // corresponding generic field of the PERF_RECORD_SAMPLE.
-              // Note, though, that this value is -1 when the switch out is caused by the thread
-              // exiting. This is not the case for data.prev_pid, whose value is always correct as
-              // it comes directly from the tracepoint data.
+              // See ConsumeSchedSwitchWithOrWithoutStackPerfEvent for why the pid can be -1.
               .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
               .prev_tid = sched_switch.prev_pid,
               .prev_state = sched_switch.prev_state,
@@ -673,7 +664,8 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
 }
 
 template <typename EventType, typename StructType>
-EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer, const perf_event_header& header) {
+[[nodiscard]] EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer,
+                                        const perf_event_header& header) {
   uint32_t tracepoint_size;
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
 
