@@ -34,7 +34,8 @@ class SilentDeathTest : public testing::Test {
   virtual void SetUp() {
     // Suppress debuggerd stack traces. Too slow.
     for (int signo : {SIGABRT, SIGBUS, SIGSEGV, SIGSYS}) {
-      struct sigaction64 action = {.sa_handler = SIG_DFL};
+      struct sigaction64 action = {};
+      action.sa_handler = SIG_DFL;
       sigaction64(signo, &action, &previous_);
     }
   }

@@ -16,7 +16,12 @@
 
 #pragma once
 
+#ifdef __cplusplus
+#include <atomic>
+using std::atomic_int;
+#else
 #include <stdatomic.h>
+#endif
 #include <sys/cdefs.h>
 
 #include <log/log.h>

@@ -58,6 +58,10 @@
 
 #include "logging_splitters.h"
 
+#ifndef __clang__
+#define __builtin_available(arg1,arg2) false
+#endif
+
 namespace android {
 namespace base {
 
@@ -310,6 +314,7 @@ void DefaultAborter(const char* abort_message) {
   abort();
 }
 
+#ifdef __ANDROID__
 static void LogdLogChunk(LogId id, LogSeverity severity, const char* tag, const char* message) {
   int32_t lg_id = LogIdTolog_id_t(id);
   int32_t priority = LogSeverityToPriority(severity);
@@ -333,6 +338,7 @@ void LogdLogger::operator()(LogId id, LogSeverity severity, const char* tag, con
 
   SplitByLogdChunks(id, severity, tag, file, line, message, LogdLogChunk);
 }
+#endif
 
 void InitLogging(char* argv[], LogFunction&& logger, AbortFunction&& aborter) {
   SetLogger(std::forward<LogFunction>(logger));
