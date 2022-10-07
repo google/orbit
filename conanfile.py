@@ -11,7 +11,6 @@ from conans.errors import ConanInvalidConfiguration
 import os
 import shutil
 from io import StringIO
-from contrib.python import conan_helpers
 import csv
 
 
@@ -147,28 +146,6 @@ class OrbitConan(ConanFile):
         self.copy("LICENSE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
         self.copy("LICENCE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
 
-        if not self.options.system_qt:
-            chromium_licenses = conan_helpers.gather_chromium_licenses(self.deps_cpp_info["qt"].rootpath)
-            chromium_licenses.sort(key=lambda license_info: license_info["name"].lower())
-
-            with open(os.path.join(self.install_folder, "NOTICE.Chromium.csv"), "w") as fd:
-                writer = csv.DictWriter(fd, fieldnames=["name", "url", "license"], extrasaction='ignore')
-                writer.writeheader()
-
-                for license in chromium_licenses:
-                    writer.writerow(license)
-
-            with open(os.path.join(self.install_folder, "NOTICE.Chromium"), "w") as fd:
-                for license in chromium_licenses:
-                    fd.write("================================================================================\n")
-                    fd.write("Name: {}\n".format(license["name"]))
-                    fd.write("URL: {}\n\n".format(license.get("url", "")))
-                    fd.write(open(license["license file"], 'r').read())
-                    fd.write("\n\n")
-
-                fd.write("================================================================================\n")
-
-
 
     def package(self):
         self.copy("*", src="bin/autopresets", dst="bin/autopresets", symlinks=True)
@@ -185,8 +162,6 @@ class OrbitConan(ConanFile):
         self.copy("OrbitClientGgp.exe", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.debug", src="bin/", dst="bin")
         self.copy("NOTICE")
-        self.copy("NOTICE.Chromium")
-        self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
         self.copy("liborbit.so", src="lib/", dst="lib")
         self.copy("liborbituserspaceinstrumentation.so", src="lib/", dst="lib")
