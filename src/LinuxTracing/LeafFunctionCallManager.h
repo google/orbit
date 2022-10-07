@@ -80,7 +80,6 @@ class LeafFunctionCallManager {
       const CallchainPerfEventDataT* event_data, LibunwindstackMaps* current_maps,
       LibunwindstackUnwinder* unwinder);
 
- private:
   uint16_t stack_dump_size_;
 };
 

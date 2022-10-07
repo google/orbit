@@ -73,9 +73,9 @@ orbit_grpc_protos::Callstack::CallstackType LeafFunctionCallManager::PatchCaller
   // error).
   if (new_rbp != rbp) {
     // If the $rbp after unwinding is below the sampled $rbp, the sampled $rbp could not be a
-    // valid frame pointer (remember the stack grows downwards). Note that, in addition to this
-    // check, we also check if the complete callchain is in executable code in the
-    // UprobesUnwindingVisitor.
+    // valid frame pointer (remember the stack grows downwards).
+    // Note that, in addition to this check, we also check if the complete callchain is in
+    // executable code in the UprobesUnwindingVisitor.
     if (new_rbp < rbp) {
       return orbit_grpc_protos::Callstack::kFramePointerUnwindingError;
     }

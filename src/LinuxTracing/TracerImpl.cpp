@@ -1372,8 +1372,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
   } else if (is_sched_switch_with_callchain) {
     // When the switch out is caused by the thread exiting, the sample record's pid is "-1".
-    // We are fine with discarding the callstack in this case, as it will only show the exit
-    // syscall.
+    // For simplicity, we accept that we discard the callstack in this case.
     pid_t pid_or_minus_one = ReadSampleRecordPid(ring_buffer);
     bool copy_stack_related_data = pid_or_minus_one == target_pid_;
     PerfEvent event = ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(ring_buffer, header,
