@@ -24,13 +24,11 @@ class OrbitConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = ["cmake_multi"]
     options = {"system_qt": [True, False], "with_gui": [True, False],
-               "debian_packaging": [True, False],
                "fPIC": [True, False],
                "run_tests": [True, False],
                "run_python_tests": [True, False],
                "build_target": "ANY"}
     default_options = {"system_qt": True, "with_gui": True,
-                       "debian_packaging": False,
                        "fPIC": True,
                        "run_tests": True,
                        "run_python_tests": False,
@@ -85,10 +83,6 @@ class OrbitConan(ConanFile):
 
 
     def configure(self):
-        if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
-            raise ConanInvalidConfiguration(
-                "Debian packaging is only supported for GGP builds!")
-
         if self.settings.os != "Windows" and not self.options.fPIC:
             raise ConanInvalidConfiguration(
                 "We only support compiling with fPIC enabled!")
@@ -182,45 +176,6 @@ class OrbitConan(ConanFile):
 
 
     def package(self):
-        if self.options.debian_packaging:
-            shutil.rmtree(self.package_folder)
-            self.copy("OrbitService", src="bin/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("liborbit.so", src="lib/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("liborbituserspaceinstrumentation.so", src="lib/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("NOTICE",
-                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
-            self.copy("LICENSE",
-                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
-            basedir = "{}/{}-{}".format(self.package_folder,
-                                        self.name, self._version())
-            os.makedirs("{}/DEBIAN".format(basedir), exist_ok=True)
-            tools.save("{}/DEBIAN/control".format(basedir), """Package: orbitprofiler
-Version: {}
-Section: development
-Priority: optional
-Architecture: amd64
-Maintainer: Google, Inc <orbitprofiler-eng@google.com>
-Description: Orbit is a C/C++ profiler for Windows, Linux and the Stadia Platform.
-Homepage: https://github.com/google/orbit
-Installed-Size: `du -ks usr/ | cut -f 1`
-""".format(self._version()))
-
-            tools.save("{}/DEBIAN/postinst".format(basedir), """
-#!/bin/bash
-# Setting the setuid-bit for OrbitService
-chmod -v 4775 /opt/developer/tools/OrbitService
-""")
-
-            self.run("chmod +x {}/DEBIAN/postinst".format(basedir))
-            self.run("chmod g-s {}/DEBIAN".format(basedir))
-            self.run("chmod g-s {}/".format(basedir))
-            self.run("dpkg-deb -b --root-owner-group {}".format(basedir))
-            self.run("dpkg --contents {}.deb".format(basedir))
-            shutil.rmtree(basedir)
-
         self.copy("*", src="bin/autopresets", dst="bin/autopresets", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)

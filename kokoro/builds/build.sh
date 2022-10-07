@@ -125,12 +125,6 @@ if [ -n "$1" ]; then
   # Building Orbit
   mkdir -p "${REPO_ROOT}/build/"
 
-  if [[ $CONAN_PROFILE == ggp_* ]]; then
-    readonly PACKAGING_OPTION="-o debian_packaging=True"
-  else
-    readonly PACKAGING_OPTION=""
-  fi
-
   BUILD_OPTION=""
 
   if [[ -v ORBIT_BUILD_MISSING_PACKAGES ]]; then
@@ -153,7 +147,6 @@ if [ -n "$1" ]; then
     conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
       ${BUILD_OPTION} \
       --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
-      $PACKAGING_OPTION \
       --lockfile-out="${REPO_ROOT}/build/conan.lock" || RET=$?
   done
 
