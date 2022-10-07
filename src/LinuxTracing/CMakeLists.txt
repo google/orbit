@@ -26,6 +26,7 @@ target_sources(LinuxTracing PRIVATE
         GpuTracepointVisitor.cpp
         KernelTracepoints.h
         LeafFunctionCallManager.h
+        LeafFunctionCallManager.cpp
         LibunwindstackMaps.cpp
         LibunwindstackMaps.h
         LibunwindstackMultipleOfflineAndProcessMemory.cpp
