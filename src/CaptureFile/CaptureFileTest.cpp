@@ -112,7 +112,7 @@ class CaptureFileTest : public CaptureFileHeaderTest {
     capture_file_ = std::move(capture_file_or_error.value());
   }
 
-  void VerifySectionReadable(uint64_t section_index, size_t section_size) {
+  void VerifySectionIsReadable(uint64_t section_index, size_t section_size) {
     EXPECT_EQ(capture_file_->GetSectionList()[section_index].size, section_size);
     std::vector<char> data;
     data.reserve(section_size);
@@ -126,18 +126,11 @@ class CaptureFileTest : public CaptureFileHeaderTest {
 
     const uint64_t last_section_index = capture_file_->GetSectionList().size() - 1;
 
-    const CaptureFileSection section_list_entry =
-        capture_file_->GetSectionList()[last_section_index];
-    EXPECT_EQ(section_list_entry.type, kSectionTypeUserData);
-    EXPECT_EQ(section_list_entry.size, user_data_section_size);
-
-    EXPECT_EQ(capture_file_->FindSectionByType(kSectionTypeUserData), last_section_index);
-
     ASSERT_EQ(capture_file_->FindAllSectionsByType(kSectionTypeUserData).size(), 1);
     EXPECT_EQ(capture_file_->FindAllSectionsByType(kSectionTypeUserData).front(),
               last_section_index);
 
-    VerifySectionReadable(last_section_index, user_data_section_size);
+    VerifySectionIsReadable(last_section_index, user_data_section_size);
   }
 
  protected:

@@ -6,23 +6,23 @@ This document describes capture file format for Orbit.
 
 ## File structure
 
-The file consists of multiple sections. Most of the sections are optional and
-may not be present in the file. The header and Capture Section are the only mandatory sections.
+The file consists of multiple sections. The Header and Capture Section are mandatory sections.
+Other additional sections are optional and may not be present in the file.
 
-| Section              |           |
-|----------------------|-----------|
-| Header               | mandatory | 
-| Capture Section      | mandatory |
-| Additional Section 1 | optional  |
-| ...                  | optional  |
-| Additional Section N | optional  |
-| Section List         | optional  |
-| User Data Section    | optional  |
+| Section                                   |           |
+|-------------------------------------------|-----------|
+| Header                                    | mandatory | 
+| Capture Section                           | mandatory |
+| Additional (read-only) Section 1          | optional  |
+| ...                                       | optional  |
+| Additional (read-only) Section N          | optional  |
+| Section List                              | optional  |
+| Additional (read-write) User Data Section | optional  |
 
-Note that the file has the following order. The Header has to go first. The Capture Section is second. 
+Note that the file has the following order. The Header has to go first. The Capture Section is second.
 Then come N additional read-only sections. Afterwards comes the Section List and last the User Data
-Section. Note that the section list only contains the additional sections and the user data section. 
-The [USER_DATA](#user_data) is a read-write section.
+Section. Note that the section list only contains the additional sections (including the user data
+section). The [USER_DATA](#user_data) is a read-write section.
 
 ### Header
 
