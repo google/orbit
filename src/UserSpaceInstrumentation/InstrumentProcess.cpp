@@ -188,9 +188,8 @@ ErrorMessageOr<void> WaitForThreadToExit(pid_t pid, pid_t tid) {
 // These are the names of the threads that will be spawned when
 // liborbituserspaceinstrumentation.so is injected into the target process.
 std::multiset<std::string> GetExpectedOrbitThreadNames() {
-  static const std::multiset<std::string> kThreadNames{"default-executo", "resolver-execut",
-                                                       "grpc_global_tim", "grpc_global_tim",
-                                                       "ConnectRcvCmds",  "ForwarderThread"};
+  static const std::multiset<std::string> kThreadNames{
+      "default-executo", "resolver-execut", "grpc_global_tim", "ConnectRcvCmds", "ForwarderThread"};
   return kThreadNames;
 }
 

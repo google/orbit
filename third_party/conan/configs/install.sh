@@ -45,6 +45,7 @@ if [ "$FORCE_PUBLIC_REMOTES" == "yes" ]; then
   elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
     echo "Artifactory override detected. Adjusting public remote..."
     conan remote add -i 0 -f artifactory_public "$ORBIT_OVERRIDE_ARTIFACTORY_URL" || exit $?
+    conan remote disable conan-center || exit $?
   else
     LOCATION="$(curl -sI http://orbit-artifactory/ 2>/dev/null)"
 

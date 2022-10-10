@@ -13,6 +13,8 @@ abseil:compiler=Visual Studio
 abseil:compiler.cppstd=17
 gtest:compiler=Visual Studio
 gtest:compiler.cppstd=17
+grpc:compiler=Visual Studio
+grpc:compiler.cppstd=17
 
 [options]
 OrbitProfiler:system_qt=False
