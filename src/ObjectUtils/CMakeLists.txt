@@ -55,7 +55,12 @@ target_link_libraries(
          absl::synchronization
          absl::time
          absl::span
-         CONAN_PKG::llvm-core)
+         LLVMDebugInfoCodeView
+         LLVMDebugInfoDWARF
+         LLVMDebugInfoPDB
+         LLVMHeaders
+         LLVMObject
+         LLVMSymbolize)
 
 if (WIN32)
 target_link_libraries(ObjectUtils PUBLIC DIASDK::DIASDK)
@@ -84,8 +89,7 @@ target_link_libraries(
   ObjectUtilsTests
   PRIVATE ObjectUtils
           TestUtils
-          GTest::Main
-          CONAN_PKG::llvm-core)
+          GTest::Main)
 
 register_test(ObjectUtilsTests)
 

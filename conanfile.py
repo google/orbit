@@ -54,7 +54,6 @@ class OrbitConan(ConanFile):
         self.requires("abseil/20220623.0")
         self.requires("capstone/4.0.2")
         self.requires("grpc/1.48.0")
-        self.requires("llvm-core/12.0.0@orbitdeps/stable")
         self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
             self.requires("volk/1.2.170")
@@ -81,9 +80,6 @@ class OrbitConan(ConanFile):
                 "We don't actively support building the UI for 32bit platforms. Please remove this check in conanfile.py if you still want to do so!")
 
         self.options["gtest"].no_main = True
-
-        if self.settings.os != "Windows":
-            self.options["llvm-core"].with_xml2 = False
 
         if self.options.with_gui:
 
