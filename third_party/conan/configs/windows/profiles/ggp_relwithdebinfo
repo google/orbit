@@ -1,4 +1,0 @@
-include(ggp_common)
-
-[settings]
-build_type=RelWithDebInfo
