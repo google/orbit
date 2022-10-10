@@ -28,7 +28,6 @@
 
 #include "CommandLineUtils/CommandLineUtils.h"
 #include "MetricsUploader/ScopedMetric.h"
-#include "MoveFilesToDocuments/MoveFilesToDocuments.h"
 #include "OrbitBase/File.h"
 
 #ifdef _WIN32
@@ -346,8 +345,6 @@ int main(int argc, char* argv[]) {
   }
 
   LogAndMaybeWarnAboutClockResolution();
-
-  orbit_move_files_to_documents::TryMoveSavedDataLocationIfNeeded();
 
   const DeploymentConfiguration deployment_configuration =
       orbit_session_setup::FigureOutDeploymentConfiguration();

@@ -11,11 +11,9 @@ target_sources(
     PRIVATE main.cpp
 )
 
-
 target_link_libraries(Orbit PRIVATE
         ClientFlags
         CommandLineUtils
-        MoveFilesToDocuments
         OrbitQt
         Style)
 target_include_directories(Orbit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
