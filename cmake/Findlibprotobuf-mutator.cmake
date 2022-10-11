@@ -21,6 +21,6 @@ if(NOT MSVC)
   )
 endif()
 
-target_link_libraries(libprotobuf-mutator PRIVATE CONAN_PKG::protobuf)
+target_link_libraries(libprotobuf-mutator PRIVATE protobuf::protobuf)
 
 add_library(libprotobuf-mutator::libprotobuf-mutator ALIAS libprotobuf-mutator)

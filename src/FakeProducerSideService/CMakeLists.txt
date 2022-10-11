@@ -14,5 +14,5 @@ target_include_directories(FakeProducerSideService INTERFACE
 
 target_link_libraries(FakeProducerSideService INTERFACE
         GrpcProtos
-        CONAN_PKG::grpc
-        GTest::GTest)
+        grpc::grpc
+        GTest::gtest)

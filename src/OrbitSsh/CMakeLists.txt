@@ -44,7 +44,7 @@ endif()
 target_link_libraries(
   OrbitSsh
   PUBLIC OrbitBase
-         CONAN_PKG::libssh2)
+         Libssh2::libssh2)
 
 if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC WIN32_LEAN_AND_MEAN)
@@ -56,7 +56,7 @@ endif()
 add_executable(OrbitSshTests)
 target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
 
-target_link_libraries(OrbitSshTests PRIVATE OrbitSsh CONAN_PKG::libssh2
+target_link_libraries(OrbitSshTests PRIVATE OrbitSsh Libssh2::libssh2
                                             GTest::Main)
 
 register_test(OrbitSshTests PROPERTIES TIMEOUT 10)

@@ -42,7 +42,7 @@ function(grpc_helper)
   list(APPEND _sources ${new_sources})
   set_target_properties(${ARGV0} PROPERTIES SOURCES "${_sources}")
 
-  target_link_libraries(${ARGV0} PUBLIC CONAN_PKG::grpc)
+  target_link_libraries(${ARGV0} PUBLIC grpc::grpc)
   target_include_directories(${ARGV0} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/grpc_codegen/include/)
 
   # include-what-you-use needs full source-code visibility, which means

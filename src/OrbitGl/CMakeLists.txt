@@ -187,10 +187,10 @@ target_link_libraries(
          RemoteSymbolProvider
          SymbolProvider
          Symbols
+         freetype
          freetype-gl::freetype-gl
-         CONAN_PKG::freetype
-         CONAN_PKG::glad
-         CONAN_PKG::imgui
+         glad::glad
+         imgui::imgui
          gte::gte
          Qt5::Gui)
 

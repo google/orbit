@@ -22,7 +22,7 @@ target_sources(OffscreenRenderingVulkanTutorialLib PRIVATE
 
 target_link_libraries(OffscreenRenderingVulkanTutorialLib PUBLIC
         OrbitBase
-        CONAN_PKG::volk)
+        volk::volk)
 
 
 add_executable(OffscreenRenderingVulkanTutorial)

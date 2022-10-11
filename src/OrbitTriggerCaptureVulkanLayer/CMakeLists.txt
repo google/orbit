@@ -15,8 +15,8 @@ target_sources(OrbitTriggerCaptureVulkanLayer PRIVATE
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitTriggerCaptureVulkanLayer PUBLIC
-        CONAN_PKG::vulkan-headers
-        CONAN_PKG::protobuf
+        vulkan-headers::vulkan-headers
+        protobuf::protobuf
         OrbitBase
         OrbitCaptureGgpClientLib
         Vulkan::ValidationLayers)

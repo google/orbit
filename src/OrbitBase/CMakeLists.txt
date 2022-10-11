@@ -95,7 +95,7 @@ target_sources(OrbitBase PRIVATE
 endif()
 
 target_link_libraries(OrbitBase PUBLIC
-        CONAN_PKG::outcome
+        outcome::outcome
         absl::base
         absl::flat_hash_map
         absl::strings
@@ -164,7 +164,7 @@ endif()
 target_link_libraries(OrbitBaseTests PRIVATE
         OrbitBase
         TestUtils
-        GTest::GTest
+        GTest::gtest
         GTest::Main)
 
 register_test(OrbitBaseTests)

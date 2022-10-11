@@ -2,6 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+find_package(GTest CONFIG REQUIRED)
+
+if(NOT TARGET GTest::gtest AND TARGET gtest::libgtest)
+  add_library(GTest::gtest ALIAS gtest::libgtest)
+endif()
+
+if(NOT TARGET GTest::gmock AND TARGET gtest::gmock)
+  add_library(GTest::gmock ALIAS gtest::gmock)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/third_party/cmake/Modules/GoogleTest.cmake)
 
 # `register_test` registers a test target with ctest. Individual test
@@ -35,8 +45,3 @@ function(register_test TEST_TARGET)
     target_link_libraries(${TEST_TARGET} PRIVATE OrbitBase)
   endif()
 endfunction()
-
-if(NOT TARGET GTest::GTest)
-        add_library(GTest::GTest INTERFACE IMPORTED)
-  target_link_libraries(GTest::GTest INTERFACE CONAN_PKG::gtest)
-endif()

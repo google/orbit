@@ -50,7 +50,7 @@ list(APPEND headers
 file(COPY ${headers} DESTINATION "${INC_DIR}/freetype-gl/")
 
 target_include_directories(freetype-gl PUBLIC ${INC_DIR})
-target_link_libraries(freetype-gl PRIVATE CONAN_PKG::glad CONAN_PKG::freetype)
+target_link_libraries(freetype-gl PRIVATE glad::glad freetype)
 
 file(COPY "${DIR}/fonts/Vera.ttf" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fonts/")
 file(COPY "${DIR}/shaders/v3f-t2f-c4f.frag" "${DIR}/shaders/v3f-t2f-c4f.vert"

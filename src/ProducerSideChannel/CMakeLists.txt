@@ -13,4 +13,4 @@ target_include_directories(ProducerSideChannel INTERFACE ${CMAKE_CURRENT_SOURCE_
 
 target_link_libraries(ProducerSideChannel INTERFACE
         absl::str_format
-        CONAN_PKG::grpc)
+        grpc::grpc)

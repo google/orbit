@@ -16,7 +16,7 @@ target_link_libraries(QtUtils PUBLIC
   absl::synchronization
   absl::time
   Qt5::Core
-  GTest::GTest)
+  GTest::gtest)
 
 target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
                               include/QtUtils/CreateTimeout.h

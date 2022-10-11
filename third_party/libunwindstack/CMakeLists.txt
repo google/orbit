@@ -153,7 +153,7 @@ target_sources(libunwindstack_common PUBLIC
 target_include_directories(libunwindstack_common PUBLIC include/)
 target_compile_features(libunwindstack_common PUBLIC cxx_std_17)
 target_link_libraries(libunwindstack_common PRIVATE
-  CONAN_PKG::capstone
+  capstone::capstone
   libbase
   libprocinfo
   LZMA::LZMA)
@@ -177,7 +177,7 @@ add_library(libunwindstack STATIC
   LogStdout.cpp)
 
 target_link_libraries(libunwindstack PUBLIC
-  CONAN_PKG::capstone
+  capstone::capstone
   libbase
   libprocinfo
 
@@ -297,10 +297,10 @@ target_link_libraries(libunwindstack_tests PRIVATE
   liblog_shared
   libbase
   libprocinfo
-  CONAN_PKG::capstone
+  capstone::capstone
   LZMA::LZMA
-  CONAN_PKG::zlib
-  GTest::Main)
+  GTest::Main
+  ZLIB::ZLIB)
 
 target_include_directories(libunwindstack_tests PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}

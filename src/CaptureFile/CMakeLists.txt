@@ -35,7 +35,7 @@ target_link_libraries(
   PUBLIC OrbitBase
          GrpcProtos
          ClientProtos
-         CONAN_PKG::protobuf)
+         protobuf::protobuf)
 
 add_executable(CaptureFileTests)
 

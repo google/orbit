@@ -52,8 +52,8 @@ target_link_libraries(WindowsTracing PUBLIC
         absl::flat_hash_map
         absl::flat_hash_set
         absl::str_format
-        CONAN_PKG::grpc
-        CONAN_PKG::outcome)
+        grpc::grpc
+        outcome::outcome)
 
 add_executable(WindowsTracingTests)
 
@@ -63,7 +63,7 @@ target_sources(WindowsTracingTests PRIVATE
 
 target_link_libraries(WindowsTracingTests PRIVATE
         WindowsTracing
-        GTest::GTest
+        GTest::gtest
         GTest::Main)
 
 SET_TARGET_PROPERTIES(WindowsTracingTests PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
