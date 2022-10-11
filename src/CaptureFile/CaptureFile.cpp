@@ -15,6 +15,7 @@
 #include "CaptureFileConstants.h"
 #include "OrbitBase/Align.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "ProtoSectionInputStreamImpl.h"
@@ -68,6 +69,9 @@ class CaptureFileImpl : public CaptureFile {
   std::unique_ptr<ProtoSectionInputStream> CreateProtoSectionInputStream(
       uint64_t section_number) override;
 
+  ErrorMessageOr<uint64_t> AddAdditionalSectionOfType(uint64_t new_section_type,
+                                                      size_t new_section_size) override;
+
  private:
   // Parse header and validate version/file-format
   ErrorMessageOr<void> ReadHeader();
@@ -76,6 +80,13 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<void> WriteSectionList(const std::vector<CaptureFileSection>& section_list,
                                         uint64_t offset);
   [[nodiscard]] bool IsThereSectionWithOffsetAfterSectionList() const;
+  // Calculates where the current content of the file ends. This is the position where new data can
+  // be written without overriding existing content.
+  ErrorMessageOr<uint64_t> CalculateContentEnd() const;
+  // Returns success when capture file is valid, otherwise an error message. A capture file is valid
+  // if it contains at most one user data section that is the last section. And if there are no
+  // other sections behind the section list.
+  ErrorMessageOr<void> VerifyCaptureFileValid() const;
 
   std::filesystem::path file_path_;
   unique_fd fd_;
@@ -214,6 +225,12 @@ ErrorMessageOr<void> ValidateFileVersion(google::protobuf::io::CodedInputStream*
   return outcome::success();
 }
 
+// Calculates how large (bytes) a section list (with `number_of_sections` sections) is when written
+// to file.
+[[nodiscard]] uint64_t CalculateSectionListSizeInFile(const uint64_t number_of_sections) {
+  return sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
+}
+
 ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
   google::protobuf::io::FileInputStream raw_input{fd_.get()};
   google::protobuf::io::CodedInputStream coded_input{&raw_input};
@@ -289,8 +306,7 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
 
   uint64_t number_of_sections = section_list.size() + 1;
 
-  uint64_t section_list_size =
-      sizeof(number_of_sections) + number_of_sections * sizeof(CaptureFileSection);
+  uint64_t section_list_size = CalculateSectionListSizeInFile(number_of_sections);
 
   uint64_t user_data_section_offset =
       orbit_base::AlignUp<8>(section_list_offset + section_list_size);
@@ -429,6 +445,141 @@ ErrorMessageOr<void> CaptureFileImpl::WriteSectionList(
                                              number_of_sections * sizeof(CaptureFileSection),
                                              offset + sizeof(number_of_sections)));
   return outcome::success();
+}
+
+ErrorMessageOr<uint64_t> CaptureFileImpl::CalculateContentEnd() const {
+  // If no section list exists, the end of the file is used.
+  if (header_.section_list_offset == 0) {
+    return GetEndOfFileOffset(fd_);
+  }
+
+  // If a user data section exists, then it has to be the last section.
+  if (const std::optional<uint64_t> user_data_section_index =
+          FindSectionByType(kSectionTypeUserData);
+      user_data_section_index.has_value()) {
+    if (user_data_section_index.value() != (section_list_.size() - 1)) {
+      return ErrorMessage{
+          "Unable to calculate where the content of the capture file ends: The user data section "
+          "is not the last section."};
+    }
+    return section_list_.back().offset + section_list_.back().size;
+  }
+
+  // Otherwise the section list is the last thing in the capture file.
+
+  if (IsThereSectionWithOffsetAfterSectionList()) {
+    return ErrorMessage{
+        "Unable to calculate where the content of the capture file ends: The file contains a non "
+        "user data section after the section list."};
+  }
+
+  return header_.section_list_offset + CalculateSectionListSizeInFile(section_list_.size());
+}
+
+ErrorMessageOr<void> CaptureFileImpl::VerifyCaptureFileValid() const {
+  if (FindAllSectionsByType(kSectionTypeUserData).size() > 1) {
+    return ErrorMessage{
+        "Capture file is invalid, because it contains more than 1 user data section."};
+  }
+
+  if (const std::optional<uint64_t> user_data_section_index =
+          FindSectionByType(kSectionTypeUserData);
+      user_data_section_index.has_value()) {
+    if (user_data_section_index.value() != section_list_.size() - 1) {
+      return ErrorMessage{
+          "Capture file is invalid, because the user data section is not the last section."};
+    }
+  }
+
+  bool contains_non_user_data_section_after_section_list = std::any_of(
+      section_list_.begin(), section_list_.end(), [this](const CaptureFileSection& section) {
+        return section.type != kSectionTypeUserData && section.offset > header_.section_list_offset;
+      });
+  if (contains_non_user_data_section_after_section_list) {
+    return ErrorMessage{
+        "Capture file is invalid, because there are additional (non user data) sections after the "
+        "section list."};
+  }
+
+  return outcome::success();
+}
+
+ErrorMessageOr<uint64_t> CaptureFileImpl::AddAdditionalSectionOfType(uint64_t new_section_type,
+                                                                     size_t new_section_size) {
+  if (section_list_.size() == kMaxNumberOfSections) {
+    return ErrorMessage{
+        absl::StrFormat("Section list has reached its maximum size: %d", section_list_.size())};
+  }
+  if (new_section_type == kSectionTypeUserData) {
+    return ErrorMessage{"Cannot add a user data section as an additional (read only) section."};
+  }
+  OUTCOME_TRY(VerifyCaptureFileValid());
+
+  // 1. Copy section list (new_section_list) and append new_section
+  std::vector<CaptureFileSection> new_section_list = section_list_;
+
+  // The new section is placed where the section list is currently.
+  uint64_t new_section_offset = header_.section_list_offset;
+  if (new_section_offset == 0) {
+    // If no section list exists, the new section is placed at the end of the file.
+    OUTCOME_TRY(const uint64_t end_of_file_offset, GetEndOfFileOffset(fd_));
+    new_section_offset = orbit_base::AlignUp<8>(end_of_file_offset);
+  }
+
+  const CaptureFileSection new_section{new_section_type, new_section_offset, new_section_size};
+
+  // The new (added) section is put at the end of the section list
+  new_section_list.emplace_back(new_section);
+  uint64_t new_section_index = new_section_list.size() - 1;
+
+  // 1.1 If a user data section exists, it is swapped with the new_section, so its the last section.
+  if (const std::optional<uint64_t> user_data_section_index =
+          FindSectionByType(kSectionTypeUserData);
+      user_data_section_index.has_value()) {
+    std::swap(new_section_list[new_section_index],
+              new_section_list[user_data_section_index.value()]);
+    new_section_index = user_data_section_index.value();
+  }
+
+  // 2. Compute the new_section_list_offset, avoiding override of existing content.
+  const uint64_t new_section_end = new_section_offset + new_section_size;
+  OUTCOME_TRY(const uint64_t file_content_end, CalculateContentEnd());
+
+  const uint64_t new_section_list_offset =
+      orbit_base::AlignUp<8>(std::max(new_section_end, file_content_end));
+
+  // 3. Resize file to make space for the new_section_list.
+  const uint64_t new_section_list_end =
+      new_section_list_offset + CalculateSectionListSizeInFile(new_section_list.size());
+  OUTCOME_TRY(orbit_base::ResizeFile(file_path_, new_section_list_end));
+
+  // 3.3 If a user data section exists, copy behind the new section list.
+  if (FindSectionByType(kSectionTypeUserData).has_value()) {
+    CaptureFileSection& user_data_section = new_section_list.back();
+
+    const uint64_t new_user_data_section_offset = orbit_base::AlignUp<8>(new_section_list_end);
+
+    const uint64_t new_user_data_section_end =
+        new_user_data_section_offset + user_data_section.size;
+    OUTCOME_TRY(orbit_base::ResizeFile(file_path_, new_user_data_section_end));
+
+    std::vector<char> bytes(user_data_section.size);
+    OUTCOME_TRY(orbit_base::ReadFullyAtOffset(fd_, bytes.data(), user_data_section.size,
+                                              user_data_section.offset));
+    OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, bytes.data(), user_data_section.size,
+                                               new_user_data_section_offset));
+    user_data_section.offset = new_user_data_section_offset;
+  }
+
+  // 4. Write new section list and update pointer in header.
+  OUTCOME_TRY(WriteSectionList(new_section_list, new_section_list_offset));
+  OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, &new_section_list_offset,
+                                             sizeof(new_section_list_offset),
+                                             CaptureFileHeader::kSectionListOffsetFieldOffset));
+  header_.section_list_offset = new_section_list_offset;
+  section_list_ = new_section_list;
+
+  return new_section_index;
 }
 
 }  // namespace

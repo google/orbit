@@ -70,6 +70,17 @@ class CaptureFile {
 
   static ErrorMessageOr<std::unique_ptr<CaptureFile>> OpenForReadWrite(
       const std::filesystem::path& file_path);
+
+  // Adds an additional section to the capture file. The new section is placed behind existing
+  // additional sections. The updated section list is placed after the new section. If a user data
+  // section exists, it is copied to after the new section list.
+  // This function will return an error in the following cases:
+  // * section list is full (kMaxNumberOfSections)
+  // * the new section is a user data section (new_section_type == kSectionTypeUserData)
+  // * The capture file is invalid. A valid capture file has at most one user data section and there
+  // are no additional (non user data) sections located after the section list.
+  virtual ErrorMessageOr<uint64_t> AddAdditionalSectionOfType(uint64_t new_section_type,
+                                                              size_t new_section_size) = 0;
 };
 
 }  // namespace orbit_capture_file

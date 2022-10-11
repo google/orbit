@@ -19,6 +19,7 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
+#include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_file {
@@ -131,6 +132,39 @@ class CaptureFileTest : public CaptureFileHeaderTest {
               last_section_index);
 
     VerifySectionIsReadable(last_section_index, user_data_section_size);
+  }
+
+  void AddSectionOfTypeAndCheckInvariants(uint64_t section_type, uint64_t section_size) {
+    const uint64_t amount_sections_before = capture_file_->GetSectionList().size();
+    const uint64_t amount_sections_of_type_before =
+        capture_file_->FindAllSectionsByType(section_type).size();
+
+    const ErrorMessageOr<uint64_t> section_index_or_error =
+        capture_file_->AddAdditionalSectionOfType(section_type, section_size);
+    EXPECT_THAT(section_index_or_error, HasNoError());
+    const uint64_t section_index = section_index_or_error.value();
+
+    const uint64_t amount_sections_after = capture_file_->GetSectionList().size();
+    const uint64_t amount_sections_of_type_after =
+        capture_file_->FindAllSectionsByType(section_type).size();
+
+    // Size matches
+    ASSERT_LT(section_index, capture_file_->GetSectionList().size());
+    EXPECT_EQ(capture_file_->GetSectionList()[section_index].size, section_size);
+
+    // Exactly one section was added
+    EXPECT_EQ(amount_sections_after, amount_sections_before + 1);
+    EXPECT_EQ(amount_sections_of_type_after, amount_sections_of_type_before + 1);
+
+    // If the capture file has a user data section, then the new section is the last section,
+    // otherwise the second to last
+    if (capture_file_->FindSectionByType(kSectionTypeUserData).has_value()) {
+      EXPECT_EQ(section_index, amount_sections_after - 2);
+    } else {
+      EXPECT_EQ(section_index, amount_sections_after - 1);
+    }
+
+    VerifySectionIsReadable(section_index, section_size);
   }
 
  protected:
@@ -319,6 +353,80 @@ TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSectionListSizeTooLarge) {
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
   EXPECT_THAT(capture_file_or_error, HasError("The section list is too large"));
+}
+
+TEST_F(CaptureFileTest, AddSectionOfTypeNoUserDataSection) {
+  EXPECT_EQ(capture_file_->GetSectionList().size(), 0);
+
+  AddSectionOfTypeAndCheckInvariants(5, 10);
+  AddSectionOfTypeAndCheckInvariants(5, 200);
+
+  AddSectionOfTypeAndCheckInvariants(200, 10);
+  AddSectionOfTypeAndCheckInvariants(200, 100);
+
+  EXPECT_EQ(capture_file_->GetSectionList().size(), 4);
+}
+
+TEST_F(CaptureFileTest, AddSectionOfTypeContainsUserDataSection) {
+  EXPECT_EQ(capture_file_->GetSectionList().size(), 0);
+
+  std::string something{"something"};
+  const size_t something_size = something.size();
+
+  const ErrorMessageOr<uint64_t> user_data_index_or_error =
+      capture_file_->AddUserDataSection(something_size);
+  ASSERT_THAT(user_data_index_or_error, HasValue(0));
+  EXPECT_EQ(capture_file_->GetSectionList().size(), 1);
+
+  const ErrorMessageOr<void> write_result = capture_file_->WriteToSection(
+      user_data_index_or_error.value(), 0, something.data(), something_size);
+  EXPECT_THAT(write_result, HasNoError());
+
+  AddSectionOfTypeAndCheckInvariants(5, 10);
+  AddSectionOfTypeAndCheckInvariants(5, 100);
+
+  // open again
+  OpenTemporayFileAsCaptureFile();
+  EXPECT_EQ(capture_file_->GetSectionList().size(), 3);
+
+  VerifySingleUserDataSectionExistsAtEnd(something_size);
+
+  std::string read_data(something_size, '0');
+  const ErrorMessageOr<void> read_result =
+      capture_file_->ReadFromSection(2, 0, read_data.data(), something_size);
+  ASSERT_THAT(read_result, HasNoError());
+  EXPECT_EQ(something, read_data);
+}
+
+TEST_F(CaptureFileTest, CannotAddUserDataSectionAsAdditionalSection) {
+  EXPECT_THAT(capture_file_->AddAdditionalSectionOfType(kSectionTypeUserData, 50),
+              HasError("Cannot add a user data section as an additional (read only) section."));
+}
+
+TEST(CaptureFile, ModifyExisting) {
+  const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_capture.orbit";
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(path);
+  ASSERT_THAT(capture_file_or_error, HasValue());
+  auto capture_file = std::move(capture_file_or_error.value());
+
+  constexpr uint64_t kSectionType = 5;
+
+  uint64_t number_of_sections = capture_file->GetSectionList().size();
+  uint64_t number_of_type_sections = capture_file->FindAllSectionsByType(kSectionType).size();
+
+  ASSERT_THAT(capture_file->AddAdditionalSectionOfType(kSectionType, 1000), HasNoError());
+
+  EXPECT_EQ(capture_file->GetSectionList().size(), number_of_sections + 1);
+  EXPECT_EQ(capture_file->FindAllSectionsByType(kSectionType).size(), number_of_type_sections + 1);
+
+  // Reopen file, nothing changed
+  capture_file_or_error = CaptureFile::OpenForReadWrite(path);
+  ASSERT_THAT(capture_file_or_error, HasValue());
+  capture_file = std::move(capture_file_or_error.value());
+
+  EXPECT_EQ(capture_file->GetSectionList().size(), number_of_sections + 1);
+  EXPECT_EQ(capture_file->FindAllSectionsByType(kSectionType).size(), number_of_type_sections + 1);
 }
 
 }  // namespace orbit_capture_file
