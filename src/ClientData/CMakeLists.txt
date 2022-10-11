@@ -49,6 +49,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/TracepointEventInfo.h
         include/ClientData/TracepointInfo.h
         include/ClientData/UserDefinedCaptureData.h
+        include/ClientData/Utils.h
         include/ClientData/WineSyscallHandlingMethod.h)
 
 target_sources(ClientData PRIVATE
@@ -69,7 +70,7 @@ target_sources(ClientData PRIVATE
         ThreadTrackDataProvider.cpp
         TimerChain.cpp
         TimerData.cpp
-        TimerDataInterface.cpp
+        Utils.cpp
         TimerTrackDataIdManager.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
@@ -104,7 +105,7 @@ target_sources(ClientDataTests PRIVATE
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
         TimerDataTest.cpp
-        TimerDataInterfaceTest.cpp
+        UtilsTest.cpp
         TimerTrackDataIdManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
