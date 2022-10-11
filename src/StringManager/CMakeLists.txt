@@ -17,9 +17,11 @@ target_sources(
 
 target_include_directories(StringManager PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_link_libraries(
-  StringManager
-  PUBLIC OrbitBase)
+target_link_libraries(StringManager PUBLIC
+  OrbitBase
+  absl::flat_hash_map
+  absl::synchronization
+  absl::strings)
 
 add_executable(StringManagerTests)
 
@@ -29,7 +31,6 @@ target_sources(StringManagerTests PRIVATE
 target_link_libraries(
   StringManagerTests
   PRIVATE StringManager
-          GTest::Main
-          CONAN_PKG::abseil)
+          GTest::Main)
 
 register_test(StringManagerTests)

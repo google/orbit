@@ -14,7 +14,7 @@ target_include_directories(OrbitVersion PUBLIC
 target_sources(OrbitVersion PRIVATE 
         include/OrbitVersion/OrbitVersion.h)
 
-target_link_libraries(OrbitVersion PUBLIC CONAN_PKG::abseil)
+target_link_libraries(OrbitVersion PUBLIC absl::str_format)
 
 include("${CMAKE_SOURCE_DIR}/cmake/version.cmake")
 GenerateVersionFile("${CMAKE_CURRENT_BINARY_DIR}/OrbitVersion.cpp"

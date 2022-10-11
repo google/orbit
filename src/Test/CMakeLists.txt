@@ -21,7 +21,7 @@ endif()
 if(NOT TARGET GTest::QtGuiMain AND TARGET Qt5::Widgets)
   add_library(GTest_QtGuiMain OBJECT EXCLUDE_FROM_ALL test_qtgui_main.cpp Path.cpp)
   target_include_directories(GTest_QtGuiMain PUBLIC include/)
-  target_link_libraries(GTest_QtGuiMain PUBLIC OrbitBase GTest::GTest Qt5::Widgets CONAN_PKG::abseil)
+  target_link_libraries(GTest_QtGuiMain PUBLIC OrbitBase GTest::GTest Qt5::Widgets absl::strings)
   add_library(GTest::QtGuiMain ALIAS GTest_QtGuiMain)
 endif()
 

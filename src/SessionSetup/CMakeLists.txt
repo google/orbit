@@ -68,7 +68,10 @@ target_link_libraries(
           OrbitSsh
           OrbitSshQt
           QtUtils
-          CONAN_PKG::abseil
+          absl::flags
+          absl::flat_hash_map
+          absl::str_format
+          absl::strings
           CONAN_PKG::grpc
           Qt5::Widgets)
 

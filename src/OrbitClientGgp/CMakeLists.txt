@@ -34,6 +34,9 @@ project(OrbitClientGgp)
 add_executable(OrbitClientGgp main.cpp)
 
 target_link_libraries(OrbitClientGgp PRIVATE 
-    OrbitClientGgpLib)
+    OrbitClientGgpLib
+    absl::flags
+    absl::flags_parse
+    absl::flags_usage)
 
 strip_symbols(OrbitClientGgp)

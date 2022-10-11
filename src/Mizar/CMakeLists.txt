@@ -27,4 +27,6 @@ target_link_libraries(Mizar
         MizarWidgets
         OrbitBase
         Threads::Threads
+        absl::flags
+        absl::flags_parse
 )

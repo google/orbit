@@ -15,7 +15,10 @@ target_link_libraries(Orbit PRIVATE
         ClientFlags
         CommandLineUtils
         OrbitQt
-        Style)
+        Style
+        absl::flags
+        absl::flags_parse
+        absl::flags_usage)
 target_include_directories(Orbit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(WIN32)

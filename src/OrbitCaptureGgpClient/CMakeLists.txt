@@ -25,6 +25,7 @@ project(OrbitCaptureGgpClient)
 add_executable(OrbitCaptureGgpClient main.cpp)
 
 target_link_libraries(OrbitCaptureGgpClient PRIVATE 
-    OrbitCaptureGgpClientLib)
+    OrbitCaptureGgpClientLib
+    absl::flags_parse)
 
 strip_symbols(OrbitCaptureGgpClient)

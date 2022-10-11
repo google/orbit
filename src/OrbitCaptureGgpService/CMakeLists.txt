@@ -19,5 +19,8 @@ target_sources(OrbitCaptureGgpService PRIVATE
 target_link_libraries(OrbitCaptureGgpService PUBLIC
         GrpcProtos
         OrbitBase
-        OrbitClientGgpLib)
+        OrbitClientGgpLib
+        absl::flags
+        absl::flags_parse
+        absl::flags_usage)
 

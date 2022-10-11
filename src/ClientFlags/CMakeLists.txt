@@ -14,4 +14,4 @@ target_include_directories(ClientFlags PUBLIC
 
 target_compile_options(ClientFlags PRIVATE ${STRICT_COMPILE_FLAGS})
 target_compile_features(ClientFlags PUBLIC cxx_std_17)
-target_link_libraries(ClientFlags PUBLIC CONAN_PKG::abseil)
+target_link_libraries(ClientFlags PUBLIC absl::flags)
