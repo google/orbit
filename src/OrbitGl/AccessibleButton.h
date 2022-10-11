@@ -17,7 +17,7 @@ class AccessibleButton : public AccessibleCaptureViewElement {
         button_(button) {
     ORBIT_CHECK(button_ != nullptr);
   }
-  [[nodiscard]] std::string AccessibleName() const override { return button_->GetLabel(); }
+  [[nodiscard]] std::string AccessibleName() const override { return button_->GetName(); }
 
  private:
   const Button* button_;

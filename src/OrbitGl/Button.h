@@ -18,7 +18,7 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
  public:
   enum class SymbolType { kNoSymbol, kPlusSymbol, kMinusSymbol };
   explicit Button(CaptureViewElement* parent, const Viewport* viewport,
-                  const TimeGraphLayout* layout, std::string label = "",
+                  const TimeGraphLayout* layout, std::string name = "",
                   SymbolType symbol_type = SymbolType::kNoSymbol);
 
   [[nodiscard]] float GetHeight() const override { return height_; }
@@ -26,8 +26,7 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
 
   void SetHeight(float height);
 
-  void SetLabel(const std::string& label);
-  [[nodiscard]] const std::string& GetLabel() const { return label_; }
+  [[nodiscard]] const std::string& GetName() const { return name_; }
 
   using MouseReleaseCallback = std::function<void(Button*)>;
   void SetMouseReleaseCallback(MouseReleaseCallback callback);
@@ -47,7 +46,7 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
   CreateAccessibleInterface() override;
 
   float height_ = 0.f;
-  std::string label_;
+  std::string name_;
   SymbolType symbol_type_;
 
   MouseReleaseCallback mouse_release_callback_ = nullptr;
