@@ -705,22 +705,10 @@ class OrbitApp final : public DataViewFactory,
   // ONLY access this from the main thread.
   absl::flat_hash_map<std::string, ModuleDownloadOperation> symbol_files_currently_downloading_;
 
-  // Map of "module ID" (file path and build ID) to symbol file retrieving future, that holds all
-  // symbol retrieving operations currently in progress. (Retrieving here means finding locally or
-  // downloading from the instance). Since downloading a symbols file can be part of the retrieval,
-  // if a module ID is contained in symbol_files_currently_downloading_, it is also contained in
-  // symbol_files_currently_being_retrieved_.
-  // ONLY access this from the main thread.
-  absl::flat_hash_map<
-      orbit_symbol_provider::ModuleIdentifier,
-      orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>>
-      symbol_files_currently_being_retrieved_;
-
   // Map of "module ID" (file path and build ID) to symbol loading future, that holds all symbol
-  // loading operations that are currently in progress. Since retrieving and downloading a file can
-  // be part of the overall symbol loading process, if a module ID is contained in
-  // symbol_files_currently_being_retrieved_ or symbol_files_currently_downloading_, it is also
-  // contained in symbols_currently_loading_.
+  // loading operations that are currently in progress. Since downloading a file can be part of the
+  // overall symbol loading process, if a module ID is contained in
+  // symbol_files_currently_downloading_, it is also contained in symbols_currently_loading_.
   // ONLY access this from the main thread.
   absl::flat_hash_map<orbit_symbol_provider::ModuleIdentifier,
                       orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>>

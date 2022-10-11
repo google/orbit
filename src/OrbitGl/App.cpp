@@ -1993,11 +1993,6 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found.", module_id.file_path)}};
   }
 
-  const auto it = symbol_files_currently_being_retrieved_.find(module_id);
-  if (it != symbol_files_currently_being_retrieved_.end()) {
-    return it->second;
-  }
-
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_local_future =
       FindModuleLocally(module_data)
           .Then(main_thread_executor_,
@@ -2034,12 +2029,6 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
                 });
           }));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_remote_future);
-  retrieve_from_remote_future.Then(
-      main_thread_executor_,
-      [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_being_retrieved_.erase(module_id);
-      });
   return retrieve_from_remote_future;
 }
 
@@ -2322,11 +2311,6 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
-  const auto it = symbol_files_currently_being_retrieved_.find(module_id);
-  if (it != symbol_files_currently_being_retrieved_.end()) {
-    return it->second;
-  }
-
   // Note that the bullet points in the ErrorMessage constructed by this function are indented (by
   // one level). This is because the caller of this method integrates this ErrorMessage into an
   // ErrorMessage that also has bullet points (with no indentation, i.e., at top level).
@@ -2394,12 +2378,6 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::RetrieveModu
       orbit_base::UnwrapFuture(find_in_cache_or_locally_future.Then(
           main_thread_executor_, std::move(retrieve_from_instance)));
 
-  symbol_files_currently_being_retrieved_.emplace(module_id, retrieve_from_instance_future);
-  retrieve_from_instance_future.Then(
-      main_thread_executor_,
-      [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& /*result*/) {
-        symbol_files_currently_being_retrieved_.erase(module_id);
-      });
   return retrieve_from_instance_future;
 }
 
