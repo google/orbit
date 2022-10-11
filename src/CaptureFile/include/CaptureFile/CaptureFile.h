@@ -71,10 +71,10 @@ class CaptureFile {
   static ErrorMessageOr<std::unique_ptr<CaptureFile>> OpenForReadWrite(
       const std::filesystem::path& file_path);
 
-  // Adds an additional section to the capture file. The new section is placed behind existing
-  // additional sections. The updated section list is placed after the new section. If a user data
-  // section exists, it is copied to after the new section list.
-  // This function will return an error in the following cases:
+  // Adds an additional section to the capture file and returns the index of the added section. The
+  // new section is placed behind existing additional sections. The updated section list is placed
+  // after the new section. If a user data section exists, it is copied to after the new section
+  // list. This function will return an error in the following cases:
   // * section list is full (kMaxNumberOfSections)
   // * the new section is a user data section (new_section_type == kSectionTypeUserData)
   // * The capture file is invalid. A valid capture file has at most one user data section and there
