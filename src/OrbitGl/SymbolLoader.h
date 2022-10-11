@@ -50,7 +50,7 @@ class SymbolLoader {
                                     const orbit_grpc_protos::ModuleSymbols& fallback_symbols) = 0;
   };
 
-  SymbolLoader(SymbolLoader::AppInterface* app_interface, std::thread::id main_thread_id,
+  SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
                orbit_base::ThreadPool* thread_pool,
                orbit_base::MainThreadExecutor* main_thread_executor,
                orbit_client_services::ProcessManager* process_manager,
@@ -102,7 +102,7 @@ class SymbolLoader {
   RetrieveModuleFromInstance(const std::string& module_file_path, orbit_base::StopToken stop_token);
 
   // RetrieveModuleItselfAndLoadFallbackSymbols retrieves the module's binary by calling
-  // `RetrieveModuleItself` and afterwards load the fallback symbols by calling
+  // `RetrieveModuleItself` and afterwards loads the fallback symbols by calling
   // `LoadFallbackSymbols`.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
   RetrieveModuleItselfAndLoadFallbackSymbols(
@@ -120,7 +120,7 @@ class SymbolLoader {
       const std::filesystem::path& object_path,
       const orbit_symbol_provider::ModuleIdentifier& module_id);
 
-  SymbolLoader::AppInterface* app_interface_;
+  AppInterface* app_interface_;
   std::thread::id main_thread_id_;
   orbit_base::ThreadPool* thread_pool_;
   orbit_base::MainThreadExecutor* main_thread_executor_;

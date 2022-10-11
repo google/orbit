@@ -36,8 +36,8 @@ using orbit_symbol_provider::SymbolLoadingOutcome;
 
 namespace orbit_gl {
 
-SymbolLoader::SymbolLoader(SymbolLoader::AppInterface* app_interface,
-                           std::thread::id main_thread_id, orbit_base::ThreadPool* thread_pool,
+SymbolLoader::SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
+                           orbit_base::ThreadPool* thread_pool,
                            orbit_base::MainThreadExecutor* main_thread_executor,
                            orbit_client_services::ProcessManager* process_manager,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader)
