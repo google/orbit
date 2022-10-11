@@ -93,13 +93,15 @@
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "StringManager/StringManager.h"
+#include "SymbolLoader.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::AbstractCaptureListener<OrbitApp>,
                        public orbit_data_views::AppInterface,
-                       public orbit_capture_client::CaptureControlInterface {
+                       public orbit_capture_client::CaptureControlInterface,
+                       public orbit_gl::SymbolLoader::AppInterface {
   using ScopeId = orbit_client_data::ScopeId;
 
  public:
@@ -317,8 +319,8 @@ class OrbitApp final : public DataViewFactory,
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(
       orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll);
-  void Refresh(orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll) {
-    FireRefreshCallbacks(type);
+  void OnModuleListUpdated() override {
+    FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   }
   using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
@@ -338,10 +340,6 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
-  // This method is pretty similar to `RetrieveModuleSymbols`, but it also requires debug
-  // information to be present.
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      const orbit_client_data::ModuleData* module);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const orbit_symbol_provider::ModuleIdentifier& module_id);
 
@@ -382,12 +380,6 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_data_views::DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] orbit_string_manager::StringManager* GetStringManager() { return &string_manager_; }
-  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
-    return process_manager_;
-  }
-  [[nodiscard]] orbit_base::MainThreadExecutor* GetMainThreadExecutor() {
-    return main_thread_executor_;
-  }
   [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
     return process_;
@@ -532,15 +524,24 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
+  [[nodiscard]] bool IsConnected() const override { return main_window_->IsConnected(); }
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
+      std::filesystem::path path_on_instance, std::filesystem::path local_path,
+      orbit_base::StopToken stop_token) override;
+  void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
+                  const orbit_grpc_protos::ModuleSymbols& module_symbols) override;
+  void AddFallbackSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
+                          const orbit_grpc_protos::ModuleSymbols& fallback_symbols) override;
+
   [[nodiscard]] bool IsModuleDownloading(
       const orbit_client_data::ModuleData* module) const override;
   [[nodiscard]] orbit_data_views::SymbolLoadingState GetSymbolLoadingStateForModule(
       const orbit_client_data::ModuleData* module) const override;
-
   [[nodiscard]] bool IsSymbolLoadingInProgressForModule(
       const orbit_client_data::ModuleData* module) const override;
   void RequestSymbolDownloadStop(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
+  void DisableDownloadForModule(const std::string& module_file_path);
 
   // Triggers symbol loading for all modules in ModuleManager that are not loaded yet. This is done
   // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
@@ -573,52 +574,6 @@ class OrbitApp final : public DataViewFactory,
   // RetrieveModuleAndLoadSymbolsAndHandleError).
   orbit_base::Future<SymbolLoadingAndErrorHandlingResult>
   RetrieveModuleAndLoadSymbolsAndHandleError(const orbit_client_data::ModuleData* module);
-  // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
-  // `RetrieveModuleSymbolsAndLoadSymbols`. If this fails, it falls back on
-  // `RetrieveModuleItselfAndLoadFallbackSymbols`.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
-      const orbit_client_data::ModuleData* module_data);
-  // RetrieveModuleSymbolsAndLoadSymbols retrieves the module symbols by calling
-  // `RetrieveModuleSymbols` and afterwards loads the symbols by calling `LoadSymbols`.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
-  RetrieveModuleSymbolsAndLoadSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id);
-  // RetrieveModuleSymbols retrieves a module file and returns the local file path (potentially from
-  // the local cache). Only modules with a .symtab section will be considered.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id);
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> FindModuleLocally(
-      const orbit_client_data::ModuleData* module_data);
-  // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
-  // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
-  void InitRemoteSymbolProviders();
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromRemote(const orbit_symbol_provider::ModuleIdentifier& module_id);
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromInstance(const std::string& module_file_path, orbit_base::StopToken stop_token);
-
-  // RetrieveModuleItselfAndLoadFallbackSymbols retrieves the module's binary by calling
-  // `RetrieveModuleItself` and afterwards load the fallback symbols by calling
-  // `LoadFallbackSymbols`.
-  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
-  RetrieveModuleItselfAndLoadFallbackSymbols(
-      const orbit_symbol_provider::ModuleIdentifier& module_id, uint64_t module_file_size);
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleItself(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                       uint64_t module_file_size);
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleItselfFromInstance(const orbit_symbol_provider::ModuleIdentifier& module_id);
-
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
-      const std::filesystem::path& symbols_path,
-      const orbit_symbol_provider::ModuleIdentifier& module_id);
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> LoadFallbackSymbols(
-      const std::filesystem::path& object_path,
-      const orbit_symbol_provider::ModuleIdentifier& module_id);
-
-  void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                  const orbit_grpc_protos::ModuleSymbols& module_symbols);
-  void AddFallbackSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
-                          const orbit_grpc_protos::ModuleSymbols& fallback_symbols);
 
   void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
                                  bool show_dialog);
@@ -696,33 +651,6 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  struct ModuleDownloadOperation {
-    orbit_base::StopSource stop_source;
-    orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> future;
-  };
-  // Map of module file path to download operation future, that holds all symbol downloads that
-  // are currently in progress.
-  // ONLY access this from the main thread.
-  absl::flat_hash_map<std::string, ModuleDownloadOperation> symbol_files_currently_downloading_;
-
-  // Map of "module ID" (file path and build ID) to symbol loading future, that holds all symbol
-  // loading operations that are currently in progress. Since downloading a file can be part of the
-  // overall symbol loading process, if a module ID is contained in
-  // symbol_files_currently_downloading_, it is also contained in symbols_currently_loading_.
-  // ONLY access this from the main thread.
-  absl::flat_hash_map<orbit_symbol_provider::ModuleIdentifier,
-                      orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>>
-      symbols_currently_loading_;
-
-  // Set of modules where a symbol loading error has occurred. The module identifier consists of
-  // file path and build ID.
-  // ONLY access this from the main thread.
-  absl::flat_hash_set<orbit_symbol_provider::ModuleIdentifier> modules_with_symbol_loading_error_;
-
-  // Set of modules for which the download is disabled.
-  // ONLY access this from the main thread.
-  absl::flat_hash_set<std::string> download_disabled_modules_;
-
   // A boolean information about if the default Frame Track was added in the current session.
   bool default_frame_track_was_added_ = false;
 
@@ -739,8 +667,6 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_client_data::DataManager> data_manager_;
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
-
-  const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
 
   orbit_client_data::ProcessData* process_ = nullptr;
 
@@ -762,17 +688,9 @@ class OrbitApp final : public DataViewFactory,
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
 
+  std::optional<orbit_gl::SymbolLoader> symbol_loader_;
   static constexpr std::chrono::milliseconds kMaxPostProcessingInterval{1000};
   orbit_qt_utils::Throttle update_after_symbol_loading_throttle_{kMaxPostProcessingInterval};
-
-  // TODO(b/243520787) The following is temporary. The SymbolProvider related logic SHOULD be moved
-  // to the ProxySymbolProvider as planned in our symbol refactoring discussion in b/243520787.
-  std::optional<orbit_http::HttpDownloadManager> download_manager_;
-  std::unique_ptr<orbit_ggp::Client> ggp_client_;
-  std::optional<orbit_remote_symbol_provider::StadiaSymbolStoreSymbolProvider>
-      stadia_symbol_provider_ = std::nullopt;
-  std::optional<orbit_remote_symbol_provider::MicrosoftSymbolServerSymbolProvider>
-      microsoft_symbol_provider_ = std::nullopt;
 };
 
 #endif  // ORBIT_GL_APP_H_
