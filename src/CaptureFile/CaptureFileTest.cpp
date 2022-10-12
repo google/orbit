@@ -403,10 +403,13 @@ TEST_F(CaptureFileTest, CannotAddUserDataSectionAsAdditionalSection) {
               HasError("Cannot add a user data section as an additional (read only) section."));
 }
 
-TEST(CaptureFile, ModifyExisting) {
+TEST_F(CaptureFileHeaderTest, ModifyExisting) {
   const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_capture.orbit";
 
-  auto capture_file_or_error = CaptureFile::OpenForReadWrite(path);
+  temporary_file_->CloseAndRemove();
+  std::filesystem::copy(path, temporary_file_->file_path());
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
   ASSERT_THAT(capture_file_or_error, HasValue());
   auto capture_file = std::move(capture_file_or_error.value());
 
@@ -421,7 +424,7 @@ TEST(CaptureFile, ModifyExisting) {
   EXPECT_EQ(capture_file->FindAllSectionsByType(kSectionType).size(), number_of_type_sections + 1);
 
   // Reopen file, nothing changed
-  capture_file_or_error = CaptureFile::OpenForReadWrite(path);
+  capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
   ASSERT_THAT(capture_file_or_error, HasValue());
   capture_file = std::move(capture_file_or_error.value());
 
