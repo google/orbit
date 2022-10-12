@@ -87,6 +87,10 @@ class CaptureFileImpl : public CaptureFile {
   // if it contains at most one user data section that is the last section. And if there are no
   // other sections behind the section list.
   ErrorMessageOr<void> VerifyCaptureFileValid() const;
+  // Returns true if file contains exactly 1 user data section that is the last section. Returns
+  // false it file does not contain a user data section. Returns an error if file contains more than
+  // one user data section, or if the one user data section is not the last section.
+  ErrorMessageOr<bool> ContainsValidUserDataSection() const;
 
   std::filesystem::path file_path_;
   unique_fd fd_;
@@ -278,16 +282,14 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
         absl::StrFormat("Section list has reached its maximum size: %d", section_list_.size())};
   }
 
+  // If there is already a user-data section return an error
+  OUTCOME_TRY(const bool contains_user_data_section, ContainsValidUserDataSection());
+  if (contains_user_data_section) {
+    return ErrorMessage{"Cannot add USER_DATA section, file already contains a user data section"};
+  }
+
   // Take a copy of section list
   auto section_list = section_list_;
-
-  // If there is already a user-data section return an error
-  for (const auto& section : section_list) {
-    if (section.type == kSectionTypeUserData) {
-      return ErrorMessage{absl::StrFormat(
-          "Cannot add USER_DATA section - there is already one at offset %#x", section.offset)};
-    }
-  }
 
   // If there are additional sections, the section list needs to be the last section, so it can be
   // amended.
@@ -453,15 +455,9 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::CalculateContentEnd() const {
     return GetEndOfFileOffset(fd_);
   }
 
-  // If a user data section exists, then it has to be the last section.
-  if (const std::optional<uint64_t> user_data_section_index =
-          FindSectionByType(kSectionTypeUserData);
-      user_data_section_index.has_value()) {
-    if (user_data_section_index.value() != (section_list_.size() - 1)) {
-      return ErrorMessage{
-          "Unable to calculate where the content of the capture file ends: The user data section "
-          "is not the last section."};
-    }
+  OUTCOME_TRY(const bool contains_user_data_section, ContainsValidUserDataSection());
+
+  if (contains_user_data_section) {
     return section_list_.back().offset + section_list_.back().size;
   }
 
@@ -477,21 +473,9 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::CalculateContentEnd() const {
 }
 
 ErrorMessageOr<void> CaptureFileImpl::VerifyCaptureFileValid() const {
-  if (FindAllSectionsByType(kSectionTypeUserData).size() > 1) {
-    return ErrorMessage{
-        "Capture file is invalid, because it contains more than 1 user data section."};
-  }
+  OUTCOME_TRY(ContainsValidUserDataSection());
 
-  if (const std::optional<uint64_t> user_data_section_index =
-          FindSectionByType(kSectionTypeUserData);
-      user_data_section_index.has_value()) {
-    if (user_data_section_index.value() != section_list_.size() - 1) {
-      return ErrorMessage{
-          "Capture file is invalid, because the user data section is not the last section."};
-    }
-  }
-
-  bool contains_non_user_data_section_after_section_list = std::any_of(
+  const bool contains_non_user_data_section_after_section_list = std::any_of(
       section_list_.begin(), section_list_.end(), [this](const CaptureFileSection& section) {
         return section.type != kSectionTypeUserData && section.offset > header_.section_list_offset;
       });
@@ -502,6 +486,25 @@ ErrorMessageOr<void> CaptureFileImpl::VerifyCaptureFileValid() const {
   }
 
   return outcome::success();
+}
+
+ErrorMessageOr<bool> CaptureFileImpl::ContainsValidUserDataSection() const {
+  if (!FindSectionByType(kSectionTypeUserData).has_value()) {
+    return false;
+  }
+  if (FindAllSectionsByType(kSectionTypeUserData).size() > 1) {
+    return ErrorMessage{
+        "Capture file is invalid, because it contains more than 1 user data section."};
+  }
+
+  // File contains exactly one user data section.
+
+  if (section_list_.back().type != kSectionTypeUserData) {
+    return ErrorMessage{
+        "Capture file is invalid, because the user data section is not the last section."};
+  }
+
+  return true;
 }
 
 ErrorMessageOr<uint64_t> CaptureFileImpl::AddAdditionalSectionOfType(uint64_t new_section_type,
