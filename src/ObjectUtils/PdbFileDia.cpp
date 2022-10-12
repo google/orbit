@@ -135,7 +135,7 @@ ErrorMessageOr<void> ForEachSymbolWithSymTag(const enum SymTagEnum& sym_tag,
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
     CComPtr<IDiaSymbol> dia_symbol_com_ptr = dia_symbol;
-    std::invoke(std::forward<Consumer>(consumer), dia_symbol);
+    std::invoke(consumer, dia_symbol);
   }
 
   return outcome::success();

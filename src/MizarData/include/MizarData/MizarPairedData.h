@@ -127,7 +127,7 @@ class MizarPairedDataTmpl {
       const orbit_client_data::CallstackInfo* callstack =
           GetCallstackData().GetCallstack(event.callstack_id());
       const std::vector<SFID> sfids = CallstackWithSFIDs(callstack);
-      std::invoke(std::forward<Action>(action), sfids);
+      std::invoke(action, sfids);
     };
 
     const auto [min_timestamp_ns, max_timestamp_ns] =
