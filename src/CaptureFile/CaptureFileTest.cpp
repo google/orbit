@@ -114,10 +114,9 @@ class CaptureFileTest : public CaptureFileHeaderTest {
 
   void VerifySectionIsReadable(uint64_t section_index, size_t section_size) {
     EXPECT_EQ(capture_file_->GetSectionList()[section_index].size, section_size);
-    std::vector<char> data;
-    data.reserve(section_size);
+    auto data = make_unique_for_overwrite<uint8_t[]>(section_size);
     const ErrorMessageOr<void> read_result =
-        capture_file_->ReadFromSection(section_index, 0, data.data(), section_size);
+        capture_file_->ReadFromSection(section_index, 0, data.get(), section_size);
     EXPECT_THAT(read_result, HasNoError());
   }
 
