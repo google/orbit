@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_UTILS_H_
-#define CLIENT_DATA_UTILS_H_
+#ifndef CLIENT_DATA_FAST_RENDERING_UTILS_H_
+#define CLIENT_DATA_FAST_RENDERING_UTILS_H_
 
 namespace orbit_client_data {
 
@@ -16,4 +16,4 @@ namespace orbit_client_data {
 
 }  // namespace orbit_client_data
 
-#endif  // CLIENT_DATA_UTILS_H_
+#endif  // CLIENT_DATA_FAST_RENDERING_UTILS_H_

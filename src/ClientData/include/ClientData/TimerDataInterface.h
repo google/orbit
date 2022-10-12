@@ -6,8 +6,8 @@
 #define CLIENT_DATA_TIMER_DATA_INTERFACE_H_
 
 #include "ClientProtos/capture_data.pb.h"
+#include "FastRenderingUtils.h"
 #include "TimerChain.h"
-#include "Utils.h"
 
 namespace orbit_client_data {
 
