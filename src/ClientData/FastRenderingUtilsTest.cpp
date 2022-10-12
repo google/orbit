@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "ClientData/TimerDataInterface.h"
+#include "ClientData/FastRenderingUtils.h"
 
 namespace orbit_client_data {
 

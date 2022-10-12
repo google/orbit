@@ -21,6 +21,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/CaptureData.h
         include/ClientData/CaptureDataHolder.h
         include/ClientData/DataManager.h
+        include/ClientData/FastRenderingUtils.h
         include/ClientData/FunctionInfo.h
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/MockScopeIdProvider.h
@@ -56,6 +57,7 @@ target_sources(ClientData PRIVATE
         CallstackType.cpp
         CaptureData.cpp
         DataManager.cpp
+        FastRenderingUtils.cpp
         FunctionInfo.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
@@ -69,7 +71,6 @@ target_sources(ClientData PRIVATE
         ThreadTrackDataProvider.cpp
         TimerChain.cpp
         TimerData.cpp
-        TimerDataInterface.cpp
         TimerTrackDataIdManager.cpp
         TimestampIntervalSet.cpp
         TracepointData.cpp
@@ -92,6 +93,7 @@ target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         CaptureDataTest.cpp
         DataManagerTest.cpp
+        FastRenderingUtilsTest.cpp
         FunctionInfoTest.cpp
         ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
@@ -104,7 +106,6 @@ target_sources(ClientDataTests PRIVATE
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
         TimerDataTest.cpp
-        TimerDataInterfaceTest.cpp
         TimerTrackDataIdManagerTest.cpp
         TimestampIntervalSetTest.cpp
         TracepointDataTest.cpp
