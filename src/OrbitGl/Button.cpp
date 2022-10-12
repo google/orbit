@@ -29,9 +29,9 @@ constexpr float kGradientFactor = 0.25f;
 namespace orbit_gl {
 
 Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout,
-               std::string label, SymbolType symbol_type)
+               std::string name, SymbolType symbol_type)
     : CaptureViewElement(parent, viewport, layout),
-      label_(std::move(label)),
+      name_(std::move(name)),
       symbol_type_{symbol_type} {
   SetWidth(layout->GetMinButtonSize());
   SetHeight(layout->GetMinButtonSize());
@@ -54,13 +54,6 @@ void Button::SetHeight(float height) {
 
   height_ = height;
   RequestUpdate();
-}
-
-void Button::SetLabel(const std::string& label) {
-  if (label_ == label) return;
-
-  label_ = label;
-  RequestUpdate(RequestUpdateScope::kDraw);
 }
 
 void Button::SetMouseReleaseCallback(MouseReleaseCallback callback) {

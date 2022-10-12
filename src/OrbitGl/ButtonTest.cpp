@@ -64,19 +64,13 @@ TEST(Button, SizeCannotBeZero) {
   EXPECT_EQ(button->GetHeight(), tester.GetLayout()->GetMinButtonSize());
 }
 
-TEST(Button, LabelWorksAsExpected) {
+TEST(Button, NameWorksAsExpected) {
   orbit_gl::CaptureViewElementTester tester;
+  const std::string kName = "UnitTest";
   std::shared_ptr<Button> button =
-      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout(), kName);
 
-  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, true);
-
-  const std::string kLabel = "UnitTest";
-  button->SetLabel(kLabel);
-
-  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, false);
-
-  EXPECT_EQ(button->GetLabel(), kLabel);
+  EXPECT_EQ(button->GetName(), kName);
 }
 
 TEST(Button, MouseReleaseCallback) {
@@ -113,7 +107,6 @@ TEST(Button, Rendering) {
   std::shared_ptr<Button> button =
       std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
-  button->SetLabel("Test");
   const Vec2 kSize(400, 50);
   const Vec2 kPos(10, 10);
   button->SetWidth(kSize[0]);
