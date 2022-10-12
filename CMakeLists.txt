@@ -56,7 +56,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
                       -Werror=old-style-cast
                       -Werror=unused-parameter
                       -Werror=unused-variable
-                      -Werror=sign-compare)
+                      -Werror=sign-compare
+                      # These seem to be buggy in GCC 11 and 12:
+                      -Wno-maybe-uninitialized
+                      -Wno-uninitialized
+                      -Wno-stringop-overflow)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
