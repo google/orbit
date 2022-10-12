@@ -63,6 +63,7 @@ target_sources(
          SchedulingStats.h
          ShortenStringWithEllipsis.h
          SimpleTimings.h
+         SymbolLoader.h
          SystemMemoryTrack.h
          TextRenderer.h
          TextRendererInterface.h
@@ -136,6 +137,7 @@ target_sources(
           SchedulerTrack.cpp
           SchedulingStats.cpp
           SimpleTimings.cpp
+          SymbolLoader.cpp
           SystemMemoryTrack.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp

@@ -75,7 +75,8 @@ ModuleSymbolFileMappings QSettingsBasedStorageManager::LoadModuleSymbolFileMappi
   return mappings;
 }
 
-void QSettingsBasedStorageManager::SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) {
+void QSettingsBasedStorageManager::SaveDisabledModulePaths(
+    const absl::flat_hash_set<std::string>& paths) {
   settings_.beginWriteArray(kDisabledModulesKey, static_cast<int>(paths.size()));
   int index = 0;
   for (const auto& path : paths) {

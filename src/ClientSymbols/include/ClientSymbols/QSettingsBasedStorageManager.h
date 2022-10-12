@@ -29,7 +29,7 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   [[nodiscard]] std::vector<std::filesystem::path> LoadPaths() override;
   void SaveModuleSymbolFileMappings(const ModuleSymbolFileMappings& mappings) override;
   [[nodiscard]] ModuleSymbolFileMappings LoadModuleSymbolFileMappings() override;
-  void SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) override;
+  void SaveDisabledModulePaths(const absl::flat_hash_set<std::string>& paths) override;
   [[nodiscard]] absl::flat_hash_set<std::string> LoadDisabledModulePaths() override;
 
   void SaveEnableStadiaSymbolStore(bool enable_stadia_symbol_store) override;

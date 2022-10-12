@@ -31,7 +31,7 @@ class PersistentStorageManager {
   virtual void SaveModuleSymbolFileMappings(const ModuleSymbolFileMappings& mappings) = 0;
   [[nodiscard]] virtual ModuleSymbolFileMappings LoadModuleSymbolFileMappings() = 0;
 
-  virtual void SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) = 0;
+  virtual void SaveDisabledModulePaths(const absl::flat_hash_set<std::string>& paths) = 0;
   [[nodiscard]] virtual absl::flat_hash_set<std::string> LoadDisabledModulePaths() = 0;
 
   // Symbol store related settings.
