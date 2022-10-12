@@ -18,7 +18,7 @@ using AbsoluteAddress = orbit_base::Typedef<AbsoluteAddressTag, const uint64_t>;
 template <typename Action>
 inline void ForEachFrame(const std::vector<uint64_t>& frames, Action&& action) {
   for (const uint64_t raw_address : frames) {
-    std::invoke(std::forward<Action>(action), AbsoluteAddress(raw_address));
+    std::invoke(action, AbsoluteAddress(raw_address));
   }
 }
 
