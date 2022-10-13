@@ -8,7 +8,9 @@ The key differentiator with many existing tools is that no alteration to the tar
 
 Orbit combines sampling and dynamic instrumentation to optimize the profiling workflow. Sampling can quickly identify interesting functions to instrument. Dynamic instrumentation results in exact function entry and exit information which is presented in the form of per-thread hierarchical call graphs.  Scheduling events are also shown to visualize when a thread was running and on what core.
 
-![ORBIT in action screenshot](logos/screenshot.png)
+An introduction to Orbit's key features can be found in the following YouTube
+video:
+[![IMAGE ALT TEXT HERE][orbit_youtube_presentation]](https://www.youtube.com/watch?v=8V-EPBPGZPs)
 
 ## Features
 
@@ -85,3 +87,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
+
+[orbit_youtube_presentation]: logos/orbit_presentation_youtube.png
