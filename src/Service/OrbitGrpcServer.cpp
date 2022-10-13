@@ -4,7 +4,6 @@
 
 #include "OrbitGrpcServer.h"
 
-#include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/security/server_credentials.h>
@@ -67,7 +66,6 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
 
 bool OrbitGrpcServerImpl::Init(std::string_view server_address, bool dev_mode) {
   grpc::EnableDefaultHealthCheckService(true);
-  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
   grpc::ServerBuilder builder;
 

@@ -5,7 +5,6 @@
 #include "OrbitCaptureGgpService.h"
 
 #include <absl/strings/str_format.h>
-#include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/security/server_credentials.h>
@@ -26,7 +25,6 @@ void OrbitCaptureGgpService::RunServer() {
   CaptureClientGgpServiceImpl ggp_capture_service;
 
   grpc::EnableDefaultHealthCheckService(true);
-  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
   ORBIT_LOG("Starting gRPC capture ggp server at %s", server_address);
   ServerBuilder builder;
