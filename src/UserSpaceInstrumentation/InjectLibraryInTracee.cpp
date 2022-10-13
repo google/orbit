@@ -9,6 +9,7 @@
 #include <absl/types/span.h>
 
 #include <cstring>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,7 @@
 #include "FindFunctionAddress.h"
 #include "MachineCode.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -35,6 +37,9 @@ struct FunctionLocatorView {
   std::string_view module_name;
   std::string_view function_name;
 };
+
+constexpr FunctionLocatorView kDlmopenInLibdl{kLibdlSoname, "dlmopen"};
+constexpr FunctionLocatorView kDlmopenInLibc{kLibcSoname, "dlmopen"};
 
 constexpr FunctionLocatorView kDlopenInLibdl{kLibdlSoname, "dlopen"};
 constexpr FunctionLocatorView kDlopenInLibc{kLibcSoname, "dlopen"};
@@ -94,10 +99,20 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
     return ErrorMessage(absl::StrFormat("Library does not exist at \"%s\"", path));
   }
 
-  // Figure out address of dlopen.
-  OUTCOME_TRY(auto&& dlopen_address,
-              FindFunctionAddressWithFallback(
-                  modules, {kDlopenInLibdl, kDlopenInLibc, kDlopenFallbackInLibc}));
+  // We will first look for dlmopen. If that function is not available we will fall back to dlopen.
+  // Both are handled in separate calls to FindFunctionAddressWithFallback because they have
+  // different function signatures.
+  ErrorMessageOr<uint64_t> dlmopen_address_or_error =
+      FindFunctionAddressWithFallback(modules, {kDlmopenInLibdl, kDlmopenInLibc});
+
+  std::optional<uint64_t> potentially_dlopen_address{};
+
+  if (!dlmopen_address_or_error.has_value()) {
+    // Figure out address of dlopen.
+    OUTCOME_TRY(potentially_dlopen_address,
+                FindFunctionAddressWithFallback(
+                    modules, {kDlopenInLibdl, kDlopenInLibc, kDlopenFallbackInLibc}));
+  }
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -111,37 +126,64 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 
   // Write the name of the .so into memory at code_memory with offset of kCodeScratchPadSize.
   std::vector<uint8_t> path_as_vector(path_length);
-  memcpy(path_as_vector.data(), path.c_str(), path_length);
+  std::memcpy(path_as_vector.data(), path.c_str(), path_length);
   const uint64_t so_path_address = code_memory->GetAddress() + kCodeScratchPadSize;
-  auto write_memory_result = WriteTraceesMemory(pid, so_path_address, path_as_vector);
-  if (write_memory_result.has_error()) {
-    return write_memory_result.error();
+  OUTCOME_TRY(WriteTraceesMemory(pid, so_path_address, path_as_vector));
+
+  MachineCode code{};
+
+  if (dlmopen_address_or_error.has_value()) {
+    constexpr Lmid_t kLmid = LM_ID_NEWLM;
+
+    // We want to do the following in the tracee:
+    // return_value = dlmopen(lmid, path, flag)
+    // The calling convention is to put the parameters in registers rdi, rsi, and rdx.
+    // So the lmid goes to rdi, the address of the file path goes to rsi, and the flag argument
+    // goes into rcx. Then we load
+    // the address of dlmopen into rax and do the call. Assembly in Intel syntax (destination
+    // first), machine code on the right:
+
+    // movabs rdi, lmid                 48 bf lmid
+    // movabsq rsi, so_path_address     48 be so_path_address
+    // movl edx, flag                   ba flag
+    // movabsq rax, dlopen_address      48 b8 dlopen_address
+    // call rax                         ff d0
+    // int3                             cc
+    code.AppendBytes({0x48, 0xbf})
+        .AppendImmediate64(kLmid)
+        .AppendBytes({0x48, 0xbe})
+        .AppendImmediate64(so_path_address)
+        .AppendBytes({0xba})
+        .AppendImmediate32(flag)
+        .AppendBytes({0x48, 0xb8})
+        .AppendImmediate64(dlmopen_address_or_error.value())
+        .AppendBytes({0xff, 0xd0})
+        .AppendBytes({0xcc});
+
+  } else {
+    // We want to do the following in the tracee:
+    // return_value = dlopen(path, flag);
+    // The calling convention is to put the parameters in registers rdi and rsi.
+    // So the address of the file path goes to rdi. The flag argument goes into rsi. Then we load
+    // the address of dlopen into rax and do the call. Assembly in Intel syntax (destination first),
+    // machine code on the right:
+
+    // movabsq rdi, so_path_address     48 bf so_path_address
+    // movl esi, flag                   be flag
+    // movabsq rax, dlopen_address      48 b8 dlopen_address
+    // call rax                         ff d0
+    // int3                             cc
+    code.AppendBytes({0x48, 0xbf})
+        .AppendImmediate64(so_path_address)
+        .AppendBytes({0xbe})
+        .AppendImmediate32(flag)
+        .AppendBytes({0x48, 0xb8})
+        .AppendImmediate64(potentially_dlopen_address.value())
+        .AppendBytes({0xff, 0xd0})
+        .AppendBytes({0xcc});
   }
 
-  // We want to do the following in the tracee:
-  // return_value = dlopen(path, flag);
-  // The calling convention is to put the parameters in registers rdi and rsi.
-  // So the address of the file path goes to rdi. The flag argument goes into rsi. Then we load the
-  // address of dlopen into rax and do the call. Assembly in Intel syntax (destination first),
-  // machine code on the right:
-
-  // movabsq rdi, so_path_address     48 bf so_path_address
-  // movl esi, flag                   be flag
-  // movabsq rax, dlopen_address      48 b8 dlopen_address
-  // call rax                         ff d0
-  // int3                             cc
-  MachineCode code;
-  code.AppendBytes({0x48, 0xbf})
-      .AppendImmediate64(so_path_address)
-      .AppendBytes({0xbe})
-      .AppendImmediate32(flag)
-      .AppendBytes({0x48, 0xb8})
-      .AppendImmediate64(dlopen_address)
-      .AppendBytes({0xff, 0xd0})
-      .AppendBytes({0xcc});
-
   OUTCOME_TRY(auto&& return_value, ExecuteMachineCode(*code_memory, code));
-
   return absl::bit_cast<void*>(return_value);
 }
 
