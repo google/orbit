@@ -15,11 +15,11 @@ target_sources(OrbitTriggerCaptureVulkanLayer PRIVATE
         OrbitCaptureClientLayer.cpp)
 
 target_link_libraries(OrbitTriggerCaptureVulkanLayer PUBLIC
-        vulkan-headers::vulkan-headers
-        protobuf::protobuf
         OrbitBase
         OrbitCaptureGgpClientLib
-        Vulkan::ValidationLayers)
+        protobuf::protobuf
+        vulkan-headers::vulkan-headers
+        vulkan-validationlayers::vulkan-validationlayers)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/protos/OrbitTriggerCaptureVulkanLayer)
 protobuf_generate(TARGET OrbitTriggerCaptureVulkanLayer PROTOS

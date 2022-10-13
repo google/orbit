@@ -62,7 +62,7 @@ class OffscreenRenderingVulkanTutorial {
   VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
   VkDevice device_ = VK_NULL_HANDLE;
   VkQueue graphics_queue_ = VK_NULL_HANDLE;
-  VkFormat image_format_ = VkFormat::VK_FORMAT_UNDEFINED;
+  VkFormat image_format_ = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
   VkExtent3D image_extent_{};
   VkImage image_ = VK_NULL_HANDLE;
   VkDeviceMemory memory_ = VK_NULL_HANDLE;

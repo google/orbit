@@ -127,7 +127,7 @@ else()
   find_package(libbase REQUIRED)
   find_package(liblog REQUIRED)
   find_package(libprocinfo REQUIRED)
-  find_package(VulkanValidationLayers REQUIRED)
+  find_package(vulkan-validationlayers REQUIRED)
 endif()
 
 include("cmake/protobuf.cmake")

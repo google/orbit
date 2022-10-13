@@ -218,7 +218,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
   VkImageCreateInfo create_info{
       .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
       .imageType = VK_IMAGE_TYPE_2D,
-      .format = VK_FORMAT_UNDEFINED,
+      .format = image_format_,
       .extent = {.width = kImageWidth, .height = kImageHeight, .depth = 1},
       .mipLevels = 1,
       .arrayLayers = 1,
@@ -230,22 +230,13 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
   };
   image_extent_ = create_info.extent;
 
-  for (int format_int = VK_FORMAT_BEGIN_RANGE; format_int <= VK_FORMAT_END_RANGE; ++format_int) {
-    const auto format = static_cast<VkFormat>(format_int);
-
-    VkImageFormatProperties format_properties{};
-    VkResult result = vkGetPhysicalDeviceImageFormatProperties(
-        physical_device_, format, create_info.imageType, create_info.tiling, create_info.usage,
-        create_info.flags, &format_properties);
-    if (result == VK_SUCCESS) {
-      image_format_ = format;
-      break;
-    }
-  }
-
-  ORBIT_CHECK(image_format_ != VkFormat::VK_FORMAT_UNDEFINED);
+  VkImageFormatProperties format_properties{};
+  VkResult result = vkGetPhysicalDeviceImageFormatProperties(
+      physical_device_, create_info.format, create_info.imageType, create_info.tiling, create_info.usage,
+      create_info.flags, &format_properties);
+  ORBIT_CHECK(result == VK_SUCCESS);
   ORBIT_LOG("image_format_=%d", image_format_);
-  create_info.format = image_format_;
+
   CHECK_VK_SUCCESS(vkCreateImage(device_, &create_info, nullptr, &image_));
 
   // Good reference for the code that follows:

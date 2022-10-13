@@ -22,11 +22,11 @@ target_sources(OrbitVulkanLayerInterface PRIVATE
 
 target_link_libraries(OrbitVulkanLayerInterface PUBLIC
         CaptureEventProducer
-        vulkan-headers::vulkan-headers
         GrpcProtos
         OrbitBase
         ProducerSideChannel
-        Vulkan::ValidationLayers)
+        vulkan-headers::vulkan-headers
+        vulkan-validationlayers::vulkan-validationlayers)
 
 add_library(OrbitVulkanLayer SHARED)
 
