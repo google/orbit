@@ -54,7 +54,7 @@ class OrbitConan(ConanFile):
 
     def requirements(self):
         self.requires("abseil/20220623.0")
-        self.requires("capstone/4.0.2")
+        if not self.options.with_system_deps: self.requires("capstone/4.0.2")
         self.requires("grpc/1.48.0")
         if not self.options.with_system_deps: self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
