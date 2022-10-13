@@ -104,6 +104,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
   float z = GlCanvas::kZValueEvent;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
+  uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
 
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
@@ -125,11 +126,11 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(
-          min_tick, max_tick, action_on_callstack_events);
+      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRangeDiscretized(
+          min_tick, max_tick, resolution_in_pixels, action_on_callstack_events);
     } else {
-      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-          GetThreadId(), min_tick, max_tick, action_on_callstack_events);
+      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRangeDiscretized(
+          GetThreadId(), min_tick, max_tick, resolution_in_pixels, action_on_callstack_events);
     }
 
     // Draw selected callstack samples.

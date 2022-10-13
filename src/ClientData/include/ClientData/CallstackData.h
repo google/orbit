@@ -19,6 +19,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "FastRenderingUtils.h"
 #include "ModuleManager.h"
 #include "OrbitBase/Logging.h"
 
@@ -75,6 +76,19 @@ class CallstackData {
     }
   }
 
+  // Do a particular action for callstacks but skipping callstacks that will be rendered later in
+  // the same pixel in the screen. It assures to do the action at least once for callstacks in each
+  // occupied pixel. This iteration is faster that the non-discretized one since it doesn't require
+  // going through all callstacks.
+  template <typename Action>
+  void ForEachCallstackEventInTimeRangeDiscretized(uint64_t min_timestamp, uint64_t max_timestamp,
+                                                   uint32_t resolution, Action&& action) const {
+    for (const auto& [tid, unused_events] : callstack_events_by_tid_) {
+      ForEachCallstackEventOfTidInTimeRangeDiscretized(tid, min_timestamp, max_timestamp,
+                                                       resolution, action);
+    }
+  }
+
   template <typename Action>
   void ForEachCallstackEventOfTidInTimeRange(uint32_t tid, uint64_t min_timestamp,
                                              uint64_t max_timestamp, Action&& action) const {
@@ -88,6 +102,28 @@ class CallstackData {
     for (auto event_it = events.lower_bound(min_timestamp);
          event_it != events.upper_bound(max_timestamp); ++event_it) {
       std::invoke(action, event_it->second);
+    }
+  }
+
+  // Do a particular action for all callstacks in a thread but skipping callstacks that will be
+  // rendered later in the same pixel in the screen. It assures to do the action at least once for
+  // callstacks in each occupied pixel. This iteration is faster that the non-discretized one since
+  // it doesn't require going through all callstacks.
+  template <typename Action>
+  void ForEachCallstackEventOfTidInTimeRangeDiscretized(uint32_t tid, uint64_t min_timestamp,
+                                                        uint64_t max_timestamp, uint32_t resolution,
+                                                        Action&& action) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
+    if (tid_and_events_it == callstack_events_by_tid_.end()) {
+      return;
+    }
+    const auto& events = tid_and_events_it->second;
+    for (auto event_it = events.lower_bound(min_timestamp);
+         event_it != events.end() && event_it->first < max_timestamp;
+         event_it = events.lower_bound(GetNextPixelBoundaryTimeNs(event_it->first, resolution,
+                                                                  min_timestamp, max_timestamp))) {
+      std::invoke(std::forward<Action>(action), event_it->second);
     }
   }
 
