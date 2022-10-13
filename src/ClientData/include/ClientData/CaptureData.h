@@ -127,6 +127,11 @@ class CaptureData {
       uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const ThreadStateSliceInfo&)>& action) const;
 
+  // Similar to the previous ones, but does not iterate for more than one slice per pixel.
+  void ForEachThreadStateSliceIntersectingTimeRangeDiscretized(
+      uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp, uint32_t resolution,
+      const std::function<void(const ThreadStateSliceInfo&)>& action) const;
+
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;
 
   void UpdateScopeStats(const TimerInfo& timer_info);

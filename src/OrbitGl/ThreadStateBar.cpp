@@ -285,18 +285,14 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreen(GetSize())[0];
   const uint64_t min_time_graph_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
   const float pixel_width_in_world_coords = viewport_->ScreenToWorld({1, 0})[0];
+  uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
 
   uint64_t ignore_until_ns = 0;
 
   ORBIT_CHECK(capture_data_ != nullptr);
-  capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
-      GetThreadId(), min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
-        if (slice.end_timestamp_ns() <= ignore_until_ns) {
-          // Reduce overdraw by not drawing slices whose entire width would only draw over a
-          // previous slice. Similar to TimerTrack::UpdatePrimitives.
-          return;
-        }
-
+  capture_data_->ForEachThreadStateSliceIntersectingTimeRangeDiscretized(
+      GetThreadId(), min_tick, max_tick, resolution_in_pixels,
+      [&](const ThreadStateSliceInfo& slice) {
         const float x0 = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
         const float x1 = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
         const float width = x1 - x0;
