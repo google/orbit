@@ -10,7 +10,7 @@ Orbit combines sampling and dynamic instrumentation to optimize the profiling wo
 
 An introduction to Orbit's key features can be found in the following YouTube
 video:
-[![IMAGE ALT TEXT HERE][orbit_youtube_presentation]](https://www.youtube.com/watch?v=8V-EPBPGZPs)
+[![Orbit Presentation][orbit_youtube_presentation]](https://www.youtube.com/watch?v=8V-EPBPGZPs)
 
 ## Features
 
