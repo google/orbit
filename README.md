@@ -34,6 +34,9 @@ Please have a look at the first three sections of our [development documentation
 
 ## Workflow
 
+> **Note** And extensive documentation of the usage of Orbit can be found in our [usage documentation](documentation/DOCUMENTATION.md).
+
+The following describes the basic workflow of Orbit:
 1. Select a process in the list of currently running processes in the connection setup dialog, and click <b><samp>Start Session</samp></b>.
 2. The list of loaded modules will appear on the top of the <b><samp>Symbols</samp></b> tab.  If debug symbols were found for a module, it will be highlighted in blue.
 3. <b><samp>Right click</samp></b> on the module(s) for which you want to load debug information and select <b><samp>Load Symbols</samp></b>. The <b><samp>Functions</samp></b> tab will get populated.
