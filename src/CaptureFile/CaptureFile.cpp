@@ -123,13 +123,7 @@ ErrorMessageOr<uint64_t> GetEndOfFileOffset(const unique_fd& fd) {
 }
 
 ErrorMessageOr<void> CaptureFileImpl::Initialize() {
-  auto fd_or_error = orbit_base::OpenExistingFileForReadWrite(file_path_);
-  if (fd_or_error.has_error()) {
-    return fd_or_error.error();
-  }
-
-  fd_ = std::move(fd_or_error.value());
-
+  OUTCOME_TRY(fd_, orbit_base::OpenExistingFileForReadWrite(file_path_));
   OUTCOME_TRY(ReadHeader());
   OUTCOME_TRY(ReadSectionList());
   OUTCOME_TRY(CalculateCaptureSectionSize());

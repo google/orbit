@@ -404,12 +404,23 @@ TEST_F(CaptureFileTest, CannotAddUserDataSectionAsAdditionalSection) {
 }
 
 TEST_F(CaptureFileHeaderTest, ModifyExisting) {
-  const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_capture.orbit";
+  const std::filesystem::path path = temporary_file_->file_path();
+  {
+    // Copy existing file from testdata to the tmp location while preserving permissions
+    const auto temporary_file_perms = std::filesystem::status(path).permissions();
 
-  temporary_file_->CloseAndRemove();
-  std::filesystem::copy(path, temporary_file_->file_path());
+    temporary_file_->CloseAndRemove();
 
-  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
+    std::error_code error;
+    std::filesystem::copy_file(orbit_test::GetTestdataDir() / "test_capture.orbit", path, error);
+    ASSERT_FALSE(error) << error.message();
+
+    // Update permissions to what they have been before
+    std::filesystem::permissions(path, temporary_file_perms, error);
+    ASSERT_FALSE(error) << error.message();
+  }
+
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(path);
   ASSERT_THAT(capture_file_or_error, HasValue());
   auto capture_file = std::move(capture_file_or_error.value());
 
@@ -424,7 +435,7 @@ TEST_F(CaptureFileHeaderTest, ModifyExisting) {
   EXPECT_EQ(capture_file->FindAllSectionsByType(kSectionType).size(), number_of_type_sections + 1);
 
   // Reopen file, nothing changed
-  capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file_->file_path());
+  capture_file_or_error = CaptureFile::OpenForReadWrite(path);
   ASSERT_THAT(capture_file_or_error, HasValue());
   capture_file = std::move(capture_file_or_error.value());
 
