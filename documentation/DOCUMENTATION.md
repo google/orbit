@@ -104,8 +104,6 @@ However, to unwind using frame pointers, you must compile *all* target binaries
 Orbit still supports leaf functions (functions without a call instruction) that
 do not set the frame pointer, which means it also supports binaries compiled
 with `‑momit‑leaf‑frame‑pointer` (as long as `‑fno‑omit‑frame‑pointer` is used).
-All application surface libraries that are part of a Stadia instance are already
-compiled with `-fno-omit-frame-pointer -momit-leaf-frame-pointer`.
 
 ### Work with the Capture tab
 
