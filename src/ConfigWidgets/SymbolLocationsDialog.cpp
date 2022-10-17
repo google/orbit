@@ -370,8 +370,7 @@ void SymbolLocationsDialog::OnListItemSelectionChanged() {
 
 void SymbolLocationsDialog::OnMoreInfoButtonClicked() {
   QString url_as_string{
-      "https://developers.google.com/stadia/docs/develop/optimize/"
-      "profile-cpu-with-orbit#load_symbols"};
+      "https://github.com/google/orbit/blob/main/documentation/DOCUMENTATION.md#load-symbols"};
   if (!QDesktopServices::openUrl(QUrl(url_as_string, QUrl::StrictMode))) {
     QMessageBox::critical(this, "Error opening URL",
                           QString("Could not open %1").arg(url_as_string));
