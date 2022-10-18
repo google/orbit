@@ -2,7 +2,7 @@
 
 <img alt="ORBIT Logo" src="logos/orbit_logo_simple.png" align="right" width="520" >
 
-The **O**pen **R**untime **B**inary **I**nstrumentation **T**ool, is a
+Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
 standalone **native** application (C, C++, Rust, Go, ...) profiler for Windows
 and Linux. Its main purpose is to help developers identify the performance
 bottlenecks of a complex application.
@@ -63,7 +63,6 @@ The following describes the basic workflow of Orbit:
 1. Select a process in the list of currently running processes in the connection
    setup dialog, and click **Start Session**.
 2. The list of loaded modules will appear at the top of the **Symbols** tab.
-   If debug symbols were found for a module, it will be highlighted in green.
 3. Orbit tries to automatically retrieve debug information of the modules.
    See [here](documentation/DOCUMENTATION.md#load-symbols) on how to load
    symbols for modules Orbit failed to load. For successfully loaded module
@@ -72,9 +71,9 @@ The following describes the basic workflow of Orbit:
    by <kbd>Right-Click</kbd> and choosing **Hook**.
 5. Start profiling by pressing <kbd>F5</kbd>. To stop profiling, press
    <kbd>F5</kbd> again. You can either zoom time using <kbd>W</kbd> and
-   <kbd>S</kbd> or <kbd>ctrl</kbd> + the scroll wheel. You can also
-   <kbd>ctrl</kbd>+<kbd>Right-Click</kbd> and drag to zoom to a specific time
-   range. To scale the UI, press <kbd>ctrl</kbd> + <kbd>+</kbd>/<kbd>-</kbd>.
+   <kbd>S</kbd> or <kbd>Ctrl</kbd> + the scroll wheel. You can also
+   <kbd>Ctrl</kbd>+<kbd>Right-Click</kbd> and drag to zoom to a specific time
+   range. To scale the UI, press <kbd>Ctrl</kbd> + <kbd>+</kbd>/<kbd>-</kbd>.
    Press <kbd>SPACE</kbd> to see the last 2 seconds of capture.
 6. You can select sections of the per-thread sampling event track to get a
    sampling report of your selection.
@@ -84,11 +83,11 @@ The following describes the basic workflow of Orbit:
 Once you have loaded the debug information for your modules and have chosen
 functions of interest to dynamically instrument, you can save your profiling
 preset so that you won't have to do this manually again. To save a preset, go to
-**File** ⇒ **Save Preset**
+**File** > **Save Preset**
 
 ### Feedback
 
-Questions and comments are more than welcome, please open an
+Questions and comments are more than welcome: please open an
 [issue](https://github.com/google/orbit/issues/new).
 
 ## About
