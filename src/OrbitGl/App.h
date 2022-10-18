@@ -77,7 +77,6 @@
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CanceledOr.h"
-#include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
@@ -107,14 +106,12 @@ class OrbitApp final : public DataViewFactory,
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     orbit_base::MainThreadExecutor* main_thread_executor,
-                    const orbit_base::CrashHandler* crash_handler,
                     orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
       orbit_gl::MainWindowInterface* main_window,
       orbit_base::MainThreadExecutor* main_thread_executor,
-      const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   void PostInit(bool is_connected);
@@ -674,7 +671,6 @@ class OrbitApp final : public DataViewFactory,
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 
-  const orbit_base::CrashHandler* crash_handler_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
   // TODO(b/166767590) Synchronize. Probably in the same way as capture_data
   // Created by the main thread right before a capture is started. While capturing its modified by

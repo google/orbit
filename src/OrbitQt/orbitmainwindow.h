@@ -44,7 +44,6 @@
 #include "MainWindowInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CanceledOr.h"
-#include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -65,7 +64,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static constexpr int kEndSessionReturnCode = 1;
 
   explicit OrbitMainWindow(orbit_session_setup::TargetConfiguration target_configuration,
-                           const orbit_base::CrashHandler* crash_handler,
                            orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
                            const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;

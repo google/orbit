@@ -23,7 +23,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Attributes.h
         include/OrbitBase/CanceledOr.h
         include/OrbitBase/Chunk.h
-        include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ExecuteCommand.h
         include/OrbitBase/Executor.h

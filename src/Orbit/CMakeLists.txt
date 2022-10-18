@@ -18,11 +18,6 @@ target_link_libraries(Orbit PRIVATE
         Style)
 target_include_directories(Orbit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(WITH_CRASH_HANDLING)
-  target_link_libraries(Orbit PRIVATE CrashHandler)
-  target_compile_definitions(Orbit PRIVATE ORBIT_CRASH_HANDLING)
-endif()
-
 if(WIN32)
   set_target_properties(Orbit PROPERTIES WIN32_EXECUTABLE ON)
 

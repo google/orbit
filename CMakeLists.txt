@@ -66,9 +66,6 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
-option(WITH_CRASH_HANDLING "Setting this option will enable crash handling based on crashpad." ON)
-
-set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading crash dumps to the url specified.")
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -246,10 +243,6 @@ if(WITH_GUI)
   add_subdirectory(src/Style)
   add_subdirectory(src/SyntaxHighlighter)
   add_subdirectory(src/UtilWidgets)
-endif()
-
-if(WITH_GUI AND WITH_CRASH_HANDLING)
-  add_subdirectory(src/CrashHandler)
 endif()
 
 if(WIN32)

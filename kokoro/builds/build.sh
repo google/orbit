@@ -122,12 +122,6 @@ if [ -n "$1" ]; then
     readonly OS="windows"
   fi
 
-  CRASHDUMP_SERVER=""
-  readonly CRASH_SERVER_URL_FILE="${KEYSTORE_PATH}/74938_orbitprofiler_crashdump_collection_server"
-  if [ -f "$CRASH_SERVER_URL_FILE" ]; then
-    CRASHDUMP_SERVER="$(cat "${CRASH_SERVER_URL_FILE}" | tr -d '\n')"
-  fi
-
   # Building Orbit
   mkdir -p "${REPO_ROOT}/build/"
 
@@ -159,7 +153,7 @@ if [ -n "$1" ]; then
     conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
       ${BUILD_OPTION} \
       --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
-      -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
+      $PACKAGING_OPTION \
       --lockfile-out="${REPO_ROOT}/build/conan.lock" || RET=$?
   done
 
@@ -178,7 +172,7 @@ if [ -n "$1" ]; then
     conan install -if "${REPO_ROOT}/build/" \
           ${BUILD_OPTION} \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
-          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/' || RET=${PIPESTATUS[0]}
+          "${REPO_ROOT}" || RET=${PIPESTATUS[0]}
   done
 
   echo "Starting the build (conan build)."
