@@ -143,11 +143,12 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     const orbit_client_data::CallstackData& selection_callstack_data =
         capture_data_->selection_callstack_data();
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      selection_callstack_data.ForEachCallstackEventInTimeRange(
-          min_tick, max_tick, action_on_selected_callstack_events);
+      selection_callstack_data.ForEachCallstackEventInTimeRangeDiscretized(
+          min_tick, max_tick, resolution_in_pixels, action_on_selected_callstack_events);
     } else {
-      selection_callstack_data.ForEachCallstackEventOfTidInTimeRange(
-          GetThreadId(), min_tick, max_tick, action_on_selected_callstack_events);
+      selection_callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(
+          GetThreadId(), min_tick, max_tick, resolution_in_pixels,
+          action_on_selected_callstack_events);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may
@@ -168,11 +169,11 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
       primitive_assembler.AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(
-          min_tick, max_tick, action_on_callstack_events);
+      capture_data_->GetCallstackData().ForEachCallstackEventInTimeRangeDiscretized(
+          min_tick, max_tick, resolution_in_pixels, action_on_callstack_events);
     } else {
-      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-          GetThreadId(), min_tick, max_tick, action_on_callstack_events);
+      capture_data_->GetCallstackData().ForEachCallstackEventOfTidInTimeRangeDiscretized(
+          GetThreadId(), min_tick, max_tick, resolution_in_pixels, action_on_callstack_events);
     }
   }
 }
