@@ -1,0 +1,19 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+# Normalize all detected text files to LF line endings when checking in.
+* text=auto
+
+# Keep everything within the windows subdirectory as it is.
+/windows/** binary
+
+# Binary files should be detected by default, but just stay save and tell
+# git that they are not text and are not diff-able
+# Portable network graphics format
+*.png binary
+# Windows dynamic link library format
+*.dll binary
+# Windows import library format
+*.lib binary
+# Windows portable executable format
+*.exe binary
+# TrueType file format
+*.ttf binary
