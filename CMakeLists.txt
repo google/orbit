@@ -93,6 +93,7 @@ find_package(Threads REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
+find_package(libprotobuf-mutator REQUIRED)
 
 if(WITH_GUI)
   find_package(OpenGL REQUIRED)

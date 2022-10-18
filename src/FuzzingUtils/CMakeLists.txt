@@ -9,4 +9,4 @@ target_sources(FuzzingUtils INTERFACE
         include/FuzzingUtils/ProtoFuzzer.h
         include/FuzzingUtils/Fuzzer.h)
 target_include_directories(FuzzingUtils INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
-target_link_libraries(FuzzingUtils INTERFACE OrbitBase CONAN_PKG::libprotobuf-mutator)
+target_link_libraries(FuzzingUtils INTERFACE OrbitBase libprotobuf-mutator::libprotobuf-mutator)
