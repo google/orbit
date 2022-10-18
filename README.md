@@ -100,7 +100,7 @@ is now developed and maintained by a team of engineers at Google.
 [License (BSD 2-clause)](./LICENSE)
 
 <a href="http://opensource.org/licenses/BSD-2-Clause" target="_blank">
-<img align="right" src="http://opensource.org/trademarks/opensource/OSI-Approved-License-100x137.png">
+<img style="float: right" src="http://opensource.org/trademarks/opensource/OSI-Approved-License-100x137.png" alt="OSI Approved License">
 </a>
 
 ```text
