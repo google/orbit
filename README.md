@@ -3,9 +3,9 @@
 <img alt="ORBIT Logo" src="logos/orbit_logo_simple.png" align="right" width="520" >
 
 The **O**pen **R**untime **B**inary **I**nstrumentation **T**ool, is a
-standalone **native** application (C, C++, Rust, go, ...) profiler for Windows
-and Linux. Its main purpose is to help developers visualize the execution flow
-of a complex application.
+standalone **native** application (C, C++, Rust, Go, ...) profiler for Windows
+and Linux. Its main purpose is to help developers identify the performance
+bottlenecks of a complex application.
 
 The key differentiator with many existing tools is that no alteration to the
 target process is necessary. Orbit does not require you to change a single line
@@ -26,26 +26,25 @@ video:
 
 ## Features
 
-- Dynamic Instrumentation (No Code Change Required)
-- Robust Sampling
+- Dynamic Instrumentation (no code change required)
+- Callstack Sampling
 - Wine/Proton Mixed-Callstack Profiling
 - Thread Scheduling and Dependency Tracing
 - Memory Tracing
-- GPU Driver Tracepoints (AMD Only)
-- Vulkan Debug Label and Command Buffer Tracing (AMD Only)
+- GPU Driver Tracepoints (AMD only)
+- Vulkan Debug Label and Command Buffer Tracing (AMD only)
 - Manual Instrumentation
 - Source Code and Disassembly View
 - Remote Profiling
-- Fast Debug Symbol Parsing
+- Debug Symbol Parsing
 - Full Serialization of Captured Data
-- ...
 
 ### Note
 
 Orbit is undergoing a major overhaul. The focus has now shifted to the Linux
 version. Windows local profiling is currently only supported partially and major
 features, such as dynamic instrumentation, are not yet implemented. It is
-possible however to profile Linux executable from a Windows UI instance. For
+possible however to profile Linux executables from a Windows UI instance. For
 Windows local profiling, please use the released
 [binaries](https://github.com/google/orbit/releases).
 
@@ -62,31 +61,30 @@ what Compilers, Platforms, and Tools are supported and needed.
 
 The following describes the basic workflow of Orbit:
 1. Select a process in the list of currently running processes in the connection
-   setup dialog, and click <b><samp>Start Session</samp></b>.
-2. The list of loaded modules will appear on the top of the
-   <b><samp>Symbols</samp></b> tab. If debug symbols were found for a module,
-   it will be highlighted in green.
-3. <b><samp>Right click</samp></b> on the module(s) for which you want to load
-   debug information and select <b><samp>Load Symbols</samp></b>. The
-   <b><samp>Functions</samp></b> tab will get populated.
-4. Select functions you wish to profile in the <b><samp>Functions</samp></b> tab
-   by <kbd>Right-Click</kbd> and choosing <b><samp>Hook</samp></b>.
-5. In the <b><samp>Capture</samp></b> tab, start profiling by pressing
-   <kbd>F5</kbd>. To stop profiling, press <kbd>F5</kbd> again. You can either
-   zoom time using <kbd>W</kbd> and <kbd>S</kbd> or <kbd>ctrl</kbd> + the scroll
-   wheel. You can also <kbd>ctrl</kbd>+<b><samp>right-click</samp></b> and drag
-   to zoom to a specific time range. To scale the UI, press <kbd>ctrl</kbd> +
-   <kbd>+</kbd>/<kbd>-</kbd>. Press <kbd>SPACE</kbd> to see the last 2 seconds
-   of capture.
+   setup dialog, and click **Start Session**.
+2. The list of loaded modules will appear at the top of the **Symbols** tab.
+   If debug symbols were found for a module, it will be highlighted in green.
+3. Orbit tries to automatically retrieve debug information of the modules.
+   See [here](documentation/DOCUMENTATION.md#load-symbols) on how to load
+   symbols for modules Orbit failed to load. For successfully loaded module
+   symbols, the **Functions** tab will get populated.
+4. Select functions you wish to dynamically instrument in the **Functions** tab
+   by <kbd>Right-Click</kbd> and choosing **Hook**.
+5. Start profiling by pressing <kbd>F5</kbd>. To stop profiling, press
+   <kbd>F5</kbd> again. You can either zoom time using <kbd>W</kbd> and
+   <kbd>S</kbd> or <kbd>ctrl</kbd> + the scroll wheel. You can also
+   <kbd>ctrl</kbd>+<kbd>Right-Click</kbd> and drag to zoom to a specific time
+   range. To scale the UI, press <kbd>ctrl</kbd> + <kbd>+</kbd>/<kbd>-</kbd>.
+   Press <kbd>SPACE</kbd> to see the last 2 seconds of capture.
 6. You can select sections of the per-thread sampling event track to get a
    sampling report of your selection.
 
 ## Presets
 
 Once you have loaded the debug information for your modules and have chosen
-functions of interest, you can save your profiling preset so that you won't
-have to do this manually again.  To save a preset, go to
-<b><samp>File</samp></b> ⇒ <b><samp>Save Preset</samp></b>
+functions of interest to dynamically instrument, you can save your profiling
+preset so that you won't have to do this manually again. To save a preset, go to
+**File** ⇒ **Save Preset**
 
 ### Feedback
 
