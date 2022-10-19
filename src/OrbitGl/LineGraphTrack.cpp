@@ -85,9 +85,8 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
                               aggr.GetEntry().end_tick, prev_normalized_values,
                               aggr.GetEntry().values, z, false);
 
-        next_pixel_start_ns =
-          orbit_client_data::GetNextPixelBoundaryTimeNs(aggr.GetEntry().end_tick,
-              resolution_in_pixels, min_tick, max_tick);
+        next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+            aggr.GetEntry().end_tick, resolution_in_pixels, min_tick, max_tick);
 
         prev_normalized_values = aggr.GetEntry().values;
         aggr.StartNewEntry(prev_time, curr_time, curr_normalized_values);

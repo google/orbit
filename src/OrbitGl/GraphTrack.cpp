@@ -31,15 +31,12 @@ using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
 template <size_t Dimension>
-GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
-                                  const orbit_gl::TimelineInfoInterface* timeline_info,
-                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                  std::array<std::string, Dimension> series_names,
-                                  uint8_t series_value_decimal_digits,
-                                  std::string series_value_units,
-                                  const orbit_client_data::ModuleManager* module_manager,
-                                  const orbit_client_data::CaptureData* capture_data,
-                                  GraphTrackAggregationMode aggregation_mode)
+GraphTrack<Dimension>::GraphTrack(
+    CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
+    orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+    std::array<std::string, Dimension> series_names, uint8_t series_value_decimal_digits,
+    std::string series_value_units, const orbit_client_data::ModuleManager* module_manager,
+    const orbit_client_data::CaptureData* capture_data, GraphTrackAggregationMode aggregation_mode)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
       series_{series_names, series_value_decimal_digits, std::move(series_value_units)},
       aggregation_mode_(aggregation_mode) {}
@@ -272,9 +269,8 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   GraphTrackDataAggregator<Dimension> aggr(aggregation_mode_);
 
   const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
-  uint64_t next_pixel_start_ns =
-    orbit_client_data::GetNextPixelBoundaryTimeNs(min_tick,
-        resolution_in_pixels, min_tick, max_tick);
+  uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+      min_tick, resolution_in_pixels, min_tick, max_tick);
 
   // We skip the last element because we can't calculate time passed between last element
   // and the next one.
@@ -304,12 +300,10 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
       } else {
         // Otherwise, draw the accumulated_entry and start accumulating a new one
         DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick,
-                              aggr.GetEntry().end_tick,
-                              aggr.GetEntry().values, z);
+                              aggr.GetEntry().end_tick, aggr.GetEntry().values, z);
 
-        next_pixel_start_ns =
-          orbit_client_data::GetNextPixelBoundaryTimeNs(aggr.GetEntry().end_tick,
-              resolution_in_pixels, min_tick, max_tick);
+        next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+            aggr.GetEntry().end_tick, resolution_in_pixels, min_tick, max_tick);
 
         aggr.StartNewEntry(current_time, next_time, normalized_cumulative_values);
       }
@@ -318,9 +312,8 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   }
 
   // Draw the leftover entry
-  DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick,
-      aggr.GetEntry().end_tick,
-      aggr.GetEntry().values, z);
+  DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick, aggr.GetEntry().end_tick,
+                        aggr.GetEntry().values, z);
 }
 
 template <size_t Dimension>

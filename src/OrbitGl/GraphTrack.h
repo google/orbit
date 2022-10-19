@@ -11,12 +11,12 @@
 #include <string>
 
 #include "CoreMath.h"
+#include "GraphTrackDataAggregator.h"
 #include "MultivariateTimeSeries.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "GraphTrackDataAggregator.h"
 
 template <size_t Dimension>
 class GraphTrack : public Track {

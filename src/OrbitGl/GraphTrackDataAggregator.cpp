@@ -1,3 +1,7 @@
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "GraphTrackDataAggregator.h"
 
 template <size_t Dimension>
@@ -60,4 +64,3 @@ template class GraphTrackDataAggregator<1>;
 template class GraphTrackDataAggregator<2>;
 template class GraphTrackDataAggregator<3>;
 template class GraphTrackDataAggregator<4>;
-

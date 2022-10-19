@@ -86,8 +86,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
     const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
     bool is_last) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
-      primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values,
-      z, is_last);
+      primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values, z,
+      is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
   if (prev_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
