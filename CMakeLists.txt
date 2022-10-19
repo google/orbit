@@ -98,6 +98,7 @@ find_package(LZMA REQUIRED)
 
 if(WITH_GUI)
   find_package(OpenGL REQUIRED)
+  find_package(freetype-gl REQUIRED)
   find_package(
     Qt5 CONFIG REQUIRED
     COMPONENTS Core

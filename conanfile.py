@@ -83,8 +83,7 @@ class OrbitConan(ConanFile):
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f", override=True)
 
         if self.options.with_gui:
-            self.requires("freetype/2.10.0@bincrafters/stable#0", override=True)
-            self.requires("freetype-gl/79b03d9@{}".format(self._orbit_channel))
+            self.requires("freetype/2.10.0@bincrafters/stable#0")
             self.requires("glad/0.1.34")
             self.requires("imgui/1.85")
             self.requires("libpng/1.6.37@bincrafters/stable#0", override=True)
@@ -148,16 +147,8 @@ class OrbitConan(ConanFile):
 
     def imports(self):
         dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        if self.options.with_gui:
-            for path in self.deps_cpp_info["freetype-gl"].resdirs:
-                self.copy("Vera.ttf", src=path, dst="{}/fonts/".format(dest))
-                self.copy("Vera.ttf", src=path,
-                          dst="{}/fonts/".format("OrbitQt/"))
-                self.copy("v3f-t2f-c4f.*", src=path,
-                          dst="{}/shaders/".format(dest))
-                self.copy("v3f-t2f-c4f.*", src=path,
-                          dst="{}/shaders/".format("OrbitQt/"))
         if self.options.deploy_opengl_software_renderer:
+            os.makedirs(dest, exist_ok=True)
             shutil.copyfile(os.path.join(self.deps_cpp_info["llvmpipe"].bin_paths[0], "opengl32.dll"),
                             os.path.join(dest, "opengl32sw.dll"))
 
