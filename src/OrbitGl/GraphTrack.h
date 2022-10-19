@@ -16,6 +16,7 @@
 #include "PrimitiveAssembler.h"
 #include "Track.h"
 #include "Viewport.h"
+#include "GraphTrackDataAggregator.h"
 
 template <size_t Dimension>
 class GraphTrack : public Track {
@@ -26,7 +27,8 @@ class GraphTrack : public Track {
                       std::array<std::string, Dimension> series_names,
                       uint8_t series_value_decimal_digits, std::string series_value_unit,
                       const orbit_client_data::ModuleManager* module_manager,
-                      const orbit_client_data::CaptureData* capture_data);
+                      const orbit_client_data::CaptureData* capture_data,
+                      GraphTrackAggregationMode aggregation_mode);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }
   [[nodiscard]] float GetHeight() const override;
@@ -108,6 +110,8 @@ class GraphTrack : public Track {
   }
 
   MultivariateTimeSeries<Dimension> series_;
+
+  GraphTrackAggregationMode aggregation_mode_ = GraphTrackAggregationMode::kAvg;
 
  private:
   [[nodiscard]] virtual std::string GetLegendTooltips(size_t legend_index) const = 0;

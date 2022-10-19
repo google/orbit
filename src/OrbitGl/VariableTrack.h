@@ -30,7 +30,7 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
       : LineGraphTrack<kVariableTrackDimension>(parent, timeline_info, viewport, layout,
                                                 std::array<std::string, kVariableTrackDimension>{},
                                                 kTrackValueDecimalDigits, kTrackValueUnits,
-                                                module_manager, capture_data),
+                                                module_manager, capture_data, GraphTrackAggregationMode::kAvg),
         name_{std::move(name)} {
     SetSeriesColors(kVariableTrackColor);
   }

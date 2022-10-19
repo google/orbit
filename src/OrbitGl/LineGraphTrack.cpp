@@ -50,30 +50,62 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
 
-  auto current_iterator = entries.begin();
+  auto curr_iterator = entries.begin();
   auto last_iterator = std::prev(entries.end());
-  uint64_t current_time = current_iterator->first;
-  std::array<float, Dimension> current_normalized_values =
-      GetNormalizedValues(current_iterator->second, min, inverse_value_range);
+  std::array<float, Dimension> prev_normalized_values =
+      GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
 
-  while (current_iterator != last_iterator) {
-    auto next_iterator = std::next(current_iterator);
-    uint64_t next_time = next_iterator->first;
-    std::array<float, Dimension> next_normalized_values =
-        GetNormalizedValues(next_iterator->second, min, inverse_value_range);
-    bool is_last = next_time >= max_tick;
+  bool is_first = true;
+  GraphTrackDataAggregator<Dimension> aggr(this->aggregation_mode_);
 
-    DrawSingleSeriesEntry(primitive_assembler, current_time, next_time, current_normalized_values,
-                          next_normalized_values, z, is_last);
+  const uint32_t resolution_in_pixels =
+      this->GetViewport()->WorldToScreen({this->GetWidth(), 0})[0];
+  uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+      min_tick, resolution_in_pixels, min_tick, max_tick);
 
-    current_iterator = next_iterator;
-    current_time = next_time;
-    current_normalized_values = next_normalized_values;
+  while (curr_iterator != last_iterator) {
+    uint64_t prev_time = curr_iterator->first;
+    curr_iterator = std::next(curr_iterator);
+
+    uint64_t curr_time = curr_iterator->first;
+    std::array<float, Dimension> curr_normalized_values =
+        GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
+
+    if (is_first) {
+      aggr.StartNewEntry(prev_time, curr_time, curr_normalized_values);
+      is_first = false;
+    } else {
+      // If the size of the current entry is less than a pixel
+      if (aggr.GetEntry().end_tick < next_pixel_start_ns) {
+        // Add the current data to accumulated_entry
+        aggr.AppendData(prev_time, curr_time, curr_normalized_values);
+      } else {
+        // Otherwise, draw the accumulated_entry and start accumulating a new one
+        DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick,
+                              aggr.GetEntry().end_tick, prev_normalized_values,
+                              aggr.GetEntry().values, z, false);
+
+        next_pixel_start_ns =
+          orbit_client_data::GetNextPixelBoundaryTimeNs(aggr.GetEntry().end_tick,
+              resolution_in_pixels, min_tick, max_tick);
+
+        prev_normalized_values = aggr.GetEntry().values;
+        aggr.StartNewEntry(prev_time, curr_time, curr_normalized_values);
+      }
+    }
   }
 
-  if (current_time < max_tick) {
-    DrawSingleSeriesEntry(primitive_assembler, current_time, max_tick, current_normalized_values,
-                          current_normalized_values, z, true);
+  bool is_accumulated_entry_last = aggr.GetEntry().end_tick >= max_tick;
+  // Draw the leftover entry
+  DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick, aggr.GetEntry().end_tick,
+                        prev_normalized_values, aggr.GetEntry().values, z,
+                        is_accumulated_entry_last);
+
+  // If there was not enough data to reach the end tick, draw an entry until the
+  // end.
+  if (!is_accumulated_entry_last) {
+    DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().end_tick, max_tick,
+                          aggr.GetEntry().values, aggr.GetEntry().values, z, true);
   }
 }
 
@@ -87,8 +119,8 @@ static void DrawSquareDot(PrimitiveAssembler& primitive_assembler, Vec2 center, 
 template <size_t Dimension>
 void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
     PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, Dimension>& current_normalized_values,
-    const std::array<float, Dimension>& next_normalized_values, float z, bool is_last) {
+    const std::array<float, Dimension>& prev_normalized_values,
+    const std::array<float, Dimension>& curr_normalized_values, float z, bool is_last) {
   constexpr float kDotRadius = 2.f;
   float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
   float x1 = this->timeline_info_->GetWorldFromTick(end_tick);
@@ -96,11 +128,11 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
   float base_y = this->GetGraphContentBottomY();
 
   for (size_t i = Dimension; i-- > 0;) {
-    float y0 = base_y - current_normalized_values[i] * content_height;
+    float y0 = base_y - prev_normalized_values[i] * content_height;
     DrawSquareDot(primitive_assembler, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
     primitive_assembler.AddLine(Vec2(x0, y0), Vec2(x1, y0), z, this->GetColor(i));
     if (!is_last) {
-      float y1 = base_y - next_normalized_values[i] * content_height;
+      float y1 = base_y - curr_normalized_values[i] * content_height;
       primitive_assembler.AddLine(Vec2(x1, y0), Vec2(x1, y1), z, this->GetColor(i));
     }
   }

@@ -31,7 +31,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueUnits, module_manager, capture_data),
+          kTrackValueUnits, module_manager, capture_data, GraphTrackAggregationMode::kMax),
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
@@ -82,15 +82,15 @@ void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& primitive_assembler,
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(
     PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
-    const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
+    const std::array<float, kBasicPageFaultsTrackDimension>& prev_normalized_values,
+    const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
     bool is_last) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
-      primitive_assembler, start_tick, end_tick, current_normalized_values, next_normalized_values,
+      primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values,
       z, is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
-  if (current_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
+  if (prev_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
 
   const Color kHightlightingColor(231, 68, 53, 100);
   float x0 = timeline_info_->GetWorldFromTick(start_tick);
