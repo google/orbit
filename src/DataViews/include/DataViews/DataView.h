@@ -24,7 +24,6 @@
 #include "ClientData/ModuleData.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -105,9 +104,8 @@ class DataView {
   };
   using ActionGroup = std::vector<Action>;
 
-  explicit DataView(DataViewType type, AppInterface* app,
-                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-      : update_period_ms_(-1), type_(type), app_{app}, metrics_uploader_{metrics_uploader} {}
+  explicit DataView(DataViewType type, AppInterface* app)
+      : update_period_ms_(-1), type_(type), app_{app} {}
 
   // Calls virtual initialization methods, therefore cannot be called from the constructor.
   void Init();
@@ -227,7 +225,6 @@ class DataView {
   DataViewType type_;
 
   AppInterface* app_ = nullptr;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 }  // namespace orbit_data_views

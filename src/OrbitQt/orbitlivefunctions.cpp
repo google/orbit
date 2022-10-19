@@ -22,7 +22,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "HistogramWidget.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
@@ -37,10 +36,9 @@ OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
 
 OrbitLiveFunctions::~OrbitLiveFunctions() { delete ui_; }
 
-void OrbitLiveFunctions::Initialize(OrbitApp* app,
-                                    orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                                    SelectionType selection_type, FontType font_type) {
-  live_functions_.emplace(app, metrics_uploader);
+void OrbitLiveFunctions::Initialize(OrbitApp* app, SelectionType selection_type,
+                                    FontType font_type) {
+  live_functions_.emplace(app);
   orbit_data_views::DataView* data_view = &live_functions_->GetDataView();
   ui_->data_view_panel_->Initialize(data_view, selection_type, font_type);
 

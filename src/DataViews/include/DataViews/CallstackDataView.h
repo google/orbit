@@ -22,8 +22,7 @@ namespace orbit_data_views {
 
 class CallstackDataView : public DataView {
  public:
-  explicit CallstackDataView(AppInterface* app,
-                             orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  explicit CallstackDataView(AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddress; }

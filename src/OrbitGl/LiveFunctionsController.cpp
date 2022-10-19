@@ -101,11 +101,8 @@ static const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_
 
 }  // namespace
 
-LiveFunctionsController::LiveFunctionsController(
-    OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : live_functions_data_view_{this, app, metrics_uploader},
-      app_{app},
-      metrics_uploader_(metrics_uploader) {
+LiveFunctionsController::LiveFunctionsController(OrbitApp* app)
+    : live_functions_data_view_{this, app}, app_{app} {
   live_functions_data_view_.Init();
 }
 
@@ -200,7 +197,6 @@ void LiveFunctionsController::OnPreviousButton(uint64_t id) {
 void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   current_timer_infos_.erase(id);
   iterator_id_to_scope_id_.erase(id);
-  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_REMOVE);
 
   // If we erase the iterator that was last used by the user, then
   // we need to switch last_id_pressed_ to an existing id.

@@ -19,7 +19,6 @@
 #include "DataViews/SymbolLoadingState.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/module.pb.h"
-#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
 namespace orbit_data_views {
@@ -57,7 +56,7 @@ std::string GetExpectedDisplayFileSizeByIndex(size_t index) {
 
 class ModulesDataViewTest : public testing::Test {
  public:
-  explicit ModulesDataViewTest() : view_{&app_, &metrics_uploader_} {
+  explicit ModulesDataViewTest() : view_{&app_} {
     view_.Init();
     for (size_t i = 0; i < kNumModules; i++) {
       ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], kFilePaths[i],
@@ -86,7 +85,6 @@ class ModulesDataViewTest : public testing::Test {
 
  protected:
   orbit_data_views::MockAppInterface app_;
-  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::ModulesDataView view_;
   orbit_client_data::ModuleManager module_manager_;
   std::vector<ModuleInMemory> modules_in_memory_;

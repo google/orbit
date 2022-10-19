@@ -11,8 +11,6 @@
 
 #include "ClientServices/ProcessManager.h"
 #include "Connections.h"
-#include "MetricsUploader/MetricsUploader.h"
-#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/SshInfo.h"
@@ -35,9 +33,7 @@ class ConnectToTargetDialog : public QDialog {
 
  public:
   explicit ConnectToTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
-                                 const ConnectionTarget& target,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                                 QWidget* parent = nullptr);
+                                 const ConnectionTarget& target, QWidget* parent = nullptr);
   ~ConnectToTargetDialog() override;
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
@@ -46,7 +42,6 @@ class ConnectToTargetDialog : public QDialog {
   std::unique_ptr<Ui::ConnectToTargetDialog> ui_;
   SshConnectionArtifacts* ssh_connection_artifacts_;
   ConnectionTarget target_;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   using MaybeSshAndInstanceData =
       std::tuple<ErrorMessageOr<orbit_ggp::SshInfo>, ErrorMessageOr<orbit_ggp::Instance>>;
@@ -57,8 +52,6 @@ class ConnectToTargetDialog : public QDialog {
   std::optional<orbit_session_setup::StadiaConnection> stadia_connection_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::optional<TargetConfiguration> target_configuration_;
-
-  std::unique_ptr<orbit_metrics_uploader::ScopedMetric> connection_metric_;
 
   ErrorMessageOr<void> OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);

@@ -61,12 +61,10 @@ using orbit_grpc_protos::ProcessInfo;
 
 SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_artifacts,
                                        std::optional<TargetConfiguration> target_configuration_opt,
-                                       orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                        QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::SessionSetupDialog>()),
       local_grpc_port_(ssh_connection_artifacts->GetGrpcPort().grpc_port),
-      metrics_uploader_(metrics_uploader),
       state_stadia_(&state_machine_),
       state_stadia_history_(&state_stadia_),
       state_stadia_connecting_(&state_stadia_),
@@ -86,10 +84,8 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
       state_local_process_selected_(&state_local_connected_),
       state_local_no_process_selected_(&state_local_connected_) {
   ORBIT_CHECK(ssh_connection_artifacts != nullptr);
-  ORBIT_CHECK(metrics_uploader_ != nullptr);
 
   ui_->setupUi(this);
-  ui_->stadiaWidget->SetMetricsUploader(metrics_uploader);
   ui_->stadiaWidget->SetSshConnectionArtifacts(ssh_connection_artifacts);
   ui_->processesTableOverlay->raise();
 
@@ -145,9 +141,6 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   } else {
     SetStateMachineInitialState();
   }
-
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SESSION_SETUP_WINDOW_OPEN);
 }
 
 void SessionSetupDialog::SetStateMachineInitialState() {
@@ -175,9 +168,6 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
 
   int rc = QDialog::exec();
   state_machine_.stop();
-
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SESSION_SETUP_WINDOW_CLOSE);
 
   if (rc != QDialog::Accepted) return std::nullopt;
 

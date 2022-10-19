@@ -14,7 +14,6 @@
 #include "DataViews/SymbolLoadingState.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "Http/HttpDownloadManager.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
@@ -53,8 +52,7 @@ class SymbolLoader {
   SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
                orbit_base::ThreadPool* thread_pool,
                orbit_base::MainThreadExecutor* main_thread_executor,
-               orbit_client_services::ProcessManager* process_manager,
-               orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+               orbit_client_services::ProcessManager* process_manager);
 
   // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
   // `RetrieveModuleSymbolsAndLoadSymbols`. If this fails, it falls back on
@@ -125,7 +123,6 @@ class SymbolLoader {
   orbit_base::ThreadPool* thread_pool_;
   orbit_base::MainThreadExecutor* main_thread_executor_;
   orbit_client_services::ProcessManager* process_manager_;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
 

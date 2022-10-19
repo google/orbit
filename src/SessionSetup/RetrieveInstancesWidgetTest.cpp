@@ -17,7 +17,6 @@
 #include <memory>
 #include <optional>
 
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
@@ -48,8 +47,6 @@ class MockRetrieveInstances : public RetrieveInstances {
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>,
               LoadProjectsAndInstances,
               (const std::optional<Project>& project, InstanceListScope scope), (override));
-  MOCK_METHOD(void, SetMetricsUploader,
-              (orbit_metrics_uploader::MetricsUploader * metrics_uploader), (override));
 };
 
 namespace {
@@ -337,7 +334,6 @@ TEST_F(RetrieveInstancesWidgetTest, StartFailed) {
           ErrorMessage{"error message"}}));
 
   widget_.Start();
-  QCoreApplication::processEvents();
 
   QMetaObject::invokeMethod(
       &widget_, []() { QCoreApplication::exit(); }, Qt::QueuedConnection);

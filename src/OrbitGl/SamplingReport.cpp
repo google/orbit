@@ -29,9 +29,8 @@ using orbit_client_data::ThreadSampleData;
 SamplingReport::SamplingReport(
     OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
     const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool has_summary)
+    bool has_summary)
     : app_{app},
-      metrics_uploader_{metrics_uploader},
       callstack_data_{callstack_data},
       post_processed_sampling_data_{post_processed_sampling_data},
       has_summary_{has_summary} {
@@ -76,7 +75,7 @@ void SamplingReport::FillReport() {
       post_processed_sampling_data_->GetSortedThreadSampleData();
 
   for (const ThreadSampleData* thread_sample_data : sample_data) {
-    orbit_data_views::SamplingReportDataView thread_report{app_, metrics_uploader_};
+    orbit_data_views::SamplingReportDataView thread_report{app_};
     thread_report.Init();
     thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
     thread_report.SetThreadID(thread_sample_data->thread_id);

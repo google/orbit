@@ -16,15 +16,13 @@
 #include "ClientProtos/preset.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "PresetFile/PresetFile.h"
 
 namespace orbit_data_views {
 class PresetsDataView : public DataView {
  public:
-  explicit PresetsDataView(AppInterface* app,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  explicit PresetsDataView(AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnPresetName; }

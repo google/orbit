@@ -17,7 +17,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
-#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -53,10 +52,9 @@ namespace orbit_data_views {
 
 class PresetsDataViewTest : public testing::Test {
  public:
-  explicit PresetsDataViewTest() : view_{&app_, &metrics_uploader_} { view_.Init(); }
+  explicit PresetsDataViewTest() : view_{&app_} { view_.Init(); }
 
  protected:
-  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   MockAppInterface app_;
   PresetsDataView view_;
 };

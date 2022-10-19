@@ -20,7 +20,6 @@
 #include <system_error>
 
 #include "DeploymentConfigurations.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/AnyInvocable.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
@@ -52,8 +51,7 @@ class ServiceDeployManager : public QObject {
 
   ~ServiceDeployManager() override;
 
-  ErrorMessageOr<GrpcPort> Exec(
-      orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+  ErrorMessageOr<GrpcPort> Exec();
 
   // This method copies remote source file to local destination.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> CopyFileToLocal(

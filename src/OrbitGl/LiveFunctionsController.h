@@ -12,7 +12,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
@@ -23,8 +22,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   using ScopeId = orbit_client_data::ScopeId;
 
  public:
-  explicit LiveFunctionsController(OrbitApp* app,
-                                   orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  explicit LiveFunctionsController(OrbitApp* app);
 
   orbit_data_views::LiveFunctionsDataView& GetDataView() { return live_functions_data_view_; }
 
@@ -66,7 +64,6 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   uint64_t id_to_select_ = 0;
 
   OrbitApp* app_ = nullptr;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // LIVE_FUNCTIONS_H_

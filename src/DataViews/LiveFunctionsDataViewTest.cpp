@@ -28,7 +28,6 @@
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
-#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
@@ -231,8 +230,7 @@ class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterfa
 class LiveFunctionsDataViewTest : public testing::Test {
  public:
   explicit LiveFunctionsDataViewTest()
-      : view_{&live_functions_, &app_, &metrics_uploader_},
-        capture_data_(GenerateTestCaptureData(&module_manager_)) {
+      : view_{&live_functions_, &app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
@@ -256,7 +254,6 @@ class LiveFunctionsDataViewTest : public testing::Test {
  protected:
   MockLiveFunctionsInterface live_functions_;
   orbit_data_views::MockAppInterface app_;
-  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::LiveFunctionsDataView view_;
 
   orbit_client_data::ModuleManager module_manager_;

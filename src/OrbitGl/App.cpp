@@ -72,10 +72,6 @@
 #include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
 #include "MainWindowInterface.h"
-#include "MetricsUploader/CaptureMetric.h"
-#include "MetricsUploader/MetricsUploader.h"
-#include "MetricsUploader/ScopedMetric.h"
-#include "MetricsUploader/orbit_log_event.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/CanceledOr.h"
@@ -161,11 +157,6 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
-using orbit_metrics_uploader::CaptureMetric;
-using orbit_metrics_uploader::OrbitCaptureData;
-using orbit_metrics_uploader::OrbitLogEvent;
-using orbit_metrics_uploader::ScopedMetric;
-
 using orbit_preset_file::PresetFile;
 
 using orbit_symbol_provider::ModuleIdentifier;
@@ -177,7 +168,6 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 namespace {
 
-constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
 constexpr const char* kNtdllSoFileName = "ntdll.so";
 constexpr const char* kWineSyscallDispatcherFunctionName = "__wine_syscall_dispatcher";
 constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
@@ -207,53 +197,6 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
   }
 
   return orbit_data_views::PresetLoadState::kPartiallyLoadable;
-}
-
-orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
-    const std::vector<FunctionInfo>& instrumented_functions, int64_t number_of_frame_tracks,
-    bool thread_states, int64_t memory_information_sampling_period_ms,
-    bool lib_orbit_vulkan_layer_loaded, uint64_t max_local_marker_depth_per_command_buffer,
-    DynamicInstrumentationMethod dynamic_instrumentation_method,
-    uint64_t callstack_samples_per_second, UnwindingMethod callstack_unwinding_method,
-    bool auto_frame_track) {
-  orbit_metrics_uploader::CaptureStartData capture_start_data{};
-  capture_start_data.number_of_instrumented_functions = instrumented_functions.size();
-  capture_start_data.number_of_frame_tracks = number_of_frame_tracks;
-  capture_start_data.thread_states =
-      thread_states ? orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_ENABLED
-                    : orbit_metrics_uploader::OrbitCaptureData_ThreadStates_THREAD_STATES_DISABLED;
-  capture_start_data.memory_information_sampling_period_ms = memory_information_sampling_period_ms;
-  capture_start_data.lib_orbit_vulkan_layer =
-      lib_orbit_vulkan_layer_loaded
-          ? orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_LOADED
-          : orbit_metrics_uploader::OrbitCaptureData_LibOrbitVulkanLayer_LIB_NOT_LOADED;
-  if (max_local_marker_depth_per_command_buffer == std::numeric_limits<uint64_t>::max()) {
-    capture_start_data.local_marker_depth_per_command_buffer =
-        orbit_metrics_uploader::OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_UNLIMITED;
-  } else {
-    capture_start_data.local_marker_depth_per_command_buffer =
-        orbit_metrics_uploader::OrbitCaptureData_LocalMarkerDepthPerCommandBuffer_LIMITED;
-    capture_start_data.max_local_marker_depth_per_command_buffer =
-        max_local_marker_depth_per_command_buffer;
-  }
-  capture_start_data.dynamic_instrumentation_method =
-      dynamic_instrumentation_method == orbit_grpc_protos::CaptureOptions::kKernelUprobes
-          ? orbit_metrics_uploader::
-                OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_KERNEL
-          : orbit_metrics_uploader::
-                OrbitCaptureData_DynamicInstrumentationMethod_DYNAMIC_INSTRUMENTATION_METHOD_ORBIT;
-  capture_start_data.callstack_samples_per_second = callstack_samples_per_second;
-  capture_start_data.callstack_unwinding_method =
-      callstack_unwinding_method == orbit_grpc_protos::CaptureOptions::kDwarf
-          ? orbit_metrics_uploader::
-                OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_DWARF
-          : orbit_metrics_uploader::
-                OrbitCaptureData_CallstackUnwindingMethod_CALLSTACK_UNWINDING_METHOD_FRAME_POINTER;
-  capture_start_data.auto_frame_track =
-      auto_frame_track
-          ? orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_ENABLED
-          : orbit_metrics_uploader::OrbitCaptureData_AutoFrameTrack_AUTO_FRAME_TRACK_DISABLED;
-  return capture_start_data;
 }
 
 // Searches through an inout modules list for a module which paths contains path_substring. If one
@@ -300,11 +243,8 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                   orbit_base::MainThreadExecutor* main_thread_executor,
-                   orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : main_window_{main_window},
-      main_thread_executor_(main_thread_executor),
-      metrics_uploader_(metrics_uploader) {
+                   orbit_base::MainThreadExecutor* main_thread_executor)
+    : main_window_{main_window}, main_thread_executor_(main_thread_executor) {
   ORBIT_CHECK(main_window_ != nullptr);
 
   thread_pool_ = orbit_base::ThreadPool::Create(
@@ -375,12 +315,6 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
           absl::StrFormat("The target process crashed during the capture with signal %d.",
                           capture_finished.target_process_termination_signal()));
     }
-    metrics_capture_complete_data_.target_process_state_after_capture =
-        static_cast<OrbitCaptureData::TargetProcessStateAfterCapture>(
-            capture_finished.target_process_state_after_capture());
-    metrics_capture_complete_data_.target_process_termination_signal =
-        static_cast<OrbitCaptureData::TargetProcessTerminationSignal>(
-            capture_finished.target_process_termination_signal());
 
     ORBIT_CHECK(HasCaptureData());
     if (GetCaptureData().file_path().has_value()) {
@@ -398,10 +332,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
   absl::Mutex mutex;
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
-
-  if (file_path.has_value()) {
-    metrics_capture_complete_data_.file_path = file_path.value();
-  }
 
   main_thread_executor_->Schedule(
       [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
@@ -497,15 +427,6 @@ Future<void> OrbitApp::OnCaptureComplete() {
         ORBIT_CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
-        const orbit_client_data::ThreadSampleData* all_threads_sample_data =
-            GetCaptureData().post_processed_sampling_data().GetSummary();
-        if (all_threads_sample_data != nullptr) {
-          metrics_capture_complete_data_.number_of_callstack_samples =
-              all_threads_sample_data->samples_count;
-          metrics_capture_complete_data_.number_of_unwinding_errors =
-              all_threads_sample_data->unwinding_errors_count;
-        }
-
         FireRefreshCallbacks();
 
         if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
@@ -543,8 +464,6 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 }
 
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
-  CaptureMetricProcessTimer(timer_info);
-
   GetMutableCaptureData().UpdateScopeStats(timer_info);
 
   GetMutableTimeGraph()->ProcessTimer(timer_info);
@@ -556,7 +475,6 @@ void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_str
 }
 
 void OrbitApp::OnApiTrackValue(const orbit_client_data::ApiTrackValue& api_track_value) {
-  metrics_capture_complete_data_.number_of_manual_tracked_value_timers++;
   GetMutableTimeGraph()->ProcessApiTrackValueEvent(api_track_value);
 }
 
@@ -781,16 +699,14 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
   });
 }
 
-std::unique_ptr<OrbitApp> OrbitApp::Create(
-    orbit_gl::MainWindowInterface* main_window,
-    orbit_base::MainThreadExecutor* main_thread_executor,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  return std::make_unique<OrbitApp>(main_window, main_thread_executor, metrics_uploader);
+std::unique_ptr<OrbitApp> OrbitApp::Create(orbit_gl::MainWindowInterface* main_window,
+                                           orbit_base::MainThreadExecutor* main_thread_executor) {
+  return std::make_unique<OrbitApp>(main_window, main_thread_executor);
 }
 
 void OrbitApp::PostInit(bool is_connected) {
   symbol_loader_.emplace(this, main_thread_id_, thread_pool_.get(), main_thread_executor_,
-                         process_manager_, metrics_uploader_);
+                         process_manager_);
 
   if (is_connected) {
     ORBIT_CHECK(process_manager_ != nullptr);
@@ -952,8 +868,6 @@ void OrbitApp::RenderImGuiDebugUI() {
 }
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
-  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_DISASSEMBLY_SHOW};
-
   ORBIT_CHECK(process_ != nullptr);
   const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
   ORBIT_CHECK(module != nullptr);
@@ -964,18 +878,15 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
         "Error reading memory",
         absl::StrFormat(
             R"(Unable to calculate function "%s" address, likely because the module "%s" is not loaded.)",
-            function.pretty_name(), module->file_path()),
-        std::move(metric));
+            function.pretty_name(), module->file_path()));
     return;
   }
-  thread_pool_->Schedule([this, metric = std::move(metric),
-                          absolute_address = absolute_address.value(), is_64_bit, pid,
+  thread_pool_->Schedule([this, absolute_address = absolute_address.value(), is_64_bit, pid,
                           function]() mutable {
     auto result = process_manager_->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
-      SendErrorToUi("Error reading memory",
-                    absl::StrFormat("Could not read process memory: %s.", result.error().message()),
-                    std::move(metric));
+      SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
+                                                            result.error().message()));
       return;
     }
 
@@ -1010,19 +921,16 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
-  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SOURCE_CODE_SHOW};
-
   const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module->module_id());
 
-  (void)loaded_module.Then(main_thread_executor_, [this, module, function,
-                                                   metric = std::move(metric)](
+  (void)loaded_module.Then(main_thread_executor_, [this, module, function](
                                                       const ErrorMessageOr<std::filesystem::path>&
                                                           local_file_path_or_error) mutable {
     const std::string error_title = "Error showing source code";
     if (local_file_path_or_error.has_error()) {
-      SendErrorToUi(error_title, local_file_path_or_error.error().message(), std::move(metric));
+      SendErrorToUi(error_title, local_file_path_or_error.error().message());
       return;
     }
 
@@ -1035,8 +943,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
           absl::StrFormat(
               R"(Could not find source code location of function "%s" in module "%s": %s)",
               function.pretty_name(), module->file_path(),
-              decl_line_info_or_error.error().message()),
-          std::move(metric));
+              decl_line_info_or_error.error().message()));
       return;
     }
 
@@ -1054,8 +961,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
             error_title,
             absl::StrFormat(
                 R"(Unable calculate function "%s" address in memory, likely because the module "%s" is not loaded)",
-                function.pretty_name(), module->file_path()),
-            std::move(metric));
+                function.pretty_name(), module->file_path()));
         return;
       }
 
@@ -1067,8 +973,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
       }
     }
 
-    main_window_->ShowSourceCode(source_file_path, line_info.source_line(), std::move(code_report),
-                                 &metric);
+    main_window_->ShowSourceCode(source_file_path, line_info.source_line(), std::move(code_report));
   });
 }
 
@@ -1121,8 +1026,8 @@ void OrbitApp::SetSamplingReport(
     sampling_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data,
-                                                 metrics_uploader_);
+  auto report =
+      std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   ORBIT_CHECK(sampling_reports_callback_);
   sampling_reports_callback_(callstack_data_view, report);
@@ -1147,9 +1052,8 @@ void OrbitApp::SetSelectionReport(
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(this, selection_callstack_data,
-                                                 selection_post_processed_sampling_data,
-                                                 metrics_uploader_, has_summary);
+  auto report = std::make_shared<SamplingReport>(
+      this, selection_callstack_data, selection_post_processed_sampling_data, has_summary);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
@@ -1252,12 +1156,7 @@ void OrbitApp::SetClipboard(const std::string& text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
-  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_PRESET_SAVE};
-  auto save_result = SavePreset(filename);
-  if (save_result.has_error()) {
-    metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-    return save_result.error();
-  }
+  OUTCOME_TRY(SavePreset(filename));
   ListPresets();
   FireRefreshCallbacks(DataViewType::kPresets);
   return outcome::success();
@@ -1313,12 +1212,12 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  auto load_future = thread_pool_->Schedule([this, file_path]() {
+  auto load_future = thread_pool_->Schedule([this, file_path]()
+                                                -> ErrorMessageOr<CaptureListener::CaptureOutcome> {
     capture_loading_cancellation_requested_ = false;
 
-    auto capture_file_or_error = CaptureFile::OpenForReadWrite(file_path);
-
-    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result{CaptureOutcome::kComplete};
+    OUTCOME_TRY(const std::unique_ptr<CaptureFile> capture_file,
+                CaptureFile::OpenForReadWrite(file_path));
 
     // Set is_loading_capture_ to true for the duration of this scope.
     data_source_ = CaptureData::DataSource::kLoadedCapture;
@@ -1327,28 +1226,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
                                              *value = CaptureData::DataSource::kLiveCapture;
                                            }};
 
-    ScopedMetric metric{metrics_uploader_, capture_file_or_error.has_value()
-                                               ? OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
-                                               : OrbitLogEvent::ORBIT_CAPTURE_LOAD};
-    if (capture_file_or_error.has_value()) {
-      load_result = LoadCapture(this, capture_file_or_error.value().get(),
-                                &capture_loading_cancellation_requested_);
-    } else {
-      load_result = capture_file_or_error.error();
-    }
+    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result =
+        LoadCapture(this, capture_file.get(), &capture_loading_cancellation_requested_);
 
-    if (load_result.has_error()) {
-      metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-      return load_result;
-    }
-
-    switch (load_result.value()) {
-      case CaptureOutcome::kCancelled:
-        metric.SetStatusCode(OrbitLogEvent::CANCELLED);
-        break;
-      case CaptureOutcome::kComplete:
-        OnCaptureComplete();
-        break;
+    if (load_result.has_value() && load_result.value() == CaptureOutcome::kComplete) {
+      OnCaptureComplete();
     }
 
     return load_result;
@@ -1565,38 +1447,6 @@ void OrbitApp::StartCapture() {
   options.thread_state_change_callstack_collection =
       data_manager_->thread_state_change_callstack_collection();
 
-  // In metrics, -1 indicates memory collection was turned off. See also the comment in
-  // orbit_log_event.proto
-  constexpr int64_t kMemoryCollectionDisabledMetricsValue = -1;
-  int64_t memory_information_sampling_period_ms_for_metrics = kMemoryCollectionDisabledMetricsValue;
-  if (options.collect_memory_info) {
-    memory_information_sampling_period_ms_for_metrics =
-        static_cast<int64_t>(options.memory_sampling_period_ms);
-  }
-
-  // Whether the Orbit custom vulkan layer is used by the process (game), is determined via the
-  // module list of the process. If "libOrbitVulkanLayer.so" is in the module list, it means the
-  // process loaded it and it is in use.
-  bool orbit_vulkan_layer_loaded_by_process = false;
-  std::vector<const ModuleData*> vulkan_layer_modules =
-      module_manager_->GetModulesByFilename(kLibOrbitVulkanLayerSoFileName);
-  for (const auto& module : vulkan_layer_modules) {
-    if (process->IsModuleLoadedByProcess(module)) {
-      orbit_vulkan_layer_loaded_by_process = true;
-    }
-  }
-
-  CaptureMetric capture_metric{
-      metrics_uploader_,
-      CreateCaptureStartData(
-          selected_functions, user_defined_capture_data.frame_track_functions().size(),
-          data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
-          orbit_vulkan_layer_loaded_by_process, options.max_local_marker_depth_per_command_buffer,
-          options.dynamic_instrumentation_method, static_cast<uint64_t>(options.samples_per_second),
-          options.unwinding_method, data_manager_->enable_auto_frame_track())};
-
-  metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
-
   ORBIT_CHECK(capture_client_ != nullptr);
 
   std::unique_ptr<CaptureEventProcessor> capture_event_processor = CreateCaptureEventProcessor(
@@ -1611,44 +1461,27 @@ void OrbitApp::StartCapture() {
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)
-  capture_result.Then(
-      main_thread_executor_, [this, capture_metric = std::move(capture_metric)](
-                                 ErrorMessageOr<CaptureOutcome> capture_result) mutable {
-        if (capture_result.has_error()) {
-          OnCaptureFailed(capture_result.error());
-          capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
-          capture_metric.SendCaptureFailed();
-          return;
-        }
-        switch (capture_result.value()) {
-          case CaptureListener::CaptureOutcome::kCancelled:
-            OnCaptureCancelled();
-            capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
-            capture_metric.SendCaptureCancelled();
-            return;
-          case CaptureListener::CaptureOutcome::kComplete:
-            OnCaptureComplete().Then(
-                main_thread_executor_,
-                [this, capture_metric = std::move(capture_metric)]() mutable {
-                  auto capture_time = absl::Nanoseconds(GetTimeGraph()->GetCaptureTimeSpanNs());
-                  auto capture_time_ms = ToChronoMilliseconds(capture_time);
-                  capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
-                  capture_metric.SendCaptureSucceeded(capture_time_ms);
-                });
-
-            return;
-        }
-      });
+  capture_result.Then(main_thread_executor_,
+                      [this](ErrorMessageOr<CaptureOutcome> capture_result) mutable {
+                        if (capture_result.has_error()) {
+                          OnCaptureFailed(capture_result.error());
+                          return;
+                        }
+                        switch (capture_result.value()) {
+                          case CaptureListener::CaptureOutcome::kCancelled:
+                            OnCaptureCancelled();
+                            return;
+                          case CaptureListener::CaptureOutcome::kComplete:
+                            OnCaptureComplete();
+                            return;
+                        }
+                      });
 }
 
 void OrbitApp::StopCapture() {
   if (!capture_client_->StopCapture()) {
     return;
   }
-
-  auto capture_time = absl::Nanoseconds(GetTimeGraph()->GetCaptureTimeSpanUs());
-  auto capture_time_ms = ToChronoMilliseconds(capture_time);
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_CAPTURE_DURATION, capture_time_ms);
 
   ORBIT_CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
@@ -1752,12 +1585,6 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
   });
 }
 
-void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
-                             ScopedMetric metric) {
-  SendErrorToUi(title, text);
-  metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-}
-
 Future<void> OrbitApp::LoadSymbolsManually(absl::Span<const ModuleData* const> modules) {
   // Use a set, to filter out duplicates
   absl::flat_hash_set<const ModuleData*> modules_set(modules.begin(), modules.end());
@@ -1803,20 +1630,10 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
 
         switch (error_handling_result) {
           case MainWindowInterface::SymbolErrorHandlingResult::kSymbolLoadingCancelled: {
-            metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_CANCELLED);
             return {SymbolLoadingAndErrorHandlingResult::kCanceled};
           }
           case MainWindowInterface::SymbolErrorHandlingResult::kReloadRequired: {
-            return RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-                main_thread_executor_,
-                [this](SymbolLoadingAndErrorHandlingResult result)
-                    -> SymbolLoadingAndErrorHandlingResult {
-                  if (result == SymbolLoadingAndErrorHandlingResult::kSymbolsLoadedSuccessfully) {
-                    metrics_uploader_->SendLogEvent(
-                        OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_RESOLVED);
-                  }
-                  return result;
-                });
+            return RetrieveModuleAndLoadSymbolsAndHandleError(module);
           }
         }
         ORBIT_UNREACHABLE();
@@ -2002,7 +1819,6 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
 }
 
 Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file) {
-  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_PRESET_LOAD};
   std::vector<Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
   load_module_results.reserve(module_paths.size());
@@ -2029,7 +1845,7 @@ Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file)
   auto results = orbit_base::WhenAll(absl::MakeConstSpan(load_module_results));
   return results.Then(
       main_thread_executor_,
-      [this, metric = std::move(metric), preset_file](
+      [this, preset_file](
           std::vector<std::string> module_paths_not_found) mutable -> ErrorMessageOr<void> {
         size_t tried_to_load_amount = module_paths_not_found.size();
         module_paths_not_found.erase(
@@ -2038,7 +1854,6 @@ Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file)
             module_paths_not_found.end());
 
         if (tried_to_load_amount == module_paths_not_found.size()) {
-          metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
           std::string error_message =
               absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
                               absl::StrJoin(module_paths_not_found, "\n* "));
@@ -2519,10 +2334,10 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                       bool origin_is_multiple_threads) {
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
-  std::unique_ptr<SamplingReport> report = std::make_unique<SamplingReport>(
-      this, &GetCaptureData().selection_callstack_data(),
-      &GetCaptureData().selection_post_processed_sampling_data(), metrics_uploader_,
-      /*generate_summary*/ origin_is_multiple_threads);
+  std::unique_ptr<SamplingReport> report =
+      std::make_unique<SamplingReport>(this, &GetCaptureData().selection_callstack_data(),
+                                       &GetCaptureData().selection_post_processed_sampling_data(),
+                                       /*generate_summary*/ origin_is_multiple_threads);
   main_window_->SetCallstackInspection(
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
           GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
@@ -2594,28 +2409,28 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this, metrics_uploader_);
+        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
+        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_);
+        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
-        presets_data_view_ = DataView::CreateAndInit<PresetsDataView>(this, metrics_uploader_);
+        presets_data_view_ = DataView::CreateAndInit<PresetsDataView>(this);
         panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
@@ -2632,8 +2447,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ =
-            DataView::CreateAndInit<TracepointsDataView>(this, metrics_uploader_);
+        tracepoints_data_view_ = DataView::CreateAndInit<TracepointsDataView>(this);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
@@ -2646,8 +2460,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ =
-        DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
+    selection_callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
@@ -2689,13 +2502,11 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 
 void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
   data_manager_->EnableFrameTrack(function);
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
 }
 
 void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
   if (data_manager_->IsFrameTrackEnabled(function)) {
     data_manager_->DisableFrameTrack(function);
-    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
   }
 }
 
@@ -2732,7 +2543,6 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       AddFrameTrackTimers(instrumented_function_id);
     }
     TrySaveUserDefinedCaptureInfo();
-    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
     return;
   }
 
@@ -2746,7 +2556,6 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       function->pretty_name());
   main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
       title, message, kDontShowAgainEmptyFrameTrackWarningKey);
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
@@ -2772,7 +2581,6 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
-    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
   }
 }
 
@@ -2938,32 +2746,6 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   }
 
   return outcome::success();
-}
-
-void OrbitApp::CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer) {
-  if (timer.function_id() != 0) {
-    metrics_capture_complete_data_.number_of_instrumented_function_timers++;
-    return;
-  }
-  switch (timer.type()) {
-    case orbit_client_protos::TimerInfo_Type_kGpuActivity:
-      metrics_capture_complete_data_.number_of_gpu_activity_timers++;
-      break;
-    case orbit_client_protos::TimerInfo_Type_kGpuCommandBuffer:
-      metrics_capture_complete_data_.number_of_vulkan_layer_gpu_command_buffer_timers++;
-      break;
-    case orbit_client_protos::TimerInfo_Type_kGpuDebugMarker:
-      metrics_capture_complete_data_.number_of_vulkan_layer_gpu_debug_marker_timers++;
-      break;
-    case orbit_client_protos::TimerInfo_Type_kApiScope:
-      metrics_capture_complete_data_.number_of_manual_start_timers++;
-      break;
-    case orbit_client_protos::TimerInfo_Type_kApiScopeAsync:
-      metrics_capture_complete_data_.number_of_manual_start_async_timers++;
-      break;
-    default:
-      break;
-  }
 }
 
 void OrbitApp::TrySaveUserDefinedCaptureInfo() {

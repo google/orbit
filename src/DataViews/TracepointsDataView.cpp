@@ -20,9 +20,8 @@ using orbit_grpc_protos::TracepointInfo;
 
 namespace orbit_data_views {
 
-TracepointsDataView::TracepointsDataView(AppInterface* app,
-                                         orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kTracepoints, app, metrics_uploader) {}
+TracepointsDataView::TracepointsDataView(AppInterface* app)
+    : DataView(DataViewType::kTracepoints, app) {}
 
 const std::vector<DataView::Column>& TracepointsDataView::GetColumns() {
   static const std::vector<Column>& columns = [] {

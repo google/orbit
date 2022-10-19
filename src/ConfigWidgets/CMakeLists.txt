@@ -12,7 +12,6 @@ target_include_directories(ConfigWidgets PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(ConfigWidgets PUBLIC ClientData
                                            ClientFlags
                                            ClientSymbols
-                                           MetricsUploader
                                            OrbitBase
                                            SourcePathsMapping
                                            CONAN_PKG::abseil

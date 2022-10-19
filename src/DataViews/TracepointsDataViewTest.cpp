@@ -9,7 +9,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/TracepointsDataView.h"
 #include "GrpcProtos/tracepoint.pb.h"
-#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
@@ -44,7 +43,7 @@ const std::array<std::string, kNumTracepoints> kTracepointNames{"sys_enter_kill"
 
 class TracepointsDataViewTest : public testing::Test {
  public:
-  explicit TracepointsDataViewTest() : view_{&app_, &metrics_uploader_} {
+  explicit TracepointsDataViewTest() : view_{&app_} {
     view_.Init();
     for (size_t i = 0; i < kNumTracepoints; i++) {
       TracepointInfo tracepoint;
@@ -67,7 +66,6 @@ class TracepointsDataViewTest : public testing::Test {
 
  protected:
   orbit_data_views::MockAppInterface app_;
-  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::TracepointsDataView view_;
   std::vector<TracepointInfo> tracepoints_;
 };

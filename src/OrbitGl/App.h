@@ -74,8 +74,6 @@
 #include "IntrospectionWindow.h"
 #include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
-#include "MetricsUploader/CaptureMetric.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -105,14 +103,11 @@ class OrbitApp final : public DataViewFactory,
 
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                    orbit_base::MainThreadExecutor* main_thread_executor,
-                    orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+                    orbit_base::MainThreadExecutor* main_thread_executor);
   ~OrbitApp() override;
 
-  static std::unique_ptr<OrbitApp> Create(
-      orbit_gl::MainWindowInterface* main_window,
-      orbit_base::MainThreadExecutor* main_thread_executor,
-      orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+  static std::unique_ptr<OrbitApp> Create(orbit_gl::MainWindowInterface* main_window,
+                                          orbit_base::MainThreadExecutor* main_thread_executor);
 
   void PostInit(bool is_connected);
   void MainTick();
@@ -330,8 +325,6 @@ class OrbitApp final : public DataViewFactory,
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text) override;
-  void SendErrorToUi(const std::string& title, const std::string& text,
-                     orbit_metrics_uploader::ScopedMetric metric);
   void RenderImGuiDebugUI();
 
   orbit_base::Future<void> LoadSymbolsManually(
@@ -597,9 +590,6 @@ class OrbitApp final : public DataViewFactory,
 
   void RequestUpdatePrimitives();
 
-  // Only call from the capture thread
-  void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
-
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                      std::optional<ScopeId> scope_id) override;
 
@@ -670,13 +660,6 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
-
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
-  // TODO(b/166767590) Synchronize. Probably in the same way as capture_data
-  // Created by the main thread right before a capture is started. While capturing its modified by
-  // the capture thread. After the capture is finished its read by the main thread again. This is
-  // similar to how capture_data is used.
-  orbit_metrics_uploader::CaptureCompleteData metrics_capture_complete_data_;
 
   orbit_capture_file_info::Manager capture_file_info_manager_{};
 

@@ -97,7 +97,6 @@
 #include "GrpcProtos/services.pb.h"
 #include "Introspection/Introspection.h"
 #include "LiveFunctionsController.h"
-#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
@@ -156,9 +155,6 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 using orbit_client_data::WineSyscallHandlingMethod;
 
-using orbit_metrics_uploader::OrbitLogEvent;
-using orbit_metrics_uploader::ScopedMetric;
-
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";
 const QString kMediumGrayColor = "rgb(68, 68, 68)";
@@ -170,15 +166,13 @@ constexpr int kHintFrameHeight = 45;
 }  // namespace
 
 OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
       main_thread_executor_{orbit_qt_utils::MainThreadExecutorImpl::Create()},
-      app_{OrbitApp::Create(this, main_thread_executor_.get(), metrics_uploader)},
+      app_{OrbitApp::Create(this, main_thread_executor_.get())},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
-      target_configuration_(std::move(target_configuration)),
-      metrics_uploader_(metrics_uploader) {
+      target_configuration_(std::move(target_configuration)) {
   SetupMainWindow();
 
   SetupStatusBarLogButton();
@@ -204,8 +198,6 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   UpdateCaptureStateDependentWidgets();
 
   LoadCaptureOptionsIntoApp();
-
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN);
 
   // SymbolPaths.txt deprecation code
 
@@ -411,8 +403,7 @@ void OrbitMainWindow::SetupMainWindow() {
 
   StartMainTimer();
 
-  ui->liveFunctions->Initialize(app_.get(), metrics_uploader_, SelectionType::kExtended,
-                                FontType::kDefault);
+  ui->liveFunctions->Initialize(app_.get(), SelectionType::kExtended, FontType::kDefault);
 
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
@@ -422,10 +413,10 @@ void OrbitMainWindow::SetupMainWindow() {
             app_->SetHistogramSelectionRange(range);
           });
 
-  ui->topDownWidget->Initialize(app_.get(), metrics_uploader_);
-  ui->selectionTopDownWidget->Initialize(app_.get(), metrics_uploader_);
-  ui->bottomUpWidget->Initialize(app_.get(), metrics_uploader_);
-  ui->selectionBottomUpWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->topDownWidget->Initialize(app_.get());
+  ui->selectionTopDownWidget->Initialize(app_.get());
+  ui->bottomUpWidget->Initialize(app_.get());
+  ui->selectionBottomUpWidget->Initialize(app_.get());
 
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
@@ -1580,8 +1571,7 @@ void OrbitMainWindow::ExecuteSymbolLocationsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
   orbit_config_widgets::SymbolLocationsDialog dialog{
-      &client_symbols_storage_manager, metrics_uploader_,
-      absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
+      &client_symbols_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 
@@ -1647,8 +1637,6 @@ void OrbitMainWindow::Exit(int return_code) {
   if (introspection_widget_ != nullptr) {
     introspection_widget_->close();
   }
-
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_CLOSE);
 
   QApplication::exit(return_code);
 }
@@ -1822,8 +1810,7 @@ static std::optional<QString> TryApplyMappingAndReadSourceFile(
   return std::nullopt;
 }
 
-std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path,
-                                                       ScopedMetric* metric) {
+std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
   {
     ErrorMessageOr<std::string> source_code_or_error = orbit_base::ReadFileToString(file_path);
     if (source_code_or_error.has_value()) {
@@ -1837,13 +1824,10 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
   }
 
   {
-    metric->Pause();
     std::optional<orbit_source_paths_mapping_ui::UserAnswers> maybe_user_answers =
         orbit_source_paths_mapping_ui::AskUserForSourceFilePath(this, file_path);
-    metric->Resume();
 
     if (!maybe_user_answers.has_value()) {
-      metric->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
       return std::nullopt;
     }
 
@@ -1853,7 +1837,6 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
     if (file_contents_or_error.has_error()) {
       QMessageBox::critical(this, "Could not open source file",
                             QString::fromStdString(file_contents_or_error.error().message()));
-      metric->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       return std::nullopt;
     }
 
@@ -1870,9 +1853,8 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
 
 void OrbitMainWindow::ShowSourceCode(
     const std::filesystem::path& file_path, size_t line_number,
-    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report,
-    ScopedMetric* metric) {
-  const auto source_code = LoadSourceCode(file_path.lexically_normal(), metric);
+    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) {
+  const auto source_code = LoadSourceCode(file_path.lexically_normal());
   if (!source_code.has_value()) return;
 
   auto code_viewer_dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
@@ -1986,7 +1968,6 @@ orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::Handle
     const ErrorMessage& error, const orbit_client_data::ModuleData* module) {
   orbit_config_widgets::SymbolErrorDialog error_dialog{module, error.message(), this};
 
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_DISPLAYED);
   orbit_config_widgets::SymbolErrorDialog::Result result = error_dialog.Exec();
 
   switch (result) {
@@ -2029,8 +2010,6 @@ orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
       return_canceled_or = orbit_base::Canceled{};
       break;
     case Result::kStopAndDisable: {
-      metrics_uploader_->SendLogEvent(
-          orbit_metrics_uploader::OrbitLogEvent::ORBIT_SYMBOL_DOWNLOAD_DISABLED_BY_USER);
       app_->DisableDownloadForModule(module->file_path());
       break;
     }

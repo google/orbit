@@ -63,7 +63,6 @@ target_link_libraries(
           ClientData
           ClientFlags
           ClientServices
-          MetricsUploader
           OrbitBase
           OrbitGgp
           OrbitSsh
@@ -76,10 +75,10 @@ target_link_libraries(
 set_target_properties(SessionSetup PROPERTIES AUTOMOC ON)
 set_target_properties(SessionSetup PROPERTIES AUTOUIC ON)
 
-add_executable(SessionSetupTest)
+add_executable(SessionSetupTests)
 
 target_sources(
-  SessionSetupTest
+  SessionSetupTests
   PRIVATE ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
           PersistentStorageTest.cpp
@@ -93,18 +92,18 @@ target_sources(
 
 
 target_link_libraries(
-  SessionSetupTest
+  SessionSetupTests
   PRIVATE SessionSetup
           TestUtils
           GTest::QtGuiMain
           Qt5::Test)
 
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
-  register_test(SessionSetupTest PROPERTIES DISABLED TRUE)
+  register_test(SessionSetupTests PROPERTIES DISABLED TRUE)
 endif()
 
 if (NOT WIN32)
-  register_test(SessionSetupTest PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+  register_test(SessionSetupTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
 
 add_subdirectory(RetrieveInstancesWidgetDemo)

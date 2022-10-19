@@ -29,9 +29,7 @@ using orbit_client_data::ModuleManager;
 
 namespace orbit_data_views {
 
-CallstackDataView::CallstackDataView(AppInterface* app,
-                                     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kCallstack, app, metrics_uploader) {}
+CallstackDataView::CallstackDataView(AppInterface* app) : DataView(DataViewType::kCallstack, app) {}
 
 const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
