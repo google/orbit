@@ -28,15 +28,13 @@ class OrbitConan(ConanFile):
                "fPIC": [True, False],
                "run_tests": [True, False],
                "run_python_tests": [True, False],
-               "build_target": "ANY",
-               "deploy_opengl_software_renderer": [True, False]}
+               "build_target": "ANY"}
     default_options = {"system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
                        "run_tests": True,
                        "run_python_tests": False,
-                       "build_target": None,
-                       "deploy_opengl_software_renderer": False}
+                       "build_target": None}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
 
@@ -60,13 +58,6 @@ class OrbitConan(ConanFile):
         self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
-        if self.options.deploy_opengl_software_renderer and self.settings.os != "Windows":
-            raise ConanInvalidConfiguration("The OpenGL software renderer can only be deployed on Windows")
-        if self.options.deploy_opengl_software_renderer and not self.options.with_gui:
-            raise ConanInvalidConfiguration("The OpenGL software renderer can only be deployed with GUI enabled.")
-        if self.options.deploy_opengl_software_renderer and self.options.system_qt:
-            raise ConanInvalidConfiguration("The OpenGL software renderer cannot be deployed when using a system-provided Qt installation.")
-
         self.requires("abseil/20211102.0")
         self.requires("bzip2/1.0.8", override=True)
         self.requires("capstone/4.0.2")
@@ -91,9 +82,6 @@ class OrbitConan(ConanFile):
 
             if not self.options.system_qt:
                 self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
-
-        if self.options.deploy_opengl_software_renderer:
-            self.requires("llvmpipe/21.0.3@{}#fd5932d6a7fa5fb0af5045eb53c02d18".format(self._orbit_channel))
 
 
     def configure(self):
@@ -146,12 +134,6 @@ class OrbitConan(ConanFile):
             build_python.main()
 
     def imports(self):
-        dest = os.getenv("CONAN_IMPORT_PATH", "bin")
-        if self.options.deploy_opengl_software_renderer:
-            os.makedirs(dest, exist_ok=True)
-            shutil.copyfile(os.path.join(self.deps_cpp_info["llvmpipe"].bin_paths[0], "opengl32.dll"),
-                            os.path.join(dest, "opengl32sw.dll"))
-
         excludes = [
                 "*qt*",
                 "*licensewizard*",
@@ -268,7 +250,6 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("libIntegrationTestPuppetSharedObject.so.debug", src="lib/", dst="lib")
         self.copy("OrbitFakeClient", src="bin/", dst="bin")
         self.copy("OrbitFakeClient.debug", src="bin/", dst="bin")
-        self.copy("opengl32sw.dll", src="bin/", dst="bin")
         self.copy("msdia140.dll", src="bin/", dst="bin")
 
         if not self.options.system_qt:
