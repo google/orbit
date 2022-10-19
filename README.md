@@ -103,19 +103,19 @@ Questions and comments are more than welcome: please open an
 Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/), but
 is now developed and maintained by a team of engineers at Google. The current
 maintainers are:
-* @akopich
-* @antonrohr
-* @beckerhe
-* @danielfenner
-* @dimitry-
-* @dpallotti
-* @florian-kuebler
-* @karupayun
-* @pierricgimmig
-* @reichlfl
-* @ronaldfw
-* @vickyliu-go4it
-* @vwbaker
+* [@akopich](https://github.com/akopich)
+* [@antonrohr](https://github.com/antonrohr)
+* [@beckerhe](https://github.com/beckerhe)
+* [@danielfenner](https://github.com/danielfenner)
+* [@dimitry-](https://github.com/dimitry-)
+* [@dpallotti](https://github.com/dpallotti)
+* [@florian-kuebler](https://github.com/florian-kuebler)
+* [@karupayun](https://github.com/karupayun)
+* [@pierricgimmig](https://github.com/pierricgimmig)
+* [@reichlfl](https://github.com/reichlfl)
+* [@ronaldfw](https://github.com/ronaldfw)
+* [@vickyliu-go4it](https://github.com/vickyliu-go4it)
+* [@vwbaker](https://github.com/vwbaker)
 
 ## License
 
