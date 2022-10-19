@@ -94,6 +94,7 @@ find_package(xxHash REQUIRED)
 find_package(concurrentqueue REQUIRED)
 find_package(gte REQUIRED)
 find_package(libprotobuf-mutator REQUIRED)
+find_package(LZMA REQUIRED)
 
 if(WITH_GUI)
   find_package(OpenGL REQUIRED)

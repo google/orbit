@@ -73,7 +73,6 @@ class OrbitConan(ConanFile):
         self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
         self.requires("c-ares/1.15.0", override=True)
         self.requires("llvm-core/12.0.0@{}".format(self._orbit_channel))
-        self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
         self.requires("openssl/1.1.1k", override=True)
         self.requires("outcome/2.2.0")
         if self.settings.os != "Windows":
