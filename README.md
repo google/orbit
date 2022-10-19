@@ -21,12 +21,12 @@ Dynamic instrumentation results in exact function entry and exit information
 which is presented in the form of per-thread hierarchical call graphs.
 Manual instrumentation markers can be added to the source code and further
 allows for value-tracking. Scheduling events are also shown to visualize when a
-thread was running and on what core. Furthermore, dependencies between threads
-are displaying which thread got blocked/unblocked by which other thread. For AMD
-GPUs, the submission, scheduling and hardware execution timings of a job is
-visualized. Additional GPU data, such as Vulkan debug markers can be retrieved
-using Orbit's Vulkan layer. Memory consumption and page-fault information is
-visualized as well.
+thread was running and on what core. Furthermore, Orbit visualizes thread
+dependencies, showing which thread got blocked or unblocked by which other
+thread. For AMD GPUs, the submission, scheduling and hardware execution timings
+of a job is visualized. Additional GPU data, such as Vulkan debug markers can be
+retrieved using Orbit's Vulkan layer. Memory consumption and page-fault
+information is visualized as well.
 
 An introduction to Orbit's key features can be found in the following YouTube
 video:
