@@ -31,7 +31,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   explicit SamplingReport(
       OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
-      orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool has_summary = true);
+      bool has_summary = true);
   void UpdateReport(
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
@@ -64,7 +64,6 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   void UpdateDisplayedCallstack();
 
   OrbitApp* app_ = nullptr;
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
   const orbit_client_data::CallstackData* callstack_data_;
   const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data_;
 

@@ -9,8 +9,6 @@
 #include "ClientFlags/ClientFlags.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "Introspection/Introspection.h"
-#include "MetricsUploader/ScopedMetric.h"
-#include "MetricsUploader/orbit_log_event.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ImmediateExecutor.h"
@@ -28,9 +26,6 @@ using orbit_client_data::ModuleData;
 
 using orbit_data_views::SymbolLoadingState;
 
-using orbit_metrics_uploader::OrbitLogEvent;
-using orbit_metrics_uploader::ScopedMetric;
-
 using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 
@@ -39,18 +34,15 @@ namespace orbit_gl {
 SymbolLoader::SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
                            orbit_base::ThreadPool* thread_pool,
                            orbit_base::MainThreadExecutor* main_thread_executor,
-                           orbit_client_services::ProcessManager* process_manager,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+                           orbit_client_services::ProcessManager* process_manager)
     : app_interface_{app_interface},
       main_thread_id_{main_thread_id},
       thread_pool_{thread_pool},
       main_thread_executor_{main_thread_executor},
-      process_manager_{process_manager},
-      metrics_uploader_{metrics_uploader} {
+      process_manager_{process_manager} {
   ORBIT_CHECK(app_interface_ != nullptr);
   ORBIT_CHECK(thread_pool_ != nullptr);
   ORBIT_CHECK(main_thread_executor_ != nullptr);
-  ORBIT_CHECK(metrics_uploader_ != nullptr);
 
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
   download_disabled_modules_ = storage_manager.LoadDisabledModulePaths();
@@ -94,10 +86,6 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
   ORBIT_CHECK(module_data != nullptr);
-
-  // TODO(b/231455031): Make sure this scoped metric gets the state CANCELLED when the user stops
-  //  the download.
-  ScopedMetric metric(metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
   const ModuleIdentifier module_id = module_data->module_id();
 
@@ -156,11 +144,10 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
           }));
 
   retrieve_module_itself_and_load_fallback_symbols_future.Then(
-      main_thread_executor_, [this, metric = std::move(metric),
-                              module_id](const ErrorMessageOr<CanceledOr<void>>& result) mutable {
+      main_thread_executor_,
+      [this, module_id](const ErrorMessageOr<CanceledOr<void>>& result) mutable {
         if (result.has_error()) {
           modules_with_symbol_loading_error_.emplace(module_id);
-          metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
         }
         symbols_currently_loading_.erase(module_id);
         app_interface_->OnModuleListUpdated();

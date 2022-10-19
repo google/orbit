@@ -177,11 +177,11 @@ target_link_libraries(
          DisplayFormats
          GrpcProtos
          Http
-         MetricsUploader
          OrbitAccessibility
          OrbitBase
          OrbitGgp
          OrbitPaths
+         OrbitVersion
          PresetFile
          StringManager
          RemoteSymbolProvider

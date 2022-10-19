@@ -15,8 +15,7 @@
 namespace orbit_data_views {
 class FunctionsDataView : public DataView {
  public:
-  explicit FunctionsDataView(AppInterface* app,
-                             orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  explicit FunctionsDataView(AppInterface* app);
 
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;

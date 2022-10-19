@@ -35,8 +35,7 @@ class OrbitLiveFunctions : public QWidget {
   explicit OrbitLiveFunctions(QWidget* parent = nullptr);
   ~OrbitLiveFunctions() override;
 
-  void Initialize(OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader,
-                  SelectionType selection_type, FontType font_type);
+  void Initialize(OrbitApp* app, SelectionType selection_type, FontType font_type);
   void Deinitialize();
   void Refresh();
   void OnDataChanged();

@@ -11,7 +11,6 @@
 #include <optional>
 #include <variant>
 
-#include "MetricsUploader/MetricsUploaderStub.h"
 #include "OrbitSsh/Context.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/DeploymentConfigurations.h"
@@ -36,13 +35,12 @@ class SessionSetupDialogTest : public ::testing::Test {
   std::unique_ptr<orbit_ssh::Context> ssh_context_;
   DeploymentConfiguration deploy_config_{NoDeployment{}};
   std::unique_ptr<SshConnectionArtifacts> ssh_artifacts_;
-  orbit_metrics_uploader::MetricsUploaderStub uploader_stub_;
 };
 
 }  // namespace
 
 TEST_F(SessionSetupDialogTest, CreateExecAndRejectEmptyDialogueReturnsNoConfiguration) {
-  SessionSetupDialog dialog{ssh_artifacts_.get(), std::nullopt, &uploader_stub_};
+  SessionSetupDialog dialog{ssh_artifacts_.get(), std::nullopt};
 
   EXPECT_TRUE(dialog.isEnabled());
 
@@ -66,7 +64,7 @@ TEST_F(SessionSetupDialogTest, CreateExecAndStartDialogueWithFileTargetReturnsVa
   const std::filesystem::path file_path = "test/path/to/file";
   FileTarget file_target{file_path};
 
-  SessionSetupDialog dialog(ssh_artifacts_.get(), file_target, &uploader_stub_);
+  SessionSetupDialog dialog(ssh_artifacts_.get(), file_target);
 
   QMetaObject::invokeMethod(
       &dialog,

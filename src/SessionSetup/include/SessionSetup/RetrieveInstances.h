@@ -9,7 +9,6 @@
 #include <memory>
 #include <optional>
 
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
@@ -53,7 +52,6 @@ class RetrieveInstances {
   virtual orbit_base::Future<ErrorMessageOr<LoadProjectsAndInstancesResult>>
   LoadProjectsAndInstances(const std::optional<orbit_ggp::Project>& project,
                            orbit_ggp::Client::InstanceListScope scope) = 0;
-  virtual void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) = 0;
 
   [[nodiscard]] static std::unique_ptr<RetrieveInstances> Create(
       orbit_ggp::Client* ggp_client, orbit_base::MainThreadExecutor* main_thread_executor);

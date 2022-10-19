@@ -24,14 +24,12 @@
 
 namespace orbit_session_setup {
 
-ConnectToTargetDialog::ConnectToTargetDialog(
-    SshConnectionArtifacts* ssh_connection_artifacts, const ConnectionTarget& target,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
+ConnectToTargetDialog::ConnectToTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
+                                             const ConnectionTarget& target, QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::ConnectToTargetDialog>()),
       ssh_connection_artifacts_(ssh_connection_artifacts),
       target_(target),
-      metrics_uploader_(metrics_uploader),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
   ORBIT_CHECK(ssh_connection_artifacts != nullptr);
 
@@ -46,14 +44,6 @@ ConnectToTargetDialog::ConnectToTargetDialog(
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  if (absl::GetFlag(FLAGS_launched_from_vsi)) {
-    connection_metric_ = std::make_unique<orbit_metrics_uploader::ScopedMetric>(
-        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_CONNECT_TO_VSI_TARGET);
-  } else {
-    connection_metric_ = std::make_unique<orbit_metrics_uploader::ScopedMetric>(
-        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_CONNECT_TO_CLI_TARGET);
-  }
-
   ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
             target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
 
@@ -82,15 +72,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   int rc = QDialog::exec();
 
   if (rc != QDialog::Accepted) {
-    if (connection_metric_ != nullptr) {
-      connection_metric_->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
-      connection_metric_.reset();
-    }
     return std::nullopt;
-  }
-
-  if (connection_metric_ != nullptr) {
-    connection_metric_.reset();
   }
 
   return std::move(target_configuration_);

@@ -88,7 +88,6 @@ target_link_libraries(
           CodeViewer
           ConfigWidgets
           DisplayFormats
-          MetricsUploader
           OrbitAccessibility
           OrbitGl
           OrbitGgp

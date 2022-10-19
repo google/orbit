@@ -30,8 +30,7 @@ class LiveFunctionsDataView : public DataView {
   using ScopeId = orbit_client_data::ScopeId;
 
  public:
-  explicit LiveFunctionsDataView(LiveFunctionsInterface* live_functions, AppInterface* app,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+  explicit LiveFunctionsDataView(LiveFunctionsInterface* live_functions, AppInterface* app);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }

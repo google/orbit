@@ -58,10 +58,9 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 namespace orbit_data_views {
 
-LiveFunctionsDataView::LiveFunctionsDataView(
-    LiveFunctionsInterface* live_functions, AppInterface* app,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kLiveFunctions, app, metrics_uploader),
+LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsInterface* live_functions,
+                                             AppInterface* app)
+    : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
@@ -369,7 +368,6 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
     if (stats.count() > 0) {
       live_functions_->AddIterator(scope_id, function_info);
-      metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
     }
   }
 }

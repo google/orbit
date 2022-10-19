@@ -167,7 +167,6 @@ void ConnectToStadiaWidget::Start() {
 
   retrieve_instances_ = RetrieveInstances::Create(ggp_client_.get(), main_thread_executor_.get());
   ui_->retrieveInstancesWidget->SetRetrieveInstances(retrieve_instances_.get());
-  ui_->retrieveInstancesWidget->SetMetricsUploader(metrics_uploader_);
   ui_->retrieveInstancesWidget->Start();
 }
 
@@ -312,7 +311,7 @@ void ConnectToStadiaWidget::DeployOrbitService() {
       QObject::connect(ui_->instancesTableOverlay, &OverlayWidget::Cancelled,
                        service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
 
-  const auto deployment_result = service_deploy_manager_->Exec(metrics_uploader_);
+  const auto deployment_result = service_deploy_manager_->Exec();
   if (deployment_result.has_error()) {
     Disconnect();
     if (deployment_result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {

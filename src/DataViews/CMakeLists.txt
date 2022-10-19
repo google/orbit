@@ -42,7 +42,6 @@ target_link_libraries(DataViews PUBLIC
         ClientModel
         ClientProtos
         DisplayFormats
-        MetricsUploader
         OrbitBase
         PresetFile
         QtUtils

@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "CommandLineUtils/CommandLineUtils.h"
-#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/File.h"
 
 #ifdef _WIN32
@@ -38,7 +37,6 @@
 #include "AccessibilityAdapter.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ImGuiOrbit.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitPaths/Paths.h"
@@ -70,10 +68,8 @@ Q_DECLARE_METATYPE(std::error_code);
 
 static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifiedTarget(
     orbit_session_setup::SshConnectionArtifacts& connection_artifacts,
-    const orbit_session_setup::ConnectionTarget& target,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  orbit_session_setup::ConnectToTargetDialog dialog(&connection_artifacts, target,
-                                                    metrics_uploader);
+    const orbit_session_setup::ConnectionTarget& target) {
+  orbit_session_setup::ConnectToTargetDialog dialog(&connection_artifacts, target);
   return dialog.Exec();
 }
 
@@ -90,19 +86,6 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
   std::optional<orbit_session_setup::TargetConfiguration> target_config;
 
-  std::unique_ptr<orbit_metrics_uploader::MetricsUploader> metrics_uploader =
-      orbit_metrics_uploader::MetricsUploader::CreateMetricsUploader();
-  metrics_uploader->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_METRICS_UPLOADER_START);
-
-  orbit_metrics_uploader::ScopedMetric metric{metrics_uploader.get(),
-                                              orbit_metrics_uploader::OrbitLogEvent::ORBIT_EXIT};
-
-  if (!absl::GetFlag(FLAGS_auto_symbol_loading)) {
-    metrics_uploader->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FLAG_AUTO_SYMBOL_LOADING_DISABLED);
-  }
-
   // If Orbit starts with loading a capture file, we skip SessionSetupDialog and create a
   // FileTarget from capture_file_path. After creating the FileTarget, we reset
   // has_file_parameter as false such that if a user ends the previous session, Orbit
@@ -113,8 +96,8 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   while (true) {
     {
       if (has_connection_target) {
-        target_config = ConnectToSpecifiedTarget(
-            ssh_connection_artifacts, maybe_connection_target.value(), metrics_uploader.get());
+        target_config =
+            ConnectToSpecifiedTarget(ssh_connection_artifacts, maybe_connection_target.value());
         if (!target_config.has_value()) {
           // User closed dialog, or an error occured.
           return -1;
@@ -123,8 +106,8 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
         target_config = orbit_session_setup::FileTarget(capture_file_path);
         has_file_parameter = false;
       } else {
-        orbit_session_setup::SessionSetupDialog target_dialog{
-            &ssh_connection_artifacts, std::move(target_config), metrics_uploader.get()};
+        orbit_session_setup::SessionSetupDialog target_dialog{&ssh_connection_artifacts,
+                                                              std::move(target_config)};
         target_config = target_dialog.Exec();
 
         if (!target_config.has_value()) {
@@ -139,8 +122,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
 
     {  // Scoping of QT UI Resources
 
-      OrbitMainWindow w(std::move(target_config.value()), metrics_uploader.get(),
-                        command_line_flags);
+      OrbitMainWindow w(std::move(target_config.value()), command_line_flags);
       w.show();
       w.raise();
       w.activateWindow();

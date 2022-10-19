@@ -21,8 +21,6 @@
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
-#include "MetricsUploader/MetricsUploader.h"
-#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -78,9 +76,8 @@ std::string GetDateModifiedString(const PresetFile& preset) {
 
 namespace orbit_data_views {
 
-PresetsDataView::PresetsDataView(AppInterface* app,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app, metrics_uploader),
+PresetsDataView::PresetsDataView(AppInterface* app)
+    : DataView(DataViewType::kPresets, app),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
@@ -213,8 +210,6 @@ void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
 }
 
 void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
-  orbit_metrics_uploader::ScopedMetric metric{
-      metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_DELETE};
   int row = selection[0];
   const PresetFile& preset = GetPreset(row);
   const std::string& filename = preset.file_path().string();
@@ -224,7 +219,6 @@ void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection)
     OnDataChanged();
   } else {
     ORBIT_ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
-    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
     app_->SendErrorToUi("Error deleting preset",
                         absl::StrFormat("Could not delete preset \"%s\".", filename));
   }

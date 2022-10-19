@@ -42,7 +42,6 @@
 #include "FilterPanelWidgetAction.h"
 #include "GrpcProtos/process.pb.h"
 #include "MainWindowInterface.h"
-#include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
@@ -64,7 +63,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static constexpr int kEndSessionReturnCode = 1;
 
   explicit OrbitMainWindow(orbit_session_setup::TargetConfiguration target_configuration,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
                            const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;
 
@@ -105,8 +103,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowTooltip(std::string_view message) override;
   void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
-      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report,
-      orbit_metrics_uploader::ScopedMetric* metric) override;
+      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
   void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                        const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
@@ -248,8 +245,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void UpdateCaptureToolbarIconOpacity();
 
-  std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path,
-                                        orbit_metrics_uploader::ScopedMetric* metric);
+  std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path);
 
  private:
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
@@ -292,8 +288,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   // to a file, it is not connected and this bool is false. This is also false when the connection
   // broke.
   bool is_connected_ = false;
-
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_
