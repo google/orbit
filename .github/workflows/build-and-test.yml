@@ -1,0 +1,56 @@
+# Copyright (c) 2022 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+name: build-and-test
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test-ubuntu:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+           sudo apt update &&                             \
+           sudo apt install --yes --no-install-recommends \
+           build-essential                                \
+           cmake                                          \
+           libcapstone-dev                                \
+           libgrpc++-dev                                  \
+           libssh2-1-dev                                  \
+           vulkan-validationlayers-dev                    \
+           libz-dev                                       \
+           llvm-dev                                       \
+           libfreetype6-dev                               \
+           libimgui-dev                                   \
+           protobuf-compiler-grpc                         \
+           pkg-config                                     \
+           libvulkan-volk-dev                             \
+           libvulkan-dev                                  \
+           libopengl-dev                                  \
+           libglx-dev                                     \
+           mesa-common-dev                                \
+           qtbase5-dev                                    \
+           libgtest-dev                                   \
+           libgmock-dev                                   \
+           git                                            \
+           libprotobuf-dev
+      - run: mkdir build && cd build
+      - name: CMake Configure
+        run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=sandybridge" ${GITHUB_WORKSPACE}
+      - name: CMake Build
+        run: cmake --build .
+      - name: CMake Test
+        run: ctest --output-on-failure -E IntegrationTest
