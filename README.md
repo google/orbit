@@ -3,9 +3,11 @@
 <img alt="ORBIT Logo" src="logos/orbit_logo_simple.png" align="right" width="520" >
 
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
-standalone **native** application (C, C++, Rust, Go, ...) profiler for Windows
-and Linux. Its main purpose is to help developers identify the performance
-bottlenecks of a complex application.
+standalone **native** application profiler for Windows and Linux. It supports
+native applications written in languages such as C, C++, Rust, or Go. Its main
+purpose is to help developers identify the performance bottlenecks of a complex
+application. Orbit can be also used to visualize the execution flow of such
+applications.
 
 The key differentiator with many existing tools is that no alteration to the
 target process is necessary. Orbit does not require you to change a single line
@@ -17,8 +19,14 @@ Orbit combines sampling and dynamic instrumentation to optimize the profiling
 workflow. Sampling can quickly identify interesting functions to instrument.
 Dynamic instrumentation results in exact function entry and exit information
 which is presented in the form of per-thread hierarchical call graphs.
-Scheduling events are also shown to visualize when a thread was running and
-on what core.
+Manual instrumentation markers can be added to the source code and further
+allows for value-tracking. Scheduling events are also shown to visualize when a
+thread was running and on what core. Furthermore, dependencies between threads
+are displaying which thread got blocked/unblocked by which other thread. For AMD
+GPUs, the submission, scheduling and hardware execution timings of a job is
+visualized. Additional GPU data, such as Vulkan debug markers can be retrieved
+using Orbit's Vulkan layer. Memory consumption and page-fault information is
+visualized as well.
 
 An introduction to Orbit's key features can be found in the following YouTube
 video:
@@ -36,16 +44,16 @@ video:
 - Manual Instrumentation
 - Source Code and Disassembly View
 - Remote Profiling
-- Debug Symbol Parsing
+- Debug Symbol Parsing (ELF, DWARF, PE and PDB)
 - Full Serialization of Captured Data
 
 ### Note
 
-Orbit is undergoing a major overhaul. The focus has now shifted to the Linux
-version. Windows local profiling is currently only supported partially and major
-features, such as dynamic instrumentation, are not yet implemented. It is
-possible however to profile Linux executables from a Windows UI instance. For
-Windows local profiling, please use the released
+Orbit's focus has shifted to the Linux version. Windows local profiling is
+currently only supported partially and major features, such as dynamic
+instrumentation, are not yet implemented. It is possible however to profile
+Linux executables from a Windows UI instance. For Windows local profiling,
+please use the released
 [binaries](https://github.com/google/orbit/releases).
 
 ## Build
@@ -93,7 +101,21 @@ Questions and comments are more than welcome: please open an
 ## About
 
 Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/), but
-is now developed and maintained by a team of engineers at Google.
+is now developed and maintained by a team of engineers at Google. The current
+maintainers are:
+* @akopich
+* @antonrohr
+* @beckerhe
+* @danielfenner
+* @dimitry-
+* @dpallotti
+* @florian-kuebler
+* @karupayun
+* @pierricgimmig
+* @reichlfl
+* @ronaldfw
+* @vickyliu-go4it
+* @vwbaker
 
 ## License
 
