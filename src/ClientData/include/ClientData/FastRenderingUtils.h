@@ -14,6 +14,9 @@ namespace orbit_client_data {
                                                   uint32_t resolution, uint64_t start_ns,
                                                   uint64_t end_ns);
 
+[[nodiscard]] uint32_t GetPixelNumber(uint64_t current_timestamp_ns, uint32_t resolution,
+                                      uint64_t start_ns, uint64_t end_ns);
+
 }  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_FAST_RENDERING_UTILS_H_

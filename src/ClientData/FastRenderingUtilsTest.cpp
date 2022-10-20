@@ -12,6 +12,18 @@ constexpr uint64_t kStartNs = 100;
 constexpr uint64_t kEndNs = 200;
 static std::vector<uint32_t> kPixelResolutionsInTest = {1, 20, 30, 50, 100};
 
+TEST(FastRenderingUtils, GetPixelNumber) {
+  for (uint32_t resolution : kPixelResolutionsInTest) {
+    EXPECT_EQ(GetPixelNumber(kStartNs, resolution, kStartNs, kEndNs), 0);
+    EXPECT_EQ(GetPixelNumber(kEndNs - 1, resolution, kStartNs, kEndNs), resolution - 1);
+    EXPECT_EQ(GetPixelNumber(kEndNs, resolution, kStartNs, kEndNs), resolution);
+
+    const uint32_t kLastNsForFirstPixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
+    EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel, resolution, kStartNs, kEndNs), 0);
+    EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel + 1, resolution, kStartNs, kEndNs), 1);
+  }
+}
+
 TEST(GetNextPixelBoundaryTimeNs, TimestampAreInRange) {
   constexpr uint64_t visible_ns = kEndNs - kStartNs;  // 100
 
