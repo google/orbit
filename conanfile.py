@@ -67,8 +67,6 @@ class OrbitConan(ConanFile):
         self.requires("openssl/1.1.1k", override=True)
         self.requires("outcome/2.2.0")
         if self.settings.os != "Windows":
-            self.requires(
-                "libunwindstack-android-dependencies/20210709@{}".format(self._orbit_channel))
             self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
         self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f", override=True)
