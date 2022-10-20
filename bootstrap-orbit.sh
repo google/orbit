@@ -27,7 +27,7 @@ done
 
 readonly REQUIRED_PACKAGES=( build-essential libglu1-mesa-dev mesa-common-dev \
                              libxmu-dev libxi-dev libopengl-dev qtbase5-dev \
-                             libxxf86vm-dev python3-pip llvm-dev )
+                             libxxf86vm-dev python3-pip llvm-dev libboost-dev )
 
 function add_ubuntu_universe_repo {
   sudo add-apt-repository universe
