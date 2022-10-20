@@ -281,10 +281,4 @@ file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 
 # Generating license NOTICE files
 include("cmake/collect_licenses.cmake")
-
-# When not compiling with a system-provided version of Qt we can integrate all the licenses from Chromium.
-if(EXISTS "${CMAKE_BINARY_DIR}/NOTICE.Chromium")
-  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/" APPEND_FILES "${CMAKE_BINARY_DIR}/NOTICE.Chromium")
-else()
-  GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/")
-endif()
+GenerateThirdPartyLicenseFile("${CMAKE_BINARY_DIR}/NOTICE" "${CMAKE_BINARY_DIR}/licenses/")

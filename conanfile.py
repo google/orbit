@@ -11,8 +11,6 @@ from conans.errors import ConanInvalidConfiguration
 import os
 import shutil
 from io import StringIO
-from contrib.python import conan_helpers
-from contrib.jupyter import build as build_python
 import csv
 
 
@@ -24,16 +22,12 @@ class OrbitConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = ["cmake_multi"]
     options = {"system_qt": [True, False], "with_gui": [True, False],
-               "debian_packaging": [True, False],
                "fPIC": [True, False],
                "run_tests": [True, False],
-               "run_python_tests": [True, False],
                "build_target": "ANY"}
     default_options = {"system_qt": True, "with_gui": True,
-                       "debian_packaging": False,
                        "fPIC": True,
                        "run_tests": True,
-                       "run_python_tests": False,
                        "build_target": None}
     _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
@@ -83,10 +77,6 @@ class OrbitConan(ConanFile):
 
 
     def configure(self):
-        if self.options.debian_packaging and (self.settings.get_safe("os.platform") != "GGP" or tools.detected_os() != "Linux"):
-            raise ConanInvalidConfiguration(
-                "Debian packaging is only supported for GGP builds!")
-
         if self.settings.os != "Windows" and not self.options.fPIC:
             raise ConanInvalidConfiguration(
                 "We only support compiling with fPIC enabled!")
@@ -128,8 +118,6 @@ class OrbitConan(ConanFile):
         cmake.build(target=str(self.options.build_target) if self.options.build_target else None)
         if self.options.run_tests and not tools.cross_building(self.settings, skip_x64_x86=True) and self.settings.get_safe("os.platform") != "GGP":
             cmake.test(output_on_failure=True)
-        if self.options.run_python_tests:
-            build_python.main()
 
     def imports(self):
         excludes = [
@@ -156,69 +144,8 @@ class OrbitConan(ConanFile):
         self.copy("LICENSE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
         self.copy("LICENCE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
 
-        if not self.options.system_qt:
-            chromium_licenses = conan_helpers.gather_chromium_licenses(self.deps_cpp_info["qt"].rootpath)
-            chromium_licenses.sort(key=lambda license_info: license_info["name"].lower())
-
-            with open(os.path.join(self.install_folder, "NOTICE.Chromium.csv"), "w") as fd:
-                writer = csv.DictWriter(fd, fieldnames=["name", "url", "license"], extrasaction='ignore')
-                writer.writeheader()
-
-                for license in chromium_licenses:
-                    writer.writerow(license)
-
-            with open(os.path.join(self.install_folder, "NOTICE.Chromium"), "w") as fd:
-                for license in chromium_licenses:
-                    fd.write("================================================================================\n")
-                    fd.write("Name: {}\n".format(license["name"]))
-                    fd.write("URL: {}\n\n".format(license.get("url", "")))
-                    fd.write(open(license["license file"], 'r').read())
-                    fd.write("\n\n")
-
-                fd.write("================================================================================\n")
-
-
 
     def package(self):
-        if self.options.debian_packaging:
-            shutil.rmtree(self.package_folder)
-            self.copy("OrbitService", src="bin/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("liborbit.so", src="lib/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("liborbituserspaceinstrumentation.so", src="lib/",
-                      dst="{}-{}/opt/developer/tools/".format(self.name, self._version()))
-            self.copy("NOTICE",
-                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
-            self.copy("LICENSE",
-                      dst="{}-{}/usr/share/doc/{}/".format(self.name, self._version(), self.name))
-            basedir = "{}/{}-{}".format(self.package_folder,
-                                        self.name, self._version())
-            os.makedirs("{}/DEBIAN".format(basedir), exist_ok=True)
-            tools.save("{}/DEBIAN/control".format(basedir), """Package: orbitprofiler
-Version: {}
-Section: development
-Priority: optional
-Architecture: amd64
-Maintainer: Google, Inc <orbitprofiler-eng@google.com>
-Description: Orbit is a C/C++ profiler for Windows, Linux and the Stadia Platform.
-Homepage: https://github.com/google/orbit
-Installed-Size: `du -ks usr/ | cut -f 1`
-""".format(self._version()))
-
-            tools.save("{}/DEBIAN/postinst".format(basedir), """
-#!/bin/bash
-# Setting the setuid-bit for OrbitService
-chmod -v 4775 /opt/developer/tools/OrbitService
-""")
-
-            self.run("chmod +x {}/DEBIAN/postinst".format(basedir))
-            self.run("chmod g-s {}/DEBIAN".format(basedir))
-            self.run("chmod g-s {}/".format(basedir))
-            self.run("dpkg-deb -b --root-owner-group {}".format(basedir))
-            self.run("dpkg --contents {}.deb".format(basedir))
-            shutil.rmtree(basedir)
-
         self.copy("*", src="bin/autopresets", dst="bin/autopresets", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
@@ -233,8 +160,6 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("OrbitClientGgp.exe", src="bin/", dst="bin")
         self.copy("OrbitClientGgp.debug", src="bin/", dst="bin")
         self.copy("NOTICE")
-        self.copy("NOTICE.Chromium")
-        self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
         self.copy("liborbit.so", src="lib/", dst="lib")
         self.copy("liborbituserspaceinstrumentation.so", src="lib/", dst="lib")
