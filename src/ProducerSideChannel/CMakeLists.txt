@@ -12,5 +12,5 @@ target_sources(ProducerSideChannel INTERFACE
 target_include_directories(ProducerSideChannel INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(ProducerSideChannel INTERFACE
-        CONAN_PKG::abseil
+        absl::str_format
         CONAN_PKG::grpc)

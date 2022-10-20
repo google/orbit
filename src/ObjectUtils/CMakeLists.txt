@@ -46,7 +46,15 @@ target_link_libraries(
   PUBLIC GrpcProtos
          OrbitBase
          Introspection
-         CONAN_PKG::abseil
+         absl::base
+         absl::flat_hash_map
+         absl::flat_hash_set
+         absl::memory
+         absl::str_format
+         absl::strings
+         absl::synchronization
+         absl::time
+         absl::span
          CONAN_PKG::llvm-core)
 
 if (WIN32)
@@ -77,8 +85,7 @@ target_link_libraries(
   PRIVATE ObjectUtils
           TestUtils
           GTest::Main
-          CONAN_PKG::llvm-core
-          CONAN_PKG::abseil)
+          CONAN_PKG::llvm-core)
 
 register_test(ObjectUtilsTests)
 

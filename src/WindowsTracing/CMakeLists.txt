@@ -47,7 +47,11 @@ target_link_libraries(WindowsTracing PUBLIC
         PresentMon
         WindowsUtils
         krabsetw
-        CONAN_PKG::abseil
+        absl::base
+        absl::bind_front
+        absl::flat_hash_map
+        absl::flat_hash_set
+        absl::str_format
         CONAN_PKG::grpc
         CONAN_PKG::outcome)
 

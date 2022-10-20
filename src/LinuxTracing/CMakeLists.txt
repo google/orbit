@@ -71,7 +71,12 @@ target_link_libraries(LinuxTracing PUBLIC
         ModuleUtils
         ObjectUtils
         OrbitBase
-        CONAN_PKG::abseil)
+        absl::flat_hash_map
+        absl::flat_hash_set
+        absl::meta
+        absl::str_format
+        absl::strings
+        absl::synchronization)
 
 add_executable(LinuxTracingTests)
 

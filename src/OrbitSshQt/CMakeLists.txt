@@ -38,7 +38,8 @@ target_link_libraries(OrbitSshQt PUBLIC
         OrbitSsh
         Qt5::Core
         Qt5::Network
-        CONAN_PKG::abseil)
+        absl::base
+        absl::str_format)
 set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 
 add_executable(OrbitSshQtIntegrationTests)

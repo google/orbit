@@ -38,6 +38,10 @@ endif()
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)
-target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
+target_link_libraries(OrbitService PRIVATE
+  OrbitServiceLib
+  absl::flags
+  absl::flags_usage
+  absl::flags_parse)
 
 strip_symbols(OrbitService)

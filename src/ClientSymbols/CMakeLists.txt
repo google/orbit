@@ -9,7 +9,10 @@ add_library(ClientSymbols STATIC)
 
 target_include_directories(ClientSymbols PUBLIC include/)
 target_link_libraries(ClientSymbols PUBLIC 
-        CONAN_PKG::abseil        
+        absl::flat_hash_map
+        absl::flat_hash_set
+        absl::hash
+        absl::span
         Qt5::Core)
 
 target_sources(ClientSymbols PUBLIC 
