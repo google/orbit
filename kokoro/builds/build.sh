@@ -13,6 +13,8 @@ if [ -z "${CONAN_PROFILE}" ]; then
   # Profile mappings. Use that for testing different profiles
   # without changing the Kokoro config.
   declare -A profile_mapping=( \
+    [ggp_relwidthdebinfo]=skip \
+    [msvc2019_relwithdebinfo]=skip \
   )
 
   CONAN_PROFILE="${profile_mapping[${CONAN_PROFILE}]-${CONAN_PROFILE}}"
@@ -30,6 +32,11 @@ if [ -z "${CONAN_PROFILE}" ]; then
   echo -n "No conan profile was set nor one could be auto-detected. "
   echo "Aborting this build!"
   exit 2
+fi
+
+if [[ $CONAN_PROFILE == skip ]]; then
+  echo "Skipping this build. Reporting success..."
+  exit 0
 fi
 
 source $(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd)/upload_symbols.sh
