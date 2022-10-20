@@ -77,9 +77,9 @@ class CallstackData {
   }
 
   // Do a particular action for callstacks but skipping callstacks that will be rendered later in
-  // the same pixel in the screen. It assures to do the action once for callstacks in each occupied
-  // pixel. This iteration is faster that the non-discretized one since it doesn't require going
-  // through all callstacks.
+  // the same pixel on the screen. It assures to do the action at most once per pixel. This
+  // iteration is faster than the non-discretized one since it doesn't require going through all
+  // callstacks.
   template <typename Action>
   void ForEachCallstackEventInTimeRangeDiscretized(uint64_t min_timestamp, uint64_t max_timestamp,
                                                    uint32_t resolution, Action&& action) const {
@@ -106,9 +106,9 @@ class CallstackData {
   }
 
   // Do a particular action for all callstacks in a thread but skipping callstacks that will be
-  // rendered later in the same pixel in the screen. It assures to do the action once for callstacks
-  // in each occupied pixel. This iteration is faster that the non-discretized one since it doesn't
-  // require going through all callstacks.
+  // rendered later in the same pixel on the screen. It assures to do the action at most once per
+  // pixel. This iteration is faster than the non-discretized one since it does not require going
+  // through all callstacks.
   template <typename Action>
   void ForEachCallstackEventOfTidInTimeRangeDiscretized(uint32_t tid, uint64_t min_timestamp,
                                                         uint64_t max_timestamp, uint32_t resolution,
