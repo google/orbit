@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_TRANSLATION_STACK_H_
 #define ORBIT_GL_TRANSLATION_STACK_H_
 
+#include <cmath>
 #include <vector>
 
 #include "CoreMath.h"
@@ -28,7 +29,7 @@ class TranslationStack {
   [[nodiscard]] LayeredVec2 TranslateXYZAndFloorXY(const LayeredVec2& input) const {
     const Vec2 result_shape = input.xy + current_translation_.xy;
     const float result_z = input.z + current_translation_.z;
-    return {{floorf(result_shape[0]), floorf(result_shape[1])}, result_z};
+    return {{std::floor(result_shape[0]), std::floor(result_shape[1])}, result_z};
   }
 
  private:

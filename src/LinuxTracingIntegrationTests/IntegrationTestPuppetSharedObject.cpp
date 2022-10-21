@@ -11,7 +11,7 @@ extern "C" double function_that_works_for_a_considerable_amount_of_time() {
   double result = 2;
 
   for (size_t i = 0; i < 10'000'000; ++i) {
-    result = sqrt(result + 1.0);
+    result = std::sqrt(result + 1.0);
   }
 
   return result;

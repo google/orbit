@@ -4,11 +4,13 @@
 
 #include "TrackRenderHelper.h"
 
+#include <cmath>
+
 namespace {
 
 std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) {
-  float cos_r = cosf(kPiFloat * rotation / 180.f);
-  float sin_r = sinf(kPiFloat * rotation / 180.f);
+  float cos_r = std::cos(kPiFloat * rotation / 180.f);
+  float sin_r = std::sin(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
   for (const Vec2& point : points) {
     float x_rotated = cos_r * point[0] + sin_r * point[1];
@@ -30,7 +32,7 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   float increment_radians = 0.5f * kPiFloat / static_cast<float>(num_sides);
   for (uint32_t i = 1; i < num_sides; ++i) {
     float angle = kPiFloat + static_cast<float>(i) * increment_radians;
-    points.emplace_back(radius * cosf(angle) + radius, radius * sinf(angle) + radius);
+    points.emplace_back(radius * std::cos(angle) + radius, radius * std::sin(angle) + radius);
   }
 
   points.emplace_back(radius, 0.f);

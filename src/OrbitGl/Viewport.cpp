@@ -5,6 +5,7 @@
 #include "Viewport.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "OrbitBase/Logging.h"
 
@@ -45,8 +46,10 @@ Vec2 Viewport::ScreenToWorld(const Vec2i& screen_coords) const {
 
 Vec2i Viewport::WorldToScreen(const Vec2& world_coords) const {
   Vec2i screen_coords;
-  screen_coords[0] = static_cast<int>(floorf(world_coords[0] / world_width_ * GetScreenWidth()));
-  screen_coords[1] = static_cast<int>(floorf(world_coords[1] / world_height_ * GetScreenHeight()));
+  screen_coords[0] =
+      static_cast<int>(std::floor(world_coords[0] / world_width_ * GetScreenWidth()));
+  screen_coords[1] =
+      static_cast<int>(std::floor(world_coords[1] / world_height_ * GetScreenHeight()));
   return screen_coords;
 }
 

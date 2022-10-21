@@ -5,10 +5,10 @@
 #ifndef ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 #define ORBIT_GL_TIME_GRAPH_LAYOUT_H_
 
-#include <math.h>
 #include <stdint.h>
 
 #include <algorithm>
+#include <cmath>
 
 #include "OrbitBase/ThreadUtils.h"
 
@@ -67,7 +67,7 @@ class TimeGraphLayout {
   void SetDrawProperties(bool value) { draw_properties_ = value; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
-  uint32_t GetFontSize() const { return lround(font_size_ * scale_); }
+  uint32_t GetFontSize() const { return std::lround(font_size_ * scale_); }
 
   int GetMaxLayoutingLoops() const { return max_layouting_loops_; }
 

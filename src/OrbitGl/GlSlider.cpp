@@ -5,11 +5,11 @@
 #include "GlSlider.h"
 
 #include <GteVector.h>
-#include <math.h>
 
 #include <QCursor>
 #include <QGuiApplication>
 #include <algorithm>
+#include <cmath>
 
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -258,7 +258,7 @@ void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
-  float slider_height = ceilf(length_ratio_ * bar_pixel_len);
+  float slider_height = std::ceil(length_ratio_ * bar_pixel_len);
   float non_slider_height = bar_pixel_len - slider_height;
 
   const Color dark_border_color = GetDarkerColor(bar_color_);
@@ -266,7 +266,7 @@ void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   // Background
   DrawBackground(primitive_assembler, 0, 0, GetSliderWidth(), bar_pixel_len);
 
-  float start = ceilf(pos_ratio_ * non_slider_height);
+  float start = std::ceil(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
   DrawSlider(primitive_assembler, 0, start, GetSliderWidth(), slider_height, shading_direction);
@@ -288,12 +288,12 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
-  float slider_width = ceilf(length_ratio_ * bar_pixel_len);
+  float slider_width = std::ceil(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
   DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetSliderWidth());
 
-  float start = floorf(pos_ratio_ * non_slider_width);
+  float start = std::floor(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
   DrawSlider(primitive_assembler, start, 0, slider_width, GetSliderWidth(), shading_direction);

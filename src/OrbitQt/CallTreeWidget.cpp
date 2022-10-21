@@ -9,7 +9,6 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/internal/flag.h>
 #include <absl/strings/match.h>
-#include <math.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -32,6 +31,7 @@
 #include <QTimer>
 #include <QTreeView>
 #include <algorithm>
+#include <cmath>
 #include <list>
 #include <memory>
 #include <optional>
@@ -919,16 +919,17 @@ void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
   option_progress_bar.palette = option.palette;
   option_progress_bar.minimum = 0;
   option_progress_bar.maximum = 100;
-  option_progress_bar.progress = static_cast<int>(round(inclusive_percent.value()));
+  option_progress_bar.progress = static_cast<int>(std::round(inclusive_percent.value()));
 
   const QColor bar_background_color = option.palette.color(QPalette::Disabled, QPalette::Base);
   option_progress_bar.palette.setColor(QPalette::Base, bar_background_color);
 
   const QColor palette_highlight_color = option.palette.color(QPalette::Highlight);
   static constexpr float kBarColorValueReductionFactor = .3f / .4f;
-  const QColor bar_foreground_color = QColor::fromHsv(
-      palette_highlight_color.hue(), palette_highlight_color.saturation(),
-      static_cast<int>(round(palette_highlight_color.value() * kBarColorValueReductionFactor)));
+  const QColor bar_foreground_color =
+      QColor::fromHsv(palette_highlight_color.hue(), palette_highlight_color.saturation(),
+                      static_cast<int>(std::round(palette_highlight_color.value() *
+                                                  kBarColorValueReductionFactor)));
   option_progress_bar.palette.setColor(QPalette::Highlight, bar_foreground_color);
 
   option_progress_bar.text = index.data(Qt::DisplayRole).toString();

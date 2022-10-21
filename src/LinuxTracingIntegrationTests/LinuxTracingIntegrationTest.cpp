@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <cmath>
 #include <thread>
 #include <utility>
 
@@ -734,8 +735,8 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
             (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
   constexpr double kMinExpectedScheduledRelativeTime = 0.67;
   const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
-      floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
-            sampling_rate * kMinExpectedScheduledRelativeTime));
+      std::floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) /
+                 1e9 * sampling_rate * kMinExpectedScheduledRelativeTime));
   EXPECT_GE(matching_callstack_count, min_expected_matching_callstack_count);
 }
 

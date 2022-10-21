@@ -4,9 +4,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <math.h>
 #include <stdint.h>
 
+#include <cmath>
 #include <memory>
 #include <utility>
 
@@ -98,7 +98,7 @@ static void TestDragType() {
   });
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  int scale = static_cast<int>(pow(10, dim));
+  int scale = static_cast<int>(std::pow(10, dim));
 
   PickDragRelease<dim>(*slider, 50 * scale);
   EXPECT_EQ(drag_count, 1);
@@ -154,7 +154,7 @@ static void TestScroll(float slider_length = 0.25) {
   auto [slider, viewport, tester] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  int scale = static_cast<int>(pow(10, dim));
+  int scale = static_cast<int>(std::pow(10, dim));
   float pos;
   const int kOffset = 2;
 
@@ -179,7 +179,7 @@ static void TestDrag(float slider_length = 0.25) {
   auto [slider, viewport, tester] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  int scale = static_cast<int>(pow(10, dim));
+  int scale = static_cast<int>(std::pow(10, dim));
   float pos;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
@@ -235,7 +235,7 @@ static void TestScaling() {
   const int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  int scale = static_cast<int>(pow(10, dim));
+  int scale = static_cast<int>(std::pow(10, dim));
 
   slider->SetResizeCallback([&](float start, float end) { size = end - start; });
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
@@ -297,7 +297,7 @@ static void TestBreakScaling() {
   const int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
-  int scale = static_cast<int>(pow(10, dim));
+  int scale = static_cast<int>(std::pow(10, dim));
 
   // Pick on the right, then drag across the end of the slider
   pos = slider->GetSliderPixelPos();
