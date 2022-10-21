@@ -16,12 +16,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "OrbitBase/File.h"
-#include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "SourcePathsMapping/Mapping.h"
-#include "SourcePathsMapping/MappingManager.h"
 
 namespace orbit_source_paths_mapping_ui {
 constexpr const char* kAutocreateMappingKey = "auto_create_mapping";
