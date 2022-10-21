@@ -5,10 +5,10 @@
 #include "PrimitiveAssembler.h"
 
 #include <OrbitBase/Logging.h>
-#include <math.h>
 #include <stddef.h>
 
 #include <array>
+#include <cmath>
 
 #include "CoreMath.h"
 #include "Geometry.h"
@@ -95,10 +95,10 @@ static std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, u
   const Vec2 origin(0, 0);
 
   float increment_radians = std::fabs(angle_1 - angle_0) / static_cast<float>(num_sides);
-  Vec2 last_point(cosf(angle_0), sinf(angle_0));
+  Vec2 last_point(std::cos(angle_0), std::sin(angle_0));
   for (uint32_t i = 1; i <= num_sides; ++i) {
     float angle = angle_0 + static_cast<float>(i) * increment_radians;
-    Vec2 current_point(cosf(angle), sinf(angle));
+    Vec2 current_point(std::cos(angle), std::sin(angle));
     triangles.emplace_back(Triangle(origin, last_point, current_point));
     last_point = current_point;
   }

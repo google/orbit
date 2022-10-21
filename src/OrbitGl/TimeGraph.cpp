@@ -11,7 +11,7 @@
 #include <stddef.h>
 
 #include <algorithm>
-#include <cstdint>
+#include <cmath>
 #include <limits>
 
 #include "App.h"
@@ -729,7 +729,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // The horizontal slider should be at the bottom of the TimeGraph. Because how OpenGl renders, the
   // way to assure that there is no pixels below the scrollbar is by making a ceiling.
   horizontal_slider_->SetPos(timegraph_current_x,
-                             ceil(GetHeight() - horizontal_slider_->GetHeight()));
+                             std::ceil(GetHeight() - horizontal_slider_->GetHeight()));
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
   UpdateHorizontalSliderFromWorld();

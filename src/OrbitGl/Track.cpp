@@ -4,7 +4,6 @@
 
 #include "Track.h"
 
-#include <math.h>
 #include <stddef.h>
 
 #include "AccessibleTrack.h"

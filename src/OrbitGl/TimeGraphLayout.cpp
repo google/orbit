@@ -6,6 +6,8 @@
 
 #include <imgui.h>
 
+#include <cmath>
+
 #include "OrbitBase/ThreadConstants.h"
 
 TimeGraphLayout::TimeGraphLayout() {
@@ -110,7 +112,7 @@ float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
       collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
 
   // We want the button to scale slower than other elements, so we use sqrt() function.
-  return button_size_without_scaling * sqrt(scale_);
+  return button_size_without_scaling * std::sqrt(scale_);
 }
 
 float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {

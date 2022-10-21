@@ -5,11 +5,11 @@
 #ifndef ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
 #define ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
 
-#include <math.h>
 #include <stdint.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
@@ -45,8 +45,8 @@ class PrimitiveAssembler {
 
     const float angle = (kPiFloat * 2.f) / kCirclePoints;
     for (int32_t i = 1; i <= kCirclePoints; i++) {
-      float new_x = sinf(angle * i);
-      float new_y = cosf(angle * i);
+      float new_x = std::sin(angle * i);
+      float new_y = std::cos(angle * i);
       circle_points.emplace_back(Vec2(new_x, new_y));
     }
   }

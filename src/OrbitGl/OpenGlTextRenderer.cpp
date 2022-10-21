@@ -9,11 +9,11 @@
 #include <freetype-gl/vector.h>
 #include <freetype-gl/vertex-buffer.h>
 #include <limits.h>
-#include <math.h>
 #include <string.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <iosfwd>
@@ -493,7 +493,7 @@ int OpenGlTextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t fon
     if (text[i] == '\n') break;
   }
 
-  return static_cast<int>(ceil(string_width));
+  return static_cast<int>(std::ceil(string_width));
 }
 
 int OpenGlTextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_size) {

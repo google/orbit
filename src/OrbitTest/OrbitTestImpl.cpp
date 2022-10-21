@@ -171,15 +171,15 @@ void OrbitTestImpl::ManualInstrumentationApiTest() {
 
     [[maybe_unused]] static float float_var = 0.f;
     [[maybe_unused]] static constexpr float kSinfCoeff = 0.1f;
-    ORBIT_FLOAT_WITH_COLOR("float_var", sinf((++float_var) * kSinfCoeff), kOrbitColorPink);
+    ORBIT_FLOAT_WITH_COLOR("float_var", std::sin((++float_var) * kSinfCoeff), kOrbitColorPink);
 
     [[maybe_unused]] static double double_var = 0.0;
     [[maybe_unused]] static constexpr double kCosCoeff = 0.1;
-    ORBIT_DOUBLE_WITH_COLOR("double_var", cos((++double_var) * kCosCoeff), kOrbitColorPurple);
+    ORBIT_DOUBLE_WITH_COLOR("double_var", std::cos((++double_var) * kCosCoeff), kOrbitColorPurple);
 
     for (int i = 0; i < 5; ++i) {
       std::string track_name = absl::StrFormat("DynamicName_%u", i);
-      ORBIT_DOUBLE(track_name.c_str(), cos(double_var * static_cast<double>(i)));
+      ORBIT_DOUBLE(track_name.c_str(), std::cos(double_var * static_cast<double>(i)));
     }
 
     // Async spans.

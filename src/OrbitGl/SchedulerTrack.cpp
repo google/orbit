@@ -8,6 +8,8 @@
 #include <absl/strings/str_format.h>
 #include <stdint.h>
 
+#include <cmath>
+
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -63,8 +65,8 @@ float SchedulerTrack::GetHeight() const {
   //  are temporarily hacking this issue by adding an epsilon.
   // Epsilon for any float in the range of (0, 8092), maximum width for a 8k pixel screen.
   constexpr float kEpsilon = std::numeric_limits<float>::epsilon() * 8092;
-  const float extended_start_x = floorf(start_x + kEpsilon);
-  const float extended_end_x = ceil(end_x + kEpsilon);
+  const float extended_start_x = std::floor(start_x + kEpsilon);
+  const float extended_end_x = std::ceil(end_x + kEpsilon);
   return {extended_start_x, extended_end_x - extended_start_x};
 }
 
