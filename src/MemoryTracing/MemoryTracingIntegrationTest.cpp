@@ -11,7 +11,6 @@
 
 #include <numeric>
 
-#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"

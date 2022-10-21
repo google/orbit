@@ -8,11 +8,9 @@
 
 #include <string>
 
-#include "GrpcProtos/Constants.h"
 #include "MemoryTracingUtils.h"
 
 using orbit_grpc_protos::CGroupMemoryUsage;
-using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SystemMemoryUsage;
 
