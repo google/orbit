@@ -12,7 +12,6 @@
 
 using ::testing::A;
 using ::testing::AllOf;
-using ::testing::Const;
 using ::testing::Field;
 using ::testing::Invoke;
 using ::testing::IsSubsetOf;

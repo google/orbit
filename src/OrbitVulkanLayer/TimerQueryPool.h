@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Profiling.h"
 
 namespace orbit_vulkan_layer {
 
