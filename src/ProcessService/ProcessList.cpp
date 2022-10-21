@@ -13,7 +13,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
 
 namespace orbit_process_service_internal {
