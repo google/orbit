@@ -13,7 +13,6 @@
 
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Sftp.h"
-#include "OrbitSshQt/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/StateMachineHelper.h"

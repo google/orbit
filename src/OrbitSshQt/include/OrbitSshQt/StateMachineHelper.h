@@ -7,7 +7,6 @@
 
 #include <QObject>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
