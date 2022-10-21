@@ -8,13 +8,14 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <google/protobuf/arena.h>
+#include <grpcpp/impl/codegen/sync_stream.h>
 
 #include <memory>
 #include <thread>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
-#include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 
 namespace orbit_producer_event_processor {

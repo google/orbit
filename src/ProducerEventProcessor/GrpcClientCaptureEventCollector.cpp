@@ -6,9 +6,8 @@
 
 #include <google/protobuf/arena.h>
 
+#include "ApiInterface/Orbit.h"
 #include "GrpcProtos/capture.pb.h"
-#include "GrpcProtos/services.grpc.pb.h"
-#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
