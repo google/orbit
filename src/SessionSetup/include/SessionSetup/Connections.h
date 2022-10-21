@@ -11,13 +11,10 @@
 #include <optional>
 #include <utility>
 
-#include "ClientData/ProcessData.h"
-#include "ClientServices/ProcessManager.h"
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitSsh/Context.h"
-#include "OrbitSsh/Credentials.h"
 #include "SessionSetup/ServiceDeployManager.h"
 
 namespace orbit_session_setup {

@@ -24,7 +24,6 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/CanceledOr.h"
-#include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"

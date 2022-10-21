@@ -7,6 +7,8 @@
 
 #include <utility>
 
+#include "ClientData/ProcessData.h"
+#include "ClientServices/ProcessManager.h"
 #include "SessionSetup/Connections.h"
 
 namespace orbit_session_setup {

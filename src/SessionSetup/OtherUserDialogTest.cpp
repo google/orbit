@@ -3,12 +3,10 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <qapplication.h>
-#include <qnamespace.h>
-#include <qobjectdefs.h>
-#include <qsettings.h>
 
+#include <QApplication>
 #include <QCheckBox>
+#include <QSettings>
 
 #include "SessionSetup/OtherUserDialog.h"
 #include "TestUtils/TestUtils.h"

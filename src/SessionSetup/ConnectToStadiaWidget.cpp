@@ -39,7 +39,6 @@
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/InstanceItemModel.h"
 #include "OrbitGgp/Project.h"
-#include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "QtUtils/MainThreadExecutorImpl.h"

@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <memory>
 
-#include "ClientFlags/ClientFlags.h"
-#include "ClientServices/ProcessClient.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/WhenAll.h"
 #include "SessionSetup/ConnectToTargetDialog.h"

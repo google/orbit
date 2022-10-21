@@ -19,7 +19,6 @@
 
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "SessionSetup/RetrieveInstancesWidget.h"
