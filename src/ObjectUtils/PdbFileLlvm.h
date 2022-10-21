@@ -28,7 +28,6 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/PdbFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_object_utils {

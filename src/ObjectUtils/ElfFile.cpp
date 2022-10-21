@@ -44,7 +44,6 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_object_utils {
