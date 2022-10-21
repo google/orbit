@@ -10,7 +10,6 @@
 #include <QJsonValue>
 
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Error.h"
 
 namespace orbit_ggp {
 namespace {
