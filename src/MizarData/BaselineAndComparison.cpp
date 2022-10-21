@@ -12,8 +12,6 @@
 #include <string>
 
 #include "BaselineAndComparisonHelper.h"
-#include "ClientData/CaptureData.h"
-#include "MizarData/MizarData.h"
 #include "MizarData/MizarDataProvider.h"
 
 namespace orbit_mizar_data {

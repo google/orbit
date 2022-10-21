@@ -10,7 +10,6 @@
 #include <optional>
 #include <string>
 
-#include "ClientData/CaptureData.h"
 #include "ClientData/CaptureDataHolder.h"
 #include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/FunctionSymbols.h"

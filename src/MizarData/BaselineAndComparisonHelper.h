@@ -18,7 +18,6 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
-#include "MizarData/MizarDataProvider.h"
 
 namespace orbit_mizar_data {
 

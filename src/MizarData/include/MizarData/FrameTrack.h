@@ -9,7 +9,6 @@
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Typedef.h"
-#include "stdint.h"
 
 namespace orbit_mizar_data {
 

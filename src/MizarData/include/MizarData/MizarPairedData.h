@@ -21,7 +21,6 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/ScopeId.h"
-#include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/AbsoluteAddress.h"
@@ -31,7 +30,6 @@
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
 #include "MizarData/MizarDataProvider.h"
-#include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {
 
