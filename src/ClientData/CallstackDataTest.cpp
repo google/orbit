@@ -203,37 +203,27 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
 TEST(CallstackData, ForEachCallstackEventOfTidInTimeRangeDiscretized) {
   CallstackData callstack_data;
 
+  const uint64_t cs_id = 12;
+  CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(cs_id, std::move(cs));
+
   constexpr uint32_t kTid = 42;
   constexpr uint32_t kAnotherTid = 43;
 
-  constexpr uint64_t kCloneAddress = 0x10;
-
-  const uint64_t cs1_id = 12;
-  const uint64_t cs1_outer = kCloneAddress;
-  const uint64_t cs1_inner = 0x11;
-  CallstackInfo cs1{{cs1_inner, cs1_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs1_id, std::move(cs1));
-
-  const uint64_t cs2_id = 13;
-  const uint64_t cs2_outer = kCloneAddress;
-  const uint64_t cs2_inner = 0x21;
-  CallstackInfo cs2{{cs2_inner, cs2_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs2_id, std::move(cs2));
-
   const uint64_t time1 = 142;
-  CallstackEvent event1{time1, cs1_id, kTid};
+  CallstackEvent event1{time1, cs_id, kTid};
   callstack_data.AddCallstackEvent(event1);
 
   const uint64_t time2 = 242;
-  CallstackEvent event2{time2, cs2_id, kTid};
+  CallstackEvent event2{time2, cs_id, kTid};
   callstack_data.AddCallstackEvent(event2);
 
   const uint64_t time3 = 342;
-  CallstackEvent event3{time3, cs1_id, kAnotherTid};
+  CallstackEvent event3{time3, cs_id, kAnotherTid};
   callstack_data.AddCallstackEvent(event3);
 
   const uint64_t time4 = 442;
-  CallstackEvent event4{time4, cs2_id, kTid};
+  CallstackEvent event4{time4, cs_id, kTid};
   callstack_data.AddCallstackEvent(event4);
 
   std::vector<CallstackEvent> callstack_list;
@@ -274,37 +264,27 @@ TEST(CallstackData, ForEachCallstackEventOfTidInTimeRangeDiscretized) {
 TEST(CallstackData, ForEachCallstackEventInTimeRangeDiscretized) {
   CallstackData callstack_data;
 
+  const uint64_t cs_id = 12;
+  CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(cs_id, std::move(cs));
+
   constexpr uint32_t kTid = 42;
   constexpr uint32_t kAnotherTid = 43;
 
-  constexpr uint64_t kCloneAddress = 0x10;
-
-  const uint64_t cs1_id = 12;
-  const uint64_t cs1_outer = kCloneAddress;
-  const uint64_t cs1_inner = 0x11;
-  CallstackInfo cs1{{cs1_inner, cs1_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs1_id, std::move(cs1));
-
-  const uint64_t cs2_id = 13;
-  const uint64_t cs2_outer = kCloneAddress;
-  const uint64_t cs2_inner = 0x21;
-  CallstackInfo cs2{{cs2_inner, cs2_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs2_id, std::move(cs2));
-
   const uint64_t time1 = 142;
-  CallstackEvent event1{time1, cs1_id, kTid};
+  CallstackEvent event1{time1, cs_id, kTid};
   callstack_data.AddCallstackEvent(event1);
 
   const uint64_t time2 = 242;
-  CallstackEvent event2{time2, cs2_id, kTid};
+  CallstackEvent event2{time2, cs_id, kTid};
   callstack_data.AddCallstackEvent(event2);
 
   const uint64_t time3 = 342;
-  CallstackEvent event3{time3, cs1_id, kAnotherTid};
+  CallstackEvent event3{time3, cs_id, kAnotherTid};
   callstack_data.AddCallstackEvent(event3);
 
   const uint64_t time4 = 442;
-  CallstackEvent event4{time4, cs2_id, kTid};
+  CallstackEvent event4{time4, cs_id, kTid};
   callstack_data.AddCallstackEvent(event4);
 
   std::vector<CallstackEvent> callstack_list;

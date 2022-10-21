@@ -84,21 +84,21 @@ class CallstackData {
   void ForEachCallstackEventInTimeRangeDiscretized(uint64_t min_timestamp, uint64_t max_timestamp,
                                                    uint32_t resolution, Action&& action) const {
     auto get_next_callstack = [&](uint64_t timestamp) -> CallstackEvent {
-      const uint32_t kFakeId = -1;
+      constexpr uint32_t kFakeId = -1;
       CallstackEvent next_callstack{max_timestamp, kFakeId, kFakeId};
       uint32_t current_pixel = GetPixelNumber(timestamp, resolution, min_timestamp, max_timestamp);
       for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
-        auto next_callstack_tid = events.lower_bound(timestamp);
-        if (next_callstack_tid != events.end() &&
-            next_callstack_tid->second.timestamp_ns() < next_callstack.timestamp_ns()) {
+        auto next_callstack_of_tid = events.lower_bound(timestamp);
+        if (next_callstack_of_tid != events.end() &&
+            next_callstack_of_tid->second.timestamp_ns() < next_callstack.timestamp_ns()) {
           // If this callstack will be drawn in the current_pixel, we don't need to search for more
-          // of them, otherwise there could be a callstack in another thread_id that will be draw
+          // of them. Otherwise there could be a callstack in another thread_id that will be draw
           // before, so we need to keep looking.
-          if (GetPixelNumber(next_callstack_tid->first, resolution, min_timestamp, max_timestamp) ==
-              current_pixel) {
-            return next_callstack_tid->second;
+          if (GetPixelNumber(next_callstack_of_tid->first, resolution, min_timestamp,
+                             max_timestamp) == current_pixel) {
+            return next_callstack_of_tid->second;
           }
-          next_callstack = next_callstack_tid->second;
+          next_callstack = next_callstack_of_tid->second;
         }
       }
       return next_callstack;
