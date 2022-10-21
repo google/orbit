@@ -14,7 +14,6 @@
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MockCaptureListener.h"
-#include "OrbitBase/Profiling.h"
 
 namespace orbit_capture_client {
 

@@ -6,6 +6,7 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientProtos/user_defined_capture_info.pb.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
 
