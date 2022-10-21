@@ -16,7 +16,6 @@
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "absl/synchronization/mutex.h"
 
 namespace orbit_base {
 

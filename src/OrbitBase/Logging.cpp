@@ -17,7 +17,6 @@
 
 #include "LoggingUtils.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 

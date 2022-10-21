@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_ALIGN_H_
 #define ORBIT_BASE_ALIGN_H_
 
+#include <cstdint>
+
 namespace orbit_base {
 
 // alignment must be a power of 2

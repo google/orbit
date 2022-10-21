@@ -48,7 +48,7 @@ orbit_base::Future<std::variant<orbit_base::VoidToMonostate_t<Args>...>> WhenAny
   auto shared_state = std::make_shared<
       orbit_base_internal::SharedStateWhenAny<orbit_base::VoidToMonostate_t<Args>...>>();
 
-  (RegisterContinuationOrCallDirectly(
+  (orbit_base::RegisterContinuationOrCallDirectly(
        futures,
        // Having the lambda expression taking a parameter pack as its arguments allows us to express
        // 0 arguments (void) and 1 argument (any other T) in a single continuation.

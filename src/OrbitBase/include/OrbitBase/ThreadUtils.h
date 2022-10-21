@@ -14,8 +14,6 @@
 
 #include <string>
 
-#include "OrbitBase/ThreadConstants.h"
-
 namespace orbit_base {
 
 // We use uint32_t as our cross-platform thread id and process id type. Platform-specific invalid

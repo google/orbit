@@ -13,6 +13,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {
