@@ -27,14 +27,12 @@
 #include <vector>
 
 #include "ClientData/ScopeInfo.h"
-#include "ClientData/ScopeStats.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/FrameTrackListModel.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 
 namespace Ui {
