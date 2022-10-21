@@ -26,7 +26,6 @@
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
-#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/ThreadUtils.h"
