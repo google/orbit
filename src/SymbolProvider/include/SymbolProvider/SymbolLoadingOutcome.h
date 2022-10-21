@@ -9,7 +9,6 @@
 #include <variant>
 
 #include "OrbitBase/CanceledOr.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 
