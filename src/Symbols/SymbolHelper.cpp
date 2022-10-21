@@ -36,7 +36,6 @@
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
-#include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolUtils.h"
 
 using orbit_grpc_protos::ModuleSymbols;
