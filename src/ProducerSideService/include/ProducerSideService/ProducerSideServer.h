@@ -12,7 +12,6 @@
 
 #include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "ProducerSideService/ProducerSideServiceImpl.h"
 
