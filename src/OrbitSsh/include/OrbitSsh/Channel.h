@@ -12,7 +12,6 @@
 #include <string>
 #include <string_view>
 
-#include "Error.h"
 #include "OrbitBase/Result.h"
 #include "Session.h"
 
