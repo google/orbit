@@ -12,11 +12,7 @@
 
 #include "AnnotatingSourceCodeDialog.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CodeReport/AnnotateDisassembly.h"
-#include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
-#include "CodeViewer/OwningDialog.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"

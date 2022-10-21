@@ -27,10 +27,8 @@
 #include <QWidget>
 #include <memory>
 
-#include "AccessibleTimeGraph.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
-#include "orbitglwidget.h"
 
 namespace orbit_qt {
 

@@ -76,7 +76,6 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
-#include "ClientModel/CaptureSerializer.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
@@ -95,7 +94,6 @@
 #include "GlCanvas.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.pb.h"
-#include "Introspection/Introspection.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -137,7 +135,6 @@ using orbit_capture_client::CaptureListener;
 using orbit_client_data::ScopeId;
 
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_CHECK_FALSE;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 

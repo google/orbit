@@ -12,12 +12,11 @@
 #include <chrono>
 #include <functional>
 
-#include "App.h"
 #include "ClientData/FunctionInfo.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
-#include "CodeViewer/OwningDialog.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Future.h"

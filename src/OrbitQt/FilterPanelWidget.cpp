@@ -8,7 +8,6 @@
 #include <QFrame>
 #include <QWidget>
 
-#include "orbitmainwindow.h"
 #include "ui_FilterPanelWidget.h"
 
 FilterPanelWidget::FilterPanelWidget(QWidget* parent)
