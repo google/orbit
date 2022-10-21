@@ -27,8 +27,6 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureSerializer.h"
-#include "ClientModel/SamplingDataPostProcessor.h"
-#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/services.pb.h"
@@ -37,7 +35,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
