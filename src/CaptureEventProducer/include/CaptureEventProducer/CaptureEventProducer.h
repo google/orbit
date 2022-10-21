@@ -5,6 +5,7 @@
 #ifndef CAPTURE_EVENT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
 #define CAPTURE_EVENT_PRODUCER_CAPTURE_EVENT_PRODUCER_H_
 
+#include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
@@ -15,7 +16,6 @@
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/producer_side_services.grpc.pb.h"
 #include "GrpcProtos/producer_side_services.pb.h"
-#include "absl/synchronization/mutex.h"
 
 namespace orbit_capture_event_producer {
 
