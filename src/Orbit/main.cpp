@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "CommandLineUtils/CommandLineUtils.h"
-#include "OrbitBase/File.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -36,7 +35,6 @@
 
 #include "AccessibilityAdapter.h"
 #include "ClientFlags/ClientFlags.h"
-#include "ImGuiOrbit.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitPaths/Paths.h"
