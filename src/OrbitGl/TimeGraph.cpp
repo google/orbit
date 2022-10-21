@@ -14,11 +14,11 @@
 #include <cmath>
 #include <limits>
 
+#include "AccessibleTimeGraph.h"
 #include "App.h"
 #include "AsyncTrack.h"
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
-#include "ClientData/CallstackEvent.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
 #include "FrameTrack.h"
@@ -38,8 +38,6 @@
 
 using orbit_capture_client::CaptureEventProcessor;
 
-using orbit_client_data::ApiTrackValue;
-using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
@@ -52,8 +50,6 @@ using orbit_gl::SystemMemoryTrack;
 using orbit_gl::TextRenderer;
 using orbit_gl::TrackManager;
 using orbit_gl::VariableTrack;
-
-using orbit_grpc_protos::InstrumentedFunction;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, CaptureData* capture_data,

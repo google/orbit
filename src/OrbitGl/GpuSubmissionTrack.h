@@ -11,13 +11,11 @@
 #include <string>
 #include <string_view>
 
-#include "CallstackThreadBar.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
-#include "GpuDebugMarkerTrack.h"
 #include "PickingManager.h"
 #include "StringManager/StringManager.h"
-#include "TextRenderer.h"
+#include "TimerTrack.h"
 #include "Track.h"
 
 class OrbitApp;

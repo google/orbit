@@ -6,7 +6,6 @@
 
 #include "ApiUtils/EncodedEvent.h"
 #include "CaptureClient/CaptureEventProcessor.h"
-#include "Geometry.h"
 #include "GrpcProtos/Constants.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"

@@ -11,8 +11,8 @@
 
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
-#include "PickingManager.h"
 #include "PrimitiveAssembler.h"
+#include "TimelineInfoInterface.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

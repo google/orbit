@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_SHORTEN_STRING_WITH_ELLIPSIS_H_
 #define ORBIT_GL_SHORTEN_STRING_WITH_ELLIPSIS_H_
 
+#include <string>
+
 enum class EllipsisPosition { kMiddle };
 
 namespace orbit_gl {

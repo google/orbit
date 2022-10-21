@@ -8,7 +8,6 @@
 #include <string>
 
 #include "AccessibleCaptureViewElement.h"
-#include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {

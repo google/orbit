@@ -23,7 +23,6 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
 #include "SamplingReport.h"
-#include "Statistics/Histogram.h"
 
 namespace orbit_gl {
 

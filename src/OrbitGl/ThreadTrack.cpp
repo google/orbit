@@ -20,7 +20,6 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeId.h"
-#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
@@ -32,18 +31,14 @@
 #include "TimerTrack.h"
 #include "Viewport.h"
 
-using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ScopeId;
-using orbit_client_data::TimerChain;
 
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
 using orbit_client_protos::TimerInfo;
-
-using orbit_grpc_protos::InstrumentedFunction;
 
 ThreadTrack::ThreadTrack(CaptureViewElement* parent,
                          const orbit_gl::TimelineInfoInterface* timeline_info,

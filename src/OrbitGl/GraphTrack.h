@@ -14,7 +14,6 @@
 #include "MultivariateTimeSeries.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
-#include "Timer.h"
 #include "Track.h"
 #include "Viewport.h"
 

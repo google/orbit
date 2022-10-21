@@ -15,7 +15,6 @@
 
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "ThreadColor.h"
 #include "TimeGraph.h"

@@ -18,7 +18,6 @@
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
-#include "TriangleToggle.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -26,8 +25,6 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
-
-using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
 constexpr const double kHeightCapAverageMultipleDouble = 6.0;

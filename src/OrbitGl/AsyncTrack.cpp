@@ -15,23 +15,18 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
 #include "GlUtils.h"
-#include "Introspection/Introspection.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
-#include "TriangleToggle.h"
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
-
-using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,

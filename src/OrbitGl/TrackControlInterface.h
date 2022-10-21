@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "Geometry.h"
+#include "CoreMath.h"
 
 namespace orbit_gl {
 

@@ -11,9 +11,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "AccessibleCaptureViewElement.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "OrbitBase/Logging.h"
 #include "PickingManager.h"
 
 namespace orbit_gl {

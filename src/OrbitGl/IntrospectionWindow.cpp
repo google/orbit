@@ -7,10 +7,10 @@
 #include "App.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "ImGuiOrbit.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CaptureData;
-using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::CaptureStarted;
 
 namespace {

@@ -24,7 +24,6 @@
 #include "GlCanvas.h"
 #include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
-#include "TriangleToggle.h"
 #include "Viewport.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"

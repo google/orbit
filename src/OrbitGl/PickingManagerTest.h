@@ -11,7 +11,6 @@
 #include <array>
 
 #include "CoreMath.h"
-#include "GlCanvas.h"
 #include "PickingManager.h"
 #include "absl/base/casts.h"
 

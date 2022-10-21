@@ -7,7 +7,6 @@
 #include <list>
 
 #include "CaptureStats.h"
-#include "SchedulerTrack.h"
 #include "SchedulingStats.h"
 
 TEST(CaptureStats, NullCaptureWindow) {

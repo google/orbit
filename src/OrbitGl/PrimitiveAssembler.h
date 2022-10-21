@@ -19,7 +19,6 @@
 #include "Batcher.h"
 #include "CoreMath.h"
 #include "Geometry.h"
-#include "TranslationStack.h"
 
 namespace orbit_gl {
 

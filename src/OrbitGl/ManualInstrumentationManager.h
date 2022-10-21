@@ -16,8 +16,6 @@
 
 #include "ClientData/ApiStringEvent.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "Introspection/Introspection.h"
-#include "OrbitBase/Logging.h"
 #include "StringManager/StringManager.h"
 
 // Wrapper around a StringManager that holds the association from the id of an async time span to

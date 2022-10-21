@@ -6,7 +6,6 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "GlCanvas.h"
-#include "Track.h"
 #include "TrackRenderHelper.h"
 
 namespace orbit_gl {

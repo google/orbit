@@ -18,7 +18,6 @@
 #include "PrimitiveAssembler.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
-#include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_data::TimerChain;

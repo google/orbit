@@ -10,16 +10,13 @@
 #include <memory>
 
 #include "App.h"
-#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
-#include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;

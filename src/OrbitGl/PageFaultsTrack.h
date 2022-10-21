@@ -8,7 +8,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "MajorPageFaultsTrack.h"
 #include "MinorPageFaultsTrack.h"
-#include "Timer.h"
 #include "Track.h"
 #include "Viewport.h"
 

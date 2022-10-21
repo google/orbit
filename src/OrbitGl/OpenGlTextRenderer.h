@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "CoreMath.h"
-#include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 

@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
 #include "OrbitBase/Logging.h"
 #include "Track.h"

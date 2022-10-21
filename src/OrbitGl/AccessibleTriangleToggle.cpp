@@ -4,8 +4,8 @@
 
 #include "AccessibleTriangleToggle.h"
 
-#include "CoreMath.h"
-#include "GlCanvas.h"
+#include "AccessibleCaptureViewElement.h"
+#include "TriangleToggle.h"
 
 namespace orbit_gl {
 

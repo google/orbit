@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_CAPUTRE_STATS_H_
-#define ORBIT_GL_CAPUTRE_STATS_H_
+#ifndef ORBIT_GL_CAPTURE_STATS_H_
+#define ORBIT_GL_CAPTURE_STATS_H_
 
 #include <string>
 
@@ -22,4 +22,4 @@ class CaptureStats {
   std::string summary_;
 };
 
-#endif  // ORBIT_GL_CAPUTRE_STATS_H_
+#endif  // ORBIT_GL_CAPTURE_STATS_H_
