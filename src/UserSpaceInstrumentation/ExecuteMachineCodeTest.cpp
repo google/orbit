@@ -19,7 +19,6 @@
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {

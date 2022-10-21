@@ -18,7 +18,6 @@
 #include "FindFunctionAddress.h"
 #include "MachineCode.h"
 #include "OrbitBase/File.h"
-#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
 

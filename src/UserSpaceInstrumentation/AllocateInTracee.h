@@ -11,9 +11,7 @@
 #include <functional>
 #include <memory>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {
 

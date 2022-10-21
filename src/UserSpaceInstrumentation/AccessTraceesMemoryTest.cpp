@@ -23,7 +23,6 @@
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "RegisterState.h"
 #include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 

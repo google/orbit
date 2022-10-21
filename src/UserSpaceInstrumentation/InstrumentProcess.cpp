@@ -32,7 +32,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
-#include "ReadSeccompModeOfThread.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/AnyThreadIsInStrictSeccompMode.h"
