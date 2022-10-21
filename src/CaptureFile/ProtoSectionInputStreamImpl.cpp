@@ -4,7 +4,6 @@
 
 #include "ProtoSectionInputStreamImpl.h"
 
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 
 namespace orbit_capture_file_internal {

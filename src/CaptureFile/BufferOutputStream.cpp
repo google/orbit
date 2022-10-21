@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstring>
 
-#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_capture_file {
 
