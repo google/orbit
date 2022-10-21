@@ -42,6 +42,19 @@ if [ "$FORCE_PUBLIC_REMOTES" == "yes" ]; then
     echo "CI machine detected, but forced to use public remotes. Will be using caching proxy of the public remotes though."
     conan remote add -i 0 -f artifactory "http://artifactory.internal/artifactory/api/conan/conan-public" || exit $?
     conan_disable_public_remotes || exit $?
+  elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
+    echo "Artifactory override detected. Adjusting public remote..."
+    conan remote add -i 0 -f artifactory_public "$ORBIT_OVERRIDE_ARTIFACTORY_URL" || exit $?
+  else
+    LOCATION="$(curl -sI http://orbit-artifactory/ 2>/dev/null)"
+
+    if [ $? -eq 0 ]; then
+      echo "Internal machine detected. Adjusting remotes to use internal public mirror..."
+      LOCATION="$(echo "$LOCATION" | grep -e "^Location:" | cut -d ' ' -f 2 | cut -d '/' -f 3)"
+
+      conan remote add -i 0 -f artifactory_public "http://$LOCATION/artifactory/api/conan/conan-public" || exit $?
+      conan config set proxies.http="$LOCATION=http://127.0.0.2:999" || exit $?
+    fi
   fi
 elif [ -n "$ORBIT_OVERRIDE_ARTIFACTORY_URL" ]; then
   echo "Artifactory override detected. Adjusting remotes..."
