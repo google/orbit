@@ -8,8 +8,6 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "GrpcProtos/services_ggp.grpc.pb.h"
-
 class OrbitCaptureGgpService final {
  public:
   explicit OrbitCaptureGgpService(uint16_t grpc_port) : grpc_port_{grpc_port} {}
