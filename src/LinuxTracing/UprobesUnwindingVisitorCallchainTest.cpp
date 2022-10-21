@@ -21,7 +21,6 @@
 #include "MockTracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
-#include "Test/Path.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"

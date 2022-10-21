@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "LibunwindstackMaps.h"
-#include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "UprobesReturnAddressManager.h"
 

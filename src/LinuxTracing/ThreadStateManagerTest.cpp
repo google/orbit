@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/ThreadConstants.h"
 #include "ThreadStateManager.h"
 
 using orbit_grpc_protos::ThreadStateSlice;

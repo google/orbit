@@ -18,7 +18,6 @@
 #include "KernelTracepoints.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 #include "PerfEventOrderedStream.h"
 #include "PerfEventRecords.h"

@@ -14,7 +14,6 @@
 #include "GpuTracepointVisitor.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MockTracerListener.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 
 namespace orbit_linux_tracing {

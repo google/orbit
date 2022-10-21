@@ -12,8 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "OrbitBase/Logging.h"
-
 namespace orbit_linux_tracing {
 
 // This class is a "view" of a stack slice (some copy of process memory). It contains a bare pointer
