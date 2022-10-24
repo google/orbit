@@ -24,7 +24,6 @@
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/BaselineAndComparison.h"
-#include "MizarData/MizarDataProvider.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TestUtils/ContainerHelpers.h"

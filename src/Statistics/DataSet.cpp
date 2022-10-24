@@ -8,9 +8,6 @@
 #include <optional>
 #include <vector>
 
-#include "OrbitBase/Logging.h"
-#include "Statistics/Histogram.h"
-
 namespace orbit_statistics {
 
 [[nodiscard]] std::optional<DataSet> DataSet::Create(absl::Span<const uint64_t> data) {

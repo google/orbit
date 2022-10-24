@@ -12,7 +12,6 @@
 #include <string>
 #include <utility>
 
-#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/FunctionSymbols.h"
@@ -21,7 +20,6 @@
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
-#include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
 

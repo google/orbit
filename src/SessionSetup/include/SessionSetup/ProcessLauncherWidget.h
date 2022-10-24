@@ -9,7 +9,6 @@
 #include <QWidget>
 #include <memory>
 
-#include "ClientData/ProcessData.h"
 #include "ClientServices/ProcessManager.h"
 
 namespace Ui {

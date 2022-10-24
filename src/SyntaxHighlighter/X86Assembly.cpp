@@ -4,8 +4,6 @@
 
 #include "SyntaxHighlighter/X86Assembly.h"
 
-#include <qregularexpression.h>
-
 #include <QColor>
 #include <QRegularExpression>
 #include <QString>

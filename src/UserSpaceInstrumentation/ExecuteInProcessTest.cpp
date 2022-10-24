@@ -13,7 +13,6 @@
 
 #include "GetTestLibLibraryPath.h"
 #include "ModuleUtils/ReadLinuxModules.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"

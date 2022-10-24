@@ -24,7 +24,6 @@
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitService.h"
 #include "OrbitVersion/OrbitVersion.h"

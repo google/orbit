@@ -31,13 +31,13 @@
 #include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
-#include "absl/base/casts.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
@@ -46,8 +46,6 @@ using orbit_client_data::CaptureData;
 using orbit_gl::Batcher;
 using orbit_gl::CaptureViewElement;
 using orbit_gl::ModifierKeys;
-using orbit_gl::PickingUserData;
-using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
 constexpr const char* kTimingDraw = "Draw";

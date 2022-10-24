@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "DataViews/DataView.h"
-#include "orbitglwidget.h"
 #include "orbittablemodel.h"
 #include "types.h"
 

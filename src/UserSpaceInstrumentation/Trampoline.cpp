@@ -24,6 +24,7 @@
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/UniqueResource.h"
 #include "RegisterState.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
 

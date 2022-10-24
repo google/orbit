@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "ClientProtos/capture_data.pb.h"
-#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/ThreadConstants.h"
 
 class CaptureData;
 class SchedulerTrack;

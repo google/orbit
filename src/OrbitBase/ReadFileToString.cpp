@@ -13,7 +13,6 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "OrbitBase/UniqueResource.h"
 
 #if defined(__linux)
 #include <unistd.h>

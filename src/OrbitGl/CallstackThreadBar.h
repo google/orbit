@@ -11,11 +11,9 @@
 #include <memory>
 #include <string>
 
-#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CoreMath.h"
 #include "ThreadBar.h"
 #include "Viewport.h"
 

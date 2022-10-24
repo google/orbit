@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "CaptureViewElement.h"
-#include "CoreMath.h"
 #include "Viewport.h"
 
 class Track;

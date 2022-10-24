@@ -10,7 +10,6 @@
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/Time.h"
-#include "MizarBase/Titles.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "TestUtils/TestUtils.h"

@@ -5,6 +5,9 @@
 #ifndef LINUX_TRACING_USER_SPACE_INSTRUMENTATION_ADDRESSES_H_
 #define LINUX_TRACING_USER_SPACE_INSTRUMENTATION_ADDRESSES_H_
 
+#include <cstdint>
+#include <string_view>
+
 namespace orbit_linux_tracing {
 
 // This interface carries information about memory addresses dedicated to user space

@@ -14,7 +14,6 @@
 #include <Qt>
 #include <string>
 
-#include "ClientData/ScopeStats.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"

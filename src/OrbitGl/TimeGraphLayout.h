@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/ThreadConstants.h"
 
 class TimeGraphLayout {
  public:

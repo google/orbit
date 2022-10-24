@@ -17,7 +17,6 @@
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetupUtils.h"
 #include "TargetConfiguration.h"
-#include "grpcpp/channel.h"
 
 namespace Ui {
 class ConnectToTargetDialog;  // IWYU pragma: keep

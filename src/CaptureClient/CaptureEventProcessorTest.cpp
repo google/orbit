@@ -13,9 +13,7 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/ApiStringEvent.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/TracepointCustom.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
@@ -23,8 +21,6 @@
 
 namespace orbit_capture_client {
 
-using orbit_client_data::ApiStringEvent;
-using orbit_client_data::ApiTrackValue;
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::LinuxAddressInfo;
@@ -36,8 +32,6 @@ using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::CallstackSample;
-using orbit_grpc_protos::CaptureFinished;
-using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::ClockResolutionEvent;
@@ -58,7 +52,6 @@ using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::InternedTracepointInfo;
 using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
-using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
 using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;

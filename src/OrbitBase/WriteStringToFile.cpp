@@ -7,7 +7,6 @@
 #include <absl/strings/str_format.h>
 
 #include "OrbitBase/File.h"
-#include "OrbitBase/UniqueResource.h"
 
 namespace orbit_base {
 

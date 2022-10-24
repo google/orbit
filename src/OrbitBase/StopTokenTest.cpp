@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "OrbitBase/Future.h"
-#include "OrbitBase/SharedState.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
 

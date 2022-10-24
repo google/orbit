@@ -20,7 +20,6 @@
 #include <string>
 #include <utility>
 
-#include "Geometry.h"
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -475,8 +474,8 @@ float OpenGlTextRenderer::GetStringHeight(const char* text, uint32_t font_size) 
 int OpenGlTextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {
   float string_width = 0;
 
-  std::size_t len = strlen(text);
-  for (std::size_t i = 0; i < len; ++i) {
+  size_t len = strlen(text);
+  for (size_t i = 0; i < len; ++i) {
     ftgl::texture_font_t* font = GetFont(font_size);
     ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
@@ -499,7 +498,7 @@ int OpenGlTextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t fon
 int OpenGlTextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_size) {
   int max_height = 0.f;
   ftgl::texture_font_t* font = GetFont(font_size);
-  for (std::size_t i = 0; i < strlen(text); ++i) {
+  for (size_t i = 0; i < strlen(text); ++i) {
     ftgl::texture_glyph_t* glyph = MaybeLoadAndGetGlyph(font, text + i);
     if (glyph != nullptr) {
       max_height = std::max(max_height, glyph->offset_y);

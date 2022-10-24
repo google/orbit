@@ -13,8 +13,6 @@
 #include <string>
 
 #include "ClientData/CallstackData.h"
-#include "ClientData/CallstackEvent.h"
-#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"

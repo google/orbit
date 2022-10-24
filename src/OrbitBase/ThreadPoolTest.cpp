@@ -10,7 +10,6 @@
 #include <chrono>
 #include <memory>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadPool.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"

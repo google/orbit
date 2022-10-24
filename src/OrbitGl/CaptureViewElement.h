@@ -6,12 +6,10 @@
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
 #include "AccessibleInterfaceProvider.h"
-#include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
-#include "TimelineInfoInterface.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

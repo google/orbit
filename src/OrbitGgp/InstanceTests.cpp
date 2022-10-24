@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 #include "TestUtils/TestUtils.h"
 

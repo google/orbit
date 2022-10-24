@@ -5,6 +5,8 @@
 #ifndef LINUX_TRACING_MOCK_TRACER_LISTENER_H_
 #define LINUX_TRACING_MOCK_TRACER_LISTENER_H_
 
+#include <gmock/gmock.h>
+
 #include "LinuxTracing/TracerListener.h"
 
 namespace orbit_linux_tracing {

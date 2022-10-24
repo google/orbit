@@ -14,10 +14,8 @@
 #include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
-#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarPairedData.h"
-#include "MizarWidgets/MizarMainWindow.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "SamplingWithFrameTrackInputWidget.h"
 

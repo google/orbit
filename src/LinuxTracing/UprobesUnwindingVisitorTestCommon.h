@@ -6,6 +6,7 @@
 #define LINUX_TRACING_UPROBES_UNWINDING_VISITOR_TEST_COMMON_H_
 
 #include <asm/perf_regs.h>
+#include <gmock/gmock.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 

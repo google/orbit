@@ -19,7 +19,6 @@
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
@@ -27,7 +26,6 @@ namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
-using orbit_client_data::CallstackType;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TracepointInfo;

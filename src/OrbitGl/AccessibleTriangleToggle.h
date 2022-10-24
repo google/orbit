@@ -6,8 +6,6 @@
 #define ORBIT_GL_ACCESSIBLE_TRIANGLE_TOGGLE_H_
 
 #include "AccessibleCaptureViewElement.h"
-#include "CaptureViewElement.h"
-#include "Track.h"
 
 class TriangleToggle;
 

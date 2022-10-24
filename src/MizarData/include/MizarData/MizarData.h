@@ -12,8 +12,6 @@
 #include <vector>
 
 #include "CaptureClient/AbstractCaptureListener.h"
-#include "CaptureClient/CaptureListener.h"
-#include "CaptureFile/CaptureFile.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -21,7 +19,6 @@
 #include "GrpcProtos/module.pb.h"
 #include "MizarBase/Time.h"
 #include "MizarDataProvider.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitPaths/Paths.h"
 #include "Symbols/SymbolHelper.h"
 

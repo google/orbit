@@ -5,11 +5,12 @@
 #ifndef MIZAR_BASE_TIME_H_
 #define MIZAR_BASE_TIME_H_
 
+#include <stdint.h>
+
 #include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "stdint.h"
 
 namespace orbit_mizar_base_internal {
 

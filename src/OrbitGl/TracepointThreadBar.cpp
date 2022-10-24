@@ -14,7 +14,6 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "ClientServices/TracepointServiceClient.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"

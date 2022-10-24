@@ -10,7 +10,7 @@
 #include <optional>
 #include <utility>
 
-#include "Introspection/Introspection.h"
+#include "ApiInterface/Orbit.h"
 #include "OrbitBase/Action.h"
 #include "OrbitBase/Logging.h"
 #include "QtUtils/FutureWatcher.h"

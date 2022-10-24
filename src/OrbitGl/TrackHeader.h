@@ -8,7 +8,6 @@
 #include <memory>
 
 #include "CaptureViewElement.h"
-#include "OrbitBase/Logging.h"
 #include "TrackControlInterface.h"
 #include "TriangleToggle.h"
 

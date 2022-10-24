@@ -12,8 +12,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
-#include "OrbitBase/Logging.h"
-#include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
 
 class OrbitApp;

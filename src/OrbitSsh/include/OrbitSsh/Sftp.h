@@ -11,7 +11,6 @@
 #include <memory>
 
 #include "OrbitBase/Result.h"
-#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
 
 namespace orbit_ssh {

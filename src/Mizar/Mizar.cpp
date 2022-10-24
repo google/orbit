@@ -26,8 +26,6 @@
 using ::orbit_client_data::ScopeId;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
-using ::orbit_mizar_base::MakeBaseline;
-using ::orbit_mizar_base::MakeComparison;
 using ::orbit_mizar_base::TID;
 
 [[nodiscard]] static ErrorMessageOr<void> LoadCapture(orbit_mizar_data::MizarData* data,

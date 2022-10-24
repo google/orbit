@@ -11,7 +11,6 @@
 #include <system_error>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_base_internal {
 

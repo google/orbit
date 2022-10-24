@@ -26,7 +26,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Error.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/ExecuteProcess.h"

@@ -6,8 +6,8 @@
 #define SYNTAX_HIGHLIGHTER_X86_ASSEMBLY_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <qregularexpression.h>
 
+#include <QRegularExpression>
 #include <QSyntaxHighlighter>
 
 namespace orbit_syntax_highlighter {

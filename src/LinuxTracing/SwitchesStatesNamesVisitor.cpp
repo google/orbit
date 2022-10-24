@@ -13,7 +13,6 @@
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 
 namespace orbit_linux_tracing {

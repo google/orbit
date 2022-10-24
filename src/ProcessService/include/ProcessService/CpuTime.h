@@ -5,6 +5,9 @@
 #ifndef PROCESS_SERVICE_CPU_TIME_H_
 #define PROCESS_SERVICE_CPU_TIME_H_
 
+#include <cstddef>
+#include <cstdint>
+
 namespace orbit_process_service_internal {
 
 // In the linux world, Jiffies is a global counter which increments on tick (caused by a CPU timer

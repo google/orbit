@@ -35,7 +35,6 @@
 #include "ClientData/ScopeId.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
-#include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
 using ::orbit_client_data::ScopeId;

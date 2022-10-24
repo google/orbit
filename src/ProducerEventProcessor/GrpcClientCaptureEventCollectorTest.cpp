@@ -11,7 +11,6 @@
 #include <thread>
 
 #include "GrpcProtos/capture.pb.h"
-#include "GrpcProtos/services.grpc.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 

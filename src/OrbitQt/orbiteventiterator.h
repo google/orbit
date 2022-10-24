@@ -18,9 +18,7 @@
 #include <functional>
 #include <string>
 
-#include "OrbitBase/Profiling.h"
 #include "absl/container/flat_hash_map.h"
-#include "types.h"
 
 namespace Ui {
 class OrbitEventIterator;

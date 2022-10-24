@@ -18,7 +18,6 @@
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "ReadSeccompModeOfThread.h"
 #include "RegisterState.h"

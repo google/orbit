@@ -15,7 +15,6 @@
 #include <type_traits>
 
 #include "OrbitBase/Result.h"
-#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
 #include "OrbitSsh/Sftp.h"
 

@@ -30,8 +30,6 @@
 #include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
 #include "ModuleUtils/ReadLinuxModules.h"
-#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
-#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"

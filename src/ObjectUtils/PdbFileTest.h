@@ -13,7 +13,6 @@
 
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/PdbFile.h"
-#include "OrbitBase/Logging.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 

@@ -7,7 +7,6 @@
 #include <QFileDialog>
 #include <QLineEdit>
 
-#include "OrbitBase/Logging.h"
 #include "ui_ProcessLauncherWidget.h"
 
 namespace orbit_session_setup {

@@ -8,10 +8,8 @@
 #include <absl/algorithm/container.h>
 #include <absl/functional/bind_front.h>
 
-#include "ClientData/CaptureData.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
-#include "MizarData/MizarData.h"
 #include "MizarData/MizarDataProvider.h"
 #include "OrbitBase/Overloaded.h"
 

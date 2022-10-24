@@ -6,6 +6,7 @@
 #define ORBIT_VERSION_ORBIT_VERSION_H_
 
 #include <string>
+#include <tuple>
 
 namespace orbit_version {
 

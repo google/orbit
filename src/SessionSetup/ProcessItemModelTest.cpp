@@ -11,7 +11,6 @@
 #include <string>
 
 #include "GrpcProtos/process.pb.h"
-#include "OrbitBase/Logging.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "SessionSetup/ProcessItemModel.h"
 

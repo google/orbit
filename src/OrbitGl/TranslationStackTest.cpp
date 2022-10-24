@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include "Geometry.h"
 #include "TranslationStack.h"
 
 namespace orbit_gl {

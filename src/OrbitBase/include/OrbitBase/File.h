@@ -14,7 +14,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/SafeStrerror.h"
 
 #if defined(__linux)
 #include <unistd.h>

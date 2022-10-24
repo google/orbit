@@ -16,14 +16,10 @@
 #include <vector>
 
 #include "AccessibleInterfaceProvider.h"
-#include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
-#include "GlUtils.h"
-#include "ImGuiOrbit.h"
 #include "OpenGlBatcher.h"
 #include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
-#include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
 #include "Timer.h"
 #include "Viewport.h"

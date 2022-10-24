@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-#include "App.h"
 #include "ClientData/ScopeId.h"
 #include "Statistics/Histogram.h"
 

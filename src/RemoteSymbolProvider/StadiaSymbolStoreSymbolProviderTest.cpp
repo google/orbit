@@ -31,9 +31,7 @@ using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 using orbit_symbol_provider::SymbolLoadingSuccessResult;
 using orbit_test_utils::HasError;
-using orbit_test_utils::HasNoError;
 using ::testing::_;
-using ::testing::Return;
 
 const std::filesystem::path kSymbolCacheDir{"symbol/cache/path"};
 const std::string kValidModuleName{"valid_module_name"};

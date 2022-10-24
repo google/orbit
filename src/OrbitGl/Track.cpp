@@ -6,6 +6,8 @@
 
 #include <stddef.h>
 
+#include <cmath>
+
 #include "AccessibleTrack.h"
 #include "ClientData/CaptureData.h"
 #include "CoreMath.h"
@@ -16,7 +18,6 @@
 #include "TrackRenderHelper.h"
 #include "Viewport.h"
 
-using orbit_client_data::TimerData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 

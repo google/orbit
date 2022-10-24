@@ -11,8 +11,6 @@
 #include <iterator>
 
 #include "Geometry.h"
-#include "TextRenderer.h"
-#include "TimeGraphLayout.h"
 
 namespace orbit_gl {
 

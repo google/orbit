@@ -22,7 +22,6 @@
 #include <optional>
 #include <string>
 
-#include "OrbitBase/Executor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Account.h"
 #include "OrbitGgp/Client.h"
@@ -34,7 +33,6 @@
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/RetrieveInstances.h"
-#include "SessionSetup/RetrieveInstancesWidget.h"
 #include "SessionSetup/ServiceDeployManager.h"
 
 namespace Ui {

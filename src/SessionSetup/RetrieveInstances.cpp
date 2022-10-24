@@ -19,7 +19,6 @@
 #include <utility>
 
 #include "OrbitBase/Future.h"
-#include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/WhenAll.h"

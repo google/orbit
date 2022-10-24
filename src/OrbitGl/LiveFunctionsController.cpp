@@ -16,6 +16,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/Constants.h"
 #include "TimeGraph.h"
 
 using orbit_client_data::FunctionInfo;

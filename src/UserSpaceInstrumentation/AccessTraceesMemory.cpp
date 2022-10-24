@@ -17,7 +17,6 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_user_space_instrumentation {
 

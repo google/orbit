@@ -16,18 +16,13 @@
 #include <string_view>
 #include <thread>
 
-#include "FindFunctionAddress.h"
 #include "GrpcProtos/capture.pb.h"
-#include "ModuleUtils/ReadLinuxModules.h"
-#include "ObjectUtils/ElfFile.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
-#include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
 namespace orbit_user_space_instrumentation {

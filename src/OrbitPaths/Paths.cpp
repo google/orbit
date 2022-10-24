@@ -23,7 +23,6 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/StringConversion.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 

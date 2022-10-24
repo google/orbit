@@ -8,6 +8,8 @@
 
 #include <string_view>
 
+#include "OrbitBase/SafeStrerror.h"
+
 namespace orbit_base {
 
 ErrorMessageOr<TemporaryFile> TemporaryFile::Create(std::string_view prefix) {

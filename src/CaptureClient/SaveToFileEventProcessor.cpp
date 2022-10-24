@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
+
 #include "CaptureClient/CaptureEventProcessor.h"
-#include "CaptureFile/CaptureFile.h"
-#include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
+#include "ClientProtos/user_defined_capture_info.pb.h"
+#include "OrbitBase/Logging.h"
 
 using orbit_capture_file::CaptureFileOutputStream;
 using orbit_client_protos::UserDefinedCaptureInfo;

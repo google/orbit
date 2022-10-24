@@ -8,7 +8,6 @@
 #include <optional>
 #include <string>
 
-#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"

@@ -14,7 +14,6 @@
 
 #include "ClientData/WineSyscallHandlingMethod.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Logging.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {

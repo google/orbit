@@ -25,8 +25,6 @@
 #include <utility>
 #include <vector>
 
-#include "CutoutWidget.h"
-
 namespace Ui {
 class TutorialOverlay;
 }

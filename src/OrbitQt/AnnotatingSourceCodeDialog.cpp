@@ -10,10 +10,8 @@
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "ObjectUtils/ElfFile.h"
-#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 

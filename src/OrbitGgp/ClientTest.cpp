@@ -13,7 +13,6 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Account.h"

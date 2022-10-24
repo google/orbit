@@ -13,21 +13,15 @@
 #include <string>
 #include <vector>
 
-#include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
-#include "ClientData/CallstackType.h"
 #include "ClientData/ScopeId.h"
-#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "Statistics/Histogram.h"
 #include "TextRenderer.h"
-#include "TracepointThreadBar.h"
 #include "Track.h"
 #include "Viewport.h"
-#include "absl/synchronization/mutex.h"
 
 class OrbitApp;
 

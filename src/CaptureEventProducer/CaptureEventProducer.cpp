@@ -13,7 +13,6 @@
 #include "OrbitBase/ThreadUtils.h"
 
 using orbit_grpc_protos::ProducerSideService;
-using orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest;
 using orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse;
 
 namespace orbit_capture_event_producer {

@@ -7,7 +7,6 @@
 
 #include <string>
 
-#include "CallstackThreadBar.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"

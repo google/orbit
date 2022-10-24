@@ -7,17 +7,16 @@
 
 #include <absl/container/flat_hash_set.h>
 
+#include <filesystem>
+
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
-#include "ClientData/ProcessData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
-#include "ClientData/TracepointCustom.h"
 #include "ClientData/TracepointEventInfo.h"
 #include "ClientData/TracepointInfo.h"
-#include "ClientData/UserDefinedCaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"

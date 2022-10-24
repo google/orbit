@@ -13,8 +13,6 @@
 
 #include "GrpcProtos/capture.pb.h"
 #include "ModuleUtils/ReadLinuxMaps.h"
-#include "OrbitBase/Logging.h"
-#include "OrbitBase/Profiling.h"
 
 namespace orbit_linux_tracing {
 

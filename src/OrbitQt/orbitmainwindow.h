@@ -36,7 +36,6 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "ClientServices/ProcessManager.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
@@ -45,8 +44,6 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
-#include "SessionSetup/ServiceDeployManager.h"
-#include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 #include "orbitglwidget.h"
 

@@ -14,7 +14,6 @@ namespace orbit_capture_client {
 using orbit_client_data::ApiStringEvent;
 using orbit_client_data::ApiTrackValue;
 using orbit_client_protos::TimerInfo;
-using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::ApiScopeStart;
 using orbit_grpc_protos::ApiScopeStartAsync;
 

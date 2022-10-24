@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
 
 static ErrorMessageOr<std::string> ReturnString() { return "This is fine."; }

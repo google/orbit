@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "CoreMath.h"
-#include "Geometry.h"
 
 namespace orbit_gl {
 

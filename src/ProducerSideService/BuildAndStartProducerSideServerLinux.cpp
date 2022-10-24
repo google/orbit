@@ -14,7 +14,6 @@
 #include "BuildAndStartProducerSideServerWithUri.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 #include "ProducerSideService/BuildAndStartProducerSideServer.h"
 #include "ProducerSideService/ProducerSideServer.h"

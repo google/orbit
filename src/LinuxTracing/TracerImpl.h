@@ -31,7 +31,6 @@
 #include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "LostAndDiscardedEventVisitor.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "PerfEvent.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventRingBuffer.h"

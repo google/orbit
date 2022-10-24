@@ -11,7 +11,7 @@
 Used by the TutorialOverlay widget (TutorialOverlay.h).
 
 This widget does not provide any functionality on top of QLabel, so there is no
-reason to use it except in cases explicitely stated in the documentation of
+reason to use it except in cases explicitly stated in the documentation of
 TutorialOverlay.
 
 CutoutWidget merely provides a semantic difference when placed inside the TutorialOverlay

@@ -25,7 +25,6 @@
 #include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
 #include "ModuleUtils/ReadLinuxModules.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"

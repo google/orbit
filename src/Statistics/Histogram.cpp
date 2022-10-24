@@ -7,10 +7,10 @@
 #include <absl/types/span.h>
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "HistogramUtils.h"
-#include "OrbitBase/Logging.h"
 #include "Statistics/DataSet.h"
 
 namespace orbit_statistics {

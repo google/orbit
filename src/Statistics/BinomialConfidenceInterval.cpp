@@ -5,7 +5,6 @@
 #include "Statistics/BinomialConfidenceInterval.h"
 
 #include <cmath>
-#include <cstdint>
 
 namespace orbit_statistics {
 
