@@ -8,61 +8,73 @@
 #include "GraphTrackDataAggregator.h"
 
 using ::testing::ElementsAre;
-using ::testing::FloatEq;
 
 namespace {
 
 TEST(GraphTrackDataAggregator, InitialEntryIsEmpty) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kAvg};
-  EXPECT_EQ(aggr.GetEntry().start_tick, 0);
-  EXPECT_EQ(aggr.GetEntry().end_tick, 0);
-  EXPECT_EQ(aggr.GetEntry().values[0], 0);
+  GraphTrackDataAggregator<1> aggr;
+  EXPECT_EQ(aggr.GetAccumulatedEntry(), nullptr);
 }
 
 TEST(GraphTrackDataAggregator, CanStartEntry) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kAvg};
-  aggr.StartNewEntry(1, 2, {3.f});
-  EXPECT_EQ(aggr.GetEntry().start_tick, 1);
-  EXPECT_EQ(aggr.GetEntry().end_tick, 2);
-  EXPECT_EQ(aggr.GetEntry().values[0], 3.f);
+  GraphTrackDataAggregator<1> aggr;
+  aggr.SetEntry(1, 2, {3.f});
+  ASSERT_NE(aggr.GetAccumulatedEntry(), nullptr);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 2);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->min_vals[0], 3.f);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->max_vals[0], 3.f);
+}
+
+TEST(GraphTrackDataAggregator, MergingDataIntoEmptyStartsNewEntry) {
+  GraphTrackDataAggregator<1> aggr;
+  aggr.MergeDataIntoEntry(1, 2, {3.f});
+  ASSERT_NE(aggr.GetAccumulatedEntry(), nullptr);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 2);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->min_vals[0], 3.f);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->max_vals[0], 3.f);
 }
 
 TEST(GraphTrackDataAggregator, StartNewEntryOverridesPrevious) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kAvg};
-  aggr.StartNewEntry(1, 2, {3.f});
-  aggr.StartNewEntry(3, 4, {5.f});
-  EXPECT_EQ(aggr.GetEntry().start_tick, 3);
-  EXPECT_EQ(aggr.GetEntry().end_tick, 4);
-  EXPECT_EQ(aggr.GetEntry().values[0], 5.f);
+  GraphTrackDataAggregator<1> aggr;
+  aggr.SetEntry(1, 2, {3.f});
+  aggr.SetEntry(3, 4, {5.f});
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 3);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 4);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->min_vals[0], 5.f);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->max_vals[0], 5.f);
 }
 
 TEST(GraphTrackDataAggregator, MaxAggrPicksMaxValues) {
-  GraphTrackDataAggregator<2> aggr{GraphTrackAggregationMode::kMax};
-  aggr.StartNewEntry(1, 2, {10.f, 20.f});
-  aggr.AppendData(3, 4, {1.f, 100.f});
-  EXPECT_THAT(aggr.GetEntry().values, ElementsAre(10.f, 100.f));
+  GraphTrackDataAggregator<2> aggr;
+  aggr.SetEntry(1, 2, {10.f, 20.f});
+  aggr.MergeDataIntoEntry(3, 4, {1.f, 100.f});
+  EXPECT_THAT(aggr.GetAccumulatedEntry()->max_vals, ElementsAre(10.f, 100.f));
 }
 
-TEST(GraphTrackDataAggregator, AvgIsWeighted) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kAvg};
-  aggr.StartNewEntry(1, 1, {1.f});
-  aggr.AppendData(2, 3, {4.f});
-  EXPECT_THAT(aggr.GetEntry().values[0], FloatEq(3.f));
+TEST(GraphTrackDataAggregator, MinAggrPicksMinValues) {
+  GraphTrackDataAggregator<2> aggr;
+  aggr.SetEntry(1, 2, {10.f, 20.f});
+  aggr.MergeDataIntoEntry(3, 4, {1.f, 100.f});
+  EXPECT_THAT(aggr.GetAccumulatedEntry()->min_vals, ElementsAre(1.f, 20.f));
 }
 
 TEST(GraphTrackDataAggregator, TimeBoundsAreMerged) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kMax};
-  aggr.StartNewEntry(1, 2, {});
-  aggr.AppendData(10, 20, {});
-  EXPECT_EQ(aggr.GetEntry().start_tick, 1);
-  EXPECT_EQ(aggr.GetEntry().end_tick, 20);
+  GraphTrackDataAggregator<1> aggr;
+  aggr.SetEntry(1, 2, {});
+  aggr.MergeDataIntoEntry(10, 20, {});
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 20);
 }
 
-TEST(GraphTrackDataAggregator, TimeBoundsAreInclusive) {
-  GraphTrackDataAggregator<1> aggr{GraphTrackAggregationMode::kAvg};
-  aggr.StartNewEntry(0, 0, {0.f});
-  aggr.AppendData(1, 1, {3.f});
-  EXPECT_THAT(aggr.GetEntry().values[0], FloatEq(1.5f));
+TEST(GraphTrackDataAggregator, DataCanBeAddedOutOfOrder) {
+  GraphTrackDataAggregator<1> aggr;
+  aggr.SetEntry(10, 20, {});
+  aggr.MergeDataIntoEntry(1, 10, {});
+  aggr.MergeDataIntoEntry(30, 40, {});
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
+  EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 40);
 }
 
 }  // namespace

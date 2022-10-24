@@ -31,15 +31,16 @@ using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
 template <size_t Dimension>
-GraphTrack<Dimension>::GraphTrack(
-    CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
-    orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-    std::array<std::string, Dimension> series_names, uint8_t series_value_decimal_digits,
-    std::string series_value_units, const orbit_client_data::ModuleManager* module_manager,
-    const orbit_client_data::CaptureData* capture_data, GraphTrackAggregationMode aggregation_mode)
+GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
+                                  const orbit_gl::TimelineInfoInterface* timeline_info,
+                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                  std::array<std::string, Dimension> series_names,
+                                  uint8_t series_value_decimal_digits,
+                                  std::string series_value_units,
+                                  const orbit_client_data::ModuleManager* module_manager,
+                                  const orbit_client_data::CaptureData* capture_data)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
-      series_{series_names, series_value_decimal_digits, std::move(series_value_units)},
-      aggregation_mode_(aggregation_mode) {}
+      series_{series_names, series_value_decimal_digits, std::move(series_value_units)} {}
 
 template <size_t Dimension>
 bool GraphTrack<Dimension>::HasLegend() const {
@@ -266,7 +267,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   auto current_it = entries.begin();
   auto last_it = std::prev(entries.end());
 
-  GraphTrackDataAggregator<Dimension> aggr(aggregation_mode_);
+  GraphTrackDataAggregator<Dimension> aggr;
 
   const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
   uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
@@ -290,30 +291,34 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
     auto next_it = std::next(current_it);
     uint64_t next_time = std::min(next_it->first, max_tick);
 
-    if (current_it == entries.begin()) {
-      aggr.StartNewEntry(current_time, next_time, normalized_cumulative_values);
+    if (aggr.GetAccumulatedEntry() == nullptr) {
+      aggr.SetEntry(current_time, next_time, normalized_cumulative_values);
     } else {
-      // If the size of the current entry is less than a pixel
-      if (aggr.GetEntry().end_tick < next_pixel_start_ns) {
+      // If the accumulated entry still fits in the pixel
+      if (aggr.GetAccumulatedEntry()->end_tick < next_pixel_start_ns) {
         // Add the current data to accumulated_entry
-        aggr.AppendData(current_time, next_time, normalized_cumulative_values);
+        aggr.MergeDataIntoEntry(current_time, next_time, normalized_cumulative_values);
       } else {
         // Otherwise, draw the accumulated_entry and start accumulating a new one
-        DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick,
-                              aggr.GetEntry().end_tick, aggr.GetEntry().values, z);
+        // When drawing we only use max values - for every usage of this track
+        // this is currently the best representation.
+        DrawSingleSeriesEntry(primitive_assembler, aggr.GetAccumulatedEntry()->start_tick,
+                              aggr.GetAccumulatedEntry()->end_tick,
+                              aggr.GetAccumulatedEntry()->max_vals, z);
 
         next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
-            aggr.GetEntry().end_tick, resolution_in_pixels, min_tick, max_tick);
+            aggr.GetAccumulatedEntry()->end_tick, resolution_in_pixels, min_tick, max_tick);
 
-        aggr.StartNewEntry(current_time, next_time, normalized_cumulative_values);
+        aggr.SetEntry(current_time, next_time, normalized_cumulative_values);
       }
     }
     current_it = next_it;
   }
 
   // Draw the leftover entry
-  DrawSingleSeriesEntry(primitive_assembler, aggr.GetEntry().start_tick, aggr.GetEntry().end_tick,
-                        aggr.GetEntry().values, z);
+  DrawSingleSeriesEntry(primitive_assembler, aggr.GetAccumulatedEntry()->start_tick,
+                        aggr.GetAccumulatedEntry()->end_tick, aggr.GetAccumulatedEntry()->max_vals,
+                        z);
 }
 
 template <size_t Dimension>

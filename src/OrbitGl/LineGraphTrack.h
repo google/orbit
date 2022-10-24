@@ -30,6 +30,15 @@ class LineGraphTrack : public GraphTrack<Dimension> {
                                      const std::array<float, Dimension>& prev_normalized_values,
                                      const std::array<float, Dimension>& curr_normalized_values,
                                      float z, bool is_last);
+
+  // Determines how values should be aggregated for drawing.
+  enum class AggregationMode {
+    kMax = 0,  // Draw only the max value of each element. Faster to draw and less noise but may
+               // lose min values.
+    kMinMax,   // Draw both min and max values. A bit slower to draw and may be noisy, but preserves
+               // both up and down spikes.
+  };
+  AggregationMode aggregation_mode_ = AggregationMode::kMinMax;
 };
 
 }  // namespace orbit_gl

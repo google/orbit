@@ -4,60 +4,59 @@
 
 #include "GraphTrackDataAggregator.h"
 
+#include <algorithm>
+
+#include "OrbitBase/Logging.h"
+
 template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::StartNewEntry(uint64_t start_tick, uint64_t end_tick,
-                                                        const ValuesT& values) {
+using ValuesT = typename GraphTrackDataAggregator<Dimension>::ValuesT;
+
+namespace {
+template <size_t Dimension>
+void MergeValuesWithMax(const ValuesT<Dimension>& src, ValuesT<Dimension>& dest) {
+  for (size_t i = 0; i < Dimension; ++i) {
+    dest[i] = std::max(dest[i], src[i]);
+  }
+}
+
+template <size_t Dimension>
+void MergeValuesWithMin(const ValuesT<Dimension>& src, ValuesT<Dimension>& dest) {
+  for (size_t i = 0; i < Dimension; ++i) {
+    dest[i] = std::min(dest[i], src[i]);
+  }
+}
+}  // namespace
+
+template <size_t Dimension>
+void GraphTrackDataAggregator<Dimension>::SetEntry(uint64_t start_tick, uint64_t end_tick,
+                                                   const ValuesT& values) {
   ORBIT_CHECK(start_tick <= end_tick);
 
-  entry_ = Entry{start_tick, end_tick, values};
+  accumulated_entry_ = AccumulatedEntry{start_tick, end_tick, values, values};
 }
 
 template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::AppendWithAveraging(uint64_t start_tick,
-                                                              uint64_t end_tick,
-                                                              const ValuesT& values) {
-  uint64_t new_val_duration = end_tick - start_tick + 1;
-  uint64_t curr_val_duration = entry_.end_tick - entry_.start_tick + 1;
-  float append_weight = new_val_duration / curr_val_duration;
-  float total_weight = 1.f + append_weight;
-  for (size_t i = 0; i < Dimension; ++i) {
-    entry_.values[i] += values[i] * append_weight;
-    entry_.values[i] /= total_weight;
+void GraphTrackDataAggregator<Dimension>::MergeDataIntoEntry(uint64_t start_tick, uint64_t end_tick,
+                                                             const ValuesT& values) {
+  if (!accumulated_entry_.has_value()) {
+    SetEntry(start_tick, end_tick, values);
+    return;
   }
-}
 
-template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::AppendWithMaxValue(const ValuesT& values) {
-  for (size_t i = 0; i < Dimension; ++i) {
-    entry_.values[i] = std::max(values[i], entry_.values[i]);
-  }
-}
-
-// Append `values` for the range [`start_tick`, `end_tick`] to the entry
-// we're accumulating. The values are aggregated depending on the mode set
-// in the constructor.
-template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::AppendData(uint64_t start_tick, uint64_t end_tick,
-                                                     const ValuesT& values) {
-  ORBIT_CHECK(entry_.end_tick <= start_tick);
   ORBIT_CHECK(start_tick <= end_tick);
 
-  switch (mode_) {
-    case GraphTrackAggregationMode::kMax:
-      AppendWithMaxValue(values);
-      break;
-    case GraphTrackAggregationMode::kAvg:
-      AppendWithAveraging(start_tick, end_tick, values);
-      break;
-  }
-  entry_.end_tick = end_tick;
+  MergeValuesWithMin<Dimension>(values, accumulated_entry_->min_vals);
+  MergeValuesWithMax<Dimension>(values, accumulated_entry_->max_vals);
+
+  accumulated_entry_->start_tick = std::min(accumulated_entry_->start_tick, start_tick);
+  accumulated_entry_->end_tick = std::max(accumulated_entry_->end_tick, end_tick);
 }
 
-// Return the currently accumulated entry.
 template <size_t Dimension>
-[[nodiscard]] const typename GraphTrackDataAggregator<Dimension>::Entry&
-GraphTrackDataAggregator<Dimension>::GetEntry() const {
-  return entry_;
+[[nodiscard]] const typename GraphTrackDataAggregator<Dimension>::AccumulatedEntry*
+GraphTrackDataAggregator<Dimension>::GetAccumulatedEntry() const {
+  if (accumulated_entry_.has_value()) return &accumulated_entry_.value();
+  return nullptr;
 }
 
 template class GraphTrackDataAggregator<1>;

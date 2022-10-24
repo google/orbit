@@ -28,7 +28,7 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
                        const orbit_client_data::CaptureData* capture_data)
       : GraphTrack<Dimension>(parent, timeline_info, viewport, layout, series_names,
                               series_value_decimal_digits, std::move(series_value_units),
-                              module_manager, capture_data, GraphTrackAggregationMode::kMax),
+                              module_manager, capture_data),
         AnnotationTrack() {
     // Memory tracks are collapsed by default.
     this->SetCollapsed(true);

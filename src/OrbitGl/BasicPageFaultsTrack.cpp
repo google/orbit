@@ -31,11 +31,16 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueUnits, module_manager, capture_data, GraphTrackAggregationMode::kMax),
+          kTrackValueUnits, module_manager, capture_data),
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
-      parent_(parent) {}
+      parent_(parent) {
+  aggregation_mode_ = AggregationMode::kMax;  // Here we use Max aggregation and not summing the
+                                              // values (which would also make sense) because the
+                                              // code expects the max value to be known ahead of
+                                              // rendering time when we do aggregation.
+}
 
 void BasicPageFaultsTrack::AddValues(
     uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
