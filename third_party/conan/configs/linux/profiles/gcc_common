@@ -8,6 +8,8 @@ abseil:compiler=gcc
 abseil:compiler.cppstd=17
 gtest:compiler=gcc
 gtest:compiler.cppstd=17
+grpc:compiler=gcc
+grpc:compiler.cppstd=17
 
 [env]
 gtest:CXXFLAGS=$CXX_FLAGS -std=c++17

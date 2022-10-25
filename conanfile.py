@@ -29,7 +29,6 @@ class OrbitConan(ConanFile):
                        "fPIC": True,
                        "run_tests": True,
                        "build_target": None}
-    _orbit_channel = "orbitdeps/stable"
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
 
     def _version(self):
@@ -47,33 +46,29 @@ class OrbitConan(ConanFile):
             del self.options.fPIC
 
     def build_requirements(self):
-        self.build_requires('protoc_installer/3.9.1@bincrafters/stable#0')
-        self.build_requires('grpc_codegen/1.27.3@{}'.format(self._orbit_channel))
+        self.build_requires('protobuf/3.21.4')
+        self.build_requires('grpc/1.48.0')
         self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
-        self.requires("abseil/20211102.0")
-        self.requires("bzip2/1.0.8", override=True)
+        self.requires("abseil/20220623.0")
         self.requires("capstone/4.0.2")
-        self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
-        self.requires("c-ares/1.15.0", override=True)
-        self.requires("llvm-core/12.0.0@{}".format(self._orbit_channel))
-        self.requires("openssl/1.1.1k", override=True)
-        self.requires("outcome/2.2.0")
+        self.requires("grpc/1.48.0")
+        self.requires("llvm-core/12.0.0@orbitdeps/stable")
+        self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
             self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
-        self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f", override=True)
+        self.requires("zlib/1.2.12", override=True)
 
         if self.options.with_gui:
-            self.requires("freetype/2.10.0@bincrafters/stable#0")
+            self.requires("freetype/2.12.1")
             self.requires("glad/0.1.34")
-            self.requires("imgui/1.85")
-            self.requires("libpng/1.6.37@bincrafters/stable#0", override=True)
-            self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
+            self.requires("imgui/1.88")
+            self.requires("libssh2/1.10.0")
 
             if not self.options.system_qt:
-                self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
+                self.requires("qt/5.15.6")
 
 
     def configure(self):
@@ -93,9 +88,6 @@ class OrbitConan(ConanFile):
         if self.options.with_gui:
 
             if not self.options.system_qt:
-                self.options["qt"].qtwebengine = True
-                self.options["qt"].qtwebchannel = True
-                self.options["qt"].qtwebsockets = True
                 self.options["qt"].shared = True
                 self.options["qt"].with_sqlite3 = False
                 self.options["qt"].with_mysql = False
