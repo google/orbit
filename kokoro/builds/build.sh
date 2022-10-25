@@ -15,6 +15,10 @@ if [ -z "${CONAN_PROFILE}" ]; then
   declare -A profile_mapping=( \
     [ggp_relwithdebinfo]=skip \
     [msvc2019_relwithdebinfo]=skip \
+    [clang7_relwithdebinfo]=skip \
+    [gcc9_relwithdebinfo]=skip \
+    [iwyu]=skip \
+    [coverage_clang9]=coverage_clang11 \
   )
 
   CONAN_PROFILE="${profile_mapping[${CONAN_PROFILE}]-${CONAN_PROFILE}}"
@@ -61,10 +65,10 @@ if [ -n "$1" ]; then
     echo "Delete all unnecessary files from the src/-directory."
 
     set +e # This is allowed to fail when deleting
-    if [ $CONAN_PROFILE == "coverage_clang9" ]; then
-      # In the coverage_clang9 case, we spare the results at build/package,
+    if [[ $CONAN_PROFILE == coverage_* ]]; then
+      # In the coverage case, we spare the results at build/package,
       # the conan trace file, and this script (well, everything under kokoro).
-      echo "Cleanup for coverage_clang9"
+      echo "Cleanup for coverage"
       find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
                             ! -path "${MOUNT_POINT}/github" \
                             ! -path "${REPO_ROOT}" \
@@ -72,7 +76,7 @@ if [ -n "$1" ]; then
                             ! -path "${REPO_ROOT}/build" \
                             ! -path "${REPO_ROOT}/build/package*"\
                             -delete
-      echo "Cleanup for coverage_clang9 done."
+      echo "Cleanup for coverage done."
     elif [ "${BUILD_TYPE}" == "presubmit" ]; then
       # In the presubmit case we only spare the testresults (under build/),
       # the conan trace file, and this script (well, everything under kokoro).
@@ -160,7 +164,7 @@ if [ -n "$1" ]; then
   echo "Starting the build (conan build)."
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
 
-  if [[ $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != "coverage_clang9" ]]; then
+  if [[ $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != coverage_* ]]; then
     echo "Start the packaging (conan package)."
     conan package -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
     echo "Packaging is done."
@@ -216,7 +220,7 @@ if [ -n "$1" ]; then
   fi
 
   # Package build artifacts into a zip for integration in the installer.
-  if [[ $CONAN_PROFILE != ggp_* && $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != "coverage_clang9" ]]; then
+  if [[ $CONAN_PROFILE != ggp_* && $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != coverage_* ]]; then
     echo "Create a zip containing Orbit UI for integration in the installer."
     pushd "${REPO_ROOT}/build/package" > /dev/null
     cp -av bin/ Orbit
@@ -261,7 +265,7 @@ if [ -n "$1" ]; then
   fi
 
   # Generate unit test coverage report and save it in build/package for upload
-  if [[ $CONAN_PROFILE == "coverage_clang9" ]]; then
+  if [[ $CONAN_PROFILE == coverage_* ]]; then
     echo "Starting to generate unit test coverage report"
     mkdir -p "${REPO_ROOT}/build/package"
     ${REPO_ROOT}/contrib/unit_test_coverage/generate_coverage_report.sh \
