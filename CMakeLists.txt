@@ -105,11 +105,7 @@ if(WITH_GUI)
     COMPONENTS Core
                Network
                Test
-               Widgets
-               WebEngine
-               WebEngineWidgets
-               WebSockets
-               WebChannel)
+               Widgets)
 endif()
 
 find_package(Filesystem REQUIRED)
