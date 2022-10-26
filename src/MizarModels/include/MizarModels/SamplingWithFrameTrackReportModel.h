@@ -32,7 +32,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
-  using SFID = ::orbit_mizar_base::SFID;
+  using SFID = ::orbit_mizar_base::SampledFunctionId;
   using BaselineAndComparisonFunctionSymbols =
       orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 

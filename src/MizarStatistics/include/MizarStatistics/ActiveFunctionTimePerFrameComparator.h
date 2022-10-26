@@ -36,7 +36,7 @@ class ActiveFunctionTimePerFrameComparatorTmpl {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
-  using SFID = ::orbit_mizar_base::SFID;
+  using SFID = ::orbit_mizar_base::SampledFunctionId;
 
  public:
   explicit ActiveFunctionTimePerFrameComparatorTmpl(

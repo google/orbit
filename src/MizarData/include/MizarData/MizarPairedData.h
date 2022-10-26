@@ -38,7 +38,7 @@ namespace orbit_mizar_data {
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
 template <typename Data, typename FrameTracks, typename FrameTrackStats>
 class MizarPairedDataTmpl {
-  using SFID = ::orbit_mizar_base::SFID;
+  using SFID = ::orbit_mizar_base::SampledFunctionId;
   using TID = ::orbit_mizar_base::TID;
   using ScopeId = ::orbit_client_data::ScopeId;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;

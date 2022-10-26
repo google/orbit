@@ -31,7 +31,7 @@ using ::orbit_grpc_protos::PresentEvent;
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::ForEachFrame;
 using ::orbit_mizar_base::RelativeTimeNs;
-using ::orbit_mizar_base::SFID;
+using ::orbit_mizar_base::SampledFunctionId;
 using ::orbit_mizar_base::TID;
 using ::orbit_mizar_base::TimestampNs;
 using ::orbit_test_utils::MakeMap;
@@ -120,8 +120,10 @@ const absl::flat_hash_map<TID, std::string> kSampledTidToName = [] {
   return result;
 }();
 
-const absl::flat_hash_map<AbsoluteAddress, SFID> kAddressToId = {
-    {kAddressFood, SFID(1)}, {kAddressCall, SFID(2)}, {kAddressBefore, SFID(3)}};
+const absl::flat_hash_map<AbsoluteAddress, SampledFunctionId> kAddressToId = {
+    {kAddressFood, SampledFunctionId(1)},
+    {kAddressCall, SampledFunctionId(2)},
+    {kAddressBefore, SampledFunctionId(3)}};
 
 const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   auto callstack_data = std::make_unique<orbit_client_data::CallstackData>();
@@ -146,23 +148,25 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
 const absl::flat_hash_map<TID, uint64_t> kTidToCallstackCount = {
     {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
 
-[[nodiscard]] static std::vector<SFID> SFIDsForCallstacks(const std::vector<uint64_t>& addresses) {
+[[nodiscard]] static std::vector<SampledFunctionId> SFIDsForCallstacks(
+    const std::vector<uint64_t>& addresses) {
   std::vector<AbsoluteAddress> good_addresses;
   ForEachFrame(addresses, [&good_addresses](AbsoluteAddress address) {
     if (kAddressToId.contains(address)) {
       good_addresses.push_back(address);
     }
   });
-  std::vector<SFID> ids;
+  std::vector<SampledFunctionId> ids;
   std::transform(std::begin(good_addresses), std::end(good_addresses), std::back_inserter(ids),
                  [](AbsoluteAddress address) { return kAddressToId.at(address); });
   return ids;
 }
 
-const std::vector<SFID> kCompleteCallstackIds = SFIDsForCallstacks(kCompleteCallstack.frames());
-const std::vector<SFID> kInCompleteCallstackIds =
+const std::vector<SampledFunctionId> kCompleteCallstackIds =
+    SFIDsForCallstacks(kCompleteCallstack.frames());
+const std::vector<SampledFunctionId> kInCompleteCallstackIds =
     SFIDsForCallstacks({kInCompleteCallstack.frames()[0]});
-const std::vector<SFID> kAnotherCompleteCallstackIds =
+const std::vector<SampledFunctionId> kAnotherCompleteCallstackIds =
     SFIDsForCallstacks(kAnotherCompleteCallstack.frames());
 
 namespace {
@@ -244,8 +248,8 @@ TEST_F(MizarPairedDataTest, FrameTrackManagerIsProperlyInitialized) {
 
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   MizarPairedDataUnderTest mizar_paired_data(std::move(data_), kAddressToId);
-  std::vector<std::vector<SFID>> actual_ids_fed_to_action;
-  auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
+  std::vector<std::vector<SampledFunctionId>> actual_ids_fed_to_action;
+  auto action = [&actual_ids_fed_to_action](const std::vector<SampledFunctionId> ids) {
     actual_ids_fed_to_action.push_back(ids);
   };
 

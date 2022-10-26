@@ -31,7 +31,7 @@ class BaselineAndComparisonTmpl {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
-  using SFID = ::orbit_mizar_base::SFID;
+  using SFID = ::orbit_mizar_base::SampledFunctionId;
   using TID = ::orbit_mizar_base::TID;
   using RelativeTimeNs = ::orbit_mizar_base::RelativeTimeNs;
   using BaselineAndComparisonFunctionSymbols =
@@ -133,9 +133,9 @@ using ActiveFunctionTimePerFrameComparator =
     orbit_mizar_statistics::ActiveFunctionTimePerFrameComparatorTmpl<SamplingCounts,
                                                                      orbit_client_data::ScopeStats>;
 
-using BaselineAndComparison =
-    BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator,
-                              orbit_statistics::HolmBonferroniCorrection<orbit_mizar_base::SFID>>;
+using BaselineAndComparison = BaselineAndComparisonTmpl<
+    MizarPairedData, ActiveFunctionTimePerFrameComparator,
+    orbit_statistics::HolmBonferroniCorrection<orbit_mizar_base::SampledFunctionId>>;
 
 BaselineAndComparison CreateBaselineAndComparison(std::unique_ptr<MizarDataProvider> baseline,
                                                   std::unique_ptr<MizarDataProvider> comparison);

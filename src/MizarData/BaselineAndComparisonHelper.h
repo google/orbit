@@ -22,11 +22,11 @@
 namespace orbit_mizar_data {
 
 struct AddressToIdAndIdToSymbol {
-  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
+  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SampledFunctionId>
       baseline_address_to_sfid;
-  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SFID>
+  absl::flat_hash_map<orbit_mizar_base::AbsoluteAddress, orbit_mizar_base::SampledFunctionId>
       comparison_address_to_sfid;
-  absl::flat_hash_map<orbit_mizar_base::SFID,
+  absl::flat_hash_map<orbit_mizar_base::SampledFunctionId,
                       orbit_mizar_base::BaselineAndComparisonFunctionSymbols>
       sfid_to_symbols;
 };
@@ -44,7 +44,7 @@ class BaselineAndComparisonHelperTmpl {
   using BaselineAndComparisonFunctionSymbols =
       ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
   using FunctionSymbol = ::orbit_mizar_base::FunctionSymbol;
-  using SFID = ::orbit_mizar_base::SFID;
+  using SFID = ::orbit_mizar_base::SampledFunctionId;
 
  public:
   // The functions takes (address -> symbol) maps for baseline and comparison.

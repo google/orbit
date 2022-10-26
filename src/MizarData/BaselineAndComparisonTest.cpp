@@ -37,7 +37,7 @@ using ::orbit_mizar_base::FunctionSymbol;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
 using ::orbit_mizar_base::RelativeTimeNs;
-using ::orbit_mizar_base::SFID;
+using ::orbit_mizar_base::SampledFunctionId;
 using ::orbit_mizar_base::TID;
 using ::orbit_test_utils::Commons;
 using ::orbit_test_utils::MakeMap;
@@ -89,8 +89,9 @@ const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> kComparisonAddressToS
     MakeAddressToSymbolMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
 
 static void ExpectCorrectNames(
-    const absl::flat_hash_map<AbsoluteAddress, SFID>& address_to_sfid,
-    const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols>& sfid_to_symbols,
+    const absl::flat_hash_map<AbsoluteAddress, SampledFunctionId>& address_to_sfid,
+    const absl::flat_hash_map<SampledFunctionId, BaselineAndComparisonFunctionSymbols>&
+        sfid_to_symbols,
     const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& address_to_symbol) {
   for (const auto& [address, sfid] : address_to_sfid) {
     EXPECT_TRUE(sfid_to_symbols.contains(sfid));
@@ -161,25 +162,26 @@ TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
 }
 
 constexpr size_t kSfidCount = 3;
-constexpr SFID kSfidFirst = SFID(1);
-constexpr SFID kSfidSecond = SFID(2);
-constexpr SFID kSfidThird = SFID(3);
-constexpr std::array<SFID, kSfidCount> kSfids = {kSfidFirst, kSfidSecond, kSfidThird};
+constexpr SampledFunctionId kSfidFirst = SampledFunctionId(1);
+constexpr SampledFunctionId kSfidSecond = SampledFunctionId(2);
+constexpr SampledFunctionId kSfidThird = SampledFunctionId(3);
+constexpr std::array<SampledFunctionId, kSfidCount> kSfids = {kSfidFirst, kSfidSecond, kSfidThird};
 
-const absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> kFunctionSymbols = [] {
-  absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> result;
-  absl::c_transform(kSfids, MakeFunctionSymbols(kBaselineFunctionNames),
-                    std::inserter(result, std::begin(result)),
-                    [](SFID sfid, const FunctionSymbol& symbol) {
-                      BaselineAndComparisonFunctionSymbols symbols{
-                          Baseline<FunctionSymbol>(symbol), Comparison<FunctionSymbol>(symbol)};
-                      return std::make_pair(sfid, symbols);
-                    });
-  return result;
-}();
+const absl::flat_hash_map<SampledFunctionId, BaselineAndComparisonFunctionSymbols>
+    kFunctionSymbols = [] {
+      absl::flat_hash_map<SampledFunctionId, BaselineAndComparisonFunctionSymbols> result;
+      absl::c_transform(kSfids, MakeFunctionSymbols(kBaselineFunctionNames),
+                        std::inserter(result, std::begin(result)),
+                        [](SampledFunctionId sfid, const FunctionSymbol& symbol) {
+                          BaselineAndComparisonFunctionSymbols symbols{
+                              Baseline<FunctionSymbol>(symbol), Comparison<FunctionSymbol>(symbol)};
+                          return std::make_pair(sfid, symbols);
+                        });
+      return result;
+    }();
 
-const std::vector<std::vector<SFID>> kCallstacks = {
-    std::vector<SFID>{kSfidThird, kSfidSecond, kSfidFirst}, {kSfidSecond}, {}};
+const std::vector<std::vector<SampledFunctionId>> kCallstacks = {
+    std::vector<SampledFunctionId>{kSfidThird, kSfidSecond, kSfidFirst}, {kSfidSecond}, {}};
 
 const orbit_client_data::ScopeStats kNonEmptyScopeStats = [] {
   orbit_client_data::ScopeStats result;
@@ -199,13 +201,14 @@ const std::array<double, kSfidCount> kCorrectedPvalues = [] {
                  [](const double pvalue) { return pvalue * 2; });
   return result;
 }();
-const absl::flat_hash_map<SFID, double> kSfidToPvalue = MakeMap(kSfids, kPvalues);
-const absl::flat_hash_map<SFID, double> kSfidToCorrectedPvalue = MakeMap(kSfids, kCorrectedPvalues);
+const absl::flat_hash_map<SampledFunctionId, double> kSfidToPvalue = MakeMap(kSfids, kPvalues);
+const absl::flat_hash_map<SampledFunctionId, double> kSfidToCorrectedPvalue =
+    MakeMap(kSfids, kCorrectedPvalues);
 
 namespace {
 class MockPairedData {
  public:
-  explicit MockPairedData(std::vector<std::vector<SFID>> callstacks,
+  explicit MockPairedData(std::vector<std::vector<SampledFunctionId>> callstacks,
                           orbit_client_data::ScopeStats frame_track_stats)
       : callstacks_(std::move(callstacks)), frame_track_stats_(frame_track_stats) {}
 
@@ -223,7 +226,7 @@ class MockPairedData {
   };
 
  private:
-  std::vector<std::vector<SFID>> callstacks_;
+  std::vector<std::vector<SampledFunctionId>> callstacks_;
   orbit_client_data::ScopeStats frame_track_stats_;
 };
 
@@ -235,7 +238,7 @@ class MockFunctionTimeComparator {
       const Comparison<SamplingCounts>& /*comparison_counts*/,
       const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
-  [[nodiscard]] orbit_mizar_statistics::ComparisonResult Compare(SFID sfid) const {
+  [[nodiscard]] orbit_mizar_statistics::ComparisonResult Compare(SampledFunctionId sfid) const {
     return {kStatistic, kSfidToPvalue.at(sfid)};
   };
 };
@@ -243,12 +246,12 @@ class MockFunctionTimeComparator {
 }  // namespace
 
 // It's not even a correction in statistical sense. Good only for mocking.
-[[nodiscard]] static absl::flat_hash_map<SFID, double> MockCorrection(
-    const absl::flat_hash_map<SFID, double>& pvalues) {
-  absl::flat_hash_map<SFID, double> result;
+[[nodiscard]] static absl::flat_hash_map<SampledFunctionId, double> MockCorrection(
+    const absl::flat_hash_map<SampledFunctionId, double>& pvalues) {
+  absl::flat_hash_map<SampledFunctionId, double> result;
   std::transform(std::begin(pvalues), std::end(pvalues), std::inserter(result, std::begin(result)),
                  [](const auto& key_to_pvalue) {
-                   const SFID sfid = key_to_pvalue.first;
+                   const SampledFunctionId sfid = key_to_pvalue.first;
                    return std::make_pair(sfid, kSfidToCorrectedPvalue.at(sfid));
                  });
   return result;
@@ -263,7 +266,8 @@ static void ExpectScopeStatsEq(const orbit_client_data::ScopeStats a,
 
 TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   auto full = MakeBaseline<MockPairedData>(kCallstacks, kNonEmptyScopeStats);
-  auto empty = MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, kEmptyScopeStats);
+  auto empty = MakeComparison<MockPairedData>(std::vector<std::vector<SampledFunctionId>>{},
+                                              kEmptyScopeStats);
 
   BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator, MockCorrection> bac(
       std::move(full), std::move(empty), kFunctionSymbols);
@@ -286,7 +290,7 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   EXPECT_EQ(report.GetBaselineSamplingCounts()->GetInclusiveCount(kSfidThird), 1);
 
   EXPECT_EQ(report.GetComparisonSamplingCounts()->GetTotalCallstacks(), 0);
-  for (const SFID sfid : kSfids) {
+  for (const SampledFunctionId sfid : kSfids) {
     EXPECT_EQ(report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid), 0);
     EXPECT_EQ(report.GetComparisonSamplingCounts()->GetInclusiveCount(sfid), 0);
 
