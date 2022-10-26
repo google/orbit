@@ -15,6 +15,7 @@ target_sources(
           include/SessionSetup/DeploymentConfigurations.h
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
+          include/SessionSetup/OrbitServiceInstance.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/OtherUserDialog.h
           include/SessionSetup/PersistentStorage.h
@@ -38,6 +39,7 @@ target_sources(
           ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
           Error.cpp
+          OrbitServiceInstance.cpp
           OtherUserDialog.cpp
           OtherUserDialog.ui
           OverlayWidget.cpp
@@ -86,6 +88,7 @@ target_sources(
           DoubleClickableLabelTest.cpp
           PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
+          OrbitServiceInstanceTest.cpp
           OtherUserDialogTest.cpp
           RetrieveInstancesTest.cpp
           RetrieveInstancesWidgetTest.cpp
