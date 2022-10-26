@@ -47,17 +47,26 @@ class BaselineAndComparisonHelperTmpl {
   using SFID = ::orbit_mizar_base::SFID;
 
  public:
+  // The functions takes (address -> symbol) maps for baseline and comparison.
+  // It yields two maps (address -> SFID) and the third map
+  // (SFID -> baseline_and_comparison_symbols).
   [[nodiscard]] AddressToIdAndIdToSymbol AssignSampledFunctionIds(
       const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& baseline_address_to_symbol,
       const absl::flat_hash_map<AbsoluteAddress, FunctionSymbol>& comparison_address_to_symbol)
       const {
-    // TODO(b/248266436) the code needs to be commented
+    // Construct (Key -> symbol) map for comparison symbols. The keys are produced by
+    // `FunctionSymbolToKey::GetKey`.
     absl::flat_hash_map<Key, FunctionSymbol> comparison_key_to_symbol =
         KeyToSymbol(comparison_address_to_symbol);
 
     absl::flat_hash_map<Key, SFID> key_to_sfid;
     absl::flat_hash_map<SFID, BaselineAndComparisonFunctionSymbols> sfid_to_symbols;
 
+    // Now we go through all the baseline symbols and obtain their corresponding Keys (again,
+    // yielded by `FunctionSymbolToKey::GetKey`). If an equal key has also been yielded for some
+    // comparison symbol and the key has no SFID assigned, we assign it the next consecutive SFID.
+    // Also, both baseline and comparison symbols corresponding to the key are stored in
+    // `sfid_to_symbols`.
     SFID next_sfid_value{1};
     for (const auto& [unused_address, baseline_function_symbol] : baseline_address_to_symbol) {
       Key key = function_symbol_to_key_.GetKey(baseline_function_symbol);
@@ -75,6 +84,9 @@ class BaselineAndComparisonHelperTmpl {
       }
     }
 
+    // Finally, using (address -> symbol) map and (Key -> SFID) map we construct (address -> SFID)
+    // maps for baseline and comparison. Again, the (symbol -> Key) map is yielded by
+    // `FunctionSymbolToKey`.
     absl::flat_hash_map<AbsoluteAddress, SFID> baseline_address_to_sfid =
         AddressToSFID(baseline_address_to_symbol, key_to_sfid);
     absl::flat_hash_map<AbsoluteAddress, SFID> comparison_address_to_sfid =
