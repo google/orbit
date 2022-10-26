@@ -16,7 +16,7 @@
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
-using ::orbit_mizar_base::SFID;
+using ::orbit_mizar_base::SampledFunctionId;
 using ::testing::DoubleNear;
 using ::testing::IsNan;
 using ::testing::Return;
@@ -24,7 +24,7 @@ using ::testing::Return;
 namespace {
 class MockCounts {
  public:
-  MOCK_METHOD(double, GetExclusiveRate, (SFID), (const));
+  MOCK_METHOD(double, GetExclusiveRate, (SampledFunctionId), (const));
   MOCK_METHOD(uint64_t, GetTotalCallstacks, (), (const));
 };
 
@@ -54,7 +54,7 @@ constexpr double kFrametimeVarComparison = 150;
 constexpr double kAvgFrametimeBaseline = 1000;
 constexpr double kAvgFrametimeComparison = 900;
 
-constexpr SFID kArbitrarySfid(10);
+constexpr SampledFunctionId kArbitrarySfid(10);
 
 constexpr double kExpectedStatistic = -0.929944;
 constexpr double kPvalue = 0.352400;
@@ -100,7 +100,7 @@ TEST_F(ActiveFunctionTimePerFrameComparatorTest, ComparatorIsCorrectWithNonZeroR
   SetBaselineExpectations(*baseline_counts_, *baseline_frame_track_stats_);
   SetComparisonExpectations(*comparison_counts_, *comparison_frame_track_stats_);
 
-  ComparisonResult result = comparator.Compare(SFID(kArbitrarySfid));
+  ComparisonResult result = comparator.Compare(SampledFunctionId(kArbitrarySfid));
 
   EXPECT_THAT(result.statistic, DoubleNear(kExpectedStatistic, kTolerance));
   EXPECT_THAT(result.pvalue, DoubleNear(kPvalue, kTolerance));
@@ -114,7 +114,7 @@ TEST_F(ActiveFunctionTimePerFrameComparatorTest,
   SetBaselineExpectations(*baseline_counts_, *baseline_frame_track_stats_);
   SetBaselineExpectations(*comparison_counts_, *comparison_frame_track_stats_);
 
-  ComparisonResult result = comparator.Compare(SFID(kArbitrarySfid));
+  ComparisonResult result = comparator.Compare(SampledFunctionId(kArbitrarySfid));
 
   EXPECT_THAT(result.statistic, DoubleNear(0, kTolerance));
   // no difference observed, large pvalue returned
@@ -130,7 +130,7 @@ TEST_F(ActiveFunctionTimePerFrameComparatorTest, ComparatorIsCorrectWithZeroRate
   EXPECT_CALL(*baseline_counts_, GetExclusiveRate).WillRepeatedly(Return(0));
   EXPECT_CALL(*comparison_counts_, GetExclusiveRate).WillRepeatedly(Return(0));
 
-  ComparisonResult result = comparator.Compare(SFID(kArbitrarySfid));
+  ComparisonResult result = comparator.Compare(SampledFunctionId(kArbitrarySfid));
 
   EXPECT_THAT(result.statistic, IsNan());
   // no difference observed, largest pvalue returned

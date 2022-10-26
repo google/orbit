@@ -19,10 +19,9 @@ struct SampledFunctionIdTag : orbit_base::PreIncrementTag {};
 
 // The class represents a sampled function id. These ids are the same for the same function across
 // all the captures.
-// TODO (b/236358265) rename to `SampledFunctionId`.
-using SFID = orbit_base::Typedef<SampledFunctionIdTag, uint64_t>;
+using SampledFunctionId = orbit_base::Typedef<SampledFunctionIdTag, uint64_t>;
 
-static_assert(orbit_base::kHasZeroMemoryOverheadV<SFID>);
+static_assert(orbit_base::kHasZeroMemoryOverheadV<SampledFunctionId>);
 
 }  // namespace orbit_mizar_base
 

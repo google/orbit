@@ -29,7 +29,7 @@ using ::orbit_mizar_base::FunctionSymbol;
 using ::testing::Ne;
 using ::testing::StrNe;
 using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
-using SFID = ::orbit_mizar_base::SFID;
+using SFID = ::orbit_mizar_base::SampledFunctionId;
 using Counts = ::orbit_mizar_data::SamplingCounts;
 using ::orbit_mizar_base::BaselineAndComparisonFunctionSymbols;
 using ::orbit_mizar_base::MakeBaseline;
