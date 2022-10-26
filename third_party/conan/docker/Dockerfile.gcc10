@@ -2,34 +2,44 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-RUN useradd -Ums /bin/bash conan && \
-    apt-get -qq update && \
-    DEBIAN_FRONTEND=noninteractive \
+RUN useradd -Ums /bin/bash conan \
+    && apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive \
         apt-get install -y --no-install-recommends \
-        cmake \
-        curl \
+        build-essential \
         g++-10 \
         gcc-10 \
+        cmake \
+        libcapstone-dev \
+        libgrpc++-dev \
+        libssh2-1-dev \
+        vulkan-validationlayers-dev \
+        libz-dev \
+        llvm-dev \
+        libfreetype6-dev \
+        libimgui-dev \
+        protobuf-compiler-grpc \
+        pkg-config \
+        libvulkan-volk-dev \
+        libvulkan-dev \
+        libopengl-dev \
+        libglx-dev \
+        mesa-common-dev \
+        qtbase5-dev \
+        libgtest-dev \
+        libgmock-dev \
+        libprotobuf-dev \
+        libboost-dev \
+        curl \
         git \
         jq \
-        libglu1-mesa-dev \
-        libqt5webchannel5-dev \
-        libqt5websockets5-dev \
-        libxi-dev \
-        libxmu-dev \
-        make \
-        mesa-common-dev \
         ninja-build \
-        python2.7 \
         python3-pip \
-        python-is-python2 \
-        qt5-default \
-        qtwebengine5-dev \
-        zip && \
-    python3 -m pip install conan==1.36.0 && \
-    rm -rf /var/lib/apt/lists/*
+        zip \
+    && python3 -m pip install conan==1.53.0 \
+    && rm -rf /var/lib/apt/lists/*
 
 USER conan
 WORKDIR /home/conan

@@ -36,7 +36,7 @@ declare -A profile_to_dockerfile=( \
   ["clang_format"]="clang_format" \
   ["license_headers"]="license_headers" \
   ["iwyu"]="iwyu" \
-  ["coverage_clang9"]="coverage_clang9" \
+  ["coverage_clang11"]="coverage_clang11" \
 )
 
 if [ "$#" -eq 0 ]; then

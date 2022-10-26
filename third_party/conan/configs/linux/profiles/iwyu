@@ -1,4 +1,4 @@
-include(clang9_release)
+include(clang11_release)
 
 [options]
 OrbitProfiler:build_target=iwyu

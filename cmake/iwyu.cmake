@@ -27,7 +27,7 @@ if(NOT WIN32)
     # applied to the code base.
     add_custom_command(OUTPUT include-what-you-use.log
       COMMAND "${Python3_EXECUTABLE}" "${iwyu_tool_py}" -p iwyu_commands.json -o iwyu
-        -j ${cpu_count} -- -w -Xiwyu "--mapping_file=${CMAKE_SOURCE_DIR}/contrib/iwyu/qt5_14.imp"
+        -j ${cpu_count} -- -w
         -Xiwyu "--mapping_file=${CMAKE_SOURCE_DIR}/contrib/iwyu/orbit.imp"
         -Xiwyu --cxx17ns -Xiwyu --max_line_length=120 -Xiwyu --no_fwd_decls > include-what-you-use.log
       DEPENDS iwyu_commands.json

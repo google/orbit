@@ -10,7 +10,7 @@ RUN useradd -Ums /bin/bash conan \
         apt-get install -y --no-install-recommends \
         build-essential \
         clang-11 \
-        clang-format \
+        llvm-11 \
         cmake \
         libcapstone-dev \
         libgrpc++-dev \
@@ -38,8 +38,6 @@ RUN useradd -Ums /bin/bash conan \
         ninja-build \
         python3-pip \
         zip \
-        patchutils \
-        iwyu \
     && python3 -m pip install conan==1.53.0 \
     && rm -rf /var/lib/apt/lists/*
 
