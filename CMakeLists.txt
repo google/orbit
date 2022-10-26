@@ -96,6 +96,7 @@ find_package(gte REQUIRED)
 find_package(libprotobuf-mutator REQUIRED)
 find_package(LZMA REQUIRED)
 find_package(absl REQUIRED)
+find_package(LLVM REQUIRED)
 
 if(WITH_GUI)
   find_package(OpenGL REQUIRED)
