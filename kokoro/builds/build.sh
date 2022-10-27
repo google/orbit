@@ -15,7 +15,8 @@ if [ -z "${CONAN_PROFILE}" ]; then
   declare -A profile_mapping=( \
     [ggp_relwithdebinfo]=skip \
     [msvc2019_relwithdebinfo]=skip \
-    [clang7_relwithdebinfo]=skip \
+    # We re-use the clang7 job to test the build with system dependencies until the other CI is up
+    [clang7_relwithdebinfo]=clang11_release_system_deps \
     [gcc9_relwithdebinfo]=skip \
     [iwyu]=skip \
     [coverage_clang9]=coverage_clang11 \
