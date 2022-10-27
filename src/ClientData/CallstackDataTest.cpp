@@ -208,24 +208,16 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
                                                                         event4, event5, event6}));
 }
 
-struct TidAndTimestamp {
-  uint32_t tid;
-  uint64_t timestamp;
-};
-
-static const std::vector<TidAndTimestamp> kTimestampsAndTidInForEachCallstackTests{
-    {kTid, 142}, {kTid, 242}, {kAnotherTid, 342}, {kTid, 442}};
-constexpr uint64_t kTimestampAfterSecondEvent = 300;
-
-static std::vector<CallstackEvent> GenerateAllEvents() {
+const std::vector<uint32_t> kTids = {kTid, kTid, kAnotherTid, kTid};
+const std::vector<uint64_t> kTimestamps = {142, 242, 342, 442};
+const std::vector<CallstackEvent> kAllEvents = [] {
   std::vector<CallstackEvent> events;
-  absl::c_transform(
-      kTimestampsAndTidInForEachCallstackTests, std::back_inserter(events),
-      [](TidAndTimestamp tid_and_timestamp) {
-        return CallstackEvent{tid_and_timestamp.timestamp, kCallstackId1, tid_and_timestamp.tid};
-      });
+  absl::c_transform(kTids, kTimestamps, std::back_inserter(events),
+                    [](uint32_t tid, uint64_t timestamp) {
+                      return CallstackEvent{timestamp, kCallstackId1, tid};
+                    });
   return events;
-}
+}();
 
 template <typename T>
 static std::vector<T> GetSubset(const std::vector<T>& list, std::vector<int> desired_positions) {
@@ -254,7 +246,7 @@ TEST_P(ForEachCallstackEventOfTidInTimeRangeDiscretizedTest, IterationIsCorrect)
   const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
   callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
 
-  for (const CallstackEvent& event : GenerateAllEvents()) {
+  for (const CallstackEvent& event : kAllEvents) {
     callstack_data.AddCallstackEvent(event);
   }
 
@@ -266,7 +258,7 @@ TEST_P(ForEachCallstackEventOfTidInTimeRangeDiscretizedTest, IterationIsCorrect)
       test_case.tid, test_case.start_ns, test_case.end_ns, test_case.resolution, visit_callstack);
   EXPECT_THAT(
       visited_callstack_list,
-      Pointwise(CallstackEventEq(), GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
+      Pointwise(CallstackEventEq(), GetSubset(kAllEvents, test_case.expected_event_ids)));
 }
 
 constexpr uint64_t kStartNs = 0;
@@ -280,7 +272,7 @@ INSTANTIATE_TEST_SUITE_P(
     ValuesIn<FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest>({
         {"NormalTimeRange", kTid, kStartNs, kEndNs, kResolution, {0, 1, 3}},
         {"DifferentTid", kAnotherTid, kStartNs, kEndNs, kResolution, {2}},
-        {"SmallTimeRange", kTid, kStartNs, kTimestampAfterSecondEvent, kResolution, {0, 1}},
+        {"SmallTimeRange", kTid, kStartNs, kTimestamps[2] - 1, kResolution, {0, 1}},
         // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack will be drawn
         // in the first pixel, and therefore only one will be visible.
         {"InfiniteTimeRange", kTid, kStartNs, kMaxNs, kResolution, {0}},
@@ -311,7 +303,7 @@ TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
   const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
   callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
 
-  for (const CallstackEvent& event : GenerateAllEvents()) {
+  for (const CallstackEvent& event : kAllEvents) {
     callstack_data.AddCallstackEvent(event);
   }
 
@@ -324,11 +316,11 @@ TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
   if (test_case.expect_type == kExpectAll) {
     EXPECT_THAT(visited_callstack_list,
                 Pointwise(CallstackEventEq(),
-                          GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
+                          GetSubset(kAllEvents, test_case.expected_event_ids)));
   } else {
     EXPECT_EQ(visited_callstack_list.size(), 1);
     EXPECT_THAT(visited_callstack_list[0],
-                AnyOfArray(GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
+                AnyOfArray(GetSubset(kAllEvents, test_case.expected_event_ids)));
   }
 }
 
@@ -337,7 +329,7 @@ INSTANTIATE_TEST_SUITE_P(
     ForEachCallstackEventInTimeRangeDiscretizedTest,
     ValuesIn<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>({
         {"NormalTimeRange", kExpectAll, kStartNs, kEndNs, kResolution, {0, 1, 2, 3}},
-        {"SmallTimeRange", kExpectAll, kStartNs, kTimestampAfterSecondEvent, kResolution, {0, 1}},
+        {"SmallTimeRange", kExpectAll, kStartNs, kTimestamps[2] - 1, kResolution, {0, 1}},
         // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack should be draw
         // in the first pixel, and therefore only one will be visible. It should be the first of
         // some of the threads.
