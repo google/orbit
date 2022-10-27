@@ -118,8 +118,8 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
-               GetPos()[1]);
+      const Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
+                     GetPos()[1]);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackType::kComplete) {
@@ -140,8 +140,8 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_selected_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
-               GetPos()[1]);
+      const Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
+                     GetPos()[1]);
       primitive_assembler.AddVerticalLine(pos, track_height, z, kGreenSelection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
@@ -163,9 +163,10 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(GetPixelNumber(time, resolution_in_pixels, min_tick, max_tick) - kPickingBoxOffset,
-               GetPos()[1]);
-      Vec2 size(kPickingBoxWidth, track_height);
+      const Vec2 pos(
+          GetPixelNumber(time, resolution_in_pixels, min_tick, max_tick) - kPickingBoxOffset,
+          GetPos()[1]);
+      const Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr, [this, &primitive_assembler](PickingId id) -> std::string {
             return GetSampleTooltip(primitive_assembler, id);

@@ -14,8 +14,10 @@ namespace orbit_client_data {
                                                   uint32_t resolution, uint64_t start_ns,
                                                   uint64_t end_ns);
 
-[[nodiscard]] uint32_t GetPixelNumber(uint64_t current_timestamp_ns, uint32_t resolution,
-                                      uint64_t start_ns, uint64_t end_ns);
+// Free Function that returns the number of the pixel of a particular timestamp. The query
+// assumes a closed-open interval [start_ns, end_ns), so end_ns is not a visible timestamp.
+[[nodiscard]] uint32_t GetPixelNumber(uint64_t timestamp_ns, uint32_t resolution, uint64_t start_ns,
+                                      uint64_t end_ns);
 
 }  // namespace orbit_client_data
 

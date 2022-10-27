@@ -15,11 +15,19 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 
+using ::testing::AnyOfArray;
+using ::testing::Pointwise;
+using ::testing::TestParamInfo;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
+
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 
 namespace orbit_client_data {
+
+namespace {
 
 MATCHER(CallstackEventEq, "") {
   const CallstackEvent& a = std::get<0>(arg);
@@ -111,39 +119,40 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
 
   EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
                   tid, 0, std::numeric_limits<uint64_t>::max()),
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{
-                                                         event1, event2, event3, event4, event5}));
+              Pointwise(CallstackEventEq(),
+                        std::vector<CallstackEvent>{event1, event2, event3, event4, event5}));
 
   EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
                   tid_with_no_complete, 0, std::numeric_limits<uint64_t>::max()),
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event6, event7}));
+              Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event6, event7}));
 
-  EXPECT_THAT(
-      callstack_data.GetCallstackEventsOfTidInTimeRange(tid_without_supermajority, 0,
-                                                        std::numeric_limits<uint64_t>::max()),
-      testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event8, event9, event10}));
+  EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
+                  tid_without_supermajority, 0, std::numeric_limits<uint64_t>::max()),
+              Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event8, event9, event10}));
 }
+
+constexpr uint32_t kTid = 42;
+constexpr uint32_t kAnotherTid = 43;
+
+static inline constexpr uint64_t kCallstackId1 = 12;
+constexpr uint64_t kCallstackId2 = 13;
+
+constexpr uint64_t kCloneAddress = 0x10;
+constexpr uint64_t kBrokenAddress = 0x30;
+constexpr uint64_t kFunctionToStopUnwindingAtAddress = 0x40;
 
 TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToStopUnwindingAt) {
   CallstackData callstack_data;
 
-  constexpr uint32_t kTid = 42;
-
-  constexpr uint64_t kCloneAddress = 0x10;
-  constexpr uint64_t kBrokenAddress = 0x30;
-  constexpr uint64_t kFunctionToStopUnwindingAtAddress = 0x40;
-
-  const uint64_t cs1_id = 12;
   const uint64_t cs1_outer = kCloneAddress;
   const uint64_t cs1_inner = 0x11;
   CallstackInfo cs1{{cs1_inner, cs1_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs1_id, std::move(cs1));
+  callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs1));
 
-  const uint64_t cs2_id = 13;
   const uint64_t cs2_outer = kCloneAddress;
   const uint64_t cs2_inner = 0x21;
   CallstackInfo cs2{{cs2_inner, cs2_outer}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs2_id, std::move(cs2));
+  callstack_data.AddUniqueCallstack(kCallstackId2, std::move(cs2));
 
   const uint64_t broken_cs_id = 81;
   const uint64_t broken_cs_outer = kBrokenAddress;
@@ -161,7 +170,7 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
                                     std::move(function_to_stop_unwinding_at_cs));
 
   const uint64_t time1 = 142;
-  CallstackEvent event1{time1, cs1_id, kTid};
+  CallstackEvent event1{time1, kCallstackId1, kTid};
   callstack_data.AddCallstackEvent(event1);
 
   const uint64_t time2 = 242;
@@ -169,11 +178,11 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
   callstack_data.AddCallstackEvent(event2);
 
   const uint64_t time3 = 342;
-  CallstackEvent event3{time3, cs2_id, kTid};
+  CallstackEvent event3{time3, kCallstackId2, kTid};
   callstack_data.AddCallstackEvent(event3);
 
   const uint64_t time4 = 442;
-  CallstackEvent event4{time4, cs1_id, kTid};
+  CallstackEvent event4{time4, kCallstackId1, kTid};
   callstack_data.AddCallstackEvent(event4);
 
   const uint64_t time5 = 542;
@@ -181,143 +190,166 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
   callstack_data.AddCallstackEvent(event5);
 
   const uint64_t time6 = 642;
-  CallstackEvent event6{time6, cs2_id, kTid};
+  CallstackEvent event6{time6, kCallstackId2, kTid};
   callstack_data.AddCallstackEvent(event6);
 
   callstack_data.UpdateCallstackTypeBasedOnMajorityStart({{kFunctionToStopUnwindingAtAddress, 10}});
 
-  EXPECT_EQ(callstack_data.GetCallstack(cs1_id)->type(), CallstackType::kComplete);
-  EXPECT_EQ(callstack_data.GetCallstack(cs2_id)->type(), CallstackType::kComplete);
+  EXPECT_EQ(callstack_data.GetCallstack(kCallstackId1)->type(), CallstackType::kComplete);
+  EXPECT_EQ(callstack_data.GetCallstack(kCallstackId2)->type(), CallstackType::kComplete);
   EXPECT_EQ(callstack_data.GetCallstack(broken_cs_id)->type(),
             CallstackType::kFilteredByMajorityOutermostFrame);
   EXPECT_EQ(callstack_data.GetCallstack(function_to_stop_unwinding_at_cs_id)->type(),
             CallstackType::kComplete);
 
+  EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
+                  kTid, 0, std::numeric_limits<uint64_t>::max()),
+              Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1, event2, event3,
+                                                                        event4, event5, event6}));
+}
+
+struct TidAndTimestamp {
+  uint32_t tid;
+  uint64_t timestamp;
+};
+
+static const std::vector<TidAndTimestamp> kTimestampsAndTidInForEachCallstackTests{
+    {kTid, 142}, {kTid, 242}, {kAnotherTid, 342}, {kTid, 442}};
+constexpr uint64_t kTimestampAfterSecondEvent = 300;
+
+static std::vector<CallstackEvent> GenerateAllEvents() {
+  std::vector<CallstackEvent> events;
+  absl::c_transform(
+      kTimestampsAndTidInForEachCallstackTests, std::back_inserter(events),
+      [](TidAndTimestamp tid_and_timestamp) {
+        return CallstackEvent{tid_and_timestamp.timestamp, kCallstackId1, tid_and_timestamp.tid};
+      });
+  return events;
+}
+
+template <typename T>
+static std::vector<T> GetSubset(const std::vector<T>& list, std::vector<int> desired_positions) {
+  std::vector<T> subset;
+  absl::c_transform(desired_positions, std::back_inserter(subset),
+                    [&](int id) { return list[id]; });
+  return subset;
+}
+
+struct FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest {
+  std::string test_name;
+  uint32_t tid;
+  uint64_t start_ns;
+  uint64_t end_ns;
+  uint32_t resolution;
+  std::vector<int> expected_event_ids;
+};
+
+using ForEachCallstackEventOfTidInTimeRangeDiscretizedTest =
+    TestWithParam<FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest>;
+
+TEST_P(ForEachCallstackEventOfTidInTimeRangeDiscretizedTest, IterationIsCorrect) {
+  const FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest& test_case = GetParam();
+
+  CallstackData callstack_data;
+  const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
+
+  for (const CallstackEvent& event : GenerateAllEvents()) {
+    callstack_data.AddCallstackEvent(event);
+  }
+
+  std::vector<CallstackEvent> visited_callstack_list;
+  auto visit_callstack = [&](const CallstackEvent& event) {
+    visited_callstack_list.push_back(event);
+  };
+  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(
+      test_case.tid, test_case.start_ns, test_case.end_ns, test_case.resolution, visit_callstack);
   EXPECT_THAT(
-      callstack_data.GetCallstackEventsOfTidInTimeRange(kTid, 0,
-                                                        std::numeric_limits<uint64_t>::max()),
-      testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1, event2, event3,
-                                                                         event4, event5, event6}));
+      visited_callstack_list,
+      Pointwise(CallstackEventEq(), GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
 }
 
-TEST(CallstackData, ForEachCallstackEventOfTidInTimeRangeDiscretized) {
+constexpr uint64_t kStartNs = 0;
+constexpr uint64_t kEndNs = 1000;
+constexpr uint64_t kMaxNs = std::numeric_limits<uint64_t>::max();
+constexpr uint32_t kResolution = 2000;
+
+INSTANTIATE_TEST_SUITE_P(
+    ForEachCallstackEventOfTidInTimeRangeDiscretizedTests,
+    ForEachCallstackEventOfTidInTimeRangeDiscretizedTest,
+    ValuesIn<FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest>({
+        {"NormalTimeRange", kTid, kStartNs, kEndNs, kResolution, {0, 1, 3}},
+        {"DifferentTid", kAnotherTid, kStartNs, kEndNs, kResolution, {2}},
+        {"SmallTimeRange", kTid, kStartNs, kTimestampAfterSecondEvent, kResolution, {0, 1}},
+        // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack will be drawn
+        // in the first pixel, and therefore only one will be visible.
+        {"InfiniteTimeRange", kTid, kStartNs, kMaxNs, kResolution, {0}},
+        // With one pixel on the screen we should only see one event.
+        {"OnePixel", kTid, kStartNs, kEndNs, /*resolution=*/1, {0}},
+    }),
+    [](const TestParamInfo<ForEachCallstackEventOfTidInTimeRangeDiscretizedTest::ParamType>& info) {
+      return info.param.test_name;
+    });
+
+enum ExpectType { kExpectAll, kExpectAny };
+struct FormattingForEachCallstackEventInTimeRangeDiscretizedTest {
+  std::string test_name;
+  ExpectType expect_type;
+  uint64_t start_ns;
+  uint64_t end_ns;
+  uint32_t resolution;
+  std::vector<int> expected_event_ids;
+};
+
+using ForEachCallstackEventInTimeRangeDiscretizedTest =
+    TestWithParam<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>;
+
+TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
+  const FormattingForEachCallstackEventInTimeRangeDiscretizedTest& test_case = GetParam();
+
   CallstackData callstack_data;
+  const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
 
-  const uint64_t cs_id = 12;
-  CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs_id, std::move(cs));
+  for (const CallstackEvent& event : GenerateAllEvents()) {
+    callstack_data.AddCallstackEvent(event);
+  }
 
-  constexpr uint32_t kTid = 42;
-  constexpr uint32_t kAnotherTid = 43;
-
-  const uint64_t time1 = 142;
-  CallstackEvent event1{time1, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event1);
-
-  const uint64_t time2 = 242;
-  CallstackEvent event2{time2, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event2);
-
-  const uint64_t time3 = 342;
-  CallstackEvent event3{time3, cs_id, kAnotherTid};
-  callstack_data.AddCallstackEvent(event3);
-
-  const uint64_t time4 = 442;
-  CallstackEvent event4{time4, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event4);
-
-  std::vector<CallstackEvent> callstack_list;
-  auto insert_callstack = [&](const CallstackEvent& event) { callstack_list.push_back(event); };
-  const uint32_t kResolution = 2000;
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(kTid, 0, 1000, kResolution,
-                                                                  insert_callstack);
-  EXPECT_THAT(callstack_list, testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{
-                                                                         event1, event2, event4}));
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(kAnotherTid, 0, 1000, kResolution,
-                                                                  insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(),
-                                 std::vector<CallstackEvent>{event1, event2, event4, event3}));
-
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(
-      kTid, 0, event2.timestamp_ns() + 1, kResolution, insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1, event2}));
-
-  // With one pixel on the screen we should only see one event.
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(kTid, 0, 1000, /*resolution=*/1,
-                                                                  insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1}));
-
-  // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack should be draw in
-  // the first pixel, and therefore only one will be visible.
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(
-      kTid, 0, std::numeric_limits<uint64_t>::max(), kResolution, insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1}));
+  std::vector<CallstackEvent> visited_callstack_list;
+  auto visit_callstack = [&](const CallstackEvent& event) {
+    visited_callstack_list.push_back(event);
+  };
+  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(test_case.start_ns, test_case.end_ns,
+                                                             test_case.resolution, visit_callstack);
+  if (test_case.expect_type == kExpectAll) {
+    EXPECT_THAT(visited_callstack_list,
+                Pointwise(CallstackEventEq(),
+                          GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
+  } else {
+    EXPECT_EQ(visited_callstack_list.size(), 1);
+    EXPECT_THAT(visited_callstack_list[0],
+                AnyOfArray(GetSubset(GenerateAllEvents(), test_case.expected_event_ids)));
+  }
 }
 
-TEST(CallstackData, ForEachCallstackEventInTimeRangeDiscretized) {
-  CallstackData callstack_data;
+INSTANTIATE_TEST_SUITE_P(
+    ForEachCallstackEventInTimeRangeDiscretizedTests,
+    ForEachCallstackEventInTimeRangeDiscretizedTest,
+    ValuesIn<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>({
+        {"NormalTimeRange", kExpectAll, kStartNs, kEndNs, kResolution, {0, 1, 2, 3}},
+        {"SmallTimeRange", kExpectAll, kStartNs, kTimestampAfterSecondEvent, kResolution, {0, 1}},
+        // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack should be draw
+        // in the first pixel, and therefore only one will be visible. It should be the first of
+        // some of the threads.
+        {"InfiniteTimeRange", kExpectAny, kStartNs, kMaxNs, kResolution, {0, 2}},
+        // With one pixel on the screen we should only see one event. It should be the first of some
+        // of the threads.
+        {"OnePixel", kExpectAny, kStartNs, kEndNs, /*resolution=*/1, {0, 2}},
+    }),
+    [](const TestParamInfo<ForEachCallstackEventInTimeRangeDiscretizedTest::ParamType>& info) {
+      return info.param.test_name;
+    });
 
-  const uint64_t cs_id = 12;
-  CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(cs_id, std::move(cs));
-
-  constexpr uint32_t kTid = 42;
-  constexpr uint32_t kAnotherTid = 43;
-
-  const uint64_t time1 = 142;
-  CallstackEvent event1{time1, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event1);
-
-  const uint64_t time2 = 242;
-  CallstackEvent event2{time2, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event2);
-
-  const uint64_t time3 = 342;
-  CallstackEvent event3{time3, cs_id, kAnotherTid};
-  callstack_data.AddCallstackEvent(event3);
-
-  const uint64_t time4 = 442;
-  CallstackEvent event4{time4, cs_id, kTid};
-  callstack_data.AddCallstackEvent(event4);
-
-  std::vector<CallstackEvent> callstack_list;
-  auto insert_callstack = [&](const CallstackEvent& event) { callstack_list.push_back(event); };
-  const uint32_t kResolution = 2000;
-  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(0, 1000, kResolution,
-                                                             insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(),
-                                 std::vector<CallstackEvent>{event1, event2, event3, event4}));
-
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(0, event2.timestamp_ns() + 1,
-                                                             kResolution, insert_callstack);
-  EXPECT_THAT(callstack_list,
-              testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1, event2}));
-
-  // With one pixel on the screen we should only see one event. It should be the first of some of
-  // the threads.
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(0, 1000, /*resolution=*/1,
-                                                             insert_callstack);
-  EXPECT_EQ(callstack_list.size(), 1);
-  EXPECT_THAT(callstack_list[0], testing::AnyOf(event1, event3));
-
-  // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack should be draw in
-  // the first pixel, and therefore only one will be visible. It should be the first of some of the
-  // threads.
-  callstack_list.clear();
-  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(
-      0, std::numeric_limits<uint64_t>::max(), kResolution, insert_callstack);
-  EXPECT_EQ(callstack_list.size(), 1);
-  EXPECT_THAT(callstack_list[0], testing::AnyOf(event1, event3));
-}
+}  // namespace
 
 }  // namespace orbit_client_data
