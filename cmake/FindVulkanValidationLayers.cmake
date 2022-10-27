@@ -5,4 +5,4 @@
 add_library(Vulkan::ValidationLayers INTERFACE IMPORTED GLOBAL)
 target_include_directories(Vulkan::ValidationLayers SYSTEM
                            INTERFACE third_party/vulkan)
-target_link_libraries(Vulkan::ValidationLayers INTERFACE CONAN_PKG::vulkan-headers)
+target_link_libraries(Vulkan::ValidationLayers INTERFACE vulkan-headers::vulkan-headers)

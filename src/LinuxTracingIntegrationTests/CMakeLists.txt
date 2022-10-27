@@ -38,7 +38,7 @@ target_link_libraries(IntegrationTestCommons PUBLIC
         ObjectUtils
         OrbitBase
         OffscreenRenderingVulkanTutorialLib
-        GTest::GTest
+        GTest::gtest
         absl::base
         absl::time
         absl::flat_hash_set
@@ -57,7 +57,7 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         LinuxTracing
         ObjectUtils
         OrbitBase
-        GTest::GTest
+        GTest::gtest
         GTest::Main
         absl::base
         absl::time
@@ -86,7 +86,7 @@ target_link_libraries(OrbitServiceIntegrationTests PRIVATE
         OrbitBase
         OrbitServiceLib
         OrbitVersion
-        GTest::GTest
+        GTest::gtest
         GTest::Main
         absl::base
         absl::time

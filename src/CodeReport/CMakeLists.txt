@@ -14,7 +14,7 @@ target_link_libraries(CodeReport PUBLIC OrbitBase
                                         ObjectUtils
                                         absl::flat_hash_map
                                         absl::strings
-                                        CONAN_PKG::capstone)
+                                        capstone::capstone)
 
 target_sources(CodeReport PUBLIC include/CodeReport/AnnotateDisassembly.h
                                  include/CodeReport/AnnotatingLine.h

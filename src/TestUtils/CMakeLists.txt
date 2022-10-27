@@ -14,7 +14,7 @@ target_link_libraries(TestUtils INTERFACE
   absl::flat_hash_set
   absl::strings
   absl::str_format
-  GTest::GTest)
+  GTest::gtest)
 
 add_executable(TestUtilsTests
   TestUtilsTest.cpp

@@ -17,4 +17,4 @@ protobuf_generate(TARGET ClientProtos PROTOS
 
 target_include_directories(ClientProtos PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/protos)
 
-target_link_libraries(ClientProtos PUBLIC CONAN_PKG::protobuf)
+target_link_libraries(ClientProtos PUBLIC protobuf::protobuf)

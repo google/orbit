@@ -22,7 +22,7 @@ target_sources(OrbitVulkanLayerInterface PRIVATE
 
 target_link_libraries(OrbitVulkanLayerInterface PUBLIC
         CaptureEventProducer
-        CONAN_PKG::vulkan-headers
+        vulkan-headers::vulkan-headers
         GrpcProtos
         OrbitBase
         ProducerSideChannel

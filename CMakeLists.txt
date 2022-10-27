@@ -71,9 +71,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
-conan_basic_setup(TARGETS)
-
 if (NOT WIN32)
   # Make all executables position independent on Linux
 
@@ -97,9 +94,18 @@ find_package(libprotobuf-mutator REQUIRED)
 find_package(LZMA REQUIRED)
 find_package(absl REQUIRED)
 find_package(LLVM REQUIRED)
+find_package(gRPC REQUIRED)
+find_package(capstone REQUIRED)
+find_package(protobuf REQUIRED)
+find_package(Libssh2 REQUIRED)
+find_package(outcome REQUIRED)
+find_package(volk REQUIRED)
+find_package(VulkanHeaders REQUIRED)
+find_package(ZLIB REQUIRED)
 
 if(WITH_GUI)
   find_package(OpenGL REQUIRED)
+  find_package(freetype REQUIRED)
   find_package(freetype-gl REQUIRED)
   find_package(
     Qt5 CONFIG REQUIRED
@@ -107,6 +113,8 @@ if(WITH_GUI)
                Network
                Test
                Widgets)
+  find_package(imgui REQUIRED)
+  find_package(glad REQUIRED)
 endif()
 
 find_package(Filesystem REQUIRED)

@@ -22,7 +22,7 @@ target_link_libraries(
   PUBLIC OrbitBase
          ClientProtos
          absl::strings
-         CONAN_PKG::protobuf)
+         protobuf::protobuf)
 
 add_executable(PresetFileTests)
 

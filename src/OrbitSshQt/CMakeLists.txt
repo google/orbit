@@ -44,7 +44,7 @@ set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 
 add_executable(OrbitSshQtIntegrationTests)
 target_sources(OrbitSshQtIntegrationTests PRIVATE IntegrationTests.cpp)
-target_link_libraries(OrbitSshQtIntegrationTests PUBLIC OrbitSshQt GTest::GTest)
+target_link_libraries(OrbitSshQtIntegrationTests PUBLIC OrbitSshQt GTest::gtest)
 
 # tests
 #add_executable(OrbitSshQtTests)
