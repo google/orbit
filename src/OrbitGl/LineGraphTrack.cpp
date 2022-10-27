@@ -53,8 +53,13 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
   auto curr_iterator = entries.begin();
   auto last_iterator = std::prev(entries.end());
-  std::array<float, Dimension> prev_normalized_values =
+
+  // Normalized values that were last used for drawing.
+  std::array<float, Dimension> prev_drawn_values =
       GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
+
+  // Normalized values of the last entry we've iterated over.
+  std::array<float, Dimension> last_entry_values = prev_drawn_values;
 
   GraphTrackDataAggregator<Dimension> aggr;
 
@@ -68,21 +73,30 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
   auto draw_aggregated =
       [&](const typename GraphTrackDataAggregator<Dimension>::AccumulatedEntry& accumulated_entry,
           bool is_last) {
-        // First dtaw the entry for the max values.
+        // First draw the entry for the max values.
         DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.start_tick,
-                              accumulated_entry.end_tick, prev_normalized_values,
+                              accumulated_entry.end_tick, prev_drawn_values,
                               accumulated_entry.max_vals, z, is_last);
-        prev_normalized_values = accumulated_entry.max_vals;
+        prev_drawn_values = accumulated_entry.max_vals;
 
-        // Draw min values only if needed.
+        // Draw min values if needed.
         if (aggregation_mode_ == AggregationMode::kMinMax &&
             accumulated_entry.min_vals != accumulated_entry.max_vals) {
-          // Here we're drawing a single-sized entry (starts and ends at
-          // `end_tick`) that goes from max to min values.
+          // Draw a single-sized entry (starts and ends at `end_tick`) that goes from max to min
+          // values.
           DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
-                                accumulated_entry.end_tick, accumulated_entry.max_vals,
+                                accumulated_entry.end_tick, prev_drawn_values,
                                 accumulated_entry.min_vals, z, is_last);
-          prev_normalized_values = accumulated_entry.min_vals;
+          prev_drawn_values = accumulated_entry.min_vals;
+        }
+
+        // Finally, draw the last entry. This ensures that the horizontal line from this pixel to
+        // the next entry would be at the same position both zoomed in and out.
+        if (last_entry_values != prev_drawn_values) {
+          DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
+                                accumulated_entry.end_tick, prev_drawn_values, last_entry_values, z,
+                                is_last);
+          prev_drawn_values = last_entry_values;
         }
       };
 
@@ -96,21 +110,28 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
     if (aggr.GetAccumulatedEntry() == nullptr) {
       aggr.SetEntry(prev_time, curr_time, curr_normalized_values);
+      last_entry_values = curr_normalized_values;
       continue;
     }
-    // If the accumulated entry still fits in the pixel
-    if (aggr.GetAccumulatedEntry()->end_tick < next_pixel_start_ns) {
+
+    // If the current data point fits into the same pixel as the entry we are currently
+    // accumulating.
+    if (curr_time < next_pixel_start_ns) {
       // Add the current data to accumulated_entry
       aggr.MergeDataIntoEntry(prev_time, curr_time, curr_normalized_values);
+      last_entry_values = curr_normalized_values;
     } else {
       auto accumulated_entry = *aggr.GetAccumulatedEntry();
       // Otherwise, draw the accumulated_entry and start accumulating a new one
       draw_aggregated(accumulated_entry, false);
 
+      // Must be done before the next `SetEntry` call - we are using the end tick value of the
+      // current entry to calculate the next pixel border.
       next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
           aggr.GetAccumulatedEntry()->end_tick, resolution_in_pixels, min_tick, max_tick);
 
       aggr.SetEntry(prev_time, curr_time, curr_normalized_values);
+      last_entry_values = curr_normalized_values;
     }
   }
 
@@ -123,7 +144,7 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
   // end.
   if (!is_accumulated_entry_last) {
     DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick, max_tick,
-                          prev_normalized_values, prev_normalized_values, z, true);
+                          prev_drawn_values, prev_drawn_values, z, true);
   }
 }
 

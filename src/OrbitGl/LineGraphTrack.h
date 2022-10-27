@@ -33,10 +33,9 @@ class LineGraphTrack : public GraphTrack<Dimension> {
 
   // Determines how values should be aggregated for drawing.
   enum class AggregationMode {
-    kMax = 0,  // Draw only the max value of each element. Faster to draw and less noise but may
-               // lose min values.
-    kMinMax,   // Draw both min and max values. A bit slower to draw and may be noisy, but preserves
-               // both up and down spikes.
+    // Draw only the max value of each element. Less visual noise but may lose min values.
+    kMax = 0,
+    kMinMax,  // Draw both min and max values. May be noisy, but preserves both up and down spikes.
   };
   AggregationMode aggregation_mode_ = AggregationMode::kMinMax;
 };
