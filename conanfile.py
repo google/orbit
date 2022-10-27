@@ -24,11 +24,13 @@ class OrbitConan(ConanFile):
     options = {"with_gui": [True, False],
                "fPIC": [True, False],
                "run_tests": [True, False],
-               "build_target": "ANY"}
+               "build_target": "ANY",
+               "with_system_deps": [True, False]}
     default_options = {"with_gui": True,
                        "fPIC": True,
                        "run_tests": True,
-                       "build_target": None}
+                       "build_target": None,
+                       "with_system_deps": False}
     exports_sources = "CMakeLists.txt", "Orbit*", "bin/*", "cmake/*", "third_party/*", "LICENSE"
 
     def _version(self):
