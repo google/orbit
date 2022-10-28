@@ -8,7 +8,7 @@
 #include "absl/container/flat_hash_map.h"
 // clang-format off
 #include "vulkan/vulkan.h" // IWYU pragma: keep
-#include "vk_layer_dispatch_table.h" // IWYU pragma: keep
+#include "vulkan/vk_layer_dispatch_table.h" // IWYU pragma: keep
 // clang-format on
 
 namespace {

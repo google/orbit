@@ -58,8 +58,9 @@ class OrbitConan(ConanFile):
         self.requires("grpc/1.48.0")
         if not self.options.with_system_deps: self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
-            self.requires("volk/1.2.170")
-            self.requires("vulkan-headers/1.1.114.0")
+            self.requires("volk/1.3.224.1")
+            self.requires("vulkan-headers/1.3.224.1")
+            self.requires("vulkan-validationlayers/1.3.224.1")
         self.requires("zlib/1.2.12", override=True)
 
         if self.options.with_gui:
@@ -79,6 +80,11 @@ class OrbitConan(ConanFile):
                 "We don't actively support building the UI for 32bit platforms. Please remove this check in conanfile.py if you still want to do so!")
 
         self.options["gtest"].no_main = True
+
+        if self.settings.os != "Windows":
+            self.options["vulkan-validationlayers"].with_wsi_xcb = False
+            self.options["vulkan-validationlayers"].with_wsi_xlib = False
+            self.options["vulkan-validationlayers"].with_wsi_wayland = False
 
 
     def build(self):
