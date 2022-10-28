@@ -218,7 +218,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
   VkImageCreateInfo create_info{
       .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
       .imageType = VK_IMAGE_TYPE_2D,
-      .format = image_format_,
+      .format = kImageFormat,
       .extent = {.width = kImageWidth, .height = kImageHeight, .depth = 1},
       .mipLevels = 1,
       .arrayLayers = 1,
@@ -229,13 +229,6 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
   };
   image_extent_ = create_info.extent;
-
-  VkImageFormatProperties format_properties{};
-  VkResult result = vkGetPhysicalDeviceImageFormatProperties(
-      physical_device_, create_info.format, create_info.imageType, create_info.tiling, create_info.usage,
-      create_info.flags, &format_properties);
-  ORBIT_CHECK(result == VK_SUCCESS);
-  ORBIT_LOG("image_format_=%d", image_format_);
 
   CHECK_VK_SUCCESS(vkCreateImage(device_, &create_info, nullptr, &image_));
 
@@ -270,7 +263,7 @@ void OffscreenRenderingVulkanTutorial::CreateImageView() {
       .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
       .image = image_,
       .viewType = VK_IMAGE_VIEW_TYPE_2D,
-      .format = image_format_,
+      .format = kImageFormat,
       .components = {.r = VK_COMPONENT_SWIZZLE_IDENTITY,
                      .g = VK_COMPONENT_SWIZZLE_IDENTITY,
                      .b = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -286,7 +279,7 @@ void OffscreenRenderingVulkanTutorial::CreateImageView() {
 
 void OffscreenRenderingVulkanTutorial::CreateRenderPass() {
   VkAttachmentDescription color_attachment{
-      .format = image_format_,
+      .format = kImageFormat,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,

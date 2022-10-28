@@ -57,12 +57,12 @@ class OffscreenRenderingVulkanTutorial {
   static const std::vector<const char*> kValidationLayerNames;
   static constexpr uint32_t kImageWidth = 800;
   static constexpr uint32_t kImageHeight = 600;
+  static constexpr VkFormat kImageFormat = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
 
   VkInstance instance_ = VK_NULL_HANDLE;
   VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
   VkDevice device_ = VK_NULL_HANDLE;
   VkQueue graphics_queue_ = VK_NULL_HANDLE;
-  VkFormat image_format_ = VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
   VkExtent3D image_extent_{};
   VkImage image_ = VK_NULL_HANDLE;
   VkDeviceMemory memory_ = VK_NULL_HANDLE;
