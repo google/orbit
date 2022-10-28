@@ -31,7 +31,7 @@ class OrbitServiceInstanceImpl : public OrbitServiceInstance {
   [[nodiscard]] ErrorMessageOr<void> Start();
 
  private:
-  [[nodiscard]] std::string GetStateErrorAndOutput();
+  [[nodiscard]] std::string ReadStateErrorAndOutput();
 
   QProcess process_;
   QMetaObject::Connection finished_connection_;
@@ -47,7 +47,7 @@ ErrorMessageOr<std::unique_ptr<OrbitServiceInstance>> OrbitServiceInstance::Crea
 
 ErrorMessageOr<std::unique_ptr<OrbitServiceInstance>> OrbitServiceInstance::CreatePrivileged() {
   const QString orbit_service_path = QCoreApplication::applicationDirPath() + "/OrbitService";
-  return OrbitServiceInstance::Create("/usr/bin/pkexec", {orbit_service_path});
+  return OrbitServiceInstance::Create("pkexec", {orbit_service_path});
 }
 
 OrbitServiceInstanceImpl::OrbitServiceInstanceImpl(const QString& program,
@@ -97,7 +97,7 @@ ErrorMessageOr<void> OrbitServiceInstanceImpl::Start() {
   bool wait_started_result = process_.waitForStarted(kWaitTimeInMilliSeconds);
   if (!wait_started_result || !IsRunning()) {
     return ErrorMessage{
-        absl::StrFormat("Unable to start OrbitService. Details:\n%s", GetStateErrorAndOutput())};
+        absl::StrFormat("Unable to start OrbitService. Details:\n%s", ReadStateErrorAndOutput())};
   }
 
   QObject::connect(&process_, &QProcess::errorOccurred, this,
@@ -127,7 +127,7 @@ ErrorMessageOr<void> OrbitServiceInstanceImpl::Start() {
   return outcome::success();
 }
 
-std::string OrbitServiceInstanceImpl::GetStateErrorAndOutput() {
+std::string OrbitServiceInstanceImpl::ReadStateErrorAndOutput() {
   return absl::StrFormat("Process state: %s\nProcess error: %s\nstdout: %s\nstderr: %s\n",
                          QMetaEnum::fromType<QProcess::ProcessState>().valueToKey(process_.state()),
                          QMetaEnum::fromType<QProcess::ProcessError>().valueToKey(process_.error()),
