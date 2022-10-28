@@ -63,7 +63,7 @@ class OrbitConan(ConanFile):
         self.requires("zlib/1.2.12", override=True)
 
         if self.options.with_gui:
-            self.requires("freetype/2.12.1")
+            if not self.options.with_system_deps: self.requires("freetype/2.12.1")
             self.requires("glad/0.1.34")
             self.requires("imgui/1.88")
             if not self.options.with_system_deps: self.requires("libssh2/1.10.0")
