@@ -14,6 +14,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "absl/functional/bind_front.h"
 
 using ::testing::AnyOfArray;
 using ::testing::Pointwise;
@@ -219,12 +220,21 @@ const std::vector<CallstackEvent> kAllEvents = [] {
   return events;
 }();
 
+constexpr auto kGetTestName = [](const auto& info) { return info.param.test_name; };
+
+std::unique_ptr<CallstackData> kCallstackDataWithEvents = [] {
+  auto result = std::make_unique<CallstackData>();
+  CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
+  result->AddUniqueCallstack(kCallstackId1, std::move(cs));
+  absl::c_for_each(kAllEvents, absl::bind_front(&CallstackData::AddCallstackEvent, result.get()));
+  return result;
+}();
+
 template <typename T>
-static std::vector<T> GetSubset(const std::vector<T>& list, std::vector<int> desired_positions) {
-  std::vector<T> subset;
-  absl::c_transform(desired_positions, std::back_inserter(subset),
-                    [&](int id) { return list[id]; });
-  return subset;
+[[nodiscard]] static std::vector<T> Slice(const std::vector<T>& v, std::vector<int> indices) {
+  std::vector<T> slice;
+  absl::c_transform(indices, std::back_inserter(slice), [&](int i) { return v[i]; });
+  return slice;
 }
 
 struct FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest {
@@ -241,24 +251,16 @@ using ForEachCallstackEventOfTidInTimeRangeDiscretizedTest =
 
 TEST_P(ForEachCallstackEventOfTidInTimeRangeDiscretizedTest, IterationIsCorrect) {
   const FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest& test_case = GetParam();
-
-  CallstackData callstack_data;
-  const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
-
-  for (const CallstackEvent& event : kAllEvents) {
-    callstack_data.AddCallstackEvent(event);
-  }
+  const CallstackData* callstack_data = kCallstackDataWithEvents.get();
 
   std::vector<CallstackEvent> visited_callstack_list;
   auto visit_callstack = [&](const CallstackEvent& event) {
     visited_callstack_list.push_back(event);
   };
-  callstack_data.ForEachCallstackEventOfTidInTimeRangeDiscretized(
+  callstack_data->ForEachCallstackEventOfTidInTimeRangeDiscretized(
       test_case.tid, test_case.start_ns, test_case.end_ns, test_case.resolution, visit_callstack);
-  EXPECT_THAT(
-      visited_callstack_list,
-      Pointwise(CallstackEventEq(), GetSubset(kAllEvents, test_case.expected_event_ids)));
+  EXPECT_THAT(visited_callstack_list,
+              Pointwise(CallstackEventEq(), Slice(kAllEvents, test_case.expected_event_ids)));
 }
 
 constexpr uint64_t kStartNs = 0;
@@ -279,14 +281,20 @@ INSTANTIATE_TEST_SUITE_P(
         // With one pixel on the screen we should only see one event.
         {"OnePixel", kTid, kStartNs, kEndNs, /*resolution=*/1, {0}},
     }),
-    [](const TestParamInfo<ForEachCallstackEventOfTidInTimeRangeDiscretizedTest::ParamType>& info) {
-      return info.param.test_name;
-    });
+    kGetTestName);
 
-enum ExpectType { kExpectAll, kExpectAny };
+constexpr auto kExpectAll = [](const auto& actual, const auto& expected) {
+  EXPECT_THAT(actual, Pointwise(CallstackEventEq(), expected));
+};
+
+constexpr auto kExpectAny = [](const auto& actual, const auto& expected) {
+  EXPECT_EQ(actual.size(), 1);
+  EXPECT_THAT(actual[0], AnyOfArray(expected));
+};
+
 struct FormattingForEachCallstackEventInTimeRangeDiscretizedTest {
   std::string test_name;
-  ExpectType expect_type;
+  absl::FunctionRef<void(std::vector<CallstackEvent>, std::vector<CallstackEvent>)> expect;
   uint64_t start_ns;
   uint64_t end_ns;
   uint32_t resolution;
@@ -295,33 +303,17 @@ struct FormattingForEachCallstackEventInTimeRangeDiscretizedTest {
 
 using ForEachCallstackEventInTimeRangeDiscretizedTest =
     TestWithParam<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>;
-
 TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
   const FormattingForEachCallstackEventInTimeRangeDiscretizedTest& test_case = GetParam();
-
-  CallstackData callstack_data;
-  const CallstackInfo cs{{0x11, 0x10}, CallstackType::kComplete};
-  callstack_data.AddUniqueCallstack(kCallstackId1, std::move(cs));
-
-  for (const CallstackEvent& event : kAllEvents) {
-    callstack_data.AddCallstackEvent(event);
-  }
+  const CallstackData* callstack_data = kCallstackDataWithEvents.get();
 
   std::vector<CallstackEvent> visited_callstack_list;
   auto visit_callstack = [&](const CallstackEvent& event) {
     visited_callstack_list.push_back(event);
   };
-  callstack_data.ForEachCallstackEventInTimeRangeDiscretized(test_case.start_ns, test_case.end_ns,
-                                                             test_case.resolution, visit_callstack);
-  if (test_case.expect_type == kExpectAll) {
-    EXPECT_THAT(visited_callstack_list,
-                Pointwise(CallstackEventEq(),
-                          GetSubset(kAllEvents, test_case.expected_event_ids)));
-  } else {
-    EXPECT_EQ(visited_callstack_list.size(), 1);
-    EXPECT_THAT(visited_callstack_list[0],
-                AnyOfArray(GetSubset(kAllEvents, test_case.expected_event_ids)));
-  }
+  callstack_data->ForEachCallstackEventInTimeRangeDiscretized(
+      test_case.start_ns, test_case.end_ns, test_case.resolution, visit_callstack);
+  test_case.expect(visited_callstack_list, Slice(kAllEvents, test_case.expected_event_ids));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -338,9 +330,7 @@ INSTANTIATE_TEST_SUITE_P(
         // of the threads.
         {"OnePixel", kExpectAny, kStartNs, kEndNs, /*resolution=*/1, {0, 2}},
     }),
-    [](const TestParamInfo<ForEachCallstackEventInTimeRangeDiscretizedTest::ParamType>& info) {
-      return info.param.test_name;
-    });
+    kGetTestName);
 
 }  // namespace
 
