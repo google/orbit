@@ -58,9 +58,9 @@ class OrbitConan(ConanFile):
         self.requires("grpc/1.48.0")
         if not self.options.with_system_deps: self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
-            self.requires("volk/1.3.224.1")
-            self.requires("vulkan-headers/1.3.224.1")
-            self.requires("vulkan-validationlayers/1.3.224.1")
+            if not self.options.with_system_deps: self.requires("volk/1.3.224.1")
+            if not self.options.with_system_deps: self.requires("vulkan-headers/1.3.224.1")
+            if not self.options.with_system_deps: self.requires("vulkan-validationlayers/1.3.224.1")
         self.requires("zlib/1.2.12", override=True)
 
         if self.options.with_gui:
