@@ -83,9 +83,34 @@ class CallstackData {
   template <typename Action>
   void ForEachCallstackEventInTimeRangeDiscretized(uint64_t min_timestamp, uint64_t max_timestamp,
                                                    uint32_t resolution, Action&& action) const {
-    for (const auto& [tid, unused_events] : callstack_events_by_tid_) {
-      ForEachCallstackEventOfTidInTimeRangeDiscretized(tid, min_timestamp, max_timestamp,
-                                                       resolution, action);
+    auto get_next_callstack = [&](uint64_t timestamp) -> std::optional<CallstackEvent> {
+      std::optional<CallstackEvent> next_callstack;
+      const uint32_t current_pixel =
+          GetPixelNumber(timestamp, resolution, min_timestamp, max_timestamp);
+      for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
+        auto next_callstack_of_tid = events.lower_bound(timestamp);
+        if (next_callstack_of_tid == events.end() ||
+            (next_callstack.has_value() &&
+             next_callstack.value().timestamp_ns() <= next_callstack_of_tid->second.timestamp_ns()))
+          continue;
+
+        // If this callstack will be drawn in the current_pixel, we don't need to search for more of
+        // them. Otherwise there could be a callstack in another thread_id that will be draw before,
+        // so we need to keep looking.
+        if (GetPixelNumber(next_callstack_of_tid->first, resolution, min_timestamp,
+                           max_timestamp) == current_pixel) {
+          return next_callstack_of_tid->second;
+        }
+        next_callstack = next_callstack_of_tid->second;
+      }
+      return next_callstack;
+    };
+
+    for (std::optional<CallstackEvent> next_callstack = get_next_callstack(min_timestamp);
+         next_callstack.has_value() && next_callstack.value().timestamp_ns() < max_timestamp;
+         next_callstack = get_next_callstack(GetNextPixelBoundaryTimeNs(
+             next_callstack.value().timestamp_ns(), resolution, min_timestamp, max_timestamp))) {
+      std::invoke(action, next_callstack.value());
     }
   }
 
