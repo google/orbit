@@ -119,7 +119,6 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
     if (curr_time < next_pixel_start_ns) {
       // Add the current data to accumulated_entry
       aggr.MergeDataIntoEntry(prev_time, curr_time, curr_normalized_values);
-      last_entry_values = curr_normalized_values;
     } else {
       auto accumulated_entry = *aggr.GetAccumulatedEntry();
       // Otherwise, draw the accumulated_entry and start accumulating a new one
@@ -131,8 +130,9 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
           aggr.GetAccumulatedEntry()->end_tick, resolution_in_pixels, min_tick, max_tick);
 
       aggr.SetEntry(prev_time, curr_time, curr_normalized_values);
-      last_entry_values = curr_normalized_values;
     }
+
+    last_entry_values = curr_normalized_values;
   }
 
   bool is_accumulated_entry_last = aggr.GetAccumulatedEntry()->end_tick >= max_tick;
