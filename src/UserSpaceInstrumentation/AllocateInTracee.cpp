@@ -210,8 +210,8 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryExecutable() {
   }
 
   constexpr uint64_t kSyscallNumberMprotect = 10;
-  auto result_or_error =
-      SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_, PROT_EXEC, 0, 0, 0, 0);
+  auto result_or_error = SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_,
+                                         PROT_EXEC | PROT_READ, 0, 0, 0, 0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
         "Failed to execute mprotect syscall with parameters address=%#x size=%u prot=PROT_EXEC: %s",
