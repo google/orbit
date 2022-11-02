@@ -30,3 +30,13 @@ target_link_libraries(Api PUBLIC
         ProducerSideChannel)
 
 strip_symbols(Api)
+
+if (WIN32)
+install(TARGETS Api
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /opt/orbitprofiler)
+else()
+install(TARGETS Api
+        CONFIGURATIONS Release
+        LIBRARY DESTINATION /opt/orbitprofiler)
+endif()

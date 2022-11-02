@@ -45,3 +45,7 @@ target_link_libraries(OrbitService PRIVATE
   absl::flags_parse)
 
 strip_symbols(OrbitService)
+
+install(TARGETS OrbitService
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION /opt/orbitprofiler)

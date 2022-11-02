@@ -12,6 +12,13 @@ target_sources(ApiInterface INTERFACE
 target_include_directories(ApiInterface INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
+set_target_properties(ApiInterface PROPERTIES
+        PUBLIC_HEADER include/ApiInterface/Orbit.h)
+
+install(TARGETS ApiInterface
+        CONFIGURATIONS Release
+        PUBLIC_HEADER DESTINATION /opt/orbitprofiler)
+
 
 # This needs to be an executable because we also need to verify linking.
 add_executable(ApiHeaderBuildsInCTest)

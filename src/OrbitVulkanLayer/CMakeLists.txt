@@ -53,6 +53,11 @@ target_link_libraries(OrbitVulkanLayer PRIVATE
 
 strip_symbols(OrbitVulkanLayer)
 
+install(TARGETS OrbitVulkanLayer
+        CONFIGURATIONS Release
+        LIBRARY DESTINATION /opt/orbitprofiler)
+
+
 add_executable(OrbitVulkanLayerTests)
 
 target_sources(OrbitVulkanLayerTests PRIVATE

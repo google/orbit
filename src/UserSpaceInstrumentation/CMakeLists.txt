@@ -88,6 +88,10 @@ target_link_libraries(OrbitUserSpaceInstrumentation PUBLIC
 
 strip_symbols(OrbitUserSpaceInstrumentation)
 
+install(TARGETS OrbitUserSpaceInstrumentation
+        CONFIGURATIONS Release
+        LIBRARY DESTINATION /opt/orbitprofiler)
+
 # This test lib is merely used in UserSpaceInstrumentationTests below. The
 # binary libUserSpaceInstrumentationTestLib.so created from this target is used
 # to test the injection mechanism.
