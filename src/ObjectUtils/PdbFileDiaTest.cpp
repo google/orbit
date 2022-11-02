@@ -7,18 +7,18 @@
 // Must be included after PdbFileTest.h
 #include "PdbFileDia.h"
 
-using orbit_object_utils::PdbFileDia;
-
-INSTANTIATE_TYPED_TEST_SUITE_P(PdbFileDiaTest, PdbFileTest, ::testing::Types<PdbFileDia>);
+INSTANTIATE_TYPED_TEST_SUITE_P(PdbFileDiaTest, PdbFileTest,
+                               ::testing::Types<orbit_object_utils::PdbFileDia>);
 
 // This test is specific to using the DIA SDK to load PDB files.
 TEST(PdbFileDiaTest, CreatePdbDoesNotFailOnCoInitializeWhenAlreadyInitialized) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
   HRESULT result = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
   ASSERT_TRUE(result == S_OK || result == S_FALSE);
-  ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_result1 =
-      PdbFileDia::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000});
-  ASSERT_THAT(pdb_file_result1, HasNoError());
+  ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result1 =
+      orbit_object_utils::PdbFileDia::CreatePdbFile(
+          file_path_pdb, orbit_object_utils::ObjectFileInfo{0x180000000});
+  ASSERT_THAT(pdb_file_result1, orbit_test_utils::HasNoError());
   CoUninitialize();
 }
 
@@ -26,9 +26,10 @@ TEST(PdbFileDiaTest, CreatePdbDoesNotFailOnCoInitializeWhenAlreadyInitialized) {
 TEST(PdbFileDiaTest, PdbFileProperlyUninitializesComLibrary) {
   std::filesystem::path file_path_pdb = orbit_test::GetTestdataDir() / "dllmain.pdb";
   {
-    ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_result =
-        PdbFileDia::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000});
-    ASSERT_THAT(pdb_file_result, HasNoError());
+    ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
+        orbit_object_utils::PdbFileDia::CreatePdbFile(
+            file_path_pdb, orbit_object_utils::ObjectFileInfo{0x180000000});
+    ASSERT_THAT(pdb_file_result, orbit_test_utils::HasNoError());
   }
 
   HRESULT result = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
