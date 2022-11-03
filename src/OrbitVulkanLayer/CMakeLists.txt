@@ -53,6 +53,12 @@ target_link_libraries(OrbitVulkanLayer PRIVATE
 
 strip_symbols(OrbitVulkanLayer)
 
+if (NOT WIN32)
+install(TARGETS OrbitVulkanLayer
+        CONFIGURATIONS Release
+        LIBRARY DESTINATION /opt/orbitprofiler)
+endif()
+
 add_executable(OrbitVulkanLayerTests)
 
 target_sources(OrbitVulkanLayerTests PRIVATE
