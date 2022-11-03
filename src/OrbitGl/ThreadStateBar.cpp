@@ -299,6 +299,7 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
 
         auto [box_start_x, box_width] = timeline_info_->GetBoxPosXAndWidthFromTicks(
             slice.begin_timestamp_ns(), slice.end_timestamp_ns());
+
         const Vec2 pos{box_start_x, GetPos()[1]};
         const Vec2 size{box_width, GetHeight()};
 
