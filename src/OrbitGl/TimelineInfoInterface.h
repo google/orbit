@@ -25,6 +25,10 @@ class TimelineInfoInterface {
   [[nodiscard]] virtual double GetMaxTimeUs() const = 0;
 
   virtual void ZoomTime(int zoom_delta, double center_time_ratio) = 0;
+  // Translation from start and end ticks to box position and width, to be consistently used across
+  // CaptureViewElements. It will extend boxes to the border of the pixels.
+  [[nodiscard]] virtual std::pair<float, float> GetBoxPosXAndWidthFromTicks(
+      uint64_t start_tick, uint64_t end_tick) const = 0;
 
   [[nodiscard]] virtual uint64_t GetCaptureTimeSpanNs() const = 0;
 };
