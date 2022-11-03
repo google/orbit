@@ -39,6 +39,7 @@ endif()
 
 strip_symbols(Orbit)
 
+if (NOT WIN32)
 install(TARGETS Orbit
         CONFIGURATIONS Release
         RUNTIME DESTINATION /opt/orbitprofiler)
@@ -47,3 +48,4 @@ install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fonts"
         DESTINATION /opt/orbitprofiler)
 install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders"
         DESTINATION /opt/orbitprofiler)
+endif()

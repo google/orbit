@@ -15,10 +15,11 @@ target_include_directories(ApiInterface INTERFACE
 set_target_properties(ApiInterface PROPERTIES
         PUBLIC_HEADER include/ApiInterface/Orbit.h)
 
+if (NOT WIN32)
 install(TARGETS ApiInterface
         CONFIGURATIONS Release
         PUBLIC_HEADER DESTINATION /opt/orbitprofiler)
-
+endif()
 
 # This needs to be an executable because we also need to verify linking.
 add_executable(ApiHeaderBuildsInCTest)

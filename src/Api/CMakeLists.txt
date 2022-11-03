@@ -31,11 +31,7 @@ target_link_libraries(Api PUBLIC
 
 strip_symbols(Api)
 
-if (WIN32)
-install(TARGETS Api
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION /opt/orbitprofiler)
-else()
+if (NOT WIN32)
 install(TARGETS Api
         CONFIGURATIONS Release
         LIBRARY DESTINATION /opt/orbitprofiler)
