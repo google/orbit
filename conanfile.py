@@ -48,14 +48,14 @@ class OrbitConan(ConanFile):
             del self.options.fPIC
 
     def build_requirements(self):
-        self.build_requires('protobuf/3.21.4')
-        self.build_requires('grpc/1.48.0')
-        self.build_requires('gtest/1.11.0', force_host_context=True)
+        if not self.options.with_system_deps: self.build_requires('protobuf/3.21.4')
+        if not self.options.with_system_deps: self.build_requires('grpc/1.48.0')
+        if not self.options.with_system_deps: self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
-        self.requires("abseil/20220623.0")
+        if not self.options.with_system_deps: self.requires("abseil/20220623.0")
         if not self.options.with_system_deps: self.requires("capstone/4.0.2")
-        self.requires("grpc/1.48.0")
+        if not self.options.with_system_deps: self.requires("grpc/1.48.0")
         if not self.options.with_system_deps: self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
             if not self.options.with_system_deps: self.requires("volk/1.3.224.1")

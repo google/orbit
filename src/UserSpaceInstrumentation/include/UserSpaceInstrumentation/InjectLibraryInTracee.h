@@ -18,12 +18,18 @@
 
 namespace orbit_user_space_instrumentation {
 
+// kUseInitialNamespace means dlmopen will behave like dlopen.
+// You can use kCreateNewNamespace to instruct dlmopen to load all
+// transitive dependencies in a separate namespace which means shared
+// libraries will not be shared with the target process.
+enum class LinkerNamespace { kUseInitialNamespace, kCreateNewNamespace };
+
 // Open, use, and close dynamic library in the tracee. The functions here resemble the respective
 // functions offered by libdl as documented e.g. here: https://linux.die.net/man/3/dlopen. We rely
 // on either libdl or libc being loaded into the tracee.
-[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(
+[[nodiscard]] ErrorMessageOr<void*> DlmopenInTracee(
     pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
-    const std::filesystem::path& path, uint32_t flag);
+    const std::filesystem::path& path, uint32_t flag, LinkerNamespace linker_namespace);
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(
     pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle,
     std::string_view symbol);
