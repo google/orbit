@@ -591,7 +591,7 @@ class InstrumentFunctionTest : public testing::Test {
     const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
 
     // Inject the payload for the instrumentation.
-    auto library_handle_or_error = DlopenInTracee(pid_, modules, library_path, RTLD_NOW);
+    auto library_handle_or_error = DlmopenInTracee(pid_, modules, library_path, RTLD_NOW);
     ORBIT_CHECK(library_handle_or_error.has_value());
     void* library_handle = library_handle_or_error.value();
 

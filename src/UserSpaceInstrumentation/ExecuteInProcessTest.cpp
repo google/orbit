@@ -52,7 +52,7 @@ class ExecuteInProcessTest : public testing::Test {
     auto modules_or_error = orbit_module_utils::ReadModules(pid_);
     ORBIT_CHECK(modules_or_error.has_value());
     auto library_handle_or_error =
-        DlopenInTracee(pid_, modules_or_error.value(), library_path, RTLD_NOW);
+        DlmopenInTracee(pid_, modules_or_error.value(), library_path, RTLD_NOW);
     ORBIT_CHECK(library_handle_or_error.has_value());
     library_handle_ = library_handle_or_error.value();
   }

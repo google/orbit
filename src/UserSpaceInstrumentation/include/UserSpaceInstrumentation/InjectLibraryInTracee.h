@@ -21,7 +21,7 @@ namespace orbit_user_space_instrumentation {
 // Open, use, and close dynamic library in the tracee. The functions here resemble the respective
 // functions offered by libdl as documented e.g. here: https://linux.die.net/man/3/dlopen. We rely
 // on either libdl or libc being loaded into the tracee.
-[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(
+[[nodiscard]] ErrorMessageOr<void*> DlmopenInTracee(
     pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
     const std::filesystem::path& path, uint32_t flag);
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(

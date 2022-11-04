@@ -400,7 +400,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   // in the previous run.
   OUTCOME_TRY(const bool already_injected, AlreadyInjected(modules));
 
-  auto library_handle_or_error = DlopenInTracee(pid, modules, library_path, RTLD_NOW);
+  auto library_handle_or_error = DlmopenInTracee(pid, modules, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to open library in tracee: %s",
                                         library_handle_or_error.error().message()));
