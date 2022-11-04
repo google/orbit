@@ -42,6 +42,7 @@ target_sources(
          GpuSubmissionTrack.h
          GpuTrack.h
          GraphTrack.h
+         GraphTrackDataAggregator.h
          Images.h
          ImGuiOrbit.h
          IntrospectionWindow.h
@@ -120,6 +121,7 @@ target_sources(
           GpuSubmissionTrack.cpp
           GpuTrack.cpp
           GraphTrack.cpp
+          GraphTrackDataAggregator.cpp
           ImGuiOrbit.cpp
           IntrospectionWindow.cpp
           LineGraphTrack.cpp
@@ -228,6 +230,7 @@ target_sources(OrbitGlTests PRIVATE
                FormatCallstackForTooltipTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
+               GraphTrackDataAggregatorTest.cpp
                MockBatcher.cpp
                MockTextRenderer.cpp
                MultivariateTimeSeriesTest.cpp

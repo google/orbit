@@ -11,6 +11,7 @@
 #include <string>
 
 #include "CoreMath.h"
+#include "GraphTrackDataAggregator.h"
 #include "MultivariateTimeSeries.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
@@ -113,7 +114,8 @@ class GraphTrack : public Track {
   [[nodiscard]] virtual std::string GetLegendTooltips(size_t legend_index) const = 0;
   void DrawSingleSeriesEntry(orbit_gl::PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
                              uint64_t end_tick,
-                             const std::array<float, Dimension>& normalized_values, float z);
+                             const std::array<float, Dimension>& normalized_cumulative_values,
+                             float z);
   [[nodiscard]] bool HasLegend() const;
 
   std::optional<std::array<Color, Dimension>> series_colors_;

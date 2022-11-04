@@ -35,7 +35,12 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
-      parent_(parent) {}
+      parent_(parent) {
+  aggregation_mode_ = AggregationMode::kMax;  // Here we use Max aggregation and not summing the
+                                              // values (which would also make sense) because the
+                                              // code expects the max value to be known ahead of
+                                              // rendering time when we do aggregation.
+}
 
 void BasicPageFaultsTrack::AddValues(
     uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
@@ -82,15 +87,15 @@ void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& primitive_assembler,
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(
     PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
-    const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
+    const std::array<float, kBasicPageFaultsTrackDimension>& prev_normalized_values,
+    const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
     bool is_last) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
-      primitive_assembler, start_tick, end_tick, current_normalized_values, next_normalized_values,
-      z, is_last);
+      primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values, z,
+      is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
-  if (current_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
+  if (prev_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
 
   const Color kHightlightingColor(231, 68, 53, 100);
   float x0 = timeline_info_->GetWorldFromTick(start_tick);

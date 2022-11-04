@@ -27,9 +27,18 @@ class LineGraphTrack : public GraphTrack<Dimension> {
                   float z) override;
   virtual void DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
                                      uint64_t end_tick,
-                                     const std::array<float, Dimension>& current_normalized_values,
-                                     const std::array<float, Dimension>& next_normalized_values,
+                                     const std::array<float, Dimension>& prev_normalized_values,
+                                     const std::array<float, Dimension>& curr_normalized_values,
                                      float z, bool is_last);
+
+  // Determines how values should be aggregated for drawing.
+  enum class AggregationMode {
+    // Draw only the max value of each element. Less visual noise but may lose min values.
+    kMax = 0,
+    // Draw both min and max values. May be noisy, but preserves both up and down spikes.
+    kMinMax,
+  };
+  AggregationMode aggregation_mode_ = AggregationMode::kMinMax;
 };
 
 }  // namespace orbit_gl

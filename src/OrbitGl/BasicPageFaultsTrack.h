@@ -46,8 +46,8 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
 
   void DrawSingleSeriesEntry(
       PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-      const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
-      const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
+      const std::array<float, kBasicPageFaultsTrackDimension>& prev_normalized_values,
+      const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
       bool is_last) override;
 
   // Once this is set, if values[index_of_series_to_highlight_] > 0 in the sampling window t, we

@@ -13,6 +13,7 @@
 #include <iterator>
 #include <numeric>
 
+#include "ClientData/FastRenderingUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "TextRenderer.h"
@@ -266,6 +267,12 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   auto current_it = entries.begin();
   auto last_it = std::prev(entries.end());
 
+  GraphTrackDataAggregator<Dimension> aggr;
+
+  const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
+  uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+      min_tick, resolution_in_pixels, min_tick, max_tick);
+
   // We skip the last element because we can't calculate time passed between last element
   // and the next one.
   while (current_it != last_it) {
@@ -283,10 +290,40 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
     uint64_t current_time = std::max(current_it->first, min_tick);
     auto next_it = std::next(current_it);
     uint64_t next_time = std::min(next_it->first, max_tick);
-    DrawSingleSeriesEntry(primitive_assembler, current_time, next_time,
-                          normalized_cumulative_values, z);
+
+    if (aggr.GetAccumulatedEntry() == nullptr) {
+      aggr.SetEntry(current_time, next_time, normalized_cumulative_values);
+    } else {
+      // If the current data point fits into the same pixel as the entry we are currently
+      // accumulating.
+      if (current_time < next_pixel_start_ns) {
+        // Add the current data to accumulated_entry
+        aggr.MergeDataIntoEntry(current_time, next_time, normalized_cumulative_values);
+      } else {
+        // Otherwise, draw the accumulated_entry and start accumulating a new one
+        // When drawing we only use max values - for every usage of this track
+        // this is currently the best representation.
+        // If we draw multiple boxes on the same pixel, the largest box would
+        // overdraw the smaller ones.
+        DrawSingleSeriesEntry(primitive_assembler, aggr.GetAccumulatedEntry()->start_tick,
+                              aggr.GetAccumulatedEntry()->end_tick,
+                              aggr.GetAccumulatedEntry()->max_vals, z);
+
+        // Must be done before the next `SetEntry` call - we are using the end tick value of the
+        // current entry to calculate the next pixel border.
+        next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
+            aggr.GetAccumulatedEntry()->end_tick, resolution_in_pixels, min_tick, max_tick);
+
+        aggr.SetEntry(current_time, next_time, normalized_cumulative_values);
+      }
+    }
     current_it = next_it;
   }
+
+  // Draw the leftover entry
+  DrawSingleSeriesEntry(primitive_assembler, aggr.GetAccumulatedEntry()->start_tick,
+                        aggr.GetAccumulatedEntry()->end_tick, aggr.GetAccumulatedEntry()->max_vals,
+                        z);
 }
 
 template <size_t Dimension>
