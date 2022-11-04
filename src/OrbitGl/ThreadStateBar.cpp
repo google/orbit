@@ -281,22 +281,11 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   ThreadBar::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
                                 picking_mode);
 
-  const auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
-  const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreen(GetSize())[0];
-  const uint64_t min_time_graph_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
-  const float pixel_width_in_world_coords = viewport_->ScreenToWorld({1, 0})[0];
-
-  uint64_t ignore_until_ns = 0;
-
+  uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
   ORBIT_CHECK(capture_data_ != nullptr);
-  capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
-      GetThreadId(), min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
-        if (slice.end_timestamp_ns() <= ignore_until_ns) {
-          // Reduce overdraw by not drawing slices whose entire width would only draw over a
-          // previous slice. Similar to TimerTrack::UpdatePrimitives.
-          return;
-        }
-
+  capture_data_->ForEachThreadStateSliceIntersectingTimeRangeDiscretized(
+      GetThreadId(), min_tick, max_tick, resolution_in_pixels,
+      [&](const ThreadStateSliceInfo& slice) {
         auto [box_start_x, box_width] = timeline_info_->GetBoxPosXAndWidthFromTicks(
             slice.begin_timestamp_ns(), slice.end_timestamp_ns());
 
@@ -316,25 +305,8 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
           return GetThreadStateSliceTooltip(primitive_assembler, id);
         });
         user_data->custom_data_ = &slice;
-
-        if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
-          Quad box = MakeBox(pos, size);
-          primitive_assembler.AddBox(box, GlCanvas::kZValueEvent, color, std::move(user_data));
-        } else {
-          // Make this slice cover an entire pixel and don't draw subsequent slices that would
-          // coincide with the same pixel.
-          // Use AddBox instead of AddVerticalLine as otherwise the tops of Boxes and lines wouldn't
-          // be properly aligned.
-          Quad box = MakeBox(pos, {pixel_width_in_world_coords, size[1]});
-          primitive_assembler.AddBox(box, GlCanvas::kZValueEvent, color, std::move(user_data));
-
-          if (pixel_delta_ns != 0) {
-            ignore_until_ns =
-                min_time_graph_ns +
-                (slice.begin_timestamp_ns() - min_time_graph_ns) / pixel_delta_ns * pixel_delta_ns +
-                pixel_delta_ns;
-          }
-        }
+        Quad box = MakeBox(pos, size);
+        primitive_assembler.AddBox(box, GlCanvas::kZValueEvent, color, std::move(user_data));
       });
 }
 

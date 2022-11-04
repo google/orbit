@@ -26,7 +26,10 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "Test/Path.h"
 
+using testing::ElementsAreArray;
 using testing::Optional;
+using ::testing::ValuesIn;
+using ::testing::WithParamInterface;
 
 namespace orbit_client_data {
 
@@ -55,10 +58,15 @@ constexpr uint64_t kSecondTid = 2000;
 constexpr uint64_t kNonExistingTid = 404;
 constexpr uint64_t kStTimestamp1 = 50;
 constexpr uint64_t kEnTimestamp1 = 100;
+constexpr uint64_t kMidSlice1Timestamp = 75;
 constexpr uint64_t kStTimestamp2 = 100;
 constexpr uint64_t kEnTimestamp2 = 150;
+constexpr uint64_t kMidSlice2Timestamp = 101;
 constexpr uint64_t kStTimestamp3 = 150;
 constexpr uint64_t kEnTimestamp3 = 200;
+constexpr uint64_t kMidSlice3Timestamp = 199;
+constexpr uint64_t kInvalidTimestamp1 = 49;
+constexpr uint64_t kInvalidTimestamp2 = 201;
 constexpr uint32_t kWakeupTid = 4200;
 constexpr uint32_t kWakeupPid = 420;
 constexpr uint32_t kInvalidPidAndTid = 0;
@@ -271,6 +279,63 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
   EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kNotIssuedId), testing::IsNull());
 }
 
+struct FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest {
+  std::string test_name;
+  uint32_t tid;
+  uint64_t start_ns;
+  uint64_t end_ns;
+  uint32_t resolution;
+  std::vector<ThreadStateSliceInfo> expected_slices;
+};
+
+class ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest
+    : public CaptureDataTest,
+      public WithParamInterface<
+          FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest> {};
+
+TEST_P(ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest, IterationIsCorrect) {
+  auto& test_case = GetParam();
+
+  capture_data_.AddThreadStateSlice(kSlice1);
+  capture_data_.AddThreadStateSlice(kSlice2);
+  capture_data_.AddThreadStateSlice(kSlice4);
+
+  std::vector<ThreadStateSliceInfo> visited_callstack_list;
+  auto visit_callstack = [&](const ThreadStateSliceInfo& event) {
+    visited_callstack_list.push_back(event);
+  };
+  capture_data_.ForEachThreadStateSliceIntersectingTimeRangeDiscretized(
+      test_case.tid, test_case.start_ns, test_case.end_ns, test_case.resolution, visit_callstack);
+  EXPECT_THAT(visited_callstack_list, ElementsAreArray(test_case.expected_slices));
+}
+
+constexpr uint32_t kResolution = 2000;
+constexpr auto kGetTestName = [](const auto& info) { return info.param.test_name; };
+
+INSTANTIATE_TEST_SUITE_P(
+    ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTests,
+    ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest,
+    ValuesIn<FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest>({
+        {"NormalRange", kFirstTid, kStTimestamp1, kEnTimestamp2, kResolution, {kSlice1, kSlice2}},
+        {"DifferentTid", kSecondTid, kStTimestamp1, kEnTimestamp2, kResolution, {kSlice4}},
+        {"PartiallyVisibleSlices",
+         kFirstTid,
+         kMidSlice1Timestamp,
+         kMidSlice2Timestamp,
+         kResolution,
+         {kSlice1, kSlice2}},
+        {"FirstSlice", kFirstTid, kStTimestamp1, kEnTimestamp1, kResolution, {kSlice1}},
+        {"SecondSlice", kFirstTid, kStTimestamp2, kEnTimestamp2, kResolution, {kSlice2}},
+        {"BeforeFirst", kFirstTid, kInvalidTimestamp1 - 1, kInvalidTimestamp1, kResolution, {}},
+        {"AfterLast", kFirstTid, kInvalidTimestamp2, kInvalidTimestamp2 + 1, kResolution, {}},
+        // When max_timestamp is very big, each callstack will be drawn in the first pixel, and
+        // therefore only one will be visible.
+        {"InfiniteTimeRange", kFirstTid, kStTimestamp1, kLargeInteger, kResolution, {kSlice1}},
+        // With one pixel on the screen we should only see one event.
+        {"OnePixel", kFirstTid, kStTimestamp1, kEnTimestamp2, /*resolution=*/1, {kSlice1}},
+    }),
+    kGetTestName);
+
 TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
   EXPECT_EQ(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.begin_timestamp_ns()),
@@ -280,14 +345,6 @@ TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
   capture_data_.AddThreadStateSlice(kSlice2);
   capture_data_.AddThreadStateSlice(kSlice3);
   capture_data_.AddThreadStateSlice(kSlice4);
-
-  constexpr uint64_t kMidSlice1Timestamp = 75;
-  constexpr uint64_t kMidSlice2Timestamp = 101;
-  constexpr uint64_t kMidSlice3Timestamp = 199;
-  constexpr uint64_t kMidSlice4Timestamp = 75;
-
-  constexpr uint64_t kInvalidTimestamp1 = 200;
-  constexpr uint64_t kInvalidTimestamp2 = 49;
 
   EXPECT_THAT(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice1.begin_timestamp_ns()),
@@ -314,7 +371,7 @@ TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
               Optional(kSlice2));
   EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kMidSlice3Timestamp),
               Optional(kSlice3));
-  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice4Timestamp),
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice1Timestamp),
               Optional(kSlice4));
 
   EXPECT_EQ(

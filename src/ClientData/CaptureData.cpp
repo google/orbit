@@ -76,6 +76,36 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
   }
 }
 
+void CaptureData::ForEachThreadStateSliceIntersectingTimeRangeDiscretized(
+    uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp, uint32_t resolution,
+    const std::function<void(const ThreadStateSliceInfo&)>& action) const {
+  absl::MutexLock lock{&thread_state_slices_mutex_};
+  auto tid_thread_state_slices_it = thread_state_slices_.find(thread_id);
+  if (tid_thread_state_slices_it == thread_state_slices_.end()) {
+    return;
+  }
+
+  const std::vector<ThreadStateSliceInfo>& tid_thread_state_slices =
+      tid_thread_state_slices_it->second;
+
+  auto thread_state_slices_lower_bound = [&](uint64_t timestamp) {
+    return std::lower_bound(tid_thread_state_slices.begin(), tid_thread_state_slices.end(),
+                            timestamp, [](const ThreadStateSliceInfo& slice, uint64_t timestamp) {
+                              return timestamp >= slice.end_timestamp_ns();
+                            });
+  };
+
+  uint64_t current_timestamp = min_timestamp;
+  auto slice_it = thread_state_slices_lower_bound(current_timestamp);
+  while (slice_it != tid_thread_state_slices.end() &&
+         slice_it->begin_timestamp_ns() < max_timestamp) {
+    action(*slice_it);
+    current_timestamp = GetNextPixelBoundaryTimeNs(slice_it->end_timestamp_ns(), resolution,
+                                                   min_timestamp, max_timestamp);
+    slice_it = thread_state_slices_lower_bound(current_timestamp);
+  }
+}
+
 const ScopeStats& CaptureData::GetScopeStatsOrDefault(ScopeId scope_id) const {
   return all_scopes_->GetScopeStatsOrDefault(scope_id);
 }
