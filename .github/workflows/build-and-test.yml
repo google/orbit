@@ -27,6 +27,7 @@ jobs:
            sudo apt install --yes --no-install-recommends \
            build-essential                                \
            cmake                                          \
+           libboost-dev                                   \
            libcapstone-dev                                \
            libgrpc++-dev                                  \
            libssh2-1-dev                                  \
