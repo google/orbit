@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Orbit Maintainers <orbitprofiler-eng@google.com>
 Build-Depends: cmake,
   debhelper-compat (= 13),
-  libboost-deb,
+  libboost-dev,
   libcapstone-dev,
   libgrpc++-dev,
   libssh2-1-dev,
