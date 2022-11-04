@@ -469,6 +469,20 @@ uint64_t TimeGraph::GetCaptureTimeSpanNs() const {
   return capture_max_timestamp_ - capture_min_timestamp_;
 }
 
+std::pair<float, float> TimeGraph::GetBoxPosXAndWidthFromTicks(uint64_t start_tick,
+                                                               uint64_t end_tick) const {
+  // TODO(b/244736453): GetWorldFromTick uses floats and therefore is not precise enough. Since
+  //  the optimization looks for the first timer after the boundary of a pixel, we are getting
+  //  several values very close to that boundary. The lack of precision is making some of that
+  //  numbers to be just before the boundary and they ended be floored in the previous pixel. We
+  //  are temporarily hacking this issue by adding an epsilon.
+  // Epsilon for any float in the range of (0, 8092), maximum width for a 8k pixel screen.
+  constexpr float kEpsilon = std::numeric_limits<float>::epsilon() * 8092;
+  const float extended_start_x = std::floor(GetWorldFromTick(start_tick) + kEpsilon);
+  const float extended_end_x = std::ceil(GetWorldFromTick(end_tick) + kEpsilon);
+  return {extended_start_x, extended_end_x - extended_start_x};
+}
+
 // Select a timer_info. Also move the view in order to assure that the timer_info and its track are
 // visible.
 void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {

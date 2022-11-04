@@ -51,6 +51,12 @@ class MockTimelineInfo : public TimelineInfoInterface {
     max_capture_ns_ = std::max(max_capture_ns_, max_tick);
   }
 
+  [[nodiscard]] std::pair<float, float> GetBoxPosXAndWidthFromTicks(
+      uint64_t start_tick, uint64_t end_tick) const override {
+    float start_x = GetWorldFromTick(start_tick);
+    float end_x = GetWorldFromTick(end_tick);
+    return {start_x, end_x - start_x};
+  }
   MOCK_METHOD(void, ZoomTime, (int, double), (override));
 
  private:

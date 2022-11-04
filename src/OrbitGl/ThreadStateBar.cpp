@@ -297,12 +297,11 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
           return;
         }
 
-        const float x0 = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
-        const float x1 = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
-        const float width = x1 - x0;
+        auto [box_start_x, box_width] = timeline_info_->GetBoxPosXAndWidthFromTicks(
+            slice.begin_timestamp_ns(), slice.end_timestamp_ns());
 
-        const Vec2 pos{x0, GetPos()[1]};
-        const Vec2 size{width, GetHeight()};
+        const Vec2 pos{box_start_x, GetPos()[1]};
+        const Vec2 size{box_width, GetHeight()};
 
         if (slice == app_->hovered_thread_state_slice() ||
             slice == app_->selected_thread_state_slice()) {
