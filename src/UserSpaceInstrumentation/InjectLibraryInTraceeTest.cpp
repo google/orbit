@@ -92,7 +92,8 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
   const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
 
-  auto library_handle_or_error = DlmopenInTracee(pid, modules, library_path, RTLD_NOW);
+  auto library_handle_or_error =
+      DlmopenInTracee(pid, modules, library_path, RTLD_NOW, LinkerNamespace::kCreateNewNamespace);
   ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
@@ -210,7 +211,8 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
 
   // Try to load non existing dynamic lib into tracee.
   const std::string kNonExistingLibName = "libNotFound.so";
-  auto library_handle_or_error = DlmopenInTracee(pid, modules, kNonExistingLibName, RTLD_NOW);
+  auto library_handle_or_error = DlmopenInTracee(pid, modules, kNonExistingLibName, RTLD_NOW,
+                                                 LinkerNamespace::kCreateNewNamespace);
   ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
 
   // Continue child process.

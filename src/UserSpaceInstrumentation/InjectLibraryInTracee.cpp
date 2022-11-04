@@ -7,6 +7,7 @@
 #include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
 #include <absl/types/span.h>
+#include <dlfcn.h>
 
 #include <cstring>
 #include <optional>
@@ -84,7 +85,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 
 [[nodiscard]] ErrorMessageOr<void*> DlmopenInTracee(
     pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
-    const std::filesystem::path& path, uint32_t flag) {
+    const std::filesystem::path& path, uint32_t flag, LinkerNamespace linker_namespace) {
   // Make sure file exists.
   auto file_exists_or_error = orbit_base::FileOrDirectoryExists(path);
   if (file_exists_or_error.has_error()) {
@@ -114,15 +115,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   const uint64_t so_path_address = code_memory->GetAddress() + kCodeScratchPadSize;
   OUTCOME_TRY(WriteTraceesMemory(pid, so_path_address, path_as_vector));
 
-  constexpr Lmid_t kLmid = LM_ID_NEWLM;
-
   // We want to do the following in the tracee:
   // return_value = dlmopen(lmid, path, flag)
   // The calling convention is to put the parameters in registers rdi, rsi, and rdx.
   // So the lmid goes to rdi, the address of the file path goes to rsi, and the flag argument
-  // goes into rcx. Then we load
-  // the address of dlmopen into rax and do the call. Assembly in Intel syntax (destination
-  // first), machine code on the right:
+  // goes into rcx. Then we load the address of dlmopen into rax and do the call. Assembly in Intel
+  // syntax (destination first), machine code on the right:
 
   // movabsq rdi, lmid                48 bf lmid
   // movabsq rsi, so_path_address     48 be so_path_address
@@ -132,7 +130,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   // int3                             cc
   MachineCode code{};
   code.AppendBytes({0x48, 0xbf})
-      .AppendImmediate64(kLmid)
+      .AppendImmediate64(linker_namespace == LinkerNamespace::kUseInitialNamespace ? LM_ID_BASE
+                                                                                   : LM_ID_NEWLM)
       .AppendBytes({0x48, 0xbe})
       .AppendImmediate64(so_path_address)
       .AppendBytes({0xba})
