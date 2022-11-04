@@ -1,0 +1,8 @@
+orbit for Debian
+
+Orbit, the Open Runtime Binary Instrumentation Tool is a standalone
+native application profiler for Windows and Linux. It supports native
+applications written in languages such as C, C++, Rust, or Go. Its main
+purpose is to help developers identify the performance bottlenecks of a
+complex application. Orbit can be also used to visualize the execution flow
+of such applications.

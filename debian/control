@@ -1,0 +1,40 @@
+Source: orbit
+Section: devel
+Priority: optional
+Maintainer: Orbit Maintainers <orbitprofiler-eng@google.com>
+Build-Depends: cmake,
+  debhelper-compat (= 13),
+  libboost-dev,
+  libcapstone-dev,
+  libgrpc++-dev,
+  libssh2-1-dev,
+  vulkan-validationlayers-dev,
+  libz-dev,
+  llvm-dev,
+  libfreetype6-dev,
+  libimgui-dev,
+  protobuf-compiler-grpc,
+  pkg-config,
+  libvulkan-volk-dev,
+  libvulkan-dev,
+  libopengl-dev,
+  libglx-dev,
+  mesa-common-dev,
+  qtbase5-dev,
+  libgtest-dev,
+  libgmock-dev,
+  libprotobuf-dev
+Standards-Version: 4.5.1
+Homepage: <https://github.com/google/orbit>
+Rules-Requires-Root: no
+
+Package: orbit
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Orbit, the Open Runtime Binary Instrumentation Tool is a standalone
+  native application profiler for Windows and Linux. It supports native
+  applications written in languages such as C, C++, Rust, or Go. Its main
+  purpose is to help developers identify the performance bottlenecks of a
+  complex application. Orbit can be also used to visualize the execution flow
+  of such applications.
