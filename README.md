@@ -1,5 +1,5 @@
 # ORBIT
-
+![builds and tests](https://github.com/google/orbit/actions/workflows/build-and-test.yml/badge.svg?branch=main)
 <img alt="ORBIT Logo" src="logos/orbit_logo_simple.png" align="right" width="520" >
 
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
