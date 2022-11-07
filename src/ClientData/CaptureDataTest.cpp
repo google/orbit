@@ -56,14 +56,14 @@ constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
 constexpr uint64_t kFirstTid = 1000;
 constexpr uint64_t kSecondTid = 2000;
 constexpr uint64_t kNonExistingTid = 404;
-constexpr uint64_t kStTimestamp1 = 50;
-constexpr uint64_t kEnTimestamp1 = 100;
+constexpr uint64_t kStartTimestamp1 = 50;
+constexpr uint64_t kEndTimestamp1 = 100;
 constexpr uint64_t kMidSlice1Timestamp = 75;
-constexpr uint64_t kStTimestamp2 = 100;
-constexpr uint64_t kEnTimestamp2 = 150;
+constexpr uint64_t kStartTimestamp2 = 100;
+constexpr uint64_t kEndTimestamp2 = 150;
 constexpr uint64_t kMidSlice2Timestamp = 101;
-constexpr uint64_t kStTimestamp3 = 150;
-constexpr uint64_t kEnTimestamp3 = 200;
+constexpr uint64_t kStartTimestamp3 = 150;
+constexpr uint64_t kEndTimestamp3 = 200;
 constexpr uint64_t kMidSlice3Timestamp = 199;
 constexpr uint64_t kInvalidTimestamp1 = 49;
 constexpr uint64_t kInvalidTimestamp2 = 201;
@@ -76,32 +76,32 @@ constexpr uint64_t kCallstackId3 = 25;
 
 const ThreadStateSliceInfo kSlice1{kFirstTid,
                                    orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep,
-                                   kStTimestamp1,
-                                   kEnTimestamp1,
+                                   kStartTimestamp1,
+                                   kEndTimestamp1,
                                    ThreadStateSliceInfo::WakeupReason::kNotApplicable,
                                    kInvalidPidAndTid,
                                    kInvalidPidAndTid,
                                    kNoCallstackId};
 const ThreadStateSliceInfo kSlice2{kFirstTid,
                                    orbit_grpc_protos::ThreadStateSlice::kRunnable,
-                                   kStTimestamp2,
-                                   kEnTimestamp2,
+                                   kStartTimestamp2,
+                                   kEndTimestamp2,
                                    ThreadStateSliceInfo::WakeupReason::kUnblocked,
                                    kWakeupTid,
                                    kWakeupPid,
                                    kCallstackId1};
 const ThreadStateSliceInfo kSlice3{kFirstTid,
                                    orbit_grpc_protos::ThreadStateSlice::kRunning,
-                                   kStTimestamp3,
-                                   kEnTimestamp3,
+                                   kStartTimestamp3,
+                                   kEndTimestamp3,
                                    ThreadStateSliceInfo::WakeupReason::kNotApplicable,
                                    kInvalidPidAndTid,
                                    kInvalidPidAndTid,
                                    kNoCallstackId};
 const ThreadStateSliceInfo kSlice4{kSecondTid,
                                    orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep,
-                                   kStTimestamp1,
-                                   kEnTimestamp1,
+                                   kStartTimestamp1,
+                                   kEndTimestamp1,
                                    ThreadStateSliceInfo::WakeupReason::kNotApplicable,
                                    kInvalidPidAndTid,
                                    kInvalidPidAndTid,
@@ -279,7 +279,7 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
   EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kNotIssuedId), testing::IsNull());
 }
 
-struct FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest {
+struct ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTestCase {
   std::string test_name;
   uint32_t tid;
   uint64_t start_ns;
@@ -290,8 +290,7 @@ struct FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest {
 
 class ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest
     : public CaptureDataTest,
-      public WithParamInterface<
-          FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest> {};
+      public WithParamInterface<ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTestCase> {};
 
 TEST_P(ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest, IterationIsCorrect) {
   auto& test_case = GetParam();
@@ -315,24 +314,29 @@ constexpr auto kGetTestName = [](const auto& info) { return info.param.test_name
 INSTANTIATE_TEST_SUITE_P(
     ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTests,
     ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest,
-    ValuesIn<FormattingForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest>({
-        {"NormalRange", kFirstTid, kStTimestamp1, kEnTimestamp2, kResolution, {kSlice1, kSlice2}},
-        {"DifferentTid", kSecondTid, kStTimestamp1, kEnTimestamp2, kResolution, {kSlice4}},
+    ValuesIn<ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTestCase>({
+        {"NormalRange",
+         kFirstTid,
+         kStartTimestamp1,
+         kEndTimestamp2,
+         kResolution,
+         {kSlice1, kSlice2}},
+        {"DifferentTid", kSecondTid, kStartTimestamp1, kEndTimestamp2, kResolution, {kSlice4}},
         {"PartiallyVisibleSlices",
          kFirstTid,
          kMidSlice1Timestamp,
          kMidSlice2Timestamp,
          kResolution,
          {kSlice1, kSlice2}},
-        {"FirstSlice", kFirstTid, kStTimestamp1, kEnTimestamp1, kResolution, {kSlice1}},
-        {"SecondSlice", kFirstTid, kStTimestamp2, kEnTimestamp2, kResolution, {kSlice2}},
+        {"FirstSlice", kFirstTid, kStartTimestamp1, kEndTimestamp1, kResolution, {kSlice1}},
+        {"SecondSlice", kFirstTid, kStartTimestamp2, kEndTimestamp2, kResolution, {kSlice2}},
         {"BeforeFirst", kFirstTid, kInvalidTimestamp1 - 1, kInvalidTimestamp1, kResolution, {}},
         {"AfterLast", kFirstTid, kInvalidTimestamp2, kInvalidTimestamp2 + 1, kResolution, {}},
         // When max_timestamp is very big, each callstack will be drawn in the first pixel, and
         // therefore only one will be visible.
-        {"InfiniteTimeRange", kFirstTid, kStTimestamp1, kLargeInteger, kResolution, {kSlice1}},
+        {"InfiniteTimeRange", kFirstTid, kStartTimestamp1, kLargeInteger, kResolution, {kSlice1}},
         // With one pixel on the screen we should only see one event.
-        {"OnePixel", kFirstTid, kStTimestamp1, kEnTimestamp2, /*resolution=*/1, {kSlice1}},
+        {"OnePixel", kFirstTid, kStartTimestamp1, kEndTimestamp2, /*resolution=*/1, {kSlice1}},
     }),
     kGetTestName);
 
