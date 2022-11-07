@@ -82,5 +82,5 @@ jobs:
         run: cmake --build .
       - name: CCache Stats
         run: ccache -s
-      - name: CMake Test
-        run: ctest --output-on-failure -E IntegrationTest
+      #- name: CMake Test
+      #  run: ctest --output-on-failure -E IntegrationTest
