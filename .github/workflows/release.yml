@@ -37,27 +37,9 @@ jobs:
            devscripts                                     \
            cmake                                          \
            ccache                                         \
-           libboost-dev                                   \
-           libcapstone-dev                                \
-           libgrpc++-dev                                  \
-           libssh2-1-dev                                  \
-           vulkan-validationlayers-dev                    \
-           libz-dev                                       \
-           llvm-dev                                       \
-           libfreetype6-dev                               \
-           libimgui-dev                                   \
-           protobuf-compiler-grpc                         \
-           pkg-config                                     \
-           libvulkan-volk-dev                             \
-           libvulkan-dev                                  \
-           libopengl-dev                                  \
-           libglx-dev                                     \
-           mesa-common-dev                                \
-           qtbase5-dev                                    \
-           libgtest-dev                                   \
-           libgmock-dev                                   \
            git                                            \
-           libprotobuf-dev
+      - name: Install Debian Build Dependencies
+        run: mk-build-deps --install debian/control
       - run: mkdir build && cd build
       - name: Save CCache Timestamp
         id: ccache_timestamp
