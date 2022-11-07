@@ -713,7 +713,7 @@ TEST_F(InstrumentFunctionTest, DoSomething) {
 }
 
 TEST_F(InstrumentFunctionTest, CheckStackAlignedTo16Bytes) {
-#if !defined(NDEBUG)
+#if defined(NDEBUG)
   GTEST_SKIP();
 #endif
   RunChild(&DoSomething, "DoSomething");
