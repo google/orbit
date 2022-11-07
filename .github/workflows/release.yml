@@ -1,0 +1,76 @@
+# Copyright (c) 2022 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+name: build-and-test
+on:
+  schedule:
+  - cron: '0 7 * * *'
+  # This is for testing the action only.
+  pull_request:
+    branches:
+    - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-debian-package:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    env:
+      CCACHE_BASEDIR: "${GITHUB_WORKSPACE}"
+      CCACHE_DIR: "${GITHUB_WORKSPACE}/.ccache"
+      CCACHE_COMPRESS: "true"
+      CCACHE_COMPRESSLEVEL: "6"
+      CCACHE_MAXSIZE: "400M"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+      - name: Install dependencies
+        run: |
+           sudo apt update &&                             \
+           sudo apt install --yes --no-install-recommends \
+           build-essential                                \
+           cmake                                          \
+           ccache                                         \
+           libboost-dev                                   \
+           libcapstone-dev                                \
+           libgrpc++-dev                                  \
+           libssh2-1-dev                                  \
+           vulkan-validationlayers-dev                    \
+           libz-dev                                       \
+           llvm-dev                                       \
+           libfreetype6-dev                               \
+           libimgui-dev                                   \
+           protobuf-compiler-grpc                         \
+           pkg-config                                     \
+           libvulkan-volk-dev                             \
+           libvulkan-dev                                  \
+           libopengl-dev                                  \
+           libglx-dev                                     \
+           mesa-common-dev                                \
+           qtbase5-dev                                    \
+           libgtest-dev                                   \
+           libgmock-dev                                   \
+           git                                            \
+           libprotobuf-dev
+      - run: mkdir build && cd build
+      - name: Save CCache Timestamp
+        id: ccache_timestamp
+        run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
+      - name: Setup CCache Files
+        uses: actions/cache@v3
+        with:
+          path: .ccache
+          key: ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+          restore-keys: |
+            ccache-
+      - run: ccache -p
+      - run: ccache -z
+      - name: Build Debian Package
+        run: debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache -b
+      - name: CCache Stats
+        run: ccache -s
