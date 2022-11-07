@@ -397,35 +397,20 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
       std::unique_ptr<PickingUserData> user_data =
           CreatePickingUserData(primitive_assembler, *timer_info);
 
-      const float start_x = timeline_info_->GetWorldFromTick(timer_info->start());
-      const float end_x = timeline_info_->GetWorldFromTick(timer_info->end());
-      // First we are using floor and ceil to extend points to the pixel borders. After we are
-      // adding 0.5 to move the extended value to the center of the pixel.
-      const float kHalfPixel = 0.5f;
-      const float extended_start_x = floorf(start_x) + kHalfPixel;
-      const float extended_end_x = ceil(end_x) + kHalfPixel;
+      auto box_height = GetDefaultBoxHeight();
+      const auto [pos_x, size_x] =
+          timeline_info_->GetBoxPosXAndWidthFromTicks(timer_info->start(), timer_info->end());
+      const Vec2 pos = {pos_x, world_timer_y};
+      const Vec2 size = {size_x, box_height};
 
-      float box_height = GetDefaultBoxHeight();
-      const Vec2 pos = {extended_start_x, world_timer_y};
-      const Vec2 size = {extended_end_x - extended_start_x, box_height};
-
-      // We are optimizing rendering by drawing the boxes with 1 pixel width as lines.
-      if (size[0] > 1.5f) {
-        if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
-          DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
-        }
-        primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
-        if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
-          primitive_assembler.AddQuadBorder(
-              MakeBox(pos, size), GlCanvas::kZValueBoxBorder, TimerTrack::kBoxBorderColor,
-              CreatePickingUserData(primitive_assembler, *timer_info));
-        }
-      } else {
-        // In this case size should be equal to 1. We will use the middle point of the start and
-        // end, so there are no empty spaces when we combine boxes with lines.
-        const float kHalfSize = 0.5f;
-        primitive_assembler.AddVerticalLine({pos[0] + kHalfSize, pos[1]}, box_height, draw_data.z,
-                                            color, std::move(user_data));
+      if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
+        DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
+      }
+      primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+      if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
+        primitive_assembler.AddQuadBorder(MakeBox(pos, size), GlCanvas::kZValueBoxBorder,
+                                          TimerTrack::kBoxBorderColor,
+                                          CreatePickingUserData(primitive_assembler, *timer_info));
       }
     }
   }
