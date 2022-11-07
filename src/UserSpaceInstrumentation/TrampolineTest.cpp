@@ -713,6 +713,9 @@ TEST_F(InstrumentFunctionTest, DoSomething) {
 }
 
 TEST_F(InstrumentFunctionTest, CheckStackAlignedTo16Bytes) {
+#if !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   RunChild(&DoSomething, "DoSomething");
   PrepareInstrumentation("EntryPayloadAlignedCopy", kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
