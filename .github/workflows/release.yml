@@ -38,6 +38,7 @@ jobs:
            cmake                                          \
            ccache                                         \
            git                                            \
+           equivs
       - name: Install Debian Build Dependencies
         run: mk-build-deps --install debian/control
       - run: mkdir build && cd build
