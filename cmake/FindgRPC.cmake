@@ -4,7 +4,7 @@
 
 find_package(gRPC CONFIG QUIET)
 
-if(TARGET gRPC::gRPC)
+if(TARGET grpc::grpc)
   return()
 endif()
 
