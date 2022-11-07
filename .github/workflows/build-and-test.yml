@@ -70,10 +70,10 @@ jobs:
             ccache-
       - name: CMake Configure
         run: |
-          cmake -DCMAKE_BUILD_TYPE=Release       \
-           -DCMAKE_CXX_FLAGS="-march=sandybridge" \
-           -DCMAKE_C_COMPILER_LAUNCHER=ccache     \
-           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache   \
+          cmake -DCMAKE_BUILD_TYPE=Release                                                             \
+           -DCMAKE_CXX_FLAGS="-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer" \
+           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                          \
+           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
            ${GITHUB_WORKSPACE}
       - run: ccache -p
       - run: ccache -z
