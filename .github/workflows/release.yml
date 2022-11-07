@@ -38,7 +38,8 @@ jobs:
            cmake                                          \
            ccache                                         \
            git                                            \
-           equivs
+           equivs                                         \
+           fakeroot
       - name: Install Debian Build Dependencies
         run: mk-build-deps --install debian/control
       - run: mkdir build && cd build
