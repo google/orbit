@@ -31,7 +31,6 @@ jobs:
         with:
           fetch-depth: '0'
           path: workspace
-      - run: cd workspace
       - name: Install dependencies
         run: |
            sudo apt update &&                             \
@@ -44,7 +43,7 @@ jobs:
            equivs                                         \
            fakeroot
       - name: Install Debian Build Dependencies
-        run: ls . && sudo mk-build-deps --install debian/control
+        run: cd workspace && ls . && sudo mk-build-deps --install debian/control
       - run: mkdir build && cd build
       - name: Save CCache Timestamp
         id: ccache_timestamp
