@@ -21,9 +21,10 @@ namespace orbit_service {
 
 class OrbitService {
  public:
-  explicit OrbitService(uint16_t grpc_port, bool start_producer_side_server, bool dev_mode)
+  explicit OrbitService(uint16_t grpc_port, std::optional<std::string> producer_side_server_address,
+                        bool dev_mode)
       : grpc_port_{grpc_port},
-        start_producer_side_server_{start_producer_side_server},
+        producer_side_server_address_{std::move(producer_side_server_address)},
         dev_mode_{dev_mode} {}
 
   ErrorMessageOr<void> Run(std::atomic<bool>* exit_requested);
@@ -32,7 +33,7 @@ class OrbitService {
   [[nodiscard]] bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
 
   uint16_t grpc_port_;
-  bool start_producer_side_server_;
+  std::optional<std::string> producer_side_server_address_;
   bool dev_mode_;
 
   std::optional<std::chrono::time_point<std::chrono::steady_clock>> last_stdin_message_ =

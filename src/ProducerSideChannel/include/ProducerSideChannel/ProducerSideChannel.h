@@ -13,24 +13,21 @@
 
 namespace orbit_producer_side_channel {
 
+#ifdef _WIN32
 // This is the default server address used for the communication between producers of CaptureEvents
-// and OrbitService on Windows.
-constexpr const char* kProducerSideWindowsServerAddress = "localhost:1789";
+// and OrbitService on Windows
+constexpr const char* kProducerSideDefaultServerAddress = "localhost:1789";
 
-// This is the default path of the Unix domain socket used for the communication
-// between producers of CaptureEvents and OrbitService.
-constexpr const char* kProducerSideUnixDomainSocketPath = "/tmp/orbit-producer-side-socket";
+#else
+// This is the default server address used for the communication between producers of CaptureEvents
+// and OrbitService. On Linux we use a unix domain socket.
+constexpr const char* kProducerSideDefaultServerAddress = "unix:/tmp/orbit-producer-side-socket";
+#endif
 
 // This function returns a gRPC channel that uses a Unix domain socket,
 // by default the one specified by kProducerSideUnixDomainSocketPath.
 inline std::shared_ptr<grpc::Channel> CreateProducerSideChannel(
-    std::string_view unix_domain_socket_path = kProducerSideUnixDomainSocketPath) {
-#ifdef WIN32
-  std::string server_address = kProducerSideWindowsServerAddress;
-#else
-  std::string server_address = absl::StrFormat("unix:%s", unix_domain_socket_path);
-#endif
-
+    std::string_view server_address = kProducerSideDefaultServerAddress) {
   grpc::ChannelArguments channel_arguments;
   // Significantly reduce the gRPC channel's reconnection backoff time. Defaults for min and max
   // would be 20 seconds and 2 minutes. That's too much for us, as we want a producer to quickly
@@ -41,7 +38,7 @@ inline std::shared_ptr<grpc::Channel> CreateProducerSideChannel(
   channel_arguments.SetInt(GRPC_ARG_MIN_RECONNECT_BACKOFF_MS, kMinReconnectBackoffMs);
   channel_arguments.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, kMaxReconnectBackoffMs);
 
-  return grpc::CreateCustomChannel(server_address, grpc::InsecureChannelCredentials(),
+  return grpc::CreateCustomChannel(std::string{server_address}, grpc::InsecureChannelCredentials(),
                                    channel_arguments);
 }
 

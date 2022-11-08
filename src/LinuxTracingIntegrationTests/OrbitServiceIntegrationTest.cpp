@@ -42,9 +42,12 @@ constexpr uint16_t kOrbitServicePort = 44765;
 int OrbitServiceMain() {
   ORBIT_LOG("OrbitService started");
   std::atomic<bool> exit_requested = false;
+  std::string producer_side_server_address =
+      absl::StrFormat("unix:/tmp/orbit-producer-side-socket-%d", orbit_base::GetCurrentProcessId());
+
   // OrbitService's loop terminates when EOF is received, no need to manipulate exit_requested.
   ErrorMessageOr<void> error_message =
-      orbit_service::OrbitService{kOrbitServicePort, /*start_producer_side_server=*/true,
+      orbit_service::OrbitService{kOrbitServicePort, producer_side_server_address,
                                   /*dev_mode=*/false}
           .Run(&exit_requested);
 

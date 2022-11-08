@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <string>
 
+#include "ProducerSideChannel/ProducerSideChannel.h"
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -31,6 +33,11 @@ ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 ABSL_FLAG(bool, producer_side_server, true,
           "Start the producer-side server: set it to false if you need to start a second instance "
           "of OrbitService");
+
+ABSL_FLAG(std::string, producer_side_server_address,
+          orbit_producer_side_channel::kProducerSideDefaultServerAddress,
+          "The producer side server will list on the given address. It accepts either port and ip "
+          "(<<IP>>:<<PORT>>) or a unix domain socket path (unix:<</my/path>>).");
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode");
 
@@ -99,11 +106,14 @@ int main(int argc, char** argv) {
   InstallSigintHandler();
 
   const uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
-  const bool start_producer_side_server = absl::GetFlag(FLAGS_producer_side_server);
   const bool dev_mode = absl::GetFlag(FLAGS_devmode);
+  std::optional<std::string> producer_side_server_address{};
+  if (absl::GetFlag(FLAGS_producer_side_server)) {
+    producer_side_server_address = absl::GetFlag(FLAGS_producer_side_server_address);
+  }
 
   exit_requested = false;
-  orbit_service::OrbitService service{grpc_port, start_producer_side_server, dev_mode};
+  orbit_service::OrbitService service{grpc_port, std::move(producer_side_server_address), dev_mode};
   auto result = service.Run(&exit_requested);
 
   if (!result.has_error()) return 0;

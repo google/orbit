@@ -140,9 +140,9 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
               CreateGrpcServer(grpc_port_, dev_mode_));
 
   std::unique_ptr<ProducerSideServer> producer_side_server;
-  if (start_producer_side_server_) {
-    OUTCOME_TRY(producer_side_server,
-                orbit_producer_side_service::BuildAndStartProducerSideServer());
+  if (producer_side_server_address_.has_value()) {
+    OUTCOME_TRY(producer_side_server, orbit_producer_side_service::BuildAndStartProducerSideServer(
+                                          producer_side_server_address_.value()));
     grpc_server->AddCaptureStartStopListener(producer_side_server.get());
   }
 
@@ -185,7 +185,7 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
     std::this_thread::sleep_for(std::chrono::milliseconds{200});
   }
 
-  if (start_producer_side_server_) {
+  if (producer_side_server_address_.has_value()) {
     producer_side_server->ShutdownAndWait();
     grpc_server->RemoveCaptureStartStopListener(producer_side_server.get());
   }

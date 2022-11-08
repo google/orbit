@@ -17,17 +17,9 @@ target_sources(ProducerSideService PUBLIC
         include/ProducerSideService/ProducerSideServiceImpl.h)    
         
 target_sources(ProducerSideService PRIVATE
-        BuildAndStartProducerSideServerWithUri.h
+        BuildAndStartProducerSideServer.cpp
         ProducerSideServer.cpp
         ProducerSideServiceImpl.cpp)
-
-if (WIN32)        
-target_sources(ProducerSideService PRIVATE
-        BuildAndStartProducerSideServerWindows.cpp)
-else()
-target_sources(ProducerSideService PRIVATE
-        BuildAndStartProducerSideServerLinux.cpp)
-endif()
 
 target_link_libraries(ProducerSideService PUBLIC
         CaptureServiceBase

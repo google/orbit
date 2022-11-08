@@ -12,7 +12,8 @@
 
 namespace orbit_producer_side_service {
 
-ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServer();
+ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServer(
+    std::string_view server_address);
 }  // namespace orbit_producer_side_service
 
 #endif  // ORBIT_PRODUCER_SIDE_SERVICE_BUILD_AND_START_PRODUCER_SIDE_SERVER_H_
