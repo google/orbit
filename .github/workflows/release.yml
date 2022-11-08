@@ -71,6 +71,7 @@ jobs:
              -b
       - name: CCache Stats
         run: ccache -s
+      - run: ls -la .
       - name: Archive Debian Packages
         uses: actions/upload-artifact@v3
         with:
