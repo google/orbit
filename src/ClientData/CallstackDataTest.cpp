@@ -237,7 +237,7 @@ template <typename T>
   return slice;
 }
 
-struct FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest {
+struct ForEachCallstackEventOfTidInTimeRangeDiscretizedTestCase {
   std::string test_name;
   uint32_t tid;
   uint64_t start_ns;
@@ -247,10 +247,10 @@ struct FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest {
 };
 
 using ForEachCallstackEventOfTidInTimeRangeDiscretizedTest =
-    TestWithParam<FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest>;
+    TestWithParam<ForEachCallstackEventOfTidInTimeRangeDiscretizedTestCase>;
 
 TEST_P(ForEachCallstackEventOfTidInTimeRangeDiscretizedTest, IterationIsCorrect) {
-  const FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest& test_case = GetParam();
+  const ForEachCallstackEventOfTidInTimeRangeDiscretizedTestCase& test_case = GetParam();
   const CallstackData* callstack_data = kCallstackDataWithEvents.get();
 
   std::vector<CallstackEvent> visited_callstack_list;
@@ -271,7 +271,7 @@ constexpr uint32_t kResolution = 2000;
 INSTANTIATE_TEST_SUITE_P(
     ForEachCallstackEventOfTidInTimeRangeDiscretizedTests,
     ForEachCallstackEventOfTidInTimeRangeDiscretizedTest,
-    ValuesIn<FormattingForEachCallstackEventOfTidInTimeRangeDiscretizedTest>({
+    ValuesIn<ForEachCallstackEventOfTidInTimeRangeDiscretizedTestCase>({
         {"NormalTimeRange", kTid, kStartNs, kEndNs, kResolution, {0, 1, 3}},
         {"DifferentTid", kAnotherTid, kStartNs, kEndNs, kResolution, {2}},
         {"SmallTimeRange", kTid, kStartNs, kTimestamps[2] - 1, kResolution, {0, 1}},
@@ -292,7 +292,7 @@ constexpr auto kExpectAny = [](const auto& actual, const auto& expected) {
   EXPECT_THAT(actual[0], AnyOfArray(expected));
 };
 
-struct FormattingForEachCallstackEventInTimeRangeDiscretizedTest {
+struct ForEachCallstackEventInTimeRangeDiscretizedTestCase {
   std::string test_name;
   absl::FunctionRef<void(std::vector<CallstackEvent>, std::vector<CallstackEvent>)> expect;
   uint64_t start_ns;
@@ -302,9 +302,9 @@ struct FormattingForEachCallstackEventInTimeRangeDiscretizedTest {
 };
 
 using ForEachCallstackEventInTimeRangeDiscretizedTest =
-    TestWithParam<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>;
+    TestWithParam<ForEachCallstackEventInTimeRangeDiscretizedTestCase>;
 TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
-  const FormattingForEachCallstackEventInTimeRangeDiscretizedTest& test_case = GetParam();
+  const ForEachCallstackEventInTimeRangeDiscretizedTestCase& test_case = GetParam();
   const CallstackData* callstack_data = kCallstackDataWithEvents.get();
 
   std::vector<CallstackEvent> visited_callstack_list;
@@ -319,7 +319,7 @@ TEST_P(ForEachCallstackEventInTimeRangeDiscretizedTest, IterationIsCorrect) {
 INSTANTIATE_TEST_SUITE_P(
     ForEachCallstackEventInTimeRangeDiscretizedTests,
     ForEachCallstackEventInTimeRangeDiscretizedTest,
-    ValuesIn<FormattingForEachCallstackEventInTimeRangeDiscretizedTest>({
+    ValuesIn<ForEachCallstackEventInTimeRangeDiscretizedTestCase>({
         {"NormalTimeRange", kExpectAll, kStartNs, kEndNs, kResolution, {0, 1, 2, 3}},
         {"SmallTimeRange", kExpectAll, kStartNs, kTimestamps[2] - 1, kResolution, {0, 1}},
         // When max_timestamp is std::numeric_limits<uint64_t>::max(), each callstack should be draw
