@@ -37,8 +37,6 @@ if(WIN32)
   add_dependencies(Orbit OrbitQtTests)
 endif()
 
-strip_symbols(Orbit)
-
 if (NOT WIN32)
 install(TARGETS Orbit
         CONFIGURATIONS Release

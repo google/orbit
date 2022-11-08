@@ -29,8 +29,6 @@ target_link_libraries(Api PUBLIC
         OrbitBase
         ProducerSideChannel)
 
-strip_symbols(Api)
-
 if (NOT WIN32)
 install(TARGETS Api
         CONFIGURATIONS Release

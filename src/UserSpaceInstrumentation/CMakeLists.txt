@@ -86,8 +86,6 @@ target_link_libraries(OrbitUserSpaceInstrumentation PUBLIC
         OrbitBase
         ProducerSideChannel)
 
-strip_symbols(OrbitUserSpaceInstrumentation)
-
 if (NOT WIN32)
 install(TARGETS OrbitUserSpaceInstrumentation
         CONFIGURATIONS Release

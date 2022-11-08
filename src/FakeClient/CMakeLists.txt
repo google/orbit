@@ -30,5 +30,3 @@ target_link_libraries(OrbitFakeClient PRIVATE
         absl::flat_hash_map
         absl::strings
         absl::time)
-
-strip_symbols(OrbitFakeClient)

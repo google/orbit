@@ -51,8 +51,6 @@ add_custom_command(TARGET OrbitVulkanLayer POST_BUILD COMMAND ${CMAKE_COMMAND}
 target_link_libraries(OrbitVulkanLayer PRIVATE
         OrbitVulkanLayerInterface)
 
-strip_symbols(OrbitVulkanLayer)
-
 if (NOT WIN32)
 install(TARGETS OrbitVulkanLayer
         CONFIGURATIONS Release
