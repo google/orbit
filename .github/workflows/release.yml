@@ -32,6 +32,7 @@ jobs:
           fetch-depth: '0'
           path: orbit
       - run: cd orbit
+      - run: ls .
       - name: Install dependencies
         run: |
            sudo apt update &&                             \
@@ -44,7 +45,7 @@ jobs:
            equivs                                         \
            fakeroot
       - name: Install Debian Build Dependencies
-        run: ls && sudo mk-build-deps --install debian/control
+        run: ls . && sudo mk-build-deps --install debian/control
       - run: mkdir build && cd build
       - name: Save CCache Timestamp
         id: ccache_timestamp
