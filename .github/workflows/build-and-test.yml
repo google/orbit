@@ -101,7 +101,7 @@ jobs:
             ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-
             ccache
       - name: CMake Configure
-          working-directory: ./workspace
+        working-directory: ./build
         env:
           CXX: ${{ matrix.cxx }}
           CC: ${{ matrix.cc }}
