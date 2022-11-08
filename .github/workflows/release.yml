@@ -62,6 +62,7 @@ jobs:
         run: |
              debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache \
              --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache       \
+             --preserve-envvar=GITHUB_WORKSPACE                    \
              --preserve-envvar=CCACHE_BASEDIR                      \
              --preserve-envvar=CCACHE_DIR                          \
              --preserve-envvar=CCACHE_COMPRESS                     \
