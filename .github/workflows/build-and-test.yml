@@ -88,18 +88,18 @@ jobs:
            libgmock-dev                                   \
            git                                            \
            libprotobuf-dev
-      - run: mkdir build
       - name: Save CCache Timestamp
         id: ccache_timestamp
         run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
       - name: Setup CCache Files
         uses: actions/cache@v3
         with:
-          path: .ccache
+          path: ${CCACHE_DIR}
           key: ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-
             ccache
+      - run: mkdir build
       - name: CMake Configure
         working-directory: ./build
         env:
