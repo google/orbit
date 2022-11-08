@@ -114,8 +114,10 @@ jobs:
       - run: ccache -p
       - run: ccache -z
       - name: CMake Build
+        working-directory: ./build
         run: cmake --build .
       - name: CCache Stats
         run: ccache -s
       - name: CMake Test
+        working-directory: ./build
         run: ctest --output-on-failure -E IntegrationTest
