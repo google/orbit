@@ -367,20 +367,6 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   thread_track_data_provider_->AddTimer(timer_info);
 }
 
-[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
-    const internal::DrawData& draw_data, const orbit_gl::TimelineInfoInterface* timeline_info,
-    const TimerInfo& timer_info) {
-  double start_us = timeline_info->GetUsFromTick(timer_info.start());
-  double end_us = timeline_info->GetUsFromTick(timer_info.end());
-  double elapsed_us = end_us - start_us;
-  double normalized_start = start_us * draw_data.inv_time_window;
-  double normalized_length = elapsed_us * draw_data.inv_time_window;
-  float world_timer_width = static_cast<float>(normalized_length * draw_data.track_width);
-  float world_timer_x =
-      static_cast<float>(draw_data.track_start_x + normalized_start * draw_data.track_width);
-  return {world_timer_x, world_timer_width};
-}
-
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -412,24 +398,19 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
           CreatePickingUserData(primitive_assembler, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, timeline_info_, *timer_info);
+      const auto [pos_x, size_x] =
+          timeline_info_->GetBoxPosXAndWidthFromTicks(timer_info->start(), timer_info->end());
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 
-      auto timer_duration = timer_info->end() - timer_info->start();
-      if (timer_duration > draw_data.ns_per_pixel) {
-        if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
-          DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
-        }
-        primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
-        if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
-          primitive_assembler.AddQuadBorder(
-              MakeBox(pos, size), GlCanvas::kZValueBoxBorder, TimerTrack::kBoxBorderColor,
-              CreatePickingUserData(primitive_assembler, *timer_info));
-        }
-      } else {
-        primitive_assembler.AddVerticalLine(pos, box_height, draw_data.z, color,
-                                            std::move(user_data));
+      if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
+        DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
+      }
+      primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+      if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
+        primitive_assembler.AddQuadBorder(MakeBox(pos, size), GlCanvas::kZValueBoxBorder,
+                                          TimerTrack::kBoxBorderColor,
+                                          CreatePickingUserData(primitive_assembler, *timer_info));
       }
     }
   }
