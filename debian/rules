@@ -9,4 +9,4 @@ override_dh_auto_configure:
 	      -DCMAKE_BUILD_TYPE=Release
 
 override_dh_auto_build:
-  dh_auto_build -- VERBOSE=1
+	dh_auto_build -- VERBOSE=1

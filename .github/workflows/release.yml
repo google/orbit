@@ -60,7 +60,14 @@ jobs:
       - run: ccache -p
       - run: ccache -z
       - name: Build Debian Package
-        run: debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache -b
+        run: debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache \
+             --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache       \
+             --preserve-envvar=CCACHE_BASEDIR                      \
+             --preserve-envvar=CCACHE_DIR                          \
+             --preserve-envvar=CCACHE_COMPRESS                     \
+             --preserve-envvar=CCACHE_COMPRESSLEVEL                \
+             --preserve-envvar=CCACHE_MAXSIZE                      \
+             -b
       - name: CCache Stats
         run: ccache -s
       - name: Archive Debian Packages
