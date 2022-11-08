@@ -6,7 +6,7 @@
 
 namespace orbit_client_data {
 
-uint32_t GetPixelNumber(uint64_t timestamp_ns, uint32_t resolution, uint64_t start_ns,
+uint64_t GetPixelNumber(uint64_t timestamp_ns, uint32_t resolution, uint64_t start_ns,
                         uint64_t end_ns) {
   uint64_t current_ns_from_start = timestamp_ns - start_ns;
   uint64_t total_ns = end_ns - start_ns;
