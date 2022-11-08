@@ -31,8 +31,7 @@ jobs:
         with:
           fetch-depth: '0'
           path: orbit
-      - run: ls .
-      - run: ls orbit
+      - run: cd orbit
       - name: Install dependencies
         run: |
            sudo apt update &&                             \
