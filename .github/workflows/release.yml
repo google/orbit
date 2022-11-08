@@ -75,4 +75,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: debian-packages
-          path: *.deb
+          path: | 
+            *.deb
