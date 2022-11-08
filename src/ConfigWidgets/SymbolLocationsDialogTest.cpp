@@ -79,21 +79,21 @@ class SymbolLocationsDialogTest : public ::testing::Test {
     SetLoadMappings({});
     SetExpectedSaveMappings({});
   }
-  static void ScheduleMessageBoxCancellation(SymbolLocationsDialog* dialog, bool& called) {
+  static void ScheduleMessageBoxCancellation(SymbolLocationsDialog* dialog, bool* called) {
     QMetaObject::invokeMethod(
         dialog,
-        [&]() {
+        [=]() {
           auto* message_box = dialog->findChild<QMessageBox*>();
           ASSERT_NE(message_box, nullptr);
           message_box->reject();
-          called = true;
+          *called = true;
         },
         Qt::QueuedConnection);
   }
   static void ScheduleMessageBoxAcceptOverride(SymbolLocationsDialog* dialog, bool* called) {
     QMetaObject::invokeMethod(
         dialog,
-        [&]() {
+        [=]() {
           auto* message_box = dialog->findChild<QMessageBox*>();
           ASSERT_NE(message_box, nullptr);
           // Since the override button is a "custom button" (added via addButton), it is hard to get
@@ -339,7 +339,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
 
   {  // build id mismatch. Warning is displayed and dismissed
     bool message_box_cancelled = false;
-    ScheduleMessageBoxCancellation(&dialog, message_box_cancelled);
+    ScheduleMessageBoxCancellation(&dialog, &message_box_cancelled);
     EXPECT_THAT(dialog.TryAddSymbolFile(no_symbols_elf_stale_debug), HasValue());
     EXPECT_TRUE(message_box_cancelled);
     EXPECT_EQ(list_widget->count(), 1);
