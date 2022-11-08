@@ -44,8 +44,6 @@ target_link_libraries(OrbitService PRIVATE
   absl::flags_usage
   absl::flags_parse)
 
-strip_symbols(OrbitService)
-
 if (NOT WIN32)
 install(TARGETS OrbitService
         CONFIGURATIONS Release

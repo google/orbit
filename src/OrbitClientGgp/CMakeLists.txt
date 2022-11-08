@@ -38,5 +38,3 @@ target_link_libraries(OrbitClientGgp PRIVATE
     absl::flags
     absl::flags_parse
     absl::flags_usage)
-
-strip_symbols(OrbitClientGgp)

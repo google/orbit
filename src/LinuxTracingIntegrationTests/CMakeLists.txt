@@ -15,8 +15,6 @@ target_link_libraries(IntegrationTestPuppetSharedObject PUBLIC
         dl
         OrbitBase)
 
-strip_symbols(IntegrationTestPuppetSharedObject)
-
 
 add_library(IntegrationTestCommons STATIC)
 
@@ -65,8 +63,6 @@ target_link_libraries(LinuxTracingIntegrationTests PRIVATE
         absl::strings
         absl::synchronization)
 
-strip_symbols(LinuxTracingIntegrationTests)
-
 register_test(LinuxTracingIntegrationTests)
 
 
@@ -93,7 +89,5 @@ target_link_libraries(OrbitServiceIntegrationTests PRIVATE
         absl::flat_hash_set
         absl::strings
         absl::synchronization)
-
-strip_symbols(OrbitServiceIntegrationTests)
 
 register_test(OrbitServiceIntegrationTests)
