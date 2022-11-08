@@ -10,15 +10,46 @@ on:
   pull_request:
     branches:
       - 'main'
+  schedule:
+  - cron: '0 7 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-test-ubuntu:
+  job:
+    name: ${{ matrix.build_type }}.${{ matrix.cc }}.build-and-test-ubuntu
     runs-on: ubuntu-22.04
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "GCC Release",
+            build_type: 'Release',
+            cc: "gcc",
+            cxx: "g++"
+        }
+        - {
+          name: "GCC Debug",
+          build_type: 'Debug',
+          cc: "gcc",
+          cxx: "g++"
+        }
+        - {
+            name: "Clang Release",
+            build_type: 'Release',
+            cc: "clang",
+            cxx: "clang++"
+        }
+        - {
+            name: "Clang Debug",
+            build_type: 'Debug',
+            cc: "clang",
+            cxx: "clang++"
+        }
     env:
       CCACHE_BASEDIR: "${GITHUB_WORKSPACE}"
       CCACHE_DIR: "${GITHUB_WORKSPACE}/.ccache"
@@ -57,7 +88,7 @@ jobs:
            libgmock-dev                                   \
            git                                            \
            libprotobuf-dev
-      - run: mkdir build && cd build
+      - run: mkdir build
       - name: Save CCache Timestamp
         id: ccache_timestamp
         run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
@@ -65,12 +96,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .ccache
-          key: ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+          key: ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
-            ccache-
+            ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-
+            ccache
       - name: CMake Configure
+          working-directory: ./workspace
+        env:
+          CXX: ${{ matrix.cxx }}
+          CC: ${{ matrix.cc }}
         run: |
-          cmake -DCMAKE_BUILD_TYPE=Release                                                             \
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}                                            \
            -DCMAKE_CXX_FLAGS="-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer" \
            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                          \
            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
