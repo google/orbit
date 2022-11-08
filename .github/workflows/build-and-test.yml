@@ -94,11 +94,11 @@ jobs:
       - name: Setup CCache Files
         uses: actions/cache@v3
         with:
-          path: ${CCACHE_DIR}
+          path: .ccache
           key: ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-
-            ccache
+            ccache-
       - run: mkdir build
       - name: CMake Configure
         working-directory: ./build
