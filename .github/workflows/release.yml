@@ -59,7 +59,7 @@ jobs:
       - run: ccache -z
       - name: Build Debian Package
         working-directory: ./workspace
-        run: debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache \
+        run: yes | debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache \
              --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache       \
              --preserve-envvar=CCACHE_BASEDIR                      \
              --preserve-envvar=CCACHE_DIR                          \
