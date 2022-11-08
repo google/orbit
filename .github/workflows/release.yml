@@ -31,7 +31,7 @@ jobs:
         with:
           fetch-depth: '0'
           path: workspace
-      - run: cd workspace/orbit
+      - run: cd workspace
       - name: Install dependencies
         run: |
            sudo apt update &&                             \
