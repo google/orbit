@@ -5,7 +5,7 @@
 name: release
 on:
   schedule:
-  - cron: '0 7 * * *'
+  - cron: '0 7 * * 1,3,5'
   # This is for testing the action only.
   pull_request:
     branches:
@@ -50,12 +50,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .ccache
-          key: ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+          key: debian-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
-            ccache-
+            debian-ccache-
       - run: ccache -p
       - run: ccache -z
       - name: Build Debian Package
         run: debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache --set-envvar=CMAKE_CXX_COMPILER_LAUNCHER=ccache -b
       - name: CCache Stats
         run: ccache -s
+      - name: Archive Debian Packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-packages
+          path: ..
