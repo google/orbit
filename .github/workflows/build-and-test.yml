@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   job:
-    name: ${{ matrix.build_type }}.${{ matrix.cc }}.build-and-test-ubuntu
+    name: ${{ matrix.config.build_type }}.${{ matrix.config.cc }}.build-and-test-ubuntu
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     strategy:
@@ -88,7 +88,6 @@ jobs:
            libgmock-dev                                   \
            git                                            \
            libprotobuf-dev
-      - run: mkdir build
       - name: Save CCache Timestamp
         id: ccache_timestamp
         run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
@@ -96,17 +95,18 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .ccache
-          key: ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+          key: ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
-            ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-
-            ccache
+            ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-
+            ccache-
+      - run: mkdir build
       - name: CMake Configure
-          working-directory: ./workspace
+        working-directory: ./build
         env:
-          CXX: ${{ matrix.cxx }}
-          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.config.cxx }}
+          CC: ${{ matrix.config.cc }}
         run: |
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}                                            \
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}                                     \
            -DCMAKE_CXX_FLAGS="-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer" \
            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                          \
            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
@@ -114,8 +114,10 @@ jobs:
       - run: ccache -p
       - run: ccache -z
       - name: CMake Build
+        working-directory: ./build
         run: cmake --build .
       - name: CCache Stats
         run: ccache -s
       - name: CMake Test
+        working-directory: ./build
         run: ctest --output-on-failure -E IntegrationTest
