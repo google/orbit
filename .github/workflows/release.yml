@@ -53,6 +53,7 @@ jobs:
           key: debian-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
             debian-ccache-
+            ccache-
       - run: ccache -p
       - run: ccache -z
       - name: Build Debian Package
