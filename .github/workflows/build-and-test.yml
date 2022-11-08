@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   job:
-    name: ${{ matrix.build_type }}.${{ matrix.cc }}.build-and-test-ubuntu
+    name: ${{ matrix.config.build_type }}.${{ matrix.config.cc }}.build-and-test-ubuntu
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     strategy:
@@ -96,17 +96,17 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .ccache
-          key: ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+          key: ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
-            ${{ matrix.build_type }}-${{ matrix.cc }}-ccache-
+            ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-
             ccache
       - name: CMake Configure
         working-directory: ./build
         env:
-          CXX: ${{ matrix.cxx }}
-          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.config.cxx }}
+          CC: ${{ matrix.config.cc }}
         run: |
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}                                            \
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.config.build_type }}                                     \
            -DCMAKE_CXX_FLAGS="-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer" \
            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                          \
            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
