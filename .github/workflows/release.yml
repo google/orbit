@@ -26,9 +26,13 @@ jobs:
       CCACHE_COMPRESSLEVEL: "6"
       CCACHE_MAXSIZE: "400M"
     steps:
+      - run: ls .
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
+          path: orbit
+      - run: ls .
+      - run: ls orbit
       - name: Install dependencies
         run: |
            sudo apt update &&                             \
