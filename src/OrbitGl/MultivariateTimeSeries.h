@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 #define ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 
+#include <absl/container/btree_map.h>
 #include <absl/synchronization/mutex.h>
 
 #include <array>
@@ -76,12 +77,8 @@ class MultivariateTimeSeries {
   }
 
   using TimeSeriesEntryIter =
-      typename std::map<uint64_t, std::array<double, Dimension>>::const_iterator;
+      typename absl::btree_map<uint64_t, std::array<double, Dimension>>::const_iterator;
 
-  struct Range {
-    TimeSeriesEntryIter start_inclusive;
-    TimeSeriesEntryIter end_inclusive;
-  };
   // If there is no overlap between time range [min_time, max_time] and [StartTimeInNs(),
   // EndTimeInNs()], return empty array. Otherwise return a range of entries affected by the time
   // range [min_time, max_time] where:
@@ -136,7 +133,8 @@ class MultivariateTimeSeries {
   }
 
   mutable absl::Mutex mutex_;
-  std::map<uint64_t, std::array<double, Dimension>> time_to_series_values_ ABSL_GUARDED_BY(mutex_);
+  absl::btree_map<uint64_t, std::array<double, Dimension>> time_to_series_values_
+      ABSL_GUARDED_BY(mutex_);
   double min_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
   double max_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
 
