@@ -1,5 +1,8 @@
 # ORBIT
 ![builds and tests](https://github.com/google/orbit/actions/workflows/build-and-test.yml/badge.svg?branch=main)
+![Debian package](https://github.com/google/orbit/actions/workflows/release.yml/badge.svg?branch=main)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/google/orbit/badge)](https://api.securityscorecards.dev/projects/github.com/google/orbit)
+
 <img alt="ORBIT Logo" src="contrib/logos/orbit_logo_simple.png" align="right" width="520" >
 
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
