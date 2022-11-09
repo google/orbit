@@ -8,8 +8,8 @@
 
 namespace orbit_client_data {
 
-constexpr uint64_t kStartNs = 100;
-constexpr uint64_t kEndNs = 200;
+constexpr uint64_t kStartNs = 100'000'000'000'000ULL;
+constexpr uint64_t kEndNs = 200'000'000'000'000ULL;
 
 using GetPixelNumberTest = ::testing::TestWithParam<uint32_t>;
 using GetNextPixelBoundaryTimeNsTest = ::testing::TestWithParam<uint32_t>;
@@ -18,7 +18,7 @@ TEST_P(GetPixelNumberTest, FirstPixel) {
   const uint32_t resolution = GetParam();
   EXPECT_EQ(GetPixelNumber(kStartNs, resolution, kStartNs, kEndNs), 0);
 
-  const uint32_t kLastNsForFirstPixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
+  const uint64_t kLastNsForFirstPixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
   EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel, resolution, kStartNs, kEndNs), 0);
   EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel + 1, resolution, kStartNs, kEndNs), 1);
 }
@@ -31,7 +31,7 @@ TEST_P(GetPixelNumberTest, LastPixel) {
 
 INSTANTIATE_TEST_SUITE_P(GetPixelNumberTests, GetPixelNumberTest, testing::Values(1, 20, 30, 100));
 
-TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampAreInRange) {
+TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampsAreInRange) {
   const uint32_t resolution = GetParam();
   constexpr uint64_t visible_ns = kEndNs - kStartNs;  // 100
 
@@ -41,9 +41,11 @@ TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampAreInRange) {
     return 1 + (dividend - 1) / divisor;
   };
 
+  constexpr uint32_t kNumberOfTestedTimestamps = 200;
+  constexpr uint64_t kStep = (kEndNs - kStartNs - 1) / kNumberOfTestedTimestamps + 1;
   // The max number of nanoseconds per pixel can be calculated using a ceil function.
   const uint64_t max_nanoseconds_per_pixel = rounding_up_division(visible_ns, resolution);
-  for (uint64_t timestamp_ns = kStartNs; timestamp_ns < kEndNs; timestamp_ns++) {
+  for (uint64_t timestamp_ns = kStartNs; timestamp_ns < kEndNs; timestamp_ns += kStep) {
     const uint64_t next_pixel_ns =
         GetNextPixelBoundaryTimeNs(timestamp_ns, resolution, kStartNs, kEndNs);
     // The timestamp of the next pixel should be between the current one and the current plus the
@@ -68,12 +70,15 @@ TEST_P(GetNextPixelBoundaryTimeNsTest, NumIterations) {
 }
 
 TEST(GetNextPixelBoundaryTimeNsTest, ExtremeZoomInBorderCase) {
-  constexpr uint64_t visible_ns = kEndNs - kStartNs;
+  constexpr uint64_t kVisibleNs = 100;
 
   // If there are more visible pixels than visible timestamps, we will have several pixels with the
   // same timestamp. In this case to avoid an infinite loop, the next pixel timestamp should be
-  // greater than the one queried.
-  EXPECT_EQ(GetNextPixelBoundaryTimeNs(kStartNs, visible_ns * 10, kStartNs, kEndNs), kStartNs + 1);
+  // greater than the one queried, even if the queried pixel is outside the visible time range.
+  EXPECT_EQ(GetNextPixelBoundaryTimeNs(kStartNs, kVisibleNs * 10, kStartNs, kStartNs + kVisibleNs),
+            kStartNs + 1);
+  EXPECT_EQ(GetNextPixelBoundaryTimeNs(kEndNs, kVisibleNs * 10, kStartNs, kStartNs + kVisibleNs),
+            kEndNs + 1);
 }
 
 INSTANTIATE_TEST_SUITE_P(GetNextPixelBoundaryTimeNsTests, GetNextPixelBoundaryTimeNsTest,
