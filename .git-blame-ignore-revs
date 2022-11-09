@@ -5,3 +5,4 @@
 7e1ae51539672920f3cb2441bce184658dae4e1e  # Initial clang-format
 cea9ffd533106b59e79cc9a2e80c595691b24576  # Bulk clang-format after ColumnLimit change
 748d5b126b19690a5d20d8e1aff375e4d4e35564  # Bulk clang-format after ColumnLimit change
+7a5bc789f9d3555a06a765a1f8bb2ed2938b1506  # Bulk clang-format after switch to clang-format-14
