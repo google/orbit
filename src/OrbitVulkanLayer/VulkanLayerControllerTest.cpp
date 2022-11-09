@@ -734,7 +734,7 @@ TEST_F(
       }));
 
   PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
-      +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*device*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
@@ -808,7 +808,7 @@ TEST_F(VulkanLayerControllerTest,
   };
 
   PFN_vkGetDeviceProcAddr fake_get_device_proc_addr =
-      +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*device*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   PFN_vkGetInstanceProcAddr fake_get_instance_proc_addr =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
@@ -904,7 +904,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnResetCommandPoolToSubmissionTracker)
 TEST_F(VulkanLayerControllerTest, ForwardsOnAllocateCommandBuffersToSubmissionTracker) {
   PFN_vkAllocateCommandBuffers fake_allocate_command_buffers =
       +[](VkDevice /*device*/, const VkCommandBufferAllocateInfo* /*allocate_info*/,
-          VkCommandBuffer *
+          VkCommandBuffer*
           /*command_buffers*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, AllocateCommandBuffers)
@@ -946,7 +946,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnFreeCommandBuffersToSubmissionTracke
 
 TEST_F(VulkanLayerControllerTest, ForwardsOnBeginCommandBufferToSubmissionTracker) {
   PFN_vkBeginCommandBuffer fake_begin_command_buffer =
-      +[](VkCommandBuffer /*command_buffer*/, const VkCommandBufferBeginInfo *
+      +[](VkCommandBuffer /*command_buffer*/, const VkCommandBufferBeginInfo*
           /*begin_info*/) -> VkResult { return VK_SUCCESS; };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
   EXPECT_CALL(*dispatch_table, BeginCommandBuffer)
@@ -1044,7 +1044,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnGetQueueSubmitToSubmissionTracker) {
 
 TEST_F(VulkanLayerControllerTest, ForwardsOnQueuePresentKHRToSubmissionTracker) {
   PFN_vkQueuePresentKHR fake_queue_present =
-      +[](VkQueue /*queue*/, const VkPresentInfoKHR * /*present_info*/) -> VkResult {
+      +[](VkQueue /*queue*/, const VkPresentInfoKHR* /*present_info*/) -> VkResult {
     return VK_SUCCESS;
   };
   const MockDispatchTable* dispatch_table = controller_.dispatch_table();
@@ -1234,7 +1234,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsCreateDebugUtilsMessengerEXTIfExtensio
 
   PFN_vkCreateDebugUtilsMessengerEXT fake =
       +[](VkInstance /*instance*/, const VkDebugUtilsMessengerCreateInfoEXT* /*create_info*/,
-          const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT *
+          const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT*
           /*messenger*/) -> VkResult { return VK_SUCCESS; };
   EXPECT_CALL(*dispatch_table, CreateDebugUtilsMessengerEXT).Times(1).WillOnce(Return(fake));
   controller_.OnCreateDebugUtilsMessengerEXT(instance, nullptr, nullptr, nullptr);
@@ -1336,7 +1336,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsSetDebugUtilsObjectNameEXTIfExtensionS
       .WillOnce(Return(true));
 
   PFN_vkSetDebugUtilsObjectNameEXT fake =
-      +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT * /*name_info*/) -> VkResult {
+      +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT* /*name_info*/) -> VkResult {
     return VK_SUCCESS;
   };
   EXPECT_CALL(*dispatch_table, SetDebugUtilsObjectNameEXT).Times(1).WillOnce(Return(fake));
@@ -1358,7 +1358,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsSetDebugUtilsObjectTagEXTIfExtensionSu
       .WillOnce(Return(true));
 
   PFN_vkSetDebugUtilsObjectTagEXT fake =
-      +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT * /*tag_info*/) -> VkResult {
+      +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT* /*tag_info*/) -> VkResult {
     return VK_SUCCESS;
   };
   EXPECT_CALL(*dispatch_table, SetDebugUtilsObjectTagEXT).Times(1).WillOnce(Return(fake));
@@ -1424,7 +1424,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsDebugMarkerSetObjectNameEXTIfExtension
       .WillOnce(Return(true));
 
   PFN_vkDebugMarkerSetObjectNameEXT fake =
-      +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT * /*name_info*/) -> VkResult {
+      +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT* /*name_info*/) -> VkResult {
     return VK_SUCCESS;
   };
   EXPECT_CALL(*dispatch_table, DebugMarkerSetObjectNameEXT).Times(1).WillOnce(Return(fake));
@@ -1446,7 +1446,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsDebugMarkerSetObjectTagEXTIfExtensionS
       .WillOnce(Return(true));
 
   PFN_vkDebugMarkerSetObjectTagEXT fake =
-      +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT * /*tag*/) -> VkResult {
+      +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT* /*tag*/) -> VkResult {
     return VK_SUCCESS;
   };
   EXPECT_CALL(*dispatch_table, DebugMarkerSetObjectTagEXT).Times(1).WillOnce(Return(fake));
@@ -1469,7 +1469,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsCreateDebugReportCallbackEXTIfExtensio
 
   PFN_vkCreateDebugReportCallbackEXT fake =
       +[](VkInstance /*instance*/, const VkDebugReportCallbackCreateInfoEXT* /*create_info*/,
-          const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT *
+          const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT*
           /*callback*/) -> VkResult { return VK_SUCCESS; };
   EXPECT_CALL(*dispatch_table, CreateDebugReportCallbackEXT).Times(1).WillOnce(Return(fake));
   controller_.OnCreateDebugReportCallbackEXT(instance, nullptr, nullptr, nullptr);

@@ -8,8 +8,8 @@
 
 #include <absl/strings/match.h>
 
-#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "ApiUtils/ApiEnableInfo.h"
+#include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "WindowsUtils/DllInjection.h"

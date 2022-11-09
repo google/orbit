@@ -10,7 +10,9 @@
 // clang-format on
 
 #include <stdint.h>
+
 #include <string>
+
 #include "OrbitBase/Result.h"
 
 namespace orbit_windows_utils {

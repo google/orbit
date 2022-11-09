@@ -3,7 +3,7 @@
 # Copyright (c) 2020 The Orbit Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-clang_format_path="/usr/bin/clang-format-9";
+clang_format_path="/usr/bin/clang-format-14";
 
 # If we are running in git bash this is the default location:
 if  [ -f "/c/Program Files/LLVM/bin/clang-format.exe" ]; then

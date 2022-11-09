@@ -18,7 +18,7 @@ TEST(DispatchTable, CanInitializeInstance) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
-      +[](VkInstance /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
@@ -29,7 +29,7 @@ TEST(DispatchTable, CannotInitializeInstanceTwice) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
-      +[](VkInstance /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
@@ -44,7 +44,7 @@ TEST(DispatchTable, CanRemoveInstance) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
-      +[](VkInstance /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
@@ -55,7 +55,7 @@ TEST(DispatchTable, CanReinitializeInstanceAfterRemove) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
-      +[](VkInstance /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
@@ -67,7 +67,7 @@ TEST(DispatchTable, CanInitializeDevice) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
-      +[](VkDevice /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateDeviceDispatchTable(device, next_get_device_proc_addr_function);
@@ -77,7 +77,7 @@ TEST(DispatchTable, CannotInitializeDeviceTwice) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
-      +[](VkDevice /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateDeviceDispatchTable(device, next_get_device_proc_addr_function);
@@ -90,7 +90,7 @@ TEST(DispatchTable, CanRemoveDevice) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
-      +[](VkDevice /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateDeviceDispatchTable(device, next_get_device_proc_addr_function);
@@ -101,7 +101,7 @@ TEST(DispatchTable, CanReinitializeDeviceAfterRemove) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
-      +[](VkDevice /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateDeviceDispatchTable(device, next_get_device_proc_addr_function);
@@ -113,7 +113,7 @@ TEST(DispatchTable, NoDeviceExtensionAvailable) {
   VkLayerDispatchTable some_dispatch_table = {};
   auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
-      +[](VkDevice /*device*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkDevice /*device*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateDeviceDispatchTable(device, next_get_device_proc_addr_function);
@@ -125,7 +125,7 @@ TEST(DispatchTable, NoInstanceExtensionAvailable) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
   auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
-      +[](VkInstance /*instance*/, const char * /*name*/) -> PFN_vkVoidFunction { return nullptr; };
+      +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
   DispatchTable dispatch_table = {};
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
@@ -154,13 +154,13 @@ TEST(DispatchTable, CanSupportDeviceDebugUtilsExtension) {
     }
     if (strcmp(name, "vkSetDebugUtilsObjectNameEXT") == 0) {
       PFN_vkSetDebugUtilsObjectNameEXT function =
-          +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT*
               /*name_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
     if (strcmp(name, "vkSetDebugUtilsObjectTagEXT") == 0) {
       PFN_vkSetDebugUtilsObjectTagEXT function =
-          +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT*
               /*tag_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -196,7 +196,7 @@ TEST(DispatchTable, CanSupportInstanceDebugUtilsExtension) {
     if (strcmp(name, "vkCreateDebugUtilsMessengerEXT") == 0) {
       PFN_vkCreateDebugUtilsMessengerEXT function =
           +[](VkInstance /*instance*/, const VkDebugUtilsMessengerCreateInfoEXT* /*create_info*/,
-              const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT *
+              const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT*
               /*messenger*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -229,7 +229,7 @@ TEST(DispatchTable, CanSupportDebugReportExtension) {
     if (strcmp(name, "vkCreateDebugReportCallbackEXT") == 0) {
       PFN_vkCreateDebugReportCallbackEXT function =
           +[](VkInstance /*instance*/, const VkDebugReportCallbackCreateInfoEXT* /*create_info*/,
-              const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT *
+              const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT*
               /*messenger*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -277,14 +277,14 @@ TEST(DispatchTable, CanSupportDebugMarkerExtension) {
     }
     if (strcmp(name, "vkDebugMarkerSetObjectTagEXT") == 0) {
       PFN_vkDebugMarkerSetObjectTagEXT function =
-          +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT * /*tag_info*/) -> VkResult {
+          +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT* /*tag_info*/) -> VkResult {
         return VK_SUCCESS;
       };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
     if (strcmp(name, "vkDebugMarkerSetObjectNameEXT") == 0) {
       PFN_vkDebugMarkerSetObjectNameEXT function =
-          +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT*
               /*name_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -304,7 +304,7 @@ TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
     if (strcmp(name, "vkEnumerateDeviceExtensionProperties") == 0) {
       PFN_vkEnumerateDeviceExtensionProperties function =
           +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
-              uint32_t* property_count, VkExtensionProperties *
+              uint32_t* property_count, VkExtensionProperties*
               /*properties*/) -> VkResult {
         *property_count = 42;
         return VK_SUCCESS;
@@ -363,7 +363,7 @@ TEST(DispatchTable, CanCallGetInstanceProcAddr) {
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkGetInstanceProcAddr") == 0) {
-      PFN_vkGetInstanceProcAddr function = +[](VkInstance /*instance*/, const char *
+      PFN_vkGetInstanceProcAddr function = +[](VkInstance /*instance*/, const char*
                                                /*name*/) -> PFN_vkVoidFunction {
         was_called = true;
         return nullptr;
@@ -390,7 +390,7 @@ TEST(DispatchTable, CanCallGetDeviceProcAddr) {
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkGetDeviceProcAddr") == 0) {
-      PFN_vkGetDeviceProcAddr function = +[](VkDevice /*device*/, const char *
+      PFN_vkGetDeviceProcAddr function = +[](VkDevice /*device*/, const char*
                                              /*name*/) -> PFN_vkVoidFunction {
         was_called = true;
         return nullptr;
@@ -440,7 +440,7 @@ TEST(DispatchTable, CanCallAllocateCommandBuffers) {
     if (strcmp(name, "vkAllocateCommandBuffers") == 0) {
       PFN_vkAllocateCommandBuffers function =
           +[](VkDevice /*device*/, const VkCommandBufferAllocateInfo* /*allocate_info*/,
-              VkCommandBuffer *
+              VkCommandBuffer*
               /*command_buffers*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -489,7 +489,7 @@ TEST(DispatchTable, CanCallBeginCommandBuffer) {
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkBeginCommandBuffer") == 0) {
       PFN_vkBeginCommandBuffer function =
-          +[](VkCommandBuffer /*command_buffer*/, const VkCommandBufferBeginInfo *
+          +[](VkCommandBuffer /*command_buffer*/, const VkCommandBufferBeginInfo*
               /*begin_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -631,7 +631,7 @@ TEST(DispatchTable, CanCallQueuePresentKHR) {
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkQueuePresentKHR") == 0) {
-      PFN_vkQueuePresentKHR function = +[](VkQueue /*queue*/, const VkPresentInfoKHR *
+      PFN_vkQueuePresentKHR function = +[](VkQueue /*queue*/, const VkPresentInfoKHR*
                                            /*present_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -655,7 +655,7 @@ TEST(DispatchTable, CanCallCreateQueryPool) {
     if (strcmp(name, "vkCreateQueryPool") == 0) {
       PFN_vkCreateQueryPool function =
           +[](VkDevice /*device*/, const VkQueryPoolCreateInfo* /*create_info*/,
-              const VkAllocationCallbacks* /*allocator*/, VkQueryPool *
+              const VkAllocationCallbacks* /*allocator*/, VkQueryPool*
               /*query_pool*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -837,7 +837,7 @@ TEST(DispatchTable, CanCallSetDebugUtilsObjectNameEXT) {
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkSetDebugUtilsObjectNameEXT") == 0) {
       PFN_vkSetDebugUtilsObjectNameEXT function =
-          +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugUtilsObjectNameInfoEXT*
               /*name_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -859,7 +859,7 @@ TEST(DispatchTable, CanCallSetDebugUtilsObjectTagEXT) {
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkSetDebugUtilsObjectTagEXT") == 0) {
       PFN_vkSetDebugUtilsObjectTagEXT function =
-          +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugUtilsObjectTagInfoEXT*
               /*tag_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -955,7 +955,7 @@ TEST(DispatchTable, CanCallCreateDebugUtilsMessengerEXT) {
     if (strcmp(name, "vkCreateDebugUtilsMessengerEXT") == 0) {
       PFN_vkCreateDebugUtilsMessengerEXT function =
           +[](VkInstance /*instance*/, const VkDebugUtilsMessengerCreateInfoEXT* /*create_info*/,
-              const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT *
+              const VkAllocationCallbacks* /*allocator*/, VkDebugUtilsMessengerEXT*
               /*messenger*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -1030,7 +1030,7 @@ TEST(DispatchTable, CanCallCreateDebugReportCallbackEXT) {
     if (strcmp(name, "vkCreateDebugReportCallbackEXT") == 0) {
       PFN_vkCreateDebugReportCallbackEXT function =
           +[](VkInstance /*instance*/, const VkDebugReportCallbackCreateInfoEXT* /*create_info*/,
-              const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT *
+              const VkAllocationCallbacks* /*allocator*/, VkDebugReportCallbackEXT*
               /*messenger*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }
@@ -1182,7 +1182,7 @@ TEST(DispatchTable, CanCallDebugMarkerSetObjectTagEXT) {
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkDebugMarkerSetObjectTagEXT") == 0) {
       PFN_vkDebugMarkerSetObjectTagEXT function =
-          +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT * /*tag_info*/) -> VkResult {
+          +[](VkDevice /*device*/, const VkDebugMarkerObjectTagInfoEXT* /*tag_info*/) -> VkResult {
         return VK_SUCCESS;
       };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
@@ -1205,7 +1205,7 @@ TEST(DispatchTable, CanCallDebugMarkerSetObjectNameEXT) {
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkDebugMarkerSetObjectNameEXT") == 0) {
       PFN_vkDebugMarkerSetObjectNameEXT function =
-          +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT *
+          +[](VkDevice /*device*/, const VkDebugMarkerObjectNameInfoEXT*
               /*name_info*/) -> VkResult { return VK_SUCCESS; };
       return absl::bit_cast<PFN_vkVoidFunction>(function);
     }

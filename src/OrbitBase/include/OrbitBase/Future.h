@@ -256,7 +256,7 @@ class [[nodiscard]] Future<ErrorMessageOr<T>>
   // Note: Usually `invocable` won't be executed if `executor` gets destroyed before `*this`
   // completes. Check the docs or implementation of `Executor::ScheduleAfter` to be sure.
   template <typename Executor, typename Invocable>
-  auto ThenIfSuccess(Executor * executor, Invocable && invocable) const {
+  auto ThenIfSuccess(Executor* executor, Invocable&& invocable) const {
     return executor->ScheduleAfterIfSuccess(*this, std::forward<Invocable>(invocable));
   }
 };

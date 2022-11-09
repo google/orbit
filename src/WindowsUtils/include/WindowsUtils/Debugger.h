@@ -10,14 +10,14 @@
 #include <psapi.h>
 // clang-format on
 
-#include "OrbitBase/Promise.h"
-#include "OrbitBase/Result.h"
-#include "WindowsUtils/CreateProcess.h"
-
 #include <filesystem>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
+#include "WindowsUtils/CreateProcess.h"
 
 namespace orbit_windows_utils {
 

@@ -140,7 +140,7 @@ TEST_F(GpuQueueSubmissionProcessorTest, DXVKVulkanDebugMarkerEncodesGroupId) {
 
   bool was_called = false;
   static constexpr uint64_t kCommandBufferTextKey = 1234;
-  auto get_string_hash_and_send_if_necessary_fake = [&was_called](const std::string &
+  auto get_string_hash_and_send_if_necessary_fake = [&was_called](const std::string&
                                                                   /*str*/) -> uint64_t {
     was_called = true;
     return kCommandBufferTextKey;
