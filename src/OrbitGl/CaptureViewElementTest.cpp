@@ -105,7 +105,7 @@ TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
 }
 
 const Viewport kViewport(100, 100);
-const TimeGraphLayout kLayout;
+const StaticTimeGraphLayout kLayout;
 
 TEST(CaptureViewElement, ContainsPointRecursively) {
   UnitTestCaptureViewLeafElement elem(nullptr, &kViewport, &kLayout);

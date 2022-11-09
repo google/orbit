@@ -10,6 +10,7 @@
 #include "MockTextRenderer.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
+#include "StaticTimeGraphLayout.h"
 
 namespace orbit_gl {
 
@@ -62,7 +63,7 @@ class CaptureViewElementTester {
 
  protected:
   Viewport viewport_ = Viewport(100, 100);
-  TimeGraphLayout layout_;
+  orbit_gl::StaticTimeGraphLayout layout_;
 
  private:
   void TestWidthPropagationToChildren(CaptureViewElement* element);

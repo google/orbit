@@ -7,6 +7,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "StaticTimeGraphLayout.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -54,7 +55,7 @@ class TrackManagerTest : public ::testing::Test {
     capture_data_->UpdateScopeStats(timer);
   }
 
-  TimeGraphLayout layout_;
+  orbit_gl::StaticTimeGraphLayout layout_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
   TrackManager track_manager_;
 };

@@ -12,7 +12,7 @@
 #include <string>
 
 #include "QtUtils/AssertNoQtLogWarnings.h"
-#include "TimeGraphLayout.h"
+#include "StaticTimeGraphLayout.h"
 #include "TrackManager.h"
 #include "TrackTestData.h"
 #include "TrackTypeItemModel.h"
@@ -43,7 +43,7 @@ class TrackTypeItemModelTest : public ::testing::Test {
   orbit_qt_utils::AssertNoQtLogWarnings log_qt_test_;
   TrackTypeItemModel model_;
 
-  TimeGraphLayout layout_;
+  orbit_gl::StaticTimeGraphLayout layout_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_ =
       orbit_gl::TrackTestData::GenerateTestCaptureData();
   orbit_gl::TrackManager track_manager_ = orbit_gl::TrackManager(
