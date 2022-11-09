@@ -33,12 +33,6 @@ jobs:
             cxx: "g++"
         }
         - {
-          name: "GCC Debug",
-          build_type: 'Debug',
-          cc: "gcc",
-          cxx: "g++"
-        }
-        - {
             name: "Clang Release",
             build_type: 'Release',
             cc: "clang",
