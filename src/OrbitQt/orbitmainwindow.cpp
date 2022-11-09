@@ -118,7 +118,6 @@
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
-#include "TutorialContent.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -388,10 +387,6 @@ void OrbitMainWindow::SetupMainWindow() {
     ui->menuDebug->menuAction()->setVisible(false);
   }
 
-  if (absl::GetFlag(FLAGS_enable_tutorials_feature)) {
-    InitTutorials(this);
-  }
-
   SetupCaptureToolbar();
   SetupTrackConfigurationUi();
 
@@ -463,7 +458,7 @@ void OrbitMainWindow::SetupHintFrame() {
   hint_layout->setMargin(0);
   hint_frame_->setLayout(hint_layout);
   auto* hint_arrow = new QLabel();
-  hint_arrow->setPixmap(QPixmap(":/images/tutorial/grey_arrow_up.png").scaledToHeight(12));
+  hint_arrow->setPixmap(QPixmap(":/actions/grey_arrow_up").scaledToHeight(12));
   hint_layout->addWidget(hint_arrow);
   auto* hint_message = new QLabel("Start a capture here");
   hint_message->setAlignment(Qt::AlignCenter);
@@ -781,8 +776,6 @@ QTabWidget* OrbitMainWindow::FindParentTabWidget(const QWidget* widget) const {
 }
 
 OrbitMainWindow::~OrbitMainWindow() {
-  DeinitTutorials();
-
   ui->selectionBottomUpWidget->Deinitialize();
   ui->bottomUpWidget->Deinitialize();
   ui->selectionTopDownWidget->Deinitialize();

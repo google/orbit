@@ -33,9 +33,7 @@ target_sources(
           opengldetect.h
           resource.h
           TrackConfigurationWidget.h
-          TrackTypeItemModel.h
-          TutorialContent.h
-          TutorialOverlay.h)
+          TrackTypeItemModel.h)
 
 target_sources(
   OrbitQt
@@ -71,11 +69,7 @@ target_sources(
           TrackConfigurationWidget.cpp
           TrackConfigurationWidget.ui
           TrackTypeItemModel.cpp
-          TutorialContent.cpp
-          TutorialOverlay.cpp
-          TutorialOverlay.ui
-          ../../icons/orbiticons.qrc
-          ../../images/orbitimages.qrc)
+          ../../icons/orbiticons.qrc)
 
 target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -112,15 +106,13 @@ add_executable(OrbitQtTests)
 
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapter.h
-                CutoutWidget.h
-                TutorialOverlay.h)
+                CutoutWidget.h)
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 HistogramWidgetTest.cpp
                 MultipleOfValidatorTest.cpp
-                TutorialOverlayTest.cpp
                 TrackTypeItemModelTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

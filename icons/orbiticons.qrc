@@ -44,5 +44,6 @@
     <file alias="alert">outline_report_problem_white_18dp.png</file>
     <file alias="expand_down">outline_expand_more_white_18dp_cropped.png</file>
     <file alias="expand_up">outline_expand_less_white_18dp_cropped.png</file>
+    <file alias="grey_arrow_up">grey_arrow_up.png</file>
   </qresource>
 </RCC>
