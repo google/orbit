@@ -12,7 +12,7 @@ if(NOT TARGET GTest::gmock AND TARGET gtest::gmock)
   add_library(GTest::gmock ALIAS gtest::gmock)
 endif()
 
-include(${CMAKE_SOURCE_DIR}/third_party/cmake/Modules/GoogleTest.cmake)
+include(GoogleTest)
 
 # `register_test` registers a test target with ctest. Individual test
 # cases will be detected automatically and executed in separate processes.
