@@ -25,8 +25,6 @@ ABSL_DECLARE_FLAG(bool, local);
 
 ABSL_DECLARE_FLAG(std::string, process_name);
 
-ABSL_DECLARE_FLAG(bool, enable_tutorials_feature);
-
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 

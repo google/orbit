@@ -23,8 +23,6 @@ ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 ABSL_FLAG(std::string, process_name, "",
           "Automatically select and connect to the specified process");
 
-ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
-
 // TODO(kuebler): remove this once we have the validator complete
 ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
 
