@@ -1,6 +1,6 @@
 # ORBIT
 ![builds and tests](https://github.com/google/orbit/actions/workflows/build-and-test.yml/badge.svg?branch=main)
-<img alt="ORBIT Logo" src="logos/orbit_logo_simple.png" align="right" width="520" >
+<img alt="ORBIT Logo" src="contrib/logos/orbit_logo_simple.png" align="right" width="520" >
 
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
 standalone **native** application profiler for Windows and Linux. It supports
@@ -153,4 +153,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 
-[orbit_youtube_presentation]: logos/orbit_presentation_youtube.png
+[orbit_youtube_presentation]: contrib/logos/orbit_presentation_youtube.png
