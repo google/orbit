@@ -9,8 +9,6 @@
 #include <stdint.h>
 // clang-format on
 
-#include <absl/functional/bind_front.h>
-
 #include <PresentData/ETW/Microsoft_Windows_D3D9.h>
 #include <PresentData/ETW/Microsoft_Windows_DXGI.h>
 #include <PresentData/ETW/Microsoft_Windows_Dwm_Core.h>
@@ -18,6 +16,7 @@
 #include <PresentData/ETW/Microsoft_Windows_EventMetadata.h>
 #include <PresentData/ETW/Microsoft_Windows_Win32k.h>
 #include <PresentData/ETW/NT_Process.h>
+#include <absl/functional/bind_front.h>
 
 // clang-format off
 #include <d3d9.h>

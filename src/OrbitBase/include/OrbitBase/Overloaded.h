@@ -53,7 +53,7 @@ struct overloaded : orbit_base_internal::WithParen<Ts>... {
 };
 
 template <typename... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
+overloaded(Ts...) -> overloaded<Ts...>;
 
 }  // namespace orbit_base
 

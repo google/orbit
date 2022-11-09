@@ -13,9 +13,9 @@
 
 #include <vector>
 
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "WindowsTracing/ListModulesEtw.h"
 #include "WindowsUtils/PathConverter.h"
 

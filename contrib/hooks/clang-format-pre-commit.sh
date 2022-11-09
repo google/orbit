@@ -9,7 +9,7 @@
 # After the formatting has been applied, it will ask you which changes should
 
 echo "Formatting all changed files now..."
-git clang-format-9 -f
+git clang-format-14 -f
 # Only show this to the user of there are unstaged changes.
 if ! (git diff -- --quiet)
 then

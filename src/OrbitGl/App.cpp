@@ -1214,29 +1214,29 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
     capture_window_->set_draw_help(false);
   }
   ClearCapture();
-  auto load_future = thread_pool_->Schedule([this, file_path]()
-                                                -> ErrorMessageOr<CaptureListener::CaptureOutcome> {
-    capture_loading_cancellation_requested_ = false;
+  auto load_future = thread_pool_->Schedule(
+      [this, file_path]() -> ErrorMessageOr<CaptureListener::CaptureOutcome> {
+        capture_loading_cancellation_requested_ = false;
 
-    OUTCOME_TRY(const std::unique_ptr<CaptureFile> capture_file,
-                CaptureFile::OpenForReadWrite(file_path));
+        OUTCOME_TRY(const std::unique_ptr<CaptureFile> capture_file,
+                    CaptureFile::OpenForReadWrite(file_path));
 
-    // Set is_loading_capture_ to true for the duration of this scope.
-    data_source_ = CaptureData::DataSource::kLoadedCapture;
-    orbit_base::unique_resource scope_exit{&data_source_,
-                                           [](std::atomic<CaptureData::DataSource>* value) {
-                                             *value = CaptureData::DataSource::kLiveCapture;
-                                           }};
+        // Set is_loading_capture_ to true for the duration of this scope.
+        data_source_ = CaptureData::DataSource::kLoadedCapture;
+        orbit_base::unique_resource scope_exit{&data_source_,
+                                               [](std::atomic<CaptureData::DataSource>* value) {
+                                                 *value = CaptureData::DataSource::kLiveCapture;
+                                               }};
 
-    ErrorMessageOr<CaptureListener::CaptureOutcome> load_result =
-        LoadCapture(this, capture_file.get(), &capture_loading_cancellation_requested_);
+        ErrorMessageOr<CaptureListener::CaptureOutcome> load_result =
+            LoadCapture(this, capture_file.get(), &capture_loading_cancellation_requested_);
 
-    if (load_result.has_value() && load_result.value() == CaptureOutcome::kComplete) {
-      OnCaptureComplete();
-    }
+        if (load_result.has_value() && load_result.value() == CaptureOutcome::kComplete) {
+          OnCaptureComplete();
+        }
 
-    return load_result;
-  });
+        return load_result;
+      });
 
   DoZoom = true;  // TODO: remove global, review logic
 
@@ -1604,7 +1604,7 @@ Future<void> OrbitApp::LoadSymbolsManually(absl::Span<const ModuleData* const> m
   for (const auto& module : modules_set) {
     // Explicitly do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
