@@ -2,16 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-name: build-and-test
+name: checks
 on:
-  push:
-    branches:
-      - 'main'
   pull_request:
     branches:
       - 'main'
-  schedule:
-  - cron: '0 7 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -34,3 +29,15 @@ jobs:
       - name: Check formatting
         run: ./contrib/scripts/check-clang-format.sh
         shell: bash
+
+  check-license-headers:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'
+    - name: Check license headers
+      run: ./contrib/scripts/check-license-headers.sh
+      shell: bash
+
