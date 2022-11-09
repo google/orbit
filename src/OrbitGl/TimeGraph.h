@@ -21,9 +21,10 @@
 #include "ImGuiTimeGraphLayout.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
-#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "QtTextRenderer.h"
+// #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
 #include "TrackContainer.h"
@@ -43,7 +44,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   void DrawAllElements(orbit_gl::PrimitiveAssembler& primitive_assembler,
                        orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode);
-  void DrawText(float layer);
+  void DrawText(QPainter* painter, float layer);
 
   // TODO(b/214282122): Move Process Timers function outside the UI.
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
@@ -203,7 +204,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
       ScopeId scope_id) const;
 
   AccessibleInterfaceProvider* accessible_parent_;
-  orbit_gl::OpenGlTextRenderer text_renderer_static_;
+  orbit_gl::QtTextRenderer text_renderer_static_;
 
   double ref_time_us_ = 0;
   double min_time_us_ = 0;

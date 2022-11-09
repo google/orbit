@@ -56,7 +56,7 @@ target_sources(
          MockTimelineInfo.h
          MultivariateTimeSeries.h
          OpenGlBatcher.h
-         OpenGlTextRenderer.h
+         QtTextRenderer.h
          PageFaultsTrack.h
          PickingManager.h
          PrimitiveAssembler.h
@@ -134,7 +134,7 @@ target_sources(
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
           OpenGlBatcher.cpp
-          OpenGlTextRenderer.cpp
+          QtTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
           PrimitiveAssembler.cpp
@@ -191,8 +191,6 @@ target_link_libraries(
          RemoteSymbolProvider
          SymbolProvider
          Symbols
-         freetype
-         freetype-gl::freetype-gl
          glad::glad
          imgui::imgui
          gte::gte

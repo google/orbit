@@ -241,14 +241,14 @@ void GlCanvas::PrepareGlState() {
 
 void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
-void GlCanvas::Render(int width, int height) {
+void GlCanvas::Render(QPainter* painter, int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
   ORBIT_CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
 
   if (!IsRedrawNeeded()) {
     return;
   }
-
+  painter->beginNativePainting();
   redraw_requested_ = false;
   ui_batcher_.ResetElements();
 
@@ -267,7 +267,7 @@ void GlCanvas::Render(int width, int height) {
   // Reset picking manager before each draw.
   picking_manager_.Reset();
 
-  Draw();
+  Draw(painter);
 
   if (picking_mode_ == PickingMode::kNone) {
     for (const auto& render_callback : render_callbacks_) {
@@ -278,7 +278,9 @@ void GlCanvas::Render(int width, int height) {
   glFlush();
   CleanupGlState();
 
-  PostRender();
+  PostRender(painter);
+
+  painter->endNativePainting();
 
   double_clicking_ = false;
   viewport_.ClearDirtyFlag();
@@ -294,7 +296,7 @@ void GlCanvas::PreRender() {
   }
 }
 
-void GlCanvas::PostRender() {
+void GlCanvas::PostRender(QPainter* painter) {
   PickingMode prev_picking_mode = picking_mode_;
   picking_mode_ = PickingMode::kNone;
 
@@ -304,7 +306,7 @@ void GlCanvas::PostRender() {
 
   if (prev_picking_mode != PickingMode::kNone) {
     Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
-    GlCanvas::Render(viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
+    GlCanvas::Render(painter, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   }
 }
 

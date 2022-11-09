@@ -8,6 +8,7 @@
 #include <imgui.h>
 #include <stdint.h>
 
+#include <QPainter>
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -18,9 +19,9 @@
 #include "AccessibleInterfaceProvider.h"
 #include "CoreMath.h"
 #include "OpenGlBatcher.h"
-#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "QtTextRenderer.h"
 #include "Timer.h"
 #include "Viewport.h"
 
@@ -35,10 +36,10 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app);
 
   void Resize(int width, int height);
-  void Render(int width, int height);
+  void Render(QPainter* painter, int width, int height);
 
   virtual void PreRender();
-  virtual void PostRender();
+  virtual void PostRender(QPainter* painter);
 
   void PrepareGlViewport();
   void PrepareGlState();
@@ -121,7 +122,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static const Color kTabTextColorSelected;
 
  protected:
-  virtual void Draw() {}
+  virtual void Draw(QPainter* /*painter*/) {}
 
   void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
   bool ControlPressed();
@@ -146,7 +147,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   float track_container_click_scrolling_offset_ = 0;
-  orbit_gl::OpenGlTextRenderer text_renderer_;
+  orbit_gl::QtTextRenderer text_renderer_;
   PickingManager picking_manager_;
   bool double_clicking_;
   bool control_key_;

@@ -233,12 +233,12 @@ void CaptureWindow::SelectTimer(const TimerInfo* timer_info) {
   }
 }
 
-void CaptureWindow::PostRender() {
+void CaptureWindow::PostRender(QPainter* painter) {
   if (picking_mode_ != PickingMode::kNone) {
     RequestUpdatePrimitives();
   }
 
-  GlCanvas::PostRender();
+  GlCanvas::PostRender(painter);
 }
 
 void CaptureWindow::RightDown(int x, int y) {
@@ -461,7 +461,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
   return std::make_unique<AccessibleCaptureWindow>(this);
 }
 
-void CaptureWindow::Draw() {
+void CaptureWindow::Draw(QPainter* painter) {
   ORBIT_SCOPE("CaptureWindow::Draw");
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
   bool time_graph_was_redrawn = time_graph_ != nullptr && time_graph_->IsRedrawNeeded();
@@ -501,7 +501,7 @@ void CaptureWindow::Draw() {
     }
   }
 
-  RenderAllLayers();
+  RenderAllLayers(painter);
 
   if (picking_mode_ == PickingMode::kNone) {
     if (last_frame_start_time_ != 0) {
@@ -514,7 +514,7 @@ void CaptureWindow::Draw() {
   last_frame_start_time_ = orbit_base::CaptureTimestampNs();
 }
 
-void CaptureWindow::RenderAllLayers() {
+void CaptureWindow::RenderAllLayers(QPainter* painter) {
   std::vector<float> all_layers{};
   if (time_graph_ != nullptr) {
     all_layers = time_graph_->GetBatcher().GetLayers();
@@ -537,10 +537,16 @@ void CaptureWindow::RenderAllLayers() {
     }
     ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
 
+    // The painter is in "native painting mode" all the time and we merely leave it for rendering
+    // the text here. Compare GlCanvas::Render - that's where we enter native painting.
+    painter->endNativePainting();
+
     if (picking_mode_ == PickingMode::kNone) {
-      text_renderer_.RenderLayer(layer);
-      RenderText(layer);
+      text_renderer_.RenderLayer(painter, layer);
+      RenderText(painter, layer);
     }
+
+    painter->beginNativePainting();
   }
 }
 
@@ -647,11 +653,11 @@ void CaptureWindow::RenderImGuiDebugUI() {
   }
 }
 
-void CaptureWindow::RenderText(float layer) {
+void CaptureWindow::RenderText(QPainter* painter, float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (time_graph_ == nullptr) return;
   if (picking_mode_ == PickingMode::kNone) {
-    time_graph_->DrawText(layer);
+    time_graph_->DrawText(painter, layer);
   }
 }
 

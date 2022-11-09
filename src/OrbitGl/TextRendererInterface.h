@@ -12,6 +12,7 @@
 
 #include "CoreMath.h"
 #include "PrimitiveAssembler.h"
+#include "QPainter"
 
 namespace orbit_gl {
 
@@ -32,7 +33,7 @@ class TextRendererInterface {
   virtual void Init() = 0;
   virtual void Clear() = 0;
 
-  virtual void RenderLayer(float layer) = 0;
+  virtual void RenderLayer(QPainter* painter, float layer) = 0;
   virtual void RenderDebug(PrimitiveAssembler* primitive_assembler) = 0;
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
 

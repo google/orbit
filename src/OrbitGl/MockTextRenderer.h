@@ -18,7 +18,7 @@ class MockTextRenderer : public TextRenderer {
   MOCK_METHOD(void, Init, (), (override));
   void Clear() override;
 
-  MOCK_METHOD(void, RenderLayer, (float), (override));
+  MOCK_METHOD(void, RenderLayer, (QPainter*, float), (override));
   MOCK_METHOD(void, RenderDebug, (PrimitiveAssembler*), (override));
   [[nodiscard]] std::vector<float> GetLayers() const override {
     return std::vector<float>(z_layers_.begin(), z_layers_.end());
