@@ -26,7 +26,6 @@ while read file; do
 
 done <<< $(git diff -U0 --no-color --relative --name-only --diff-filter=r $MERGE_BASE \
 | grep -v third_party/ \
-| grep -v /build \
 | egrep '\.cpp$|\.h$|CMakeLists\.txt$|\.js$|\.proto$|\.py$')
 
 if [ -n "$LICENSE_HEADER_MISSED" ]; then
