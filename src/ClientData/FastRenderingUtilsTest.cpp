@@ -31,7 +31,7 @@ TEST_P(GetPixelNumberTest, LastPixel) {
 
 INSTANTIATE_TEST_SUITE_P(GetPixelNumberTests, GetPixelNumberTest, testing::Values(1, 20, 30, 100));
 
-TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampAreInRange) {
+TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampsAreInRange) {
   const uint32_t resolution = GetParam();
   constexpr uint64_t visible_ns = kEndNs - kStartNs;  // 100
 
