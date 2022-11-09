@@ -64,7 +64,6 @@ class TimeGraphLayout {
   }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = std::clamp(value, kMinScale, kMaxScale); }
-  void SetDrawProperties(bool value) { draw_properties_ = value; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
   uint32_t GetFontSize() const { return std::lround(font_size_ * scale_); }
@@ -115,7 +114,6 @@ class TimeGraphLayout {
   float toolbar_icon_height_;
   float scale_;
 
-  bool draw_properties_ = false;
   bool draw_track_background_ = true;
 
   int max_layouting_loops_ = 10;
