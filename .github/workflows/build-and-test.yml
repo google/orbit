@@ -9,7 +9,6 @@ on:
       - 'main'
     paths:
       - 'CMakeLists.txt'
-      - '**.cmake'
       - '.github/**'
       - 'cmake/**'
       - 'src/**'
@@ -19,7 +18,6 @@ on:
       - 'main'
     paths:
       - 'CMakeLists.txt'
-      - '**.cmake'
       - '.github/**'
       - 'cmake/**'
       - 'src/**'
