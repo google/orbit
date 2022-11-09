@@ -34,3 +34,15 @@ jobs:
       - name: Check formatting
         run: ./contrib/scripts/check-clang-format.sh
         shell: bash
+
+  check-licence-headers:
+    runs-on: ubuntu-22.04
+      timeout-minutes: 20
+      steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+      - name: Check licence headers
+        run: ./contrib/scripts/check-licence-headers.sh
+        shell: bash
+
