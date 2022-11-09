@@ -7,9 +7,23 @@ on:
   push:
     branches:
       - 'main'
+    paths:
+      - 'CMakeLists.txt'
+      - '**.cmake'
+      - '.github/**'
+      - 'cmake/**'
+      - 'src/**'
+      - 'third_party/**'
   pull_request:
     branches:
       - 'main'
+    paths:
+      - 'CMakeLists.txt'
+      - '**.cmake'
+      - '.github/**'
+      - 'cmake/**'
+      - 'src/**'
+      - 'third_party/**'
   schedule:
   - cron: '0 7 * * *'
 
