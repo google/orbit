@@ -135,9 +135,6 @@
               </item>
              </layout>
             </item>
-            <item>
-             <widget class="orbit_session_setup::ProcessLauncherWidget" name="processLauncherWidget" native="true"/>
-            </item>
            </layout>
           </widget>
          </item>
@@ -348,12 +345,6 @@
    <class>orbit_session_setup::TargetLabel</class>
    <extends>QWidget</extends>
    <header>SessionSetup/TargetLabel.h</header>
-  </customwidget>
-  <customwidget>
-   <class>orbit_session_setup::ProcessLauncherWidget</class>
-   <extends>QWidget</extends>
-   <header>SessionSetup/ProcessLauncherWidget.h</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

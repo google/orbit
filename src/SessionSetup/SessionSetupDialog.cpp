@@ -112,7 +112,6 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   ui_->processesTableView->verticalHeader()->setVisible(false);
 
   ui_->localFrame->setVisible(absl::GetFlag(FLAGS_local));
-  ui_->processLauncherWidget->setVisible(absl::GetFlag(FLAGS_devmode));
 
   // If a user clicks on the localProfilingRadioButton when it is already checked, it will not
   // become unchecked.
@@ -126,8 +125,6 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   QObject::connect(ui_->processFilterLineEdit, &QLineEdit::textChanged, &process_proxy_model_,
                    &QSortFilterProxyModel::setFilterFixedString);
   QObject::connect(ui_->confirmButton, &QPushButton::clicked, this, &QDialog::accept);
-  QObject::connect(ui_->processLauncherWidget, &ProcessLauncherWidget::ProcessLaunched, this,
-                   &SessionSetupDialog::ProcessLaunched);
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::FileSelected, this,
                    [this](std::filesystem::path path) { selected_file_path_ = std::move(path); });
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::SelectionConfirmed, this,
@@ -217,7 +214,6 @@ void SessionSetupDialog::SetupStadiaStates() {
   state_stadia_.assignProperty(ui_->stadiaWidget, "active", true);
   state_stadia_.assignProperty(ui_->loadCaptureWidget, "active", false);
   state_stadia_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_stadia_.assignProperty(ui_->processLauncherWidget, "enabled", false);
 
   // STATE state_stadia_connecting_
   state_stadia_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
@@ -294,7 +290,6 @@ void SessionSetupDialog::SetupLocalStates() {
   state_local_.assignProperty(ui_->localProfilingRadioButton, "checked", true);
   state_local_.assignProperty(ui_->stadiaWidget, "active", false);
   state_local_.assignProperty(ui_->loadCaptureWidget, "active", false);
-  state_local_.assignProperty(ui_->processLauncherWidget, "enabled", false);
 
   // STATE state_local_connecting_
   state_local_connecting_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connecting...");
@@ -305,7 +300,6 @@ void SessionSetupDialog::SetupLocalStates() {
 
   // STATE state_local_connected_
   state_local_connected_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connected");
-  state_local_connected_.assignProperty(ui_->processLauncherWidget, "enabled", true);
 
   // STATE state_local_processes_loading_
   state_local_processes_loading_.assignProperty(ui_->processesTableOverlay, "visible", true);
@@ -368,7 +362,6 @@ void SessionSetupDialog::SetupFileStates() {
   state_file_.assignProperty(ui_->loadCaptureWidget, "active", true);
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
   state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_file_.assignProperty(ui_->processLauncherWidget, "enabled", false);
 
   // STATE state_file_selected_
   state_file_selected_.assignProperty(ui_->confirmButton, "enabled", true);
@@ -491,16 +484,7 @@ void SessionSetupDialog::ConnectToLocal() {
   SetupLocalProcessManager();
 }
 
-void SessionSetupDialog::SetupLocalProcessManager() {
-  SetupProcessManager(local_grpc_channel_);
-  ui_->processLauncherWidget->SetProcessManager(process_manager_.get());
-}
-
-void SessionSetupDialog::ProcessLaunched(const orbit_grpc_protos::ProcessInfo& process_info) {
-  process_ = std::make_unique<orbit_client_data::ProcessData>(process_info);
-  emit ProcessSelected();
-  accept();
-}
+void SessionSetupDialog::SetupLocalProcessManager() { SetupProcessManager(local_grpc_channel_); }
 
 void SessionSetupDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
   state_machine_.setInitialState(&state_stadia_);
