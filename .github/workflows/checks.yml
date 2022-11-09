@@ -2,16 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-name: build-and-test
+name: checks
 on:
-  push:
-    branches:
-      - 'main'
   pull_request:
     branches:
       - 'main'
-  schedule:
-  - cron: '0 7 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
