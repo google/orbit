@@ -128,9 +128,9 @@ jobs:
         working-directory: ./build
         run: CTEST_OUTPUT_FAILURE=1 ARGS="-E IntegrationTest" cmake --build . --target test
       - name: Upload test artifacts
-        working-directory: ./build
         uses: actions/upload-artifact@v2
         if: success() || failure()
+        working-directory: ./build
         with:
           name: test-results-${{ matrix.config.cc }}-${{ matrix.config.build_type }}
           path: testresults/**.xml
