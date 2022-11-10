@@ -410,7 +410,7 @@ p, li { white-space: pre-wrap; }
          <property name="title">
           <string>Auto FrameTrack</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
+         <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
            <widget class="QCheckBox" name="autoFrameTrackCheckBox">
             <property name="toolTip">
