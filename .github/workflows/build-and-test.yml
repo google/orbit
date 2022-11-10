@@ -130,7 +130,6 @@ jobs:
       - name: Upload test artifacts
         uses: actions/upload-artifact@v2
         if: success() || failure()
-        working-directory: ./build
         with:
           name: test-results-${{ matrix.config.cc }}-${{ matrix.config.build_type }}
-          path: testresults/**.xml
+          path: build/testresults/**.xml
