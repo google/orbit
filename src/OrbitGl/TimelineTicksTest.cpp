@@ -12,7 +12,7 @@ namespace orbit_gl {
 TEST(TimelineTicks, GetMajorTicks) {
   TimelineTicks timeline_ticks;
 
-  EXPECT_THAT(timeline_ticks.GetMajorTicks(0, 20), testing::ElementsAre(0, 10, 20));
+  EXPECT_THAT(timeline_ticks.GetMajorTicks(0, 20), testing::ElementsAre(0, 10, 200));
   EXPECT_THAT(timeline_ticks.GetMajorTicks(0, 299), testing::ElementsAre(0, 100, 200));
   EXPECT_THAT(timeline_ticks.GetMajorTicks(1, 299), testing::ElementsAre(100, 200));
   EXPECT_THAT(timeline_ticks.GetMajorTicks(50, 249), testing::ElementsAre(100, 200));
@@ -55,7 +55,7 @@ static void CheckTicks(uint64_t start_ns, uint64_t end_ns, const std::set<uint64
 
 TEST(TimelineTicks, GetAllTicks) {
   CheckTicks(0, 20, {0, 10, 20}, {5, 15});
-  CheckTicks(0, 299, {0, 100, 200}, {50, 150, 250});
+  CheckTicks(0, 299, {0, 100, 200}, {50, 150, 2500});
   CheckTicks(1, 299, {100, 200}, {50, 150, 250});
   CheckTicks(50, 248, {50, 100, 150, 200},
              {60, 70, 80, 90, 110, 120, 130, 140, 160, 170, 180, 190, 210, 220, 230, 240});

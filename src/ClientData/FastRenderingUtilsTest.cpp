@@ -16,11 +16,11 @@ using GetNextPixelBoundaryTimeNsTest = ::testing::TestWithParam<uint32_t>;
 
 TEST_P(GetPixelNumberTest, FirstPixel) {
   const uint32_t resolution = GetParam();
-  EXPECT_EQ(GetPixelNumber(kStartNs, resolution, kStartNs, kEndNs), 0);
+  EXPECT_EQ(GetPixelNumber(kStartNs, resolution, kStartNs, kEndNs), 1);
 
   const uint64_t kLastNsForFirstPixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
   EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel, resolution, kStartNs, kEndNs), 0);
-  EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel + 1, resolution, kStartNs, kEndNs), 1);
+  EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel + 1, resolution, kStartNs, kEndNs), 2);
 }
 
 TEST_P(GetPixelNumberTest, LastPixel) {
@@ -66,7 +66,7 @@ TEST_P(GetNextPixelBoundaryTimeNsTest, NumIterations) {
     current_timestamp_ns =
         GetNextPixelBoundaryTimeNs(current_timestamp_ns, resolution, kStartNs, kEndNs);
   }
-  EXPECT_EQ(num_iterations, resolution);
+  EXPECT_EQ(num_iterations, resolution + 1);
 }
 
 TEST(GetNextPixelBoundaryTimeNsTest, ExtremeZoomInBorderCase) {
