@@ -134,5 +134,5 @@ jobs:
         if: success() || failure()
         with:
           name: test-results-${{ matrix.config.cc }}-${{ matrix.config.build_type }}
-          path: build/testresults/**.xml
+          path: 'build/testresults/**/*.xml'
           retention-days: 1
