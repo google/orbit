@@ -1,0 +1,46 @@
+# Copyright (c) 2022 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+name: report-tests
+
+on:
+  workflow_run:
+    workflows: ['build-and-test']
+    types:
+      - completed
+
+permissions: read-all
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "GCC Release",
+            build_type: 'Release',
+            cc: "gcc",
+            cxx: "g++"
+        }
+        - {
+            name: "Clang Release",
+            build_type: 'Release',
+            cc: "clang",
+            cxx: "clang++"
+        }
+        - {
+            name: "Clang Debug",
+            build_type: 'Debug',
+            cc: "clang",
+            cxx: "clang++"
+        }
+    steps:
+    - uses: dorny/test-reporter@c9b3d0e2bd2a4e96aaf424dbaa31c46b42318226 #v1.6.0
+      with:
+        artifact: test-results-${{ matrix.config.cc }}-${{ matrix.config.build_type }}
+        name: '${{ matrix.config.build_type }} ${{ matrix.config.cc }} Tests'
+        path: '*.xml'
+        reporter: java-junit
