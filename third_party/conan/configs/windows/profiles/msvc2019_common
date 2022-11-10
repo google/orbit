@@ -16,9 +16,6 @@ gtest:compiler.cppstd=17
 grpc:compiler=Visual Studio
 grpc:compiler.cppstd=17
 
-[options]
-OrbitProfiler:system_qt=False
-
 [env]
 CONAN_CMAKE_SYSTEM_VERSION=10
 LDFLAGS=$LD_FLAGS
