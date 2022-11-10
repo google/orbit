@@ -49,8 +49,6 @@ class SessionSetupDialog : public QDialog {
   void SetupLocalProcessManager();
   void TearDownProcessManager();
   void ProcessSelectionChanged(const QModelIndex& current);
-  void ConnectToLocal();
-  void ProcessLaunched(const orbit_grpc_protos::ProcessInfo& process_info);
 
  signals:
   void ProcessSelected();
@@ -66,9 +64,6 @@ class SessionSetupDialog : public QDialog {
 
   std::unique_ptr<orbit_client_data::ProcessData> process_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
-
-  std::shared_ptr<grpc::Channel> local_grpc_channel_;
-  uint16_t local_grpc_port_;
 
   std::filesystem::path selected_file_path_;
 

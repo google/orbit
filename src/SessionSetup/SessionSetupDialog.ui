@@ -74,7 +74,7 @@
         <property name="lineWidth">
          <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,1">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,1">
          <property name="rightMargin">
           <number>0</number>
          </property>
@@ -82,64 +82,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFrame" name="localFrame">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="visible">
-            <bool>true</bool>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout">
-              <item>
-               <widget class="QRadioButton" name="localProfilingRadioButton">
-                <property name="font">
-                 <font>
-                  <pointsize>12</pointsize>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>Local profiling</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>0</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QLabel" name="localProfilingStatusMessage">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <widget class="orbit_session_setup::ProcessLauncherWidget" name="processLauncherWidget" native="true"/>
-            </item>
-           </layout>
-          </widget>
+          <widget class="orbit_session_setup::ConnectToLocalWidget" name="localProfilingWidget" native="true"/>
          </item>
          <item>
           <widget class="orbit_session_setup::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
@@ -350,10 +293,9 @@
    <header>SessionSetup/TargetLabel.h</header>
   </customwidget>
   <customwidget>
-   <class>orbit_session_setup::ProcessLauncherWidget</class>
+   <class>orbit_session_setup::ConnectToLocalWidget</class>
    <extends>QWidget</extends>
-   <header>SessionSetup/ProcessLauncherWidget.h</header>
-   <container>1</container>
+   <header>SessionSetup/ConnectToLocalWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>
