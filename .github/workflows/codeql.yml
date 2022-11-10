@@ -20,6 +20,10 @@ on:
   schedule:
     - cron: '20 19 * * 3'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze
@@ -43,6 +47,7 @@ jobs:
         fetch-depth: '0'
 
     - name: Install dependencies
+      if: ${{ matrix.language }} == 'cpp'
       run: |
          sudo apt update &&                             \
          sudo apt install --yes --no-install-recommends \
@@ -71,16 +76,17 @@ jobs:
          git                                            \
          libprotobuf-dev
     - name: Save CCache Timestamp
+      if: ${{ matrix.language }} == 'cpp'
       id: ccache_timestamp
       run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
     - name: Setup CCache Files
+      if: ${{ matrix.language }} == 'cpp'
       uses: actions/cache@v3
       with:
         path: .ccache
-        key: Release-gcc-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
+        key: CodeQL-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
         restore-keys: |
-          Release-gcc-ccache-
-          ccache-
+          CodeQL-ccache-
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -111,7 +117,9 @@ jobs:
     #   ./location_of_script_within_repo/buildscript.sh
 
     - run: mkdir build
+      if: ${{ matrix.language }} == 'cpp'
     - name: CMake Configure
+      if: ${{ matrix.language }} == 'cpp'
       working-directory: ./build
       env:
         CXX: g++
@@ -123,11 +131,15 @@ jobs:
          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
          ${GITHUB_WORKSPACE}
     - run: ccache -p
+      if: ${{ matrix.language }} == 'cpp'
     - run: ccache -z
+      if: ${{ matrix.language }} == 'cpp'
     - name: CMake Build
+      if: ${{ matrix.language }} == 'cpp'
       working-directory: ./build
       run: cmake --build .
     - name: CCache Stats
+      if: ${{ matrix.language }} == 'cpp'
       run: ccache -s
 
     - name: Perform CodeQL Analysis
