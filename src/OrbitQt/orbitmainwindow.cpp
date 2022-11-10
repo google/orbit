@@ -108,6 +108,7 @@
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SamplingReport.h"
 #include "SessionSetup/Connections.h"
+#include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
@@ -1645,23 +1646,35 @@ void OrbitMainWindow::resizeEvent(QResizeEvent* event) {
   UpdateTargetLabelPosition();
 }
 
+void OrbitMainWindow::OnConnectionError(const QString& error_message) {
+  is_connected_ = false;
+  target_process_state_ = TargetProcessState::kEnded;
+  UpdateProcessConnectionStateDependentWidgets();
+
+  target_label_->SetConnectionDead(error_message);
+
+  QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
+}
+
 void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
   ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
   const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
-  is_connected_ = false;
-  target_process_state_ = TargetProcessState::kEnded;
-  UpdateProcessConnectionStateDependentWidgets();
-
   QString error_message = QString("The connection to instance \"%1\" failed with error message: %2")
                               .arg(target.GetConnection()->GetInstance().display_name)
                               .arg(QString::fromStdString(error.message()));
+  OnConnectionError(error_message);
+}
 
-  target_label_->SetConnectionDead(error_message);
+void OrbitMainWindow::OnLocalConnectionError(const QString& error_message) {
+  ORBIT_CHECK(std::holds_alternative<LocalTarget>(target_configuration_));
+  const LocalTarget& target = std::get<LocalTarget>(target_configuration_);
 
-  QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
+  target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
+
+  OnConnectionError(error_message);
 }
 
 void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
@@ -1690,6 +1703,11 @@ void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
 
 void OrbitMainWindow::SetTarget(const LocalTarget& target) {
   const orbit_session_setup::LocalConnection* connection = target.GetConnection();
+
+  QObject::connect(connection->GetOrbitServiceInstance(),
+                   &orbit_session_setup::OrbitServiceInstance::ErrorOccurred, this,
+                   &OrbitMainWindow::OnLocalConnectionError, Qt::UniqueConnection);
+
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());

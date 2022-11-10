@@ -15,6 +15,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitSsh/Context.h"
+#include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/ServiceDeployManager.h"
 
 namespace orbit_session_setup {
@@ -87,21 +88,31 @@ class StadiaConnection {
 /*
  * The LocalConnection class describes an active connection to an OrbitService running on the same
  * machine as the UI. This class holds a grpc channel which is used for the communication with
- * OrbitService.
- * This class is meant to be constructed and then not modified anymore.
+ * OrbitService and an optional OrbitServiceInstance. Optional here means that the
+ * unique_ptr<OrbitServiceInstance> can be a nullptr. This class is meant to be constructed and then
+ * not modified anymore. Only ConnectToLocalWidget is allowed to modify the members, which is used
+ * to move out members for reusing them.
  */
 class LocalConnection {
+  friend class ConnectToLocalWidget;
+
  public:
-  explicit LocalConnection(std::shared_ptr<grpc::Channel>&& grpc_channel)
-      : grpc_channel_(std::move(grpc_channel)) {
+  explicit LocalConnection(std::shared_ptr<grpc::Channel>&& grpc_channel,
+                           std::unique_ptr<OrbitServiceInstance>&& orbit_service_instance)
+      : grpc_channel_(std::move(grpc_channel)),
+        orbit_service_instance_(std::move(orbit_service_instance)) {
     ORBIT_CHECK(grpc_channel_ != nullptr);
   }
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
     return grpc_channel_;
   }
+  [[nodiscard]] const OrbitServiceInstance* GetOrbitServiceInstance() const {
+    return orbit_service_instance_.get();
+  }
 
  private:
   std::shared_ptr<grpc::Channel> grpc_channel_;
+  std::unique_ptr<OrbitServiceInstance> orbit_service_instance_;
 };
 
 }  // namespace orbit_session_setup

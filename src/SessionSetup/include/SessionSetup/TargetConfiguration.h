@@ -58,7 +58,7 @@ class LocalTarget {
   explicit LocalTarget(LocalConnection&& connection,
                        std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
                        std::unique_ptr<orbit_client_data::ProcessData> process)
-      : connection_(connection),
+      : connection_(std::move(connection)),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
     ORBIT_CHECK(process_manager_ != nullptr);
