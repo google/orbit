@@ -14,6 +14,9 @@ permissions: read-all
 
 jobs:
   report:
+    permissions:
+      checks: write
+      statuses: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
