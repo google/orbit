@@ -10,6 +10,7 @@ add_library(SessionSetup STATIC)
 target_sources(
   SessionSetup
   PUBLIC  include/SessionSetup/Connections.h
+          include/SessionSetup/ConnectToLocalWidget.h
           include/SessionSetup/ConnectToStadiaWidget.h
           include/SessionSetup/ConnectToTargetDialog.h
           include/SessionSetup/DeploymentConfigurations.h
@@ -33,7 +34,9 @@ target_include_directories(SessionSetup PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
 
 target_sources(
   SessionSetup
-  PRIVATE ConnectToStadiaWidget.cpp
+  PRIVATE ConnectToLocalWidget.cpp
+          ConnectToLocalWidget.ui
+          ConnectToStadiaWidget.cpp
           ConnectToStadiaWidget.ui
           ConnectToTargetDialog.cpp
           ConnectToTargetDialog.ui
@@ -84,7 +87,8 @@ add_executable(SessionSetupTests)
 
 target_sources(
   SessionSetupTests
-  PRIVATE ConnectToStadiaWidgetTest.cpp
+  PRIVATE ConnectToLocalWidgetTest.cpp
+          ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
           PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
