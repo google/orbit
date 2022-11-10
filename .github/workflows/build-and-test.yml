@@ -128,4 +128,11 @@ jobs:
         run: ccache -s
       - name: CMake Test
         working-directory: ./build
-        run: ctest --output-on-failure -E IntegrationTest
+        run: CTEST_OUTPUT_FAILURE=1 ARGS="-E IntegrationTest" cmake --build . --target test
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: test-results-${{ matrix.config.cc }}-${{ matrix.config.build_type }}
+          path: build/testresults/**.xml
+          retention-days: 1
