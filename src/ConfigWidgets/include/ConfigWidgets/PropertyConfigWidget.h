@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PROPERTY_CONFIG_WIDGET_H_
-#define PROPERTY_CONFIG_WIDGET_H_
+#ifndef CONFIG_WIDGETS_PROPERTY_CONFIG_WIDGET_H_
+#define CONFIG_WIDGETS_PROPERTY_CONFIG_WIDGET_H_
 
 #include <QGridLayout>
 #include <QWidget>
@@ -120,4 +120,4 @@ class PropertyConfigWidget : public QWidget {
 
 }  // namespace orbit_config_widgets
 
-#endif  // PROPERTY_CONFIG_WIDGET_H_
+#endif  // CONFIG_WIDGETS_PROPERTY_CONFIG_WIDGET_H_
