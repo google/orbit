@@ -22,11 +22,13 @@ target_link_libraries(ConfigWidgets PUBLIC ClientData
                                            Qt5::Widgets)
 
 target_sources(
-  ConfigWidgets PUBLIC include/ConfigWidgets/SourcePathsMappingDialog.h
+  ConfigWidgets PUBLIC include/ConfigWidgets/PropertyConfigWidget.h
+                       include/ConfigWidgets/SourcePathsMappingDialog.h
                        include/ConfigWidgets/StopSymbolDownloadDialog.h
                        include/ConfigWidgets/SymbolErrorDialog.h
                        include/ConfigWidgets/SymbolLocationsDialog.h)
-target_sources(ConfigWidgets PRIVATE SourcePathsMappingDialog.cpp
+target_sources(ConfigWidgets PRIVATE PropertyConfigWidget.cpp
+                                     SourcePathsMappingDialog.cpp
                                      SourcePathsMappingDialog.ui
                                      StopSymbolDownloadDialog.cpp
                                      StopSymbolDownloadDialog.ui
@@ -40,7 +42,8 @@ set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
 
 add_executable(ConfigWidgetsTests)
 
-target_sources(ConfigWidgetsTests PRIVATE StopSymbolDownloadDialogTest.cpp
+target_sources(ConfigWidgetsTests PRIVATE PropertyConfigWidgetTest.cpp
+                                          StopSymbolDownloadDialogTest.cpp
                                           SymbolErrorDialogTest.cpp
                                           SymbolLocationsDialogTest.cpp)
 
