@@ -16,6 +16,7 @@
 #define OrbitCommitHashStr "@COMMIT_HASH@"
 #define OrbitMajorVersion @MAJOR_VERSION@
 #define OrbitMinorVersion @MINOR_VERSION@
+static_assert(OrbitMajorVersion == 1);
 
 namespace orbit_version {
 
