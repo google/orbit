@@ -140,9 +140,8 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_selected_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      const Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
-                     GetPos()[1]);
-      primitive_assembler.AddVerticalLine(pos, track_height, z, kGreenSelection);
+      const auto& [pos_x, unused_size_x] = timeline_info_->GetBoxPosXAndWidthFromTicks(time, time);
+      primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, kGreenSelection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
         capture_data_->selection_callstack_data();
