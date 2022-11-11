@@ -14,6 +14,8 @@
 #include "TimeGraphLayout.h"
 
 namespace orbit_gl {
+// This class implements a TimeGraphLayout where all properties are static values that can't be
+// changed. This class is mainly for tests that need some TimeGraphLayout.
 class StaticTimeGraphLayout : public TimeGraphLayout {
  public:
   constexpr static float kMinScale = 0.333f;

@@ -13,6 +13,9 @@
 #include "TimeGraphLayout.h"
 
 namespace orbit_gl {
+// The ImGui TimeGraphLayout is an implementation of TimeGraphLayout where all properties can be
+// changed through an ImGui interface with controls for each parameter. This simplifies experimented
+// with layout changes.
 class ImGuiTimeGraphLayout : public TimeGraphLayout {
  public:
   ImGuiTimeGraphLayout();
