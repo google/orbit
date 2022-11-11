@@ -18,12 +18,12 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GlSlider.h"
+#include "ImGuiTimeGraphLayout.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
 #include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
-#include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
 #include "TrackContainer.h"
@@ -127,7 +127,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] orbit_gl::Batcher& GetBatcher() { return batcher_; }
 
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
-  [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
+  [[nodiscard]] orbit_gl::ImGuiTimeGraphLayout& GetImGuiLayout() { return layout_; }
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
@@ -211,7 +211,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
 
-  TimeGraphLayout layout_;
+  orbit_gl::ImGuiTimeGraphLayout layout_;
 
   orbit_gl::OpenGlBatcher batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;

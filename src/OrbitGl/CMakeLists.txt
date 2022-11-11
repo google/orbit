@@ -45,6 +45,7 @@ target_sources(
          GraphTrackDataAggregator.h
          Images.h
          ImGuiOrbit.h
+         ImGuiTimeGraphLayout.h
          IntrospectionWindow.h
          LineGraphTrack.h
          LiveFunctionsController.h
@@ -64,6 +65,7 @@ target_sources(
          SchedulingStats.h
          ShortenStringWithEllipsis.h
          SimpleTimings.h
+         StaticTimeGraphLayout.h
          SymbolLoader.h
          SystemMemoryTrack.h
          TextRenderer.h
@@ -123,6 +125,7 @@ target_sources(
           GraphTrack.cpp
           GraphTrackDataAggregator.cpp
           ImGuiOrbit.cpp
+          ImGuiTimeGraphLayout.cpp
           IntrospectionWindow.cpp
           LineGraphTrack.cpp
           LiveFunctionsController.cpp
@@ -142,7 +145,6 @@ target_sources(
           SymbolLoader.cpp
           SystemMemoryTrack.cpp
           TimeGraph.cpp
-          TimeGraphLayout.cpp
           TimelineTicks.cpp
           TimelineUi.cpp
           TimerInfosIterator.cpp

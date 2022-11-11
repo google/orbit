@@ -591,7 +591,7 @@ void CaptureWindow::RequestUpdatePrimitives() {
 
 void CaptureWindow::RenderImGuiDebugUI() {
   if (ImGui::CollapsingHeader("Layout Properties")) {
-    if (time_graph_ != nullptr && time_graph_->GetLayout().DrawProperties()) {
+    if (time_graph_ != nullptr && time_graph_->GetImGuiLayout().DrawProperties()) {
       RequestUpdatePrimitives();
     }
 

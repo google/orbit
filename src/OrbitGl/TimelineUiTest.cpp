@@ -11,6 +11,7 @@
 #include "MockBatcher.h"
 #include "MockTextRenderer.h"
 #include "MockTimelineInfo.h"
+#include "StaticTimeGraphLayout.h"
 #include "TimelineUi.h"
 #include "Viewport.h"
 
@@ -137,7 +138,7 @@ static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {
   MockTimelineInfo mock_timeline_info;
   mock_timeline_info.SetWorldWidth(world_width);
 
-  TimeGraphLayout layout;
+  StaticTimeGraphLayout layout;
   Viewport viewport(world_width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
   timeline_ui_test.TestUpdatePrimitives(0, 100);
@@ -170,7 +171,7 @@ TEST(TimelineUi, Draw) {
   MockTimelineInfo mock_timeline_info;
   mock_timeline_info.SetWorldWidth(width);
 
-  TimeGraphLayout layout;
+  StaticTimeGraphLayout layout;
   Viewport viewport(width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
 
@@ -196,7 +197,7 @@ TEST(TimelineUi, OnMouseWheel) {
   MockTimelineInfo mock_timeline_info;
   mock_timeline_info.SetWorldWidth(width);
 
-  TimeGraphLayout layout;
+  StaticTimeGraphLayout layout;
   Viewport viewport(width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
   const Vec2 pos_inside_timeline = timeline_ui_test.GetPos();

@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TimeGraphLayout.h"
+#include "ImGuiTimeGraphLayout.h"
 
 #include <imgui.h>
 
@@ -10,7 +10,9 @@
 
 #include "OrbitBase/ThreadConstants.h"
 
-TimeGraphLayout::TimeGraphLayout() {
+namespace orbit_gl {
+
+ImGuiTimeGraphLayout::ImGuiTimeGraphLayout() {
   text_box_height_ = 20.f;
   core_height_ = 10.f;
   thread_state_track_height_ = 6.0f;
@@ -58,7 +60,7 @@ TimeGraphLayout::TimeGraphLayout() {
     needs_redraw = true;                      \
   }
 
-bool TimeGraphLayout::DrawProperties() {
+bool ImGuiTimeGraphLayout::DrawProperties() {
   bool needs_redraw = false;
   FLOAT_SLIDER(track_label_offset_x_);
   FLOAT_SLIDER(text_box_height_);
@@ -106,7 +108,7 @@ bool TimeGraphLayout::DrawProperties() {
   return needs_redraw;
 }
 
-float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
+float ImGuiTimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
   float button_size_without_scaling =
       collapse_button_size_ -
       collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
@@ -115,7 +117,7 @@ float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
   return button_size_without_scaling * std::sqrt(scale_);
 }
 
-float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
+float ImGuiTimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
   float height = GetEventTrackHeight();
   if (tid == orbit_base::kAllProcessThreadsTid) {
     height *= GetAllThreadsEventTrackScale();
@@ -123,8 +125,10 @@ float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
   return height;
 }
 
-float TimeGraphLayout::GetSliderResizeMargin() const {
+float ImGuiTimeGraphLayout::GetSliderResizeMargin() const {
   // The resize part of the slider is 1/3 of the min length.
-  const float kRatioMinSliderLengthResizePart = 3.f;
+  constexpr float kRatioMinSliderLengthResizePart = 3.f;
   return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
 }
+
+}  // namespace orbit_gl
