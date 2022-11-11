@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,136 +19,133 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   constexpr static float kMinScale = 0.333f;
   constexpr static float kMaxScale = 3.f;
 
-  [[nodiscard]] float GetTextBoxHeight() const override { return text_box_height_ * scale_; }
-  [[nodiscard]] float GetTextCoresHeight() const override { return core_height_ * scale_; }
+  [[nodiscard]] float GetTextBoxHeight() const override { return kTextBoxHeight * scale_; }
+  [[nodiscard]] float GetTextCoresHeight() const override { return kCoreHeight * scale_; }
   [[nodiscard]] float GetThreadStateTrackHeight() const override {
-    return thread_state_track_height_ * scale_;
+    return kThreadStateTrackHeight * scale_;
   }
   [[nodiscard]] float GetEventTrackHeightFromTid(uint32_t tid) const override {
-    float height = event_track_height_ * scale_;
+    float height = kEventTrackHeight * scale_;
     if (tid == orbit_base::kAllProcessThreadsTid) {
-      height *= all_threads_event_track_scale_;
+      height *= kAllThreadsEventTrackScale;
     }
     return height;
   }
   [[nodiscard]] float GetVariableTrackHeight() const override {
-    return variable_track_height_ * scale_;
+    return kVariableTrackHeight * scale_;
   }
   [[nodiscard]] float GetTrackContentBottomMargin() const override {
-    return track_content_bottom_margin_ * scale_;
+    return kTrackContentBottomMargin * scale_;
   }
   [[nodiscard]] float GetTrackContentTopMargin() const override {
-    return track_content_top_margin_ * scale_;
+    return kTrackContentTopMargin * scale_;
   }
-  [[nodiscard]] float GetTrackLabelOffsetX() const override { return track_label_offset_x_; }
-  [[nodiscard]] float GetSliderWidth() const override { return slider_width_ * scale_; }
-  [[nodiscard]] float GetMinSliderLength() const override { return min_slider_length_ * scale_; }
+  [[nodiscard]] float GetTrackLabelOffsetX() const override { return kTrackLabelOffsetX; }
+  [[nodiscard]] float GetSliderWidth() const override { return kSliderWidth * scale_; }
+  [[nodiscard]] float GetMinSliderLength() const override { return kMinSliderLength * scale_; }
   [[nodiscard]] float GetSliderResizeMargin() const override {
     // The resize part of the slider is 1/3 of the min length.
     constexpr float kRatioMinSliderLengthResizePart = 3.f;
     return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
   }
-  [[nodiscard]] float GetTimeBarHeight() const override { return time_bar_height_ * scale_; }
-  [[nodiscard]] float GetTrackTabWidth() const override { return track_tab_width_; }
-  [[nodiscard]] float GetTrackTabHeight() const override { return track_tab_height_ * scale_; }
-  [[nodiscard]] float GetTrackTabOffset() const override { return track_tab_offset_; }
-  [[nodiscard]] float GetTrackIndentOffset() const override { return track_indent_offset_; }
+  [[nodiscard]] float GetTimeBarHeight() const override { return kTimeBarHeight * scale_; }
+  [[nodiscard]] float GetTrackTabWidth() const override { return kTrackTabWidth; }
+  [[nodiscard]] float GetTrackTabHeight() const override { return kTrackTabHeight * scale_; }
+  [[nodiscard]] float GetTrackTabOffset() const override { return kTrackTabOffset; }
+  [[nodiscard]] float GetTrackIndentOffset() const override { return kTrackIndentOffset; }
   [[nodiscard]] float GetCollapseButtonSize(int indentation_level) const override {
     float button_size_without_scaling =
-        collapse_button_size_ -
-        collapse_button_decrease_per_indentation_ * static_cast<float>(indentation_level);
+        kCollapseButtonSize -
+        kCollapseButtonDecreasePerIndentation * static_cast<float>(indentation_level);
 
     // We want the button to scale slower than other elements, so we use sqrt() function.
     return button_size_without_scaling * std::sqrt(scale_);
   }
-  [[nodiscard]] float GetCollapseButtonOffset() const override { return collapse_button_offset_; }
-  [[nodiscard]] float GetRoundingRadius() const override { return rounding_radius_ * scale_; }
-  [[nodiscard]] float GetRoundingNumSides() const override { return rounding_num_sides_; }
-  [[nodiscard]] float GetTextOffset() const override { return text_offset_ * scale_; }
-  [[nodiscard]] float GetRightMargin() const override { return right_margin_ * scale_; }
-  [[nodiscard]] float GetMinButtonSize() const override { return min_button_size_; }
-  [[nodiscard]] float GetButtonWidth() const override { return button_width_ * scale_; }
-  [[nodiscard]] float GetButtonHeight() const override { return button_height_ * scale_; }
+  [[nodiscard]] float GetCollapseButtonOffset() const override { return kCollapseButtonOffset; }
+  [[nodiscard]] float GetRoundingRadius() const override { return kRoundingRadius * scale_; }
+  [[nodiscard]] float GetRoundingNumSides() const override { return kRoundingNumSides; }
+  [[nodiscard]] float GetTextOffset() const override { return kTextOffset * scale_; }
+  [[nodiscard]] float GetRightMargin() const override { return kRightMargin * scale_; }
+  [[nodiscard]] float GetMinButtonSize() const override { return kMinButtonSize; }
+  [[nodiscard]] float GetButtonWidth() const override { return kButtonWidth * scale_; }
+  [[nodiscard]] float GetButtonHeight() const override { return kButtonHeight * scale_; }
   [[nodiscard]] float GetSpaceBetweenTracks() const override {
-    return space_between_tracks_ * scale_;
+    return kSpaceBetweenTracks * scale_;
   }
   [[nodiscard]] float GetSpaceBetweenTracksAndTimeline() const override {
-    return space_between_tracks_and_timeline_ * scale_;
+    return kSpaceBetweenTracksAndTimeline * scale_;
   }
-  [[nodiscard]] float GetSpaceBetweenCores() const override {
-    return space_between_cores_ * scale_;
-  }
+  [[nodiscard]] float GetSpaceBetweenCores() const override { return kSpaceBetweenCores * scale_; }
   [[nodiscard]] float GetSpaceBetweenGpuDepths() const override {
-    return space_between_gpu_depths_ * scale_;
+    return kSpaceBetweenGpuDepths * scale_;
   }
   [[nodiscard]] float GetSpaceBetweenThreadPanes() const override {
-    return space_between_thread_panes_ * scale_;
+    return kSpaceBetweenThreadPanes * scale_;
   }
   [[nodiscard]] float GetSpaceBetweenSubtracks() const override {
-    return space_between_subtracks_ * scale_;
+    return kSpaceBetweenSubtracks * scale_;
   }
   [[nodiscard]] float GetGenericFixedSpacerWidth() const override {
-    return generic_fixed_spacer_width_;
+    return kGenericFixedSpacerWidth;
   }
   [[nodiscard]] float GetThreadDependencyArrowHeadWidth() const override {
-    return thread_dependency_arrow_head_width_ * scale_;
+    return kThreadDependencyArrowHeadWidth * scale_;
   }
   [[nodiscard]] float GetThreadDependencyArrowHeadHeight() const override {
-    return thread_dependency_arrow_head_height_ * scale_;
+    return kThreadDependencyArrowHeadHeight * scale_;
   }
   [[nodiscard]] float GetThreadDependencyArrowBodyWidth() const override {
-    return thread_dependency_arrow_body_width_ * scale_;
+    return kThreadDependencyArrowBodyWidth * scale_;
   }
   [[nodiscard]] float GetScale() const override { return scale_; }
   void SetScale(float value) override { scale_ = std::clamp(value, kMinScale, kMaxScale); }
-  [[nodiscard]] bool GetDrawTrackBackground() const override { return draw_track_background_; }
-  [[nodiscard]] uint32_t GetFontSize() const override { return std::lround(font_size_ * scale_); }
+  [[nodiscard]] bool GetDrawTrackBackground() const override { return kDrawTrackBackground; }
+  [[nodiscard]] uint32_t GetFontSize() const override { return std::lround(kFontSize * scale_); }
 
-  [[nodiscard]] int GetMaxLayoutingLoops() const override { return max_layouting_loops_; }
+  [[nodiscard]] int GetMaxLayoutingLoops() const override { return kMaxLayoutingLoops; }
 
  private:
-  float text_box_height_ = 20.f;
-  float core_height_ = 10.f;
-  float thread_state_track_height_ = 6.0f;
-  float event_track_height_ = 10.f;
-  float all_threads_event_track_scale_ = 2.f;
-  float variable_track_height_ = 20.f;
-  float track_content_bottom_margin_ = 5.f;
-  float track_content_top_margin_ = 5.f;
-  float space_between_cores_ = 2.f;
-  float space_between_gpu_depths_ = 2.f;
-  float space_between_tracks_ = 10.f;
-  float space_between_tracks_and_timeline_ = 10.f;
-  float space_between_thread_panes_ = 5.f;
-  float space_between_subtracks_ = 0.f;
-  float track_label_offset_x_ = 30.f;
-  float slider_width_ = 15.f;
-  float min_slider_length_ = 20.f;
-  float track_tab_width_ = 350.f;
-  float track_tab_height_ = 25.f;
-  float track_tab_offset_ = 0.f;
-  float track_indent_offset_ = 5.f;
-  float collapse_button_offset_ = 15.f;
-  float collapse_button_size_ = 10.f;
-  float collapse_button_decrease_per_indentation_ = 2.f;
-  float rounding_radius_ = 8.f;
-  float rounding_num_sides_ = 16;
-  float text_offset_ = 5.f;
-  float right_margin_ = 10.f;
-  float min_button_size_ = 5.f;
-  float button_width_ = 15.f;
-  float button_height_ = 15.f;
-  float generic_fixed_spacer_width_ = 10.f;
+  constexpr static float kTextBoxHeight = 20.f;
+  constexpr static float kCoreHeight = 10.f;
+  constexpr static float kThreadStateTrackHeight = 6.0f;
+  constexpr static float kEventTrackHeight = 10.f;
+  constexpr static float kAllThreadsEventTrackScale = 2.f;
+  constexpr static float kVariableTrackHeight = 20.f;
+  constexpr static float kTrackContentBottomMargin = 5.f;
+  constexpr static float kTrackContentTopMargin = 5.f;
+  constexpr static float kSpaceBetweenCores = 2.f;
+  constexpr static float kSpaceBetweenGpuDepths = 2.f;
+  constexpr static float kSpaceBetweenTracks = 10.f;
+  constexpr static float kSpaceBetweenTracksAndTimeline = 10.f;
+  constexpr static float kSpaceBetweenThreadPanes = 5.f;
+  constexpr static float kSpaceBetweenSubtracks = 0.f;
+  constexpr static float kTrackLabelOffsetX = 30.f;
+  constexpr static float kSliderWidth = 15.f;
+  constexpr static float kMinSliderLength = 20.f;
+  constexpr static float kTrackTabWidth = 350.f;
+  constexpr static float kTrackTabHeight = 25.f;
+  constexpr static float kTrackTabOffset = 0.f;
+  constexpr static float kTrackIndentOffset = 5.f;
+  constexpr static float kCollapseButtonOffset = 15.f;
+  constexpr static float kCollapseButtonSize = 10.f;
+  constexpr static float kCollapseButtonDecreasePerIndentation = 2.f;
+  constexpr static float kRoundingRadius = 8.f;
+  constexpr static float kRoundingNumSides = 16;
+  constexpr static float kTextOffset = 5.f;
+  constexpr static float kRightMargin = 10.f;
+  constexpr static float kMinButtonSize = 5.f;
+  constexpr static float kButtonWidth = 15.f;
+  constexpr static float kButtonHeight = 15.f;
+  constexpr static float kGenericFixedSpacerWidth = 10.f;
+  constexpr static float kTimeBarHeight = 30.f;
+  constexpr static uint32_t kFontSize = 14;
+  constexpr static float kThreadDependencyArrowHeadWidth = 16;
+  constexpr static float kThreadDependencyArrowHeadHeight = 15;
+  constexpr static float kThreadDependencyArrowBodyWidth = 4;
+  constexpr static bool kDrawTrackBackground = true;
+  constexpr static int kMaxLayoutingLoops = 10;
+
   float scale_ = 1.f;
-  float time_bar_height_ = 30.f;
-  uint32_t font_size_ = 14;
-  float thread_dependency_arrow_head_width_ = 16;
-  float thread_dependency_arrow_head_height_ = 15;
-  float thread_dependency_arrow_body_width_ = 4;
-
-  bool draw_track_background_ = true;
-
-  int max_layouting_loops_ = 10;
 };
 }  // namespace orbit_gl
 

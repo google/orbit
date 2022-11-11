@@ -63,7 +63,7 @@ class CaptureViewElementTester {
 
  protected:
   Viewport viewport_ = Viewport(100, 100);
-  orbit_gl::StaticTimeGraphLayout layout_;
+  StaticTimeGraphLayout layout_;
 
  private:
   void TestWidthPropagationToChildren(CaptureViewElement* element);
