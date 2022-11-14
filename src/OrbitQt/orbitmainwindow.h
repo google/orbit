@@ -238,7 +238,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   [[nodiscard]] bool ConfirmExit();
   void Exit(int return_code);
 
+  void OnConnectionError(const QString& error_message);
   void OnStadiaConnectionError(std::error_code error);
+  void OnLocalConnectionError(const QString& error_message);
 
   void UpdateCaptureToolbarIconOpacity();
 

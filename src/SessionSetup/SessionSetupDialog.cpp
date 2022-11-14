@@ -43,8 +43,11 @@
 #include "ClientServices/ProcessManager.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
+#include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/ConnectToStadiaWidget.h"
 #include "SessionSetup/Connections.h"
+#include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessItemModel.h"
 #include "SessionSetup/TargetConfiguration.h"
@@ -64,7 +67,6 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
                                        QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::SessionSetupDialog>()),
-      local_grpc_port_(ssh_connection_artifacts->GetGrpcPort().grpc_port),
       state_stadia_(&state_machine_),
       state_stadia_history_(&state_stadia_),
       state_stadia_connecting_(&state_stadia_),
@@ -87,6 +89,8 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
 
   ui_->setupUi(this);
   ui_->stadiaWidget->SetSshConnectionArtifacts(ssh_connection_artifacts);
+  ui_->localProfilingWidget->SetOrbitServiceInstanceCreateFunction(
+      []() { return OrbitServiceInstance::CreatePrivileged(); });
   ui_->processesTableOverlay->raise();
 
   state_machine_.setGlobalRestorePolicy(QStateMachine::RestoreProperties);
@@ -111,23 +115,14 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   ui_->processesTableView->verticalHeader()->setDefaultSectionSize(kProcessesRowHeight);
   ui_->processesTableView->verticalHeader()->setVisible(false);
 
-  ui_->localFrame->setVisible(absl::GetFlag(FLAGS_local));
-  ui_->processLauncherWidget->setVisible(absl::GetFlag(FLAGS_devmode));
+  ui_->localProfilingWidget->setVisible(absl::GetFlag(FLAGS_local));
 
-  // If a user clicks on the localProfilingRadioButton when it is already checked, it will not
-  // become unchecked.
-  QObject::connect(ui_->localProfilingRadioButton, &QRadioButton::clicked, this,
-                   [this](bool checked) {
-                     if (!checked) ui_->localProfilingRadioButton->setChecked(true);
-                   });
   QObject::connect(ui_->processesTableView->selectionModel(), &QItemSelectionModel::currentChanged,
                    this, &SessionSetupDialog::ProcessSelectionChanged);
   QObject::connect(ui_->processesTableView, &QTableView::doubleClicked, this, &QDialog::accept);
   QObject::connect(ui_->processFilterLineEdit, &QLineEdit::textChanged, &process_proxy_model_,
                    &QSortFilterProxyModel::setFilterFixedString);
   QObject::connect(ui_->confirmButton, &QPushButton::clicked, this, &QDialog::accept);
-  QObject::connect(ui_->processLauncherWidget, &ProcessLauncherWidget::ProcessLaunched, this,
-                   &SessionSetupDialog::ProcessLaunched);
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::FileSelected, this,
                    [this](std::filesystem::path path) { selected_file_path_ = std::move(path); });
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::SelectionConfirmed, this,
@@ -179,7 +174,7 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
     return StadiaTarget(ui_->stadiaWidget->StopAndClearConnection().value(),
                         std::move(process_manager_), std::move(process_));
   } else if (state_machine_.configuration().contains(&state_local_)) {
-    return LocalTarget(LocalConnection(std::move(local_grpc_channel_)), std::move(process_manager_),
+    return LocalTarget(ui_->localProfilingWidget->TakeConnection(), std::move(process_manager_),
                        std::move(process_));
   } else if (state_machine_.configuration().contains(&state_file_)) {
     return FileTarget(selected_file_path_);
@@ -216,8 +211,7 @@ void SessionSetupDialog::SetupStadiaStates() {
                                "Please connect to an instance and select a process.");
   state_stadia_.assignProperty(ui_->stadiaWidget, "active", true);
   state_stadia_.assignProperty(ui_->loadCaptureWidget, "active", false);
-  state_stadia_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_stadia_.assignProperty(ui_->processLauncherWidget, "enabled", false);
+  state_stadia_.assignProperty(ui_->localProfilingWidget, "active", false);
 
   // STATE state_stadia_connecting_
   state_stadia_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
@@ -236,7 +230,7 @@ void SessionSetupDialog::SetupStadiaStates() {
   // STATE state_stadia_
   state_stadia_.addTransition(ui_->loadCaptureWidget, &LoadCaptureWidget::Activated,
                               &state_file_history_);
-  state_stadia_.addTransition(ui_->localProfilingRadioButton, &QRadioButton::clicked,
+  state_stadia_.addTransition(ui_->localProfilingWidget, &ConnectToLocalWidget::Activated,
                               &state_local_history_);
   state_stadia_.addTransition(ui_->stadiaWidget, &ConnectToStadiaWidget::Disconnected,
                               &state_stadia_connecting_);
@@ -291,21 +285,12 @@ void SessionSetupDialog::SetupLocalStates() {
   state_local_.assignProperty(
       ui_->confirmButton, "toolTip",
       "Please have a OrbitService run on the local machine and select a process.");
-  state_local_.assignProperty(ui_->localProfilingRadioButton, "checked", true);
+  state_local_.assignProperty(ui_->localProfilingWidget, "active", true);
   state_local_.assignProperty(ui_->stadiaWidget, "active", false);
   state_local_.assignProperty(ui_->loadCaptureWidget, "active", false);
-  state_local_.assignProperty(ui_->processLauncherWidget, "enabled", false);
 
-  // STATE state_local_connecting_
-  state_local_connecting_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connecting...");
-  state_local_connecting_.assignProperty(
-      ui_->localProfilingStatusMessage, "toolTip",
-      "Orbit is trying to connect to a local OrbitService. Please make sure OrbitService is "
-      "running on the local machine.");
-
-  // STATE state_local_connected_
-  state_local_connected_.assignProperty(ui_->localProfilingStatusMessage, "text", "Connected");
-  state_local_connected_.assignProperty(ui_->processLauncherWidget, "enabled", true);
+  // STATE state_local_connecting
+  state_local_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
 
   // STATE state_local_processes_loading_
   state_local_processes_loading_.assignProperty(ui_->processesTableOverlay, "visible", true);
@@ -325,12 +310,12 @@ void SessionSetupDialog::SetupLocalStates() {
                              &state_file_history_);
 
   // STATE state_local_connecting_
-  state_local_connecting_.addTransition(this, &SessionSetupDialog::ProcessListUpdated,
+  state_local_connecting_.addTransition(ui_->localProfilingWidget, &ConnectToLocalWidget::Connected,
                                         &state_local_connected_);
-  QObject::connect(&state_local_connecting_, &QState::entered, this,
-                   &SessionSetupDialog::ConnectToLocal);
 
   // STATE state_local_connected_
+  state_local_connected_.addTransition(
+      ui_->localProfilingWidget, &ConnectToLocalWidget::Disconnected, &state_local_connecting_);
   QObject::connect(&state_local_connected_, &QState::entered, this,
                    &SessionSetupDialog::SetupLocalProcessManager);
   QObject::connect(&state_local_connected_, &QState::exited, this,
@@ -364,11 +349,10 @@ void SessionSetupDialog::SetupFileStates() {
   // STATE state_file_
   state_file_.assignProperty(ui_->confirmButton, "enabled", false);
   state_file_.assignProperty(ui_->confirmButton, "toolTip", "Please select a capture to load");
+  state_file_.assignProperty(ui_->localProfilingWidget, "active", false);
   state_file_.assignProperty(ui_->stadiaWidget, "active", false);
   state_file_.assignProperty(ui_->loadCaptureWidget, "active", true);
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
-  state_file_.assignProperty(ui_->localProfilingRadioButton, "checked", false);
-  state_file_.assignProperty(ui_->processLauncherWidget, "enabled", false);
 
   // STATE state_file_selected_
   state_file_selected_.assignProperty(ui_->confirmButton, "enabled", true);
@@ -378,7 +362,7 @@ void SessionSetupDialog::SetupFileStates() {
   // STATE state_file_
   state_file_.addTransition(ui_->stadiaWidget, &ConnectToStadiaWidget::Activated,
                             &state_stadia_history_);
-  state_file_.addTransition(ui_->localProfilingRadioButton, &QRadioButton::clicked,
+  state_file_.addTransition(ui_->localProfilingWidget, &ConnectToLocalWidget::Activated,
                             &state_local_history_);
   state_file_.addTransition(ui_->loadCaptureWidget, &LoadCaptureWidget::FileSelected,
                             &state_file_selected_);
@@ -481,25 +465,8 @@ void SessionSetupDialog::OnProcessListUpdate(
   });
 }
 
-void SessionSetupDialog::ConnectToLocal() {
-  if (local_grpc_channel_ == nullptr) {
-    local_grpc_channel_ =
-        grpc::CreateCustomChannel(absl::StrFormat("127.0.0.1:%d", local_grpc_port_),
-                                  grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
-  }
-
-  SetupLocalProcessManager();
-}
-
 void SessionSetupDialog::SetupLocalProcessManager() {
-  SetupProcessManager(local_grpc_channel_);
-  ui_->processLauncherWidget->SetProcessManager(process_manager_.get());
-}
-
-void SessionSetupDialog::ProcessLaunched(const orbit_grpc_protos::ProcessInfo& process_info) {
-  process_ = std::make_unique<orbit_client_data::ProcessData>(process_info);
-  emit ProcessSelected();
-  accept();
+  SetupProcessManager(ui_->localProfilingWidget->GetGrpcChannel());
 }
 
 void SessionSetupDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
@@ -515,7 +482,8 @@ void SessionSetupDialog::SetTargetAndStateMachineInitialState(StadiaTarget targe
 }
 
 void SessionSetupDialog::SetTargetAndStateMachineInitialState(LocalTarget target) {
-  local_grpc_channel_ = target.GetConnection()->GetGrpcChannel();
+  ui_->localProfilingWidget->SetConnection(std::move(target.connection_));
+
   process_manager_ = std::move(target.process_manager_);
   process_ = std::move(target.process_);
 
