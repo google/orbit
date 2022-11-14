@@ -21,8 +21,6 @@ ABSL_DECLARE_FLAG(std::string, collector_root_password);
 
 ABSL_DECLARE_FLAG(uint16_t, grpc_port);
 
-ABSL_DECLARE_FLAG(bool, local);
-
 ABSL_DECLARE_FLAG(std::string, process_name);
 
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.

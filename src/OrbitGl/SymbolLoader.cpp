@@ -311,7 +311,10 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     }
     error_message += "\n  * " + symbols_path.error().message();
   }
-  if (absl::GetFlag(FLAGS_local)) {
+  {
+    // Check whether a valid symbol file exists on the local machine at module_data.file_path().
+    // This is valuable when a local target is profiled (aka OrbitService runs on the local
+    // machine). In case Orbit is connected to a remote machine this will likely fail.
     const auto symbols_included_in_module =
         orbit_symbols::VerifySymbolFile(module_data.file_path(), module_data.build_id());
     if (symbols_included_in_module.has_value()) {
@@ -379,7 +382,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
         // If --local, Orbit cannot download files from the instance, because no ssh channel
         // exists. We still return an ErrorMessage to enable continuing searching for symbols
         // from other symbol sources.
-        if (absl::GetFlag(FLAGS_local) || !app_interface_->IsConnected() ||
+        if (app_interface_->IsLocalTarget() || !app_interface_->IsConnected() ||
             absl::GetFlag(FLAGS_disable_instance_symbols)) {
           return {ErrorMessage{"\n- Not able to search for symbols on the instance."}};
         }
@@ -560,7 +563,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
       error_message += absl::StrFormat("\n  * Could not find module file itself in cache: %s",
                                        object_in_cache.error().message());
     }
-    if (absl::GetFlag(FLAGS_local)) {
+    if (app_interface_->IsLocalTarget()) {
       auto verify_object_file_result = orbit_symbols::VerifyObjectFile(
           module_id.file_path, module_id.build_id, module_file_size);
       if (verify_object_file_result.has_value()) {
@@ -586,7 +589,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
       return {find_in_cache_or_locally_result};
     }
 
-    if (absl::GetFlag(FLAGS_local) || !app_interface_->IsConnected() ||
+    if (app_interface_->IsLocalTarget() || !app_interface_->IsConnected() ||
         absl::GetFlag(FLAGS_disable_instance_symbols)) {
       return {ErrorMessage{
           absl::StrFormat("%s\n  * Could not search for module file itself on the instance.",
