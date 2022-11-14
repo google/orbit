@@ -1,0 +1,36 @@
+# Copyright (c) 2022 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+name: report-checks
+
+on:
+  workflow_run:
+    workflows: ['checks']
+    types:
+      - completed
+
+permissions: read-all
+
+jobs:
+  report-missing-license-headers:
+    permissions:
+      checks: write
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: '0'
+    - name: Download artifact
+      uses: dawidd6/action-download-artifact@e6e25ac3a2b93187502a8be1ef9e9603afc34925 # v2.24.2
+      with:
+        workflow: ${{ github.event.workflow_run.workflow_id }}
+        workflow_conclusion: ''
+        name: missing_license_headers
+    - name: Report missing headers
+      run: ./contrib/scripts/report-license-headers.sh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COMMIT_SHA: ${{ github.event.workflow_run.head_commit.id }}
+      shell: bash

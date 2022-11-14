@@ -35,6 +35,9 @@ jobs:
   check-license-headers:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    permissions:
+      checks: write
+      statuses: write
     steps:
     - uses: actions/checkout@v3
       with:
@@ -42,4 +45,11 @@ jobs:
     - name: Check license headers
       run: ./contrib/scripts/check-license-headers.sh
       shell: bash
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v3
+      if: success() || failure()
+      with:
+        name: missing_license_headers
+        path: missing_license_headers.txt
+        retention-days: 1
 
