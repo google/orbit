@@ -5,6 +5,7 @@
 #include "IntrospectionWindow.h"
 
 #include "App.h"
+#include "CaptureClient/AppInterface.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ImGuiOrbit.h"
@@ -204,8 +205,9 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
 
 }  // namespace
 
-IntrospectionWindow::IntrospectionWindow(OrbitApp* app)
-    : CaptureWindow(app),
+IntrospectionWindow::IntrospectionWindow(
+    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control)
+    : CaptureWindow(app, capture_control),
       capture_listener_{std::make_unique<IntrospectionCaptureListener>(this)},
       api_event_processor_{capture_listener_.get()} {
   // Create CaptureData.

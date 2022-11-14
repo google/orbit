@@ -91,12 +91,14 @@ GlCanvas::~GlCanvas() {
 std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app) {
   switch (canvas_type) {
     case CanvasType::kCaptureWindow: {
-      auto main_capture_window = std::make_unique<CaptureWindow>(app);
+      auto main_capture_window =
+          std::make_unique<CaptureWindow>(app, /*.capture_control_interface = */ app);
       app->SetCaptureWindow(main_capture_window.get());
       return main_capture_window;
     }
     case CanvasType::kIntrospectionWindow: {
-      auto introspection_window = std::make_unique<IntrospectionWindow>(app);
+      auto introspection_window =
+          std::make_unique<IntrospectionWindow>(app, /*.capture_control_interface = */ app);
       app->SetIntrospectionWindow(introspection_window.get());
       return introspection_window;
     }

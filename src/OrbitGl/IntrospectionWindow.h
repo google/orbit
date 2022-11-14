@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "CaptureClient/ApiEventProcessor.h"
+#include "CaptureClient/AppInterface.h"
 #include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "Introspection/Introspection.h"
@@ -18,7 +19,8 @@ class OrbitApp;
 
 class IntrospectionWindow : public CaptureWindow {
  public:
-  explicit IntrospectionWindow(OrbitApp* app);
+  explicit IntrospectionWindow(OrbitApp* app,
+                               orbit_capture_client::CaptureControlInterface* capture_control);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
   void RenderImGuiDebugUI() override;
