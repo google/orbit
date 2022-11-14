@@ -134,7 +134,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   bool IsConnected() override { return is_connected_; }
 
-  bool IsLocalTarget() override {
+  [[nodiscard]] bool IsLocalTarget() const override {
     return std::holds_alternative<orbit_session_setup::LocalTarget>(target_configuration_);
   }
 

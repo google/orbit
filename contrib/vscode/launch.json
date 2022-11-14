@@ -21,9 +21,6 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build_default_relwithdebinfo/bin/Orbit",
-      "args": [
-        "--local",
-      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/build_default_relwithdebinfo/bin/",
       "environment": [],

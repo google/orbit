@@ -144,22 +144,21 @@ script will not be able to install conan for you.)
 Like mentioned before, the collector currently only works for Linux. So the following
 only applies there:
 
-To obtain scheduling information, the collector needs to run as root:
+1. Start Orbit via 
+```bash
+./build_default_relwithdebinfo/bin/Orbit
+```
+2. Start OrbitService by clicking the button `Start OrbitService`. To obtain scheduling
+   information, the collector needs to run as root, hence this will prompt you for a
+	 password (via [pkexec](https://linux.die.net/man/1/pkexec)). Alternatively, you can 
+	 start OrbitService yourself:
 
 ```bash
 sudo ./build_default_relwithdebinfo/bin/OrbitService # Start the collector
 ```
 
-After the collector runs you can start the frontend from a different shell.
-
-```bash
-./build_default_relwithdebinfo/bin/Orbit --local
-```
-
 The frontend currently has no graphical user interface to connect to a generic
-remote instance. Only Stadia is supported as a special case. That's why you need
-to start the frontend in `--local` mode. This will instruct Orbit to connect to the
-service at `localhost` on port `44765`.
+remote instance. Only Stadia is supported as a special case. 
 
 If you needed remote profiling support you could tunnel the mentioned TCP port through
 a SSH connection to an arbitrary Linux server. There are plans on adding generic

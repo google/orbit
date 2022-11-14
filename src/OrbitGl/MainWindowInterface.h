@@ -75,7 +75,7 @@ class MainWindowInterface {
   virtual void ClearCallstackInspection() = 0;
 
   virtual bool IsConnected() = 0;
-  virtual bool IsLocalTarget() = 0;
+  [[nodiscard]] virtual bool IsLocalTarget() const = 0;
 };
 
 }  // namespace orbit_gl

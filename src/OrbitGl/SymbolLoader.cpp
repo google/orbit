@@ -379,9 +379,9 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
       main_thread_executor_->Schedule([this, module_id,
                                        stop_token = stop_source.GetStopToken()]() mutable
                                       -> Future<SymbolRetrieveResult> {
-        // If --local, Orbit cannot download files from the instance, because no ssh channel
-        // exists. We still return an ErrorMessage to enable continuing searching for symbols
-        // from other symbol sources.
+        // If Orbit is in local profiling mode, it cannot download files from the instance, because
+        // no ssh channel exists. We still return an ErrorMessage to enable continuing searching for
+        // symbols from other symbol sources.
         if (app_interface_->IsLocalTarget() || !app_interface_->IsConnected() ||
             absl::GetFlag(FLAGS_disable_instance_symbols)) {
           return {ErrorMessage{"\n- Not able to search for symbols on the instance."}};
