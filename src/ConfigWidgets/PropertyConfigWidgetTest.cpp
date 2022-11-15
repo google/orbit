@@ -6,6 +6,8 @@
 
 #include <QApplication>
 #include <QCheckBox>
+#include <QPushButton>
+#include <QSignalSpy>
 #include <QSlider>
 
 #include "ConfigWidgets/PropertyConfigWidget.h"
@@ -64,20 +66,38 @@ TEST(PropertyConfigWidget, AddWidgetForFloatProperty) {
 
   auto* slider = widget.findChild<QSlider*>("slider_my_label_");
   ASSERT_NE(slider, nullptr);
-
   EXPECT_EQ(slider->value(), 42);
 
-  // Slider changes adjust the property's value.
+  QSignalSpy property_change_signal{
+      &widget, &orbit_config_widgets::PropertyConfigWidget::AnyRegisteredPropertyChangedValue};
+
+  // Slider changes adjust the property's value
+  property_change_signal.clear();
   slider->setValue(78);
   EXPECT_EQ(property.value(), 78);
+  // and trigger the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 
   // The slider obeys min and max limits.
   slider->setValue(142);
   EXPECT_EQ(property.value(), 100);
 
-  // Programmatic value changes adjust the slider.
-  property.SetValue(42);
-  EXPECT_EQ(slider->value(), 42);
+  // Programmatic value changes adjust the slider
+  property_change_signal.clear();
+  property.SetValue(43);
+  EXPECT_EQ(slider->value(), 43);
+  // and do NOT trigger the change signal.
+  EXPECT_EQ(property_change_signal.count(), 0);
+
+  // Clicking the reset button restores the initial value
+  auto* reset_button = widget.findChild<QPushButton*>("reset_button_my_label_");
+  ASSERT_NE(reset_button, nullptr);
+
+  property_change_signal.clear();
+  reset_button->click();
+  EXPECT_EQ(slider->value(), property.definition().initial_value);
+  // and triggers the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 }
 
 TEST(PropertyConfigWidget, AddWidgetForIntProperty) {
@@ -89,20 +109,38 @@ TEST(PropertyConfigWidget, AddWidgetForIntProperty) {
 
   auto* slider = widget.findChild<QSlider*>("slider_my_label_");
   ASSERT_NE(slider, nullptr);
-
   EXPECT_EQ(slider->value(), 42);
 
-  // Slider changes adjust the property's value.
+  QSignalSpy property_change_signal{
+      &widget, &orbit_config_widgets::PropertyConfigWidget::AnyRegisteredPropertyChangedValue};
+
+  // Slider changes adjust the property's value
+  property_change_signal.clear();
   slider->setValue(78);
   EXPECT_EQ(property.value(), 78);
+  // and trigger the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 
   // The slider obeys min and max limits.
   slider->setValue(142);
   EXPECT_EQ(property.value(), 100);
 
-  // Programmatic value changes adjust the slider.
-  property.SetValue(42);
-  EXPECT_EQ(slider->value(), 42);
+  // Programmatic value changes adjust the slider
+  property_change_signal.clear();
+  property.SetValue(43);
+  EXPECT_EQ(slider->value(), 43);
+  // and do NOT trigger the change signal.
+  EXPECT_EQ(property_change_signal.count(), 0);
+
+  // Clicking the reset button restores the initial value
+  auto* reset_button = widget.findChild<QPushButton*>("reset_button_my_label_");
+  ASSERT_NE(reset_button, nullptr);
+
+  property_change_signal.clear();
+  reset_button->click();
+  EXPECT_EQ(slider->value(), property.definition().initial_value);
+  // and triggers the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 }
 
 TEST(PropertyConfigWidget, AddWidgetForBoolProperty) {
@@ -114,14 +152,35 @@ TEST(PropertyConfigWidget, AddWidgetForBoolProperty) {
 
   auto* checkbox = widget.findChild<QCheckBox*>("checkbox_my_label_");
   ASSERT_NE(checkbox, nullptr);
-
   EXPECT_EQ(checkbox->isChecked(), true);
 
+  QSignalSpy property_change_signal{
+      &widget, &orbit_config_widgets::PropertyConfigWidget::AnyRegisteredPropertyChangedValue};
+
+  // Changing the checked state of the checkbox adjusts the value of the property
+  property_change_signal.clear();
   checkbox->setChecked(false);
   EXPECT_EQ(property.value(), false);
+  // and triggers the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 
+  // Programmatic value changes adjust the checked state of the checkbox
+  property_change_signal.clear();
   property.SetValue(true);
   EXPECT_EQ(checkbox->isChecked(), true);
+  // and do NOT trigger the change signal.
+  EXPECT_EQ(property_change_signal.count(), 0);
+
+  // Clicking the reset button restores the initial check state
+  property.SetValue(false);
+  auto* reset_button = widget.findChild<QPushButton*>("reset_button_my_label_");
+  ASSERT_NE(reset_button, nullptr);
+
+  property_change_signal.clear();
+  reset_button->click();
+  EXPECT_EQ(checkbox->isChecked(), property.definition().initial_value);
+  // and triggers the change signal.
+  EXPECT_EQ(property_change_signal.count(), 1);
 }
 
 // Start the test binary with `--gtest_filter=PropertyConfigWidget.DISABLED_Demo

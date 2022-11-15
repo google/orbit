@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QSlider>
 #include <QWidget>
 #include <string_view>
@@ -44,11 +45,18 @@ void PropertyConfigWidget::AddWidgetForProperty(FloatProperty* property) {
 
   auto* slider = new QSlider(Qt::Horizontal, this);  // NOLINT(cppcoreguidelines-owning-memory)
   property->value_ = property->definition().initial_value;
+
+  const auto to_slider_value = [property](float input) {
+    return static_cast<int>((input - property->definition().min) / property->definition().step);
+  };
+  const auto to_property_value = [property](int slider_position) {
+    return property->definition().min +
+           static_cast<float>(slider_position) * property->definition().step;
+  };
+
   slider->setMinimum(0);
-  slider->setMaximum(static_cast<int>((property->definition().max - property->definition().min) /
-                                      property->definition().step));
-  slider->setValue(static_cast<int>((property->value_ - property->definition().min) /
-                                    property->definition().step));
+  slider->setMaximum(to_slider_value(property->definition().max));
+  slider->setValue(to_slider_value(property->definition().initial_value));
   slider->setSingleStep(1);
   slider->setObjectName(QString{"slider_%1"}.arg(MakeObjectName(property->definition().label)));
   layout_->addWidget(slider, row, 1);
@@ -64,16 +72,26 @@ void PropertyConfigWidget::AddWidgetForProperty(FloatProperty* property) {
   value_label->setObjectName(
       QString{"value_label_%1"}.arg(MakeObjectName(property->definition_.label)));
 
-  QObject::connect(slider, &QSlider::valueChanged, value_label,
-                   [property, get_value_string, value_label](int value) {
-                     const auto new_value = property->definition().min +
-                                            static_cast<float>(value) * property->definition_.step;
-                     if (property->value_ == new_value) return;
-                     property->value_ = new_value;
-                     value_label->setText(get_value_string(property->value_));
-                   });
+  QObject::connect(
+      slider, &QSlider::valueChanged, value_label,
+      [this, property, get_value_string, value_label, to_property_value](int slider_position) {
+        const float new_value = to_property_value(slider_position);
+        if (property->value_ == new_value) return;
+        property->value_ = new_value;
+        value_label->setText(get_value_string(property->value_));
+        emit AnyRegisteredPropertyChangedValue();
+      });
 
   property->setter_ = [slider](int value) { slider->setValue(value); };
+
+  auto* reset_button = new QPushButton(QIcon::fromTheme("edit-undo"), QString{}, this);
+  layout_->addWidget(reset_button, row, 3, Qt::AlignRight);
+  reset_button->setObjectName(
+      QString{"reset_button_%1"}.arg(MakeObjectName(property->definition().label)));
+  QObject::connect(reset_button, &QPushButton::clicked, this,
+                   [slider, to_slider_value, property]() {
+                     slider->setValue(to_slider_value(property->definition().initial_value));
+                   });
 }
 
 void PropertyConfigWidget::AddWidgetForProperty(IntProperty* property) {
@@ -106,13 +124,22 @@ void PropertyConfigWidget::AddWidgetForProperty(IntProperty* property) {
       QString{"value_label_%1"}.arg(MakeObjectName(property->definition_.label)));
 
   QObject::connect(slider, &QSlider::valueChanged, value_label,
-                   [property, get_value_string, value_label](int value) {
+                   [this, property, get_value_string, value_label](int value) {
                      if (value == property->value_) return;
                      property->value_ = value;
                      value_label->setText(get_value_string(property->value_));
+                     emit AnyRegisteredPropertyChangedValue();
                    });
 
   property->setter_ = [slider](int value) { slider->setValue(value); };
+
+  auto* reset_button = new QPushButton(QIcon::fromTheme("edit-undo"), QString{}, this);
+  layout_->addWidget(reset_button, row, 3, Qt::AlignRight);
+  reset_button->setObjectName(
+      QString{"reset_button_%1"}.arg(MakeObjectName(property->definition().label)));
+  QObject::connect(reset_button, &QPushButton::clicked, this, [slider, property]() {
+    slider->setValue(property->definition().initial_value);
+  });
 }
 
 void PropertyConfigWidget::AddWidgetForProperty(BoolProperty* property) {
@@ -125,13 +152,22 @@ void PropertyConfigWidget::AddWidgetForProperty(BoolProperty* property) {
   checkbox->setChecked(property->value());
   layout_->addWidget(checkbox, row, 1);
 
-  QObject::connect(checkbox, &QCheckBox::stateChanged, this, [property](int check_state) {
+  QObject::connect(checkbox, &QCheckBox::stateChanged, this, [this, property](int check_state) {
     bool new_value = check_state == Qt::Checked;
     if (property->value() == new_value) return;
     property->value_ = new_value;
+    emit AnyRegisteredPropertyChangedValue();
   });
 
   property->setter_ = [checkbox](bool checked) { checkbox->setChecked(checked); };
+
+  auto* reset_button = new QPushButton(QIcon::fromTheme("edit-undo"), QString{}, this);
+  layout_->addWidget(reset_button, row, 3, Qt::AlignRight);
+  reset_button->setObjectName(
+      QString{"reset_button_%1"}.arg(MakeObjectName(property->definition().label)));
+  QObject::connect(reset_button, &QPushButton::clicked, this, [checkbox, property]() {
+    checkbox->setChecked(property->definition().initial_value);
+  });
 }
 
 }  // namespace orbit_config_widgets

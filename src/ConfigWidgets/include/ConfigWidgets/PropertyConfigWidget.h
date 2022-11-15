@@ -116,6 +116,11 @@ class PropertyConfigWidget : public QWidget {
 
  private:
   QGridLayout* layout_;
+
+ signals:
+  // This signal gets emitted whenever a property gets changed on the UI. It's NOT triggered when
+  // someone calls `SetValue` on a property.
+  void AnyRegisteredPropertyChangedValue();
 };
 
 }  // namespace orbit_config_widgets
