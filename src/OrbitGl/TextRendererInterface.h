@@ -34,7 +34,6 @@ class TextRendererInterface {
   virtual void Clear() = 0;
 
   virtual void RenderLayer(QPainter* painter, float layer) = 0;
-  virtual void RenderDebug(PrimitiveAssembler* primitive_assembler) = 0;
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
 
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting) = 0;
