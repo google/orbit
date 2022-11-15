@@ -489,10 +489,6 @@ void CaptureWindow::Draw(QPainter* painter) {
   }
 
   if (picking_mode_ == PickingMode::kNone) {
-    text_renderer_.RenderDebug(&primitive_assembler_);
-  }
-
-  if (picking_mode_ == PickingMode::kNone) {
     double update_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
     if (time_graph_was_redrawn) {
       scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(update_duration_in_ms);

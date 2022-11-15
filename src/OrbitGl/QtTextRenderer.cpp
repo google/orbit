@@ -72,8 +72,6 @@ void QtTextRenderer::RenderLayer(QPainter* painter, float layer) {
   }
 }
 
-void QtTextRenderer::RenderDebug(PrimitiveAssembler* /*primitive_assembler*/) {}
-
 std::vector<float> QtTextRenderer::GetLayers() const {
   std::vector<float> result(stored_text_.size());
   int index = 0;

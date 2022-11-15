@@ -25,7 +25,6 @@ class QtTextRenderer : public TextRenderer {
   void Clear() override { stored_text_.clear(); };
 
   void RenderLayer(QPainter* painter, float layer) override;
-  void RenderDebug(PrimitiveAssembler* primitive_assembler) override;
   [[nodiscard]] std::vector<float> GetLayers() const override;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;
