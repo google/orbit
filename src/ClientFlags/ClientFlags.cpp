@@ -18,7 +18,6 @@ ABSL_FLAG(std::string, collector_root_password, "", "Collector's machine root pa
 
 ABSL_FLAG(uint16_t, grpc_port, 44765,
           "The service's GRPC server port (use default value if unsure)");
-ABSL_FLAG(bool, local, false, "Connects to local instance of OrbitService");
 
 ABSL_FLAG(std::string, process_name, "",
           "Automatically select and connect to the specified process");

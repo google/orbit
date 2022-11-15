@@ -115,8 +115,6 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   ui_->processesTableView->verticalHeader()->setDefaultSectionSize(kProcessesRowHeight);
   ui_->processesTableView->verticalHeader()->setVisible(false);
 
-  ui_->localProfilingWidget->setVisible(absl::GetFlag(FLAGS_local));
-
   QObject::connect(ui_->processesTableView->selectionModel(), &QItemSelectionModel::currentChanged,
                    this, &SessionSetupDialog::ProcessSelectionChanged);
   QObject::connect(ui_->processesTableView, &QTableView::doubleClicked, this, &QDialog::accept);
@@ -139,7 +137,7 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
 }
 
 void SessionSetupDialog::SetStateMachineInitialState() {
-  if (absl::GetFlag(FLAGS_local)) {
+  if (ui_->localProfilingWidget->IsActive()) {
     state_machine_.setInitialState(&state_local_);
   } else if (ui_->stadiaWidget->IsActive()) {
     state_machine_.setInitialState(&state_stadia_);

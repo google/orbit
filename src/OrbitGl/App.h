@@ -502,6 +502,8 @@ class OrbitApp final : public DataViewFactory,
   }
 
   [[nodiscard]] bool IsConnected() const override { return main_window_->IsConnected(); }
+  [[nodiscard]] bool IsLocalTarget() const override { return main_window_->IsLocalTarget(); }
+
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) override;

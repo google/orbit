@@ -28,6 +28,7 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "App.h"
@@ -44,6 +45,7 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 #include "orbitglwidget.h"
 
@@ -131,6 +133,10 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ClearCallstackInspection() override;
 
   bool IsConnected() override { return is_connected_; }
+
+  [[nodiscard]] bool IsLocalTarget() const override {
+    return std::holds_alternative<orbit_session_setup::LocalTarget>(target_configuration_);
+  }
 
  protected:
   void closeEvent(QCloseEvent* event) override;

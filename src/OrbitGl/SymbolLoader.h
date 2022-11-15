@@ -38,6 +38,7 @@ class SymbolLoader {
     [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
         const orbit_symbol_provider::ModuleIdentifier& module_id) const = 0;
     [[nodiscard]] virtual bool IsConnected() const = 0;
+    [[nodiscard]] virtual bool IsLocalTarget() const = 0;
     virtual orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
     DownloadFileFromInstance(std::filesystem::path path_on_instance,
                              std::filesystem::path local_path,
