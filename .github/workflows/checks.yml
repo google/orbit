@@ -35,9 +35,6 @@ jobs:
   check-license-headers:
     runs-on: ubuntu-22.04
     timeout-minutes: 20
-    permissions:
-      checks: write
-      statuses: write
     steps:
     - uses: actions/checkout@v3
       with:
