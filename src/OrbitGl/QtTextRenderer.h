@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_QT_TEXT_RENDERER_H_
 #define ORBIT_GL_QT_TEXT_RENDERER_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -16,6 +18,7 @@
 
 namespace orbit_gl {
 
+// Qt implementation of TextRenderer.
 class QtTextRenderer : public TextRenderer {
  public:
   void Init() override{};
@@ -39,18 +42,19 @@ class QtTextRenderer : public TextRenderer {
  private:
   struct StoredText {
     StoredText() = default;
-    StoredText(const char* text, float x, float y, float z, TextFormatting formatting) {
+    StoredText(const char* text, int x, int y, int w, int h, TextFormatting formatting) {
       this->text = text;
       this->x = x;
       this->y = y;
-      this->z = z;
+      this->w = w;
+      this->h = h;
       this->formatting = formatting;
     }
     std::string text;
-    float x = 0.f, y = 0.f, z = 0.f;
+    int x, y, w, h;
     TextFormatting formatting;
   };
-  std::vector<StoredText> stored_text_;
+  absl::flat_hash_map<float, std::vector<StoredText>> stored_text_;
 };
 
 }  // namespace orbit_gl
