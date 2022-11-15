@@ -82,7 +82,9 @@ void PropertyConfigWidget::AddWidgetForProperty(FloatProperty* property) {
         emit AnyRegisteredPropertyChangedValue();
       });
 
-  property->setter_ = [slider](int value) { slider->setValue(value); };
+  property->setter_ = [slider, to_slider_value](float value) {
+    slider->setValue(to_slider_value(value));
+  };
 
   auto* reset_button = new QPushButton(QIcon::fromTheme("edit-undo"), QString{}, this);
   layout_->addWidget(reset_button, row, 3, Qt::AlignRight);

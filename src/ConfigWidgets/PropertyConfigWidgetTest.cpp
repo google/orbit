@@ -61,31 +61,38 @@ TEST(PropertyConfigWidget, AddWidgetForFloatProperty) {
   orbit_config_widgets::PropertyConfigWidget widget{};
 
   orbit_config_widgets::PropertyConfigWidget::FloatProperty property{
-      {.initial_value = 42.f, .min = 0.f, .max = 100.f, .step = 1.0f, .label = "My label:"}};
+      {.initial_value = 42.f, .min = 5.f, .max = 100.f, .step = 0.1f, .label = "My label:"}};
   widget.AddWidgetForProperty(&property);
+
+  const auto to_slider_position = [&property](float value) {
+    // QSlider only supports integers, so we do linear scaling between min and max with a resolution
+    // of step to support floats.
+
+    return static_cast<int>((value - property.definition().min) / property.definition().step);
+  };
 
   auto* slider = widget.findChild<QSlider*>("slider_my_label_");
   ASSERT_NE(slider, nullptr);
-  EXPECT_EQ(slider->value(), 42);
+  EXPECT_EQ(slider->value(), to_slider_position(property.definition().initial_value));
 
   QSignalSpy property_change_signal{
       &widget, &orbit_config_widgets::PropertyConfigWidget::AnyRegisteredPropertyChangedValue};
 
   // Slider changes adjust the property's value
   property_change_signal.clear();
-  slider->setValue(78);
-  EXPECT_EQ(property.value(), 78);
+  slider->setValue(to_slider_position(78.f));
+  EXPECT_FLOAT_EQ(property.value(), 78.f);
   // and trigger the change signal.
   EXPECT_EQ(property_change_signal.count(), 1);
 
   // The slider obeys min and max limits.
-  slider->setValue(142);
-  EXPECT_EQ(property.value(), 100);
+  slider->setValue(to_slider_position(142.f));
+  EXPECT_FLOAT_EQ(property.value(), property.definition().max);
 
   // Programmatic value changes adjust the slider
   property_change_signal.clear();
   property.SetValue(43);
-  EXPECT_EQ(slider->value(), 43);
+  EXPECT_EQ(slider->value(), to_slider_position(43.f));
   // and do NOT trigger the change signal.
   EXPECT_EQ(property_change_signal.count(), 0);
 
@@ -95,7 +102,7 @@ TEST(PropertyConfigWidget, AddWidgetForFloatProperty) {
 
   property_change_signal.clear();
   reset_button->click();
-  EXPECT_EQ(slider->value(), property.definition().initial_value);
+  EXPECT_FLOAT_EQ(slider->value(), to_slider_position(property.definition().initial_value));
   // and triggers the change signal.
   EXPECT_EQ(property_change_signal.count(), 1);
 }
