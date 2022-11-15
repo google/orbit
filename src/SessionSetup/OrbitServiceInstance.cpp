@@ -82,7 +82,8 @@ ErrorMessageOr<void> OrbitServiceInstanceImpl::Shutdown() {
 
   bool wait_finished_result = process_.waitForFinished(kWaitTimeInMilliSeconds);
   if (!wait_finished_result) {
-    return ErrorMessage{"The OrbitService shutdown attempt failed."};
+    return ErrorMessage{absl::StrFormat("Shutting down OrbitService timed out after %d ms.",
+                                        kWaitTimeInMilliSeconds)};
   }
   return outcome::success();
 }
