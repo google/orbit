@@ -30,8 +30,10 @@ float GetYOffsetFromAlignment(QtTextRenderer::VAlign alignment, float height) {
       return -0.5f * height;
     case QtTextRenderer::VAlign::Bottom:
       // This is a hack to match the behaviour of a previous implementation of
-      // TextRendererInterface. One would expect returning -height here but that would mean we would
-      // need to alter call sites of AddText.
+      // TextRendererInterface. A previous implementation returned the height of the actual
+      // rendered glyphs. The new implementation returns the maximum heigth of a rendered line of
+      // text (plus potentially some margin - not sure about that). One would expect returning
+      // -height here but that would mean we would need to alter call sites of AddText.
       return (-5.f / 6.f) * height;
     default:
       ORBIT_UNREACHABLE();
@@ -89,10 +91,18 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z,
 
 void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                              Vec2* out_text_pos, Vec2* out_text_size) {
+  if (out_text_pos != nullptr) {
+    (*out_text_pos)[0] = (*out_text_pos)[1] = 0.f;
+  }
+  if (out_text_size != nullptr) {
+    (*out_text_size)[0] = (*out_text_size)[1] = 0.f;
+  }
   const size_t text_length = strlen(text);
   if (text_length == 0) {
     return;
   }
+  const float width_entire_text = GetStringWidth(text, formatting.font_size);
+  const float height_entire_text = GetStringHeight(text, formatting.font_size);
   Vec2i pen_pos = viewport_->WorldToScreen(Vec2(x, y));
   LayeredVec2 transformed = translations_.TranslateXYZAndFloorXY(
       {{static_cast<float>(pen_pos[0]), static_cast<float>(pen_pos[1])}, z});
@@ -105,7 +115,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   if (GetStringWidth(text_as_string.substr(0, 1).c_str(), formatting.font_size) > max_width) {
     return;
   }
-  if (GetStringWidth(text, formatting.font_size) <= max_width) {
+  if (width_entire_text <= max_width) {
     idx_min = text_length;
   }
   while (idx_max - idx_min > 1) {
@@ -118,8 +128,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
     }
   }
   text_as_string = text_as_string.substr(0, idx_min);
-  float y_offset = GetYOffsetFromAlignment(
-      formatting.valign, GetStringHeight(text_as_string.c_str(), formatting.font_size));
+  float y_offset = GetYOffsetFromAlignment(formatting.valign, height_entire_text);
   const float single_line_height = GetStringHeight(".", formatting.font_size);
   const std::vector<std::string> lines = absl::StrSplit(text_as_string, '\n');
   for (const auto& line : lines) {
@@ -134,15 +143,12 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
 
   if (out_text_pos != nullptr) {
     (*out_text_pos)[0] =
-        transformed.xy[0] +
-        GetXOffsetFromAlignment(formatting.halign, GetStringWidth(text, formatting.font_size));
+        transformed.xy[0] + GetXOffsetFromAlignment(formatting.halign, width_entire_text);
     (*out_text_pos)[1] =
-        transformed.xy[1] +
-        GetYOffsetFromAlignment(formatting.valign, GetStringHeight(text, formatting.font_size));
+        transformed.xy[1] + GetYOffsetFromAlignment(formatting.valign, height_entire_text);
   }
   if (out_text_size != nullptr) {
-    *out_text_size = Vec2(GetStringWidth(text, formatting.font_size),
-                          GetStringHeight(text, formatting.font_size));
+    *out_text_size = Vec2(width_entire_text, height_entire_text);
   }
 }
 
