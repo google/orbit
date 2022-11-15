@@ -64,7 +64,6 @@ class OrbitConan(ConanFile):
         self.requires("zlib/1.2.12", override=True)
 
         if self.options.with_gui:
-            if not self.options.with_system_deps: self.requires("freetype/2.12.1")
             if not self.options.with_system_deps: self.requires("glad/0.1.34")
             if not self.options.with_system_deps: self.requires("imgui/1.88")
             if not self.options.with_system_deps: self.requires("libssh2/1.10.0")
@@ -123,8 +122,6 @@ class OrbitConan(ConanFile):
 
     def package(self):
         self.copy("*", src="bin/autopresets", dst="bin/autopresets", symlinks=True)
-        self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
-        self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")
         self.copy("Orbit", src="bin/", dst="bin")
         self.copy("Orbit.exe", src="bin/", dst="bin")
