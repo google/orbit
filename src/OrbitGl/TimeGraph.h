@@ -24,7 +24,6 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "QtTextRenderer.h"
-// #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
 #include "TrackContainer.h"
