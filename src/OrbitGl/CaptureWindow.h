@@ -43,7 +43,7 @@ class CaptureWindow : public GlCanvas {
 
   void SetIsMouseOver(bool value) override;
 
-  void PostRender() override;
+  void PostRender(QPainter* painter) override;
   void RenderImGuiDebugUI() override;
 
   void RequestUpdatePrimitives();
@@ -57,12 +57,12 @@ class CaptureWindow : public GlCanvas {
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
  protected:
-  void Draw() override;
+  void Draw(QPainter* painter) override;
   void UpdateChildrenPosAndSize();
 
-  void RenderAllLayers();
+  void RenderAllLayers(QPainter* painter);
 
-  virtual void RenderText(float layer);
+  virtual void RenderText(QPainter* painter, float layer);
   virtual bool ShouldSkipRendering() const;
 
   virtual void ToggleRecording();

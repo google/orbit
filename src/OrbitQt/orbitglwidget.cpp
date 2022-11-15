@@ -17,6 +17,7 @@
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QOpenGLDebugMessage>
+#include <QPainter>
 #include <QRect>
 #include <QSignalMapper>
 #include <QSurfaceFormat>
@@ -198,8 +199,10 @@ void OrbitGLWidget::resizeGL(int w, int h) {
 
 void OrbitGLWidget::paintGL() {
   ORBIT_SCOPE_FUNCTION;
+  QPainter painter(this);
+
   if (gl_canvas_) {
-    gl_canvas_->Render(width(), height());
+    gl_canvas_->Render(&painter, width(), height());
   }
 
   static volatile bool doScreenShot = false;

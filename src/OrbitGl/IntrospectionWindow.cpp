@@ -243,14 +243,14 @@ void IntrospectionWindow::StartIntrospection() {
 }
 void IntrospectionWindow::StopIntrospection() { introspection_listener_ = nullptr; }
 
-void IntrospectionWindow::Draw() {
+void IntrospectionWindow::Draw(QPainter* painter) {
   ORBIT_SCOPE_FUNCTION;
-  CaptureWindow::Draw();
+  CaptureWindow::Draw(painter);
 }
 
-void IntrospectionWindow::RenderText(float layer) {
+void IntrospectionWindow::RenderText(QPainter* painter, float layer) {
   ORBIT_SCOPE_FUNCTION;
-  CaptureWindow::RenderText(layer);
+  CaptureWindow::RenderText(painter, layer);
 }
 
 void IntrospectionWindow::ToggleRecording() {

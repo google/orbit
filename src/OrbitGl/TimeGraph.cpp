@@ -893,7 +893,9 @@ void TimeGraph::DrawMarginsBetweenChildren(
   primitive_assembler.AddBox(box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
 }
 
-void TimeGraph::DrawText(float layer) { text_renderer_static_.RenderLayer(layer); }
+void TimeGraph::DrawText(QPainter* painter, float layer) {
+  text_renderer_static_.RenderLayer(painter, layer);
+}
 
 bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {
   double start = TicksToMicroseconds(capture_min_timestamp_, min);
