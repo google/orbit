@@ -47,7 +47,6 @@ jobs:
          vulkan-validationlayers-dev                    \
          libz-dev                                       \
          llvm-dev                                       \
-         libfreetype6-dev                               \
          libimgui-dev                                   \
          protobuf-compiler-grpc                         \
          pkg-config                                     \
