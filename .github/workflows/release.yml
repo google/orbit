@@ -86,14 +86,12 @@ jobs:
       - name: Generate tag name
         id: generate-tag-name
         run: echo "tag_name=nightly-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
-      - name: Create and push tag
-        working-directory: ./workspace
-        run: git tag ${{ steps.generate-tag-name.outputs.tag_name }} && git push origin ${{ steps.generate-tag-name.outputs.tag_name }}
       - name: Release
         uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v1
         with:
           name: 'Orbit ${{ steps.generate-version-string.outputs.version_string }}'
           body: 'This is an automated nightly release of Orbit.'
           tag_name: ${{ steps.generate-tag-name.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           files: |
             *.deb
