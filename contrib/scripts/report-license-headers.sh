@@ -12,7 +12,7 @@ function format_annotations() {
 
   echo "{"
   echo "\"name\":\"missing-license-headers\","
-  echo "\"head_sha\":$(echo "${COMMIT_SHA}" | jq -Rs . | sed 's/\\n//g'),"
+  echo "\"head_sha\":$(echo -n "${COMMIT_SHA}" | jq -Rs .),"
   echo "\"status\":\"completed\","
   echo "\"conclusion\":\"failure\","
   echo "\"output\":{"
@@ -25,7 +25,7 @@ function format_annotations() {
       echo ","
     fi
     FIRST_LINE=""
-    echo "{\"path\":$(echo "${line}" | jq -Rs . | sed 's/\\n//g'),"
+    echo "{\"path\":$(echo -n "${line}" | jq -Rs .),"
     echo "\"start_line\":1,"
     echo "\"end_line\":1,"
     echo "\"start_column\":1,"
