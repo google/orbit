@@ -13,6 +13,7 @@ target_sources(
           CallTreeViewItemModel.h
           CallTreeWidget.h
           CaptureOptionsDialog.h
+          CaptureWindowDebugWidget.h
           CustomSignalsTreeView.h
           CutoutWidget.h
           ElidedLabel.h
@@ -45,6 +46,8 @@ target_sources(
           CallTreeWidget.ui
           CaptureOptionsDialog.cpp
           CaptureOptionsDialog.ui
+          CaptureWindowDebugWidget.cpp
+          CaptureWindowDebugWidget.ui
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
@@ -117,6 +120,7 @@ target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
+                CaptureWindowDebugWidgetTest.cpp
                 HistogramWidgetTest.cpp
                 MultipleOfValidatorTest.cpp
                 TimeGraphLayoutWidgetTest.cpp
