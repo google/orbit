@@ -84,7 +84,7 @@ jobs:
       - run: ls -la .
       - name: Generate tag name
         id: generate-tag-name
-        run: echo "tag_name=nightly-$(date +%m-%d-%Y)" >> $GITHUB_OUTPUT
+        run: echo "tag_name=nightly-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
       - name: Create and push tag
         working-directory: ./workspace
         run: git tag ${{ steps.generate-tag-name.outputs.tag_name }} && git push origin ${{ steps.generate-tag-name.outputs.tag_name }}
