@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DebugTabWidget</class>
+ <widget class="QWidget" name="DebugTabWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="captureWindowTab">
+      <attribute name="title">
+       <string>Capture Window</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="orbit_qt::CaptureWindowDebugWidget" name="captureWindowDebugWidget" native="true"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="introspectionWindowTab">
+      <attribute name="title">
+       <string>Introspection Window</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="orbit_qt::CaptureWindowDebugWidget" name="introspectionWindowDebugWidget" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>orbit_qt::CaptureWindowDebugWidget</class>
+   <extends>QWidget</extends>
+   <header>CaptureWindowDebugWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
