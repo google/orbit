@@ -18,13 +18,15 @@
 #include "PickingManager.h"
 #include "SimpleTimings.h"
 #include "TimeGraph.h"
+#include "TimeGraphLayout.h"
 #include "absl/container/btree_map.h"
 
 class OrbitApp;
 
 class CaptureWindow : public GlCanvas {
  public:
-  explicit CaptureWindow(OrbitApp* app);
+  explicit CaptureWindow(OrbitApp* app,
+                         orbit_capture_client::CaptureControlInterface* capture_control);
 
   void PreRender() override;
 

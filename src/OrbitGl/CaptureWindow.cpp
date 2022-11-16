@@ -76,7 +76,9 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 
 using orbit_client_protos::TimerInfo;
 
-CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app}, capture_client_app_{app} {
+CaptureWindow::CaptureWindow(
+    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control_interface)
+    : app_{app}, capture_client_app_{capture_control_interface} {
   draw_help_ = true;
 
   scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
