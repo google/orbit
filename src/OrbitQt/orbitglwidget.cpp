@@ -60,8 +60,8 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
 }
 
 void OrbitGLWidget::Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window,
-                               OrbitApp* app) {
-  gl_canvas_ = GlCanvas::Create(canvas_type, app);
+                               OrbitApp* app, TimeGraphLayout* time_graph_layout) {
+  gl_canvas_ = GlCanvas::Create(canvas_type, app, time_graph_layout);
 
   if (main_window) {
     main_window->RegisterGlWidget(this);

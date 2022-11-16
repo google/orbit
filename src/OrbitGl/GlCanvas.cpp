@@ -15,6 +15,7 @@
 #include "IntrospectionWindow.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
+#include "TimeGraphLayout.h"
 
 // TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1
@@ -88,17 +89,18 @@ GlCanvas::~GlCanvas() {
   }
 }
 
-std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app) {
+std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app,
+                                           TimeGraphLayout* time_graph_layout) {
   switch (canvas_type) {
     case CanvasType::kCaptureWindow: {
-      auto main_capture_window =
-          std::make_unique<CaptureWindow>(app, /* capture_control_interface = */ app);
+      auto main_capture_window = std::make_unique<CaptureWindow>(
+          app, /* capture_control_interface = */ app, time_graph_layout);
       app->SetCaptureWindow(main_capture_window.get());
       return main_capture_window;
     }
     case CanvasType::kIntrospectionWindow: {
-      auto introspection_window =
-          std::make_unique<IntrospectionWindow>(app, /* capture_control_interface = */ app);
+      auto introspection_window = std::make_unique<IntrospectionWindow>(
+          app, /* capture_control_interface = */ app, time_graph_layout);
       app->SetIntrospectionWindow(introspection_window.get());
       return introspection_window;
     }

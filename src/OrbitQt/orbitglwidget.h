@@ -8,6 +8,8 @@
 #include <glad/glad.h>
 #include <stdint.h>
 
+#include "TimeGraphLayout.h"
+
 // Disable "qopenglfunctions.h is not compatible with GLEW, GLEW defines will be undefined" warning
 // to reduce spam in compilation output. This is a known quirk that doesn't cause any ill effect.
 #ifdef __clang__
@@ -52,7 +54,8 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window, OrbitApp* app);
+  void Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window, OrbitApp* app,
+                  TimeGraphLayout* time_graph_layout);
   void Deinitialize(OrbitMainWindow* main_window);
   void initializeGL() override;
   void resizeGL(int w, int h) override;

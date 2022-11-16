@@ -24,6 +24,7 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "QtTextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
 #include "TrackContainer.h"
@@ -37,7 +38,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
-                     PickingManager* picking_manager);
+                     PickingManager* picking_manager, TimeGraphLayout* time_graph_layout);
 
   [[nodiscard]] float GetHeight() const override;
 
@@ -126,8 +127,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] orbit_gl::TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] orbit_gl::Batcher& GetBatcher() { return batcher_; }
 
-  [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
-  [[nodiscard]] orbit_gl::ImGuiTimeGraphLayout& GetImGuiLayout() { return layout_; }
+  [[nodiscard]] const TimeGraphLayout& GetLayout() const { return *layout_; }
 
   [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
@@ -211,7 +211,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
 
-  orbit_gl::ImGuiTimeGraphLayout layout_;
+  TimeGraphLayout* layout_ = nullptr;
 
   orbit_gl::OpenGlBatcher batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;

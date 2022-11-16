@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "CaptureViewElementTester.h"
+#include "StaticTimeGraphLayout.h"
 #include "TimeGraph.h"
 #include "TrackTestData.h"
 #include "Viewport.h"
@@ -17,7 +18,7 @@ class UnitTestTimeGraph : public testing::Test {
     capture_data_ = TrackTestData::GenerateTestCaptureData();
     viewport_ = std::make_unique<Viewport>(100, 200);
     time_graph_ = std::make_unique<TimeGraph>(nullptr, nullptr, viewport_.get(),
-                                              capture_data_.get(), nullptr);
+                                              capture_data_.get(), nullptr, &time_graph_layout_);
     time_graph_->ZoomAll();
   }
 
@@ -70,6 +71,7 @@ class UnitTestTimeGraph : public testing::Test {
 
  private:
   CaptureViewElementTester tester_;
+  StaticTimeGraphLayout time_graph_layout_;
   std::unique_ptr<TimeGraph> time_graph_;
   std::unique_ptr<Viewport> viewport_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;

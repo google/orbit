@@ -80,8 +80,11 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(
-    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control_interface)
-    : app_{app}, capture_client_app_{capture_control_interface} {
+    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control_interface,
+    TimeGraphLayout* time_graph_layout)
+    : app_{app},
+      capture_client_app_{capture_control_interface},
+      time_graph_layout_{time_graph_layout} {
   draw_help_ = true;
 
   scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
@@ -570,8 +573,8 @@ void CaptureWindow::set_draw_help(bool draw_help) {
 }
 
 void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
-  time_graph_ =
-      std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager());
+  time_graph_ = std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data,
+                                            &GetPickingManager(), time_graph_layout_);
 }
 
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
@@ -597,18 +600,6 @@ void CaptureWindow::RequestUpdatePrimitives() {
 }
 
 void CaptureWindow::RenderImGuiDebugUI() {
-  if (ImGui::CollapsingHeader("Layout Properties")) {
-    if (time_graph_ != nullptr && time_graph_->GetImGuiLayout().DrawProperties()) {
-      RequestUpdatePrimitives();
-    }
-
-    static bool draw_text_outline = false;
-    if (ImGui::Checkbox("Draw Text Outline", &draw_text_outline)) {
-      TextRenderer::SetDrawOutline(draw_text_outline);
-      RequestUpdatePrimitives();
-    }
-  }
-
   if (ImGui::CollapsingHeader("Capture Info")) {
     IMGUI_VAR_TO_TEXT(viewport_.GetScreenWidth());
     IMGUI_VAR_TO_TEXT(viewport_.GetScreenHeight());

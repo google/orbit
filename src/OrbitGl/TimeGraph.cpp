@@ -53,12 +53,13 @@ using orbit_gl::VariableTrack;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, CaptureData* capture_data,
-                     PickingManager* picking_manager)
+                     PickingManager* picking_manager, TimeGraphLayout* time_graph_layout)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
-    : orbit_gl::CaptureViewElement(nullptr, viewport, &layout_),
+    : orbit_gl::CaptureViewElement(nullptr, viewport, time_graph_layout),
       accessible_parent_{parent},
+      layout_{time_graph_layout},
       batcher_(BatcherId::kTimeGraph),
       primitive_assembler_(&batcher_, picking_manager),
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
@@ -72,15 +73,15 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   const orbit_client_data::ModuleManager* module_manager =
       app != nullptr ? app->GetModuleManager() : nullptr;
 
-  track_container_ = std::make_unique<orbit_gl::TrackContainer>(this, this, viewport, &layout_,
-                                                                app_, module_manager, capture_data);
+  track_container_ = std::make_unique<orbit_gl::TrackContainer>(this, this, viewport, layout_, app_,
+                                                                module_manager, capture_data);
   timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
-      /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
+      /*parent=*/this, /*timeline_info_interface=*/this, viewport, layout_);
 
   horizontal_slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(
-      /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
+      /*parent=*/this, viewport, layout_, /*timeline_info_interface=*/this);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
-      /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
+      /*parent=*/this, viewport, layout_, /*timeline_info_interface=*/this);
 
   horizontal_slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
   horizontal_slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
@@ -90,12 +91,12 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_->SetDragCallback(
       [&](float ratio) { track_container_->UpdateVerticalScrollUsingRatio(ratio); });
 
-  plus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, &layout_, "Plus Button",
+  plus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, layout_, "Plus Button",
                                           Button::SymbolType::kPlusSymbol);
   plus_button_->SetMouseReleaseCallback(
       [&](Button* /*button*/) { ZoomTime(/*zoom_value=*/1, /*mouse_ratio=*/0.5); });
 
-  minus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, &layout_, "Minus Button",
+  minus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, layout_, "Minus Button",
                                            Button::SymbolType::kMinusSymbol);
   minus_button_->SetMouseReleaseCallback(
       [&](Button* /*button*/) { ZoomTime(/*zoom_value=*/-1, /*mouse_ratio=*/0.5); });
@@ -186,11 +187,11 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_world_y_pos) {
       (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
   // We have to scale every item in the layout.
-  const float old_scale = layout_.GetScale();
-  layout_.SetScale(old_scale * proposed_ratio);
+  const float old_scale = layout_->GetScale();
+  layout_->SetScale(old_scale * proposed_ratio);
 
   // As we have maximum/minimum scale, the real ratio might be different than the proposed one.
-  const float real_ratio = layout_.GetScale() / old_scale;
+  const float real_ratio = layout_->GetScale() / old_scale;
 
   // TODO(b/214270440): Behave differently when the mouse is on top of the timeline.
   track_container_->VerticalZoom(real_ratio, mouse_world_y_pos);
@@ -707,31 +708,31 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // its free space.
   float total_height_without_track_container = GetHeight() - horizontal_slider_->GetHeight() -
                                                timeline_ui_->GetHeight() -
-                                               layout_.GetSpaceBetweenTracksAndTimeline();
+                                               layout_->GetSpaceBetweenTracksAndTimeline();
   track_container_->SetHeight(total_height_without_track_container);
 
   // After we set positions.
   float timegraph_current_x = GetPos()[0];
   float timegraph_current_y = GetPos()[1];
-  const float total_right_margin = layout_.GetRightMargin() + vertical_slider_->GetWidth();
+  const float total_right_margin = layout_->GetRightMargin() + vertical_slider_->GetWidth();
 
   timeline_ui_->SetWidth(GetWidth() - total_right_margin);
   timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
 
-  plus_button_->SetWidth(layout_.GetButtonWidth());
-  plus_button_->SetHeight(layout_.GetButtonHeight());
+  plus_button_->SetWidth(layout_->GetButtonWidth());
+  plus_button_->SetHeight(layout_->GetButtonHeight());
   plus_button_->SetPos(GetWidth() - plus_button_->GetWidth(), timegraph_current_y);
 
-  minus_button_->SetWidth(layout_.GetButtonWidth());
-  minus_button_->SetHeight(layout_.GetButtonHeight());
+  minus_button_->SetWidth(layout_->GetButtonWidth());
+  minus_button_->SetHeight(layout_->GetButtonHeight());
   minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
                         timegraph_current_y + plus_button_->GetHeight());
 
-  timegraph_current_y += timeline_ui_->GetHeight() + layout_.GetSpaceBetweenTracksAndTimeline();
+  timegraph_current_y += timeline_ui_->GetHeight() + layout_->GetSpaceBetweenTracksAndTimeline();
   track_container_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetPos(timegraph_current_x, timegraph_current_y);
 
-  vertical_slider_->SetWidth(layout_.GetSliderWidth());
+  vertical_slider_->SetWidth(layout_->GetSliderWidth());
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
 
   timegraph_current_y += track_container_->GetHeight();
@@ -747,7 +748,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 }
 
 float TimeGraph::GetRightMargin() const {
-  return layout_.GetRightMargin() +
+  return layout_->GetRightMargin() +
          (vertical_slider_->GetVisible() ? vertical_slider_->GetWidth() : 0.f);
 }
 
@@ -883,7 +884,7 @@ void TimeGraph::DrawMarginsBetweenChildren(
     orbit_gl::PrimitiveAssembler& primitive_assembler) const {
   // Margin between the Tracks and the Timeline.
   Vec2 timeline_margin_pos = Vec2(GetPos()[0], GetPos()[1] + timeline_ui_->GetHeight());
-  Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_.GetSpaceBetweenTracksAndTimeline());
+  Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_->GetSpaceBetweenTracksAndTimeline());
   primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
                              GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
 
