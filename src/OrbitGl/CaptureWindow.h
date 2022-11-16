@@ -14,6 +14,7 @@
 #include "Batcher.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureStats.h"
+#include "CaptureWindowDebugInterface.h"
 #include "GlCanvas.h"
 #include "PickingManager.h"
 #include "SimpleTimings.h"
@@ -23,7 +24,7 @@
 
 class OrbitApp;
 
-class CaptureWindow : public GlCanvas {
+class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterface {
  public:
   explicit CaptureWindow(OrbitApp* app,
                          orbit_capture_client::CaptureControlInterface* capture_control);
@@ -57,6 +58,10 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_.get(); }
   void CreateTimeGraph(orbit_client_data::CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
+
+  [[nodiscard]] std::string GetCaptureInfo() const override;
+  [[nodiscard]] std::string GetPerformanceInfo() const override;
+  [[nodiscard]] std::string GetSelectionSummary() const override;
 
  protected:
   void Draw(QPainter* painter) override;

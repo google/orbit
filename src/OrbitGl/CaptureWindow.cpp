@@ -18,8 +18,10 @@
 #include <ostream>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 
 #include "App.h"
+#include "CaptureClient/AppInterface.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
@@ -38,6 +40,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "absl/strings/str_format.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
@@ -650,6 +653,62 @@ void CaptureWindow::RenderImGuiDebugUI() {
                            selection_summary.c_str() + selection_summary.size());
   }
 }
+
+std::string CaptureWindow::GetCaptureInfo() const {
+  std::string capture_info;
+
+  const auto append_variable = [&capture_info](std::string_view name, const auto& value) {
+    if constexpr (std::is_floating_point_v<std::decay_t<decltype(value)>>) {
+      absl::StrAppendFormat(&capture_info, "%s: %f\n", name, value);
+    } else if constexpr (std::is_integral_v<std::decay_t<decltype(value)>>) {
+      absl::StrAppendFormat(&capture_info, "%s: %d\n", name, value);
+    } else {
+      static_assert(!std::is_same_v<decltype(value), decltype(value)>,
+                    "Value type is not supported.");
+    }
+  };
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define APPEND_VARIABLE(name) append_variable(#name, name)
+
+  APPEND_VARIABLE(viewport_.GetScreenWidth());
+  APPEND_VARIABLE(viewport_.GetScreenHeight());
+  APPEND_VARIABLE(viewport_.GetWorldWidth());
+  APPEND_VARIABLE(viewport_.GetWorldHeight());
+  APPEND_VARIABLE(mouse_move_pos_screen_[0]);
+  APPEND_VARIABLE(mouse_move_pos_screen_[1]);
+  if (time_graph_ != nullptr) {
+    APPEND_VARIABLE(time_graph_->GetTrackContainer()->GetNumVisiblePrimitives());
+    APPEND_VARIABLE(time_graph_->GetTrackManager()->GetAllTracks().size());
+    APPEND_VARIABLE(time_graph_->GetMinTimeUs());
+    APPEND_VARIABLE(time_graph_->GetMaxTimeUs());
+    APPEND_VARIABLE(time_graph_->GetCaptureMin());
+    APPEND_VARIABLE(time_graph_->GetCaptureMax());
+    APPEND_VARIABLE(time_graph_->GetTimeWindowUs());
+    const CaptureData* capture_data = time_graph_->GetCaptureData();
+    if (capture_data != nullptr) {
+      APPEND_VARIABLE(capture_data->GetCallstackData().GetCallstackEventsCount());
+    }
+  }
+
+#undef APPEND_VARIABLE
+  return capture_info;
+}
+
+std::string CaptureWindow::GetPerformanceInfo() const {
+  std::string performance_info;
+  for (const auto& item : scoped_frame_times_) {
+    absl::StrAppendFormat(&performance_info, "Avg time for %s: %f ms\n", item.first,
+                          item.second->GetAverageTimeMs());
+    absl::StrAppendFormat(&performance_info, "Min time for %s: %f ms\n", item.first,
+                          item.second->GetMinTimeMs());
+    absl::StrAppendFormat(&performance_info, "Max time for %s: %f ms\n", item.first,
+                          item.second->GetMaxTimeMs());
+  }
+  return performance_info;
+}
+
+std::string CaptureWindow::GetSelectionSummary() const { return selection_stats_.GetSummary(); }
 
 void CaptureWindow::RenderText(QPainter* painter, float layer) {
   ORBIT_SCOPE_FUNCTION;
