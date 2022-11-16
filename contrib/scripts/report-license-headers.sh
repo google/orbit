@@ -12,7 +12,7 @@ function format_annotations() {
 
   echo "{"
   echo "\"name\":\"missing-license-headers\","
-  echo "\"head_sha\":\"$COMMIT_SHA\","
+  echo "\"head_sha\":$(echo "${COMMIT_SHA}" | jq -Rs .),"
   echo "\"status\":\"completed\","
   echo "\"conclusion\":\"failure\","
   echo "\"output\":{"
@@ -25,7 +25,7 @@ function format_annotations() {
       echo ","
     fi
     FIRST_LINE=""
-    echo "{\"path\":\"$line\","
+    echo "{\"path\":$(echo "${line}" | jq -Rs .),"
     echo "\"start_line\":1,"
     echo "\"end_line\":1,"
     echo "\"start_column\":1,"
@@ -46,5 +46,5 @@ format_annotations "${GITHUB_WORKSPACE}/missing_license_headers.txt" | curl \
   -X POST \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-  https://api.github.com/repos/florian-kuebler/orbitprofiler/check-runs \
+  "https://api.github.com/repos/${GITHUB_REPOSITORY})/check-runs" \
   -d @-
