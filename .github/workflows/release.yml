@@ -5,7 +5,7 @@
 name: release
 on:
   schedule:
-  - cron: '0 7 * * 1,3,5'
+  - cron: '0 6 * * 4'
 
 permissions: read-all
 
@@ -17,6 +17,8 @@ jobs:
   build-debian-package:
     runs-on: ubuntu-22.04
     timeout-minutes: 180
+    permissions:
+      contents: write
     env:
       CCACHE_BASEDIR: "${GITHUB_WORKSPACE}"
       CCACHE_DIR: "${GITHUB_WORKSPACE}/.ccache"
@@ -30,22 +32,23 @@ jobs:
           path: workspace
       - name: Install dependencies
         run: |
-           sudo apt update &&                             \
-           sudo apt install --yes --no-install-recommends \
-           build-essential                                \
-           devscripts                                     \
-           cmake                                          \
-           ccache                                         \
-           git                                            \
-           equivs                                         \
+           sudo apt-get update &&                             \
+           sudo apt-get install --yes --no-install-recommends \
+           build-essential                                    \
+           devscripts                                         \
+           cmake                                              \
+           ccache                                             \
+           git                                                \
+           equivs                                             \
+           git-buildpackage                                   \
            fakeroot
-      - name: Install Debian Build Dependencies
+      - name: Install Debian build dependencies
         working-directory: ./workspace
         run: sudo mk-build-deps --install debian/control
-      - name: Save CCache Timestamp
+      - name: Save CCache timestamp
         id: ccache_timestamp
         run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
-      - name: Setup CCache Files
+      - name: Setup CCache files
         uses: actions/cache@v3
         with:
           path: .ccache
@@ -55,7 +58,16 @@ jobs:
             ccache-
       - run: ccache -p
       - run: ccache -z
-      - name: Build Debian Package
+      - name: Generate version string
+        id: generate-version-string
+        working-directory: ./workspace
+        run: echo "version_string=$(git describe --always --match "1.*")-1" >> $GITHUB_OUTPUT
+      - name: Update changelog file
+        working-directory: ./workspace
+        env:
+          EMAIL: orbitprofiler-eng@google.com
+        run: gbp dch --since=$(git describe --always --match "nightly*" --abbrev=0) --new-version=${{ steps.generate-version-string.outputs.version_string }} --ignore-branch
+      - name: Build Debian package
         working-directory: ./workspace
         run: |
              debuild --set-envvar=CMAKE_C_COMPILER_LAUNCHER=ccache \
@@ -70,9 +82,17 @@ jobs:
       - name: CCache Stats
         run: ccache -s
       - run: ls -la .
-      - name: Archive Debian Packages
-        uses: actions/upload-artifact@v3
+      - name: Generate tag name
+        id: generate-tag-name
+        run: echo "tag_name=nightly-$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+      - name: Create and push tag
+        working-directory: ./workspace
+        run: git tag ${{ steps.generate-tag-name.outputs.tag_name }} && git push origin ${{ steps.generate-tag-name.outputs.tag_name }}
+      - name: Release
+        uses: softprops/action-gh-release@1e07f4398721186383de40550babbdf2b84acfc5 # v1
         with:
-          name: debian-packages
-          path: | 
+          name: 'Orbit ${{ steps.generate-version-string.outputs.version_string }}'
+          body: 'This is an automated nightly release of Orbit.'
+          tag_name: ${{ steps.generate-tag-name.outputs.tag_name }}
+          files: |
             *.deb
