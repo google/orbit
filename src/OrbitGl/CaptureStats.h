@@ -16,7 +16,7 @@ class CaptureStats {
  public:
   CaptureStats() = default;
   ErrorMessageOr<void> Generate(CaptureWindow* capture_window, uint64_t start_ns, uint64_t end_ns);
-  [[nodiscard]] const std::string& GetSummary() { return summary_; }
+  [[nodiscard]] const std::string& GetSummary() const { return summary_; }
 
  private:
   std::string summary_;
