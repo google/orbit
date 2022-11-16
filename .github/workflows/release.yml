@@ -6,6 +6,7 @@ name: release
 on:
   schedule:
   - cron: '0 6 * * 4'
+  workflow_dispatch:
 
 permissions: read-all
 
