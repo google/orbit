@@ -42,4 +42,11 @@ jobs:
     - name: Check license headers
       run: ./contrib/scripts/check-license-headers.sh
       shell: bash
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v3
+      if: success() || failure()
+      with:
+        name: missing_license_headers
+        path: missing_license_headers.txt
+        retention-days: 1
 
