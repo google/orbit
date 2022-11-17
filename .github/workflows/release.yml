@@ -93,5 +93,6 @@ jobs:
           body: 'This is an automated nightly release of Orbit.'
           tag_name: ${{ steps.generate-tag-name.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
+          prerelease: true
           files: |
             *.deb
