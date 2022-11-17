@@ -10,7 +10,7 @@
 #include <thread>
 
 #include "GrpcProtos/capture.pb.h"
-#include "MemoryTracingUtils.h"
+#include "MemoryTracing/MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 

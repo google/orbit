@@ -15,13 +15,13 @@ target_include_directories(MemoryTracing PRIVATE
 
 target_sources(MemoryTracing PUBLIC    
         include/MemoryTracing/MemoryInfoListener.h
-        include/MemoryTracing/MemoryInfoProducer.h)
+        include/MemoryTracing/MemoryInfoProducer.h
+        include/MemoryTracing/MemoryTracingUtils.h)
 
 target_sources(MemoryTracing PRIVATE
         MemoryInfoListener.cpp
         MemoryInfoProducer.cpp
-        MemoryTracingUtils.cpp
-        MemoryTracingUtils.h)
+        MemoryTracingUtils.cpp)
 
 target_link_libraries(MemoryTracing PUBLIC
         GrpcProtos

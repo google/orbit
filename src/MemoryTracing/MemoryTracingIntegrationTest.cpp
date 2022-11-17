@@ -14,7 +14,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"
-#include "MemoryTracingUtils.h"
+#include "MemoryTracing/MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"

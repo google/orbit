@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "MemoryTracingUtils.h"
+#include "MemoryTracing/MemoryTracingUtils.h"
 
 using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ProcessMemoryUsage;
