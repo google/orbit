@@ -387,9 +387,6 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
   uint64_t previous_timestamp_ns = 0;
   for (const ClientCaptureEvent& event : events) {
     switch (event.event_case()) {
-      case ClientCaptureEvent::kApiEvent:
-        ORBIT_UNREACHABLE();
-
       case ClientCaptureEvent::kApiScopeStart: {
         const orbit_grpc_protos::ApiScopeStart& api_scope_start = event.api_scope_start();
         EXPECT_EQ(api_scope_start.pid(), fixture.GetPuppetPid());

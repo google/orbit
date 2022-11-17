@@ -160,23 +160,6 @@ message FunctionExit {
   uint64 timestamp_ns = 3;
 }
 
-message ApiEvent {
-  uint32 pid = 1;
-  uint32 tid = 2;
-  uint64 timestamp_ns = 3;
-
-  // The fields below are used to encode orbit_api::EncodedEvent events. This is
-  // done mainly for the performance gain of not having to allocate memory out
-  // of the Arena for strings, but also to emulate the old uprobe-based use of
-  // registers to encode events. To review after deprecation (b/182485096).
-  fixed64 r0 = 4;
-  fixed64 r1 = 5;
-  fixed64 r2 = 6;
-  fixed64 r3 = 7;
-  fixed64 r4 = 8;
-  fixed64 r5 = 9;
-}
-
 message ApiScopeStart {
   // NextID: 16
 
@@ -860,7 +843,7 @@ message OutOfOrderEventsDiscardedEvent {
 }
 
 message ClientCaptureEvent {
-  reserved 20, 23, 28, 29, 30;
+  reserved 9, 20, 23, 28, 29, 30;
 
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
@@ -876,7 +859,6 @@ message ClientCaptureEvent {
     // it is going to go away in the future when we switch to
     // frame-pointer based unwinding.
     AddressInfo address_info = 16;
-    ApiEvent api_event = 9;
     ApiScopeStart api_scope_start = 10;
     ApiScopeStartAsync api_scope_start_async = 38;
     ApiScopeStop api_scope_stop = 11;
@@ -922,7 +904,7 @@ message ClientCaptureEvent {
 }
 
 message ProducerCaptureEvent {
-  reserved 19, 22, 26, 27, 28;
+  reserved 10, 19, 22, 26, 27, 28;
   oneof event {
     // Note that field numbers from 1-15 take only 1 byte to encode
     // https://developers.google.com/protocol-buffers/docs/proto#assigning_field_numbers
@@ -933,7 +915,6 @@ message ProducerCaptureEvent {
     // Next lower-frequency ID: 51
     //
     // Please keep these alphabetically ordered.
-    ApiEvent api_event = 10;
     ApiScopeStart api_scope_start = 11;
     ApiScopeStartAsync api_scope_start_async = 36;
     ApiScopeStop api_scope_stop = 12;

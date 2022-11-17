@@ -10,7 +10,6 @@
 #include "OrbitBase/Logging.h"
 
 using orbit_grpc_protos::AddressInfo;
-using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::ApiScopeStart;
 using orbit_grpc_protos::ApiScopeStartAsync;
 using orbit_grpc_protos::ApiScopeStop;
@@ -100,7 +99,6 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
  private:
   // Please keep the declarations here and the definitions below of these Process... methods
   // alphabetically ordered as in the definition of the ProducerCaptureEvent message.
-  void ProcessApiEventAndTransferOwnership(ApiEvent* api_event);
   void ProcessApiScopeStartAndTransferOwnership(ApiScopeStart* api_scope_start);
   void ProcessApiScopeStartAsyncAndTransferOwnership(ApiScopeStartAsync* api_scope_start_async);
   void ProcessApiScopeStopAndTransferOwnership(ApiScopeStop* api_scope_stop);
@@ -220,12 +218,6 @@ void ProducerEventProcessorImpl::MergeThreadStateSliceWithCallstackAndTransferOw
 
   ClientCaptureEvent event;
   event.set_allocated_thread_state_slice(thread_state_slice);
-  client_capture_event_collector_->AddEvent(std::move(event));
-}
-
-void ProducerEventProcessorImpl::ProcessApiEventAndTransferOwnership(ApiEvent* api_event) {
-  ClientCaptureEvent event;
-  event.set_allocated_api_event(api_event);
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
@@ -656,9 +648,6 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
   // Please keep the cases alphabetically ordered, as in the definition of the ProducerCaptureEvent
   // message.
   switch (event.event_case()) {
-    case ProducerCaptureEvent::kApiEvent:
-      ProcessApiEventAndTransferOwnership(event.release_api_event());
-      break;
     case ProducerCaptureEvent::kApiScopeStart:
       ProcessApiScopeStartAndTransferOwnership(event.release_api_scope_start());
       break;
