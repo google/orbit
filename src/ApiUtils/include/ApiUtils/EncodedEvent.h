@@ -11,6 +11,8 @@
 
 #include "ApiInterface/Orbit.h"
 
+// TODO(kuebler): Either remove Encode/Decode completely or at least move it to a more suitable
+//  place.
 namespace orbit_api {
 
 template <typename Dest, typename Source>
