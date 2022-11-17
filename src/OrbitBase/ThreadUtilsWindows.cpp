@@ -10,6 +10,7 @@
 #include "OrbitBase/GetProcAddress.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {

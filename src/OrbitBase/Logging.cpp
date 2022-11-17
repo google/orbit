@@ -23,6 +23,8 @@
 #ifdef _WIN32
 #include <Windows.h>
 
+#include "OrbitBase/StringConversion.h"
+
 // Windows does not have TEMP_FAILURE_RETRY, shortcut to expression
 #define TEMP_FAILURE_RETRY(expression) (expression)
 #endif
