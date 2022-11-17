@@ -38,11 +38,8 @@ class ApiEventProcessor {
 
  private:
   CaptureListener* capture_listener_ = nullptr;
-  absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>>
-      synchronous_legacy_event_stack_by_tid_;
   absl::flat_hash_map<int32_t, std::vector<orbit_grpc_protos::ApiScopeStart>>
       synchronous_scopes_stack_by_tid_;
-  absl::flat_hash_map<uint64_t, orbit_api::ApiEvent> asynchronous_legacy_events_by_id_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::ApiScopeStartAsync> asynchronous_scopes_by_id_;
 };
 
