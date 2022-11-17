@@ -77,7 +77,7 @@ function(DoGenerateVersionFile OUTPUT_FILE INPUT_FILE GIT_COMMIT_STATE_FILE
 endfunction()
 
 if(IN_VERSION_CHECK)
-  find_program(GIT_COMMAND git)
+  find_program(GIT_COMMAND git REQUIRED)
 
   execute_process(
     COMMAND "${GIT_COMMAND}" "show" "-s" "--format=%H"
