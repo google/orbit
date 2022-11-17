@@ -22,7 +22,8 @@ Build-Depends: cmake,
   qtbase5-dev,
   libgtest-dev,
   libgmock-dev,
-  libprotobuf-dev
+  libprotobuf-dev,
+  git
 Standards-Version: 4.5.1
 Homepage: <https://github.com/google/orbit>
 Rules-Requires-Root: no
