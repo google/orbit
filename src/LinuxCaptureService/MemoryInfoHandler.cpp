@@ -5,6 +5,7 @@
 #include "MemoryInfoHandler.h"
 
 #include "GrpcProtos/Constants.h"
+#include "MemoryTracing/MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -16,7 +17,8 @@ void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options)
 
   SetSamplingStartTimestampNs(orbit_base::CaptureTimestampNs());
   SetSamplingPeriodNs(capture_options.memory_sampling_period_ns());
-  SetEnableCGroupMemory(true);
+  SetEnableCGroupMemory(
+      orbit_memory_tracing::GetCGroupMemoryUsage(capture_options.pid()).has_value());
   SetEnableProcessMemory(true);
 
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
