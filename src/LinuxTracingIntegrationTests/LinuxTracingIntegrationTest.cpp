@@ -335,9 +335,6 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
     // Please keep the cases alphabetically ordered, as in the definition of the
     // ProducerCaptureEvent message.
     switch (event.event_case()) {
-      case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
-        // TracingHandler does not send this event.
-        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
         ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStartAsync:
