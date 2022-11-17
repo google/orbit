@@ -36,7 +36,7 @@ class OrbitConan(ConanFile):
     def _version(self):
         if not self.version:
             buf = StringIO()
-            self.run("git describe --always --dirty", output=buf)
+            self.run("git describe --always --dirty  --match 1.*", output=buf)
             self.version = buf.getvalue().strip()
             if self.version[0] == 'v':
                 self.version = self.version[1:]
