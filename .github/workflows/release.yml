@@ -62,7 +62,7 @@ jobs:
       - name: Generate version string
         id: generate-version-string
         working-directory: ./workspace
-        run: echo "version_string=$(git describe --always --match "1.*")-1" >> $GITHUB_OUTPUT
+        run: echo "version_string=$(git describe --always --match "1.*")-1~jammy1" >> $GITHUB_OUTPUT
       - name: Update changelog file
         working-directory: ./workspace
         env:
