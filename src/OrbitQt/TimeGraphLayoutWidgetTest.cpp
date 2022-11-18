@@ -6,6 +6,7 @@
 
 #include <QApplication>
 
+#include "OrbitBase/ThreadConstants.h"
 #include "TimeGraphLayoutWidget.h"
 
 TEST(TimeGraphLayoutWidgetTest, SetScale) {
@@ -15,9 +16,19 @@ TEST(TimeGraphLayoutWidgetTest, SetScale) {
 
   const float previous_text_box_height = widget.GetTextBoxHeight();
 
+  constexpr uint32_t kRandomThreadId = 1;
+  const float previous_thread_track_height = widget.GetEventTrackHeightFromTid(kRandomThreadId);
+  const float previous_all_threads_track_height =
+      widget.GetEventTrackHeightFromTid(orbit_base::kAllProcessThreadsTid);
+
   // If the scaling doubles the text box height should double too.
-  widget.SetScale(2.0f * widget.GetScale());
-  EXPECT_FLOAT_EQ(2.0f * previous_text_box_height, widget.GetTextBoxHeight());
+  constexpr float kScaleFactor = 2.0f;
+  widget.SetScale(kScaleFactor * widget.GetScale());
+  EXPECT_FLOAT_EQ(kScaleFactor * previous_text_box_height, widget.GetTextBoxHeight());
+  EXPECT_FLOAT_EQ(kScaleFactor * previous_thread_track_height,
+                  widget.GetEventTrackHeightFromTid(kRandomThreadId));
+  EXPECT_FLOAT_EQ(kScaleFactor * previous_all_threads_track_height,
+                  widget.GetEventTrackHeightFromTid(orbit_base::kAllProcessThreadsTid));
 }
 
 // Start the test binary with `--gtest_filter=TimeGraphLayoutWidgetTest.DISABLED_Demo

@@ -104,6 +104,10 @@ set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 iwyu_add_dependency(OrbitQt)
 
+if(WIN32)
+  target_compile_features(OrbitQt PUBLIC cxx_std_20)
+endif()
+
 add_executable(OrbitQtTests)
 
 target_sources(OrbitQtTests
