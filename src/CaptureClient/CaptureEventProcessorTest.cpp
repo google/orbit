@@ -66,8 +66,8 @@ using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using ::testing::_;
 using ::testing::AllOf;
-using ::testing::Field;
 using ::testing::DoAll;
+using ::testing::Field;
 using ::testing::Return;
 using ::testing::SaveArg;
 
