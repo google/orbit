@@ -67,9 +67,8 @@ bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
   return false;
 }
 
-void OrbitGLWidget::Initialize(GlCanvas::CanvasType canvas_type, OrbitApp* app,
-                               TimeGraphLayout* time_graph_layout) {
-  gl_canvas_ = GlCanvas::Create(canvas_type, app, time_graph_layout);
+void OrbitGLWidget::Initialize(std::unique_ptr<GlCanvas> gl_canvas) {
+  gl_canvas_ = std::move(gl_canvas);
   constexpr std::chrono::milliseconds kUpdatePeriod{16};  // ...ms - that's roughly 60 FPS.
   update_timer_.start(kUpdatePeriod);
 }

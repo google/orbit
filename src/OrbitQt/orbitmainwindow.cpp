@@ -364,26 +364,21 @@ void OrbitMainWindow::SetupMainWindow() {
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
   app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, app_.get(),
-                                  ui->debugTabWidget->GetCaptureWindowTimeGraphLayout());
-
-  // TODO(beckerhe): This dynamic cast wrapper is just temporary and will not be needed anymore
-  // once the OrbitGLWidget is cleaned up.
-  const auto get_capture_window = [this]() {
-    auto* capture_window = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas());
-    ORBIT_CHECK(capture_window != nullptr);
-    return capture_window;
-  };
+  auto capture_window = std::make_unique<CaptureWindow>(
+      app_.get(), app_.get(), ui->debugTabWidget->GetCaptureWindowTimeGraphLayout());
+  auto* capture_window_ptr = capture_window.get();
+  app_->SetCaptureWindow(capture_window_ptr);
   QObject::connect(ui->debugTabWidget, &orbit_qt::DebugTabWidget::AnyCaptureWindowPropertyChanged,
                    ui->CaptureGLWidget,
-                   [get_capture_window]() { get_capture_window()->RequestUpdatePrimitives(); });
+                   [capture_window_ptr]() { capture_window_ptr->RequestUpdatePrimitives(); });
+  ui->CaptureGLWidget->Initialize(std::move(capture_window));
 
   app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
     OnTimerSelectionChanged(timer_info);
   });
 
   if (absl::GetFlag(FLAGS_devmode)) {
-    ui->debugTabWidget->SetCaptureWindowDebugInterface(get_capture_window());
+    ui->debugTabWidget->SetCaptureWindowDebugInterface(capture_window_ptr);
   } else {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }
@@ -1381,23 +1376,18 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
     introspection_widget_ = std::make_unique<OrbitGLWidget>();
     introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
-    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, app_.get(),
-                                      ui->debugTabWidget->GetIntrospectionWindowTimeGraphLayout());
+    auto introspection_window = std::make_unique<IntrospectionWindow>(
+        app_.get(), app_.get(), ui->debugTabWidget->GetIntrospectionWindowTimeGraphLayout());
+    auto* introspection_window_ptr = introspection_window.get();
+    app_->SetIntrospectionWindow(introspection_window_ptr);
+    introspection_widget_->Initialize(std::move(introspection_window));
     introspection_widget_->installEventFilter(this);
 
-    // TODO(beckerhe): This dynamic cast wrapper is just temporary and will not be needed anymore
-    // once the OrbitGLWidget is cleaned up.
-    const auto get_introspection_window = [this]() {
-      auto* introspection_window = dynamic_cast<CaptureWindow*>(introspection_widget_->GetCanvas());
-      ORBIT_CHECK(introspection_window != nullptr);
-      return introspection_window;
-    };
-
-    ui->debugTabWidget->SetIntrospectionWindowDebugInterface(get_introspection_window());
+    ui->debugTabWidget->SetIntrospectionWindowDebugInterface(introspection_window_ptr);
     QObject::connect(
         ui->debugTabWidget, &orbit_qt::DebugTabWidget::AnyIntrospectionWindowPropertyChanged,
         introspection_widget_.get(),
-        [get_introspection_window]() { get_introspection_window()->RequestUpdatePrimitives(); });
+        [introspection_window_ptr]() { introspection_window_ptr->RequestUpdatePrimitives(); });
   }
 
   introspection_widget_->show();
