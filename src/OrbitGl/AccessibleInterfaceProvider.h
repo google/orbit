@@ -12,7 +12,7 @@ namespace orbit_gl {
 /* Base class to provide accessibility in the capture window. */
 class AccessibleInterfaceProvider {
  public:
-  explicit AccessibleInterfaceProvider() {}
+  virtual ~AccessibleInterfaceProvider() = default;
 
   [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
   [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
