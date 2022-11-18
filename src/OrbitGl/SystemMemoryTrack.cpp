@@ -6,15 +6,11 @@
 
 #include <absl/strings/str_format.h>
 
-#include "CaptureClient/CaptureEventProcessor.h"
 #include "DisplayFormats/DisplayFormats.h"
 
 namespace orbit_gl {
 
 namespace {
-
-using orbit_capture_client::CaptureEventProcessor;
-
 const std::string kTrackValueLabelUnit = "MB";
 const std::array<std::string, kSystemMemoryTrackDimension> kSeriesName = {
     "Used", "Buffers / Cached", "Unused"};
