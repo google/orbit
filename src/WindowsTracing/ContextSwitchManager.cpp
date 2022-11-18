@@ -5,6 +5,7 @@
 #include "ContextSwitchManager.h"
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_windows_tracing {

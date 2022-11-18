@@ -51,6 +51,13 @@ target_link_libraries(ConfigWidgetsTests PRIVATE ConfigWidgets
                                                  TestUtils
                                                  GTest::QtGuiMain)
 
+if(WIN32)
+  # This is needed for the designated initializers. We don't enable this
+  # in general to not break the build for old GCC and clang compilers for
+  # no reason.
+  target_compile_features(ConfigWidgetsTests PUBLIC cxx_std_20)
+endif()
+
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
   register_test(ConfigWidgetsTests PROPERTIES DISABLED TRUE)
 endif()

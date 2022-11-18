@@ -7,6 +7,7 @@
 
 #include "ContextSwitchManager.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 
 using ::testing::SaveArg;

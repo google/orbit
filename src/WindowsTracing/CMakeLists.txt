@@ -11,8 +11,6 @@ add_library(WindowsTracing STATIC)
 target_compile_definitions(WindowsTracing PUBLIC WIN32_LEAN_AND_MEAN)
 target_compile_definitions(WindowsTracing PUBLIC INITGUID)
 
-target_compile_features(WindowsTracing PUBLIC cxx_std_17)
-
 target_include_directories(WindowsTracing PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
