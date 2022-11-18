@@ -16,6 +16,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -104,7 +105,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ExtractAndProcessSystemMemoryTrackingTimer(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
-  void ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+  void ExtractAndProcessCgroupAndProcessMemoryInfo(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
       const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
@@ -441,9 +442,9 @@ void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
 
   if (memory_usage_event.has_cgroup_memory_usage() &&
       memory_usage_event.has_process_memory_usage()) {
-    ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(memory_usage_event.timestamp_ns(),
-                                                         memory_usage_event.cgroup_memory_usage(),
-                                                         memory_usage_event.process_memory_usage());
+    ExtractAndProcessCgroupAndProcessMemoryInfo(memory_usage_event.timestamp_ns(),
+                                                memory_usage_event.cgroup_memory_usage(),
+                                                memory_usage_event.process_memory_usage());
   }
 
   if (memory_usage_event.has_system_memory_usage() &&
@@ -485,35 +486,21 @@ void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryTrackingTime
   capture_listener_->OnTimer(timer);
 }
 
-void CaptureEventProcessorForListener::ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+void CaptureEventProcessorForListener::ExtractAndProcessCgroupAndProcessMemoryInfo(
     uint64_t synchronized_timestamp_ns,
     const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
     const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
-  TimerInfo timer;
-  timer.set_type(TimerInfo::kCGroupAndProcessMemoryUsage);
-  timer.set_start(synchronized_timestamp_ns);
-  timer.set_end(synchronized_timestamp_ns);
-  timer.set_process_id(process_memory_usage.pid());
+  orbit_client_data::CgroupAndProcessMemoryInfo cgroup_and_process_memory_info{
+      .timestamp_ns = synchronized_timestamp_ns,
+      .cgroup_name_hash =
+          GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name()),
+      .cgroup_limit_bytes = cgroup_memory_usage.limit_bytes(),
+      .cgroup_rss_bytes = cgroup_memory_usage.rss_bytes(),
+      .cgroup_mapped_file_bytes = cgroup_memory_usage.mapped_file_bytes(),
+      .process_rss_anon_kb = process_memory_usage.rss_anon_kb(),
+  };
 
-  // TODO(b/192335025): Change to use dedicated classes / structs to store information for
-  // `MemoryTrack`.
-  std::vector<uint64_t> encoded_values(
-      static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kEnd));
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash)] =
-      GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.limit_bytes());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.rss_bytes());
-  encoded_values[static_cast<size_t>(
-      CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.mapped_file_bytes());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)] =
-      orbit_api::Encode<uint64_t>(process_memory_usage.rss_anon_kb());
-
-  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
-
-  capture_listener_->OnTimer(timer);
+  capture_listener_->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
 void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(

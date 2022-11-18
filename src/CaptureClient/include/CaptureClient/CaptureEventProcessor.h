@@ -42,14 +42,6 @@ class CaptureEventProcessor {
     kCachedKb = 4,
     kEnd = 5
   };
-  enum class CGroupAndProcessMemoryUsageEncodingIndex {
-    kCGroupNameHash = 0,
-    kCGroupLimitBytes = 1,
-    kCGroupRssBytes = 2,
-    kCGroupMappedFileBytes = 3,
-    kProcessRssAnonKb = 4,
-    kEnd = 5
-  };
   enum class PageFaultsEncodingIndex {
     kSystemPageFaults = 0,
     kSystemMajorPageFaults = 1,

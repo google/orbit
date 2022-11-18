@@ -125,40 +125,30 @@ std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
       kGameCGroupName, kGameCGroupLimitGB);
 }
 
-void CGroupAndProcessMemoryTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  int64_t cgroup_limit_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)));
-  int64_t cgroup_rss_bytes = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)));
-  int64_t cgroup_mapped_file_bytes = orbit_api::Decode<
-      int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)));
-  int64_t process_rss_anon_kb = orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)));
-
-  if (cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
-      cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo) {
+void CGroupAndProcessMemoryTrack::OnCgroupAndProcessMemoryInfo(
+    const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
+  if (cgroup_and_process_memory_info.HasMissingInfo()) {
     return;
   }
 
   constexpr double kMegabytesToBytes = 1024.0 * 1024.0;
   constexpr double kMegabytesToKilobytes = 1024.0;
-  double cgroup_limit_mb =
-      RoundPrecision(static_cast<double>(cgroup_limit_bytes) / kMegabytesToBytes);
-  double cgroup_rss_anon_mb =
-      RoundPrecision(static_cast<double>(cgroup_rss_bytes) / kMegabytesToBytes);
+  double cgroup_limit_mb = RoundPrecision(
+      static_cast<double>(cgroup_and_process_memory_info.cgroup_limit_bytes) / kMegabytesToBytes);
+  double cgroup_rss_anon_mb = RoundPrecision(
+      static_cast<double>(cgroup_and_process_memory_info.cgroup_rss_bytes) / kMegabytesToBytes);
   double cgroup_mapped_file_mb =
-      RoundPrecision(static_cast<double>(cgroup_mapped_file_bytes) / kMegabytesToBytes);
+      RoundPrecision(static_cast<double>(cgroup_and_process_memory_info.cgroup_mapped_file_bytes) /
+                     kMegabytesToBytes);
   double process_rss_anon_mb =
-      RoundPrecision(static_cast<double>(process_rss_anon_kb) / kMegabytesToKilobytes);
+      RoundPrecision(static_cast<double>(cgroup_and_process_memory_info.process_rss_anon_kb) /
+                     kMegabytesToKilobytes);
   double other_rss_anon_mb = cgroup_rss_anon_mb - process_rss_anon_mb;
   double unused_mb = cgroup_limit_mb - cgroup_rss_anon_mb - cgroup_mapped_file_mb;
-  AddValues(timer_info.start(),
+  AddValues(cgroup_and_process_memory_info.timestamp_ns,
             {process_rss_anon_mb, other_rss_anon_mb, cgroup_mapped_file_mb, unused_mb});
 
   if (!GetValueUpperBound().has_value()) TrySetValueUpperBound(cgroup_limit_mb);
-
-  MemoryTrack<kCGroupAndProcessMemoryTrackDimension>::OnTimer(timer_info);
 }
 
 }  // namespace orbit_gl

@@ -152,6 +152,8 @@ class OrbitApp final : public DataViewFactory,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  void OnCgroupAndProcessMemoryInfo(
+      const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
 
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;

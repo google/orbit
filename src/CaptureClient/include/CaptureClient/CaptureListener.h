@@ -13,6 +13,7 @@
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointEventInfo.h"
@@ -43,6 +44,8 @@ class CaptureListener {
   virtual void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
+  virtual void OnCgroupAndProcessMemoryInfo(
+      const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnUniqueCallstack(uint64_t callstack_id,
                                  orbit_client_data::CallstackInfo callstack) = 0;

@@ -19,6 +19,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnCaptureFinished, (const orbit_grpc_protos::CaptureFinished&), (override));
   MOCK_METHOD(void, OnTimer, (const orbit_client_protos::TimerInfo&), (override));
+  MOCK_METHOD(void, OnCgroupAndProcessMemoryInfo,
+              (const orbit_client_data::CgroupAndProcessMemoryInfo&), (override));
   MOCK_METHOD(void, OnKeyAndString, (uint64_t, std::string), (override));
   MOCK_METHOD(void, OnUniqueCallstack, (uint64_t, orbit_client_data::CallstackInfo), (override));
   MOCK_METHOD(void, OnCallstackEvent, (orbit_client_data::CallstackEvent), (override));

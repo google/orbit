@@ -313,10 +313,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
       ProcessSystemMemoryTrackingTimer(timer_info);
       break;
     }
-    case TimerInfo::kCGroupAndProcessMemoryUsage: {
-      ProcessCGroupAndProcessMemoryTrackingTimer(timer_info);
-      break;
-    }
     case TimerInfo::kPageFaults: {
       ProcessPageFaultsTrackingTimer(timer_info);
       break;
@@ -370,17 +366,17 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   }
 }
 
-void TimeGraph::ProcessCGroupAndProcessMemoryTrackingTimer(const TimerInfo& timer_info) {
-  uint64_t cgroup_name_hash = timer_info.registers(static_cast<size_t>(
-      CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash));
-  std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
+void TimeGraph::ProcessCgroupAndProcessMemoryInfo(
+    const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
+  std::string cgroup_name =
+      app_->GetStringManager()->Get(cgroup_and_process_memory_info.cgroup_name_hash).value_or("");
   if (cgroup_name.empty()) return;
 
   CGroupAndProcessMemoryTrack* track = GetTrackManager()->GetCGroupAndProcessMemoryTrack();
   if (track == nullptr) {
     track = GetTrackManager()->CreateAndGetCGroupAndProcessMemoryTrack(cgroup_name);
   }
-  track->OnTimer(timer_info);
+  track->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
 void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
