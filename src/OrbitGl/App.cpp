@@ -472,6 +472,11 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   frame_track_online_processor_.ProcessTimer(timer_info);
 }
 
+void OrbitApp::OnCGroupAndProcessMemoryInfo(
+    const orbit_client_data::CGroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
+  GetMutableTimeGraph()->ProcessCGroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
+}
+
 void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) {
   GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
 }

@@ -13,6 +13,7 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
+#include "ClientData/CGroupAndProcessMemoryInfo.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
@@ -489,31 +490,16 @@ void CaptureEventProcessorForListener::ExtractAndProcessCGroupAndProcessMemoryTr
     uint64_t synchronized_timestamp_ns,
     const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
     const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
-  TimerInfo timer;
-  timer.set_type(TimerInfo::kCGroupAndProcessMemoryUsage);
-  timer.set_start(synchronized_timestamp_ns);
-  timer.set_end(synchronized_timestamp_ns);
-  timer.set_process_id(process_memory_usage.pid());
-
-  // TODO(b/192335025): Change to use dedicated classes / structs to store information for
-  // `MemoryTrack`.
-  std::vector<uint64_t> encoded_values(
-      static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kEnd));
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash)] =
+  orbit_client_data::CGroupAndProcessMemoryInfo cgroup_and_process_memory_info;
+  cgroup_and_process_memory_info.timestamp_ns = synchronized_timestamp_ns;
+  cgroup_and_process_memory_info.cgroup_name_hash =
       GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.limit_bytes());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.rss_bytes());
-  encoded_values[static_cast<size_t>(
-      CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.mapped_file_bytes());
-  encoded_values[static_cast<size_t>(CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)] =
-      orbit_api::Encode<uint64_t>(process_memory_usage.rss_anon_kb());
+  cgroup_and_process_memory_info.cgroup_limit_bytes = cgroup_memory_usage.limit_bytes();
+  cgroup_and_process_memory_info.cgroup_rss_bytes = cgroup_memory_usage.rss_bytes();
+  cgroup_and_process_memory_info.cgroup_mapped_file_bytes = cgroup_memory_usage.mapped_file_bytes();
+  cgroup_and_process_memory_info.process_rss_anon_kb = process_memory_usage.rss_anon_kb();
 
-  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
-
-  capture_listener_->OnTimer(timer);
+  capture_listener_->OnCGroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
 void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(

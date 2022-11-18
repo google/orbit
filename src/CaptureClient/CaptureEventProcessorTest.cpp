@@ -577,13 +577,16 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
       .WillOnce(SaveArg<0>(&actual_cgroup_name_key));
 
   TimerInfo system_timer;
-  TimerInfo cgroup_and_process_timer;
   TimerInfo page_faults_timer;
   EXPECT_CALL(listener, OnTimer)
-      .Times(3)
+      .Times(2)
       .WillOnce(SaveArg<0>(&system_timer))
-      .WillOnce(SaveArg<0>(&cgroup_and_process_timer))
       .WillOnce(SaveArg<0>(&page_faults_timer));
+
+  orbit_client_data::CGroupAndProcessMemoryInfo cgroup_and_process_memory_info;
+  EXPECT_CALL(listener, OnCGroupAndProcessMemoryInfo)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&cgroup_and_process_memory_info));
 
   event_processor->ProcessEvent(event);
 
@@ -606,28 +609,14 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
                 CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)),
             system_memory_usage->cached_kb());
 
-  EXPECT_EQ(cgroup_and_process_timer.start(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(cgroup_and_process_timer.end(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(cgroup_and_process_timer.type(), TimerInfo::kCGroupAndProcessMemoryUsage);
-  EXPECT_EQ(cgroup_and_process_timer.process_id(), process_memory_usage->pid());
-  EXPECT_EQ(cgroup_and_process_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupNameHash)),
-            actual_cgroup_name_key);
-  EXPECT_EQ(
-      cgroup_and_process_timer.registers(static_cast<size_t>(
-          CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupLimitBytes)),
-      cgroup_memory_usage->limit_bytes());
-  EXPECT_EQ(cgroup_and_process_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupRssBytes)),
-            cgroup_memory_usage->rss_bytes());
-  EXPECT_EQ(
-      cgroup_and_process_timer.registers(static_cast<size_t>(
-          CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kCGroupMappedFileBytes)),
-      cgroup_memory_usage->mapped_file_bytes());
-  EXPECT_EQ(
-      cgroup_and_process_timer.registers(static_cast<size_t>(
-          CaptureEventProcessor::CGroupAndProcessMemoryUsageEncodingIndex::kProcessRssAnonKb)),
-      process_memory_usage->rss_anon_kb());
+  EXPECT_EQ(cgroup_and_process_memory_info.timestamp_ns, memory_usage_event->timestamp_ns());
+  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_name_hash, actual_cgroup_name_key);
+  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_limit_bytes, cgroup_memory_usage->limit_bytes());
+  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_rss_bytes, cgroup_memory_usage->rss_bytes());
+  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_mapped_file_bytes,
+            cgroup_memory_usage->mapped_file_bytes());
+  EXPECT_EQ(cgroup_and_process_memory_info.process_rss_anon_kb,
+            process_memory_usage->rss_anon_kb());
 
   EXPECT_EQ(page_faults_timer.start(), memory_usage_event->timestamp_ns());
   EXPECT_EQ(page_faults_timer.end(), memory_usage_event->timestamp_ns());

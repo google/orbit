@@ -111,6 +111,12 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     introspection_window_->GetTimeGraph()->ProcessTimer(timer_info);
   }
 
+  void OnCGroupAndProcessMemoryInfo(const orbit_client_data::CGroupAndProcessMemoryInfo&
+                                        cgroup_and_process_memory_info) override {
+    introspection_window_->GetTimeGraph()->ProcessCGroupAndProcessMemoryInfo(
+        cgroup_and_process_memory_info);
+  }
+
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) override {
     introspection_window_->GetTimeGraph()->ProcessApiStringEvent(api_string_event);
   }

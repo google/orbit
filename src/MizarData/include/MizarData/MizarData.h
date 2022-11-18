@@ -79,6 +79,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
   // Ignored, as we only load D, MS and sampling data.
+  void OnCGroupAndProcessMemoryInfo(const orbit_client_data::CGroupAndProcessMemoryInfo&
+                                    /*cgroup_and_process_memory_info*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
 
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,

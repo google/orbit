@@ -24,7 +24,7 @@ message TimerInfo {
     kGpuDebugMarker = 6;
     kApiEvent = 7;
     kSystemMemoryUsage = 8;
-    kCGroupAndProcessMemoryUsage = 9;
+    // kCGroupAndProcessMemoryUsage = 9;
     kPageFaults = 10;
     kApiScope = 11;
     kApiScopeAsync = 12;
