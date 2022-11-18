@@ -13,7 +13,7 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
-#include "ClientData/CGroupAndProcessMemoryInfo.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
@@ -105,7 +105,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ExtractAndProcessSystemMemoryTrackingTimer(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
-  void ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+  void ExtractAndProcessCgroupAndProcessMemoryInfo(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
       const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
@@ -442,9 +442,9 @@ void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
 
   if (memory_usage_event.has_cgroup_memory_usage() &&
       memory_usage_event.has_process_memory_usage()) {
-    ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(memory_usage_event.timestamp_ns(),
-                                                         memory_usage_event.cgroup_memory_usage(),
-                                                         memory_usage_event.process_memory_usage());
+    ExtractAndProcessCgroupAndProcessMemoryInfo(memory_usage_event.timestamp_ns(),
+                                                memory_usage_event.cgroup_memory_usage(),
+                                                memory_usage_event.process_memory_usage());
   }
 
   if (memory_usage_event.has_system_memory_usage() &&
@@ -486,20 +486,21 @@ void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryTrackingTime
   capture_listener_->OnTimer(timer);
 }
 
-void CaptureEventProcessorForListener::ExtractAndProcessCGroupAndProcessMemoryTrackingTimer(
+void CaptureEventProcessorForListener::ExtractAndProcessCgroupAndProcessMemoryInfo(
     uint64_t synchronized_timestamp_ns,
     const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
     const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
-  orbit_client_data::CGroupAndProcessMemoryInfo cgroup_and_process_memory_info;
-  cgroup_and_process_memory_info.timestamp_ns = synchronized_timestamp_ns;
-  cgroup_and_process_memory_info.cgroup_name_hash =
-      GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
-  cgroup_and_process_memory_info.cgroup_limit_bytes = cgroup_memory_usage.limit_bytes();
-  cgroup_and_process_memory_info.cgroup_rss_bytes = cgroup_memory_usage.rss_bytes();
-  cgroup_and_process_memory_info.cgroup_mapped_file_bytes = cgroup_memory_usage.mapped_file_bytes();
-  cgroup_and_process_memory_info.process_rss_anon_kb = process_memory_usage.rss_anon_kb();
+  orbit_client_data::CgroupAndProcessMemoryInfo cgroup_and_process_memory_info{
+      .timestamp_ns = synchronized_timestamp_ns,
+      .cgroup_name_hash =
+          GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name()),
+      .cgroup_limit_bytes = cgroup_memory_usage.limit_bytes(),
+      .cgroup_rss_bytes = cgroup_memory_usage.rss_bytes(),
+      .cgroup_mapped_file_bytes = cgroup_memory_usage.mapped_file_bytes(),
+      .process_rss_anon_kb = process_memory_usage.rss_anon_kb(),
+  };
 
-  capture_listener_->OnCGroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
+  capture_listener_->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
 void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(

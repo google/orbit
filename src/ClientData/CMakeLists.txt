@@ -20,7 +20,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
         include/ClientData/CaptureDataHolder.h
-        include/ClientData/CGroupAndProcessMemoryInfo.h
+        include/ClientData/CgroupAndProcessMemoryInfo.h
         include/ClientData/DataManager.h
         include/ClientData/FastRenderingUtils.h
         include/ClientData/FunctionInfo.h

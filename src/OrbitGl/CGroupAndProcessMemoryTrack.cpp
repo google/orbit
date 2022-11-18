@@ -125,12 +125,9 @@ std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
       kGameCGroupName, kGameCGroupLimitGB);
 }
 
-void CGroupAndProcessMemoryTrack::OnCGroupAndProcessMemoryInfo(
-    const orbit_client_data::CGroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
-  if (cgroup_and_process_memory_info.cgroup_limit_bytes == kMissingInfo ||
-      cgroup_and_process_memory_info.cgroup_rss_bytes == kMissingInfo ||
-      cgroup_and_process_memory_info.cgroup_mapped_file_bytes == kMissingInfo ||
-      cgroup_and_process_memory_info.process_rss_anon_kb == kMissingInfo) {
+void CGroupAndProcessMemoryTrack::OnCgroupAndProcessMemoryInfo(
+    const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
+  if (cgroup_and_process_memory_info.HasMissingInfo()) {
     return;
   }
 

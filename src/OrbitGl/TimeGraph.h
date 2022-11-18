@@ -13,7 +13,7 @@
 #include "Button.h"
 #include "CaptureViewElement.h"
 #include "ClientData/ApiTrackValue.h"
-#include "ClientData/CGroupAndProcessMemoryInfo.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -48,8 +48,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   // TODO(b/214282122): Move Process Timers function outside the UI.
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessCGroupAndProcessMemoryInfo(
-      const orbit_client_data::CGroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
+  void ProcessCgroupAndProcessMemoryInfo(
+      const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
   void ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event);
   void ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event);
 

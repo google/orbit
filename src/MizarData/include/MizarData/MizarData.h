@@ -78,11 +78,6 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
 
-  // Ignored, as we only load D, MS and sampling data.
-  void OnCGroupAndProcessMemoryInfo(const orbit_client_data::CGroupAndProcessMemoryInfo&
-                                    /*cgroup_and_process_memory_info*/) override {}
-  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
-
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo module_info) override {
     GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
@@ -95,6 +90,11 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void OnPresentEvent(const PresentEvent& event) override {
     source_to_present_events_[event.source()].push_back(event);
   }
+
+  // The following events are ignored, as we only load D, MS and sampling data.
+  void OnCgroupAndProcessMemoryInfo(const orbit_client_data::CgroupAndProcessMemoryInfo&
+                                    /*cgroup_and_process_memory_info*/) override {}
+  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*unused*/) override {}

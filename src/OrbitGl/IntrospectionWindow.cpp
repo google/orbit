@@ -111,9 +111,9 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     introspection_window_->GetTimeGraph()->ProcessTimer(timer_info);
   }
 
-  void OnCGroupAndProcessMemoryInfo(const orbit_client_data::CGroupAndProcessMemoryInfo&
+  void OnCgroupAndProcessMemoryInfo(const orbit_client_data::CgroupAndProcessMemoryInfo&
                                         cgroup_and_process_memory_info) override {
-    introspection_window_->GetTimeGraph()->ProcessCGroupAndProcessMemoryInfo(
+    introspection_window_->GetTimeGraph()->ProcessCgroupAndProcessMemoryInfo(
         cgroup_and_process_memory_info);
   }
 

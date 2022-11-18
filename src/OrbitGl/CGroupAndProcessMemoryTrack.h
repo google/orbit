@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-#include "ClientData/CGroupAndProcessMemoryInfo.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "MemoryTrack.h"
 
 namespace orbit_gl {
@@ -30,8 +30,8 @@ class CGroupAndProcessMemoryTrack final
 
   void TrySetValueUpperBound(double cgroup_limit_mb);
 
-  void OnCGroupAndProcessMemoryInfo(
-      const orbit_client_data::CGroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
+  void OnCgroupAndProcessMemoryInfo(
+      const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
 
   enum class SeriesIndex {
     kProcessRssAnonMb = 0,

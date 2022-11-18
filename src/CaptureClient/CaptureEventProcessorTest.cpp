@@ -23,6 +23,7 @@ namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
+using orbit_client_data::CgroupAndProcessMemoryInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TracepointEventInfo;
@@ -64,6 +65,8 @@ using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 using ::testing::_;
+using ::testing::AllOf;
+using ::testing::Field;
 using ::testing::DoAll;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -583,8 +586,8 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
       .WillOnce(SaveArg<0>(&system_timer))
       .WillOnce(SaveArg<0>(&page_faults_timer));
 
-  orbit_client_data::CGroupAndProcessMemoryInfo cgroup_and_process_memory_info;
-  EXPECT_CALL(listener, OnCGroupAndProcessMemoryInfo)
+  CgroupAndProcessMemoryInfo cgroup_and_process_memory_info{};
+  EXPECT_CALL(listener, OnCgroupAndProcessMemoryInfo)
       .Times(1)
       .WillOnce(SaveArg<0>(&cgroup_and_process_memory_info));
 
@@ -609,14 +612,17 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
                 CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)),
             system_memory_usage->cached_kb());
 
-  EXPECT_EQ(cgroup_and_process_memory_info.timestamp_ns, memory_usage_event->timestamp_ns());
-  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_name_hash, actual_cgroup_name_key);
-  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_limit_bytes, cgroup_memory_usage->limit_bytes());
-  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_rss_bytes, cgroup_memory_usage->rss_bytes());
-  EXPECT_EQ(cgroup_and_process_memory_info.cgroup_mapped_file_bytes,
-            cgroup_memory_usage->mapped_file_bytes());
-  EXPECT_EQ(cgroup_and_process_memory_info.process_rss_anon_kb,
-            process_memory_usage->rss_anon_kb());
+  EXPECT_THAT(
+      cgroup_and_process_memory_info,
+      AllOf(Field(&CgroupAndProcessMemoryInfo::timestamp_ns, memory_usage_event->timestamp_ns()),
+            Field(&CgroupAndProcessMemoryInfo::cgroup_name_hash, actual_cgroup_name_key),
+            Field(&CgroupAndProcessMemoryInfo::cgroup_limit_bytes,
+                  cgroup_memory_usage->limit_bytes()),
+            Field(&CgroupAndProcessMemoryInfo::cgroup_rss_bytes, cgroup_memory_usage->rss_bytes()),
+            Field(&CgroupAndProcessMemoryInfo::cgroup_mapped_file_bytes,
+                  cgroup_memory_usage->mapped_file_bytes()),
+            Field(&CgroupAndProcessMemoryInfo::process_rss_anon_kb,
+                  process_memory_usage->rss_anon_kb())));
 
   EXPECT_EQ(page_faults_timer.start(), memory_usage_event->timestamp_ns());
   EXPECT_EQ(page_faults_timer.end(), memory_usage_event->timestamp_ns());

@@ -15,16 +15,15 @@ message TimerInfo {
   uint32 depth = 5;
 
   enum Type {
+    reserved 2, 9;
     kNone = 0;
     kCoreActivity = 1;
-    // kIntrospection = 2;
     kGpuActivity = 3;
     kFrame = 4;
     kGpuCommandBuffer = 5;
     kGpuDebugMarker = 6;
     kApiEvent = 7;
     kSystemMemoryUsage = 8;
-    // kCGroupAndProcessMemoryUsage = 9;
     kPageFaults = 10;
     kApiScope = 11;
     kApiScopeAsync = 12;

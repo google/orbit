@@ -366,8 +366,8 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   }
 }
 
-void TimeGraph::ProcessCGroupAndProcessMemoryInfo(
-    const orbit_client_data::CGroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
+void TimeGraph::ProcessCgroupAndProcessMemoryInfo(
+    const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) {
   std::string cgroup_name =
       app_->GetStringManager()->Get(cgroup_and_process_memory_info.cgroup_name_hash).value_or("");
   if (cgroup_name.empty()) return;
@@ -376,7 +376,7 @@ void TimeGraph::ProcessCGroupAndProcessMemoryInfo(
   if (track == nullptr) {
     track = GetTrackManager()->CreateAndGetCGroupAndProcessMemoryTrack(cgroup_name);
   }
-  track->OnCGroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
+  track->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
 void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
