@@ -535,6 +535,7 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
 
     // The painter is in "native painting mode" all the time and we merely leave it for rendering
     // the text here. Compare GlCanvas::Render - that's where we enter native painting.
+    CleanupGlState();
     painter->endNativePainting();
 
     if (picking_mode_ == PickingMode::kNone) {
@@ -543,6 +544,7 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     }
 
     painter->beginNativePainting();
+    PrepareGlState();
   }
 }
 
