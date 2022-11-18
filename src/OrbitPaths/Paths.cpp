@@ -14,6 +14,7 @@
 #include "OrbitBase/Result.h"
 
 #ifdef _WIN32
+#include "OrbitBase/StringConversion.h"
 // clang-format off
 #include <Windows.h>
 #include <KnownFolders.h>
