@@ -5,6 +5,7 @@
 #include <absl/base/casts.h>
 #include <gtest/gtest.h>
 
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/ReadProcessMemory.h"
 

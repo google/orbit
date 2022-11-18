@@ -11,8 +11,6 @@ add_library(WindowsUtils STATIC)
 target_compile_definitions(WindowsUtils PUBLIC WIN32_LEAN_AND_MEAN)
 target_compile_definitions(WindowsUtils PUBLIC INITGUID)
 
-target_compile_features(WindowsUtils PUBLIC cxx_std_17)
-
 target_include_directories(WindowsUtils PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
