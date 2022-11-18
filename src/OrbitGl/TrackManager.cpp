@@ -424,8 +424,6 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
       return GetOrCreateGpuTrack(timer_info.timeline_hash());
     case TimerInfo::kApiScopeAsync:
       return GetOrCreateAsyncTrack(timer_info.api_scope_name());
-    case TimerInfo::kSystemMemoryUsage:
-      return GetSystemMemoryTrack();
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
       ORBIT_UNREACHABLE();

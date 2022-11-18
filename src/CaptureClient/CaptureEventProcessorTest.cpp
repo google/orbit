@@ -26,6 +26,7 @@ using orbit_client_data::CallstackInfo;
 using orbit_client_data::CgroupAndProcessMemoryInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::PageFaultsInfo;
+using orbit_client_data::SystemMemoryInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TracepointEventInfo;
 
@@ -580,8 +581,8 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_cgroup_name_key));
 
-  TimerInfo system_timer;
-  EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&system_timer));
+  SystemMemoryInfo system_memory_info{};
+  EXPECT_CALL(listener, OnSystemMemoryInfo).Times(1).WillOnce(SaveArg<0>(&system_memory_info));
 
   CgroupAndProcessMemoryInfo cgroup_and_process_memory_info{};
   EXPECT_CALL(listener, OnCgroupAndProcessMemoryInfo)
@@ -593,24 +594,13 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
 
   event_processor->ProcessEvent(event);
 
-  EXPECT_EQ(system_timer.start(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(system_timer.end(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(system_timer.type(), TimerInfo::kSystemMemoryUsage);
-  EXPECT_EQ(system_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kTotalKb)),
-            system_memory_usage->total_kb());
-  EXPECT_EQ(system_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kFreeKb)),
-            system_memory_usage->free_kb());
-  EXPECT_EQ(system_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kAvailableKb)),
-            system_memory_usage->available_kb());
-  EXPECT_EQ(system_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kBuffersKb)),
-            system_memory_usage->buffers_kb());
-  EXPECT_EQ(system_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::SystemMemoryUsageEncodingIndex::kCachedKb)),
-            system_memory_usage->cached_kb());
+  EXPECT_THAT(system_memory_info,
+              AllOf(Field(&SystemMemoryInfo::timestamp_ns, memory_usage_event->timestamp_ns()),
+                    Field(&SystemMemoryInfo::total_kb, system_memory_usage->total_kb()),
+                    Field(&SystemMemoryInfo::free_kb, system_memory_usage->free_kb()),
+                    Field(&SystemMemoryInfo::available_kb, system_memory_usage->available_kb()),
+                    Field(&SystemMemoryInfo::buffers_kb, system_memory_usage->buffers_kb()),
+                    Field(&SystemMemoryInfo::cached_kb, system_memory_usage->cached_kb())));
 
   EXPECT_THAT(
       cgroup_and_process_memory_info,

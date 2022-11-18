@@ -96,6 +96,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                                     /*cgroup_and_process_memory_info*/) override {}
   void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo&
                         /*page_faults_info*/) override {}
+  void OnSystemMemoryInfo(const orbit_client_data::SystemMemoryInfo&
+                          /*system_memory_info*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }

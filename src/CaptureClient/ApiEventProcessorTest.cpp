@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"

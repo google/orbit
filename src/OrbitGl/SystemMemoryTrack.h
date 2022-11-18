@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "ClientData/SystemMemoryInfo.h"
 #include "MemoryTrack.h"
 
 namespace orbit_gl {
@@ -28,7 +29,7 @@ class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> 
   void TrySetValueUpperBound(double total_mb);
   void SetWarningThreshold(double warning_threshold_mb);
 
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  void OnSystemMemoryInfo(const orbit_client_data::SystemMemoryInfo& system_memory_info);
 
   enum class SeriesIndex { kUsedMb = 0, kBuffersOrCachedMb = 1, kUnusedMb = 2 };
 

@@ -4,6 +4,7 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 
+#include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
