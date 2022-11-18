@@ -477,6 +477,10 @@ void OrbitApp::OnCgroupAndProcessMemoryInfo(
   GetMutableTimeGraph()->ProcessCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
+void OrbitApp::OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) {
+  GetMutableTimeGraph()->ProcessPageFaultsInfo(page_faults_info);
+}
+
 void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) {
   GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
 }

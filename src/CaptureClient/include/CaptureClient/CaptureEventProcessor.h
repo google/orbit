@@ -42,16 +42,6 @@ class CaptureEventProcessor {
     kCachedKb = 4,
     kEnd = 5
   };
-  enum class PageFaultsEncodingIndex {
-    kSystemPageFaults = 0,
-    kSystemMajorPageFaults = 1,
-    kCGroupNameHash = 2,
-    kCGroupPageFaults = 3,
-    kCGroupMajorPageFaults = 4,
-    kProcessMinorPageFaults = 5,
-    kProcessMajorPageFaults = 6,
-    kEnd = 7
-  };
 };
 
 }  // namespace orbit_capture_client

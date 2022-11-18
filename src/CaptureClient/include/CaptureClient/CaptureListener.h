@@ -15,6 +15,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/PageFaultsInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointEventInfo.h"
 #include "ClientData/TracepointInfo.h"
@@ -46,6 +47,7 @@ class CaptureListener {
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnCgroupAndProcessMemoryInfo(
       const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) = 0;
+  virtual void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnUniqueCallstack(uint64_t callstack_id,
                                  orbit_client_data::CallstackInfo callstack) = 0;

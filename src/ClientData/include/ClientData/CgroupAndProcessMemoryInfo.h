@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <optional>
 
+#include "GrpcProtos/Constants.h"
+
 namespace orbit_client_data {
 
 struct CgroupAndProcessMemoryInfo {
@@ -19,9 +21,10 @@ struct CgroupAndProcessMemoryInfo {
   int64_t process_rss_anon_kb;
 
   [[nodiscard]] bool HasMissingInfo() const {
-    constexpr int64_t kMissingInfo = -1;
-    return cgroup_limit_bytes == kMissingInfo || cgroup_rss_bytes == kMissingInfo ||
-           cgroup_mapped_file_bytes == kMissingInfo || process_rss_anon_kb == kMissingInfo;
+    return cgroup_limit_bytes == orbit_grpc_protos::kMissingInfo ||
+           cgroup_rss_bytes == orbit_grpc_protos::kMissingInfo ||
+           cgroup_mapped_file_bytes == orbit_grpc_protos::kMissingInfo ||
+           process_rss_anon_kb == orbit_grpc_protos::kMissingInfo;
   }
 };
 

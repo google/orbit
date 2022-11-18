@@ -18,6 +18,7 @@
 #include "ClientData/CallstackType.h"
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/PageFaultsInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
@@ -508,31 +509,22 @@ void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(
     const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage,
     const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
     const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage) {
-  TimerInfo timer;
-  timer.set_type(TimerInfo::kPageFaults);
-  timer.set_start(synchronized_timestamp_ns);
-  timer.set_end(synchronized_timestamp_ns);
-  timer.set_process_id(process_memory_usage.pid());
+  orbit_client_data::PageFaultsInfo page_faults_info{
+      .timestamp_ns = synchronized_timestamp_ns,
 
-  std::vector<uint64_t> encoded_values(static_cast<size_t>(PageFaultsEncodingIndex::kEnd));
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kSystemPageFaults)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.pgfault());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kSystemMajorPageFaults)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.pgmajfault());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kCGroupNameHash)] =
-      GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kCGroupPageFaults)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.pgfault());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kCGroupMajorPageFaults)] =
-      orbit_api::Encode<uint64_t>(cgroup_memory_usage.pgmajfault());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kProcessMinorPageFaults)] =
-      orbit_api::Encode<uint64_t>(process_memory_usage.minflt());
-  encoded_values[static_cast<size_t>(PageFaultsEncodingIndex::kProcessMajorPageFaults)] =
-      orbit_api::Encode<uint64_t>(process_memory_usage.majflt());
+      .system_page_faults = system_memory_usage.pgfault(),
+      .system_major_page_faults = system_memory_usage.pgmajfault(),
 
-  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
+      .cgroup_name_hash =
+          GetStringHashAndSendToListenerIfNecessary(cgroup_memory_usage.cgroup_name()),
+      .cgroup_page_faults = cgroup_memory_usage.pgfault(),
+      .cgroup_major_page_faults = cgroup_memory_usage.pgmajfault(),
 
-  capture_listener_->OnTimer(timer);
+      .process_minor_page_faults = process_memory_usage.minflt(),
+      .process_major_page_faults = process_memory_usage.majflt(),
+  };
+
+  capture_listener_->OnPageFaultsInfo(page_faults_info);
 }
 
 void CaptureEventProcessorForListener::ProcessThreadName(const ThreadName& thread_name) {

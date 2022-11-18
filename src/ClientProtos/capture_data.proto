@@ -15,7 +15,7 @@ message TimerInfo {
   uint32 depth = 5;
 
   enum Type {
-    reserved 2, 9;
+    reserved 2, 9, 10;
     kNone = 0;
     kCoreActivity = 1;
     kGpuActivity = 3;
@@ -24,7 +24,6 @@ message TimerInfo {
     kGpuDebugMarker = 6;
     kApiEvent = 7;
     kSystemMemoryUsage = 8;
-    kPageFaults = 10;
     kApiScope = 11;
     kApiScopeAsync = 12;
   }
