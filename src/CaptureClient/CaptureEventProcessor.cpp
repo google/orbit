@@ -19,6 +19,7 @@
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/PageFaultsInfo.h"
+#include "ClientData/SystemMemoryInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
@@ -103,14 +104,14 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       const orbit_grpc_protos::OutOfOrderEventsDiscardedEvent& out_of_order_events_discarded_event);
 
   void ProcessMemoryUsageEvent(const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event);
-  void ExtractAndProcessSystemMemoryTrackingTimer(
+  void ExtractAndProcessSystemMemoryInfo(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage);
   void ExtractAndProcessCgroupAndProcessMemoryInfo(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
       const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage);
-  void ExtractAndProcessPageFaultsTrackingTimer(
+  void ExtractAndProcessPageFaultsInfo(
       uint64_t synchronized_timestamp_ns,
       const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage,
       const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,
@@ -437,8 +438,8 @@ void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
 void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
     const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event) {
   if (memory_usage_event.has_system_memory_usage()) {
-    ExtractAndProcessSystemMemoryTrackingTimer(memory_usage_event.timestamp_ns(),
-                                               memory_usage_event.system_memory_usage());
+    ExtractAndProcessSystemMemoryInfo(memory_usage_event.timestamp_ns(),
+                                      memory_usage_event.system_memory_usage());
   }
 
   if (memory_usage_event.has_cgroup_memory_usage() &&
@@ -451,40 +452,25 @@ void CaptureEventProcessorForListener::ProcessMemoryUsageEvent(
   if (memory_usage_event.has_system_memory_usage() &&
       memory_usage_event.has_cgroup_memory_usage() &&
       memory_usage_event.has_process_memory_usage()) {
-    ExtractAndProcessPageFaultsTrackingTimer(
+    ExtractAndProcessPageFaultsInfo(
         memory_usage_event.timestamp_ns(), memory_usage_event.system_memory_usage(),
         memory_usage_event.cgroup_memory_usage(), memory_usage_event.process_memory_usage());
   }
 }
 
-void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryTrackingTimer(
+void CaptureEventProcessorForListener::ExtractAndProcessSystemMemoryInfo(
     uint64_t synchronized_timestamp_ns,
     const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage) {
-  TimerInfo timer;
-  timer.set_type(TimerInfo::kSystemMemoryUsage);
-  timer.set_start(synchronized_timestamp_ns);
-  timer.set_end(synchronized_timestamp_ns);
+  orbit_client_data::SystemMemoryInfo system_memory_info{
+      .timestamp_ns = synchronized_timestamp_ns,
+      .total_kb = system_memory_usage.total_kb(),
+      .free_kb = system_memory_usage.free_kb(),
+      .available_kb = system_memory_usage.available_kb(),
+      .buffers_kb = system_memory_usage.buffers_kb(),
+      .cached_kb = system_memory_usage.cached_kb(),
+  };
 
-  // The RepeatedField<Element>::Set(int index, const Element & value) method won't update the
-  // current_size_ of the repeated field. If the current_size_ == 0, the repeated field will be
-  // ignored when copying the protobuf. Therefore, if encoding the following memory information
-  // into TimerInfo registers with the Set method, the registers field of the copied TimerInfo
-  // would be empty.
-  std::vector<uint64_t> encoded_values(static_cast<size_t>(SystemMemoryUsageEncodingIndex::kEnd));
-  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kTotalKb)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.total_kb());
-  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kFreeKb)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.free_kb());
-  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kAvailableKb)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.available_kb());
-  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kBuffersKb)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.buffers_kb());
-  encoded_values[static_cast<size_t>(SystemMemoryUsageEncodingIndex::kCachedKb)] =
-      orbit_api::Encode<uint64_t>(system_memory_usage.cached_kb());
-
-  *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
-
-  capture_listener_->OnTimer(timer);
+  capture_listener_->OnSystemMemoryInfo(system_memory_info);
 }
 
 void CaptureEventProcessorForListener::ExtractAndProcessCgroupAndProcessMemoryInfo(
@@ -504,7 +490,7 @@ void CaptureEventProcessorForListener::ExtractAndProcessCgroupAndProcessMemoryIn
   capture_listener_->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
-void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(
+void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsInfo(
     uint64_t synchronized_timestamp_ns,
     const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage,
     const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage,

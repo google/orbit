@@ -4,19 +4,11 @@
 
 #include "PageFaultsTrack.h"
 
-#include "ApiUtils/EncodedEvent.h"
-#include "CaptureClient/CaptureEventProcessor.h"
-#include "GrpcProtos/Constants.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
-
-namespace {
-using orbit_capture_client::CaptureEventProcessor;
-using orbit_grpc_protos::kMissingInfo;
-}  // namespace
 
 PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent,
                                  const orbit_gl::TimelineInfoInterface* timeline_info,

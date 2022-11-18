@@ -68,8 +68,6 @@ class Track : public orbit_gl::CaptureViewElement,
   [[nodiscard]] virtual uint64_t GetMinTime() const = 0;
   [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
 
-  virtual void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) {}
-
   [[nodiscard]] bool IsPinned() const override { return pinned_; }
   void SetPinned(bool value) override;
 

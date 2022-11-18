@@ -58,7 +58,7 @@ class TimerTrack : public Track {
   ~TimerTrack() override = default;
 
   // Pickable
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
   [[nodiscard]] std::string GetTooltip() const override;
 
   // Track

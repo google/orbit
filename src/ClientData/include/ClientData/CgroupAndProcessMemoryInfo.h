@@ -6,7 +6,6 @@
 #define CLIENT_DATA_CGROUP_AND_PROCESS_MEMORY_INFO_H_
 
 #include <cstdint>
-#include <optional>
 
 #include "GrpcProtos/Constants.h"
 

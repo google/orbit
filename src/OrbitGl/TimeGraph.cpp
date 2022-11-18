@@ -310,10 +310,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
       scheduler_track->OnTimer(timer_info);
       break;
     }
-    case TimerInfo::kSystemMemoryUsage: {
-      ProcessSystemMemoryTrackingTimer(timer_info);
-      break;
-    }
     case TimerInfo::kNone: {
       // TODO (http://b/198135618): Create tracks only before drawing.
       track_manager->GetOrCreateThreadTrack(timer_info.thread_id());
@@ -348,12 +344,13 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue
   track->AddValue(time, track_event.value());
 }
 
-void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessSystemMemoryInfo(
+    const orbit_client_data::SystemMemoryInfo& system_memory_info) {
   SystemMemoryTrack* track = GetTrackManager()->GetSystemMemoryTrack();
   if (track == nullptr) {
     track = GetTrackManager()->CreateAndGetSystemMemoryTrack();
   }
-  track->OnTimer(timer_info);
+  track->OnSystemMemoryInfo(system_memory_info);
 
   if (absl::GetFlag(FLAGS_enable_warning_threshold) && !track->GetWarningThreshold().has_value()) {
     constexpr double kMegabytesToKilobytes = 1024.0;

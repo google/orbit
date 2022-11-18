@@ -122,6 +122,10 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     introspection_window_->GetTimeGraph()->ProcessPageFaultsInfo(page_faults_info);
   }
 
+  void OnSystemMemoryInfo(const orbit_client_data::SystemMemoryInfo& system_memory_info) override {
+    introspection_window_->GetTimeGraph()->ProcessSystemMemoryInfo(system_memory_info);
+  }
+
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) override {
     introspection_window_->GetTimeGraph()->ProcessApiStringEvent(api_string_event);
   }

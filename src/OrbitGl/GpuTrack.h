@@ -40,7 +40,7 @@ class GpuTrack : public Track {
                     orbit_client_data::TimerData* submission_timer_data,
                     orbit_client_data::TimerData* marker_timer_data);
 
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer_info) const override;

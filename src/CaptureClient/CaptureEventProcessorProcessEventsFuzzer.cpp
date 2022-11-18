@@ -36,6 +36,8 @@ class MyCaptureListener : public CaptureListener {
   void OnCgroupAndProcessMemoryInfo(const orbit_client_data::CgroupAndProcessMemoryInfo&
                                     /*cgroup_and_process_memory_info*/) override {}
   void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& /*page_faults_info*/) override {}
+  void OnSystemMemoryInfo(
+      const orbit_client_data::SystemMemoryInfo& /*system_memory_info*/) override {}
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
   void OnUniqueCallstack(uint64_t /*callstack_id*/, CallstackInfo /*callstack*/) override {}
   void OnCallstackEvent(CallstackEvent /*callstack_event*/) override {}

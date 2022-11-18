@@ -481,6 +481,10 @@ void OrbitApp::OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_fa
   GetMutableTimeGraph()->ProcessPageFaultsInfo(page_faults_info);
 }
 
+void OrbitApp::OnSystemMemoryInfo(const orbit_client_data::SystemMemoryInfo& system_memory_info) {
+  GetMutableTimeGraph()->ProcessSystemMemoryInfo(system_memory_info);
+}
+
 void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) {
   GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
 }

@@ -53,6 +53,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void ProcessCgroupAndProcessMemoryInfo(
       const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
   void ProcessPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info);
+  void ProcessSystemMemoryInfo(const orbit_client_data::SystemMemoryInfo& system_memory_info);
   void ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event);
   void ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event);
 
@@ -175,7 +176,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
   void ProcessAsyncTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
   std::shared_ptr<orbit_gl::GlSlider> horizontal_slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
