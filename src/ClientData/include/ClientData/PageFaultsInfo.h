@@ -1,10 +1,13 @@
 // Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 #ifndef CLIENT_DATA_PAGE_FAULTS_INFO_H_
 #define CLIENT_DATA_PAGE_FAULTS_INFO_H_
 
 #include <cstdint>
+
+#include "GrpcProtos/Constants.h"
 
 namespace orbit_client_data {
 
@@ -19,18 +22,18 @@ struct PageFaultsInfo {
   int64_t process_major_page_faults;
 
   [[nodiscard]] bool HasMajorPageFaultsInfo() const {
-    return system_major_page_faults != kMissingInfo && cgroup_major_page_faults != kMissingInfo &&
-           process_major_page_faults != kMissingInfo;
+    return system_major_page_faults != orbit_grpc_protos::kMissingInfo &&
+           cgroup_major_page_faults != orbit_grpc_protos::kMissingInfo &&
+           process_major_page_faults != orbit_grpc_protos::kMissingInfo;
   }
 
   [[nodiscard]] bool HasMinorPageFaultsInfo() const {
-    return system_page_faults != kMissingInfo && system_major_page_faults != kMissingInfo &&
-           cgroup_page_faults != kMissingInfo && cgroup_major_page_faults != kMissingInfo &&
-           process_minor_page_faults != kMissingInfo;
+    return system_page_faults != orbit_grpc_protos::kMissingInfo &&
+           system_major_page_faults != orbit_grpc_protos::kMissingInfo &&
+           cgroup_page_faults != orbit_grpc_protos::kMissingInfo &&
+           cgroup_major_page_faults != orbit_grpc_protos::kMissingInfo &&
+           process_minor_page_faults != orbit_grpc_protos::kMissingInfo;
   }
-
- private:
-  static constexpr int64_t kMissingInfo = -1;
 };
 
 }  // namespace orbit_client_data
