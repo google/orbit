@@ -62,7 +62,7 @@ ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
       if (local_connection_.GetOrbitServiceInstance() == nullptr) {
         ui_->statusLabel->setText("Waiting for OrbitService");
       } else {
-        ui_->statusLabel->setText("Connecting... to OrbitService");
+        ui_->statusLabel->setText("Connecting to OrbitService ...");
       }
       emit Disconnected();
     }
