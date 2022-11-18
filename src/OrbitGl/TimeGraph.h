@@ -15,6 +15,7 @@
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
+#include "ClientData/PageFaultsInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
@@ -50,6 +51,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessCgroupAndProcessMemoryInfo(
       const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info);
+  void ProcessPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info);
   void ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event);
   void ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event);
 
@@ -174,7 +176,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   CreateAccessibleInterface() override;
   void ProcessAsyncTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
-  void ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
   std::shared_ptr<orbit_gl::GlSlider> horizontal_slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;

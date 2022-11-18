@@ -29,6 +29,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
         include/ClientData/ModuleManager.h
+        include/ClientData/PageFaultsInfo.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/ScopeId.h

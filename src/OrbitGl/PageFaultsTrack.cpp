@@ -99,45 +99,27 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
   minor_page_faults_track_->SetPos(pos[0], current_y);
 }
 
-void PageFaultsTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  int64_t system_page_faults = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kSystemPageFaults)));
-  int64_t system_major_page_faults = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kSystemMajorPageFaults)));
-  int64_t cgroup_page_faults = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupPageFaults)));
-  int64_t cgroup_major_page_faults = orbit_api::Decode<int64_t>(timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupMajorPageFaults)));
-  int64_t process_minor_page_faults =
-      orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-          CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMinorPageFaults)));
-  int64_t process_major_page_faults =
-      orbit_api::Decode<int64_t>(timer_info.registers(static_cast<size_t>(
-          CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMajorPageFaults)));
-
-  if (system_major_page_faults != kMissingInfo && cgroup_major_page_faults != kMissingInfo &&
-      process_major_page_faults != kMissingInfo) {
+void PageFaultsTrack::OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) {
+  if (page_faults_info.HasMajorPageFaultsInfo()) {
     std::array<double, orbit_gl::kBasicPageFaultsTrackDimension> values;
     values[static_cast<size_t>(MajorPageFaultsTrack::SeriesIndex::kProcess)] =
-        static_cast<double>(process_major_page_faults);
+        static_cast<double>(page_faults_info.process_major_page_faults);
     values[static_cast<size_t>(MajorPageFaultsTrack::SeriesIndex::kCGroup)] =
-        static_cast<double>(cgroup_major_page_faults);
+        static_cast<double>(page_faults_info.cgroup_major_page_faults);
     values[static_cast<size_t>(MajorPageFaultsTrack::SeriesIndex::kSystem)] =
-        static_cast<double>(system_major_page_faults);
-    AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(timer_info.start(), values);
+        static_cast<double>(page_faults_info.system_major_page_faults);
+    AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(page_faults_info.timestamp_ns, values);
   }
 
-  if (system_page_faults != kMissingInfo && system_major_page_faults != kMissingInfo &&
-      cgroup_page_faults != kMissingInfo && cgroup_major_page_faults != kMissingInfo &&
-      process_minor_page_faults != kMissingInfo) {
+  if (page_faults_info.HasMinorPageFaultsInfo()) {
     std::array<double, orbit_gl::kBasicPageFaultsTrackDimension> values;
     values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kProcess)] =
-        static_cast<double>(process_minor_page_faults);
-    values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kCGroup)] =
-        static_cast<double>(cgroup_page_faults - cgroup_major_page_faults);
-    values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kSystem)] =
-        static_cast<double>(system_page_faults - system_major_page_faults);
-    AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(timer_info.start(), values);
+        static_cast<double>(page_faults_info.process_minor_page_faults);
+    values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kCGroup)] = static_cast<double>(
+        page_faults_info.cgroup_page_faults - page_faults_info.cgroup_major_page_faults);
+    values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kSystem)] = static_cast<double>(
+        page_faults_info.system_page_faults - page_faults_info.system_major_page_faults);
+    AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(page_faults_info.timestamp_ns, values);
   }
 }
 

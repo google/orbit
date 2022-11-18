@@ -25,6 +25,7 @@ using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CgroupAndProcessMemoryInfo;
 using orbit_client_data::LinuxAddressInfo;
+using orbit_client_data::PageFaultsInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TracepointEventInfo;
 
@@ -580,16 +581,15 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
       .WillOnce(SaveArg<0>(&actual_cgroup_name_key));
 
   TimerInfo system_timer;
-  TimerInfo page_faults_timer;
-  EXPECT_CALL(listener, OnTimer)
-      .Times(2)
-      .WillOnce(SaveArg<0>(&system_timer))
-      .WillOnce(SaveArg<0>(&page_faults_timer));
+  EXPECT_CALL(listener, OnTimer).Times(1).WillOnce(SaveArg<0>(&system_timer));
 
   CgroupAndProcessMemoryInfo cgroup_and_process_memory_info{};
   EXPECT_CALL(listener, OnCgroupAndProcessMemoryInfo)
       .Times(1)
       .WillOnce(SaveArg<0>(&cgroup_and_process_memory_info));
+
+  PageFaultsInfo page_faults_info{};
+  EXPECT_CALL(listener, OnPageFaultsInfo).Times(1).WillOnce(SaveArg<0>(&page_faults_info));
 
   event_processor->ProcessEvent(event);
 
@@ -624,31 +624,16 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
             Field(&CgroupAndProcessMemoryInfo::process_rss_anon_kb,
                   process_memory_usage->rss_anon_kb())));
 
-  EXPECT_EQ(page_faults_timer.start(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(page_faults_timer.end(), memory_usage_event->timestamp_ns());
-  EXPECT_EQ(page_faults_timer.type(), TimerInfo::kPageFaults);
-  EXPECT_EQ(page_faults_timer.process_id(), process_memory_usage->pid());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash)),
-            actual_cgroup_name_key);
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kSystemMajorPageFaults)),
-            system_memory_usage->pgmajfault());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kSystemPageFaults)),
-            system_memory_usage->pgfault());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupMajorPageFaults)),
-            cgroup_memory_usage->pgmajfault());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupPageFaults)),
-            cgroup_memory_usage->pgfault());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMajorPageFaults)),
-            process_memory_usage->majflt());
-  EXPECT_EQ(page_faults_timer.registers(static_cast<size_t>(
-                CaptureEventProcessor::PageFaultsEncodingIndex::kProcessMinorPageFaults)),
-            process_memory_usage->minflt());
+  EXPECT_THAT(
+      page_faults_info,
+      AllOf(Field(&PageFaultsInfo::timestamp_ns, memory_usage_event->timestamp_ns()),
+            Field(&PageFaultsInfo::system_page_faults, system_memory_usage->pgfault()),
+            Field(&PageFaultsInfo::system_major_page_faults, system_memory_usage->pgmajfault()),
+            Field(&PageFaultsInfo::cgroup_name_hash, actual_cgroup_name_key),
+            Field(&PageFaultsInfo::cgroup_page_faults, cgroup_memory_usage->pgfault()),
+            Field(&PageFaultsInfo::cgroup_major_page_faults, cgroup_memory_usage->pgmajfault()),
+            Field(&PageFaultsInfo::process_minor_page_faults, process_memory_usage->minflt()),
+            Field(&PageFaultsInfo::process_major_page_faults, process_memory_usage->majflt())));
 }
 
 GpuQueueSubmissionMetaInfo* CreateGpuQueueSubmissionMetaInfo(GpuQueueSubmission* submission,

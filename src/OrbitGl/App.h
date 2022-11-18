@@ -154,6 +154,7 @@ class OrbitApp final : public DataViewFactory,
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnCgroupAndProcessMemoryInfo(
       const orbit_client_data::CgroupAndProcessMemoryInfo& cgroup_and_process_memory_info) override;
+  void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
 
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;

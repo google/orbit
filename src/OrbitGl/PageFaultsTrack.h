@@ -5,7 +5,7 @@
 #ifndef ORBIT_GL_PAGE_FAULTS_TRACK_H_
 #define ORBIT_GL_PAGE_FAULTS_TRACK_H_
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/PageFaultsInfo.h"
 #include "MajorPageFaultsTrack.h"
 #include "MinorPageFaultsTrack.h"
 #include "Track.h"
@@ -37,7 +37,7 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
-  void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+  void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info);
 
   void AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {

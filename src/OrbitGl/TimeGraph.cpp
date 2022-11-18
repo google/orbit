@@ -313,10 +313,6 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info) {
       ProcessSystemMemoryTrackingTimer(timer_info);
       break;
     }
-    case TimerInfo::kPageFaults: {
-      ProcessPageFaultsTrackingTimer(timer_info);
-      break;
-    }
     case TimerInfo::kNone: {
       // TODO (http://b/198135618): Create tracks only before drawing.
       track_manager->GetOrCreateThreadTrack(timer_info.thread_id());
@@ -379,10 +375,9 @@ void TimeGraph::ProcessCgroupAndProcessMemoryInfo(
   track->OnCgroupAndProcessMemoryInfo(cgroup_and_process_memory_info);
 }
 
-void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
-  uint64_t cgroup_name_hash = timer_info.registers(
-      static_cast<size_t>(CaptureEventProcessor::PageFaultsEncodingIndex::kCGroupNameHash));
-  std::string cgroup_name = app_->GetStringManager()->Get(cgroup_name_hash).value_or("");
+void TimeGraph::ProcessPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) {
+  std::string cgroup_name =
+      app_->GetStringManager()->Get(page_faults_info.cgroup_name_hash).value_or("");
   if (cgroup_name.empty()) return;
 
   PageFaultsTrack* track = GetTrackManager()->GetPageFaultsTrack();
@@ -391,7 +386,7 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
     track = GetTrackManager()->CreateAndGetPageFaultsTrack(cgroup_name, memory_sampling_period_ms);
   }
   ORBIT_CHECK(track != nullptr);
-  track->OnTimer(timer_info);
+  track->OnPageFaultsInfo(page_faults_info);
 }
 
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(

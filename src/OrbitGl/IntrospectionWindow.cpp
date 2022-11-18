@@ -117,6 +117,10 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
         cgroup_and_process_memory_info);
   }
 
+  void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) override {
+    introspection_window_->GetTimeGraph()->ProcessPageFaultsInfo(page_faults_info);
+  }
+
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) override {
     introspection_window_->GetTimeGraph()->ProcessApiStringEvent(api_string_event);
   }
