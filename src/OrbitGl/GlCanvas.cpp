@@ -11,7 +11,6 @@
 #include "AccessibleInterfaceProvider.h"
 #include "App.h"
 #include "CaptureWindow.h"
-#include "ImGuiOrbit.h"
 #include "IntrospectionWindow.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
@@ -82,13 +81,6 @@ GlCanvas::GlCanvas()
   ResetHoverTimer();
 }
 
-GlCanvas::~GlCanvas() {
-  if (imgui_context_ != nullptr) {
-    Orbit_ImGui_Shutdown();
-    ImGui::DestroyContext();
-  }
-}
-
 std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app,
                                            TimeGraphLayout* time_graph_layout) {
   switch (canvas_type) {
@@ -108,14 +100,6 @@ std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app
       return std::make_unique<GlCanvas>();
     default:
       ORBIT_UNREACHABLE();
-  }
-}
-
-void GlCanvas::EnableImGui() {
-  if (imgui_context_ == nullptr) {
-    imgui_context_ = ImGui::CreateContext();
-    constexpr uint32_t kImGuiFontSize = 12;
-    Orbit_ImGui_Init(kImGuiFontSize);
   }
 }
 
@@ -147,19 +131,11 @@ void GlCanvas::LeftDown(int x, int y) {
   SetPickingMode(PickingMode::kClick);
   is_selecting_ = false;
 
-  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, true);
-
   RequestRedraw();
 }
 
-void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool /*ctrl*/) {
+void GlCanvas::MouseWheelMoved(int x, int y, int /*delta*/, bool /*ctrl*/) {
   mouse_move_pos_screen_ = Vec2i(x, y);
-
-  // Normalize and invert sign, so that delta < 0 is zoom in.
-  int delta_normalized = delta < 0 ? 1 : -1;
-
-  // Use the original sign of a_Delta here.
-  Orbit_ImGui_ScrollCallback(imgui_context_, -delta_normalized);
 
   ResetHoverTimer();
   RequestRedraw();
@@ -167,7 +143,6 @@ void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool /*ctrl*/) {
 
 void GlCanvas::LeftUp() {
   picking_manager_.Release();
-  Orbit_ImGui_MouseButtonCallback(imgui_context_, 0, false);
   RequestRedraw();
 }
 
@@ -182,13 +157,10 @@ void GlCanvas::RightDown(int x, int y) {
 
   select_start_pos_world_ = select_stop_pos_world_ = mouse_click_pos_world_;
   is_selecting_ = true;
-
-  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
   RequestRedraw();
 }
 
 bool GlCanvas::RightUp() {
-  Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, false);
   is_selecting_ = false;
   RequestRedraw();
 
@@ -196,20 +168,15 @@ bool GlCanvas::RightUp() {
   return show_context_menu;
 }
 
-void GlCanvas::CharEvent(unsigned int character) {
-  Orbit_ImGui_CharCallback(imgui_context_, character);
+void GlCanvas::CharEvent(unsigned int /*character*/) { RequestRedraw(); }
+
+void GlCanvas::KeyPressed(unsigned int /*key_code*/, bool ctrl, bool shift, bool alt) {
+  UpdateSpecialKeys(ctrl, shift, alt);
   RequestRedraw();
 }
 
-void GlCanvas::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
+void GlCanvas::KeyReleased(unsigned int /*key_code*/, bool ctrl, bool shift, bool alt) {
   UpdateSpecialKeys(ctrl, shift, alt);
-  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), true, ctrl, shift, alt);
-  RequestRedraw();
-}
-
-void GlCanvas::KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt) {
-  UpdateSpecialKeys(ctrl, shift, alt);
-  Orbit_ImGui_KeyCallback(imgui_context_, static_cast<int>(key_code), false, ctrl, shift, alt);
   RequestRedraw();
 }
 
@@ -272,12 +239,6 @@ void GlCanvas::Render(QPainter* painter, int width, int height) {
 
   Draw(painter);
 
-  if (picking_mode_ == PickingMode::kNone) {
-    for (const auto& render_callback : render_callbacks_) {
-      render_callback();
-    }
-  }
-
   glFlush();
   CleanupGlState();
 
@@ -323,10 +284,7 @@ void GlCanvas::ResetHoverTimer() {
   can_hover_ = true;
 }
 
-void GlCanvas::SetPickingMode(PickingMode mode) {
-  if (imgui_context_ != nullptr) return;
-  picking_mode_ = mode;
-}
+void GlCanvas::SetPickingMode(PickingMode mode) { picking_mode_ = mode; }
 
 void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap

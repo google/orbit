@@ -6,7 +6,6 @@
 
 #include <absl/time/time.h>
 #include <glad/glad.h>
-#include <imgui.h>
 #include <string.h>
 
 #include <algorithm>
@@ -30,7 +29,6 @@
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlUtils.h"
-#include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
@@ -599,52 +597,6 @@ void CaptureWindow::RequestUpdatePrimitives() {
 
 [[nodiscard]] bool CaptureWindow::IsRedrawNeeded() const {
   return GlCanvas::IsRedrawNeeded() || (time_graph_ != nullptr && time_graph_->IsRedrawNeeded());
-}
-
-void CaptureWindow::RenderImGuiDebugUI() {
-  if (ImGui::CollapsingHeader("Capture Info")) {
-    IMGUI_VAR_TO_TEXT(viewport_.GetScreenWidth());
-    IMGUI_VAR_TO_TEXT(viewport_.GetScreenHeight());
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldWidth());
-    IMGUI_VAR_TO_TEXT(viewport_.GetWorldHeight());
-    IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
-    IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[1]);
-    if (time_graph_ != nullptr) {
-      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackContainer()->GetNumVisiblePrimitives());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetCaptureMin());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetCaptureMax());
-      IMGUI_VAR_TO_TEXT(time_graph_->GetTimeWindowUs());
-      const CaptureData* capture_data = time_graph_->GetCaptureData();
-      if (capture_data != nullptr) {
-        IMGUI_VAR_TO_TEXT(capture_data->GetCallstackData().GetCallstackEventsCount());
-      }
-    }
-  }
-
-  if (ImGui::CollapsingHeader("Performance")) {
-    for (auto& item : scoped_frame_times_) {
-      IMGUI_VARN_TO_TEXT(item.second->GetAverageTimeMs(),
-                         (std::string("Avg time in ms: ") + item.first));
-      IMGUI_VARN_TO_TEXT(item.second->GetMinTimeMs(),
-                         (std::string("Min time in ms: ") + item.first));
-      IMGUI_VARN_TO_TEXT(item.second->GetMaxTimeMs(),
-                         (std::string("Max time in ms: ") + item.first));
-    }
-  }
-
-  if (ImGui::CollapsingHeader("Selection Summary")) {
-    const std::string& selection_summary = selection_stats_.GetSummary();
-
-    if (ImGui::Button("Copy to clipboard")) {
-      app_->SetClipboard(selection_summary);
-    }
-
-    ImGui::TextUnformatted(selection_summary.c_str(),
-                           selection_summary.c_str() + selection_summary.size());
-  }
 }
 
 std::string CaptureWindow::GetCaptureInfo() const {

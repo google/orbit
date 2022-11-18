@@ -14,7 +14,6 @@
 #include <absl/strings/substitute.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
-#include <imgui.h>
 #include <stdlib.h>
 
 #include <QProcess>
@@ -70,7 +69,6 @@
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
 #include "MainWindowInterface.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
@@ -833,55 +831,6 @@ void OrbitApp::RefreshCaptureView() {
   DoZoom = true;  // TODO: remove global, review logic
 }
 
-void OrbitApp::RenderImGuiDebugUI() {
-  ORBIT_CHECK(debug_canvas_ != nullptr);
-  ORBIT_CHECK(capture_window_ != nullptr);
-  ScopeImguiContext context(debug_canvas_->GetImGuiContext());
-  Orbit_ImGui_NewFrame(debug_canvas_);
-
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
-
-  ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-  ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(25, 25, 25, 255));
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-  ImGui::Begin("OrbitDebug", nullptr, window_flags);
-
-  if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
-    if (ImGui::BeginTabItem("CaptureWindow")) {
-      capture_window_->RenderImGuiDebugUI();
-      ImGui::EndTabItem();
-    }
-
-    if (introspection_window_) {
-      if (ImGui::BeginTabItem("Introspection")) {
-        introspection_window_->RenderImGuiDebugUI();
-        ImGui::EndTabItem();
-      }
-    }
-
-    if (ImGui::BeginTabItem("Misc")) {
-      static bool show_imgui_demo = false;
-      ImGui::Checkbox("Show ImGui Demo", &show_imgui_demo);
-      if (show_imgui_demo) {
-        ImGui::ShowDemoWindow();
-      }
-      ImGui::EndTabItem();
-    }
-
-    ImGui::EndTabBar();
-  }
-
-  ImGui::PopStyleVar();
-  ImGui::PopStyleColor();
-  ImGui::End();
-
-  ImGui::Render();
-  Orbit_ImGui_RenderDrawLists(ImGui::GetDrawData());
-  debug_canvas_->RequestRedraw();
-}
-
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   ORBIT_CHECK(process_ != nullptr);
   const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
@@ -1006,13 +955,6 @@ void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
   ORBIT_CHECK(capture_window_ == nullptr);
   capture_window_ = capture;
   capture_window_->set_draw_help(false);
-}
-
-void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
-  ORBIT_CHECK(debug_canvas_ == nullptr);
-  debug_canvas_ = debug_canvas;
-  debug_canvas_->EnableImGui();
-  debug_canvas_->AddRenderCallback([this]() { RenderImGuiDebugUI(); });
 }
 
 void OrbitApp::SetIntrospectionWindow(IntrospectionWindow* introspection_window) {

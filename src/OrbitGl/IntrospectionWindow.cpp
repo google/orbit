@@ -8,7 +8,6 @@
 #include "CaptureClient/AppInterface.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "ImGuiOrbit.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraphLayout.h"
 
@@ -276,14 +275,6 @@ void IntrospectionWindow::ToggleRecording() {
     StartIntrospection();
   } else {
     StopIntrospection();
-  }
-}
-
-void IntrospectionWindow::RenderImGuiDebugUI() {
-  CaptureWindow::RenderImGuiDebugUI();
-
-  if (ImGui::CollapsingHeader("IntrospectionWindow")) {
-    IMGUI_VAR_TO_TEXT(IsIntrospecting());
   }
 }
 

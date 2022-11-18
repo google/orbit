@@ -5,12 +5,9 @@
 #ifndef ORBIT_GL_GL_CANVAS_H_
 #define ORBIT_GL_GL_CANVAS_H_
 
-#include <imgui.h>
 #include <stdint.h>
 
 #include <QPainter>
-#include <algorithm>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -31,7 +28,7 @@ class OrbitApp;
 class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
  public:
   explicit GlCanvas();
-  virtual ~GlCanvas();
+  virtual ~GlCanvas() = default;
 
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
   static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app,
@@ -70,19 +67,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   [[nodiscard]] orbit_gl::TextRenderer& GetTextRenderer() { return text_renderer_; }
 
   [[nodiscard]] const Vec2i& GetMouseScreenPos() const { return mouse_move_pos_screen_; }
-
-  // This could be removed if ImGui is removed
-  [[nodiscard]] float GetDeltaTimeSeconds() const { return delta_time_; }
-
-  virtual void RenderImGuiDebugUI() {}
-
-  using RenderCallback = std::function<void()>;
-  void AddRenderCallback(RenderCallback callback) {
-    render_callbacks_.emplace_back(std::move(callback));
-  }
-
-  void EnableImGui();
-  [[nodiscard]] ImGuiContext* GetImGuiContext() const { return imgui_context_; }
 
   [[nodiscard]] virtual bool IsRedrawNeeded() const;
   void RequestRedraw() { redraw_requested_ = true; }
@@ -146,7 +130,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   PickingMode picking_mode_ = PickingMode::kNone;
 
-  ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   float track_container_click_scrolling_offset_ = 0;
   orbit_gl::QtTextRenderer text_renderer_;
@@ -161,7 +144,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   // PrimitiveAssembler to draw elements in the UI.
   orbit_gl::OpenGlBatcher ui_batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;
-  std::vector<RenderCallback> render_callbacks_;
 
  private:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
