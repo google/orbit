@@ -5,13 +5,8 @@
 #ifndef ORBIT_GL_GL_UTILS_H_
 #define ORBIT_GL_GL_UTILS_H_
 
+#include <absl/time/time.h>
 #include <stdint.h>
-
-#include <iostream>
-
-#include "absl/time/time.h"
-
-void CheckGlError();
 
 [[nodiscard]] inline absl::Duration TicksToDuration(uint64_t start, uint64_t end) {
   return absl::Nanoseconds(end - start);

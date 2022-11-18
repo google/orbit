@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <QOpenGLFunctions>
 #include <algorithm>
 #include <array>
 #include <iterator>
@@ -77,7 +78,7 @@ struct PrimitiveBuffers {
 // NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
 // down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
 // "jumping" around when their coordinates are changed slightly.
-class OpenGlBatcher : public Batcher {
+class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
  public:
   explicit OpenGlBatcher(BatcherId batcher_id) : Batcher(batcher_id) {}
 
@@ -93,7 +94,7 @@ class OpenGlBatcher : public Batcher {
 
   [[nodiscard]] uint32_t GetNumElements() const override { return user_data_.size(); }
   [[nodiscard]] std::vector<float> GetLayers() const override;
-  void DrawLayer(float layer, bool picking) const override;
+  void DrawLayer(float layer, bool picking) override;
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
 
@@ -102,9 +103,9 @@ class OpenGlBatcher : public Batcher {
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
-  void DrawLineBuffer(float layer, bool picking) const;
-  void DrawBoxBuffer(float layer, bool picking) const;
-  void DrawTriangleBuffer(float layer, bool picking) const;
+  void DrawLineBuffer(float layer, bool picking);
+  void DrawBoxBuffer(float layer, bool picking);
+  void DrawTriangleBuffer(float layer, bool picking);
 };
 
 }  // namespace orbit_gl

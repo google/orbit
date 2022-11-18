@@ -5,7 +5,6 @@
 #include "OpenGlBatcher.h"
 
 #include <CoreMath.h>
-#include <glad/glad.h>
 
 #include "Introspection/Introspection.h"
 
@@ -88,9 +87,10 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   return layers;
 };
 
-void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
+void OpenGlBatcher::DrawLayer(float layer, bool picking) {
   ORBIT_SCOPE_FUNCTION;
   if (!primitive_buffers_by_layer_.count(layer)) return;
+  initializeOpenGLFunctions();
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
   if (picking) {
@@ -113,7 +113,7 @@ void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
   glPopAttrib();
 }
 
-void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
   const orbit_containers::Block<Quad, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
       box_block = box_buffer.boxes_.root();
@@ -134,7 +134,7 @@ void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
   }
 }
 
-void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) {
   auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
   const orbit_containers::Block<Line, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK>*
       line_block = line_buffer.lines_.root();
@@ -154,7 +154,7 @@ void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
   }
 }
 
-void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) {
   auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
   const orbit_containers::Block<
       Triangle, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =

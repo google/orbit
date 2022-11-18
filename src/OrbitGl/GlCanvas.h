@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <QOpenGLFunctions>
 #include <QPainter>
 #include <memory>
 #include <string>
@@ -22,7 +23,7 @@
 #include "Timer.h"
 #include "Viewport.h"
 
-class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
+class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGLFunctions {
  public:
   explicit GlCanvas();
   virtual ~GlCanvas() = default;

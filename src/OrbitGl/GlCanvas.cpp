@@ -6,7 +6,6 @@
 
 #include <GteVector.h>
 #include <absl/base/casts.h>
-#include <glad/glad.h>
 
 #include "AccessibleInterfaceProvider.h"
 #include "App.h"
@@ -172,6 +171,8 @@ void GlCanvas::PrepareGlViewport() {
 }
 
 void GlCanvas::PrepareGlState() {
+  initializeOpenGLFunctions();
+
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
 
   glClearColor(static_cast<float>(kBackgroundColor[0]) / 255.0f,

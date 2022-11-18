@@ -68,7 +68,6 @@ class OrbitConan(ConanFile):
         self.requires("openssl/1.1.1s", override=True)
 
         if self.options.with_gui:
-            self.requires("glad/0.1.34")
             self.requires("libssh2/1.10.0")
 
 

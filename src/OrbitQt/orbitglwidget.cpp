@@ -2,11 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// clang-format off
-// This needs to be included first
-#include <glad/glad.h>
-// clang-format on
-
 #include "orbitglwidget.h"
 
 #include <stddef.h>
@@ -80,12 +75,6 @@ void OrbitGLWidget::Deinitialize() {
 
 void OrbitGLWidget::initializeGL() {
   initializeOpenGLFunctions();
-
-  gladLoadGLLoader([](const char* name) {
-    // NOLINTNEXTLINE
-    return reinterpret_cast<void*>(QOpenGLContext::currentContext()->getProcAddress(name));
-  });
-
   PrintContextInformation();
 }
 

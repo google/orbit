@@ -32,7 +32,7 @@ class MockBatcher : public Batcher {
     return std::vector<float>(z_layers_.begin(), z_layers_.end());
   }
 
-  virtual void DrawLayer(float /*layer*/, bool /*picking*/) const override{};
+  void DrawLayer(float /*layer*/, bool /*picking*/) override {}
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId /*id*/) const override {
     return nullptr;
