@@ -32,6 +32,7 @@ target_sources(
           orbittreeview.h
           opengldetect.h
           resource.h
+          TimeGraphLayoutWidget.h
           TrackConfigurationWidget.h
           TrackTypeItemModel.h)
 
@@ -66,6 +67,7 @@ target_sources(
           orbittablemodel.cpp
           orbittreeview.cpp
           opengldetect.cpp
+          TimeGraphLayoutWidget.cpp
           TrackConfigurationWidget.cpp
           TrackConfigurationWidget.ui
           TrackTypeItemModel.cpp
@@ -102,6 +104,10 @@ set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
 set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 iwyu_add_dependency(OrbitQt)
 
+if(WIN32)
+  target_compile_features(OrbitQt PUBLIC cxx_std_20)
+endif()
+
 add_executable(OrbitQtTests)
 
 target_sources(OrbitQtTests
@@ -113,6 +119,7 @@ target_sources(OrbitQtTests
                 CallTreeViewItemModelTest.cpp
                 HistogramWidgetTest.cpp
                 MultipleOfValidatorTest.cpp
+                TimeGraphLayoutWidgetTest.cpp
                 TrackTypeItemModelTest.cpp)
 
 target_include_directories(OrbitQtTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
