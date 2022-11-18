@@ -14,13 +14,15 @@
 #include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "Introspection/Introspection.h"
+#include "TimeGraphLayout.h"
 
 class OrbitApp;
 
 class IntrospectionWindow : public CaptureWindow {
  public:
   explicit IntrospectionWindow(OrbitApp* app,
-                               orbit_capture_client::CaptureControlInterface* capture_control);
+                               orbit_capture_client::CaptureControlInterface* capture_control,
+                               TimeGraphLayout* time_graph_layout);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
   void RenderImGuiDebugUI() override;

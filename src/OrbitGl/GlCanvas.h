@@ -22,6 +22,7 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "QtTextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "Timer.h"
 #include "Viewport.h"
 
@@ -33,7 +34,8 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   virtual ~GlCanvas();
 
   enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
-  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app);
+  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app,
+                                          TimeGraphLayout* time_graph_layout);
 
   void Resize(int width, int height);
   void Render(QPainter* painter, int width, int height);

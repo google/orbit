@@ -27,7 +27,8 @@ class OrbitApp;
 class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterface {
  public:
   explicit CaptureWindow(OrbitApp* app,
-                         orbit_capture_client::CaptureControlInterface* capture_control);
+                         orbit_capture_client::CaptureControlInterface* capture_control,
+                         TimeGraphLayout* time_graph_layout);
 
   void PreRender() override;
 
@@ -105,6 +106,9 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   CaptureStats selection_stats_;
 
   absl::btree_map<std::string, std::unique_ptr<orbit_gl::SimpleTimings>> scoped_frame_times_;
+
+ private:
+  TimeGraphLayout* time_graph_layout_ = nullptr;
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_

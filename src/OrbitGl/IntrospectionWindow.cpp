@@ -10,6 +10,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "ImGuiOrbit.h"
 #include "OrbitBase/Logging.h"
+#include "TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;
 using orbit_grpc_protos::CaptureStarted;
@@ -212,8 +213,9 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
 }  // namespace
 
 IntrospectionWindow::IntrospectionWindow(
-    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control)
-    : CaptureWindow(app, capture_control),
+    OrbitApp* app, orbit_capture_client::CaptureControlInterface* capture_control,
+    TimeGraphLayout* time_graph_layout)
+    : CaptureWindow(app, capture_control, time_graph_layout),
       capture_listener_{std::make_unique<IntrospectionCaptureListener>(this)},
       api_event_processor_{capture_listener_.get()} {
   // Create CaptureData.

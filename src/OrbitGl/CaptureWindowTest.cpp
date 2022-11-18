@@ -35,7 +35,8 @@ constexpr double kTimeEpsilonUs = 0.0000001;
 
 class NavigationTestCaptureWindow : public testing::Test {
  public:
-  explicit NavigationTestCaptureWindow() : capture_window_{nullptr, &capture_client_app_fake_} {
+  explicit NavigationTestCaptureWindow()
+      : capture_window_{nullptr, &capture_client_app_fake_, &time_graph_layout_} {
     capture_window_.Resize(kViewportWidth, kViewportHeight);
 
     capture_data_ = TrackTestData::GenerateTestCaptureData();
