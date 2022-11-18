@@ -88,7 +88,7 @@ TEST_F(ConnectToLocalWidgetTest, OrbitServiceStartedSuccessfullyThenStopped) {
   EXPECT_TRUE(lambda_called);
 
   QTest::qWait(kWaitTime);
-  EXPECT_EQ(status_label_->text(), "Connecting... to OrbitService");
+  EXPECT_EQ(status_label_->text(), "Connecting to OrbitService ...");
 }
 
 TEST_F(ConnectToLocalWidgetTest, OrbitServiceStartError) {
