@@ -20,8 +20,8 @@ constexpr int kIntrospectionTabIndex = 1;
 DebugTabWidget::DebugTabWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::DebugTabWidget>()} {
   ui_->setupUi(this);
-  ui_->tabWidget->setTabEnabled(kCaptureWindowTabIndex, false);
   ui_->tabWidget->setTabEnabled(kIntrospectionTabIndex, false);
+  ui_->tabWidget->setTabEnabled(kCaptureWindowTabIndex, false);
 
   QObject::connect(ui_->captureWindowDebugWidget,
                    &CaptureWindowDebugWidget::AnyLayoutPropertyChanged, this,
