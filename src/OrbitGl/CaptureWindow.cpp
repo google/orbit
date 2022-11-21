@@ -5,7 +5,6 @@
 #include "CaptureWindow.h"
 
 #include <absl/time/time.h>
-#include <glad/glad.h>
 #include <string.h>
 
 #include <algorithm>

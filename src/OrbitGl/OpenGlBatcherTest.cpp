@@ -52,7 +52,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
   // Simulate drawing by simple appending all colors to internal
   // buffers. Only a single color per element will be appended
   // (start point for line, first vertex for triangle and box)
-  void DrawLayer(float layer, bool picking = false) const override {
+  void DrawLayer(float layer, bool picking = false) override {
     auto& buffer = primitive_buffers_by_layer_.at(layer);
     if (picking) {
       for (auto it = buffer.line_buffer.picking_colors_.begin();

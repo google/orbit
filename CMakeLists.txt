@@ -109,7 +109,6 @@ if(WITH_GUI)
                Network
                Test
                Widgets)
-  find_package(glad REQUIRED)
 endif()
 
 find_package(Filesystem REQUIRED)

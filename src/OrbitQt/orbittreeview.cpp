@@ -4,8 +4,6 @@
 
 #include "orbittreeview.h"
 
-#include <glad/glad.h>
-
 #include <QAbstractItemView>
 #include <QAction>
 #include <QApplication>

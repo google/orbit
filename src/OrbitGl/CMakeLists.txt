@@ -116,7 +116,6 @@ target_sources(
           FrameTrackOnlineProcessor.cpp
           GlCanvas.cpp
           GlSlider.cpp
-          GlUtils.cpp
           GpuDebugMarkerTrack.cpp
           GpuSubmissionTrack.cpp
           GpuTrack.cpp
@@ -187,7 +186,6 @@ target_link_libraries(
          RemoteSymbolProvider
          SymbolProvider
          Symbols
-         glad::glad
          gte::gte
          Qt5::Gui)
 

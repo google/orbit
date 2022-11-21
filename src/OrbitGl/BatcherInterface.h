@@ -43,7 +43,7 @@ class BatcherInterface {
   [[nodiscard]] virtual uint32_t GetNumElements() const = 0;
 
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
-  virtual void DrawLayer(float layer, bool picking) const = 0;
+  virtual void DrawLayer(float layer, bool picking) = 0;
 
   [[nodiscard]] virtual const PickingUserData* GetUserData(PickingId id) const = 0;
 };
