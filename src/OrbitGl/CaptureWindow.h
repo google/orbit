@@ -40,7 +40,7 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   void LeftDown(int x, int y) override;
   void LeftUp() override;
   void RightDown(int x, int y) override;
-  bool RightUp() override;
+  void RightUp() override;
   void MouseWheelMoved(int x, int y, int delta, bool ctrl) override;
   void MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) override;
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;

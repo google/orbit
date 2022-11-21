@@ -253,7 +253,7 @@ void CaptureWindow::RightDown(int x, int y) {
   }
 }
 
-bool CaptureWindow::RightUp() {
+void CaptureWindow::RightUp() {
   if (time_graph_ != nullptr && is_selecting_ &&
       (select_start_pos_world_[0] != select_stop_pos_world_[0]) && ControlPressed()) {
     float min_world = std::min(select_start_pos_world_[0], select_stop_pos_world_[0]);
@@ -283,7 +283,7 @@ bool CaptureWindow::RightUp() {
                                        viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 
-  return GlCanvas::RightUp();
+  GlCanvas::RightUp();
 }
 
 void CaptureWindow::ZoomHorizontally(int delta, int mouse_x) {
