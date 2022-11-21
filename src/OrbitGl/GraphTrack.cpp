@@ -164,7 +164,6 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   const float kTextRightMargin = kTextLeftMargin;
   const float kTextTopMargin = layout_->GetTextOffset();
   const float kTextBottomMargin = kTextTopMargin;
-  const float kSpaceBetweenLines = layout_->GetTextOffset();
   const Color kBlack(0, 0, 0, 255);
   const Color kTransparentWhite(255, 255, 255, 180);
 
@@ -182,8 +181,7 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   for (const std::string& line : lines) {
     text_width = std::max(text_width, text_renderer.GetStringWidth(line.c_str(), font_size));
   }
-  float single_line_height = text_renderer.GetStringHeight(text.c_str(), font_size);
-  float text_height = single_line_height * lines.size() + kSpaceBetweenLines * (lines.size() - 1);
+  float text_height = text_renderer.GetStringHeight(text.c_str(), font_size);
   Vec2 text_box_size(text_width, text_height);
 
   float arrow_width = text_box_size[1] / 2.f;
