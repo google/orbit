@@ -39,13 +39,17 @@ class ElfFile : public ObjectFile {
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
   LoadSymbolsFromDynsym() = 0;
   [[nodiscard]] virtual bool HasDynsym() const = 0;
+  
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
   LoadEhOrDebugFrameEntriesAsSymbols() = 0;
 
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;
+
   [[nodiscard]] virtual bool HasGnuDebuglink() const = 0;
   [[nodiscard]] virtual bool Is64Bit() const = 0;
+
   [[nodiscard]] virtual std::string GetSoname() const = 0;
+
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::LineInfo> GetLineInfo(
       uint64_t address) = 0;
 
