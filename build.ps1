@@ -59,7 +59,7 @@ function conan_create_profile($profile) {
 $build_profile = "default_release"
 if (-not (conan_profile_exists $build_profile)) {
   Write-Host "Creating conan profile $profile"
-  conan_create_profile $profile
+  conan_create_profile $build_profile
 }
 
 
