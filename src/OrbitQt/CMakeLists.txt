@@ -16,6 +16,7 @@ target_sources(
           CaptureWindowDebugWidget.h
           CustomSignalsTreeView.h
           CutoutWidget.h
+          DebugTabWidget.h
           ElidedLabel.h
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
@@ -48,6 +49,8 @@ target_sources(
           CaptureOptionsDialog.ui
           CaptureWindowDebugWidget.cpp
           CaptureWindowDebugWidget.ui
+          DebugTabWidget.cpp
+          DebugTabWidget.ui
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
@@ -121,6 +124,7 @@ target_sources(OrbitQtTests
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 CaptureWindowDebugWidgetTest.cpp
+                DebugTabWidgetTest.cpp
                 HistogramWidgetTest.cpp
                 MultipleOfValidatorTest.cpp
                 TimeGraphLayoutWidgetTest.cpp
