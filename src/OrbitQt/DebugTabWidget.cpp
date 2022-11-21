@@ -55,11 +55,11 @@ void DebugTabWidget::ResetIntrospectionWindowDebugInterface() {
   ui_->tabWidget->setTabEnabled(kIntrospectionTabIndex, false);
 }
 
-TimeGraphLayout* DebugTabWidget::GetTimeGraphLayoutForTheCaptureWindow() const {
+TimeGraphLayout* DebugTabWidget::GetCaptureWindowTimeGraphLayout() const {
   return ui_->captureWindowDebugWidget->GetTimeGraphLayout();
 }
 
-TimeGraphLayout* DebugTabWidget::GetTimeGraphLayoutForTheIntrospectionWindow() const {
+TimeGraphLayout* DebugTabWidget::GetIntrospectionWindowTimeGraphLayout() const {
   return ui_->introspectionWindowDebugWidget->GetTimeGraphLayout();
 }
 

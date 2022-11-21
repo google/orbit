@@ -62,13 +62,10 @@ TEST(DebugTabWidget, GetTimeGraphLayout) {
   orbit_qt::DebugTabWidget widget{};
 
   // The widget should offer a time graph layout for the capture window
-  auto* capture_window_time_graph_layout = widget.GetTimeGraphLayoutForTheCaptureWindow();
-  EXPECT_NE(capture_window_time_graph_layout, nullptr);
+  EXPECT_NE(widget.GetCaptureWindowTimeGraphLayout(), nullptr);
 
   // The widget should offer a time graph layout for the introspection window
-  auto* introspection_window_time_graph_layout =
-      widget.GetTimeGraphLayoutForTheIntrospectionWindow();
-  EXPECT_NE(introspection_window_time_graph_layout, nullptr);
+  EXPECT_NE(widget.GetIntrospectionWindowTimeGraphLayout(), nullptr);
 
   // The debug tab widget has two signals which fire when any of the properties in the two time
   // graph layouts changes.

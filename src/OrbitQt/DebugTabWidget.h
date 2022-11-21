@@ -26,8 +26,8 @@ class DebugTabWidget : public QWidget {
   explicit DebugTabWidget(QWidget* parent = nullptr);
   ~DebugTabWidget() override;
 
-  [[nodiscard]] TimeGraphLayout* GetTimeGraphLayoutForTheCaptureWindow() const;
-  [[nodiscard]] TimeGraphLayout* GetTimeGraphLayoutForTheIntrospectionWindow() const;
+  [[nodiscard]] TimeGraphLayout* GetCaptureWindowTimeGraphLayout() const;
+  [[nodiscard]] TimeGraphLayout* GetIntrospectionWindowTimeGraphLayout() const;
 
   void SetCaptureWindowDebugInterface(const orbit_gl::CaptureWindowDebugInterface* interface);
   void ResetCaptureWindowDebugInterface();
