@@ -110,7 +110,7 @@ void CaptureWindow::PreRender() {
     const int kMaxLayoutLoops =
         (app_ != nullptr && (app_->IsCapturing() || app_->IsLoadingCapture()))
             ? 1
-            : time_graph_->GetLayout().GetMaxLayoutingLoops();
+            : time_graph_layout_->GetMaxLayoutingLoops();
 
     // TODO (b/229222095) Log when the max loop count is exceeded
     do {
@@ -669,12 +669,12 @@ void CaptureWindow::RenderHelpUi() {
 
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
-  // TODO(b/180312795): Use TimeGraphLayout's font size again.
-  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueUi,
-                         {14, Color(255, 255, 255, 255), -1.f /*max_size*/}, &text_bounding_box_pos,
-                         &text_bounding_box_size);
+  text_renderer_.AddText(
+      GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueUi,
+      {time_graph_layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f /*max_size*/},
+      &text_bounding_box_pos, &text_bounding_box_size);
 
-  const Color kBoxColor(50, 50, 50, 230);
+  const Color kBoxColor(50, 50, 50, 243);
   const float kMargin = 15.f;
   const float kRoundingRadius = 20.f;
   primitive_assembler_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size,
@@ -683,15 +683,15 @@ void CaptureWindow::RenderHelpUi() {
 
 const char* CaptureWindow::GetHelpText() const {
   const char* help_message =
-      "Start/Stop Capture: 'F5'\n\n"
-      "Pan: 'A','D' or \"Left Click + Drag\"\n\n"
-      "Scroll: Arrow Keys or Mouse Wheel\n\n"
-      "Timeline Zoom (10%): 'W', 'S' or \"Ctrl + Mouse Wheel\"\n\n"
-      "Zoom to Time Range: \"Ctrl + Right Click + Drag\"\n\n"
+      u8"Start/Stop Capture: F5\n\n"
+      "Pan:  \U0001F130 ,  \U0001F133  OR Left Click + Drag\n\n"
+      "Scroll:  ← ,  ↑ ,  → ,  ↓  OR Mouse Wheel\n\n"
+      "Timeline Zoom (10%):  \U0001F146 ,  \U0001F142  OR Ctrl + Mouse Wheel\n\n"
+      "Zoom to Time Range: Ctrl + Right Click + Drag\n\n"
       "Select: Left Click\n\n"
-      "Measure: \"Right Click + Drag\"\n\n"
-      "UI Scale (10%): \"Ctrl + '+'/'-' \"\n\n"
-      "Toggle Help: Ctrl + 'H'";
+      "Measure: Right Click + Drag\n\n"
+      "UI Scale (10%): Ctrl + '±'\n\n"
+      "Toggle Help: Ctrl +  \U0001F137";
   return help_message;
 }
 
@@ -742,7 +742,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   float size_x = to_world - from_world;
   // TODO(http://b/226401787): Allow green selection overlay to be on top of the Timeline after
   // modifying its design and how the overlay is drawn
-  float initial_y_position = time_graph_->GetLayout().GetTimeBarHeight();
+  float initial_y_position = time_graph_layout_->GetTimeBarHeight();
   Vec2 pos(from_world, initial_y_position);
   Vec2 size(size_x, viewport_.GetWorldHeight() - initial_y_position);
 
@@ -756,7 +756,7 @@ void CaptureWindow::RenderSelectionOverlay() {
                                        ? TextRenderer::HAlign::Left
                                        : TextRenderer::HAlign::Right;
   TextRenderer::TextFormatting formatting;
-  formatting.font_size = time_graph_->GetLayout().GetFontSize();
+  formatting.font_size = time_graph_layout_->GetFontSize();
   formatting.color = Color(255, 255, 255, 255);
   formatting.halign = alignment;
 
