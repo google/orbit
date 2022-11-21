@@ -1,2 +1,1 @@
-bintray https://orbit.jfrog.io/artifactory/api/conan/orbitdeps True
 conan-center https://center.conan.io True 

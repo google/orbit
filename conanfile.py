@@ -48,25 +48,29 @@ class OrbitConan(ConanFile):
             del self.options.fPIC
 
     def build_requirements(self):
-        if not self.options.with_system_deps: self.build_requires('protobuf/3.21.4')
-        if not self.options.with_system_deps: self.build_requires('grpc/1.48.0')
-        if not self.options.with_system_deps: self.build_requires('gtest/1.11.0', force_host_context=True)
+        if self.options.with_system_deps: return
+        self.build_requires('protobuf/3.21.4')
+        self.build_requires('grpc/1.48.0')
+        self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
-        if not self.options.with_system_deps: self.requires("abseil/20220623.0")
-        if not self.options.with_system_deps: self.requires("capstone/4.0.2")
-        if not self.options.with_system_deps: self.requires("grpc/1.48.0")
-        if not self.options.with_system_deps: self.requires("outcome/2.2.3")
+        if self.options.with_system_deps: return
+
+        self.requires("abseil/20220623.0")
+        self.requires("capstone/4.0.2")
+        self.requires("grpc/1.48.0")
+        self.requires("outcome/2.2.3")
         if self.settings.os != "Windows":
-            if not self.options.with_system_deps: self.requires("volk/1.3.224.1")
-            if not self.options.with_system_deps: self.requires("vulkan-headers/1.3.224.1")
-            if not self.options.with_system_deps: self.requires("vulkan-validationlayers/1.3.224.1")
+            self.requires("volk/1.3.224.1")
+            self.requires("vulkan-headers/1.3.224.1")
+            self.requires("vulkan-validationlayers/1.3.224.1")
         self.requires("zlib/1.2.12", override=True)
+        self.requires("openssl/1.1.1s", override=True)
 
         if self.options.with_gui:
-            if not self.options.with_system_deps: self.requires("glad/0.1.34")
-            if not self.options.with_system_deps: self.requires("imgui/1.88")
-            if not self.options.with_system_deps: self.requires("libssh2/1.10.0")
+            self.requires("glad/0.1.34")
+            self.requires("imgui/1.88")
+            self.requires("libssh2/1.10.0")
 
 
     def configure(self):
