@@ -48,7 +48,6 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   void SetIsMouseOver(bool value) override;
 
   void PostRender(QPainter* painter) override;
-  void RenderImGuiDebugUI() override;
 
   void RequestUpdatePrimitives();
   [[nodiscard]] bool IsRedrawNeeded() const override;

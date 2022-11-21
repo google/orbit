@@ -20,7 +20,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GlSlider.h"
-#include "ImGuiTimeGraphLayout.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"

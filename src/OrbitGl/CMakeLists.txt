@@ -44,8 +44,6 @@ target_sources(
          GraphTrack.h
          GraphTrackDataAggregator.h
          Images.h
-         ImGuiOrbit.h
-         ImGuiTimeGraphLayout.h
          IntrospectionWindow.h
          LineGraphTrack.h
          LiveFunctionsController.h
@@ -124,8 +122,6 @@ target_sources(
           GpuTrack.cpp
           GraphTrack.cpp
           GraphTrackDataAggregator.cpp
-          ImGuiOrbit.cpp
-          ImGuiTimeGraphLayout.cpp
           IntrospectionWindow.cpp
           LineGraphTrack.cpp
           LiveFunctionsController.cpp
@@ -192,7 +188,6 @@ target_link_libraries(
          SymbolProvider
          Symbols
          glad::glad
-         imgui::imgui
          gte::gte
          Qt5::Gui)
 

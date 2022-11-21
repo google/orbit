@@ -25,7 +25,6 @@ class IntrospectionWindow : public CaptureWindow {
                                TimeGraphLayout* time_graph_layout);
   ~IntrospectionWindow() override;
   void ToggleRecording() override;
-  void RenderImGuiDebugUI() override;
 
   void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) override;
 

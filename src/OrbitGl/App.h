@@ -316,7 +316,6 @@ class OrbitApp final : public DataViewFactory,
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text) override;
-  void RenderImGuiDebugUI();
 
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
