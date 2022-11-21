@@ -66,13 +66,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
                            const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;
 
-  void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }
-  void UnregisterGlWidget(OrbitGLWidget* widget) {
-    const auto it = std::find(gl_widgets_.begin(), gl_widgets_.end(), widget);
-    if (it != gl_widgets_.end()) {
-      gl_widgets_.erase(it);
-    }
-  }
   void OnRefreshDataViewPanels(orbit_data_views::DataViewType type);
   void UpdatePanel(orbit_data_views::DataViewType type);
 
@@ -259,7 +252,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   Ui::OrbitMainWindow* ui;
   FilterPanelWidgetAction* filter_panel_action_ = nullptr;
   QTimer* main_timer_ = nullptr;
-  std::vector<OrbitGLWidget*> gl_widgets_;
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
   orbit_session_setup::TargetLabel* target_label_ = nullptr;

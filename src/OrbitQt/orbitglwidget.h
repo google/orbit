@@ -5,66 +5,39 @@
 #ifndef ORBIT_QT_ORBIT_GL_WIDGET_H_
 #define ORBIT_QT_ORBIT_GL_WIDGET_H_
 
-#include <glad/glad.h>
 #include <stdint.h>
-
-#include "TimeGraphLayout.h"
-
-// Disable "qopenglfunctions.h is not compatible with GLEW, GLEW defines will be undefined" warning
-// to reduce spam in compilation output. This is a known quirk that doesn't cause any ill effect.
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-W#warnings"
-#endif
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcpp"
-#endif
-
-#include <QOpenGLFunctions>
-
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
 
 #include <QEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
-#include <QObject>
+#include <QOpenGLFunctions>
 #include <QOpenGLWidget>
-#include <QString>
+#include <QTimer>
 #include <QWheelEvent>
 #include <QWidget>
 #include <memory>
 
+#include "App.h"
 #include "GlCanvas.h"
-
-class OrbitApp;
-class OrbitMainWindow;
-class QOpenGLDebugMessage;
-class QOpenGLDebugLogger;
+#include "TimeGraphLayout.h"
 
 class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlCanvas::CanvasType canvas_type, OrbitMainWindow* main_window, OrbitApp* app,
+  void Initialize(GlCanvas::CanvasType canvas_type, OrbitApp* app,
                   TimeGraphLayout* time_graph_layout);
-  void Deinitialize(OrbitMainWindow* main_window);
+  void Deinitialize();
+  [[nodiscard]] GlCanvas* GetCanvas() { return gl_canvas_.get(); }
+  [[nodiscard]] const GlCanvas* GetCanvas() const { return gl_canvas_.get(); }
+
+ private:
+  void PrintContextInformation();
   void initializeGL() override;
   void resizeGL(int w, int h) override;
   void paintGL() override;
   bool eventFilter(QObject* object, QEvent* event) override;
-  void TakeScreenShot();
-  GlCanvas* GetCanvas() { return gl_canvas_.get(); }
-  void PrintContextInformation();
-
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   void mouseDoubleClickEvent(QMouseEvent* event) override;
@@ -75,14 +48,11 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void keyReleaseEvent(QKeyEvent* event) override;
   void wheelEvent(QWheelEvent* event) override;
 
- protected slots:
-  void messageLogged(const QOpenGLDebugMessage& msg);
-  void showContextMenu();
-  void OnMenuClicked(int a_Index);
+  void ShowContextMenu();
+  void OnMenuClicked(int index);
 
- private:
   std::unique_ptr<GlCanvas> gl_canvas_;
-  QOpenGLDebugLogger* debug_logger_;
+  QTimer update_timer_;
 };
 
 #endif  // ORBIT_QT_ORBIT_GL_WIDGET_H_

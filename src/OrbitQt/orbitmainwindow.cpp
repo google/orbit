@@ -364,7 +364,7 @@ void OrbitMainWindow::SetupMainWindow() {
       [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
   app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
 
-  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, this, app_.get(),
+  ui->CaptureGLWidget->Initialize(GlCanvas::CanvasType::kCaptureWindow, app_.get(),
                                   ui->debugTabWidget->GetCaptureWindowTimeGraphLayout());
 
   // TODO(beckerhe): This dynamic cast wrapper is just temporary and will not be needed anymore
@@ -799,7 +799,7 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->samplingReport->Deinitialize();
   ui->selectionReport->Deinitialize();
 
-  ui->CaptureGLWidget->Deinitialize(this);
+  ui->CaptureGLWidget->Deinitialize();
   ui->PresetsList->Deinitialize();
   ui->FunctionsList->Deinitialize();
   ui->ModulesList->Deinitialize();
@@ -1008,12 +1008,6 @@ void OrbitMainWindow::StartMainTimer() {
 void OrbitMainWindow::OnTimer() {
   ORBIT_SCOPE("OrbitMainWindow::OnTimer");
   app_->MainTick();
-
-  for (OrbitGLWidget* gl_widget : gl_widgets_) {
-    if (gl_widget->GetCanvas() != nullptr && gl_widget->GetCanvas()->IsRedrawNeeded()) {
-      gl_widget->update();
-    }
-  }
 
   if (app_->IsCapturing()) {
     filter_panel_action_->SetTimerLabelText(QString::fromStdString(
@@ -1387,7 +1381,7 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   if (introspection_widget_ == nullptr) {
     introspection_widget_ = std::make_unique<OrbitGLWidget>();
     introspection_widget_->setWindowFlags(Qt::WindowStaysOnTopHint);
-    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, this, app_.get(),
+    introspection_widget_->Initialize(GlCanvas::CanvasType::kIntrospectionWindow, app_.get(),
                                       ui->debugTabWidget->GetIntrospectionWindowTimeGraphLayout());
     introspection_widget_->installEventFilter(this);
 
