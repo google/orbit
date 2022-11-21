@@ -45,12 +45,15 @@ function conan_profile_exists {
   return $?
 }
 
+# That's the profile that is used for tools that run on the build machine (Nasm, CMake, Ninja, etc.)
+readonly build_profile="default_release"
+conan_profile_exists "${build_profile}" || create_conan_profile "${build_profile}"
 
 for profile in ${profiles[@]}; do
-  if [ "$profile" == "default_release" -o "$profile" == "default_debug" -o "$profile" == "default_relwithdebinfo" ]; then
+  if [[ $profile == default_* ]]; then
     conan_profile_exists "$profile" || create_conan_profile "$profile"
   fi
 
-  conan install -pr $profile -if build_$profile/ --build outdated "$DIR" || exit $?
+  conan install -pr:b "${build_profile}" -pr:h $profile -if build_$profile/ --build outdated "$DIR" || exit $?
   conan build -bf build_$profile/ "$DIR" || exit $?
 done

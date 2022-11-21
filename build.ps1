@@ -55,6 +55,14 @@ function conan_create_profile($profile) {
   }
 }
 
+# That's the profile that is used for tools that run on the build machine (Nasm, CMake, Ninja, etc.)
+$build_profile = "default_release"
+if (-not (conan_profile_exists $build_profile)) {
+  Write-Host "Creating conan profile $profile"
+  conan_create_profile $profile
+}
+
+
 $profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
 
 foreach ($profile in $profiles) {
@@ -66,7 +74,7 @@ foreach ($profile in $profiles) {
  
   Write-Host "Building Orbit in build_$profile/ with conan profile $profile"
 
-  & $conan.Path install -if build_$profile\ --build outdated -pr $profile -u "$PSScriptRoot"
+  & $conan.Path install -if build_$profile\ --build outdated -pr:b $build_profile -pr:h $profile -u "$PSScriptRoot"
 
   if ($LastExitCode -ne 0) {
     Throw "Error while running conan install."
