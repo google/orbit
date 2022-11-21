@@ -26,8 +26,7 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
  public:
   explicit OrbitGLWidget(QWidget* parent = nullptr);
-  void Initialize(GlCanvas::CanvasType canvas_type, OrbitApp* app,
-                  TimeGraphLayout* time_graph_layout);
+  void Initialize(std::unique_ptr<GlCanvas> gl_canvas);
   void Deinitialize();
   [[nodiscard]] GlCanvas* GetCanvas() { return gl_canvas_.get(); }
   [[nodiscard]] const GlCanvas* GetCanvas() const { return gl_canvas_.get(); }

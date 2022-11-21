@@ -19,20 +19,13 @@
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "QtTextRenderer.h"
-#include "TimeGraphLayout.h"
 #include "Timer.h"
 #include "Viewport.h"
-
-class OrbitApp;
 
 class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
  public:
   explicit GlCanvas();
   virtual ~GlCanvas() = default;
-
-  enum class CanvasType { kCaptureWindow, kIntrospectionWindow, kDebug };
-  static std::unique_ptr<GlCanvas> Create(CanvasType canvas_type, OrbitApp* app,
-                                          TimeGraphLayout* time_graph_layout);
 
   void Resize(int width, int height);
   void Render(QPainter* painter, int width, int height);
@@ -146,7 +139,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   orbit_gl::PrimitiveAssembler primitive_assembler_;
 
  private:
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
   void Pick(PickingMode picking_mode, int x, int y);
   virtual void HandlePickedElement(PickingMode /*picking_mode*/, PickingId /*picking_id*/,

@@ -81,28 +81,6 @@ GlCanvas::GlCanvas()
   ResetHoverTimer();
 }
 
-std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app,
-                                           TimeGraphLayout* time_graph_layout) {
-  switch (canvas_type) {
-    case CanvasType::kCaptureWindow: {
-      auto main_capture_window = std::make_unique<CaptureWindow>(
-          app, /* capture_control_interface = */ app, time_graph_layout);
-      app->SetCaptureWindow(main_capture_window.get());
-      return main_capture_window;
-    }
-    case CanvasType::kIntrospectionWindow: {
-      auto introspection_window = std::make_unique<IntrospectionWindow>(
-          app, /* capture_control_interface = */ app, time_graph_layout);
-      app->SetIntrospectionWindow(introspection_window.get());
-      return introspection_window;
-    }
-    case CanvasType::kDebug:
-      return std::make_unique<GlCanvas>();
-    default:
-      ORBIT_UNREACHABLE();
-  }
-}
-
 bool GlCanvas::IsRedrawNeeded() const {
   return redraw_requested_ ||
          (is_mouse_over_ && can_hover_ && hover_timer_.ElapsedMillis() > hover_delay_ms_) ||
