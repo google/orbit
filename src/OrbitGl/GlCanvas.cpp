@@ -241,6 +241,8 @@ void GlCanvas::PrepareGlState() {
   picking_mode_ != PickingMode::kNone ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glUseProgram(0);
 }
 
 void GlCanvas::CleanupGlState() { glPopAttrib(); }
@@ -260,9 +262,6 @@ void GlCanvas::Render(QPainter* painter, int width, int height) {
   PrepareGlViewport();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glUseProgram(0);
 
   // Clear text renderer
   text_renderer_.Init();
