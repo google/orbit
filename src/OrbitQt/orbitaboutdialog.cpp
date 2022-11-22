@@ -7,12 +7,17 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 
+#include "orbittreeview.h"
+#include "ui_orbitaboutdialog.h"
+
 namespace orbit_qt {
 
 OrbitAboutDialog::OrbitAboutDialog(QWidget* parent)
     : QDialog(parent), ui_(new Ui::OrbitAboutDialog) {
   ui_->setupUi(this);
 }
+
+OrbitAboutDialog::~OrbitAboutDialog() = default;
 
 void OrbitAboutDialog::SetLicenseText(const QString& text) {
   ui_->licenseTextEdit->setPlainText(text);

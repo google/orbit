@@ -17,7 +17,10 @@
 
 #include "ClientData/WineSyscallHandlingMethod.h"
 #include "GrpcProtos/capture.pb.h"
-#include "ui_CaptureOptionsDialog.h"
+
+namespace Ui {
+class CaptureOptionsDialog;
+}
 
 namespace orbit_qt {
 
@@ -48,6 +51,7 @@ class CaptureOptionsDialog : public QDialog {
 
  public:
   explicit CaptureOptionsDialog(QWidget* parent = nullptr);
+  ~CaptureOptionsDialog() override;
 
   void SetEnableSampling(bool enable_sampling);
   [[nodiscard]] bool GetEnableSampling() const;

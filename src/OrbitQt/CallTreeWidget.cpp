@@ -57,6 +57,7 @@
 #include "OrbitGl/App.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
+#include "ui_CallTreeWidget.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -101,6 +102,8 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
     ui_->horizontalSlider->setVisible(false);
   }
 }
+
+CallTreeWidget::~CallTreeWidget() = default;
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
                                      std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model) {

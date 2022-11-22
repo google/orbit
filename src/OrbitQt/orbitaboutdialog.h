@@ -10,20 +10,20 @@
 #include <QWidget>
 #include <memory>
 
-#include "ui_orbitaboutdialog.h"
-
+namespace Ui {
+class OrbitAboutDialog;
+}
 namespace orbit_qt {
 
 class OrbitAboutDialog : public QDialog {
  public:
   explicit OrbitAboutDialog(QWidget* parent = nullptr);
+  ~OrbitAboutDialog() override;
 
   void SetLicenseText(const QString& text);
   void SetVersionString(const QString& version);
   void SetBuildInformation(const QString& build_info);
   void SetOpenGlRenderer(const QString& opengl_renderer, bool software_rendering);
-
-  ~OrbitAboutDialog() override = default;
 
  private:
   std::unique_ptr<Ui::OrbitAboutDialog> ui_;
