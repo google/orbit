@@ -4,7 +4,6 @@
 
 #include "orbitmainwindow.h"
 
-#include <QtGui/qopengl.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/internal/flag.h>
 

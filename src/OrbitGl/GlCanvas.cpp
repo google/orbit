@@ -5,9 +5,9 @@
 #include "GlCanvas.h"
 
 #include <GteVector.h>
-#include <QtGui/qopengl.h>
 #include <stdint.h>
 
+#include <QOpenGLFunctions>
 #include <array>
 #include <cstdint>
 #include <cstring>
