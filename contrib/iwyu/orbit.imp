@@ -126,6 +126,10 @@
   # Qt adjustments - There is an auto-generated mapping file for Qt. Just put adjustments here.
   { "include": ["<QtCore/qglobal.h>", "private", "<QtGlobal>", "public"] },
   { "include": ["<QtCore/qobjectdefs.h>", "private", "<QMetaObject>", "public"] },
+  { "include": ["<GtGui/qopengl.h>", "private", "<QOpenGLFunctions>", "public"] },
+  { "include": ["<qtestmouse.h>", "private", "<QTest>", "public"] },
+  { "include": ["<qtestkeyboard.h>", "private", "<QTest>", "public"] },
+  { "include": ["<qtestsupport_core.h>", "private", "<QTest>", "public"] },
 
   # Vulkan
   { "include": ["@[\"<]vulkan_core\\.h[\">]", "private", "<vulkan/vulkan_core.h>", "public"]},
@@ -134,8 +138,16 @@
 
   # libstdc++
   { "include": ["<bits/exception.h>", "private", "<exception>", "public"]},
+  { "include": ["<bits/chrono.h>", "private", "<chrono>", "public"]},
+  { "include": ["<bits/utility.h>", "private", "<utility>", "public"]},
+  { "include": ["<bits/std_abs.h>", "private", "<cmath>", "public"]},
 
   # libc
   { "include": ["<bits/types/struct_iovec.h>", "private", "<sys/uio.h>", "public"]},
 
+  # Qt
+  { "ref": "qt5_15.imp" },
+
+  # Protobuf
+  { "include": ["\"net/proto2/public/repeated_field.h\"", "private", "<google/protobuf/repeated_field.h>", "public"]},
 ]

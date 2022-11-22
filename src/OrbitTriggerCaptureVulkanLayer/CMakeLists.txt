@@ -29,3 +29,5 @@ protobuf_generate(TARGET OrbitTriggerCaptureVulkanLayer PROTOS
 
 target_include_directories(OrbitTriggerCaptureVulkanLayer PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/protos)
+
+iwyu_add_dependency(OrbitTriggerCaptureVulkanLayer)

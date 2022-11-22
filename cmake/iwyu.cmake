@@ -9,7 +9,7 @@ if(NOT WIN32)
   find_package(Python3 COMPONENTS Interpreter)
   find_program(iwyu_tool_py NAMES iwyu_tool iwyu_tool.py)
   set(fix_includes_py ${CMAKE_SOURCE_DIR}/third_party/include-what-you-use/fix_includes.py)
-  find_program(clang_format_diff NAMES clang-format-diff-9 clang-format-diff)
+  find_program(clang_format_diff NAMES clang-format-diff-14 clang-format-diff-9 clang-format-diff)
   find_program(combine_diff NAMES combinediff)
   find_program(filter_diff NAMES filterdiff)
 
