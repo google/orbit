@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SystemMemoryTrack.h"
+#include "OrbitGl/SystemMemoryTrack.h"
 
 #include <absl/strings/str_format.h>
 #include <stdint.h>
@@ -10,9 +10,9 @@
 #include <array>
 #include <optional>
 
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/CoreMath.h"
 
 namespace orbit_gl {
 

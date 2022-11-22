@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "IntrospectionWindow.h"
+#include "OrbitGl/IntrospectionWindow.h"
 
 #include <absl/container/flat_hash_set.h>
 #include <stdint.h>
@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "ApiUtils/Event.h"
-#include "App.h"
 #include "CaptureClient/AppInterface.h"
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
@@ -35,8 +34,9 @@
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "TimeGraph.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;
 using orbit_grpc_protos::CaptureStarted;

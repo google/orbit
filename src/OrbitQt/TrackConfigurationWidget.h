@@ -10,7 +10,7 @@
 #include <QWidget>
 #include <memory>
 
-#include "TrackManager.h"
+#include "OrbitGl/TrackManager.h"
 #include "TrackTypeItemModel.h"
 
 namespace Ui {

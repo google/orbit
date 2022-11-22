@@ -12,19 +12,19 @@
 #include <optional>
 #include <random>
 
-#include "CaptureViewElement.h"
-#include "CoreMath.h"
-#include "GlCanvas.h"
-#include "MockBatcher.h"
-#include "MockTextRenderer.h"
-#include "MockTimelineInfo.h"
-#include "PickingManager.h"
-#include "PrimitiveAssembler.h"
-#include "StaticTimeGraphLayout.h"
-#include "TimeGraphLayout.h"
-#include "TimelineTicks.h"
-#include "TimelineUi.h"
-#include "Viewport.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/MockBatcher.h"
+#include "OrbitGl/MockTextRenderer.h"
+#include "OrbitGl/MockTimelineInfo.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TimelineTicks.h"
+#include "OrbitGl/TimelineUi.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

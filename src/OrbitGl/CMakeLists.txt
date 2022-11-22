@@ -9,89 +9,89 @@ add_library(OrbitGl STATIC)
 
 target_sources(
   OrbitGl
-  PUBLIC AccessibleButton.h
-         AccessibleCaptureViewElement.h
-         AccessibleInterfaceProvider.h
-         AccessibleTimeGraph.h
-         AccessibleTrack.h
-         AccessibleTriangleToggle.h
-         AnnotationTrack.h
-         App.h
-         AsyncTrack.h
-         BasicPageFaultsTrack.h
-         Batcher.h
-         BatcherInterface.h
-         Button.h
-         CallstackThreadBar.h
-         CallTreeView.h
-         CaptureStats.h
-         CaptureViewElement.h
-         CaptureWindow.h
-         CGroupAndProcessMemoryTrack.h
-         CoreMath.h
-         DrawingInterface.h
-         FormatCallstackForTooltip.h
-         FramePointerValidatorClient.h
-         FrameTrack.h
-         FrameTrackOnlineProcessor.h
-         Geometry.h
-         GlCanvas.h
-         GlSlider.h
-         GlUtils.h
-         GpuDebugMarkerTrack.h
-         GpuSubmissionTrack.h
-         GpuTrack.h
-         GraphTrack.h
-         GraphTrackDataAggregator.h
-         Images.h
-         IntrospectionWindow.h
-         LineGraphTrack.h
-         LiveFunctionsController.h
-         ManualInstrumentationManager.h
-         MajorPageFaultsTrack.h
-         MemoryTrack.h
-         MinorPageFaultsTrack.h
-         MockTimelineInfo.h
-         MultivariateTimeSeries.h
-         OpenGlBatcher.h
-         QtTextRenderer.h
-         PageFaultsTrack.h
-         PickingManager.h
-         PrimitiveAssembler.h
-         SamplingReport.h
-         SchedulerTrack.h
-         SchedulingStats.h
-         ShortenStringWithEllipsis.h
-         SimpleTimings.h
-         StaticTimeGraphLayout.h
-         SymbolLoader.h
-         SystemMemoryTrack.h
-         TextRenderer.h
-         TextRendererInterface.h
-         ThreadBar.h
-         ThreadColor.h
-         ThreadStateBar.h
-         ThreadTrack.h
-         TimeGraph.h
-         TimeGraphLayout.h
-         TimelineInfoInterface.h
-         TimelineTicks.h
-         TimelineUi.h
-         Timer.h
-         TimerInfosIterator.h
-         TimerTrack.h
-         TracepointThreadBar.h
-         Track.h
-         TrackContainer.h
-         TrackControlInterface.h
-         TrackHeader.h
-         TrackManager.h
-         TrackRenderHelper.h
-         TrackTestData.h
-         TranslationStack.h
-         TriangleToggle.h
-         VariableTrack.h
-         Viewport.h)
+  PUBLIC include/OrbitGl/AccessibleButton.h
+         include/OrbitGl/AccessibleCaptureViewElement.h
+         include/OrbitGl/AccessibleInterfaceProvider.h
+         include/OrbitGl/AccessibleTimeGraph.h
+         include/OrbitGl/AccessibleTrack.h
+         include/OrbitGl/AccessibleTriangleToggle.h
+         include/OrbitGl/AnnotationTrack.h
+         include/OrbitGl/App.h
+         include/OrbitGl/AsyncTrack.h
+         include/OrbitGl/BasicPageFaultsTrack.h
+         include/OrbitGl/Batcher.h
+         include/OrbitGl/BatcherInterface.h
+         include/OrbitGl/Button.h
+         include/OrbitGl/CallstackThreadBar.h
+         include/OrbitGl/CallTreeView.h
+         include/OrbitGl/CaptureStats.h
+         include/OrbitGl/CaptureViewElement.h
+         include/OrbitGl/CaptureWindow.h
+         include/OrbitGl/CGroupAndProcessMemoryTrack.h
+         include/OrbitGl/CoreMath.h
+         include/OrbitGl/DrawingInterface.h
+         include/OrbitGl/FormatCallstackForTooltip.h
+         include/OrbitGl/FramePointerValidatorClient.h
+         include/OrbitGl/FrameTrack.h
+         include/OrbitGl/FrameTrackOnlineProcessor.h
+         include/OrbitGl/Geometry.h
+         include/OrbitGl/GlCanvas.h
+         include/OrbitGl/GlSlider.h
+         include/OrbitGl/GlUtils.h
+         include/OrbitGl/GpuDebugMarkerTrack.h
+         include/OrbitGl/GpuSubmissionTrack.h
+         include/OrbitGl/GpuTrack.h
+         include/OrbitGl/GraphTrack.h
+         include/OrbitGl/GraphTrackDataAggregator.h
+         include/OrbitGl/Images.h
+         include/OrbitGl/IntrospectionWindow.h
+         include/OrbitGl/LineGraphTrack.h
+         include/OrbitGl/LiveFunctionsController.h
+         include/OrbitGl/ManualInstrumentationManager.h
+         include/OrbitGl/MajorPageFaultsTrack.h
+         include/OrbitGl/MemoryTrack.h
+         include/OrbitGl/MinorPageFaultsTrack.h
+         include/OrbitGl/MockTimelineInfo.h
+         include/OrbitGl/MultivariateTimeSeries.h
+         include/OrbitGl/OpenGlBatcher.h
+         include/OrbitGl/QtTextRenderer.h
+         include/OrbitGl/PageFaultsTrack.h
+         include/OrbitGl/PickingManager.h
+         include/OrbitGl/PrimitiveAssembler.h
+         include/OrbitGl/SamplingReport.h
+         include/OrbitGl/SchedulerTrack.h
+         include/OrbitGl/SchedulingStats.h
+         include/OrbitGl/ShortenStringWithEllipsis.h
+         include/OrbitGl/SimpleTimings.h
+         include/OrbitGl/StaticTimeGraphLayout.h
+         include/OrbitGl/SymbolLoader.h
+         include/OrbitGl/SystemMemoryTrack.h
+         include/OrbitGl/TextRenderer.h
+         include/OrbitGl/TextRendererInterface.h
+         include/OrbitGl/ThreadBar.h
+         include/OrbitGl/ThreadColor.h
+         include/OrbitGl/ThreadStateBar.h
+         include/OrbitGl/ThreadTrack.h
+         include/OrbitGl/TimeGraph.h
+         include/OrbitGl/TimeGraphLayout.h
+         include/OrbitGl/TimelineInfoInterface.h
+         include/OrbitGl/TimelineTicks.h
+         include/OrbitGl/TimelineUi.h
+         include/OrbitGl/Timer.h
+         include/OrbitGl/TimerInfosIterator.h
+         include/OrbitGl/TimerTrack.h
+         include/OrbitGl/TracepointThreadBar.h
+         include/OrbitGl/Track.h
+         include/OrbitGl/TrackContainer.h
+         include/OrbitGl/TrackControlInterface.h
+         include/OrbitGl/TrackHeader.h
+         include/OrbitGl/TrackManager.h
+         include/OrbitGl/TrackRenderHelper.h
+         include/OrbitGl/TrackTestData.h
+         include/OrbitGl/TranslationStack.h
+         include/OrbitGl/TriangleToggle.h
+         include/OrbitGl/VariableTrack.h
+         include/OrbitGl/Viewport.h)
 
 target_sources(
   OrbitGl
@@ -159,7 +159,7 @@ target_sources(
           TriangleToggle.cpp
           Viewport.cpp)
 
-target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(OrbitGl PUBLIC include/)
 
 target_link_libraries(
   OrbitGl
@@ -207,10 +207,10 @@ endif()
 add_executable(OrbitGlTests)
 
 target_sources(OrbitGlTests PRIVATE
-               CaptureViewElementTester.h
-               MockBatcher.h
-               MockTextRenderer.h
-               PickingManagerTest.h)
+               include/OrbitGl/CaptureViewElementTester.h
+               include/OrbitGl/MockBatcher.h
+               include/OrbitGl/MockTextRenderer.h
+               include/OrbitGl/PickingManagerTest.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp

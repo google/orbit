@@ -10,7 +10,7 @@
 #include <set>
 #include <vector>
 
-#include "TimelineTicks.h"
+#include "OrbitGl/TimelineTicks.h"
 
 namespace orbit_gl {
 

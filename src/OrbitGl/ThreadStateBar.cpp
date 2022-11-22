@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ThreadStateBar.h"
+#include "OrbitGl/ThreadStateBar.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -15,26 +15,26 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "AsyncTrack.h"
-#include "BatcherInterface.h"
-#include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "FormatCallstackForTooltip.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "GlUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "PrimitiveAssembler.h"
-#include "ThreadBar.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/AsyncTrack.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/FormatCallstackForTooltip.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/ThreadBar.h"
+#include "OrbitGl/Viewport.h"
 
 using EventResult = AsyncTrack::EventResult;
 using orbit_client_data::ThreadID;

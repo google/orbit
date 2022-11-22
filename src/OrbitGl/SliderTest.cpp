@@ -10,12 +10,12 @@
 #include <tuple>
 #include <utility>
 
-#include "CaptureViewElement.h"
-#include "CaptureViewElementTester.h"
-#include "CoreMath.h"
-#include "GlSlider.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/GlSlider.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "MultivariateTimeSeries.h"
+#include "OrbitGl/MultivariateTimeSeries.h"
 
 namespace orbit_gl {
 

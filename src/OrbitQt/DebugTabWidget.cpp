@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "CaptureWindowDebugWidget.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/TimeGraphLayout.h"
 #include "ui_DebugTabWidget.h"
 
 namespace orbit_qt {

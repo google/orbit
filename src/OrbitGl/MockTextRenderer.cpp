@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MockTextRenderer.h"
+#include "OrbitGl/MockTextRenderer.h"
 
 #include <GteVector.h>
 #include <string.h>
@@ -10,8 +10,8 @@
 #include <cstdint>
 #include <limits>
 
-#include "CoreMath.h"
-#include "TextRendererInterface.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TextRendererInterface.h"
 
 namespace orbit_gl {
 

@@ -27,7 +27,7 @@
 #include "ApiInterface/Orbit.h"
 #include "DataViews/SamplingReportDataView.h"
 #include "OrbitBase/Logging.h"
-#include "SamplingReport.h"
+#include "OrbitGl/SamplingReport.h"
 #include "UtilWidgets/NoticeWidget.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"

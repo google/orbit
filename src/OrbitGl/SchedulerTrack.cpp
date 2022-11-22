@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SchedulerTrack.h"
+#include "OrbitGl/SchedulerTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -13,17 +13,17 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "BatcherInterface.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PrimitiveAssembler.h"
-#include "ThreadColor.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_client_protos::TimerInfo;
 using orbit_gl::PickingUserData;

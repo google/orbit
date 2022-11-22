@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PrimitiveAssembler.h"
+#include "OrbitGl/PrimitiveAssembler.h"
 
 #include <GteVector.h>
 #include <GteVector2.h>
@@ -13,8 +13,8 @@
 #include <cmath>
 #include <utility>
 
-#include "CoreMath.h"
-#include "Geometry.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
 
 namespace orbit_gl {
 

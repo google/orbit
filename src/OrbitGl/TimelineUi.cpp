@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TimelineUi.h"
+#include "OrbitGl/TimelineUi.h"
 
 #include <GteVector.h>
 #include <absl/flags/flag.h>
@@ -12,14 +12,14 @@
 #include <cstdint>
 #include <optional>
 
-#include "AccessibleCaptureViewElement.h"
 #include "ClientFlags/ClientFlags.h"
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "TextRendererInterface.h"
-#include "TimelineTicks.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TimelineTicks.h"
 
 namespace orbit_gl {
 

@@ -41,7 +41,6 @@
 #include <tuple>
 #include <utility>
 
-#include "App.h"
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
@@ -55,6 +54,7 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
+#include "OrbitGl/App.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
 

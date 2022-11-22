@@ -313,7 +313,7 @@ inline const QString cpp_example = R"(#pragma twice
 
 #include <iostream>
 
-#include "TrackManager.h"
+#include "OrbitGl/TrackManager.h"
 
 class TrackManager {
  public:

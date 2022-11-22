@@ -12,12 +12,12 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "SchedulerTrack.h"
-#include "StaticTimeGraphLayout.h"
-#include "ThreadTrack.h"
-#include "Track.h"
-#include "TrackManager.h"
-#include "TrackTestData.h"
+#include "OrbitGl/SchedulerTrack.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/ThreadTrack.h"
+#include "OrbitGl/Track.h"
+#include "OrbitGl/TrackManager.h"
+#include "OrbitGl/TrackTestData.h"
 
 using orbit_client_protos::TimerInfo;
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "PageFaultsTrack.h"
+#include "OrbitGl/PageFaultsTrack.h"
 
 #include <GteVector.h>
 #include <stddef.h>
@@ -10,10 +10,10 @@
 #include <algorithm>
 
 #include "ApiInterface/Orbit.h"
-#include "CoreMath.h"
-#include "TextRenderer.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

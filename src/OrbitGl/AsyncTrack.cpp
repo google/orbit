@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "AsyncTrack.h"
+#include "OrbitGl/AsyncTrack.h"
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
@@ -14,19 +14,19 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlUtils.h"
-#include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
-#include "PrimitiveAssembler.h"
-#include "TextRenderer.h"
-#include "TimeGraph.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/ManualInstrumentationManager.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_client_protos::TimerInfo;
 using orbit_gl::PrimitiveAssembler;

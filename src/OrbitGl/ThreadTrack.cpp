@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ThreadTrack.h"
+#include "OrbitGl/ThreadTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -15,27 +15,27 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "BatcherInterface.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Typedef.h"
-#include "PrimitiveAssembler.h"
-#include "TextRenderer.h"
-#include "ThreadColor.h"
-#include "TimeGraphLayout.h"
-#include "TimerTrack.h"
-#include "TrackHeader.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TimerTrack.h"
+#include "OrbitGl/TrackHeader.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ScopeId;

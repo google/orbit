@@ -14,11 +14,11 @@
 #include <memory>
 
 #include "ClientData/CaptureData.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/Track.h"
+#include "OrbitGl/TrackManager.h"
+#include "OrbitGl/TrackTestData.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
-#include "StaticTimeGraphLayout.h"
-#include "Track.h"
-#include "TrackManager.h"
-#include "TrackTestData.h"
 #include "TrackTypeItemModel.h"
 
 namespace orbit_qt {

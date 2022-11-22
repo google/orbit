@@ -11,10 +11,10 @@
 #include <utility>
 #include <vector>
 
-#include "CaptureStats.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Result.h"
-#include "SchedulingStats.h"
+#include "OrbitGl/CaptureStats.h"
+#include "OrbitGl/SchedulingStats.h"
 
 TEST(CaptureStats, NullCaptureWindow) {
   CaptureStats capture_stats;

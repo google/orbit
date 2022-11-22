@@ -11,13 +11,13 @@
 #include <utility>
 #include <vector>
 
-#include "CaptureViewElement.h"
-#include "CaptureViewElementTester.h"
-#include "CoreMath.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
-#include "StaticTimeGraphLayout.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

@@ -5,8 +5,8 @@
 
 #include <vector>
 
-#include "CaptureViewElementTester.h"
-#include "GpuTrack.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/GpuTrack.h"
 
 using orbit_gl::MapGpuTimelineToTrackLabel;
 

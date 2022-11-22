@@ -10,7 +10,7 @@
 #include <cmath>
 #include <memory>
 
-#include "GlUtils.h"
+#include "OrbitGl/GlUtils.h"
 
 TEST(GlUtils, TicksToDuration) {
   uint64_t t0 = 0;

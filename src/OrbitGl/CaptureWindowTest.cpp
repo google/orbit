@@ -11,17 +11,17 @@
 
 #include "CaptureClient/AppInterface.h"
 #include "CaptureClient/CaptureClient.h"
-#include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
-#include "CoreMath.h"
-#include "GlSlider.h"
 #include "OrbitBase/Logging.h"
-#include "StaticTimeGraphLayout.h"
-#include "TimeGraph.h"
-#include "TimelineUi.h"
-#include "TrackContainer.h"
-#include "TrackTestData.h"
-#include "Viewport.h"
+#include "OrbitGl/CaptureWindow.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/GlSlider.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TimelineUi.h"
+#include "OrbitGl/TrackContainer.h"
+#include "OrbitGl/TrackTestData.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

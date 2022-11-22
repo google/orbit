@@ -19,9 +19,9 @@
 #include <QWidget>
 #include <memory>
 
-#include "App.h"
-#include "GlCanvas.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT

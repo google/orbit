@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "AccessibleTrack.h"
+#include "OrbitGl/AccessibleTrack.h"
 
 #include <GteVector.h>
 
 #include <vector>
 
-#include "CoreMath.h"
 #include "OrbitBase/Logging.h"
-#include "Track.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Track.h"
 
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;

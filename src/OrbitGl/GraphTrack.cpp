@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GraphTrack.h"
+#include "OrbitGl/GraphTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_cat.h>
@@ -19,17 +19,17 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
-#include "BatcherInterface.h"
 #include "ClientData/FastRenderingUtils.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "GraphTrackDataAggregator.h"
-#include "TextRenderer.h"
-#include "TextRendererInterface.h"
-#include "TimeGraph.h"
-#include "TimeGraphLayout.h"
-#include "TrackHeader.h"
-#include "Viewport.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GraphTrackDataAggregator.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
+#include "OrbitGl/Viewport.h"
 
 namespace {
 constexpr const float kBoxHeightMultiplier = 1.5f;

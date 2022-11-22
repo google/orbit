@@ -18,7 +18,7 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
-#include "LiveFunctionsController.h"
+#include "OrbitGl/LiveFunctionsController.h"
 #include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"
 #include "orbiteventiterator.h"

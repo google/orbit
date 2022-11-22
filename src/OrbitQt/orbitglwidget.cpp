@@ -18,9 +18,9 @@
 #include <string_view>
 #include <utility>
 
-#include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/GlCanvas.h"
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   QSurfaceFormat requested_format = QSurfaceFormat::defaultFormat();

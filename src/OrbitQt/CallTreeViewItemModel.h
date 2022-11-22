@@ -15,8 +15,8 @@
 #include <memory>
 #include <vector>
 
-#include "CallTreeView.h"
 #include "ClientData/CallstackEvent.h"
+#include "OrbitGl/CallTreeView.h"
 
 Q_DECLARE_METATYPE(const std::vector<orbit_client_data::CallstackEvent>*)
 

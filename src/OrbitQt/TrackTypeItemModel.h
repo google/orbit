@@ -16,8 +16,8 @@
 #include <map>
 #include <vector>
 
-#include "Track.h"
-#include "TrackManager.h"
+#include "OrbitGl/Track.h"
+#include "OrbitGl/TrackManager.h"
 
 namespace orbit_qt {
 

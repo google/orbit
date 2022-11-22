@@ -11,8 +11,8 @@
 #include <QTest>
 #include <string>
 
-#include "CaptureWindowDebugInterface.h"
 #include "CaptureWindowDebugWidget.h"
+#include "OrbitGl/CaptureWindowDebugInterface.h"
 
 namespace {
 class MockCaptureWindowDebugInterface : public orbit_gl::CaptureWindowDebugInterface {

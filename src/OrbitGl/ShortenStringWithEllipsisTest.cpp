@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "ShortenStringWithEllipsis.h"
+#include "OrbitGl/ShortenStringWithEllipsis.h"
 
 namespace orbit_gl {
 

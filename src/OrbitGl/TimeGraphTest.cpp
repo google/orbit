@@ -8,16 +8,16 @@
 #include <memory>
 #include <vector>
 
-#include "CaptureViewElement.h"
-#include "CaptureViewElementTester.h"
 #include "ClientData/CaptureData.h"
-#include "CoreMath.h"
-#include "GlSlider.h"
-#include "StaticTimeGraphLayout.h"
-#include "TimeGraph.h"
-#include "TimelineUi.h"
-#include "TrackTestData.h"
-#include "Viewport.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/GlSlider.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TimelineUi.h"
+#include "OrbitGl/TrackTestData.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

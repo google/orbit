@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MemoryTrack.h"
+#include "OrbitGl/MemoryTrack.h"
 
 #include <algorithm>
 #include <optional>
 
 #include "ApiInterface/Orbit.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/GlCanvas.h"
 
 namespace orbit_gl {
 

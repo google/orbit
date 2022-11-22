@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureWindow.h"
+#include "OrbitGl/CaptureWindow.h"
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
@@ -17,20 +17,13 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "BatcherInterface.h"
 #include "CaptureClient/AppInterface.h"
-#include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Geometry.h"
-#include "GlUtils.h"
 #include "Introspection/Introspection.h"
-#include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Append.h"
@@ -38,14 +31,21 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PrimitiveAssembler.h"
-#include "QtTextRenderer.h"
-#include "TextRenderer.h"
-#include "TextRendererInterface.h"
-#include "TimeGraphLayout.h"
-#include "TrackContainer.h"
-#include "TrackManager.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/OpenGlBatcher.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/QtTextRenderer.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackContainer.h"
+#include "OrbitGl/TrackManager.h"
+#include "OrbitGl/Viewport.h"
 #include "absl/strings/str_format.h"
 
 using orbit_accessibility::AccessibleInterface;

@@ -37,8 +37,6 @@
 #include <variant>
 #include <vector>
 
-#include "App.h"
-#include "CallTreeView.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
@@ -50,15 +48,17 @@
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
 #include "GrpcProtos/process.pb.h"
-#include "MainWindowInterface.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/CallTreeView.h"
+#include "OrbitGl/MainWindowInterface.h"
+#include "OrbitGl/StaticTimeGraphLayout.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
-#include "StaticTimeGraphLayout.h"
 #include "orbitglwidget.h"
 
 namespace Ui {
