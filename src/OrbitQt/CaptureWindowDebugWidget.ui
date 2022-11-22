@@ -95,7 +95,7 @@
   <customwidget>
    <class>orbit_qt::TimeGraphLayoutWidget</class>
    <extends>QWidget</extends>
-   <header>TimeGraphLayoutWidget.h</header>
+   <header>OrbitQt/TimeGraphLayoutWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

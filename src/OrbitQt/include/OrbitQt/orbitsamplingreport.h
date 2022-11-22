@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "DataViews/DataView.h"
-#include "orbitdataviewpanel.h"
+#include "OrbitQt/orbitdataviewpanel.h"
 
 class SamplingReport;
 

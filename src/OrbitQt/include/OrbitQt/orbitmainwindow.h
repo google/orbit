@@ -46,7 +46,6 @@
 #include "CodeReport/DisassemblyReport.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
-#include "FilterPanelWidgetAction.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
@@ -57,9 +56,10 @@
 #include "OrbitGl/MainWindowInterface.h"
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/StaticTimeGraphLayout.h"
+#include "OrbitQt/FilterPanelWidgetAction.h"
+#include "OrbitQt/orbitglwidget.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
-#include "orbitglwidget.h"
 
 namespace Ui {
 class OrbitMainWindow;

@@ -11,9 +11,9 @@
 #include <QTabWidget>
 #include <string>
 
-#include "CaptureWindowDebugWidget.h"
-#include "DebugTabWidget.h"
 #include "OrbitGl/CaptureWindowDebugInterface.h"
+#include "OrbitQt/CaptureWindowDebugWidget.h"
+#include "OrbitQt/DebugTabWidget.h"
 
 namespace {
 class MockCaptureWindowDebugInterface : public orbit_gl::CaptureWindowDebugInterface {

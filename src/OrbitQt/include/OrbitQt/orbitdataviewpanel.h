@@ -13,8 +13,8 @@
 #include <Qt>
 
 #include "DataViews/DataView.h"
-#include "orbittreeview.h"
-#include "types.h"
+#include "OrbitQt/orbittreeview.h"
+#include "OrbitQt/types.h"
 
 namespace Ui {
 class OrbitDataViewPanel;

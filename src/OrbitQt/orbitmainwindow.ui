@@ -721,38 +721,38 @@ It used to also contain captures and presets, but these were moved to the User D
   <customwidget>
    <class>OrbitDataViewPanel</class>
    <extends>QWidget</extends>
-   <header>orbitdataviewpanel.h</header>
+   <header>OrbitQt/orbitdataviewpanel.h</header>
   </customwidget>
   <customwidget>
    <class>OrbitGLWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>orbitglwidget.h</header>
+   <header>OrbitQt/orbitglwidget.h</header>
   </customwidget>
   <customwidget>
    <class>OrbitLiveFunctions</class>
    <extends>QWidget</extends>
-   <header>orbitlivefunctions.h</header>
+   <header>OrbitQt/orbitlivefunctions.h</header>
   </customwidget>
   <customwidget>
    <class>OrbitSamplingReport</class>
    <extends>QWidget</extends>
-   <header>orbitsamplingreport.h</header>
+   <header>OrbitQt/orbitsamplingreport.h</header>
   </customwidget>
   <customwidget>
    <class>CallTreeWidget</class>
    <extends>QWidget</extends>
-   <header>CallTreeWidget.h</header>
+   <header>OrbitQt/CallTreeWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_qt::TrackConfigurationWidget</class>
    <extends>QWidget</extends>
-   <header>TrackConfigurationWidget.h</header>
+   <header>OrbitQt/TrackConfigurationWidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>orbit_qt::DebugTabWidget</class>
    <extends>QWidget</extends>
-   <header>DebugTabWidget.h</header>
+   <header>OrbitQt/DebugTabWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

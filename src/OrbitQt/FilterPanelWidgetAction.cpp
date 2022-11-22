@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FilterPanelWidgetAction.h"
+#include "OrbitQt/FilterPanelWidgetAction.h"
 
 #include <QWidget>
 
-#include "FilterPanelWidget.h"
+#include "OrbitQt/FilterPanelWidget.h"
 
 FilterPanelWidgetAction::FilterPanelWidgetAction(QWidget* parent) : QWidgetAction(parent) {}
 

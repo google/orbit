@@ -8,35 +8,35 @@ add_library(OrbitQt OBJECT)
 
 target_sources(
   OrbitQt
-  PRIVATE AccessibilityAdapter.h
-          AnnotatingSourceCodeDialog.h
-          CallTreeViewItemModel.h
-          CallTreeWidget.h
-          CaptureOptionsDialog.h
-          CaptureWindowDebugWidget.h
-          CustomSignalsTreeView.h
-          CutoutWidget.h
-          DebugTabWidget.h
-          ElidedLabel.h
-          FilterPanelWidget.h
-          FilterPanelWidgetAction.h
-          HistogramWidget.h
-          MultipleOfSpinBox.h
-          MultipleOfValidator.h
-          orbitaboutdialog.h
-          orbitdataviewpanel.h
-          orbiteventiterator.h
-          orbitglwidget.h
-          orbitlivefunctions.h
-          orbitmainwindow.h
-          orbitsamplingreport.h
-          orbittablemodel.h
-          orbittreeview.h
-          opengldetect.h
-          resource.h
-          TimeGraphLayoutWidget.h
-          TrackConfigurationWidget.h
-          TrackTypeItemModel.h)
+  PRIVATE include/OrbitQt/AccessibilityAdapter.h
+          include/OrbitQt/AnnotatingSourceCodeDialog.h
+          include/OrbitQt/CallTreeViewItemModel.h
+          include/OrbitQt/CallTreeWidget.h
+          include/OrbitQt/CaptureOptionsDialog.h
+          include/OrbitQt/CaptureWindowDebugWidget.h
+          include/OrbitQt/CustomSignalsTreeView.h
+          include/OrbitQt/CutoutWidget.h
+          include/OrbitQt/DebugTabWidget.h
+          include/OrbitQt/ElidedLabel.h
+          include/OrbitQt/FilterPanelWidget.h
+          include/OrbitQt/FilterPanelWidgetAction.h
+          include/OrbitQt/HistogramWidget.h
+          include/OrbitQt/MultipleOfSpinBox.h
+          include/OrbitQt/MultipleOfValidator.h
+          include/OrbitQt/orbitaboutdialog.h
+          include/OrbitQt/orbitdataviewpanel.h
+          include/OrbitQt/orbiteventiterator.h
+          include/OrbitQt/orbitglwidget.h
+          include/OrbitQt/orbitlivefunctions.h
+          include/OrbitQt/orbitmainwindow.h
+          include/OrbitQt/orbitsamplingreport.h
+          include/OrbitQt/orbittablemodel.h
+          include/OrbitQt/orbittreeview.h
+          include/OrbitQt/opengldetect.h
+          include/OrbitQt/resource.h
+          include/OrbitQt/TimeGraphLayoutWidget.h
+          include/OrbitQt/TrackConfigurationWidget.h
+          include/OrbitQt/TrackTypeItemModel.h)
 
 target_sources(
   OrbitQt
@@ -116,9 +116,6 @@ endif()
 
 add_executable(OrbitQtTests)
 
-target_sources(OrbitQtTests
-        PRIVATE AccessibilityAdapter.h
-                CutoutWidget.h)
 target_sources(OrbitQtTests
         PRIVATE AccessibilityAdapterTest.cpp
                 AnnotatingSourceCodeDialogTest.cpp

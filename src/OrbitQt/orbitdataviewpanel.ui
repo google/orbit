@@ -81,7 +81,7 @@
   <customwidget>
    <class>OrbitTreeView</class>
    <extends>QTreeView</extends>
-   <header>orbittreeview.h</header>
+   <header>OrbitQt/orbittreeview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -18,8 +18,8 @@
 #include "OrbitGl/Track.h"
 #include "OrbitGl/TrackManager.h"
 #include "OrbitGl/TrackTestData.h"
+#include "OrbitQt/TrackTypeItemModel.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
-#include "TrackTypeItemModel.h"
 
 namespace orbit_qt {
 

@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "DebugTabWidget.h"
+#include "OrbitQt/DebugTabWidget.h"
 
 #include <QObject>
 #include <QTabWidget>
 #include <QWidget>
 #include <memory>
 
-#include "CaptureWindowDebugWidget.h"
 #include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitQt/CaptureWindowDebugWidget.h"
 #include "ui_DebugTabWidget.h"
 
 namespace orbit_qt {

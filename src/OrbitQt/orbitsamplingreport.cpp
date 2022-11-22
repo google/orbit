@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbitsamplingreport.h"
+#include "OrbitQt/orbitsamplingreport.h"
 
 #include <absl/strings/str_format.h>
 #include <stdint.h>
@@ -28,11 +28,11 @@
 #include "DataViews/SamplingReportDataView.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGl/SamplingReport.h"
+#include "OrbitQt/orbitdataviewpanel.h"
+#include "OrbitQt/orbittablemodel.h"
+#include "OrbitQt/orbittreeview.h"
+#include "OrbitQt/types.h"
 #include "UtilWidgets/NoticeWidget.h"
-#include "orbitdataviewpanel.h"
-#include "orbittablemodel.h"
-#include "orbittreeview.h"
-#include "types.h"
 #include "ui_orbitsamplingreport.h"
 
 const QColor kRed{255, 0, 0, 26};

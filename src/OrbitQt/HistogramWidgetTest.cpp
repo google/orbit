@@ -10,7 +10,7 @@
 #include <numeric>
 #include <vector>
 
-#include "HistogramWidget.h"
+#include "OrbitQt/HistogramWidget.h"
 
 namespace orbit_qt {
 static void TestGenerateHistogramBinWidths(int number_of_bins, int histogram_width) {

@@ -182,12 +182,12 @@
   <customwidget>
    <class>OrbitDataViewPanel</class>
    <extends>QWidget</extends>
-   <header>orbitdataviewpanel.h</header>
+   <header>OrbitQt/orbitdataviewpanel.h</header>
   </customwidget>
   <customwidget>
    <class>HistogramWidget</class>
    <extends>QWidget</extends>
-   <header>HistogramWidget.h</header>
+   <header>OrbitQt/HistogramWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

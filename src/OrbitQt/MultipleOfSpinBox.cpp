@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MultipleOfSpinBox.h"
+#include "OrbitQt/MultipleOfSpinBox.h"
 
-#include "MultipleOfValidator.h"
+#include "OrbitQt/MultipleOfValidator.h"
 
 namespace orbit_qt {
 

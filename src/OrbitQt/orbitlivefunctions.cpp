@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbitlivefunctions.h"
+#include "OrbitQt/orbitlivefunctions.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/meta/type_traits.h>
@@ -21,11 +21,11 @@
 #include "ClientData/ScopeId.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
-#include "HistogramWidget.h"
 #include "OrbitGl/OrbitApp.h"
-#include "orbitdataviewpanel.h"
-#include "orbittablemodel.h"
-#include "orbittreeview.h"
+#include "OrbitQt/HistogramWidget.h"
+#include "OrbitQt/orbitdataviewpanel.h"
+#include "OrbitQt/orbittablemodel.h"
+#include "OrbitQt/orbittreeview.h"
 #include "ui_orbitlivefunctions.h"
 
 using orbit_client_data::FunctionInfo;

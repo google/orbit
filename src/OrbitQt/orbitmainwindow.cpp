@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbitmainwindow.h"
+#include "OrbitQt/orbitmainwindow.h"
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/internal/flag.h>
@@ -70,12 +70,9 @@
 #include <variant>
 #include <vector>
 
-#include "AnnotatingSourceCodeDialog.h"
 #include "ApiInterface/Orbit.h"
-#include "CallTreeWidget.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
-#include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
@@ -94,7 +91,6 @@
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/LiveFunctionsDataView.h"
-#include "DebugTabWidget.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.pb.h"
@@ -116,6 +112,18 @@
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TrackManager.h"
 #include "OrbitPaths/Paths.h"
+#include "OrbitQt/AnnotatingSourceCodeDialog.h"
+#include "OrbitQt/CallTreeWidget.h"
+#include "OrbitQt/CaptureOptionsDialog.h"
+#include "OrbitQt/DebugTabWidget.h"
+#include "OrbitQt/TrackConfigurationWidget.h"
+#include "OrbitQt/orbitaboutdialog.h"
+#include "OrbitQt/orbitdataviewpanel.h"
+#include "OrbitQt/orbitglwidget.h"
+#include "OrbitQt/orbitlivefunctions.h"
+#include "OrbitQt/orbitsamplingreport.h"
+#include "OrbitQt/orbittreeview.h"
+#include "OrbitQt/types.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/Connections.h"
@@ -131,17 +139,9 @@
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
-#include "TrackConfigurationWidget.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
-#include "orbitaboutdialog.h"
-#include "orbitdataviewpanel.h"
-#include "orbitglwidget.h"
-#include "orbitlivefunctions.h"
-#include "orbitsamplingreport.h"
-#include "orbittreeview.h"
-#include "types.h"
 #include "ui_orbitmainwindow.h"
 
 using orbit_capture_client::CaptureClient;

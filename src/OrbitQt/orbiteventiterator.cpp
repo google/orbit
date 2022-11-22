@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbiteventiterator.h"
+#include "OrbitQt/orbiteventiterator.h"
 
 #include <QLabel>
 #include <QPushButton>
 #include <algorithm>
 
-#include "ElidedLabel.h"
+#include "OrbitQt/ElidedLabel.h"
 #include "absl/strings/str_format.h"
 #include "ui_orbiteventiterator.h"
 

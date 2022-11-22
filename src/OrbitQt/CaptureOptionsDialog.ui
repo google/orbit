@@ -721,7 +721,7 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
   <customwidget>
    <class>orbit_qt::MultipleOfSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>MultipleOfSpinBox.h</header>
+   <header>OrbitQt/MultipleOfSpinBox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

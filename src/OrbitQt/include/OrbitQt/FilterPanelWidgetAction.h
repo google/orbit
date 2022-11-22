@@ -11,7 +11,7 @@
 #include <QWidget>
 #include <QWidgetAction>
 
-#include "FilterPanelWidget.h"
+#include "OrbitQt/FilterPanelWidget.h"
 
 /*
  * Widget action used to insert the custom widget, i.e., FilterPanelWidget, into capture toolbar.
