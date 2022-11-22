@@ -118,6 +118,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   }
 }
 
+CaptureOptionsDialog::~CaptureOptionsDialog() = default;
+
 void CaptureOptionsDialog::SetEnableSampling(bool enable_sampling) {
   ui_->samplingCheckBox->setChecked(enable_sampling);
 }

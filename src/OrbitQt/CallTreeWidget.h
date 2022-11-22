@@ -32,7 +32,10 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitGl/CallTreeView.h"
 #include "absl/strings/str_split.h"
-#include "ui_CallTreeWidget.h"
+
+namespace Ui {
+class CallTreeWidget;
+}
 
 class OrbitApp;
 
@@ -41,6 +44,7 @@ class CallTreeWidget : public QWidget {
 
  public:
   explicit CallTreeWidget(QWidget* parent = nullptr);
+  ~CallTreeWidget() override;
 
   void Initialize(OrbitApp* app) {
     ORBIT_CHECK(app != nullptr);
