@@ -29,6 +29,11 @@ TEST_P(GetPixelNumberTest, LastPixel) {
   EXPECT_EQ(GetPixelNumber(kEndNs, resolution, kStartNs, kEndNs), resolution);
 }
 
+TEST_P(GetPixelNumberTest, DontCrashWithZeroTimeInterval) {
+  const uint32_t resolution = GetParam();
+  EXPECT_EQ(0, GetPixelNumber(kStartNs, resolution, kStartNs, kStartNs));
+}
+
 INSTANTIATE_TEST_SUITE_P(GetPixelNumberTests, GetPixelNumberTest, testing::Values(1, 20, 30, 100));
 
 TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampsAreInRange) {

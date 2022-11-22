@@ -10,6 +10,9 @@ uint64_t GetPixelNumber(uint64_t timestamp_ns, uint32_t resolution, uint64_t sta
                         uint64_t end_ns) {
   uint64_t current_ns_from_start = timestamp_ns - start_ns;
   uint64_t total_ns = end_ns - start_ns;
+  if (total_ns == 0) {
+    return 0;
+  }
 
   // Given a resolution of 4000 pixels, we can capture for 53 days without overflowing.
   return (current_ns_from_start * resolution) / total_ns;
