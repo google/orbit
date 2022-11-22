@@ -57,3 +57,5 @@ endif()
 if(NOT WIN32)
   register_test(MizarWidgetsTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
+
+iwyu_add_dependency(MizarWidgets)
