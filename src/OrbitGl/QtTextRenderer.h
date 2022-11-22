@@ -10,11 +10,10 @@
 #include <QPainter>
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <vector>
 
 #include "CoreMath.h"
-#include "PrimitiveAssembler.h"
+#include "QString"
 #include "TextRenderer.h"
 #include "TextRendererInterface.h"
 
@@ -41,9 +40,11 @@ class QtTextRenderer : public TextRenderer {
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
 
  private:
+  [[nodiscard]] float GetStringWidth(const QString& text, uint32_t font_size);
+
   struct StoredText {
     StoredText() = default;
-    StoredText(const char* text, int x, int y, int w, int h, TextFormatting formatting) {
+    StoredText(const QString& text, int x, int y, int w, int h, TextFormatting formatting) {
       this->text = text;
       this->x = x;
       this->y = y;
@@ -51,7 +52,7 @@ class QtTextRenderer : public TextRenderer {
       this->h = h;
       this->formatting = formatting;
     }
-    std::string text;
+    QString text;
     int x, y, w, h;
     TextFormatting formatting;
   };

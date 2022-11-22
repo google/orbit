@@ -15,6 +15,7 @@
 #include <QFontMetrics>
 #include <QPainter>
 #include <QString>
+#include <QStringList>
 #include <Qt>
 #include <algorithm>
 #include <cfloat>
@@ -76,7 +77,7 @@ void QtTextRenderer::RenderLayer(QPainter* painter, float layer) {
     painter->setPen(QColor(text_entry.formatting.color[0], text_entry.formatting.color[1],
                            text_entry.formatting.color[2], text_entry.formatting.color[3]));
     painter->drawText(text_entry.x, text_entry.y, text_entry.w, text_entry.h, Qt::AlignCenter,
-                      QString(text_entry.text.c_str()));
+                      text_entry.text);
   }
 }
 
@@ -103,7 +104,8 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   if (out_text_size != nullptr) {
     (*out_text_size)[0] = (*out_text_size)[1] = 0.f;
   }
-  const size_t text_length = strlen(text);
+  QString text_as_qstring(text);
+  const size_t text_length = text_as_qstring.length();
   if (text_length == 0) {
     return;
   }
@@ -115,10 +117,9 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   const float max_width =
       formatting.max_size == -1.f ? FLT_MAX : viewport_->WorldToScreen({formatting.max_size, 0})[0];
   // Find out how many characters from text can fit into max_width via a binary search.
-  std::string text_as_string(text);
   size_t idx_min = 1;
   size_t idx_max = text_length;
-  if (GetStringWidth(text_as_string.substr(0, 1).c_str(), formatting.font_size) > max_width) {
+  if (GetStringWidth(text_as_qstring.left(1), formatting.font_size) > max_width) {
     return;
   }
   if (width_entire_text <= max_width) {
@@ -126,24 +127,23 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   }
   while (idx_max - idx_min > 1) {
     const size_t candidate_idx = (idx_min + idx_max) / 2;
-    const std::string candidate_string = text_as_string.substr(0, candidate_idx);
-    if (GetStringWidth(candidate_string.c_str(), formatting.font_size) > max_width) {
+    const QString candidate_string = text_as_qstring.left(candidate_idx);
+    if (GetStringWidth(candidate_string, formatting.font_size) > max_width) {
       idx_max = candidate_idx;
     } else {
       idx_min = candidate_idx;
     }
   }
-  text_as_string = text_as_string.substr(0, idx_min);
+  text_as_qstring = text_as_qstring.left(idx_min);
   float y_offset = GetYOffsetFromAlignment(formatting.valign, height_entire_text);
   const float single_line_height = GetStringHeight(".", formatting.font_size);
-  const std::vector<std::string> lines = absl::StrSplit(text_as_string, '\n');
+  QStringList lines = text_as_qstring.split("\n");
   for (const auto& line : lines) {
-    const float width = GetStringWidth(line.c_str(), formatting.font_size);
+    const float width = GetStringWidth(line, formatting.font_size);
     const float x_offset = GetXOffsetFromAlignment(formatting.halign, width);
     stored_text_[transformed.z].emplace_back(
-        line.c_str(), std::lround(transformed.xy[0] + x_offset),
-        std::lround(transformed.xy[1] + y_offset), std::lround(width),
-        std::lround(single_line_height), formatting);
+        line, std::lround(transformed.xy[0] + x_offset), std::lround(transformed.xy[1] + y_offset),
+        std::lround(width), std::lround(single_line_height), formatting);
     y_offset += single_line_height;
   }
 
@@ -161,17 +161,17 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
 float QtTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                       TextFormatting formatting,
                                                       size_t trailing_chars_length) {
-  const size_t text_length = strlen(text);
+  QString text_as_qstring(text);
+  const size_t text_length = text_as_qstring.length();
+  if (text_length == 0) {
+    return 0.f;
+  }
   if (text_length < trailing_chars_length) {
     ORBIT_ERROR(
         "Trailing character length was longer than the string itself. text: \"%s\" "
         "trailing_chars_length: %d",
         text, trailing_chars_length);
     trailing_chars_length = text_length;
-  }
-
-  if (text_length == 0) {
-    return 0.f;
   }
   // Early-out: If we can't fit a single char, there's no use to do all the expensive
   // calculations below - this is a major bottleneck in some cases
@@ -191,17 +191,15 @@ float QtTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x,
   // leading_text + "... " + trailing_text
   // where leading_text is a variable amount of characters from the beginning of the string and
   // trailing_text is specified by the trailing_chars_length parameter.
-  const std::string text_as_string(text);
-  const std::string trailing_text = text_as_string.substr(text_length - trailing_chars_length);
-  const std::string leading_text = text_as_string.substr(0, text_length - trailing_chars_length);
+  const QString trailing_text = text_as_qstring.right(trailing_chars_length);
+  const QString leading_text = text_as_qstring.left(text_length - trailing_chars_length);
   const size_t leading_length = leading_text.length();
-  const std::string ellipsis_plus_trailing_text = std::string("... ") + trailing_text;
+  const QString ellipsis_plus_trailing_text = QString("... ") + trailing_text;
   size_t fitting_chars_count = 1;
-  std::string candidate_string =
-      leading_text.substr(0, fitting_chars_count).append(ellipsis_plus_trailing_text);
+  QString candidate_string = leading_text.left(fitting_chars_count) + ellipsis_plus_trailing_text;
 
   // Test if we can fit the minimal ellipsised string.
-  if (GetStringWidth(candidate_string.c_str(), formatting.font_size) > max_width) {
+  if (GetStringWidth(candidate_string, formatting.font_size) > max_width) {
     // We can't fit any ellipsised string: Even with one leading character the thing becomes too
     // long. So we let AddText truncate the entire string.
     Vec2 dims;
@@ -214,39 +212,47 @@ float QtTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x,
   size_t idx_max = leading_length;
   while (idx_max - idx_min > 1) {
     size_t candidate_idx = (idx_min + idx_max) / 2;
-    candidate_string = leading_text.substr(0, candidate_idx).append(ellipsis_plus_trailing_text);
-    if (GetStringWidth(candidate_string.c_str(), formatting.font_size) > max_width) {
+    candidate_string = leading_text.left(candidate_idx) + ellipsis_plus_trailing_text;
+    if (GetStringWidth(candidate_string, formatting.font_size) > max_width) {
       idx_max = candidate_idx;
     } else {
       idx_min = candidate_idx;
     }
   }
   fitting_chars_count = idx_min;
-  candidate_string =
-      leading_text.substr(0, fitting_chars_count).append(ellipsis_plus_trailing_text);
-  AddText(candidate_string.c_str(), x, y, z, formatting);
-  return GetStringWidth(candidate_string.c_str(), formatting.font_size);
+  candidate_string = leading_text.left(fitting_chars_count) + ellipsis_plus_trailing_text;
+  const std::string candiate_as_std_string = candidate_string.toStdString();
+  AddText(candiate_as_std_string.c_str(), x, y, z, formatting);
+  return GetStringWidth(candidate_string, formatting.font_size);
 }
 
 float QtTextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
-  const std::vector<std::string> lines = absl::StrSplit(std::string(text), '\n');
+  QString text_as_qstring(text);
+  QStringList lines = text_as_qstring.split("\n");
   float max_width = 0.f;
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   font.setPixelSize(static_cast<int>(font_size));
   QFontMetrics metrics(font);
-  for (const std::string& line : lines) {
-    max_width = std::max(
-        max_width, viewport_->ScreenToWorld(Vec2i(metrics.horizontalAdvance(line.c_str()), 0))[0]);
+  for (const QString& line : lines) {
+    max_width =
+        std::max(max_width, viewport_->ScreenToWorld(Vec2i(metrics.horizontalAdvance(line), 0))[0]);
   }
   return max_width;
 }
 
 float QtTextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
-  const float number_of_lines = static_cast<float>(std::count(text, text + strlen(text), '\n') + 1);
+  QString text_as_qstring(text);
+  QStringList lines = text_as_qstring.split("\n");
+  const float number_of_lines = lines.size();
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   font.setPixelSize(static_cast<int>(font_size));
   QFontMetrics metrics(font);
   return number_of_lines * viewport_->ScreenToWorld(Vec2i(0, metrics.height()))[1];
+}
+
+float QtTextRenderer::GetStringWidth(const QString& text, uint32_t font_size) {
+  std::string text_as_string = text.toStdString();
+  return GetStringWidth(text_as_string.c_str(), font_size);
 }
 
 }  // namespace orbit_gl
