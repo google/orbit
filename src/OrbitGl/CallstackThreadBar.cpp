@@ -37,7 +37,6 @@ using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
-using orbit_client_data::GetPixelNumber;
 using orbit_client_data::ThreadID;
 
 namespace orbit_gl {
@@ -123,14 +122,13 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      const Vec2 pos(GetPixelNumber(event.timestamp_ns(), resolution_in_pixels, min_tick, max_tick),
-                     GetPos()[1]);
+      const auto& [pos_x, unused_size_x] = timeline_info_->GetBoxPosXAndWidthFromTicks(time, time);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackType::kComplete) {
         color = kGreyError;
       }
-      primitive_assembler.AddVerticalLine(pos, track_height, z, color);
+      primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, color);
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
@@ -167,9 +165,9 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
     auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      const Vec2 pos(
-          GetPixelNumber(time, resolution_in_pixels, min_tick, max_tick) - kPickingBoxOffset,
-          GetPos()[1]);
+      const auto& [event_pos_x, unused_size_x] =
+          timeline_info_->GetBoxPosXAndWidthFromTicks(time, time);
+      const Vec2 pos(event_pos_x - kPickingBoxOffset, GetPos()[1]);
       const Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr, [this, &primitive_assembler](PickingId id) -> std::string {
