@@ -137,12 +137,9 @@ void GlCanvas::RightDown(int x, int y) {
   RequestRedraw();
 }
 
-bool GlCanvas::RightUp() {
+void GlCanvas::RightUp() {
   is_selecting_ = false;
   RequestRedraw();
-
-  bool show_context_menu = select_start_pos_world_ == select_stop_pos_world_;
-  return show_context_menu;
 }
 
 void GlCanvas::CharEvent(unsigned int /*character*/) { RequestRedraw(); }

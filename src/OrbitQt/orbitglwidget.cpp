@@ -6,37 +6,25 @@
 
 #include <stddef.h>
 
-#include <QAction>
-#include <QByteArray>
-#include <QCharRef>
-#include <QCursor>
-#include <QFlags>
-#include <QMenu>
 #include <QMetaEnum>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QPainter>
 #include <QRect>
-#include <QSignalMapper>
 #include <QSurfaceFormat>
 #include <algorithm>
 #include <chrono>
 #include <string>
 #include <vector>
 
-#include "App.h"
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "orbitmainwindow.h"
-
-#define ORBIT_DEBUG_OPEN_GL 0
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   QSurfaceFormat requested_format = QSurfaceFormat::defaultFormat();
   ORBIT_LOG("OpenGL version requested: %i.%i", requested_format.majorVersion(),
             requested_format.minorVersion());
-  gl_canvas_ = nullptr;
   setFocusPolicy(Qt::WheelFocus);
   setMouseTracking(true);
   setUpdateBehavior(QOpenGLWidget::PartialUpdate);
@@ -130,9 +118,7 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
     }
 
     if (event->button() == Qt::RightButton) {
-      if (gl_canvas_->RightUp()) {
-        ShowContextMenu();
-      }
+      gl_canvas_->RightUp();
     }
 
     if (event->button() == Qt::MiddleButton) {
@@ -141,35 +127,6 @@ void OrbitGLWidget::mouseReleaseEvent(QMouseEvent* event) {
   }
 
   update();
-}
-
-void OrbitGLWidget::ShowContextMenu() {
-  std::vector<std::string> menu = gl_canvas_->GetContextMenu();
-
-  if (!menu.empty()) {
-    QMenu context_menu(tr("GlContextMenu"), this);
-    QSignalMapper signal_mapper(this);
-    std::vector<QAction*> actions;
-
-    for (size_t i = 0; i < menu.size(); ++i) {
-      actions.push_back(new QAction(QString::fromStdString(menu[i])));
-      QObject::connect(actions[i], &QAction::triggered, &signal_mapper,
-                       qOverload<>(&QSignalMapper::map));
-      signal_mapper.setMapping(actions[i], i);
-      context_menu.addAction(actions[i]);
-    }
-
-    QObject::connect(&signal_mapper, &QSignalMapper::mappedInt, this,
-                     &OrbitGLWidget::OnMenuClicked);
-    context_menu.exec(QCursor::pos());
-
-    for (QAction* action : actions) delete action;
-  }
-}
-
-void OrbitGLWidget::OnMenuClicked(int index) {
-  const std::vector<std::string>& menu = gl_canvas_->GetContextMenu();
-  gl_canvas_->OnContextMenu(menu[index], index);
 }
 
 void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {

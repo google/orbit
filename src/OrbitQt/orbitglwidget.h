@@ -41,14 +41,11 @@ class OrbitGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void mouseReleaseEvent(QMouseEvent* event) override;
   void mouseDoubleClickEvent(QMouseEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
-  void enterEvent(QEvent*) override;
-  void leaveEvent(QEvent*) override;
+  void enterEvent(QEvent* event) override;
+  void leaveEvent(QEvent* event) override;
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
   void wheelEvent(QWheelEvent* event) override;
-
-  void ShowContextMenu();
-  void OnMenuClicked(int index);
 
   std::unique_ptr<GlCanvas> gl_canvas_;
   QTimer update_timer_;

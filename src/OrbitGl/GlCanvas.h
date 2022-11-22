@@ -46,21 +46,14 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   virtual void MouseWheelMoved(int x, int y, int delta, bool ctrl);
   virtual void MouseWheelMovedHorizontally(int /*x*/, int /*y*/, int /*delta*/, bool /*ctrl*/) {}
   virtual void RightDown(int x, int y);
-  virtual bool RightUp();
+  virtual void RightUp();
   virtual void MiddleDown(int x, int y) { RightDown(x, y); }
   virtual void MiddleUp() { RightUp(); }
   virtual void CharEvent(unsigned int character);
   virtual void KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt);
   virtual void KeyReleased(unsigned int key_code, bool ctrl, bool shift, bool alt);
 
-  [[nodiscard]] virtual std::vector<std::string> GetContextMenu() {
-    return std::vector<std::string>();
-  }
-  virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
-
   [[nodiscard]] orbit_gl::TextRenderer& GetTextRenderer() { return text_renderer_; }
-
-  [[nodiscard]] const Vec2i& GetMouseScreenPos() const { return mouse_move_pos_screen_; }
 
   [[nodiscard]] virtual bool IsRedrawNeeded() const;
   void RequestRedraw() { redraw_requested_ = true; }
@@ -144,7 +137,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   CreateAccessibleInterface() override;
   void Pick(PickingMode picking_mode, int x, int y);
   virtual void HandlePickedElement(PickingMode /*picking_mode*/, PickingId /*picking_id*/,
-                                   int /*x*/, int /*y*/) {}
+                                   int /*x*/, int /*y*/) = 0;
 };
 
 #endif  // ORBIT_GL_GL_CANVAS_H_
