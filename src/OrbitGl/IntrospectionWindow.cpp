@@ -34,7 +34,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TimeGraphLayout.h"
 

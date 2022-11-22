@@ -54,7 +54,7 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
 #include "ui_CallTreeWidget.h"

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>

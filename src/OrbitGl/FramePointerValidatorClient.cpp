@@ -19,7 +19,7 @@
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;

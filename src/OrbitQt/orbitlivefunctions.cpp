@@ -22,7 +22,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "HistogramWidget.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"
 #include "orbittreeview.h"
