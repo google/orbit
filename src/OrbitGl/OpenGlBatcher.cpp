@@ -7,9 +7,9 @@
 #include <CoreMath.h>
 #include <GteVector.h>
 #include <GteVector2.h>
-#include <QtGui/qopengl.h>
 #include <stddef.h>
 
+#include <QOpenGLFunctions>
 #include <algorithm>
 #include <utility>
 

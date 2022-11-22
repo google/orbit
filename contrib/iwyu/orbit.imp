@@ -126,7 +126,7 @@
   # Qt adjustments - There is an auto-generated mapping file for Qt. Just put adjustments here.
   { "include": ["<QtCore/qglobal.h>", "private", "<QtGlobal>", "public"] },
   { "include": ["<QtCore/qobjectdefs.h>", "private", "<QMetaObject>", "public"] },
-  { "include": ["<GtGui/qopengl.h>", "private", "<QOpenGLFunctions>", "public"] },
+  { "include": ["<QtGui/qopengl.h>", "private", "<QOpenGLFunctions>", "public"] },
   { "include": ["<qtestmouse.h>", "private", "<QTest>", "public"] },
   { "include": ["<qtestkeyboard.h>", "private", "<QTest>", "public"] },
   { "include": ["<qtestsupport_core.h>", "private", "<QTest>", "public"] },

@@ -4,13 +4,12 @@
 
 #include "orbitglwidget.h"
 
-#include <QtGui/qopengl.h>
-
 #include <QCharRef>
 #include <QFlags>
 #include <QMetaEnum>
 #include <QMouseEvent>
 #include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QPainter>
 #include <QRect>
 #include <QSurfaceFormat>
