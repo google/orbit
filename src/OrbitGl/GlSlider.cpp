@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GlSlider.h"
+#include "OrbitGl/GlSlider.h"
 
 #include <GteVector.h>
 
@@ -12,10 +12,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include "AccessibleCaptureViewElement.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "PickingManager.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PickingManager.h"
 
 namespace orbit_gl {
 

@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "BasicPageFaultsTrack.h"
+#include "OrbitGl/BasicPageFaultsTrack.h"
 
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
 #include <functional>
 
-#include "CaptureViewElement.h"
-#include "GlCanvas.h"
-#include "MultivariateTimeSeries.h"
-#include "PickingManager.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/MultivariateTimeSeries.h"
+#include "OrbitGl/PickingManager.h"
 
 namespace orbit_gl {
 

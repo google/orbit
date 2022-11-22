@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "App.h"
+#include "OrbitGl/App.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -44,7 +44,6 @@
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
-#include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
@@ -76,13 +75,11 @@
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetsDataView.h"
 #include "DataViews/SymbolLoadingState.h"
-#include "FrameTrackOnlineProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "Introspection/Introspection.h"
-#include "MainWindowInterface.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Action.h"
@@ -102,16 +99,19 @@
 #include "OrbitBase/Typedef.h"
 #include "OrbitBase/UniqueResource.h"
 #include "OrbitBase/WhenAll.h"
+#include "OrbitGl/CaptureWindow.h"
+#include "OrbitGl/FrameTrackOnlineProcessor.h"
+#include "OrbitGl/MainWindowInterface.h"
+#include "OrbitGl/SamplingReport.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/Track.h"
+#include "OrbitGl/TrackContainer.h"
+#include "OrbitGl/TrackManager.h"
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
-#include "TimeGraph.h"
-#include "Track.h"
-#include "TrackContainer.h"
-#include "TrackManager.h"
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;

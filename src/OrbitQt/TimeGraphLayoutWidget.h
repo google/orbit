@@ -14,7 +14,7 @@
 #include <string_view>
 
 #include "ConfigWidgets/PropertyConfigWidget.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 namespace orbit_qt {
 

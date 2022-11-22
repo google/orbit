@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GlCanvas.h"
+#include "OrbitGl/GlCanvas.h"
 
 #include <GteVector.h>
 #include <QtGui/qopengl.h>
@@ -12,10 +12,10 @@
 #include <cstdint>
 #include <cstring>
 
-#include "AccessibleInterfaceProvider.h"
 #include "ApiInterface/Orbit.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/AccessibleInterfaceProvider.h"
 
 // TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1

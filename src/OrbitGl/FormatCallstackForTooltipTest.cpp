@@ -21,7 +21,7 @@
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
-#include "FormatCallstackForTooltip.h"
+#include "OrbitGl/FormatCallstackForTooltip.h"
 
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;

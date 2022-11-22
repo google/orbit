@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "GraphTrackDataAggregator.h"
+#include "OrbitGl/GraphTrackDataAggregator.h"
 
 using ::testing::ElementsAre;
 

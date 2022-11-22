@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Track.h"
+#include "OrbitGl/Track.h"
 
 #include <GteVector.h>
 
-#include "AccessibleTrack.h"
 #include "ClientData/CaptureData.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "PickingManager.h"
-#include "TextRenderer.h"
-#include "TimeGraphLayout.h"
-#include "TrackRenderHelper.h"
-#include "Viewport.h"
+#include "OrbitGl/AccessibleTrack.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackRenderHelper.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;

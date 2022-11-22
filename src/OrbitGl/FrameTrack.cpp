@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FrameTrack.h"
+#include "OrbitGl/FrameTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -15,12 +15,12 @@
 
 #include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlCanvas.h"
-#include "GlUtils.h"
-#include "PrimitiveAssembler.h"
-#include "TextRenderer.h"
-#include "TextRendererInterface.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/TextRenderer.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;

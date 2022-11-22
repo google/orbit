@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SamplingReport.h"
+#include "OrbitGl/SamplingReport.h"
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -12,12 +12,12 @@
 #include <iterator>
 #include <optional>
 
-#include "App.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/App.h"
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::CallstackInfo;

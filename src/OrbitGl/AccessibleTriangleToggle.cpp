@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "AccessibleTriangleToggle.h"
+#include "OrbitGl/AccessibleTriangleToggle.h"
 
 #include <string>
 
-#include "AccessibleCaptureViewElement.h"
-#include "TriangleToggle.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
+#include "OrbitGl/TriangleToggle.h"
 
 namespace orbit_gl {
 

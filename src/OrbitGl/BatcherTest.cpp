@@ -8,9 +8,9 @@
 
 #include <memory>
 
-#include "CoreMath.h"
-#include "MockBatcher.h"
-#include "PickingManager.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/MockBatcher.h"
+#include "OrbitGl/PickingManager.h"
 
 namespace orbit_gl {
 

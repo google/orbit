@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallstackThreadBar.h"
+#include "OrbitGl/CallstackThreadBar.h"
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
@@ -12,25 +12,25 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "BatcherInterface.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FastRenderingUtils.h"
-#include "CoreMath.h"
-#include "FormatCallstackForTooltip.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PickingManager.h"
-#include "PrimitiveAssembler.h"
-#include "ThreadColor.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/FormatCallstackForTooltip.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TrackRenderHelper.h"
+#include "OrbitGl/TrackRenderHelper.h"
 
 #include <GteVector.h>
 #include <stddef.h>
 
 #include <cmath>
 
-#include "Geometry.h"
+#include "OrbitGl/Geometry.h"
 
 namespace {
 

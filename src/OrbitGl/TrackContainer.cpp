@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TrackContainer.h"
+#include "OrbitGl/TrackContainer.h"
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
@@ -18,26 +18,26 @@
 #include <optional>
 #include <utility>
 
-#include "AccessibleCaptureViewElement.h"
-#include "App.h"
-#include "BatcherInterface.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/TimestampIntervalSet.h"
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "GlUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
-#include "PickingManager.h"
-#include "ThreadColor.h"
-#include "ThreadTrack.h"
-#include "TrackManager.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/ThreadTrack.h"
+#include "OrbitGl/TrackManager.h"
 
 namespace orbit_gl {
 

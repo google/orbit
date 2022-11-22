@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "CoreMath.h"
+#include "OrbitGl/CoreMath.h"
 
 namespace orbit_gl {
 

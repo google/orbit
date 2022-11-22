@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TrackHeader.h"
+#include "OrbitGl/TrackHeader.h"
 
 #include <algorithm>
 
-#include "AccessibleCaptureViewElement.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
-#include "PickingManager.h"
-#include "TextRendererInterface.h"
-#include "TrackRenderHelper.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TrackRenderHelper.h"
 
 namespace orbit_gl {
 

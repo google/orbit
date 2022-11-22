@@ -2,18 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "Button.h"
+#include "OrbitGl/Button.h"
 
 #include <GteVector.h>
 
 #include <algorithm>
 #include <utility>
 
-#include "AccessibleButton.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/AccessibleButton.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
 
 // TODO (b/230726102): Code below is copied from GlSlider. This should live in a central place.
 namespace {

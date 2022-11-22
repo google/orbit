@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TimeGraph.h"
+#include "OrbitGl/TimeGraph.h"
 
 #include <GteVector.h>
 #include <absl/flags/flag.h>
@@ -12,32 +12,32 @@
 #include <cmath>
 #include <limits>
 
-#include "AccessibleTimeGraph.h"
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "AsyncTrack.h"
-#include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
-#include "FrameTrack.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "GlUtils.h"
-#include "GpuTrack.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "PageFaultsTrack.h"
-#include "PickingManager.h"
-#include "SchedulerTrack.h"
+#include "OrbitGl/AccessibleTimeGraph.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/AsyncTrack.h"
+#include "OrbitGl/CGroupAndProcessMemoryTrack.h"
+#include "OrbitGl/FrameTrack.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/GpuTrack.h"
+#include "OrbitGl/PageFaultsTrack.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/SchedulerTrack.h"
+#include "OrbitGl/SystemMemoryTrack.h"
+#include "OrbitGl/TrackManager.h"
+#include "OrbitGl/VariableTrack.h"
 #include "StringManager/StringManager.h"
-#include "SystemMemoryTrack.h"
-#include "TrackManager.h"
-#include "VariableTrack.h"
 
 using orbit_capture_client::CaptureEventProcessor;
 

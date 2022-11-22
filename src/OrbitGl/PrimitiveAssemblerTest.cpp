@@ -10,13 +10,13 @@
 #include <array>
 #include <memory>
 
-#include "BatcherInterface.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "MockBatcher.h"
-#include "PickingManager.h"
-#include "PickingManagerTest.h"
-#include "PrimitiveAssembler.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/MockBatcher.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/PickingManagerTest.h"
+#include "OrbitGl/PrimitiveAssembler.h"
 
 namespace orbit_gl {
 

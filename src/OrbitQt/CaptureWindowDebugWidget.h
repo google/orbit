@@ -11,8 +11,8 @@
 #include <QWidget>
 #include <memory>
 
-#include "CaptureWindowDebugInterface.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/CaptureWindowDebugInterface.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 namespace Ui {
 class CaptureWindowDebugWidget;

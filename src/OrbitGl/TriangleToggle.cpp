@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TriangleToggle.h"
+#include "OrbitGl/TriangleToggle.h"
 
 #include <GteVector.h>
 
@@ -10,12 +10,12 @@
 #include <cmath>
 #include <utility>
 
-#include "AccessibleTriangleToggle.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
-#include "PickingManager.h"
-#include "PrimitiveAssembler.h"
+#include "OrbitGl/AccessibleTriangleToggle.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/PrimitiveAssembler.h"
 
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;

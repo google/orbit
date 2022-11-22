@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OpenGlBatcher.h"
+#include "OrbitGl/OpenGlBatcher.h"
 
-#include <CoreMath.h>
 #include <GteVector.h>
 #include <GteVector2.h>
 #include <QtGui/qopengl.h>
@@ -15,7 +14,8 @@
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "TranslationStack.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TranslationStack.h"
 
 namespace orbit_gl {
 

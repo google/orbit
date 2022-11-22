@@ -12,13 +12,13 @@
 #include <utility>
 #include <vector>
 
-#include "BatcherInterface.h"
 #include "Containers/BlockChain.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "OpenGlBatcher.h"
-#include "PickingManager.h"
-#include "PickingManagerTest.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/OpenGlBatcher.h"
+#include "OrbitGl/PickingManager.h"
+#include "OrbitGl/PickingManagerTest.h"
 
 namespace orbit_gl {
 

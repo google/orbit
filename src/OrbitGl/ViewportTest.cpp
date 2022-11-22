@@ -6,8 +6,8 @@
 
 #include <memory>
 
-#include "CoreMath.h"
-#include "Viewport.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "SimpleTimings.h"
+#include "OrbitGl/SimpleTimings.h"
 
 namespace orbit_gl {
 TEST(SimpleTimings, TestCalculations) {

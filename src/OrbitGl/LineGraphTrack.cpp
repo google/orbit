@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "LineGraphTrack.h"
+#include "OrbitGl/LineGraphTrack.h"
 
 #include <GteVector.h>
 
@@ -14,12 +14,12 @@
 #include <vector>
 
 #include "ClientData/FastRenderingUtils.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "GraphTrackDataAggregator.h"
-#include "MultivariateTimeSeries.h"
-#include "TimelineInfoInterface.h"
-#include "Viewport.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GraphTrackDataAggregator.h"
+#include "OrbitGl/MultivariateTimeSeries.h"
+#include "OrbitGl/TimelineInfoInterface.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

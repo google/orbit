@@ -110,8 +110,8 @@
 #include <mutex>
 #include <utility>
 
-#include "GlCanvas.h"
 #include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
+#include "OrbitGl/GlCanvas.h"
 #include "orbitglwidget.h"
 
 using orbit_accessibility::AccessibleInterface;

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MockBatcher.h"
+#include "OrbitGl/MockBatcher.h"
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
 
 #include <limits>
 
-#include "CoreMath.h"
+#include "OrbitGl/CoreMath.h"
 
 namespace orbit_gl {
 

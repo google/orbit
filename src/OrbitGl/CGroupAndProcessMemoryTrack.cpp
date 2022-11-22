@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CGroupAndProcessMemoryTrack.h"
+#include "OrbitGl/CGroupAndProcessMemoryTrack.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/substitute.h>
@@ -12,9 +12,9 @@
 #include <optional>
 #include <string_view>
 
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/CoreMath.h"
 
 namespace orbit_gl {
 

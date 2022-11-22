@@ -13,7 +13,7 @@
 
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "TimerInfosIterator.h"
+#include "OrbitGl/TimerInfosIterator.h"
 
 using orbit_client_protos::TimerInfo;
 

@@ -8,11 +8,11 @@
 
 #include <string>
 
-#include "CaptureViewElementTester.h"
-#include "CoreMath.h"
-#include "TrackControlInterface.h"
-#include "TrackHeader.h"
-#include "TriangleToggle.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TrackControlInterface.h"
+#include "OrbitGl/TrackHeader.h"
+#include "OrbitGl/TriangleToggle.h"
 
 namespace orbit_gl {
 

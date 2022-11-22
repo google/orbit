@@ -28,9 +28,9 @@
 #include <string_view>
 #include <vector>
 
-#include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/CallTreeView.h"
 #include "absl/strings/str_split.h"
 #include "ui_CallTreeWidget.h"
 

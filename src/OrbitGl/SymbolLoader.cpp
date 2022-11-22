@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SymbolLoader.h"
+#include "OrbitGl/SymbolLoader.h"
 
 #include <absl/flags/flag.h>
 #include <absl/meta/type_traits.h>

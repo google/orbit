@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "AccessibleCaptureViewElement.h"
+#include "OrbitGl/AccessibleCaptureViewElement.h"
 
 #include <GteVector.h>
 
 #include <algorithm>
 #include <vector>
 
-#include "CoreMath.h"
-#include "Viewport.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

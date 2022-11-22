@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "CoreMath.h"
-#include "TranslationStack.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TranslationStack.h"
 
 namespace orbit_gl {
 static void ExpectEqualHasZ(const LayeredVec2& expected, const LayeredVec2& actual) {

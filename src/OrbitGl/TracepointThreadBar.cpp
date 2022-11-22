@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TracepointThreadBar.h"
+#include "OrbitGl/TracepointThreadBar.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
@@ -11,21 +11,21 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
-#include "BatcherInterface.h"
-#include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TracepointEventInfo.h"
 #include "ClientData/TracepointInfo.h"
-#include "CoreMath.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PrimitiveAssembler.h"
-#include "ThreadColor.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

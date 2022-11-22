@@ -10,14 +10,14 @@
 #include <string>
 #include <tuple>
 
-#include "Button.h"
-#include "CaptureViewElement.h"
-#include "CaptureViewElementTester.h"
-#include "CoreMath.h"
-#include "GlCanvas.h"
-#include "MockBatcher.h"
-#include "MockTextRenderer.h"
-#include "TimeGraphLayout.h"
+#include "OrbitGl/Button.h"
+#include "OrbitGl/CaptureViewElement.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/MockBatcher.h"
+#include "OrbitGl/MockTextRenderer.h"
+#include "OrbitGl/TimeGraphLayout.h"
 
 namespace orbit_gl {
 

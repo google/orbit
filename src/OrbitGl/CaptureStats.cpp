@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureStats.h"
+#include "OrbitGl/CaptureStats.h"
 
 #include <cstdint>
 #include <utility>
 #include <vector>
 
-#include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
-#include "SchedulerTrack.h"
-#include "SchedulingStats.h"
-#include "TimeGraph.h"
-#include "TrackManager.h"
+#include "OrbitGl/CaptureWindow.h"
+#include "OrbitGl/SchedulerTrack.h"
+#include "OrbitGl/SchedulingStats.h"
+#include "OrbitGl/TimeGraph.h"
+#include "OrbitGl/TrackManager.h"
 
 ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint64_t start_ns,
                                             uint64_t end_ns) {

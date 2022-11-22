@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TimerTrack.h"
+#include "OrbitGl/TimerTrack.h"
 
 #include <GteVector.h>
 #include <absl/time/time.h>
@@ -16,21 +16,21 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
-#include "App.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/TimerChain.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Geometry.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "PrimitiveAssembler.h"
-#include "TextRendererInterface.h"
-#include "TimeGraphLayout.h"
-#include "TrackHeader.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/Geometry.h"
+#include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/TextRendererInterface.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
+#include "OrbitGl/Viewport.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 

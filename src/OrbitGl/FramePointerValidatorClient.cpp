@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "FramePointerValidatorClient.h"
+#include "OrbitGl/FramePointerValidatorClient.h"
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
@@ -13,13 +13,13 @@
 #include <chrono>
 #include <string>
 
-#include "App.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "GrpcProtos/code_block.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/App.h"
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;

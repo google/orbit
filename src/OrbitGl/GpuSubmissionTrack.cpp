@@ -2,24 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GpuSubmissionTrack.h"
+#include "OrbitGl/GpuSubmissionTrack.h"
 
 #include <GteVector.h>
 
 #include <memory>
 #include <optional>
 
-#include "App.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "PrimitiveAssembler.h"
-#include "ThreadColor.h"
-#include "TimeGraphLayout.h"
-#include "TrackHeader.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/GlUtils.h"
+#include "OrbitGl/PrimitiveAssembler.h"
+#include "OrbitGl/ThreadColor.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_data::TimerChain;

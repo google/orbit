@@ -6,10 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include "CaptureViewElementTester.h"
 #include "ClientData/CaptureData.h"
-#include "ThreadTrack.h"
-#include "TrackTestData.h"
+#include "OrbitGl/CaptureViewElementTester.h"
+#include "OrbitGl/ThreadTrack.h"
+#include "OrbitGl/TrackTestData.h"
 
 namespace orbit_gl {
 

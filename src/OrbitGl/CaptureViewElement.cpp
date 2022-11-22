@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureViewElement.h"
+#include "OrbitGl/CaptureViewElement.h"
 
 #include <GteVector.h>
 #include <stdint.h>
@@ -12,7 +12,7 @@
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "Viewport.h"
+#include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TrackManager.h"
+#include "OrbitGl/TrackManager.h"
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
@@ -23,20 +23,20 @@
 #include <type_traits>
 #include <utility>
 
-#include "App.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientFlags/ClientFlags.h"
-#include "CoreMath.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackContainer.h"
+#include "OrbitGl/Viewport.h"
 #include "StringManager/StringManager.h"
-#include "TimeGraphLayout.h"
-#include "TrackContainer.h"
-#include "Viewport.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_protos::TimerInfo;

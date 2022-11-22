@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "GpuTrack.h"
+#include "OrbitGl/GpuTrack.h"
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
 
 #include <memory>
 
-#include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CoreMath.h"
 #include "OrbitBase/Logging.h"
-#include "TimeGraphLayout.h"
-#include "Viewport.h"
+#include "OrbitGl/App.h"
+#include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/Viewport.h"
 
 using orbit_client_protos::TimerInfo;
 
