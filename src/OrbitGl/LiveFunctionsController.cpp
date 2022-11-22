@@ -17,7 +17,7 @@
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TrackContainer.h"
 

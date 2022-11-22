@@ -16,7 +16,6 @@ target_sources(
          include/OrbitGl/AccessibleTrack.h
          include/OrbitGl/AccessibleTriangleToggle.h
          include/OrbitGl/AnnotationTrack.h
-         include/OrbitGl/App.h
          include/OrbitGl/AsyncTrack.h
          include/OrbitGl/BasicPageFaultsTrack.h
          include/OrbitGl/Batcher.h
@@ -54,6 +53,7 @@ target_sources(
          include/OrbitGl/MockTimelineInfo.h
          include/OrbitGl/MultivariateTimeSeries.h
          include/OrbitGl/OpenGlBatcher.h
+         include/OrbitGl/OrbitApp.h
          include/OrbitGl/QtTextRenderer.h
          include/OrbitGl/PageFaultsTrack.h
          include/OrbitGl/PickingManager.h
@@ -100,7 +100,6 @@ target_sources(
           AccessibleTrack.cpp
           AccessibleTriangleToggle.cpp
           AnnotationTrack.cpp
-          App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
           Button.cpp
@@ -129,6 +128,7 @@ target_sources(
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
           OpenGlBatcher.cpp
+          OrbitApp.cpp
           QtTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp

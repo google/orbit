@@ -12,8 +12,8 @@
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGl/App.h"
 #include "OrbitGl/CoreMath.h"
+#include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/Viewport.h"
 

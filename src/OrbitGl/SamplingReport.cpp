@@ -17,7 +17,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGl/App.h"
+#include "OrbitGl/OrbitApp.h"
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::CallstackInfo;
