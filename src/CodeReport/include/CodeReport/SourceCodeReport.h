@@ -9,8 +9,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <limits>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 #include "ClientData/FunctionInfo.h"

@@ -5,6 +5,7 @@
 #include "DummyFunctionSymbolToKey.h"
 
 #include <string>
+#include <utility>
 
 #include "MizarBase/FunctionSymbols.h"
 

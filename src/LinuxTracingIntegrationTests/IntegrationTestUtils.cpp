@@ -4,13 +4,21 @@
 
 #include "IntegrationTestUtils.h"
 
+#include <absl/strings/match.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
+
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_linux_tracing_integration_tests {

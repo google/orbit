@@ -4,8 +4,11 @@
 
 #include "LinuxCaptureService/LinuxCaptureService.h"
 
+#include <memory>
+
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
-#include "OrbitBase/Logging.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 

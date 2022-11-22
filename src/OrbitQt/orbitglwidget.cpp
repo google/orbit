@@ -4,18 +4,20 @@
 
 #include "orbitglwidget.h"
 
-#include <stddef.h>
+#include <QtGui/qopengl.h>
 
+#include <QCharRef>
+#include <QFlags>
 #include <QMetaEnum>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QPainter>
 #include <QRect>
 #include <QSurfaceFormat>
-#include <algorithm>
+#include <Qt>
 #include <chrono>
-#include <string>
-#include <vector>
+#include <string_view>
+#include <utility>
 
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"

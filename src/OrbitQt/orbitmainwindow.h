@@ -5,6 +5,9 @@
 #ifndef ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 #define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
+#include <absl/time/time.h>
+#include <stddef.h>
+
 #include <QApplication>
 #include <QCloseEvent>
 #include <QEvent>
@@ -15,12 +18,15 @@
 #include <QObject>
 #include <QPoint>
 #include <QPushButton>
+#include <QResizeEvent>
 #include <QString>
+#include <QStringList>
 #include <QTabWidget>
 #include <QTimer>
 #include <QWidget>
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <optional>
@@ -36,7 +42,10 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "CodeReport/CodeReport.h"
+#include "CodeReport/DisassemblyReport.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
@@ -45,6 +54,8 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 #include "StaticTimeGraphLayout.h"

@@ -6,6 +6,7 @@
 #define CODE_REPORT_ANNOTATE_DISASSEMBLY_H_
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"

@@ -9,14 +9,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "AsyncTrack.h"
 #include "CGroupAndProcessMemoryTrack.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "FrameTrack.h"
 #include "GpuTrack.h"
@@ -24,6 +30,8 @@
 #include "SchedulerTrack.h"
 #include "SystemMemoryTrack.h"
 #include "ThreadTrack.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Timer.h"
 #include "Track.h"
 #include "VariableTrack.h"

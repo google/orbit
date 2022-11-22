@@ -10,6 +10,8 @@
 #include <QObject>
 #include <QTimer>
 #include <chrono>
+#include <memory>
+#include <ratio>
 
 #include "QtUtils/Throttle.h"
 

@@ -7,6 +7,7 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include <atomic>
 #include <memory>
 
 #include "GrpcProtos/services_ggp.grpc.pb.h"

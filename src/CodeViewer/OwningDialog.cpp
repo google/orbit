@@ -4,7 +4,8 @@
 
 #include "CodeViewer/OwningDialog.h"
 
-#include <variant>
+#include <Qt>
+#include <utility>
 
 namespace orbit_code_viewer {
 

@@ -6,12 +6,14 @@
 #define ORBIT_GL_SAMPLING_REPORT_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <stddef.h>
 
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>

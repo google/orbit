@@ -5,7 +5,9 @@
 #ifndef CODE_VIEWER_OWNING_DIALOG_H_
 #define CODE_VIEWER_OWNING_DIALOG_H_
 
+#include <QObject>
 #include <QPointer>
+#include <QString>
 #include <memory>
 #include <optional>
 #include <variant>

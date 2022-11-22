@@ -4,15 +4,17 @@
 
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 
+#include <filesystem>
+#include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include "GrpcProtos/capture.pb.h"
-#include "GrpcProtos/services.grpc.pb.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
 

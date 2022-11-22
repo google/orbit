@@ -11,10 +11,13 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "CaptureEventProducer/CaptureEventProducer.h"
 #include "FakeProducerSideService/FakeProducerSideService.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/producer_side_services.pb.h"
 
 namespace orbit_capture_event_producer {

@@ -5,14 +5,16 @@
 #include "ClientData/ScopeIdProvider.h"
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/flags/flag.h>
+#include <absl/meta/type_traits.h>
 #include <absl/synchronization/mutex.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -21,6 +23,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
 
 namespace orbit_client_data {
 

@@ -5,10 +5,11 @@
 #include "CallTreeWidget.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/internal/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/match.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -24,32 +25,38 @@
 #include <QPainter>
 #include <QPalette>
 #include <QRect>
-#include <QStaticStringData>
+#include <QSlider>
 #include <QStringLiteral>
 #include <QStyle>
 #include <QStyleOptionProgressBar>
 #include <QTimer>
 #include <QTreeView>
+#include <Qt>
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <list>
 #include <memory>
 #include <optional>
-#include <set>
+#include <tuple>
 #include <utility>
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientFlags/ClientFlags.h"
 #include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "SymbolProvider/ModuleIdentifier.h"
+#include "UtilWidgets/NoticeWidget.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;

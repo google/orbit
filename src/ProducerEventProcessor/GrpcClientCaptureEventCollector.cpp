@@ -4,7 +4,12 @@
 
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 
+#include <absl/time/time.h>
 #include <google/protobuf/arena.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "GrpcProtos/capture.pb.h"

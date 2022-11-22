@@ -6,7 +6,11 @@
 #define CONFIG_WIDGETS_SYMBOL_ERROR_DIALOG_H_
 
 #include <QDialog>
+#include <QObject>
+#include <QString>
+#include <QWidget>
 #include <memory>
+#include <string>
 
 #include "ClientData/ModuleData.h"
 

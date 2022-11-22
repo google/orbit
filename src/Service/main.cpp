@@ -6,18 +6,23 @@
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
-#include <stdint.h>
+#include <absl/strings/string_view.h>
 
 #include <atomic>
 #include <csignal>
+#include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <string>
+#include <system_error>
+#include <tuple>
 
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitService.h"
 #include "OrbitVersion/OrbitVersion.h"
 

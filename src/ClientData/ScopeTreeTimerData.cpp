@@ -3,6 +3,16 @@
 // found in the LICENSE file.
 
 #include <ClientData/ScopeTreeTimerData.h>
+#include <absl/container/btree_map.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+
+#include "ApiInterface/Orbit.h"
+#include "ClientData/FastRenderingUtils.h"
+#include "ClientData/TimerData.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {
 

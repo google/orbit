@@ -13,6 +13,7 @@
 #include "FramePointerValidator/FramePointerValidator.h"
 #include "GrpcProtos/code_block.pb.h"
 #include "ObjectUtils/ElfFile.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_frame_pointer_validator_service {
 

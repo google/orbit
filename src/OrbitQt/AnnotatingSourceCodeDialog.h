@@ -9,8 +9,14 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <chrono>
+#include <filesystem>
 #include <functional>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 #include "ClientData/FunctionInfo.h"
 #include "CodeReport/AnnotatingLine.h"
@@ -20,6 +26,7 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SymbolProvider/ModuleIdentifier.h"

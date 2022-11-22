@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_THREAD_BAR_H_
 #define ORBIT_GL_THREAD_BAR_H_
 
+#include <stdint.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -12,8 +14,10 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
+#include "Viewport.h"
 
 class OrbitApp;
 

@@ -5,15 +5,23 @@
 #include "TestUtils.h"
 
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <capstone/capstone.h>
+#include <unistd.h>
 
+#include <algorithm>
+#include <filesystem>
+#include <memory>
 #include <string>
 
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/UniqueResource.h"
 
 namespace orbit_user_space_instrumentation {

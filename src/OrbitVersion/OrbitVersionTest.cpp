@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "OrbitVersion/OrbitVersion.h"
 
 namespace orbit_version {

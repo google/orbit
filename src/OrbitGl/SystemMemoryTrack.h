@@ -5,11 +5,20 @@
 #ifndef ORBIT_GL_SYSTEM_MEMORY_TRACK_H_
 #define ORBIT_GL_SYSTEM_MEMORY_TRACK_H_
 
+#include <stddef.h>
+
 #include <string>
 #include <utility>
 
+#include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/SystemMemoryInfo.h"
 #include "MemoryTrack.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
+#include "Track.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

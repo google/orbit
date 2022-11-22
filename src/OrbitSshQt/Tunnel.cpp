@@ -4,7 +4,7 @@
 
 #include "OrbitSshQt/Tunnel.h"
 
-#include <absl/base/macros.h>
+#include <absl/base/attributes.h>
 #include <stddef.h>
 
 #include <QByteArray>
@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"

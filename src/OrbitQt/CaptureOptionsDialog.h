@@ -5,11 +5,14 @@
 #ifndef ORBIT_QT_CAPTURE_OPTIONS_DIALOG_H_
 #define ORBIT_QT_CAPTURE_OPTIONS_DIALOG_H_
 
+#include <stdint.h>
+
 #include <QDialog>
 #include <QObject>
 #include <QString>
 #include <QValidator>
 #include <QWidget>
+#include <limits>
 #include <memory>
 
 #include "ClientData/WineSyscallHandlingMethod.h"

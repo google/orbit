@@ -4,7 +4,10 @@
 
 #include "SessionSetup/ProcessLauncherWidget.h"
 
+#include <QComboBox>
 #include <QFileDialog>
+#include <QGridLayout>
+#include <QLabel>
 #include <QLineEdit>
 
 #include "ui_ProcessLauncherWidget.h"

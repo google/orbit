@@ -14,8 +14,8 @@
 #include <sys/uio.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
-#include <iosfwd>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -24,6 +24,7 @@
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/ObjectFile.h"
@@ -34,7 +35,6 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"

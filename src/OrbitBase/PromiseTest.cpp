@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <utility>
+#include <vector>
+
 #include "OrbitBase/Promise.h"
 
 namespace orbit_base {

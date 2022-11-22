@@ -4,7 +4,6 @@
 
 #include "UprobesUnwindingVisitor.h"
 
-#include <asm/perf_regs.h>
 #include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Object.h>
@@ -13,20 +12,24 @@
 #include <unwindstack/Unwinder.h>
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
-#include "LeafFunctionCallManager.h"
+#include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "PerfEvent.h"
+#include "unwindstack/Arch.h"
+#include "unwindstack/Maps.h"
+#include "unwindstack/Memory.h"
 
 namespace orbit_linux_tracing {
 

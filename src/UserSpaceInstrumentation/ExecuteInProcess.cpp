@@ -6,6 +6,8 @@
 
 #include <absl/base/casts.h>
 
+#include <memory>
+
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"
 #include "MachineCode.h"

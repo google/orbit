@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 namespace orbit_vulkan_layer {
 

@@ -18,6 +18,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "OrbitBase/Attributes.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
 ORBIT_API_INSTANTIATE;

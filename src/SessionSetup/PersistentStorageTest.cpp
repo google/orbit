@@ -6,6 +6,8 @@
 
 #include <QCoreApplication>
 #include <QSettings>
+#include <QString>
+#include <memory>
 #include <optional>
 
 #include "OrbitGgp/Client.h"

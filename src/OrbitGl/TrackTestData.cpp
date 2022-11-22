@@ -4,6 +4,12 @@
 
 #include "TrackTestData.h"
 
+#include <absl/container/flat_hash_set.h>
+
+#include <optional>
+#include <string>
+#include <utility>
+
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"

@@ -4,10 +4,14 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 
+#include <algorithm>
+#include <string>
+
 #include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {

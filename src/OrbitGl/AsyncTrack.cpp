@@ -5,11 +5,15 @@
 #include "AsyncTrack.h"
 
 #include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
-#include <ctime>
+#include <filesystem>
+#include <memory>
+#include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -20,7 +24,7 @@
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
-#include "ThreadColor.h"
+#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 

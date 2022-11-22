@@ -8,10 +8,15 @@
 #include <absl/strings/str_format.h>
 #include <stdint.h>
 
-#include <cmath>
+#include <algorithm>
+#include <memory>
+#include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "BatcherInterface.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"

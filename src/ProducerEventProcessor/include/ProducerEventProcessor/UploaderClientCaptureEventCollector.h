@@ -7,10 +7,12 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <stddef.h>
 
 #include <memory>
 #include <vector>
 
+#include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureUploader/UploadDataInterface.h"
 #include "GrpcProtos/capture.pb.h"

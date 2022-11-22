@@ -4,12 +4,15 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
-#include <absl/strings/str_format.h>
+#include <stdint.h>
 
 #include <QComboBox>
 #include <QLineEdit>
+#include <QList>
 #include <QListWidget>
+#include <QNonConstOverload>
 #include <QObject>
+#include <QStringLiteral>
 #include <QWidget>
 #include <algorithm>
 #include <iterator>
@@ -17,6 +20,7 @@
 #include <memory>
 
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackInputWidget.h"
 
 namespace orbit_mizar_widgets {

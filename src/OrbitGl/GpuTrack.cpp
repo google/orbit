@@ -4,15 +4,15 @@
 
 #include "GpuTrack.h"
 
+#include <GteVector.h>
 #include <absl/strings/str_format.h>
-#include <absl/time/time.h>
 
-#include <algorithm>
 #include <memory>
 
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "CoreMath.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"

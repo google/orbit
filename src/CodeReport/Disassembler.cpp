@@ -4,13 +4,16 @@
 
 #include "CodeReport/Disassembler.h"
 
-#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <capstone/capstone.h>
+#include <capstone/x86.h>
+#include <stdint.h>
 
 #include <algorithm>
+#include <utility>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 
 namespace orbit_code_report {

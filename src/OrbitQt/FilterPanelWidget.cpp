@@ -6,6 +6,8 @@
 
 #include <QFontMetrics>
 #include <QFrame>
+#include <QLabel>
+#include <QLineEdit>
 #include <QWidget>
 
 #include "ui_FilterPanelWidget.h"

@@ -9,10 +9,10 @@
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
-#include <algorithm>
+#include <type_traits>
 
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ThreadConstants.h"
 

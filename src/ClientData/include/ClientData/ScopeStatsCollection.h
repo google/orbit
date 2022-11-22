@@ -6,9 +6,16 @@
 #ifndef CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
 #define CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
 
+#include <absl/container/flat_hash_map.h>
+
+#include <cstdint>
+#include <vector>
+
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

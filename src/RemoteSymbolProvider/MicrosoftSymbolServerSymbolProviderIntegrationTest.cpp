@@ -8,15 +8,24 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <variant>
 
 #include "GrpcProtos/symbol.pb.h"
 #include "Http/HttpDownloadManager.h"
 #include "ObjectUtils/SymbolsFile.h"
+#include "OrbitBase/File.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/MockSymbolCache.h"
 #include "TestUtils/TestUtils.h"

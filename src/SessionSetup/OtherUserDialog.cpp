@@ -4,8 +4,11 @@
 
 #include "SessionSetup/OtherUserDialog.h"
 
+#include <QCheckBox>
+#include <QLabel>
 #include <QSettings>
 #include <memory>
+#include <string>
 
 #include "ui_OtherUserDialog.h"
 

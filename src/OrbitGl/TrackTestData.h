@@ -5,11 +5,14 @@
 #ifndef ORBIT_GL_TRACK_TEST_DATA_H_
 #define ORBIT_GL_TRACK_TEST_DATA_H_
 
+#include <stddef.h>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_gl {

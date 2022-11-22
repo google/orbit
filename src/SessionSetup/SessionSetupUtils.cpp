@@ -4,9 +4,17 @@
 
 #include "SessionSetup/SessionSetupUtils.h"
 
+#include <absl/strings/str_format.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/support/channel_arguments.h>
+
 #include <QUrl>
+#include <algorithm>
+#include <filesystem>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/AddrAndPort.h"
 
 namespace orbit_session_setup {
 

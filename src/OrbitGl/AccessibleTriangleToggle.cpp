@@ -4,6 +4,8 @@
 
 #include "AccessibleTriangleToggle.h"
 
+#include <string>
+
 #include "AccessibleCaptureViewElement.h"
 #include "TriangleToggle.h"
 

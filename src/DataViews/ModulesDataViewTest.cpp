@@ -3,23 +3,31 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <gmock/gmock-actions.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
-#include <filesystem>
+#include <memory>
+#include <set>
 #include <string>
+#include <string_view>
+#include <vector>
 
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "DataViewTestUtils.h"
-#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/SymbolLoadingState.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/module.pb.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_data_views {
 

@@ -6,23 +6,32 @@
 
 #include <OrbitBase/Logging.h>
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QHeaderView>
+#include <QColor>
+#include <QFont>
+#include <QGradientStops>
 #include <QMargins>
 #include <QObject>
 #include <QPainter>
 #include <QPalette>
 #include <QPlainTextEdit>
 #include <QRect>
+#include <QRectF>
 #include <QResizeEvent>
 #include <QScrollBar>
+#include <QSize>
 #include <QString>
-#include <QStringList>
 #include <QTextBlock>
+#include <QTextBlockFormat>
+#include <QTextCharFormat>
 #include <QTextCursor>
+#include <QTextEdit>
+#include <QTextFormat>
+#include <QTextOption>
 #include <QWheelEvent>
+#include <Qt>
+#include <algorithm>
 #include <cmath>
+#include <memory>
 
 #include "SyntaxHighlighter/HighlightingMetadata.h"
 

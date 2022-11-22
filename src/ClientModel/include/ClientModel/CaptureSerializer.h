@@ -6,6 +6,7 @@
 #define CLIENT_MODEL_CAPTURE_SERIALIZER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/time/time.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/message.h>
@@ -13,6 +14,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"

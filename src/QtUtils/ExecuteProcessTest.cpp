@@ -4,13 +4,18 @@
 
 #include <absl/strings/match.h>
 #include <absl/time/time.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QByteArray>
 #include <QCoreApplication>
 #include <QObject>
+#include <QString>
+#include <QStringList>
 #include <QTimer>
+#include <filesystem>
 #include <memory>
+#include <string>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"

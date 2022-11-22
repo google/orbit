@@ -7,7 +7,9 @@
 
 #include <QApplication>
 #include <QPlainTextEdit>
+#include <QString>
 #include <QTest>
+#include <string>
 
 #include "CaptureWindowDebugInterface.h"
 #include "CaptureWindowDebugWidget.h"

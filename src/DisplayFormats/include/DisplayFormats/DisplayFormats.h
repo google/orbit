@@ -6,6 +6,9 @@
 #define DISPLAY_FORMATS_DISPLAY_FORMATS_H_
 
 #include <absl/time/time.h>
+#include <stdint.h>
+
+#include <string>
 
 namespace orbit_display_formats {
 

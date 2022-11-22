@@ -10,14 +10,16 @@
 #include <memory>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "BatcherInterface.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"

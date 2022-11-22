@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_client {
 

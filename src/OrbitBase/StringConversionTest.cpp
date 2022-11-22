@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "OrbitBase/StringConversion.h"
 
 namespace {

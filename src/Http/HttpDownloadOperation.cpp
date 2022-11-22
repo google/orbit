@@ -6,9 +6,13 @@
 
 #include <absl/strings/str_format.h>
 
+#include <QByteArray>
+#include <QIODevice>
+#include <QMetaObject>
 #include <QNetworkRequest>
 #include <QUrl>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 

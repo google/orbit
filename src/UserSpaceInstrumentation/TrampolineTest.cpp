@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_map.h>
+#include <capstone/capstone.h>
 #include <dlfcn.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -19,19 +21,23 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "GetTestLibLibraryPath.h"
+#include "GrpcProtos/module.pb.h"
 #include "MachineCode.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
 #include "Trampoline.h"

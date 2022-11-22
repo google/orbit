@@ -6,12 +6,15 @@
 
 #include <absl/strings/str_format.h>
 
+#include <QByteArray>
 #include <QCoreApplication>
 #include <QMetaEnum>
+#include <QMetaObject>
 #include <QProcess>
-#include <filesystem>
+#include <QtGlobal>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

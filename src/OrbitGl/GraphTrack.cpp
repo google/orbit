@@ -5,21 +5,30 @@
 #include "GraphTrack.h"
 
 #include <GteVector.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <memory>
 #include <numeric>
+#include <string_view>
+#include <utility>
+#include <vector>
 
+#include "ApiInterface/Orbit.h"
+#include "BatcherInterface.h"
 #include "ClientData/FastRenderingUtils.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "GraphTrackDataAggregator.h"
 #include "TextRenderer.h"
-#include "ThreadColor.h"
+#include "TextRendererInterface.h"
 #include "TimeGraph.h"
 #include "TimeGraphLayout.h"
+#include "TrackHeader.h"
 #include "Viewport.h"
 
 namespace {

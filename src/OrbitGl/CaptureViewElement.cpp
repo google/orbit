@@ -4,7 +4,14 @@
 
 #include "CaptureViewElement.h"
 
+#include <GteVector.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <tuple>
+
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Logging.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

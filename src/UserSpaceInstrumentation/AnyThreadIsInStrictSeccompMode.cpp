@@ -7,6 +7,7 @@
 #include <linux/seccomp.h>
 
 #include <optional>
+#include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
 #include "ReadSeccompModeOfThread.h"

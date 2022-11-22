@@ -8,11 +8,16 @@
 #include <absl/container/flat_hash_set.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <functional>
+#include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_client {
 

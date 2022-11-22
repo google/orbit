@@ -5,10 +5,20 @@
 #ifndef ORBIT_GL_MOCK_BATCHER_H_
 #define ORBIT_GL_MOCK_BATCHER_H_
 
+#include <stdint.h>
+
+#include <algorithm>
+#include <array>
 #include <limits>
+#include <memory>
+#include <set>
+#include <vector>
 
 #include "Batcher.h"
+#include "BatcherInterface.h"
+#include "CoreMath.h"
 #include "Geometry.h"
+#include "PickingManager.h"
 #include "absl/container/btree_map.h"
 
 namespace orbit_gl {

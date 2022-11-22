@@ -8,6 +8,7 @@
 #include <QLatin1String>
 #include <QString>
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <utility>
 

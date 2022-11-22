@@ -4,11 +4,17 @@
 
 #include <absl/strings/str_format.h>
 
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <utility>
+
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "ClientProtos/user_defined_capture_info.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 
 using orbit_capture_file::CaptureFileOutputStream;
 using orbit_client_protos::UserDefinedCaptureInfo;

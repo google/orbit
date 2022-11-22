@@ -4,8 +4,6 @@
 
 #include "ClientData/ScopeStats.h"
 
-#include <cmath>
-
 namespace orbit_client_data {
 void ScopeStats::UpdateStats(uint64_t elapsed_nanos) {
   auto old_avg = static_cast<double>(ComputeAverageTimeNs());

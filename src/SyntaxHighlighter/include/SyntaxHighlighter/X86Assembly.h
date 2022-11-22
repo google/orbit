@@ -7,8 +7,14 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <QColor>
+#include <QObject>
 #include <QRegularExpression>
+#include <QString>
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <Qt>
+#include <functional>
 
 namespace orbit_syntax_highlighter {
 

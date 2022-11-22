@@ -6,19 +6,26 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/string_view.h>
 #include <absl/time/time.h>
 
 #include <QByteArray>
 #include <QIODevice>
 #include <QObject>
+#include <QPointer>
 #include <QProcess>
 #include <QString>
 #include <QStringList>
-#include <QTimer>
 #include <chrono>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"

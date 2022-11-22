@@ -7,12 +7,20 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "CaptureClient/ApiEventProcessor.h"
-#include "CaptureClient/CaptureListener.h"
+#include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MockCaptureListener.h"
 

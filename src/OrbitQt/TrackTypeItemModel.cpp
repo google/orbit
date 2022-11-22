@@ -4,6 +4,11 @@
 
 #include "TrackTypeItemModel.h"
 
+#include <QAbstractItemModel>
+#include <algorithm>
+
+#include "OrbitBase/Logging.h"
+
 namespace orbit_qt {
 
 TrackTypeItemModel::TrackTypeItemModel(QObject* parent)

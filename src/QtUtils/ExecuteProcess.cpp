@@ -6,14 +6,19 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
+#include <stdint.h>
 
+#include <QIODevice>
 #include <QMetaEnum>
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
+#include <QtGlobal>
 #include <memory>
+#include <string>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 

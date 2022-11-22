@@ -6,9 +6,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <initializer_list>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "TestUtils/ContainerHelpers.h"

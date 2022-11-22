@@ -6,6 +6,7 @@
 
 #include <QFlags>
 #include <algorithm>
+#include <functional>
 #include <iterator>
 
 #include "GrpcProtos/process.pb.h"

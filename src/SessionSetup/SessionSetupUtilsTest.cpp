@@ -3,12 +3,18 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <QString>
 #include <filesystem>
+#include <memory>
+#include <optional>
+#include <vector>
 
+#include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitGgp/SshInfo.h"
+#include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Credentials.h"
 #include "SessionSetup/SessionSetupUtils.h"
 

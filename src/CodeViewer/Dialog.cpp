@@ -5,10 +5,15 @@
 #include "CodeViewer/Dialog.h"
 
 #include <QDialogButtonBox>
-#include <QHBoxLayout>
+#include <QFontDatabase>
+#include <QLabel>
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QSyntaxHighlighter>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <utility>
 
 #include "ui_Dialog.h"
 

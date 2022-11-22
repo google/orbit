@@ -5,15 +5,28 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "CaptureClient/CaptureEventProcessor.h"
-#include "CaptureClient/CaptureListener.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
+#include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/PageFaultsInfo.h"
+#include "ClientData/SystemMemoryInfo.h"
+#include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"

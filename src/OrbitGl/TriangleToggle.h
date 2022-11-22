@@ -5,10 +5,16 @@
 #ifndef ORBIT_GL_TRIANGLE_TOGGLE_H_
 #define ORBIT_GL_TRIANGLE_TOGGLE_H_
 
+#include <stdint.h>
+
 #include <functional>
 #include <memory>
 
 #include "CaptureViewElement.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "Viewport.h"
 
 class Track;

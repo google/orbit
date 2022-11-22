@@ -4,8 +4,12 @@
 
 #include "CaptureServiceBase/CaptureServiceBase.h"
 
+#include <absl/time/clock.h>
 #include <absl/time/time.h>
 
+#include <utility>
+
+#include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"

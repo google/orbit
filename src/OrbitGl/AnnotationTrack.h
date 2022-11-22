@@ -5,8 +5,11 @@
 #ifndef ORBIT_GL_ANNOTATION_TRACK_H_
 #define ORBIT_GL_ANNOTATION_TRACK_H_
 
+#include <stdint.h>
+
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "CoreMath.h"
 #include "PrimitiveAssembler.h"

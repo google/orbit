@@ -4,9 +4,12 @@
 
 #include "CaptureWindowDebugWidget.h"
 
+#include <QPlainTextEdit>
 #include <QWidget>
+#include <Qt>
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include "TimeGraphLayoutWidget.h"
 #include "ui_CaptureWindowDebugWidget.h"

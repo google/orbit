@@ -6,8 +6,12 @@
 #define CAPTURE_FILE_INFO_LOAD_CAPTURE_WIDGET_H_
 
 #include <QEvent>
+#include <QObject>
+#include <QShowEvent>
 #include <QSortFilterProxyModel>
+#include <QString>
 #include <QWidget>
+#include <filesystem>
 #include <memory>
 
 #include "CaptureFileInfo/ItemModel.h"

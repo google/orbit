@@ -2,11 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
-#include <absl/types/span.h>
+#include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <filesystem>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
@@ -17,7 +29,9 @@
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "MockAppInterface.h"
 
 using orbit_client_data::CaptureData;

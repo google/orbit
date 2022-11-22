@@ -11,6 +11,8 @@
 
 #include <atomic>
 #include <cstdint>
+#include <map>
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -28,6 +30,7 @@
 #include "PerfEventVisitor.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesReturnAddressManager.h"
+#include "unwindstack/Unwinder.h"
 
 namespace orbit_linux_tracing {
 

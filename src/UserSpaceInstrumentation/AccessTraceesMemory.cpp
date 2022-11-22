@@ -4,14 +4,11 @@
 
 #include "AccessTraceesMemory.h"
 
-#include <absl/base/casts.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
-#include <sys/ptrace.h>
 
-#include <cerrno>
-#include <cstring>
+#include <memory>
 #include <string>
 
 #include "OrbitBase/File.h"

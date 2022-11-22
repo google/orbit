@@ -10,8 +10,9 @@
 #include <dlfcn.h>
 
 #include <cstring>
-#include <optional>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "AccessTraceesMemory.h"

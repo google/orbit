@@ -4,6 +4,8 @@
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
 
+#include <utility>
+
 namespace orbit_capture_file_info {
 
 CaptureFileInfo::CaptureFileInfo(const QString& path, std::optional<absl::Duration> capture_length)

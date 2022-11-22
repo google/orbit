@@ -4,19 +4,21 @@
 
 #include "SourcePathsMappingUI/AskUserForFile.h"
 
-#include <absl/strings/str_format.h>
-
 #include <QAbstractButton>
 #include <QCheckBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QMessageBox>
+#include <QObject>
 #include <QPushButton>
 #include <QSettings>
+#include <QString>
+#include <QVariant>
+#include <Qt>
 #include <filesystem>
 #include <memory>
-
-#include "OrbitBase/Result.h"
+#include <utility>
 
 namespace orbit_source_paths_mapping_ui {
 constexpr const char* kAutocreateMappingKey = "auto_create_mapping";

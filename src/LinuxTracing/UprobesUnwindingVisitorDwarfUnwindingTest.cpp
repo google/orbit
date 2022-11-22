@@ -9,21 +9,28 @@
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Unwinder.h>
 
+#include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <cstring>
+#include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "MockTracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
 #include "UprobesFunctionCallManager.h"
-#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
 #include "UprobesUnwindingVisitorTestCommon.h"
+#include "unwindstack/SharedString.h"
 
 namespace orbit_linux_tracing {
 

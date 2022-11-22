@@ -6,12 +6,15 @@
 
 #include <absl/base/casts.h>
 #include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <dlfcn.h>
-#include <stddef.h>
 
+#include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "OrbitBase/ExecutablePath.h"

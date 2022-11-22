@@ -10,10 +10,11 @@
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
-#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include <array>
-#include <system_error>
+#include <vector>
 
 #include "LoggingUtils.h"
 #include "OrbitBase/SafeStrerror.h"

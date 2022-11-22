@@ -5,6 +5,7 @@
 #ifndef SOURCE_PATHS_MAPPING_MAPPING_MANAGER_H_
 #define SOURCE_PATHS_MAPPING_MAPPING_MANAGER_H_
 
+#include <filesystem>
 #include <optional>
 #include <utility>
 #include <vector>

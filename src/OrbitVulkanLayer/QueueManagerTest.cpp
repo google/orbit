@@ -3,6 +3,9 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <vulkan/vulkan_core.h>
+
+#include <memory>
 
 #include "QueueManager.h"
 

@@ -4,19 +4,27 @@
 
 #include "QtTextRenderer.h"
 
+#include <GteVector.h>
+#include <absl/meta/type_traits.h>
 #include <absl/strings/str_split.h>
+#include <string.h>
 
 #include <QColor>
+#include <QFont>
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <QPainter>
+#include <QString>
+#include <Qt>
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <string>
-#include <utility>
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "TranslationStack.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

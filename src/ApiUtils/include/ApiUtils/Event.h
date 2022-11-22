@@ -5,6 +5,7 @@
 #ifndef ORBIT_API_UTILS_EVENT_H_
 #define ORBIT_API_UTILS_EVENT_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <variant>
 #include <vector>

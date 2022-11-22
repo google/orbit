@@ -5,9 +5,20 @@
 #ifndef THREAD_TRACK_DATA_PROVIDER_H_
 #define THREAD_TRACK_DATA_PROVIDER_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <limits>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeTreeTimerData.h"
 #include "ClientData/ThreadTrackDataManager.h"
+#include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

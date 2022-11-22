@@ -5,6 +5,8 @@
 #ifndef LINUX_CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 #define LINUX_CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 
+#include <memory>
+
 #include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
 #include "MemoryTracing/MemoryInfoProducer.h"

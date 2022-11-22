@@ -8,7 +8,9 @@
 #include <absl/types/span.h>
 
 #include <QObject>
+#include <QString>
 #include <chrono>
+#include <optional>
 
 #include "OrbitBase/Future.h"
 

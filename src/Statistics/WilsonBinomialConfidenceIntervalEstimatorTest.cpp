@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <initializer_list>
 #include <vector>
 
 #include "Statistics/BinomialConfidenceInterval.h"

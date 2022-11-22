@@ -6,8 +6,12 @@
 #define CAPTURE_FILE_INFO_ITEM_MODEL_H_
 
 #include <QAbstractTableModel>
+#include <QModelIndex>
 #include <QObject>
+#include <QString>
 #include <QVariant>
+#include <Qt>
+#include <vector>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
 

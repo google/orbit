@@ -3,8 +3,14 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <sys/types.h>
+
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"

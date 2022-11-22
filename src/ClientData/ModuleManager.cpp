@@ -4,16 +4,16 @@
 
 #include "ClientData/ModuleManager.h"
 
-#include <absl/container/flat_hash_map.h>
+#include <absl/container/node_hash_map.h>
+#include <absl/meta/type_traits.h>
 
 #include <algorithm>
 #include <filesystem>
-#include <map>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "SymbolProvider/ModuleIdentifier.h"

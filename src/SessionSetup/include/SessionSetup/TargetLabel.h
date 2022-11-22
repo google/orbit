@@ -5,7 +5,9 @@
 #ifndef SESSION_SETUP_TARGET_LABEL_H_
 #define SESSION_SETUP_TARGET_LABEL_H_
 
+#include <QColor>
 #include <QObject>
+#include <QString>
 #include <QWidget>
 #include <filesystem>
 #include <memory>

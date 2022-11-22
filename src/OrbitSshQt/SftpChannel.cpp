@@ -4,7 +4,7 @@
 
 #include "OrbitSshQt/SftpChannel.h"
 
-#include <absl/base/macros.h>
+#include <absl/base/attributes.h>
 
 #include <QtGlobal>
 #include <utility>

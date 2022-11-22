@@ -7,16 +7,21 @@
 
 #include <absl/container/node_hash_map.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
+#include "OrbitBase/Logging.h"
 
 class CallTreeThread;
 class CallTreeFunction;

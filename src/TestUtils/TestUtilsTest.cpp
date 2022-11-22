@@ -5,6 +5,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
 

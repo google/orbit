@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <optional>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace orbit_gl {

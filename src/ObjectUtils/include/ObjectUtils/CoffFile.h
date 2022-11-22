@@ -9,6 +9,7 @@
 #include <llvm/Object/ObjectFile.h>
 
 #include <array>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>

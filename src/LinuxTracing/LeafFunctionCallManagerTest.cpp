@@ -15,18 +15,24 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
+#include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "LibunwindstackUnwinder.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
+#include "unwindstack/MachineX86_64.h"
+#include "unwindstack/Regs.h"
+#include "unwindstack/RegsX86_64.h"
 
 using ::testing::_;
 using ::testing::AllOf;

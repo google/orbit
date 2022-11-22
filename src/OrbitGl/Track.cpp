@@ -4,15 +4,14 @@
 
 #include "Track.h"
 
-#include <stddef.h>
-
-#include <cmath>
+#include <GteVector.h>
 
 #include "AccessibleTrack.h"
 #include "ClientData/CaptureData.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TrackRenderHelper.h"

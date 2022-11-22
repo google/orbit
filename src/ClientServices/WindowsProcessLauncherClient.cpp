@@ -4,10 +4,13 @@
 
 #include "ClientServices/WindowsProcessLauncherClient.h"
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
+#include <absl/synchronization/mutex.h>
 #include <grpcpp/grpcpp.h>
 
-#include <chrono>
+#include <cstdint>
 #include <memory>
 
 #include "GrpcProtos/services.grpc.pb.h"

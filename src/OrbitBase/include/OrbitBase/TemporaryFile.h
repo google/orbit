@@ -5,9 +5,12 @@
 #ifndef ORBIT_BASE_TEMPORARY_FILE_H_
 #define ORBIT_BASE_TEMPORARY_FILE_H_
 
+#include <filesystem>
 #include <string_view>
+#include <utility>
 
 #include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base {
 // Creates and opens a temporary file. It will be automatically deleted when this object gets out of

@@ -6,13 +6,17 @@
 
 #include <QAbstractItemModelTester>
 #include <QModelIndex>
-#include <QSignalSpy>
+#include <QPoint>
 #include <QTableView>
 #include <QTest>
-#include <string>
+#include <QVariant>
+#include <Qt>
+#include <memory>
 
+#include "ClientData/CaptureData.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "StaticTimeGraphLayout.h"
+#include "Track.h"
 #include "TrackManager.h"
 #include "TrackTestData.h"
 #include "TrackTypeItemModel.h"

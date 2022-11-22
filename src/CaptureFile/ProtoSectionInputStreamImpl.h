@@ -5,12 +5,18 @@
 #ifndef PROTO_SECTION_INPUT_STREAM_IMPL_H_
 #define PROTO_SECTION_INPUT_STREAM_IMPL_H_
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/message.h>
+#include <stdint.h>
+
 #include <limits>
 #include <optional>
+#include <utility>
 
 #include "CaptureFile/ProtoSectionInputStream.h"
 #include "FileFragmentInputStream.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_file_internal {
 

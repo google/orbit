@@ -6,11 +6,20 @@
 #define ORBIT_BASE_WHEN_ALL_H_
 
 #include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 
+#include <cstddef>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <tuple>
 #include <utility>
+#include <variant>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 #include "absl/types/span.h"
 

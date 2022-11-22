@@ -6,11 +6,15 @@
 #define CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 
 #include <QCoreApplication>
 #include <QSettings>
 #include <QString>
+#include <filesystem>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "ClientSymbols/PersistentStorageManager.h"
 

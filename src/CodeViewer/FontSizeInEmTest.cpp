@@ -5,8 +5,10 @@
 #include <CodeViewer/FontSizeInEm.h>
 #include <gtest/gtest.h>
 
-#include <QApplication>
+#include <QFont>
 #include <QFontDatabase>
+#include <QFontMetrics>
+#include <memory>
 
 namespace orbit_code_viewer {
 

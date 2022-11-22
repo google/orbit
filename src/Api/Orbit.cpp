@@ -6,10 +6,12 @@
 
 #include <absl/base/casts.h>
 
-#include "ApiUtils/ApiEnableInfo.h"
+#include <utility>
+
 #include "ApiUtils/Event.h"
 #include "LockFreeApiEventProducer.h"
 #include "OrbitApiVersions.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 

@@ -4,9 +4,8 @@
 
 #include <gtest/gtest.h>
 
-#include <QPushButton>
 #include <QRadioButton>
-#include <QTableView>
+#include <memory>
 
 #include "SessionSetup/ConnectToStadiaWidget.h"
 

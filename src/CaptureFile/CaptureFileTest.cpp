@@ -4,16 +4,25 @@
 
 #include <absl/base/casts.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"

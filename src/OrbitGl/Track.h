@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -18,11 +19,14 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "GteVector.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"

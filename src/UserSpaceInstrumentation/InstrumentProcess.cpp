@@ -6,21 +6,30 @@
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/meta/type_traits.h>
+#include <absl/strings/str_format.h>
+#include <capstone/capstone.h>
 #include <dlfcn.h>
-#include <linux/seccomp.h>
+#include <sched.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <mutex>
-#include <optional>
+#include <set>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"
+#include "GrpcProtos/module.pb.h"
 #include "MachineCode.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"

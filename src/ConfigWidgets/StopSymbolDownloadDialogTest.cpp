@@ -4,12 +4,16 @@
 
 #include <absl/strings/match.h>
 #include <gtest/gtest.h>
-#include <qnamespace.h>
 
 #include <QCheckBox>
 #include <QLabel>
+#include <QMetaObject>
 #include <QPushButton>
+#include <QString>
 #include <QTest>
+#include <Qt>
+#include <string>
+#include <utility>
 
 #include "ClientData/ModuleData.h"
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"

@@ -5,14 +5,16 @@
 #include "ObjectUtils/ObjectFile.h"
 
 #include <absl/strings/str_format.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ObjectFile.h>
+#include <llvm/Support/Error.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "GrpcProtos/symbol.pb.h"
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"

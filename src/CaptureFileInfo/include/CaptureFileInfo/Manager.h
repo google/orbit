@@ -5,6 +5,8 @@
 #ifndef CAPTURE_FILE_INFO_MANAGER_H_
 #define CAPTURE_FILE_INFO_MANAGER_H_
 
+#include <absl/time/time.h>
+
 #include <filesystem>
 #include <optional>
 #include <vector>

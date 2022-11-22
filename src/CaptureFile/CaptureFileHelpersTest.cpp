@@ -2,14 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/base/casts.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
+#include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
+#include "ClientProtos/user_defined_capture_info.pb.h"
+#include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 

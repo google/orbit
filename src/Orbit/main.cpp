@@ -2,31 +2,39 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/flags/internal/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
+#include <absl/strings/str_format.h>
+#include <absl/strings/string_view.h>
+#include <stddef.h>
 
 #include <QApplication>
 #include <QCoreApplication>
-#include <QDir>
 #include <QMessageBox>
 #include <QMetaType>
-#include <QObject>
+#include <QProcess>
+#include <QProcessEnvironment>
+#include <QSettings>
 #include <QString>
+#include <QStringList>
 #include <Qt>
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <system_error>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "CommandLineUtils/CommandLineUtils.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadPool.h"
+#include "SourcePathsMapping/Mapping.h"
 
 #ifdef _WIN32
 #include <process.h>

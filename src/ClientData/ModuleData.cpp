@@ -7,7 +7,8 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
-#include <filesystem>
+#include <cinttypes>
+#include <utility>
 
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"

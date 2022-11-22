@@ -4,6 +4,10 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+#include <variant>
+#include <vector>
+
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/WhenAny.h"

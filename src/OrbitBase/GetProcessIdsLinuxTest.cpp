@@ -4,14 +4,14 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <sys/types.h>
 #include <syscall.h>
+#include <unistd.h>
 
+#include <algorithm>
 #include <condition_variable>
-#include <filesystem>
-#include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Result.h"

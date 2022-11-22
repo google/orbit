@@ -5,6 +5,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #include "OrbitBase/Append.h"
 
 namespace orbit_base {

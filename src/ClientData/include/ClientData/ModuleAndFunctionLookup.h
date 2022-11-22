@@ -5,7 +5,14 @@
 #ifndef CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_
 #define CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_
 
+#include <stdint.h>
+
+#include <optional>
+#include <string>
+#include <utility>
+
 #include "CaptureData.h"
+#include "ClientData/ModuleData.h"
 #include "FunctionInfo.h"
 #include "ModuleManager.h"
 #include "ProcessData.h"

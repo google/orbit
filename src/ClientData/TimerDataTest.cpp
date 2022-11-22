@@ -3,8 +3,16 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <limits>
+#include <memory>
+#include <vector>
+
+#include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

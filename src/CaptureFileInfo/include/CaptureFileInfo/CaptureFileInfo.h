@@ -6,9 +6,11 @@
 #define CAPTURE_FILE_INFO_CAPTURE_FILE_INFO_H_
 
 #include <absl/time/time.h>
+#include <stdint.h>
 
 #include <QDateTime>
 #include <QFileInfo>
+#include <QString>
 #include <filesystem>
 #include <optional>
 #include <utility>

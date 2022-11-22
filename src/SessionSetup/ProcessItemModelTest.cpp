@@ -5,9 +5,6 @@
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModelTester>
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QString>
 #include <string>
 
 #include "GrpcProtos/process.pb.h"

@@ -5,14 +5,27 @@
 #include "SymbolLoader.h"
 
 #include <absl/flags/flag.h>
+#include <absl/meta/type_traits.h>
+#include <absl/strings/str_format.h>
+
+#include <algorithm>
+#include <chrono>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "ClientFlags/ClientFlags.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/SymbolsFile.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/StopToken.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolUtils.h"

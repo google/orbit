@@ -17,8 +17,12 @@
 #include <vector>
 
 #include "Batcher.h"
+#include "BatcherInterface.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "Geometry.h"
+#include "OrbitBase/Logging.h"
+#include "PickingManager.h"
 
 namespace orbit_gl {
 

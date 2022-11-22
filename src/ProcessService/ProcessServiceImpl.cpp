@@ -6,19 +6,21 @@
 
 #include <absl/strings/str_format.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
 

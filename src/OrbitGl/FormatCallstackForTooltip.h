@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_FORMAT_CALLSTACK_FOR_TOOLTIP_H_
 #define ORBIT_GL_FORMAT_CALLSTACK_FOR_TOOLTIP_H_
 
+#include <stddef.h>
+
 #include <string>
 
 #include "ClientData/CallstackInfo.h"

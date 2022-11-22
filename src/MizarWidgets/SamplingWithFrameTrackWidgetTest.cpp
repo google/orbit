@@ -5,12 +5,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QApplication>
 #include <QCheckBox>
 #include <QLabel>
+#include <QString>
 #include <QTest>
 #include <Qt>
 #include <memory>
+#include <string_view>
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 

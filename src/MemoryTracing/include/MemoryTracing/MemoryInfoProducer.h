@@ -6,8 +6,14 @@
 #define MEMORY_TRACING_MEMORY_INFO_PRODUCER_H_
 
 #include <absl/synchronization/mutex.h>
+#include <stdint.h>
 
+#include <functional>
+#include <memory>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <utility>
 
 #include "GrpcProtos/Constants.h"
 #include "MemoryTracing/MemoryInfoListener.h"

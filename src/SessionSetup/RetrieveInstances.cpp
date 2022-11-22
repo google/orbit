@@ -6,19 +6,21 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
-#include <absl/types/span.h>
 
 #include <QVector>
 #include <algorithm>
-#include <cstddef>
-#include <iterator>
 #include <memory>
 #include <optional>
+#include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/WhenAll.h"

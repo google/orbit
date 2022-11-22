@@ -2,7 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <string.h>
+
+// clang-format off
+// vulkan_core needs to be included before the dispatch table
+#include <vulkan/vulkan_core.h> // IWYU pragma: keep
+#include <vulkan/vk_layer_dispatch_table.h> // IWYU pragma: keep
+// clang-format on
+
+#include <memory>
 
 #include "DispatchTable.h"
 

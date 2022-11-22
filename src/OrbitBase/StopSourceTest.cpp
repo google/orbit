@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <utility>
+
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
 

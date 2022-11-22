@@ -4,10 +4,15 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <string>
 
 #include "CaptureViewElementTester.h"
+#include "CoreMath.h"
 #include "TrackControlInterface.h"
 #include "TrackHeader.h"
+#include "TriangleToggle.h"
 
 namespace orbit_gl {
 

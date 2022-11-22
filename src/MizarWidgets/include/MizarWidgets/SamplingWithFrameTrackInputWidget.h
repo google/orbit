@@ -11,23 +11,35 @@
 #include <absl/strings/str_format.h>
 #include <stdint.h>
 
+#include <QAbstractItemView>
 #include <QAbstractListModel>
 #include <QComboBox>
+#include <QIntValidator>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QListWidgetItem>
+#include <QMetaType>
 #include <QObject>
+#include <QString>
+#include <QVariant>
 #include <QWidget>
 #include <Qt>
 #include <chrono>
+#include <cstdint>
+#include <functional>
+#include <iterator>
 #include <limits>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"

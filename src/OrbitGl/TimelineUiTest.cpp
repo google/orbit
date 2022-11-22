@@ -2,16 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <GteVector.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <random>
 
+#include "CaptureViewElement.h"
+#include "CoreMath.h"
 #include "GlCanvas.h"
 #include "MockBatcher.h"
 #include "MockTextRenderer.h"
 #include "MockTimelineInfo.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "StaticTimeGraphLayout.h"
+#include "TimeGraphLayout.h"
+#include "TimelineTicks.h"
 #include "TimelineUi.h"
 #include "Viewport.h"
 

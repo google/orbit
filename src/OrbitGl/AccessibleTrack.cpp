@@ -6,12 +6,11 @@
 
 #include <GteVector.h>
 
-#include <algorithm>
+#include <vector>
 
 #include "CoreMath.h"
 #include "OrbitBase/Logging.h"
 #include "Track.h"
-#include "Viewport.h"
 
 using orbit_accessibility::AccessibilityState;
 using orbit_accessibility::AccessibleInterface;

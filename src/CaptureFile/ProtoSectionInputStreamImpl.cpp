@@ -4,6 +4,11 @@
 
 #include "ProtoSectionInputStreamImpl.h"
 
+#include <absl/strings/str_format.h>
+
+#include <cstdint>
+#include <memory>
+
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 
 namespace orbit_capture_file_internal {

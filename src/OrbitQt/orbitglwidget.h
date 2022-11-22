@@ -10,8 +10,10 @@
 #include <QEvent>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QString>
 #include <QTimer>
 #include <QWheelEvent>
 #include <QWidget>

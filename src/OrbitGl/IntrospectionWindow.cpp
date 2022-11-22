@@ -4,11 +4,38 @@
 
 #include "IntrospectionWindow.h"
 
+#include <absl/container/flat_hash_set.h>
+#include <stdint.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "ApiUtils/Event.h"
 #include "App.h"
 #include "CaptureClient/AppInterface.h"
+#include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
+#include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/PageFaultsInfo.h"
+#include "ClientData/SystemMemoryInfo.h"
+#include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;

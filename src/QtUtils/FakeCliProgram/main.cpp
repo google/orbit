@@ -5,13 +5,11 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/internal/flag.h>
 #include <absl/flags/parse.h>
-#include <absl/strings/numbers.h>
+#include <absl/strings/string_view.h>
 
 #include <chrono>
-#include <cstdint>
 #include <future>
 #include <iostream>
-#include <string_view>
 #include <thread>
 
 ABSL_FLAG(int, sleep_for_ms, 0, "The program will sleep for X milliseconds");

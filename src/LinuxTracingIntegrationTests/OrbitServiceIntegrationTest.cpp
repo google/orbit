@@ -2,28 +2,45 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/thread_annotations.h>
+#include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/security/credentials.h>
 #include <gtest/gtest.h>
+#include <sys/types.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "ApiUtils/EncodedString.h"
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "IntegrationTestChildProcess.h"
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitService.h"
 #include "OrbitVersion/OrbitVersion.h"

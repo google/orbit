@@ -5,19 +5,30 @@
 #ifndef ORBIT_GL_THREAD_TRACK_H_
 #define ORBIT_GL_THREAD_TRACK_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "CallstackThreadBar.h"
+#include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ThreadTrackDataProvider.h"
+#include "ClientData/TimerChain.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
 #include "ThreadStateBar.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "TimerTrack.h"
 #include "TracepointThreadBar.h"
 #include "Track.h"

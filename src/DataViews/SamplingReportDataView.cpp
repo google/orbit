@@ -5,10 +5,10 @@
 #include "DataViews/SamplingReportDataView.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
-#include <absl/flags/flag.h>
+#include <absl/strings/ascii.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -16,21 +16,27 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
-#include <iterator>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
+#include "DataViews/CallstackDataView.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
-#include "OrbitBase/Append.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"

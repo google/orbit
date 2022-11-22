@@ -4,9 +4,15 @@
 
 #include "ClientData/ModuleAndFunctionLookup.h"
 
+#include <cstdint>
+
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_client_data {
 namespace {

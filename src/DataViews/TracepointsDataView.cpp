@@ -4,6 +4,7 @@
 
 #include "DataViews/TracepointsDataView.h"
 
+#include <absl/strings/ascii.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
@@ -11,10 +12,10 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
-#include "OrbitBase/Append.h"
 
 using orbit_grpc_protos::TracepointInfo;
 

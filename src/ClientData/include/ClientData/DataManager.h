@@ -9,6 +9,7 @@
 #include <absl/container/node_hash_map.h>
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <thread>
 #include <vector>

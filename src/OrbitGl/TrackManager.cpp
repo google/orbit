@@ -6,29 +6,34 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
-#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
-#include <stdlib.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
+#include <limits>
 #include <optional>
-#include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "App.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientFlags/ClientFlags.h"
+#include "CoreMath.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "StringManager/StringManager.h"
 #include "TimeGraphLayout.h"
 #include "TrackContainer.h"
 #include "Viewport.h"

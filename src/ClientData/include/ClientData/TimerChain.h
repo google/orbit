@@ -7,9 +7,12 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <iosfwd>
 #include <limits>
+#include <utility>
+#include <vector>
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"

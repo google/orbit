@@ -4,22 +4,26 @@
 
 #include "ThreadStateBar.h"
 
+#include <GteVector.h>
 #include <absl/strings/str_format.h>
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "AsyncTrack.h"
+#include "BatcherInterface.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "FormatCallstackForTooltip.h"

@@ -4,6 +4,9 @@
 
 #include "TrackConfigurationWidget.h"
 
+#include <QHeaderView>
+#include <QTableView>
+
 #include "ui_TrackConfigurationWidget.h"
 
 namespace orbit_qt {

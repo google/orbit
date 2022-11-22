@@ -7,6 +7,15 @@
 #include <absl/strings/str_replace.h>
 #include <absl/strings/substitute.h>
 
+#include <filesystem>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
+#include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 

@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/ascii.h>
+#include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
-#include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"

@@ -2,11 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModelTester>
+#include <QModelIndex>
+#include <QString>
+#include <QStringLiteral>
+#include <QVariant>
+#include <Qt>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
@@ -14,9 +24,10 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 

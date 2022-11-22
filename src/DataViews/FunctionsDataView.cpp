@@ -4,24 +4,25 @@
 
 #include "DataViews/FunctionsDataView.h"
 
-#include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
+#include <optional>
 
+#include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ModuleAndFunctionLookup.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
-#include "Introspection/Introspection.h"
-#include "OrbitBase/Append.h"
 #include "OrbitBase/Chunk.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TaskGroup.h"

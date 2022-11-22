@@ -4,6 +4,8 @@
 
 #include <absl/synchronization/mutex.h>
 #include <gtest/gtest.h>
+#include <limits.h>
+#include <string.h>
 
 #ifdef _WIN32
 // No special windows header needed
@@ -11,9 +13,12 @@
 #include <pthread.h>
 #endif
 
+#include <algorithm>
+#include <cstdint>
 #include <ctime>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "OrbitBase/ThreadUtils.h"
 

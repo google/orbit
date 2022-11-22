@@ -4,17 +4,28 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_cat.h>
+
+#include <QCheckBox>
 #include <QComboBox>
+#include <QLabel>
+#include <QMetaType>
+#include <QNonConstOverload>
 #include <QObject>
+#include <QPushButton>
+#include <QVariant>
 #include <QWidget>
-#include <Qt>
 #include <memory>
+#include <utility>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/SamplingWithFrameTrackReportModel.h"
+#include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
+#include "MizarWidgets/SamplingWithFrameTrackOutputWidget.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Typedef.h"

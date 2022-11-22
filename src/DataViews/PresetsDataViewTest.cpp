@@ -2,12 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -19,7 +24,8 @@
 #include "DataViews/PresetsDataView.h"
 #include "MockAppInterface.h"
 #include "OrbitBase/File.h"
-#include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
 #include "TestUtils/TestUtils.h"

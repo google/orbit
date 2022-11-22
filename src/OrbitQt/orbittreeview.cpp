@@ -6,7 +6,6 @@
 
 #include <QAbstractItemView>
 #include <QAction>
-#include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
 #include <QHeaderView>
@@ -25,7 +24,9 @@
 #include <set>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "DataViews/DataView.h"
+#include "OrbitBase/Logging.h"
 
 OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
   header()->setSortIndicatorShown(true);

@@ -5,8 +5,11 @@
 #ifndef CODE_VIEWER_PLACE_HOLDER_WIDGET_H_
 #define CODE_VIEWER_PLACE_HOLDER_WIDGET_H_
 
+#include <QObject>
 #include <QPaintEvent>
 #include <QSize>
+#include <QString>
+#include <QWheelEvent>
 #include <QWidget>
 
 namespace orbit_code_viewer {

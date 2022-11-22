@@ -3,22 +3,37 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/strings/str_cat.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
-#include <gmock/gmock-matchers.h>
+#include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <filesystem>
+#include <initializer_list>
 #include <iterator>
+#include <memory>
+#include <optional>
+#include <set>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
@@ -28,7 +43,12 @@
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 

@@ -2,22 +2,32 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QLineEdit>
+#include <QList>
+#include <QMetaObject>
 #include <QPushButton>
 #include <QSettings>
 #include <QSignalSpy>
+#include <QString>
 #include <QTest>
+#include <QVariant>
+#include <QVector>
+#include <Qt>
 #include <memory>
 #include <optional>
+#include <utility>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
 #include "SessionSetup/PersistentStorage.h"
 #include "SessionSetup/RetrieveInstances.h"

@@ -4,12 +4,16 @@
 
 #include "CodeReport/SourceCodeReport.h"
 
+#include <stdint.h>
+
 #include <algorithm>
-#include <limits>
 #include <optional>
+#include <string>
 
 #include "ClientData/PostProcessedSamplingData.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_code_report {
 

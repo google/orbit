@@ -6,6 +6,7 @@
 
 #include <QColor>
 #include <QRegularExpression>
+#include <QRegularExpressionMatchIterator>
 #include <QString>
 #include <QTextCharFormat>
 

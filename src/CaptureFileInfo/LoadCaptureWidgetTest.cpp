@@ -2,15 +2,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/time/time.h>
 #include <gtest/gtest.h>
 
+#include <QAbstractItemModel>
 #include <QApplication>
+#include <QCoreApplication>
 #include <QLineEdit>
+#include <QModelIndex>
+#include <QObject>
+#include <QPoint>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QString>
 #include <QTableView>
 #include <QTest>
+#include <QVariant>
+#include <Qt>
 #include <filesystem>
+#include <memory>
+#include <optional>
 
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "CaptureFileInfo/Manager.h"

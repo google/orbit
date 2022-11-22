@@ -2,25 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
+#include <absl/types/span.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QMetaEnum>
+#include <QObject>
 #include <QPointer>
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QRegularExpression>
-#include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
+#include <array>
+#include <filesystem>
 #include <memory>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "Http/HttpDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
-#include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/TemporaryFile.h"

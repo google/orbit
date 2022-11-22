@@ -6,9 +6,12 @@
 #define DATA_VIEWS_MODULES_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/ModuleData.h"

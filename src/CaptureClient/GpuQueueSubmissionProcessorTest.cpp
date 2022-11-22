@@ -2,11 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
+#include <absl/container/flat_hash_map.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <string>
+#include <vector>
+
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 using google::protobuf::util::MessageDifferencer;
 using orbit_client_protos::TimerInfo;

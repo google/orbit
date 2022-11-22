@@ -4,6 +4,10 @@
 
 #include "FileFragmentInputStream.h"
 
+#include <stdint.h>
+
+#include <utility>
+
 namespace orbit_capture_file_internal {
 
 using orbit_base::ReadFullyAtOffset;

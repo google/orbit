@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "OrbitBase/Overloaded.h"
 

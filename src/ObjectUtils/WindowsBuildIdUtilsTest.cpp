@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cstdint>
 #include <string>
 
 namespace orbit_object_utils {

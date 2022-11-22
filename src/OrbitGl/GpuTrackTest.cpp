@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "CaptureViewElementTester.h"
 #include "GpuTrack.h"
 

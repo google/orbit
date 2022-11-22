@@ -5,10 +5,19 @@
 #ifndef ORBIT_GL_MINOR_PAGE_FAULTS_TRACK_H_
 #define ORBIT_GL_MINOR_PAGE_FAULTS_TRACK_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <string>
 #include <utility>
 
 #include "BasicPageFaultsTrack.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
+#include "Track.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

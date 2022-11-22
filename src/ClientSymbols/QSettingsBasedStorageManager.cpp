@@ -4,11 +4,15 @@
 
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <stddef.h>
 
 #include <QSettings>
+#include <QVariant>
+#include <algorithm>
 #include <filesystem>
-#include <memory>
+#include <type_traits>
 
 constexpr const char* kSymbolPathsSettingsKey = "symbol_directories";
 constexpr const char* kDirectoryPathKey = "directory_path";

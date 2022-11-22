@@ -5,9 +5,10 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <string>
+#include <memory>
 #include <vector>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"

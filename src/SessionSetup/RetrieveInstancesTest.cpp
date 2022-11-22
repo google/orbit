@@ -2,20 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <QString>
+#include <QVector>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitGgp/MockClient.h"
 #include "OrbitGgp/Project.h"
+#include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "TestUtils/TestUtils.h"

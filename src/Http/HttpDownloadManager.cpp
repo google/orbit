@@ -4,7 +4,13 @@
 
 #include "Http/HttpDownloadManager.h"
 
+#include <QList>
+#include <optional>
+#include <type_traits>
+#include <utility>
+
 #include "HttpDownloadOperation.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 
 namespace orbit_http {

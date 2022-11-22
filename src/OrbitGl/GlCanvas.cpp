@@ -5,15 +5,17 @@
 #include "GlCanvas.h"
 
 #include <GteVector.h>
-#include <absl/base/casts.h>
+#include <QtGui/qopengl.h>
+#include <stdint.h>
+
+#include <array>
+#include <cstdint>
+#include <cstring>
 
 #include "AccessibleInterfaceProvider.h"
-#include "App.h"
-#include "CaptureWindow.h"
-#include "IntrospectionWindow.h"
+#include "ApiInterface/Orbit.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
-#include "TimeGraphLayout.h"
 
 // TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1

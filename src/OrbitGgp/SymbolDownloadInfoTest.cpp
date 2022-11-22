@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QByteArray>
 #include <QString>
+#include <memory>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"

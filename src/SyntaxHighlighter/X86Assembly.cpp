@@ -6,7 +6,10 @@
 
 #include <QColor>
 #include <QRegularExpression>
+#include <QRegularExpressionMatchIterator>
 #include <QString>
+#include <QTextBlock>
+#include <QTextBlockUserData>
 #include <QTextCharFormat>
 
 #include "SyntaxHighlighter/HighlightingMetadata.h"

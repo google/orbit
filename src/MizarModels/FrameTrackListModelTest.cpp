@@ -2,20 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock-cardinalities.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <QModelIndex>
+#include <QString>
+#include <QVariant>
 #include <Qt>
-#include <iterator>
+#include <algorithm>
+#include <array>
+#include <limits>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
+#include "ClientData/ScopeId.h"
+#include "ClientData/ScopeInfo.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarModels/FrameTrackListModel.h"
+#include "OrbitBase/Typedef.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;

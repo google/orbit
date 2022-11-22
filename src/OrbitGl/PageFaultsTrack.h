@@ -5,9 +5,27 @@
 #ifndef ORBIT_GL_PAGE_FAULTS_TRACK_H_
 #define ORBIT_GL_PAGE_FAULTS_TRACK_H_
 
+#include <stdint.h>
+
+#include <array>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "BasicPageFaultsTrack.h"
+#include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/PageFaultsInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "MajorPageFaultsTrack.h"
 #include "MinorPageFaultsTrack.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Track.h"
 #include "Viewport.h"
 

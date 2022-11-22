@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <stdint.h>
+
 #include <QOpenGLFunctions>
 #include <algorithm>
 #include <array>
@@ -14,7 +16,11 @@
 #include <vector>
 
 #include "Batcher.h"
+#include "BatcherInterface.h"
 #include "Containers/BlockChain.h"
+#include "CoreMath.h"
+#include "Geometry.h"
+#include "PickingManager.h"
 
 namespace orbit_gl {
 

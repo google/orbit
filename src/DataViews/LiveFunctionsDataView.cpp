@@ -6,31 +6,32 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/flag.h>
-#include <absl/strings/str_cat.h>
+#include <absl/strings/ascii.h>
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
-#include <llvm/Demangle/Demangle.h>
+#include <stdint.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <iterator>
-#include <memory>
 #include <optional>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
@@ -38,7 +39,6 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
-#include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

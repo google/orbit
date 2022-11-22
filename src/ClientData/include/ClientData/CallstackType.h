@@ -6,6 +6,7 @@
 #define CLIENT_DATA_CALLSTACK_TYPES_H_
 
 #include <cstdint>
+#include <string>
 
 #include "GrpcProtos/capture.pb.h"
 

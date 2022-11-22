@@ -3,9 +3,20 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <memory>
+#include <optional>
+#include <string_view>
 
 #include "AssemblyTestLiterals.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "CodeReport/Disassembler.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 

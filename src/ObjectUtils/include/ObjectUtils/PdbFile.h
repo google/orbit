@@ -5,8 +5,11 @@
 #ifndef OBJECT_UTILS_PDB_FILE_H_
 #define OBJECT_UTILS_PDB_FILE_H_
 
+#include <stdint.h>
+
 #include <array>
 #include <filesystem>
+#include <memory>
 
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"

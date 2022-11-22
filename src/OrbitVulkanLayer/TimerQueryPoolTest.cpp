@@ -5,6 +5,11 @@
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <vulkan/vulkan_core.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <vector>
 
 #include "TimerQueryPool.h"
 

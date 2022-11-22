@@ -4,7 +4,7 @@
 
 #include "OrbitSshQt/Task.h"
 
-#include <absl/base/macros.h>
+#include <absl/base/attributes.h>
 
 #include <QTimer>
 #include <chrono>

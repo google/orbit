@@ -11,6 +11,8 @@
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "StaticTimeGraphLayout.h"
+#include "TimeGraphLayout.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

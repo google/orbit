@@ -4,10 +4,8 @@
 
 #include "QtUtils/FutureWatcher.h"
 
-#include <absl/synchronization/mutex.h>
-
-#include <QDebug>
 #include <QEventLoop>
+#include <QMetaObject>
 #include <QObject>
 #include <QPointer>
 #include <QTimer>

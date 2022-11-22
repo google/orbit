@@ -4,7 +4,8 @@
 
 #include "Viewport.h"
 
-#include <algorithm>
+#include <GteVector.h>
+
 #include <cmath>
 
 #include "OrbitBase/Logging.h"

@@ -5,21 +5,31 @@
 #ifndef ORBIT_GL_TIMER_TRACK_H_
 #define ORBIT_GL_TIMER_TRACK_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <atomic>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include "BatcherInterface.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/TimerData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "Statistics/Histogram.h"
 #include "TextRenderer.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Track.h"
 #include "Viewport.h"
 

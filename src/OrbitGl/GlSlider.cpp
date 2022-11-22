@@ -8,6 +8,7 @@
 
 #include <QCursor>
 #include <QGuiApplication>
+#include <Qt>
 #include <algorithm>
 #include <cmath>
 

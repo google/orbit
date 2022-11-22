@@ -6,9 +6,13 @@
 #define CLIENT_DATA_TIMER_TRACK_DATA_ID_MANAGER_H_
 
 #include <OrbitBase/Logging.h>
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
 
+#include <cstdint>
 #include <mutex>
+#include <string>
 
 #include "ClientProtos/capture_data.pb.h"
 

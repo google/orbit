@@ -4,7 +4,10 @@
 
 #include "TracepointService/TracepointServiceImpl.h"
 
+#include <vector>
+
 #include "GrpcProtos/services.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "ReadTracepoints.h"

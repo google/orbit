@@ -5,24 +5,29 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
-#include <unwindstack/Error.h>
+#include <sys/types.h>
 #include <unwindstack/MapInfo.h>
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "MockTracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "PerfEvent.h"
+#include "PerfEventRecords.h"
 #include "UprobesFunctionCallManager.h"
-#include "UprobesReturnAddressManager.h"
 #include "UprobesUnwindingVisitor.h"
 #include "UprobesUnwindingVisitorTestCommon.h"
 

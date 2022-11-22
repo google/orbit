@@ -2,18 +2,29 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/types/span.h>
 #include <gtest/gtest.h>
 
 #include <QApplication>
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontMetrics>
+#include <QPoint>
+#include <QPointF>
+#include <QRect>
+#include <QSize>
+#include <QString>
 #include <QTextBlock>
 #include <QTextDocument>
 #include <QWheelEvent>
+#include <Qt>
 #include <array>
-#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
+#include "CodeReport/AnnotatingLine.h"
 #include "CodeViewer/Viewer.h"
 
 namespace orbit_code_viewer {

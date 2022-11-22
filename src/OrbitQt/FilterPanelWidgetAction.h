@@ -6,6 +6,8 @@
 #define ORBIT_QT_FILTER_PANEL_WIDGET_ACTION_H_
 
 #include <QFrame>
+#include <QObject>
+#include <QString>
 #include <QWidget>
 #include <QWidgetAction>
 

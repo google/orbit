@@ -2,12 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/match.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+#include <sys/types.h>
 
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"

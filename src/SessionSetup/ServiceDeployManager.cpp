@@ -5,16 +5,21 @@
 #include "SessionSetup/ServiceDeployManager.h"
 
 #include <absl/flags/flag.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
 #include <QApplication>
 #include <QEventLoop>
 #include <QMetaObject>
+#include <QNonConstOverload>
+#include <QPointer>
 #include <Qt>
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <string_view>
 #include <system_error>
 #include <thread>
 #include <type_traits>

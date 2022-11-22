@@ -3,6 +3,9 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <memory>
 
 #include "ClientData/FastRenderingUtils.h"
 

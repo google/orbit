@@ -4,9 +4,13 @@
 
 #include <gtest/gtest.h>
 
+#include <utility>
+#include <vector>
+
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base {
 

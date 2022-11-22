@@ -2,23 +2,29 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/flag.h>
-#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <iterator>
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
+#include "ClientData/FunctionInfo.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Typedef.h"
 
 namespace orbit_client_data {
 

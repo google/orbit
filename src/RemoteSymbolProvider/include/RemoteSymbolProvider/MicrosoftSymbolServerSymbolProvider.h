@@ -5,8 +5,14 @@
 #ifndef REMOTE_SYMBOL_PROVIDER_MICROSOFT_SYMBOL_SERVER_SYMBOL_PROVIDER_H_
 #define REMOTE_SYMBOL_PROVIDER_MICROSOFT_SYMBOL_SERVER_SYMBOL_PROVIDER_H_
 
+#include <memory>
+#include <string>
+
 #include "Http/DownloadManager.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/StopToken.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"

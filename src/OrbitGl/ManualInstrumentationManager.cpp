@@ -4,11 +4,6 @@
 
 #include "ManualInstrumentationManager.h"
 
-#include <absl/synchronization/mutex.h>
-#include <stdint.h>
-
-#include "ClientProtos/capture_data.pb.h"
-
 void ManualInstrumentationManager::ProcessStringEvent(
     const orbit_client_data::ApiStringEvent& string_event) {
   const uint64_t event_id = string_event.async_scope_id();

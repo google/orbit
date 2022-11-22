@@ -4,21 +4,25 @@
 
 #include "DataViews/CallstackDataView.h"
 
-#include <absl/flags/declare.h>
-#include <absl/flags/flag.h>
+#include <absl/strings/ascii.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
+#include <stdint.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleManager.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
-#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CallstackInfo;

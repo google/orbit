@@ -12,6 +12,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"

@@ -5,8 +5,7 @@
 #include "TimerTrack.h"
 
 #include <GteVector.h>
-#include <absl/flags/declare.h>
-#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -14,16 +13,23 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/TimerChain.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
 #include "PrimitiveAssembler.h"
+#include "TextRendererInterface.h"
 #include "TimeGraphLayout.h"
+#include "TrackHeader.h"
 #include "Viewport.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"

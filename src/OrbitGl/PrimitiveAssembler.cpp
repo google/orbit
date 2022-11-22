@@ -4,11 +4,14 @@
 
 #include "PrimitiveAssembler.h"
 
+#include <GteVector.h>
+#include <GteVector2.h>
 #include <OrbitBase/Logging.h>
 #include <stddef.h>
 
 #include <array>
 #include <cmath>
+#include <utility>
 
 #include "CoreMath.h"
 #include "Geometry.h"

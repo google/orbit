@@ -4,13 +4,16 @@
 
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <atomic>
+#include <chrono>
+#include <memory>
 #include <thread>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 

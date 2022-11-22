@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/str_format.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <csignal>
+#include <cstdint>
+#include <memory>
+#include <utility>
 
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"

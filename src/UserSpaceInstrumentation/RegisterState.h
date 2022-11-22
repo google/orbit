@@ -6,8 +6,10 @@
 #define USER_SPACE_INSTRUMENTATION_REGISTER_STATE_H_
 
 #include <stdint.h>
+#include <sys/types.h>
 
 #include <array>
+#include <cstdint>
 #include <vector>
 
 #include "OrbitBase/Result.h"

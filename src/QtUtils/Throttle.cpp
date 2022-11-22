@@ -5,6 +5,7 @@
 #include "QtUtils/Throttle.h"
 
 #include <chrono>
+#include <ratio>
 
 namespace orbit_qt_utils {
 

@@ -6,6 +6,8 @@
 
 #include <QSignalSpy>
 #include <QTest>
+#include <Qt>
+#include <memory>
 
 #include "SessionSetup/DoubleClickableLabel.h"
 

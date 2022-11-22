@@ -2,11 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <GteVector.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <vector>
+
+#include "CaptureViewElement.h"
 #include "CaptureViewElementTester.h"
+#include "ClientData/CaptureData.h"
+#include "CoreMath.h"
+#include "GlSlider.h"
 #include "StaticTimeGraphLayout.h"
 #include "TimeGraph.h"
+#include "TimelineUi.h"
 #include "TrackTestData.h"
 #include "Viewport.h"
 

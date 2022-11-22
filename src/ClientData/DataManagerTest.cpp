@@ -2,14 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <string>
 #include <thread>
-#include <vector>
+#include <utility>
 
 #include "ClientData/DataManager.h"
+#include "ClientData/FunctionInfo.h"
+#include "ClientData/ScopeId.h"
+#include "ClientData/WineSyscallHandlingMethod.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 
 namespace orbit_client_data {
 

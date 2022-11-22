@@ -6,8 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
-#include <limits>
-#include <type_traits>
+#include <memory>
 #include <utility>
 
 #include "MizarBase/BaselineOrComparison.h"

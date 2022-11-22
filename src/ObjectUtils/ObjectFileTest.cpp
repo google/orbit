@@ -5,7 +5,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <memory>
+
 #include "ObjectUtils/ObjectFile.h"
+#include "OrbitBase/Result.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 

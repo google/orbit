@@ -5,6 +5,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "GraphTrackDataAggregator.h"
 
 using ::testing::ElementsAre;

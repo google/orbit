@@ -6,19 +6,43 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/meta/type_traits.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/iterator.h>
+#include <llvm/ADT/iterator_range.h>
+#include <llvm/BinaryFormat/COFF.h>
+#include <llvm/DebugInfo/DIContext.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
+#include <llvm/DebugInfo/DWARF/DWARFDie.h>
+#include <llvm/DebugInfo/DWARF/DWARFUnit.h>
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/COFF.h>
 #include <llvm/Object/CVDebugRecord.h>
 #include <llvm/Object/ObjectFile.h>
+#include <llvm/Object/SymbolicFile.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/Endian.h>
 #include <llvm/Support/Error.h>
 #include <llvm/Support/Win64EH.h>
+
+#include <algorithm>
+#include <iterator>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "Introspection/Introspection.h"
+#include "ObjectUtils/SymbolsFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

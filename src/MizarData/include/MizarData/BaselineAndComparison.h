@@ -6,15 +6,23 @@
 #define MIZAR_DATA_BASELINE_AND_COMPARISON_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
+#include "MizarData/MizarDataProvider.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"

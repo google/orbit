@@ -6,9 +6,12 @@
 
 #include <absl/strings/str_format.h>
 
+#include <string>
 #include <string_view>
+#include <variant>
 
 #include "OrbitBase/File.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 

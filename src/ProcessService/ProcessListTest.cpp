@@ -5,8 +5,11 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
+#include <memory>
 #include <optional>
 
+#include "OrbitBase/Result.h"
+#include "ProcessService/CpuTime.h"
 #include "ProcessService/ProcessList.h"
 #include "ProcessServiceUtils.h"
 

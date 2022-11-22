@@ -5,6 +5,7 @@
 #include "MizarBase/Titles.h"
 
 #include <QString>
+#include <string>
 #include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"

@@ -6,6 +6,8 @@
 #define SESSION_SETUP_OTHER_USER_DIALOG_H_
 
 #include <QDialog>
+#include <QString>
+#include <QWidget>
 #include <memory>
 
 #include "OrbitBase/Result.h"

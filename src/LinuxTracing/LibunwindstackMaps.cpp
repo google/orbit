@@ -4,7 +4,14 @@
 
 #include "LibunwindstackMaps.h"
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 #include "OrbitBase/Logging.h"
+#include "unwindstack/MapInfo.h"
+#include "unwindstack/Maps.h"
+#include "unwindstack/SharedString.h"
 
 namespace orbit_linux_tracing {
 

@@ -6,6 +6,7 @@
 
 #include <absl/strings/str_format.h>
 
+#include <QLabel>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPushButton>

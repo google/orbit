@@ -5,13 +5,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <array>
-#include <cstddef>
 #include <cstdint>
-#include <iterator>
+#include <limits>
+#include <vector>
 
-#include "ClientData/ScopeId.h"
 #include "ClientData/ThreadTrackDataProvider.h"
+#include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

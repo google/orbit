@@ -5,6 +5,9 @@
 #include "OrbitBase/WriteStringToFile.h"
 
 #include <absl/strings/str_format.h>
+#include <stdio.h>
+
+#include <string>
 
 #include "OrbitBase/File.h"
 

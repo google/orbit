@@ -6,11 +6,17 @@
 #define FILE_FRAGMENT_INPUT_STREAM_H_
 
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <stddef.h>
 #include <stdint.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <optional>
+#include <vector>
 
 #include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_file_internal {
 

@@ -5,25 +5,35 @@
 #include <absl/container/flat_hash_map.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <algorithm>
-#include <array>
 #include <chrono>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
+#include "OrbitBase/Typedef.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;

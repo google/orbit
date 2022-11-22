@@ -4,8 +4,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <sys/types.h>
 
-#include <algorithm>
+#include <cstdint>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"

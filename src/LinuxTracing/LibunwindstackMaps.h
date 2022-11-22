@@ -5,8 +5,12 @@
 #ifndef LINUX_TRACING_LIBUNWINDSTACK_MAPS_H_
 #define LINUX_TRACING_LIBUNWINDSTACK_MAPS_H_
 
+#include <stdint.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
+
+#include <memory>
+#include <string>
 
 namespace orbit_linux_tracing {
 

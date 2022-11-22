@@ -10,6 +10,7 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
+#include <filesystem>
 #include <string>
 
 #include "GrpcProtos/module.pb.h"

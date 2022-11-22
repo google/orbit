@@ -4,12 +4,10 @@
 
 #include "TracingHandler.h"
 
-#include <absl/synchronization/mutex.h>
-
 #include <utility>
 
-#include "ApiUtils/Event.h"
 #include "GrpcProtos/Constants.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
 

@@ -4,9 +4,16 @@
 
 #include "CaptureFile/CaptureFileHelpers.h"
 
+#include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+#include <stddef.h>
+
+#include <cstdint>
+#include <memory>
+#include <optional>
 
 #include "CaptureFile/CaptureFile.h"
+#include "CaptureFile/CaptureFileSection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 

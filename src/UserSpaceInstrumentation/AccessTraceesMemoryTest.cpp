@@ -2,28 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <signal.h>
 #include <sys/prctl.h>
-#include <sys/ptrace.h>
-#include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <cstdint>
-#include <functional>
 #include <iterator>
+#include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {

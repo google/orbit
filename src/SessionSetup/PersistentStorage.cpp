@@ -5,6 +5,7 @@
 #include "SessionSetup/PersistentStorage.h"
 
 #include <QSettings>
+#include <QVariant>
 
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"

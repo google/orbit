@@ -7,7 +7,6 @@
 #include <absl/base/casts.h>
 #include <linux/perf_event.h>
 #include <sys/mman.h>
-#include <sys/time.h>
 
 #include <cerrno>
 

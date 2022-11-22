@@ -5,7 +5,12 @@
 #ifndef PRESET_FILE_PRESET_FILE_H_
 #define PRESET_FILE_PRESET_FILE_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <filesystem>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "ClientProtos/preset.pb.h"

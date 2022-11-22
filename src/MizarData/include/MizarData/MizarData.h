@@ -5,18 +5,34 @@
 #ifndef MIZAR_DATA_MIZAR_DATA_H_
 #define MIZAR_DATA_MIZAR_DATA_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <stdint.h>
 
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "CaptureClient/AbstractCaptureListener.h"
+#include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/PageFaultsInfo.h"
+#include "ClientData/ProcessData.h"
+#include "ClientData/ScopeId.h"
+#include "ClientData/SystemMemoryInfo.h"
+#include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
+#include "MizarBase/AbsoluteAddress.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/Time.h"
 #include "MizarDataProvider.h"
 #include "OrbitPaths/Paths.h"

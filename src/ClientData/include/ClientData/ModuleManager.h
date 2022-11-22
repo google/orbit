@@ -5,6 +5,9 @@
 #ifndef CLIENT_DATA_MODULE_MANAGER_H_
 #define CLIENT_DATA_MODULE_MANAGER_H_
 
+#include <absl/types/span.h>
+#include <stdint.h>
+
 #include <string>
 #include <vector>
 

@@ -5,15 +5,14 @@
 #include "DataViewTestUtils.h"
 
 #include <absl/strings/str_split.h>
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <tuple>
+#include <filesystem>
+#include <utility>
 
-#include "OrbitBase/Append.h"
-#include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 

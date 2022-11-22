@@ -9,12 +9,13 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
-
-#include "OrbitBase/Logging.h"
-
 // clang-format off
 #include <vulkan/vulkan.h> // IWYU pragma: keep
 #include <vulkan/vk_layer_dispatch_table.h> // IWYU pragma: keep
+#include <string.h>
+#include <vulkan/vulkan_core.h>
+
+#include "OrbitBase/Logging.h"
 // clang-format on
 
 namespace orbit_vulkan_layer {

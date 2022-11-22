@@ -8,6 +8,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <memory>
+#include <string>
 #include <string_view>
 
 #include "CaptureServiceBase/CaptureStartStopListener.h"

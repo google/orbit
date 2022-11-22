@@ -4,9 +4,9 @@
 
 #include "ExtractSignalFromMinidump.h"
 
+#include <cstdint>
 #include <string>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 

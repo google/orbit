@@ -6,6 +6,9 @@
 #define ORBIT_QT_Q_MULTIPLE_OF_SPIN_BOX_H_
 
 #include <QSpinBox>
+#include <QString>
+#include <QValidator>
+#include <QWidget>
 #include <memory>
 
 namespace orbit_qt {

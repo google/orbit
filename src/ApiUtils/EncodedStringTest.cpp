@@ -3,11 +3,16 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
-#include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 #include "ApiUtils/EncodedString.h"
 #include "GrpcProtos/capture.pb.h"
+
 using orbit_grpc_protos::ApiScopeStart;
 
 using ::testing::ElementsAre;

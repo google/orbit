@@ -11,15 +11,16 @@
 #include <absl/strings/str_replace.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/ObjectFile.h>
 
 #include <algorithm>
+#include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <set>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 #include "Introspection/Introspection.h"
@@ -28,6 +29,7 @@
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"

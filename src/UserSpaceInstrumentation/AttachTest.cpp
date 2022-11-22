@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include <absl/time/clock.h>
+#include <absl/time/time.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
@@ -10,6 +12,7 @@
 #include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
+#include "OrbitBase/Result.h"
 #include "TestProcess.h"
 #include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"

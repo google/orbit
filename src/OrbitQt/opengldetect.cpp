@@ -4,9 +4,6 @@
 
 #include "opengldetect.h"
 
-#include <absl/strings/numbers.h>
-#include <absl/strings/str_split.h>
-
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QSurfaceFormat>

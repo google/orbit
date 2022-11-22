@@ -2,14 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <array>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/TracepointsDataView.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/Logging.h"
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;

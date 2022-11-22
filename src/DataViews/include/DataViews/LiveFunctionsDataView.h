@@ -8,14 +8,20 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
@@ -23,6 +29,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Typedef.h"
 
 namespace orbit_data_views {
 

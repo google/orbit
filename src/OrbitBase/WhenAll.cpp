@@ -4,6 +4,8 @@
 
 #include "OrbitBase/WhenAll.h"
 
+#include <absl/types/span.h>
+
 #include <memory>
 
 #include "OrbitBase/Future.h"

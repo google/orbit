@@ -7,6 +7,11 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractListModel>
+#include <QModelIndex>
+#include <QObject>
+#include <QString>
+#include <QVariant>
+#include <QtCore>
 #include <vector>
 
 #include "SourcePathsMapping/Mapping.h"

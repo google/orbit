@@ -6,13 +6,15 @@
 
 #include <absl/base/attributes.h>
 #include <absl/base/const_init.h>
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+#include <stdint.h>
 
+#include <atomic>
 #include <cstring>
-#include <ctime>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"

@@ -2,10 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stddef.h>
+
 #include <QApplication>
+#include <QString>
+#include <QSyntaxHighlighter>
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include "CodeExamples.h"
+#include "CodeReport/AnnotatingLine.h"
+#include "CodeReport/CodeReport.h"
 #include "CodeViewer/Dialog.h"
+#include "CodeViewer/FontSizeInEm.h"
 #include "Style/Style.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 

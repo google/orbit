@@ -6,6 +6,11 @@
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModelTester>
+#include <QModelIndex>
+#include <QVariant>
+#include <Qt>
+#include <filesystem>
+#include <vector>
 
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "SourcePathsMapping/Mapping.h"

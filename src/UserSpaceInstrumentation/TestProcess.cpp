@@ -4,15 +4,18 @@
 
 #include "TestProcess.h"
 
-#include <absl/time/clock.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 
+#include <algorithm>
 #include <chrono>
-#include <string>
+#include <filesystem>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/WriteStringToFile.h"
 
 namespace orbit_user_space_instrumentation {

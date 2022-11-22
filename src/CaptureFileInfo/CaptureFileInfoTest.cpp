@@ -2,10 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/time/time.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <QDateTime>
-#include <string_view>
+#include <QString>
+#include <filesystem>
+#include <memory>
+#include <optional>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
 #include "Test/Path.h"

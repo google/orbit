@@ -9,13 +9,12 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <ios>
-#include <iterator>
-#include <utility>
+#include <string>
 
 #include "FramePointerValidator/FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/UniqueResource.h"
 
 using orbit_grpc_protos::CodeBlock;

@@ -5,18 +5,29 @@
 #ifndef ORBIT_GL_TIME_GRAPH_H_
 #define ORBIT_GL_TIME_GRAPH_H_
 
+#include <QPainter>
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "AccessibleInterfaceProvider.h"
+#include "Batcher.h"
 #include "Button.h"
 #include "CaptureViewElement.h"
+#include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/PageFaultsInfo.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/SystemMemoryInfo.h"
+#include "ClientData/ThreadTrackDataProvider.h"
+#include "ClientData/TimerChain.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GlSlider.h"
@@ -24,11 +35,14 @@
 #include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "QtTextRenderer.h"
+#include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
 #include "TrackContainer.h"
+#include "TrackManager.h"
 #include "Viewport.h"
 
 class OrbitApp;

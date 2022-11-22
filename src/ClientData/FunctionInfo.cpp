@@ -5,12 +5,17 @@
 #include "ClientData/FunctionInfo.h"
 
 #include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <xxhash.h>
+
+#include <cstdint>
+#include <vector>
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {
 

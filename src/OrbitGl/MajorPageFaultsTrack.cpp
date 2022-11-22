@@ -6,6 +6,10 @@
 
 #include <absl/strings/substitute.h>
 
+#include <optional>
+
+#include "OrbitBase/Logging.h"
+
 namespace orbit_gl {
 MajorPageFaultsTrack::MajorPageFaultsTrack(Track* parent,
                                            const orbit_gl::TimelineInfoInterface* timeline_info,

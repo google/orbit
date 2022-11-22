@@ -7,6 +7,15 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <atomic>
+#include <limits>
+#include <map>
+#include <memory>
+#include <vector>
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/ThreadConstants.h"

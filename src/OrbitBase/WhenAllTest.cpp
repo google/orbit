@@ -3,6 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"

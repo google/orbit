@@ -5,7 +5,10 @@
 #include "SessionSetup/OverlayWidget.h"
 
 #include <QColor>
+#include <QLabel>
 #include <QPainter>
+#include <QProgressBar>
+#include <QPushButton>
 
 #include "OrbitBase/Logging.h"
 #include "ui_OverlayWidget.h"

@@ -3,9 +3,13 @@
 // found in the LICENSE file.
 
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <random>
+#include <string>
+#include <vector>
 
 #include "CaptureFile/BufferOutputStream.h"
 

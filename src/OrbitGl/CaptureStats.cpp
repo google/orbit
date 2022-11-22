@@ -4,12 +4,19 @@
 
 #include "CaptureStats.h"
 
-#include <absl/strings/str_format.h>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 #include "CaptureWindow.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
+#include "SchedulerTrack.h"
 #include "SchedulingStats.h"
+#include "TimeGraph.h"
+#include "TrackManager.h"
 
 ErrorMessageOr<void> CaptureStats::Generate(CaptureWindow* capture_window, uint64_t start_ns,
                                             uint64_t end_ns) {

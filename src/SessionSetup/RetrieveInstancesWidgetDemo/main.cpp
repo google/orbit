@@ -3,11 +3,17 @@
 // found in the LICENSE file.
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QMessageBox>
+#include <QObject>
+#include <QString>
+#include <QVector>
 #include <memory>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "SessionSetup/RetrieveInstancesWidget.h"

@@ -5,6 +5,10 @@
 #include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
+#include <initializer_list>
+#include <variant>
+#include <vector>
+
 #include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_symbol_provider {

@@ -5,7 +5,10 @@
 #ifndef SYMBOLS_SYMBOL_UTILS_H_
 #define SYMBOLS_SYMBOL_UTILS_H_
 
+#include <stdint.h>
+
 #include <filesystem>
+#include <string>
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"

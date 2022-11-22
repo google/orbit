@@ -10,8 +10,16 @@
 #include <array>
 #include <cstdint>
 #include <iterator>
+#include <utility>
+#include <vector>
 
+#include "ClientData/FastRenderingUtils.h"
+#include "CoreMath.h"
 #include "Geometry.h"
+#include "GraphTrackDataAggregator.h"
+#include "MultivariateTimeSeries.h"
+#include "TimelineInfoInterface.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

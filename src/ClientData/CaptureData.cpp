@@ -7,17 +7,20 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <optional>
 #include <vector>
 
+#include "ClientData/FastRenderingUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
-#include "OrbitBase/Result.h"
+#include "GrpcProtos/process.pb.h"
+#include "OrbitBase/Typedef.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;

@@ -2,23 +2,33 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <linux/seccomp.h>
+#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <syscall.h>
 #include <unistd.h>
 
+#include <array>
+#include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <memory>
 #include <random>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils.h"
 #include "TestUtils/TestUtils.h"
 #include "Trampoline.h"

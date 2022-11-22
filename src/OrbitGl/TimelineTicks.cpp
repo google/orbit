@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 #include "TimelineTicks.h"
 
+#include <iterator>
 #include <optional>
+#include <set>
 
 #include "OrbitBase/Logging.h"
 

@@ -8,11 +8,16 @@
 #include <QObject>
 #include <QState>
 #include <QStateMachine>
+#include <QString>
+#include <QVector>
 #include <QWidget>
 #include <memory>
+#include <optional>
 
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
 #include "SessionSetup/RetrieveInstances.h"
 

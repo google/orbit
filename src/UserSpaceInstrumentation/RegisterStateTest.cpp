@@ -2,13 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <signal.h>
+#include <stdlib.h>
 #include <sys/ptrace.h>
-#include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
+
+#include <array>
+#include <cstdint>
+#include <memory>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "RegisterState.h"
 #include "TestUtils/TestUtils.h"
 

@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <memory>
+#include <string>
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"

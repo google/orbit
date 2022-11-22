@@ -4,6 +4,8 @@
 
 #include "DispatchTable.h"
 
+#include <absl/base/casts.h>
+
 namespace orbit_vulkan_layer {
 
 void DispatchTable::CreateInstanceDispatchTable(

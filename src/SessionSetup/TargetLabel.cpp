@@ -6,15 +6,23 @@
 
 #include <QAction>
 #include <QDesktopServices>
+#include <QIcon>
 #include <QImage>
+#include <QLabel>
 #include <QMenu>
 #include <QPalette>
 #include <QPixmap>
+#include <QPoint>
 #include <QUrl>
+#include <chrono>
 #include <memory>
 #include <optional>
+#include <utility>
 
+#include "OrbitBase/Logging.h"
+#include "SessionSetup/Connections.h"
 #include "SessionSetup/DoubleClickableLabel.h"
+#include "SessionSetup/TargetConfiguration.h"
 #include "ui_TargetLabel.h"
 
 namespace {

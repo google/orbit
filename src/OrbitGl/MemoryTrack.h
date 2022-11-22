@@ -5,12 +5,24 @@
 #ifndef ORBIT_GL_MEMORY_TRACK_H_
 #define ORBIT_GL_MEMORY_TRACK_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <array>
 #include <string>
 #include <utility>
 
 #include "AnnotationTrack.h"
 #include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "CoreMath.h"
 #include "GraphTrack.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Track.h"
 #include "Viewport.h"
 

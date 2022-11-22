@@ -7,10 +7,12 @@
 
 #include <stdint.h>
 
+#include <QPainter>
 #include <memory>
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/AppInterface.h"
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "Introspection/Introspection.h"

@@ -6,10 +6,11 @@
 
 #include <absl/strings/str_format.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <sys/types.h>
+
+#include <array>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/SafeStrerror.h"

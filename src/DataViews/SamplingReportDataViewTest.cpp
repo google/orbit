@@ -1,40 +1,51 @@
 // Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-function-mocker.h>
-#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
-#include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "Statistics/BinomialConfidenceInterval.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;

@@ -6,7 +6,15 @@
 #define ORBIT_GL_MOCK_TEXT_RENDERER_H_
 
 #include <gmock/gmock.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <QPainter>
+#include <algorithm>
+#include <set>
+#include <vector>
+
+#include "CoreMath.h"
 #include "TextRenderer.h"
 
 namespace orbit_gl {

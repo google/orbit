@@ -4,20 +4,30 @@
 
 #include "SessionSetup/ConnectToTargetDialog.h"
 
-#include <absl/flags/flag.h>
+#include <absl/time/time.h>
 
 #include <QApplication>
+#include <QLabel>
 #include <QMessageBox>
-#include <QSizePolicy>
-#include <algorithm>
+#include <QMetaObject>
+#include <QPointer>
+#include <QPushButton>
+#include <Qt>
 #include <memory>
+#include <type_traits>
+#include <utility>
+#include <variant>
 
+#include "ClientData/ProcessData.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/WhenAll.h"
-#include "SessionSetup/ConnectToTargetDialog.h"
+#include "OrbitGgp/Project.h"
+#include "OrbitSshQt/ScopedConnection.h"
+#include "SessionSetup/Connections.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/SessionSetupUtils.h"
-#include "grpcpp/channel.h"
+#include "SessionSetup/TargetConfiguration.h"
 #include "ui_ConnectToTargetDialog.h"
 
 namespace orbit_session_setup {

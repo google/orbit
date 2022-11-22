@@ -5,9 +5,20 @@
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
+#include <absl/synchronization/mutex.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
+#include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::ApiScopeStart;

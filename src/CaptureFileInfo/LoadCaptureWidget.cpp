@@ -5,13 +5,28 @@
 #include "CaptureFileInfo/LoadCaptureWidget.h"
 
 #include <QFileDialog>
+#include <QFrame>
 #include <QHeaderView>
-#include <QMenu>
+#include <QItemSelection>
+#include <QItemSelectionModel>
+#include <QLayout>
+#include <QLineEdit>
+#include <QList>
+#include <QModelIndex>
+#include <QModelIndexList>
 #include <QObject>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QStringList>
+#include <QTableView>
+#include <QVBoxLayout>
+#include <QVariant>
+#include <Qt>
 #include <memory>
+#include <tuple>
+#include <vector>
 
+#include "CaptureFileInfo/CaptureFileInfo.h"
 #include "CaptureFileInfo/Manager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

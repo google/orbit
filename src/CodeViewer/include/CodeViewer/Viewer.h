@@ -7,11 +7,19 @@
 
 #include <absl/types/span.h>
 
+#include <QFontMetrics>
+#include <QObject>
+#include <QPaintEvent>
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QResizeEvent>
+#include <QString>
+#include <QTextDocument>
 #include <QWheelEvent>
+#include <QWidget>
+#include <cstdint>
 #include <functional>
+#include <optional>
 
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/CodeReport.h"

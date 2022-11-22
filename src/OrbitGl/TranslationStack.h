@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_TRANSLATION_STACK_H_
 #define ORBIT_GL_TRANSLATION_STACK_H_
 
+#include <GteVector.h>
+#include <GteVector2.h>
+
 #include <cmath>
 #include <vector>
 

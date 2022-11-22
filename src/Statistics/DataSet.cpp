@@ -4,9 +4,9 @@
 
 #include "Statistics/DataSet.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 namespace orbit_statistics {
 

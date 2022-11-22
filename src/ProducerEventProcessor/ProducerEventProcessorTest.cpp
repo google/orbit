@@ -5,12 +5,21 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
+#include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
 using orbit_grpc_protos::AddressInfo;

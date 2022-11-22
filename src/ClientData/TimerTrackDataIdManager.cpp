@@ -4,7 +4,10 @@
 
 #include "ClientData/TimerTrackDataIdManager.h"
 
+#include <absl/meta/type_traits.h>
+
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Logging.h"
 
 using orbit_client_protos::TimerInfo;
 

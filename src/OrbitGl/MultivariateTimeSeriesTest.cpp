@@ -4,6 +4,12 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <array>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "MultivariateTimeSeries.h"
 

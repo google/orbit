@@ -5,12 +5,16 @@
 #include "ClientModel/SamplingDataPostProcessor.h"
 
 #include <absl/hash/hash.h>
+#include <absl/meta/type_traits.h>
+#include <stddef.h>
 
 #include <algorithm>
 #include <cstdint>
-#include <memory>
+#include <iterator>
+#include <map>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -18,7 +22,6 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "absl/container/flat_hash_map.h"

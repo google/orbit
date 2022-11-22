@@ -6,16 +6,28 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
 

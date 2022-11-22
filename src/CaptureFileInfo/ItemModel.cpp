@@ -6,6 +6,10 @@
 
 #include <absl/time/time.h>
 
+#include <QStringLiteral>
+#include <optional>
+#include <utility>
+
 #include "CaptureFileInfo/CaptureFileInfo.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"

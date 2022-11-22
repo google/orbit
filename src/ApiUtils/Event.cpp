@@ -5,6 +5,7 @@
 #include "ApiUtils/Event.h"
 
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_api {
 

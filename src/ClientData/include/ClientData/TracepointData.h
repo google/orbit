@@ -5,6 +5,7 @@
 #ifndef CLIENT_DATA_TRACEPOINT_DATA_H_
 #define CLIENT_DATA_TRACEPOINT_DATA_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 
@@ -13,6 +14,7 @@
 #include <functional>
 #include <limits>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "ClientData/TracepointEventInfo.h"

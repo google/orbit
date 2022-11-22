@@ -6,6 +6,8 @@
 
 #include <absl/strings/substitute.h>
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_gl {
 
 std::string MinorPageFaultsTrack::GetTooltip() const {

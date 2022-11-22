@@ -5,6 +5,8 @@
 #ifndef CLIENT_DATA_FAST_RENDERING_UTILS_H_
 #define CLIENT_DATA_FAST_RENDERING_UTILS_H_
 
+#include <stdint.h>
+
 namespace orbit_client_data {
 
 // Free Function that will be used for any implementation of

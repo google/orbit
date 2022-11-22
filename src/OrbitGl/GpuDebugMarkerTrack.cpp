@@ -4,10 +4,11 @@
 
 #include "GpuDebugMarkerTrack.h"
 
-#include <absl/time/time.h>
+#include <GteVector.h>
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 
 #include "App.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -15,7 +16,7 @@
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
-#include "ThreadColor.h"
+#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "absl/strings/str_format.h"
 

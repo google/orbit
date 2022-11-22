@@ -6,11 +6,11 @@
 
 #include <linux/perf_event.h>
 #include <stddef.h>
-#include <string.h>
 
+#include <bitset>
 #include <cstdint>
+#include <cstring>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,6 +19,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
+#include "PerfEventOpen.h"
 #include "PerfEventOrderedStream.h"
 #include "PerfEventRecords.h"
 #include "PerfEventRingBuffer.h"

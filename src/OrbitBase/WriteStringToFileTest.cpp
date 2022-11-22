@@ -3,9 +3,12 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <filesystem>
-#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"

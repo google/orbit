@@ -6,15 +6,21 @@
 #define ORBIT_HISTOGRAM_H_
 
 #include <absl/types/span.h>
+#include <stddef.h>
 
 #include <QEvent>
 #include <QMouseEvent>
+#include <QObject>
+#include <QPaintEvent>
 #include <QPainter>
+#include <QPoint>
+#include <QString>
 #include <QWidget>
 #include <cstdint>
 #include <optional>
 #include <stack>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ClientData/ScopeId.h"

@@ -5,8 +5,17 @@
 #include "OpenGlBatcher.h"
 
 #include <CoreMath.h>
+#include <GteVector.h>
+#include <GteVector2.h>
+#include <QtGui/qopengl.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <utility>
 
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Logging.h"
+#include "TranslationStack.h"
 
 namespace orbit_gl {
 

@@ -3,8 +3,9 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <stdint.h>
+#include <absl/strings/string_view.h>
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <vector>

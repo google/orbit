@@ -2,11 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <unistd.h>
 
+#include <algorithm>
+#include <array>
 #include <deque>
+#include <iterator>
+#include <string>
+#include <vector>
 
 #include "GrpcProtos/tracepoint.pb.h"
+#include "OrbitBase/Result.h"
 #include "ReadTracepoints.h"
 #include "TestUtils/TestUtils.h"
 

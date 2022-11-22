@@ -5,13 +5,18 @@
 #ifndef ORBIT_GL_GL_SLIDER_H_
 #define ORBIT_GL_GL_SLIDER_H_
 
+#include <GteVector.h>
+
 #include <functional>
 #include <memory>
 #include <utility>
 
 #include "CaptureViewElement.h"
 #include "CoreMath.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "Viewport.h"
 

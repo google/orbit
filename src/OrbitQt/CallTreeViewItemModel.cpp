@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <QColor>
+#include <QStringLiteral>
 #include <QtCore>
 #include <algorithm>
 #include <iterator>

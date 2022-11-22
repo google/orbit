@@ -5,8 +5,11 @@
 #ifndef ORBIT_GL_ACCESSIBLE_CAPTURE_VIEW_ELEMENT_H_
 #define ORBIT_GL_ACCESSIBLE_CAPTURE_VIEW_ELEMENT_H_
 
+#include <string>
+
 #include "CaptureViewElement.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_gl {
 class AccessibleCaptureViewElement : public orbit_accessibility::AccessibleInterface {

@@ -3,12 +3,17 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <unistd.h>
 
+#include <cstring>
 #include <filesystem>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <system_error>
 
 #include "BuildAndStartProducerSideServerWithUri.h"
