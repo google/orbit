@@ -4,8 +4,6 @@
 
 #include "OrbitBase/Profiling.h"
 
-#include <absl/strings/str_format.h>
-
 #include <algorithm>
 #include <limits>
 

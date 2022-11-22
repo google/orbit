@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "SimpleTimings.h"
 
 namespace orbit_gl {

@@ -5,6 +5,7 @@
 #include "DebugTabWidget.h"
 
 #include <QObject>
+#include <QTabWidget>
 #include <QWidget>
 #include <memory>
 

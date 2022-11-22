@@ -8,9 +8,11 @@
 #include <absl/strings/match.h>
 #include <absl/types/span.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <optional>
 #include <tuple>
+#include <utility>
 
 namespace orbit_source_paths_mapping {
 

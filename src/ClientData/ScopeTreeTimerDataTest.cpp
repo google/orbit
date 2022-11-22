@@ -3,8 +3,13 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <vector>
 
 #include "ClientData/ScopeTreeTimerData.h"
+#include "ClientProtos/capture_data.pb.h"
 
 using orbit_client_protos::TimerInfo;
 

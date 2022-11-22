@@ -5,8 +5,11 @@
 #ifndef CAPTURE_CLIENT_LOAD_CAPTURE_H_
 #define CAPTURE_CLIENT_LOAD_CAPTURE_H_
 
+#include <atomic>
+
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_client {
 

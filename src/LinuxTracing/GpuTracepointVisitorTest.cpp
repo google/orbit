@@ -4,11 +4,11 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
-#include <string.h>
 #include <sys/types.h>
 
-#include <memory>
+#include <cstdint>
+#include <string>
+#include <type_traits>
 #include <utility>
 
 #include "GpuTracepointVisitor.h"

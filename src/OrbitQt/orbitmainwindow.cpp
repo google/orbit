@@ -4,15 +4,15 @@
 
 #include "orbitmainwindow.h"
 
+#include <QtGui/qopengl.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
 #include <absl/flags/internal/flag.h>
 
-#include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
 #include <QClipboard>
+#include <QColor>
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDesktopServices>
@@ -21,12 +21,10 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFlags>
-#include <QFontMetrics>
 #include <QGraphicsOpacityEffect>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QIODevice>
-#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QList>
@@ -37,6 +35,7 @@
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QPainter>
 #include <QPixmap>
 #include <QPointer>
 #include <QProcess>
@@ -45,8 +44,11 @@
 #include <QRegularExpression>
 #include <QSettings>
 #include <QSplitter>
+#include <QStatusBar>
 #include <QStringList>
+#include <QSyntaxHighlighter>
 #include <QTabBar>
+#include <QTextEdit>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
@@ -59,22 +61,28 @@
 #include <array>
 #include <filesystem>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <system_error>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "AnnotatingSourceCodeDialog.h"
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "CallTreeWidget.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureOptionsDialog.h"
+#include "CaptureWindow.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/WineSyscallHandlingMethod.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
@@ -95,6 +103,7 @@
 #include "GlCanvas.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.pb.h"
+#include "IntrospectionWindow.h"
 #include "LiveFunctionsController.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -116,10 +125,14 @@
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
+#include "Statistics/Histogram.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
+#include "TimeGraph.h"
+#include "TrackConfigurationWidget.h"
+#include "TrackManager.h"
 #include "absl/flags/flag.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
@@ -128,6 +141,7 @@
 #include "orbitglwidget.h"
 #include "orbitlivefunctions.h"
 #include "orbitsamplingreport.h"
+#include "orbittreeview.h"
 #include "types.h"
 #include "ui_orbitmainwindow.h"
 

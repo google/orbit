@@ -3,8 +3,13 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <vector>
+
+#include "ClientData/ScopeTreeTimerData.h"
 #include "ClientData/ThreadTrackDataManager.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

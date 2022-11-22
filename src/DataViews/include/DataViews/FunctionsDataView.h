@@ -6,6 +6,7 @@
 #define DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"

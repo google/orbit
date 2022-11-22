@@ -5,11 +5,14 @@
 #ifndef CLIENT_DATA_MODULE_DATA_H_
 #define CLIENT_DATA_MODULE_DATA_H_
 
+#include <absl/base/thread_annotations.h>
+
 #include <cinttypes>
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 

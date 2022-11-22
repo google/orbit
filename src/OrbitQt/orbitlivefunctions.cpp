@@ -10,11 +10,12 @@
 
 #include <QBoxLayout>
 #include <QItemSelectionModel>
+#include <QLabel>
 #include <QLayout>
 #include <QModelIndex>
 #include <QObject>
+#include <QTabWidget>
 #include <cstdint>
-#include <memory>
 #include <utility>
 
 #include "App.h"

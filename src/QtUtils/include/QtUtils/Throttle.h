@@ -6,6 +6,7 @@
 #define QT_UTILS_THROTTLE_H_
 
 #include <QObject>
+#include <QString>
 #include <QTimer>
 #include <chrono>
 #include <optional>

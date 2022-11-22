@@ -8,6 +8,7 @@
 #include <absl/meta/type_traits.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 

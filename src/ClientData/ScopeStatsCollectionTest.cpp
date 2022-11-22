@@ -4,13 +4,19 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
-#include <iterator>
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <vector>
 
 #include "ClientData/MockScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientData/ScopeStatsCollection.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
 

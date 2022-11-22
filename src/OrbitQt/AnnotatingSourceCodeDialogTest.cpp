@@ -3,17 +3,34 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <QCoreApplication>
+#include <QObject>
 #include <QPushButton>
+#include <QString>
+#include <QSyntaxHighlighter>
 #include <QTest>
 #include <QTimer>
+#include <Qt>
+#include <chrono>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "AnnotatingSourceCodeDialog.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
+#include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "GrpcProtos/symbol.pb.h"
+#include "ObjectUtils/ElfFile.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SymbolProvider/ModuleIdentifier.h"

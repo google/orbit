@@ -4,12 +4,12 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,6 +17,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MockTracerListener.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 #include "SwitchesStatesNamesVisitor.h"
 

@@ -2,13 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/support/channel_arguments.h>
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <array>
+#include <chrono>
+#include <string>
 #include <thread>
 
+#include "CaptureUploader/UploadDataInterface.h"
 #include "GrpcProtos/capture.pb.h"
 #include "ProducerEventProcessor/UploaderClientCaptureEventCollector.h"
 

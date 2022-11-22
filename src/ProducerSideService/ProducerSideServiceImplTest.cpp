@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
@@ -13,6 +14,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <thread>
 
 #include "GrpcProtos/capture.pb.h"

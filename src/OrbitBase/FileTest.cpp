@@ -3,10 +3,23 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_join.h>
+#include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <algorithm>
+#include <array>
+#include <filesystem>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"

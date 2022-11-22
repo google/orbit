@@ -8,9 +8,12 @@
 #include <absl/container/flat_hash_map.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <optional>
+#include <set>
+#include <vector>
 
 #include "ContextSwitchManager.h"
 #include "GrpcProtos/capture.pb.h"

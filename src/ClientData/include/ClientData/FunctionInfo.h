@@ -5,6 +5,8 @@
 #ifndef CLIENT_DATA_FUNCTION_INFO_H_
 #define CLIENT_DATA_FUNCTION_INFO_H_
 
+#include <stdint.h>
+
 #include <optional>
 #include <string>
 #include <utility>

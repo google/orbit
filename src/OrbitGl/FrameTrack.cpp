@@ -9,14 +9,17 @@
 #include <absl/time/time.h>
 
 #include <algorithm>
-#include <limits>
+#include <filesystem>
+#include <memory>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
+#include "TextRendererInterface.h"
 #include "TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;

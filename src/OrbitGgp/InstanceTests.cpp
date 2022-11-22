@@ -11,7 +11,6 @@
 #include <QVector>
 #include <Qt>
 #include <memory>
-#include <system_error>
 #include <utility>
 
 #include "OrbitBase/Result.h"

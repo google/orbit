@@ -5,11 +5,6 @@
 #include "MizarData/BaselineAndComparison.h"
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
-
-#include <algorithm>
-#include <iterator>
-#include <string>
 
 #include "BaselineAndComparisonHelper.h"
 #include "MizarData/MizarDataProvider.h"

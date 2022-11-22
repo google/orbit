@@ -286,13 +286,16 @@
 
 #ifdef __cplusplus
 #include <atomic>
+
 #define ORBIT_THREAD_FENCE_ACQUIRE() std::atomic_thread_fence(std::memory_order_acquire)
 #else
 #if __STDC_VERSION__ >= 201112L
 #include <stdatomic.h>
+
 #define ORBIT_THREAD_FENCE_ACQUIRE() atomic_thread_fence(memory_order_acquire)
 #elif defined(_WIN32)
 #include <windows.h>
+
 // In this case we only have a full (read and write) barrier available.
 #define ORBIT_THREAD_FENCE_ACQUIRE() MemoryBarrier()
 #else

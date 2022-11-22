@@ -5,9 +5,13 @@
 #ifndef OBJECT_UTILS_SYMBOLS_FILE_H_
 #define OBJECT_UTILS_SYMBOLS_FILE_H_
 
+#include <stdint.h>
+
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"

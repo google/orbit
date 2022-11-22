@@ -4,9 +4,18 @@
 
 #include "CodeReport/AnnotateDisassembly.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_split.h>
-#include <stdint.h>
+#include <stddef.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+#include <optional>
+#include <string>
+#include <utility>
+
+#include "OrbitBase/Result.h"
 #include "OrbitBase/Sort.h"
 
 namespace orbit_code_report {

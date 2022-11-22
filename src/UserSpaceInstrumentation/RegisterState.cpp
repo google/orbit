@@ -7,6 +7,7 @@
 #include <cpuid.h>
 #include <elf.h>
 #include <errno.h>
+#include <stdint.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 

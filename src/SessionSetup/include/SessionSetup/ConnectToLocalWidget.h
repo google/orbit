@@ -7,9 +7,13 @@
 
 #include <grpcpp/channel.h>
 
+#include <QObject>
+#include <QString>
+#include <QTimer>
 #include <QWidget>
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"

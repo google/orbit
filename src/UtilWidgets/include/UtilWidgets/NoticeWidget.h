@@ -6,7 +6,9 @@
 #define UTIL_WIDGETS_NOTICE_WIDGET_H_
 
 #include <QColor>
+#include <QObject>
 #include <QPaintEvent>
+#include <QString>
 #include <QWidget>
 #include <memory>
 #include <string>

@@ -6,9 +6,12 @@
 #define CONFIG_WIDGETS_PROPERTY_CONFIG_WIDGET_H_
 
 #include <QGridLayout>
+#include <QObject>
+#include <QString>
 #include <QWidget>
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <string_view>
 
 namespace orbit_config_widgets {

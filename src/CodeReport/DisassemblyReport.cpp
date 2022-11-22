@@ -4,6 +4,8 @@
 
 #include "CodeReport/DisassemblyReport.h"
 
+#include <cstdint>
+
 namespace orbit_code_report {
 
 std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) const {

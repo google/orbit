@@ -2,11 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
+#include <absl/base/casts.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "unwindstack/Memory.h"
 
 namespace orbit_linux_tracing {
 

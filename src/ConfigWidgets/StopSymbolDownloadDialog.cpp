@@ -4,12 +4,11 @@
 
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"
 
-#include <absl/container/flat_hash_set.h>
-
+#include <QCheckBox>
+#include <QLabel>
 #include <memory>
 
 #include "ClientData/ModuleData.h"
-#include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "OrbitBase/Logging.h"
 #include "ui_StopSymbolDownloadDialog.h"
 

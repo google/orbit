@@ -4,9 +4,15 @@
 
 #include "OrbitBase/TemporaryFile.h"
 
+#include <absl/strings/str_format.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
+#include <unistd.h>
 
+#include <string>
 #include <string_view>
+#include <system_error>
 
 #include "OrbitBase/SafeStrerror.h"
 

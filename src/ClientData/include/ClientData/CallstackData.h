@@ -9,10 +9,15 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
+#include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "CallstackType.h"

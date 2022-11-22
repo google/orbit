@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "OrbitBase/Align.h"
 
 namespace orbit_base {

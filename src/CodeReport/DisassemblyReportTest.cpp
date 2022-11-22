@@ -2,11 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
+#include <absl/container/flat_hash_map.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <cstdint>
+#include <initializer_list>
+#include <optional>
+#include <string_view>
+#include <vector>
 
 #include "AssemblyTestLiterals.h"
+#include "ClientData/CallstackEvent.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
+#include "ClientData/ProcessData.h"
+#include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
 
 using orbit_code_report::kFibonacciAbsoluteAddress;

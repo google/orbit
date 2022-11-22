@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 #include <filesystem>
+#include <string>
+#include <string_view>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"

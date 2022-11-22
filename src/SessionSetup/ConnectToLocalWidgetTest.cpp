@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <QCoreApplication>
 #include <QFrame>
 #include <QLabel>
 #include <QMessageBox>
@@ -14,8 +14,10 @@
 #include <QRadioButton>
 #include <QSignalSpy>
 #include <QTest>
+#include <Qt>
 #include <memory>
 
+#include "OrbitBase/Result.h"
 #include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 

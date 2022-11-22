@@ -5,11 +5,15 @@
 #ifndef SESSION_SETUP_SESSION_SETUP_UTILS_H_
 #define SESSION_SETUP_SESSION_SETUP_UTILS_H_
 
+#include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
+#include <stdint.h>
 
 #include <QString>
 #include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"

@@ -5,9 +5,22 @@
 #ifndef ORBIT_GL_TIMELINE_UI_H_
 #define ORBIT_GL_TIMELINE_UI_H_
 
+#include <stdint.h>
+
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "CaptureViewElement.h"
+#include "CoreMath.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineTicks.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

@@ -6,7 +6,9 @@
 
 #include <absl/synchronization/mutex.h>
 
+#include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace orbit_base {
 void SimpleExecutor::ScheduleImpl(std::unique_ptr<Action> action) {

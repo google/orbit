@@ -9,7 +9,7 @@
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
-#include <grpcpp/create_channel.h>
+#include <absl/time/clock.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
 
@@ -19,22 +19,26 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 #include "CaptureClient/CaptureClient.h"
+#include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureSerializer.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
-#include "GrpcProtos/services.pb.h"
+#include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 

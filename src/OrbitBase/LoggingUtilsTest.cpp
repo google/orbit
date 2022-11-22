@@ -3,11 +3,19 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <absl/time/civil_time.h>
 #include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <filesystem>
+#include <string>
+#include <vector>
 
 #include "LoggingUtils.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base_internal {
 namespace {

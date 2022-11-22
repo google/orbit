@@ -11,12 +11,20 @@
 #include <string>
 #include <string_view>
 
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/TimerData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "StringManager/StringManager.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "TimerTrack.h"
 #include "Track.h"
+#include "Viewport.h"
 
 class OrbitApp;
 

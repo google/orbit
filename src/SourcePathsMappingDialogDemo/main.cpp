@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include <QApplication>
+#include <QDialog>
 
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 
 int main(int argc, char* argv[]) {

@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
+#include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
 
 namespace orbit_linux_capture_service {

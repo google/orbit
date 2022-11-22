@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <variant>
 
 #include "OrbitBase/CanceledOr.h"

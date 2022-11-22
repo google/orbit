@@ -3,26 +3,32 @@
 // found in the LICENSE file.
 
 #include <absl/base/casts.h>
-#include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <dlfcn.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/prctl.h>
-#include <sys/sysmacros.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
-#include <charconv>
 #include <chrono>
 #include <csignal>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"
 #include "GetTestLibLibraryPath.h"
+#include "GrpcProtos/module.pb.h"
 #include "MachineCode.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"

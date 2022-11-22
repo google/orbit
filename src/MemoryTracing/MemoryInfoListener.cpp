@@ -4,6 +4,10 @@
 
 #include "MemoryTracing/MemoryInfoListener.h"
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 namespace orbit_memory_tracing {
 
 [[nodiscard]] static uint64_t GetSamplingWindowId(uint64_t sample_timestamp_ns,

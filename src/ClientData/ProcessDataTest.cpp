@@ -5,10 +5,10 @@
 #include <absl/strings/ascii.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
+#include <map>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
@@ -16,6 +16,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_grpc_protos::ModuleInfo;

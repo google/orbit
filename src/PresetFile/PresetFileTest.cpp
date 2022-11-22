@@ -5,7 +5,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "ClientProtos/preset.pb.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
 #include "TestUtils/TestUtils.h"

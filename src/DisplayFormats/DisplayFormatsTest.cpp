@@ -5,6 +5,8 @@
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "DisplayFormats/DisplayFormats.h"
 
 namespace orbit_display_formats {

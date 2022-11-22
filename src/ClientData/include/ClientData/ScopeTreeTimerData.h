@@ -5,10 +5,16 @@
 #ifndef CLIENT_DATA_SCOPE_TREE_TIMER_DATA_H_
 #define CLIENT_DATA_SCOPE_TREE_TIMER_DATA_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <limits>
 #include <vector>
 
+#include "ClientData/TimerChain.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "Containers/ScopeTree.h"
 #include "TimerData.h"
 #include "TimerDataInterface.h"

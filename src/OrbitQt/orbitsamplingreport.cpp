@@ -4,6 +4,9 @@
 
 #include "orbitsamplingreport.h"
 
+#include <absl/strings/str_format.h>
+#include <stdint.h>
+
 #include <QColor>
 #include <QGridLayout>
 #include <QHeaderView>
@@ -14,14 +17,14 @@
 #include <QModelIndexList>
 #include <QPushButton>
 #include <QSplitter>
-#include <QStaticStringData>
 #include <QStringLiteral>
 #include <QTabWidget>
 #include <Qt>
 #include <algorithm>
-#include <optional>
 #include <string>
+#include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "DataViews/SamplingReportDataView.h"
 #include "OrbitBase/Logging.h"
 #include "SamplingReport.h"

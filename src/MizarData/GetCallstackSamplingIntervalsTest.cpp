@@ -2,17 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/algorithm/container.h>
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <memory>
+#include <vector>
 
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarData/GetCallstackSamplingIntervals.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/Typedef.h"
 
 namespace orbit_mizar_data {
 

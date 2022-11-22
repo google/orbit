@@ -4,6 +4,11 @@
 
 #include "Symbols/SymbolUtils.h"
 
+#include <absl/strings/str_format.h>
+
+#include <functional>
+#include <memory>
+
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/File.h"

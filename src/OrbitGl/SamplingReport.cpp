@@ -4,8 +4,8 @@
 
 #include "SamplingReport.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
@@ -16,7 +16,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/PostProcessedSamplingData.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CallstackCount;

@@ -4,13 +4,16 @@
 
 #include "MemoryWatchdog.h"
 
-#include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
-#include <absl/strings/str_split.h>
+#include <absl/strings/str_format.h>
 #include <unistd.h>
+
+#include <cstdint>
+#include <string>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_linux_capture_service {
 

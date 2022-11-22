@@ -5,8 +5,12 @@
 #ifndef CAPTURE_SERVICE_BASE_CAPTURE_SERVICE_BASE_H_
 #define CAPTURE_SERVICE_BASE_CAPTURE_SERVICE_BASE_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
+#include <stdint.h>
+
+#include <memory>
 
 #include "CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"

@@ -18,6 +18,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_client_services {

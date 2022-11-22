@@ -5,35 +5,29 @@
 #include "SessionSetup/SessionSetupDialog.h"
 
 #include <absl/flags/flag.h>
-#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/grpcpp.h>
-#include <grpcpp/security/credentials.h>
-#include <grpcpp/support/channel_arguments.h>
 
-#include <QFileDialog>
 #include <QFrame>
 #include <QHeaderView>
 #include <QHistoryState>
 #include <QItemSelectionModel>
-#include <QLabel>
 #include <QLineEdit>
 #include <QMetaObject>
 #include <QModelIndexList>
 #include <QObject>
 #include <QPushButton>
-#include <QRadioButton>
 #include <QSet>
 #include <QSortFilterProxyModel>
 #include <QTableView>
-#include <QTimer>
 #include <QVariant>
 #include <QWidget>
 #include <Qt>
-#include <chrono>
+#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -44,6 +38,7 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitGgp/Instance.h"
 #include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/ConnectToStadiaWidget.h"
 #include "SessionSetup/Connections.h"
@@ -51,6 +46,7 @@
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessItemModel.h"
 #include "SessionSetup/TargetConfiguration.h"
+#include "SessionSetup/TargetLabel.h"
 #include "ui_SessionSetupDialog.h"
 
 namespace {

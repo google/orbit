@@ -6,14 +6,15 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <stdint.h>
 
+#include <algorithm>
 #include <mutex>
 #include <utility>
 
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
-#include "ClientData/ModuleAndFunctionLookup.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {

@@ -3,8 +3,12 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <string.h>
 
+#include <QString>
 #include <QStringList>
+#include <string>
+#include <vector>
 
 #include "CommandLineUtils/CommandLineUtils.h"
 

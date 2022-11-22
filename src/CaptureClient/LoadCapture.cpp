@@ -4,8 +4,18 @@
 
 #include "CaptureClient/LoadCapture.h"
 
+#include <absl/container/flat_hash_set.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <optional>
+
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
 #include "ClientProtos/user_defined_capture_info.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {

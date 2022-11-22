@@ -5,8 +5,12 @@
 #ifndef SYNTAX_HIGHLIGHTER_CPP_H_
 #define SYNTAX_HIGHLIGHTER_CPP_H_
 
+#include <QObject>
 #include <QRegularExpression>
+#include <QString>
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <functional>
 
 namespace orbit_syntax_highlighter {
 

@@ -11,10 +11,17 @@
 #include <memory>
 #include <string>
 
+#include "CaptureViewElement.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
 #include "ThreadBar.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Viewport.h"
 
 class OrbitApp;

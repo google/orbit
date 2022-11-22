@@ -2,13 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/btree_map.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <memory>
 #include <random>
+#include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "Containers/ScopeTree.h"
 

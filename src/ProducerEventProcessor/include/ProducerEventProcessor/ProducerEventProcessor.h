@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include <memory>
+
 #include "ClientCaptureEventCollector.h"
 #include "GrpcProtos/capture.pb.h"
 

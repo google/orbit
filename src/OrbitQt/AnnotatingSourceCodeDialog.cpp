@@ -4,12 +4,15 @@
 
 #include "AnnotatingSourceCodeDialog.h"
 
+#include <Qt>
 #include <chrono>
 #include <filesystem>
+#include <string>
 
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "ObjectUtils/ElfFile.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "SourcePathsMapping/MappingManager.h"

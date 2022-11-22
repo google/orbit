@@ -5,7 +5,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <gtest/gtest.h>
 
-#include <memory>
+#include <string>
 
 #include "ClientData/FunctionInfo.h"
 

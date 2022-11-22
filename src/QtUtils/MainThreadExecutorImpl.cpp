@@ -4,10 +4,11 @@
 
 #include "QtUtils/MainThreadExecutorImpl.h"
 
-#include <QCoreApplication>
 #include <QMetaObject>
+#include <Qt>
 #include <chrono>
 #include <optional>
+#include <type_traits>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

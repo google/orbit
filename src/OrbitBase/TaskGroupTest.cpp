@@ -5,6 +5,9 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <cstdint>
+#include <vector>
+
 #include "OrbitBase/TaskGroup.h"
 
 TEST(TaskGroup, EmptyTaskGroup) {

@@ -7,7 +7,6 @@
 #include <QAccessible>
 #include <QAccessibleInterface>
 #include <QString>
-#include <algorithm>
 #include <memory>
 #include <vector>
 

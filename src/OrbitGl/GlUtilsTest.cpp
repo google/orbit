@@ -5,7 +5,9 @@
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
+#include <stdlib.h>
 
+#include <cmath>
 #include <memory>
 
 #include "GlUtils.h"

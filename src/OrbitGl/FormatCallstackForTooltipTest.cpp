@@ -2,10 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <filesystem>
+#include <limits>
+#include <string>
+#include <vector>
+
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleManager.h"
 #include "FormatCallstackForTooltip.h"
 
 using orbit_client_data::CallstackInfo;

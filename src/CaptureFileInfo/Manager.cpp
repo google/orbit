@@ -5,12 +5,16 @@
 #include "CaptureFileInfo/Manager.h"
 
 #include <absl/time/time.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <QDateTime>
 #include <QFileInfo>
 #include <QSettings>
+#include <QString>
 #include <QVariant>
 #include <algorithm>
+#include <utility>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
 #include "OrbitBase/File.h"

@@ -2,17 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
+
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
+#include "OrbitBase/Overloaded.h"
+#include "OrbitBase/Typedef.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;

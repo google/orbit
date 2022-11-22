@@ -8,8 +8,6 @@
 #include <stddef.h>
 
 #include <filesystem>
-#include <iosfwd>
-#include <iterator>
 #include <type_traits>
 
 #include "LibSsh2Utils.h"

@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <QApplication>
+#include <memory>
 
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraphLayoutWidget.h"

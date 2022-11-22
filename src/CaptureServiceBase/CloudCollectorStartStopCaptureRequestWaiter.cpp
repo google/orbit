@@ -4,6 +4,9 @@
 
 #include "CaptureServiceBase/CloudCollectorStartStopCaptureRequestWaiter.h"
 
+#include <string>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 
 using orbit_grpc_protos::CaptureOptions;

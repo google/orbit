@@ -5,6 +5,7 @@
 #ifndef PROCESS_SERVICE_PROCESS_H_
 #define PROCESS_SERVICE_PROCESS_H_
 
+#include <stdint.h>
 #include <sys/types.h>
 
 #include "GrpcProtos/process.pb.h"

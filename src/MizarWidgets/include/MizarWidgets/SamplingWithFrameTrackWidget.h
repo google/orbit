@@ -8,15 +8,18 @@
 #include <absl/strings/str_format.h>
 
 #include <QObject>
+#include <QString>
 #include <QStringLiteral>
 #include <QWidget>
 #include <memory>
+#include <string>
 #include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
+#include "OrbitBase/Result.h"
 #include "SamplingWithFrameTrackInputWidget.h"
 
 namespace Ui {

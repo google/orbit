@@ -4,8 +4,14 @@
 
 #include "OrbitBase/File.h"
 
+#include <errno.h>
+#include <fcntl.h>
+
 #include <chrono>
 #include <cstdint>
+#include <ctime>
+#include <string>
+#include <system_error>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

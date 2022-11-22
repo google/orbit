@@ -13,6 +13,8 @@
 
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"

@@ -5,10 +5,16 @@
 #include <gtest/gtest.h>
 
 #include <QApplication>
+#include <QMetaObject>
 #include <QPushButton>
+#include <QString>
 #include <QTest>
+#include <Qt>
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <outcome.hpp>
+#include <utility>
 #include <variant>
 
 #include "OrbitSsh/Context.h"

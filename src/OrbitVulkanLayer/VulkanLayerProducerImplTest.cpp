@@ -4,11 +4,25 @@
 
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 #include "FakeProducerSideService/FakeProducerSideService.h"
+#include "GrpcProtos/capture.pb.h"
+#include "VulkanLayerProducer.h"
 #include "VulkanLayerProducerImpl.h"
 
 namespace orbit_vulkan_layer {

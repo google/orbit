@@ -2,11 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <GteVector.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <memory>
+#include <string>
+#include <tuple>
 
 #include "Button.h"
+#include "CaptureViewElement.h"
 #include "CaptureViewElementTester.h"
+#include "CoreMath.h"
 #include "GlCanvas.h"
+#include "MockBatcher.h"
+#include "MockTextRenderer.h"
+#include "TimeGraphLayout.h"
 
 namespace orbit_gl {
 

@@ -12,8 +12,11 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 

@@ -9,21 +9,30 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <filesystem>
 #include <iterator>
+#include <limits>
+#include <numeric>
 #include <optional>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/Result.h"
 #include "Test/Path.h"
 
 using testing::ElementsAreArray;

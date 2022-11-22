@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <libfuzzer/libfuzzer_macro.h>
+
 #include "ClientData/ModuleData.h"
 #include "FuzzingUtils/ProtoFuzzer.h"
 #include "GrpcProtos/module.pb.h"

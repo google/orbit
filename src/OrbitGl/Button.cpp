@@ -4,8 +4,16 @@
 
 #include "Button.h"
 
+#include <GteVector.h>
+
+#include <algorithm>
+#include <utility>
+
 #include "AccessibleButton.h"
+#include "CoreMath.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
 
 // TODO (b/230726102): Code below is copied from GlSlider. This should live in a central place.
 namespace {

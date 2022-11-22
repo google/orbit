@@ -5,7 +5,6 @@
 #include "PerfEventProcessor.h"
 
 #include <utility>
-#include <variant>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"

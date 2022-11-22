@@ -5,8 +5,10 @@
 #ifndef DATA_VIEWS_PRESETS_DATA_VIEW_H_
 #define DATA_VIEWS_PRESETS_DATA_VIEW_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <string_view>

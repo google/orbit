@@ -4,7 +4,15 @@
 
 #include "BasicPageFaultsTrack.h"
 
+#include <absl/strings/str_format.h>
+
+#include <algorithm>
+#include <functional>
+
+#include "CaptureViewElement.h"
 #include "GlCanvas.h"
+#include "MultivariateTimeSeries.h"
+#include "PickingManager.h"
 
 namespace orbit_gl {
 

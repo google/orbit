@@ -4,10 +4,13 @@
 
 #include "SourcePathsMapping/MappingItemModel.h"
 
-#include <QAbstractItemModel>
-#include <QDebug>
+#include <QFlags>
 #include <QModelIndex>
 #include <QVariant>
+#include <Qt>
+#include <algorithm>
+#include <filesystem>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
 

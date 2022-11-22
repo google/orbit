@@ -4,6 +4,14 @@
 
 #include "AnnotationTrack.h"
 
+#include <GteVector.h>
+
+#include <memory>
+
+#include "BatcherInterface.h"
+#include "PickingManager.h"
+#include "TextRendererInterface.h"
+
 namespace {
 
 const Color kWhite(255, 255, 255, 255);

@@ -5,7 +5,9 @@
 #include "MemoryTrack.h"
 
 #include <algorithm>
+#include <optional>
 
+#include "ApiInterface/Orbit.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 

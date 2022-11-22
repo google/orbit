@@ -6,16 +6,21 @@
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <sys/types.h>
+#include <stdint.h>
 #include <syscall.h>
 #include <unistd.h>
 
 #include <chrono>
+#include <map>
 #include <optional>
 #include <string>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "LinuxTracingUtils.h"
 #include "ModuleUtils/ReadLinuxMaps.h"
 #include "OrbitBase/ThreadUtils.h"

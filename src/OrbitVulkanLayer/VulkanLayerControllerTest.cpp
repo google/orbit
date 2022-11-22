@@ -2,11 +2,29 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/casts.h>
+#include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdlib.h>
+#include <string.h>
 #include <vulkan/vk_layer.h>
+#include <vulkan/vulkan_core.h>
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/ThreadUtils.h"
 #include "VulkanLayerController.h"
 #include "VulkanLayerProducer.h"
 

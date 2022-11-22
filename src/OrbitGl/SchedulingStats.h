@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_SCHEDULING_STATS_H_
 #define ORBIT_GL_SCHEDULING_STATS_H_
 
+#include <stdint.h>
+
 #include <functional>
 #include <map>
 #include <string>

@@ -4,15 +4,18 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackOutputWidget.h"
 
+#include <QHeaderView>
 #include <QLineEdit>
 #include <QObject>
 #include <QResizeEvent>
+#include <QSize>
 #include <QSortFilterProxyModel>
+#include <QTableView>
 #include <QWidget>
-#include <limits>
+#include <Qt>
 #include <memory>
+#include <utility>
 
-#include "MizarModels/SamplingWithFrameTrackReportModel.h"
 #include "ui_SamplingWithFrameTrackOutputWidget.h"
 
 namespace orbit_mizar_widgets {

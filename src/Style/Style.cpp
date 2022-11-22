@@ -8,6 +8,7 @@
 #include <QColor>
 #include <QPalette>
 #include <QStyleFactory>
+#include <Qt>
 
 namespace orbit_style {
 void ApplyStyle(QApplication* app) {

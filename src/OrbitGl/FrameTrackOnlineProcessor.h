@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "TimeGraph.h"

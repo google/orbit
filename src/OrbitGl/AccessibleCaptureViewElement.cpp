@@ -4,6 +4,12 @@
 
 #include "AccessibleCaptureViewElement.h"
 
+#include <GteVector.h>
+
+#include <algorithm>
+#include <vector>
+
+#include "CoreMath.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

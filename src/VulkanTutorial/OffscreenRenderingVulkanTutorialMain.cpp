@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <thread>
 

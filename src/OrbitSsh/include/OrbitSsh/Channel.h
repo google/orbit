@@ -6,6 +6,7 @@
 #define ORBIT_SSH_CHANNEL_H_
 
 #include <libssh2.h>
+#include <stddef.h>
 
 #include <memory>
 #include <optional>

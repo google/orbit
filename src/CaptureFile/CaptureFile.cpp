@@ -4,11 +4,22 @@
 
 #include "CaptureFile/CaptureFile.h"
 
+#include <absl/strings/str_format.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <unistd.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
+#include <cstring>
+#include <limits>
 #include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "CaptureFile/CaptureFileSection.h"
 #include "CaptureFile/ProtoSectionInputStream.h"

@@ -4,17 +4,23 @@
 
 // clang-format off
 #include "ApiLoader/EnableInTracee.h"
+#include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 // clang-format on
 
 #include <absl/base/casts.h>
-#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/match.h>
+#include <dlfcn.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-#include <functional>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "ModuleUtils/ReadLinuxModules.h"
-#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"

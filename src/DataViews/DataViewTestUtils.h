@@ -5,7 +5,9 @@
 #ifndef DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_
 #define DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_
 
+#include <algorithm>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "DataViews/DataView.h"

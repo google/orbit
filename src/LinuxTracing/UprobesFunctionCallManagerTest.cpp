@@ -4,8 +4,10 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <linux/perf_event.h>
 #include <sys/types.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 

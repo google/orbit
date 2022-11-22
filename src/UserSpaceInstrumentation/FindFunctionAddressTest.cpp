@@ -3,12 +3,19 @@
 // found in the LICENSE file.
 
 #include <absl/strings/match.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <signal.h>
+#include <stdint.h>
 #include <sys/prctl.h>
-#include <sys/ptrace.h>
 #include <sys/wait.h>
+#include <unistd.h>
+
+#include <string>
+#include <vector>
 
 #include "FindFunctionAddress.h"
+#include "GrpcProtos/module.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

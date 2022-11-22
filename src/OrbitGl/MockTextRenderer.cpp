@@ -4,7 +4,14 @@
 
 #include "MockTextRenderer.h"
 
+#include <GteVector.h>
+#include <string.h>
+
+#include <cstdint>
+#include <limits>
+
 #include "CoreMath.h"
+#include "TextRendererInterface.h"
 
 namespace orbit_gl {
 

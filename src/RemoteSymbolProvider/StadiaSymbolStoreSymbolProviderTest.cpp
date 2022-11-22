@@ -4,18 +4,33 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <QString>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
 
 #include "Http/MockDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
+#include "OrbitGgp/Client.h"
 #include "OrbitGgp/MockClient.h"
+#include "OrbitGgp/SymbolDownloadInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h"
+#include "SymbolProvider/ModuleIdentifier.h"
+#include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/MockSymbolCache.h"
 #include "TestUtils/TestUtils.h"
 

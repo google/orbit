@@ -5,7 +5,9 @@
 #ifndef SYMBOL_PROVIDER_STRUCTURED_DEBUG_DIRECTORY_SYMBOL_PROVIDER_H_
 #define SYMBOL_PROVIDER_STRUCTURED_DEBUG_DIRECTORY_SYMBOL_PROVIDER_H_
 
+#include <filesystem>
 #include <string_view>
+#include <utility>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"

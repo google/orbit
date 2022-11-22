@@ -8,6 +8,9 @@
 #include <absl/types/span.h>
 
 #include <QDialog>
+#include <QObject>
+#include <QString>
+#include <QWidget>
 #include <filesystem>
 #include <memory>
 #include <optional>

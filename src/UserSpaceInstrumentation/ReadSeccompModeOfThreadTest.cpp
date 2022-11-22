@@ -6,6 +6,7 @@
 #include <linux/seccomp.h>
 #include <unistd.h>
 
+#include <memory>
 #include <optional>
 
 #include "ReadSeccompModeOfThread.h"

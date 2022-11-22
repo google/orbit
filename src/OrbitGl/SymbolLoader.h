@@ -5,9 +5,15 @@
 #ifndef ORBIT_GL_SYMBOL_LOADER_H_
 #define ORBIT_GL_SYMBOL_LOADER_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <stdint.h>
 
 #include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <thread>
 
 #include "ClientData/ModuleData.h"
 #include "ClientServices/ProcessManager.h"
@@ -19,6 +25,7 @@
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitPaths/Paths.h"

@@ -5,10 +5,12 @@
 #include "Trampoline.h"
 
 #include <absl/base/casts.h>
+#include <absl/meta/type_traits.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <capstone/x86.h>
 #include <cpuid.h>
 #include <unistd.h>
 
@@ -17,6 +19,7 @@
 #include <cstring>
 #include <limits>
 #include <string>
+#include <utility>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"

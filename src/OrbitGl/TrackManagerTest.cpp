@@ -2,13 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <initializer_list>
+#include <memory>
+#include <set>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleManager.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "GrpcProtos/capture.pb.h"
+#include "SchedulerTrack.h"
 #include "StaticTimeGraphLayout.h"
-#include "TimeGraph.h"
+#include "ThreadTrack.h"
 #include "Track.h"
 #include "TrackManager.h"
 #include "TrackTestData.h"

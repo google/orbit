@@ -13,6 +13,7 @@
 
 #include "OrbitBase/Profiling.h"
 #include "PerfEvent.h"
+#include "PerfEventOrderedStream.h"
 #include "PerfEventProcessor.h"
 #include "PerfEventVisitor.h"
 

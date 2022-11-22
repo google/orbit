@@ -4,14 +4,21 @@
 
 #include "FormatCallstackForTooltip.h"
 
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <stdint.h>
 
+#include <algorithm>
+#include <filesystem>
+#include <limits>
 #include <string>
+#include <vector>
 
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "OrbitBase/Logging.h"
 #include "ShortenStringWithEllipsis.h"
 
 namespace orbit_gl {

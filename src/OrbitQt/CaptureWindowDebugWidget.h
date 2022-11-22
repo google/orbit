@@ -5,6 +5,8 @@
 #ifndef ORBIT_QT_CAPTURE_WINDOW_DEBUG_WIDGET_H_
 #define ORBIT_QT_CAPTURE_WINDOW_DEBUG_WIDGET_H_
 
+#include <QObject>
+#include <QString>
 #include <QTimer>
 #include <QWidget>
 #include <memory>

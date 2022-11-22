@@ -5,14 +5,19 @@
 #ifndef CLIENT_DATA_CAPTURE_DATA_H_
 #define CLIENT_DATA_CAPTURE_DATA_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
+#include <absl/time/clock.h>
+#include <absl/time/time.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,6 +33,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
@@ -36,8 +42,11 @@
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerData.h"
 #include "ClientData/TimerDataManager.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointData.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/process.pb.h"

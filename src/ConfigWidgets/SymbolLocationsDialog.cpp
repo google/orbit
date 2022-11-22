@@ -4,20 +4,35 @@
 
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 
+#include <QAbstractButton>
+#include <QCheckBox>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QFrame>
+#include <QGroupBox>
+#include <QIcon>
+#include <QLabel>
+#include <QList>
 #include <QListWidget>
+#include <QListWidgetItem>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSettings>
+#include <QStringList>
+#include <QUrl>
+#include <QVariant>
+#include <Qt>
 #include <algorithm>
 #include <filesystem>
 #include <iterator>
 #include <memory>
+#include <string>
 #include <tuple>
+#include <type_traits>
 
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/module.pb.h"

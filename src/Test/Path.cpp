@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <string>
 
 #include "OrbitBase/ExecutablePath.h"
 

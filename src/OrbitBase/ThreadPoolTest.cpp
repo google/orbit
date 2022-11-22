@@ -7,9 +7,11 @@
 #include <stddef.h>
 
 #include <atomic>
-#include <chrono>
 #include <memory>
+#include <vector>
 
+#include "OrbitBase/Action.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/ThreadPool.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/time/clock.h"

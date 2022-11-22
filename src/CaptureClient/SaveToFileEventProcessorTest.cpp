@@ -3,13 +3,21 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <stddef.h>
 
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
 #include <vector>
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureFile/CaptureFile.h"
+#include "CaptureFile/CaptureFileSection.h"
+#include "CaptureFile/ProtoSectionInputStream.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"

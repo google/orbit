@@ -2,17 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureSerializer.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 
 using orbit_client_data::CaptureData;

@@ -11,12 +11,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

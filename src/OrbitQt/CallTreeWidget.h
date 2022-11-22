@@ -30,6 +30,7 @@
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
+#include "OrbitBase/Logging.h"
 #include "absl/strings/str_split.h"
 #include "ui_CallTreeWidget.h"
 

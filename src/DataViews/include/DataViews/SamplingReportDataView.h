@@ -7,10 +7,12 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/CallstackType.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"

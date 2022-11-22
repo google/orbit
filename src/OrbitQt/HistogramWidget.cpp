@@ -8,16 +8,20 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
-#include <qwindowdefs.h>
+#include <absl/types/span.h>
+#include <stdlib.h>
 
 #include <QColor>
-#include <QEvent>
+#include <QFlags>
+#include <QFont>
+#include <QFontMetrics>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
 #include <QPoint>
+#include <QRect>
+#include <QSize>
 #include <QStringLiteral>
-#include <QWidget>
 #include <Qt>
 #include <algorithm>
 #include <array>
@@ -25,6 +29,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
+#include <memory>
 #include <optional>
 #include <random>
 #include <string>
@@ -35,6 +41,7 @@
 #include "ClientData/ScopeId.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Typedef.h"
 #include "Statistics/Histogram.h"
 
 using ::orbit_client_data::ScopeId;

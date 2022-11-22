@@ -7,10 +7,12 @@
 
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/ObjectFile.h>
+#include <stdint.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"

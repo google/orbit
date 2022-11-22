@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
 #include <system_error>
 
 #include "OrbitBase/Result.h"

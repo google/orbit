@@ -6,10 +6,14 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <initializer_list>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "OrbitBase/Typedef.h"

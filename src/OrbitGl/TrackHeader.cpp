@@ -4,8 +4,14 @@
 
 #include "TrackHeader.h"
 
+#include <algorithm>
+
 #include "AccessibleCaptureViewElement.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "OrbitBase/Logging.h"
+#include "PickingManager.h"
+#include "TextRendererInterface.h"
 #include "TrackRenderHelper.h"
 
 namespace orbit_gl {

@@ -5,6 +5,8 @@
 #ifndef ORBIT_QT_TRACK_CONFIGURATION_WIDGET_H_
 #define ORBIT_QT_TRACK_CONFIGURATION_WIDGET_H_
 
+#include <QObject>
+#include <QString>
 #include <QWidget>
 #include <memory>
 

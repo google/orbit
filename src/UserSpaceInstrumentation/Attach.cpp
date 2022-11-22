@@ -7,11 +7,11 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <chrono>
-#include <string>
 #include <thread>
 #include <utility>
 #include <vector>

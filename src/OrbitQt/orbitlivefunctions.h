@@ -13,6 +13,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <optional>
+#include <string>
+#include <vector>
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"

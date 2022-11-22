@@ -9,6 +9,8 @@
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSlider>
+#include <memory>
+#include <string_view>
 
 #include "ConfigWidgets/PropertyConfigWidget.h"
 

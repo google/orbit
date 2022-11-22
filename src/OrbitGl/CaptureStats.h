@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_CAPTURE_STATS_H_
 #define ORBIT_GL_CAPTURE_STATS_H_
 
+#include <stdint.h>
+
 #include <string>
 
 #include "OrbitBase/Result.h"

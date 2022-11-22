@@ -7,13 +7,25 @@
 
 #include <ClientData/CaptureData.h>
 
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "CaptureViewElement.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "CoreMath.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Track.h"
 #include "TrackManager.h"
 #include "Viewport.h"

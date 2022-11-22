@@ -5,13 +5,17 @@
 #ifndef LINUX_TRACING_LINUX_TRACING_UTILS_H_
 #define LINUX_TRACING_LINUX_TRACING_UTILS_H_
 
+#include <stdint.h>
 #include <unistd.h>
 
 #include <ctime>
+#include <map>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "ModuleUtils/ReadLinuxMaps.h"
 
 namespace orbit_linux_tracing {

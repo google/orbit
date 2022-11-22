@@ -4,11 +4,12 @@
 
 #include <gtest/gtest.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #include <memory>
-#include <variant>
 
 #include "PerfEvent.h"
+#include "PerfEventOrderedStream.h"
 #include "PerfEventQueue.h"
 
 namespace orbit_linux_tracing {

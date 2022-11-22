@@ -3,10 +3,17 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <list>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "CaptureStats.h"
+#include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Result.h"
 #include "SchedulingStats.h"
 
 TEST(CaptureStats, NullCaptureWindow) {

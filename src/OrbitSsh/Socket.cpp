@@ -4,13 +4,14 @@
 
 #include "OrbitSsh/Socket.h"
 
+#include <stddef.h>
+
 #ifdef _WIN32
 #include <winsock.h>
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #include <sys/select.h>
-#include <sys/time.h>
 #endif
 
 #include <type_traits>

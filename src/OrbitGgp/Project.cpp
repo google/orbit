@@ -10,6 +10,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <string>
+#include <utility>
 
 #include "OrbitBase/Result.h"
 

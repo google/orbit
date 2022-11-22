@@ -6,28 +6,37 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
-#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #include <algorithm>
+#include <cmath>
+#include <functional>
+#include <map>
 #include <optional>
 #include <utility>
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
+#include "BatcherInterface.h"
+#include "ClientData/CallstackType.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/TimestampIntervalSet.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "OrbitBase/Append.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "PickingManager.h"
 #include "ThreadColor.h"
+#include "ThreadTrack.h"
 #include "TrackManager.h"
 
 namespace orbit_gl {

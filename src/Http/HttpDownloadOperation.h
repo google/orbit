@@ -10,7 +10,11 @@
 #include <QNetworkReply>
 #include <QObject>
 #include <QPointer>
+#include <QString>
 #include <filesystem>
+#include <optional>
+#include <string>
+#include <utility>
 
 #include "OrbitBase/StopToken.h"
 

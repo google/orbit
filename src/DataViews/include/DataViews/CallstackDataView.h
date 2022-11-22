@@ -5,9 +5,14 @@
 #ifndef DATA_VIEWS_CALLSTACK_DATA_VIEW_H_
 #define DATA_VIEWS_CALLSTACK_DATA_VIEW_H_
 
+#include <absl/container/flat_hash_set.h>
+#include <stddef.h>
 #include <stdint.h>
 
+#include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 

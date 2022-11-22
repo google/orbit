@@ -2,27 +2,34 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-function-mocker.h>
-#include <gmock/gmock-matchers.h>
-#include <gmock/gmock-spec-builders.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QDialogButtonBox>
+#include <QApplication>
 #include <QLabel>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QPushButton>
+#include <QString>
 #include <QTest>
+#include <Qt>
 #include <filesystem>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
+#include "OrbitBase/Result.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 

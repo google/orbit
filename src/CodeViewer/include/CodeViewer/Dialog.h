@@ -5,8 +5,14 @@
 #ifndef CODE_VIEWER_DIALOG_H_
 #define CODE_VIEWER_DIALOG_H_
 
+#include <absl/types/span.h>
+#include <stddef.h>
+
 #include <QDialog>
+#include <QObject>
+#include <QString>
 #include <QSyntaxHighlighter>
+#include <QWidget>
 #include <memory>
 #include <optional>
 

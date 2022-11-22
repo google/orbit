@@ -9,6 +9,8 @@
 #include <absl/time/time.h>
 
 #include <filesystem>
+#include <string>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 

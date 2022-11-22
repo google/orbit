@@ -4,7 +4,12 @@
 
 #include "TrackRenderHelper.h"
 
+#include <GteVector.h>
+#include <stddef.h>
+
 #include <cmath>
+
+#include "Geometry.h"
 
 namespace {
 

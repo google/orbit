@@ -2,25 +2,39 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <array>
+#include <cstdint>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
-#include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/Logging.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_client_data::CallstackInfo;

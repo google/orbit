@@ -5,10 +5,16 @@
 #ifndef ORBIT_GL_LINE_GRAPH_TRACK_H_
 #define ORBIT_GL_LINE_GRAPH_TRACK_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <array>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include "GraphTrack.h"
+#include "PrimitiveAssembler.h"
 
 namespace orbit_gl {
 

@@ -19,7 +19,9 @@
 #include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "QtTextRenderer.h"
+#include "TextRenderer.h"
 #include "Timer.h"
 #include "Viewport.h"
 

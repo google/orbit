@@ -4,6 +4,8 @@
 
 #include "VulkanLayerProducerImpl.h"
 
+#include <type_traits>
+
 namespace orbit_vulkan_layer {
 
 uint64_t VulkanLayerProducerImpl::InternStringIfNecessaryAndGetKey(std::string str) {

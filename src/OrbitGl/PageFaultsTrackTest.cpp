@@ -3,7 +3,11 @@
 // found in the LICENSE file.
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <vector>
+
 #include "CaptureViewElementTester.h"
+#include "ClientData/CaptureData.h"
 #include "PageFaultsTrack.h"
 #include "TrackTestData.h"
 

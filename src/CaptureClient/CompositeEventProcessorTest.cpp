@@ -5,7 +5,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_client {
 

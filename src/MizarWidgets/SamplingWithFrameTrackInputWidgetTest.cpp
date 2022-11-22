@@ -3,26 +3,45 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
-#include <QApplication>
+#include <QAbstractItemModel>
+#include <QAbstractListModel>
 #include <QComboBox>
+#include <QItemSelectionModel>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QListWidgetItem>
+#include <QModelIndex>
 #include <QObject>
+#include <QString>
 #include <QStringLiteral>
-#include <QTest>
+#include <QVariant>
+#include <algorithm>
 #include <array>
+#include <cstdint>
+#include <initializer_list>
 #include <limits>
+#include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStats.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
+#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarModels/FrameTrackListModel.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
+#include "OrbitBase/Typedef.h"
 
 using ::orbit_client_data::ScopeId;
 using ::orbit_grpc_protos::PresentEvent;

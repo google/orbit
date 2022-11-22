@@ -4,18 +4,23 @@
 
 #include "CallstackThreadBar.h"
 
+#include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "BatcherInterface.h"
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FastRenderingUtils.h"
+#include "CoreMath.h"
 #include "FormatCallstackForTooltip.h"
 #include "Geometry.h"
 #include "GlCanvas.h"

@@ -2,14 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
+#include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
-#include <QCoreApplication>
-#include <QEventLoop>
+#include <QObject>
 #include <QTimer>
 #include <chrono>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <utility>
+#include <vector>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/ThreadPool.h"
 #include "QtUtils/FutureWatcher.h"

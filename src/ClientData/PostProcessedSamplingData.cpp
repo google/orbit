@@ -4,10 +4,16 @@
 
 #include "ClientData/PostProcessedSamplingData.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <stddef.h>
 
 #include <algorithm>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <set>
+#include <type_traits>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"

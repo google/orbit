@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <vector>
 
 #include "MachineCode.h"
 

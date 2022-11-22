@@ -4,10 +4,15 @@
 
 #include "MemoryInfoHandler.h"
 
+#include <sys/types.h>
+
+#include <utility>
+
 #include "GrpcProtos/Constants.h"
 #include "MemoryTracing/MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_linux_capture_service {

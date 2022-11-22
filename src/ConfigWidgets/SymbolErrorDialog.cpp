@@ -7,11 +7,12 @@
 #include <absl/flags/flag.h>
 
 #include <QDialog>
+#include <QLabel>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <memory>
 
 #include "ClientFlags/ClientFlags.h"
-#include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "OrbitBase/Logging.h"
 #include "ui_SymbolErrorDialog.h"
 

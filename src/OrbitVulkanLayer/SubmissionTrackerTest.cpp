@@ -3,11 +3,27 @@
 // found in the LICENSE file.
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
+#include <grpcpp/channel.h>
 #include <gtest/gtest.h>
+#include <sys/types.h>
+#include <vulkan/vulkan_core.h>
 
 #include <array>
+#include <cstdint>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
+#include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "SubmissionTracker.h"
 #include "VulkanLayerProducer.h"

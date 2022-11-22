@@ -5,6 +5,14 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <utility>
+
+#include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_base {

@@ -4,10 +4,14 @@
 
 #include "OrbitUserSpaceInstrumentation.h"
 
+#include <google/protobuf/arena.h>
+
 #include <stack>
+#include <utility>
 #include <variant>
 
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Overloaded.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"

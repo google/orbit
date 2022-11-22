@@ -5,8 +5,16 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include "OrbitBase/Action.h"
 #include "OrbitBase/Executor.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 
 namespace {
 class MockExecutor : public orbit_base::Executor {

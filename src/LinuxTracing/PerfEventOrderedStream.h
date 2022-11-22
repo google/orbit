@@ -6,6 +6,7 @@
 #define LINUX_TRACING_PERF_EVENT_ORDERED_STREAM_H_
 
 #include <absl/hash/hash.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 namespace orbit_linux_tracing {

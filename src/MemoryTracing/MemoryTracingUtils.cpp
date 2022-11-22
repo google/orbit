@@ -10,7 +10,10 @@
 #include <absl/strings/str_split.h>
 #include <stdlib.h>
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"

@@ -4,13 +4,21 @@
 
 #include "TimelineUi.h"
 
+#include <GteVector.h>
 #include <absl/flags/flag.h>
+#include <absl/time/time.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <optional>
 
 #include "AccessibleCaptureViewElement.h"
 #include "ClientFlags/ClientFlags.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
+#include "TextRendererInterface.h"
 #include "TimelineTicks.h"
 
 namespace orbit_gl {

@@ -4,17 +4,22 @@
 
 #include "CaptureOptionsDialog.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 
-#include <QAbstractButton>
+#include <QCheckBox>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDoubleSpinBox>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QNonConstOverload>
+#include <QRadioButton>
 #include <QWidget>
-#include <QtGui/QValidator>
 
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MultipleOfSpinBox.h"
 #include "OrbitBase/Logging.h"
 #include "ui_CaptureOptionsDialog.h"
 

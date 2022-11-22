@@ -6,13 +6,19 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <thread>
+#include <utility>
+#include <variant>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "ApiUtils/Event.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
 static void TestScopes() {

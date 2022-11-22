@@ -5,6 +5,10 @@
 #ifndef TIME_GRAPH_LAYOUT_WIDGET_H_
 #define TIME_GRAPH_LAYOUT_WIDGET_H_
 
+#include <stdint.h>
+
+#include <QObject>
+#include <QString>
 #include <QWidget>
 #include <cmath>
 #include <string_view>

@@ -9,6 +9,7 @@
 
 #include <deque>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "DataViews/AppInterface.h"

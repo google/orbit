@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_TRACK_RENDER_HELPER_H_
 #define ORBIT_GL_TRACK_RENDER_HELPER_H_
 
+#include <stdint.h>
+
+#include <memory>
 #include <vector>
 
 #include "CoreMath.h"

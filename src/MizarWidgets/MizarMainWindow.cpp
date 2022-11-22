@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 #include "ui_MizarMainWindow.h"
 
 namespace orbit_mizar_widgets {

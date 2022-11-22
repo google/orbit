@@ -4,7 +4,12 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <set>
+#include <string>
+
 #include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
 

@@ -4,16 +4,20 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <filesystem>
-#include <iterator>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
+#include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "Test/Path.h"

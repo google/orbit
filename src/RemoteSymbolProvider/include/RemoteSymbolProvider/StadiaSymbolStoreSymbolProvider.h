@@ -5,9 +5,14 @@
 #ifndef REMOTE_SYMBOL_PROVIDER_STADIA_SYMBOL_STORE_SYMBOL_PROVIDER_H_
 #define REMOTE_SYMBOL_PROVIDER_STADIA_SYMBOL_STORE_SYMBOL_PROVIDER_H_
 
+#include <memory>
+
 #include "Http/DownloadManager.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitGgp/Client.h"
+#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 #include "Symbols/SymbolCacheInterface.h"

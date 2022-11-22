@@ -6,6 +6,8 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/string_view.h>
+#include <stdlib.h>
 
 #include <filesystem>
 #include <optional>
@@ -14,17 +16,17 @@
 #include "OrbitBase/Result.h"
 
 #ifdef _WIN32
-#include "OrbitBase/StringConversion.h"
 // clang-format off
 #include <Windows.h>
 #include <KnownFolders.h>
 // clang-format on
 #include <shlobj.h>
+
+#include "OrbitBase/StringConversion.h"
 #endif
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/StringConversion.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 

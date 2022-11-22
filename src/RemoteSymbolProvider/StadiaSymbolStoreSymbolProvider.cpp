@@ -4,9 +4,17 @@
 
 #include "RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h"
 
-#include <absl/strings/str_format.h>
-#include <absl/strings/str_replace.h>
+#include <QString>
+#include <filesystem>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
+#include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"

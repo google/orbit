@@ -5,10 +5,14 @@
 #ifndef API_LOCK_FREE_API_EVENT_PRODUCER_H_
 #define API_LOCK_FREE_API_EVENT_PRODUCER_H_
 
+#include <google/protobuf/arena.h>
+
+#include <utility>
 #include <variant>
 
 #include "ApiUtils/Event.h"
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
+#include "GrpcProtos/capture.pb.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
 
 namespace orbit_api {

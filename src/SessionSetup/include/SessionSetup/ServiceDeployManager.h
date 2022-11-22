@@ -13,11 +13,13 @@
 #include <QThread>
 #include <QTimer>
 #include <deque>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <variant>
 
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/AnyInvocable.h"

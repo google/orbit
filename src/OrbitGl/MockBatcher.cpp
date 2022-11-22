@@ -4,6 +4,11 @@
 
 #include "MockBatcher.h"
 
+#include <GteVector.h>
+#include <absl/container/btree_map.h>
+
+#include <limits>
+
 #include "CoreMath.h"
 
 namespace orbit_gl {

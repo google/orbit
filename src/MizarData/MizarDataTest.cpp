@@ -7,22 +7,35 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "MizarBase/AbsoluteAddress.h"
+#include "MizarBase/FunctionSymbols.h"
 #include "MizarData/MizarData.h"
+#include "OrbitBase/Typedef.h"
 
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::FunctionSymbol;

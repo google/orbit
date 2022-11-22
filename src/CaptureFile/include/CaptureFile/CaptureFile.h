@@ -5,6 +5,9 @@
 #ifndef CAPTURE_FILE_CAPTURE_FILE_H_
 #define CAPTURE_FILE_CAPTURE_FILE_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <filesystem>
 #include <memory>
 #include <optional>

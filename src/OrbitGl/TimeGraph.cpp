@@ -6,8 +6,6 @@
 
 #include <GteVector.h>
 #include <absl/flags/flag.h>
-#include <absl/strings/str_format.h>
-#include <absl/time/time.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -15,23 +13,28 @@
 #include <limits>
 
 #include "AccessibleTimeGraph.h"
+#include "ApiInterface/Orbit.h"
 #include "App.h"
 #include "AsyncTrack.h"
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "ClientData/CallstackData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
 #include "FrameTrack.h"
+#include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "GpuTrack.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
-#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
 #include "PageFaultsTrack.h"
 #include "PickingManager.h"
 #include "SchedulerTrack.h"
+#include "StringManager/StringManager.h"
 #include "SystemMemoryTrack.h"
 #include "TrackManager.h"
 #include "VariableTrack.h"

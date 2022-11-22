@@ -5,9 +5,11 @@
 #ifndef ORBIT_GL_ACCESSIBLE_TRACK_H_
 #define ORBIT_GL_ACCESSIBLE_TRACK_H_
 
+#include <memory>
 #include <string>
 
 #include "AccessibleCaptureViewElement.h"
+#include "CaptureViewElement.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "TimeGraphLayout.h"
 

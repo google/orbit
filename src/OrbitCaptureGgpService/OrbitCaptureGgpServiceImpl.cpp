@@ -7,15 +7,16 @@
 #include <absl/flags/declare.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitClientGgp/ClientGgp.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
 #include "absl/flags/flag.h"

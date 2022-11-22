@@ -6,14 +6,17 @@
 #define ORBIT_QT_CALL_TREE_VIEW_ITEM_MODEL_H_
 
 #include <QAbstractItemModel>
+#include <QMetaType>
 #include <QModelIndex>
 #include <QObject>
 #include <QString>
 #include <QVariant>
 #include <Qt>
 #include <memory>
+#include <vector>
 
 #include "CallTreeView.h"
+#include "ClientData/CallstackEvent.h"
 
 Q_DECLARE_METATYPE(const std::vector<orbit_client_data::CallstackEvent>*)
 

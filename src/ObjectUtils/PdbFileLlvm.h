@@ -12,6 +12,7 @@
 #include <llvm/DebugInfo/CodeView/SymbolVisitorCallbackPipeline.h>
 #include <llvm/DebugInfo/CodeView/SymbolVisitorCallbacks.h>
 #include <llvm/DebugInfo/MSF/MappedBlockStream.h>
+#include <llvm/DebugInfo/PDB/IPDBSession.h>
 #include <llvm/DebugInfo/PDB/Native/DbiStream.h>
 #include <llvm/DebugInfo/PDB/Native/InfoStream.h>
 #include <llvm/DebugInfo/PDB/Native/ModuleDebugStream.h>
@@ -21,12 +22,16 @@
 #include <llvm/DebugInfo/PDB/PDBSymbolExe.h>
 #include <llvm/DebugInfo/PDB/PDBTypes.h>
 #include <llvm/Demangle/Demangle.h>
+#include <stdint.h>
 
 #include <array>
 #include <filesystem>
+#include <memory>
+#include <string>
 
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/PdbFile.h"
+#include "ObjectUtils/SymbolsFile.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Result.h"
 

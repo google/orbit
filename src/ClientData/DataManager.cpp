@@ -10,7 +10,7 @@
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/Typedef.h"
 
 using orbit_client_data::TracepointInfoSet;
 using orbit_grpc_protos::TracepointInfo;

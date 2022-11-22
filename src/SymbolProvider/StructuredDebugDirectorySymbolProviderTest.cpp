@@ -3,7 +3,11 @@
 // found in the LICENSE file.
 
 #include <absl/strings/match.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <filesystem>
+#include <string>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"

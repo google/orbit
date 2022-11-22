@@ -9,7 +9,7 @@
 #include <QSignalSpy>
 #include <QSlider>
 #include <QTabWidget>
-#include <QTest>
+#include <string>
 
 #include "CaptureWindowDebugInterface.h"
 #include "CaptureWindowDebugWidget.h"

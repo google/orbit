@@ -9,17 +9,19 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/StringRef.h>
-#include <llvm/ADT/Twine.h>
-#include <llvm/ADT/iterator_range.h>
+#include <llvm/ADT/iterator.h>
+#include <llvm/BinaryFormat/Dwarf.h>
 #include <llvm/BinaryFormat/ELF.h>
+#include <llvm/DebugInfo/DIContext.h>
 #include <llvm/DebugInfo/DWARF/DWARFCompileUnit.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugAranges.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugFrame.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugLine.h>
+#include <llvm/DebugInfo/DWARF/DWARFDie.h>
 #include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
-#include <llvm/DebugInfo/Symbolize/SymbolizableModule.h>
 #include <llvm/DebugInfo/Symbolize/Symbolize.h>
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
@@ -30,11 +32,13 @@
 #include <llvm/Object/SymbolicFile.h>
 #include <llvm/Support/CRC.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/Endian.h>
 #include <llvm/Support/Error.h>
-#include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemoryBuffer.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -45,6 +49,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "llvm/DebugInfo/DWARF/DWARFUnitIndex.h"
 
 namespace orbit_object_utils {
 

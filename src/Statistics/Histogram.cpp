@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <utility>
 
 #include "HistogramUtils.h"
 #include "Statistics/DataSet.h"

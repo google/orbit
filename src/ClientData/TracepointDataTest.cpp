@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "ClientData/TracepointData.h"
-#include "ClientProtos/capture_data.pb.h"
-#include "GrpcProtos/tracepoint.pb.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "OrbitBase/ThreadConstants.h"
 
 using ::testing::UnorderedElementsAre;

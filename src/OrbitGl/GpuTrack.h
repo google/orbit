@@ -7,13 +7,24 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
+#include "CaptureViewElement.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/TimerData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GpuDebugMarkerTrack.h"
 #include "GpuSubmissionTrack.h"
+#include "StringManager/StringManager.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"

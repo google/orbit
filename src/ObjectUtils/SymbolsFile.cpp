@@ -5,10 +5,13 @@
 #include "ObjectUtils/SymbolsFile.h"
 
 #include <absl/strings/str_format.h>
+#include <stddef.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/ObjectFile.h"

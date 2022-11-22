@@ -4,14 +4,17 @@
 
 #include "ConfigWidgets/PropertyConfigWidget.h"
 
+#include <QChar>
 #include <QCheckBox>
 #include <QGridLayout>
+#include <QIcon>
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
 #include <QWidget>
+#include <Qt>
 #include <string_view>
-#include <variant>
+#include <utility>
 
 namespace orbit_config_widgets {
 

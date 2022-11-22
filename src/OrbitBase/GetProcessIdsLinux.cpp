@@ -2,10 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
+#include <sys/types.h>
+
+#include <chrono>
 #include <filesystem>
+#include <istream>
 #include <optional>
 #include <string>
 #include <system_error>
+#include <vector>
 
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"

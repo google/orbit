@@ -4,22 +4,25 @@
 
 #include "CaptureClient/CaptureClient.h"
 
-#include <absl/container/flat_hash_set.h>
-#include <absl/flags/declare.h>
-#include <absl/flags/flag.h>
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
+#include <stddef.h>
 
-#include <cstdint>
+#include <algorithm>
+#include <map>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/TracepointCustom.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"

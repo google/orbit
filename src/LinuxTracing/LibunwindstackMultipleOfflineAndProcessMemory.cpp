@@ -4,7 +4,7 @@
 
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 
-#include <absl/base/casts.h>
+#include "unwindstack/Memory.h"
 
 namespace orbit_linux_tracing {
 size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* dst, size_t size) {

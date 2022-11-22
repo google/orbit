@@ -14,6 +14,7 @@
 #include <QtCore>
 #include <array>
 #include <map>
+#include <vector>
 
 #include "Track.h"
 #include "TrackManager.h"

@@ -4,9 +4,17 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 #include <sys/mman.h>
 
+#include <memory>
+#include <string>
+#include <string_view>
+
 #include "LibunwindstackMaps.h"
+#include "unwindstack/MapInfo.h"
+#include "unwindstack/Maps.h"
+#include "unwindstack/SharedString.h"
 
 namespace orbit_linux_tracing {
 

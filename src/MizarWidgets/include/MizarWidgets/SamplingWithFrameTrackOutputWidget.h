@@ -5,8 +5,13 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_OUTPUT_WIDGET_H_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_OUTPUT_WIDGET_H_
 
+#include <QObject>
+#include <QResizeEvent>
+#include <QString>
 #include <QWidget>
+#include <memory>
 
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/SamplingWithFrameTrackReportModel.h"
 

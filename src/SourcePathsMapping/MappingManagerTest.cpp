@@ -5,6 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <filesystem>
+#include <optional>
+#include <vector>
 
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"

@@ -4,14 +4,19 @@
 
 #include "DataViews/DataView.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <stdint.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <iterator>
 #include <memory>
 
+#include "ApiInterface/Orbit.h"
+#include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ProcessData.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 

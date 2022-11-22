@@ -4,8 +4,14 @@
 
 #include "HistogramUtils.h"
 
+#include <absl/types/span.h>
+
+#include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <numeric>
+#include <utility>
+#include <vector>
 
 #include "Statistics/DataSet.h"
 #include "Statistics/Histogram.h"

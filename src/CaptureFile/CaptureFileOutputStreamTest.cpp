@@ -2,14 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
+#include <string.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "CaptureFile/BufferOutputStream.h"
 #include "CaptureFile/CaptureFileOutputStream.h"
 #include "CaptureFileConstants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_capture_file {

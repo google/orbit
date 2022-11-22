@@ -4,13 +4,16 @@
 
 #include "ModuleUtils/ReadLinuxMaps.h"
 
+#include <absl/strings/ascii.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <filesystem>
+#include <memory>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

@@ -3,15 +3,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QString>
+#include <memory>
 
+#include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/FrameTrack.h"
+#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
+#include "OrbitBase/Typedef.h"
 #include "TestUtils/TestUtils.h"
 
 using ::orbit_mizar_base::Baseline;

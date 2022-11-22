@@ -4,17 +4,22 @@
 
 #include "SessionSetup/RetrieveInstancesWidget.h"
 
+#include <QCheckBox>
+#include <QComboBox>
 #include <QCoreApplication>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QObject>
 #include <QPointer>
 #include <QPushButton>
-#include <QSettings>
 #include <QVariant>
+#include <QtGlobal>
+#include <algorithm>
 #include <memory>
 #include <optional>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "QtUtils/MainThreadExecutorImpl.h"

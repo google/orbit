@@ -2,17 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
-#include <numeric>
+#include <iterator>
 #include <string>
 #include <string_view>
 
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 

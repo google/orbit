@@ -8,6 +8,8 @@
 #include <absl/container/flat_hash_set.h>
 
 #include <QDialog>
+#include <QObject>
+#include <QString>
 #include <memory>
 
 #include "ClientData/ModuleData.h"

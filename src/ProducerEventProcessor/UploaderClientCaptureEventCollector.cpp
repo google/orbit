@@ -4,10 +4,13 @@
 
 #include "ProducerEventProcessor/UploaderClientCaptureEventCollector.h"
 
+#include <algorithm>
+#include <cstring>
+
 #include "ApiInterface/Orbit.h"
 #include "GrpcProtos/capture.pb.h"
-#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 
 using orbit_capture_uploader::DataReadiness;
 using orbit_grpc_protos::ClientCaptureEvent;

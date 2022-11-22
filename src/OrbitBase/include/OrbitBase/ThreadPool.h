@@ -8,9 +8,11 @@
 #include <absl/time/time.h>
 #include <stddef.h>
 
+#include <functional>
 #include <memory>
 #include <utility>
 
+#include "OrbitBase/Action.h"
 #include "OrbitBase/Executor.h"
 
 namespace orbit_base {

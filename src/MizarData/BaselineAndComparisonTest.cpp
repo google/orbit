@@ -7,25 +7,34 @@
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
-#include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <string>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "BaselineAndComparisonHelper.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
+#include "MizarBase/AbsoluteAddress.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/FunctionSymbols.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarBase/Time.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarData/FrameTrack.h"
+#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/Typedef.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;

@@ -6,15 +6,23 @@
 #define SESSION_SETUP_CONNECT_TO_TARGET_DIALOG_H_
 
 #include <QDialog>
+#include <QObject>
 #include <QString>
+#include <QWidget>
+#include <memory>
 #include <optional>
+#include <tuple>
+#include <vector>
 
 #include "ClientServices/ProcessManager.h"
 #include "Connections.h"
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
+#include "OrbitGgp/Instance.h"
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetupUtils.h"
 #include "TargetConfiguration.h"
 

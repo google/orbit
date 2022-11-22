@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
+#include "CoreMath.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

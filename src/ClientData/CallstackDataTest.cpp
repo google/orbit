@@ -2,12 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/algorithm/container.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/functional/function_ref.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <limits>
+#include <memory>
+#include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CallstackData.h"

@@ -6,25 +6,30 @@
 
 #include <absl/container/flat_hash_set.h>
 
+#include <QString>
 #include <QStringLiteral>
+#include <cstdint>
 #include <filesystem>
-#include <iterator>
 #include <memory>
 #include <string>
+#include <string_view>
+#include <utility>
 
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "MizarBase/AbsoluteAddress.h"
+#include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Typedef.h"
 
 using ::orbit_mizar_base::AbsoluteAddress;
 using ::orbit_mizar_base::ForEachFrame;

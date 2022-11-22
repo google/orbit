@@ -4,39 +4,48 @@
 
 #include "CaptureWindow.h"
 
-#include <absl/time/time.h>
-#include <string.h>
+#include <GteVector.h>
+#include <absl/container/btree_map.h>
 
 #include <algorithm>
-#include <array>
-#include <cstdint>
-#include <functional>
 #include <iterator>
 #include <optional>
-#include <ostream>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "BatcherInterface.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
+#include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
+#include "QtTextRenderer.h"
 #include "TextRenderer.h"
+#include "TextRendererInterface.h"
 #include "TimeGraphLayout.h"
+#include "TrackContainer.h"
+#include "TrackManager.h"
+#include "Viewport.h"
 #include "absl/strings/str_format.h"
 
 using orbit_accessibility::AccessibleInterface;

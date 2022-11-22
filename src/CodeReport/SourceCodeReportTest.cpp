@@ -2,15 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <cstdint>
+#include <filesystem>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "ClientData/CallstackEvent.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/PostProcessedSamplingData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/SourceCodeReport.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "ObjectUtils/ObjectFile.h"
+#include "ObjectUtils/ElfFile.h"
+#include "OrbitBase/Result.h"
 
 namespace {
 class MockElfFile : public orbit_object_utils::ElfFile {

@@ -3,8 +3,16 @@
 // found in the LICENSE file.
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <stdint.h>
+#include <string.h>
 #include <vulkan/vk_layer.h>
-#include <vulkan/vulkan.h>
+#include <vulkan/vk_platform.h>
+#include <vulkan/vulkan_core.h>
+
+#include <array>
+#include <vector>
 
 #include "DeviceManager.h"
 #include "DispatchTable.h"

@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include <atomic>
+#include <optional>
 
 #include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "GrpcProtos/Constants.h"

@@ -5,9 +5,7 @@
 #include "ClientServices/ProcessManager.h"
 
 #include <absl/synchronization/mutex.h>
-#include <grpcpp/channel.h>
 
-#include <exception>
 #include <memory>
 #include <string>
 #include <thread>

@@ -7,7 +7,9 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 

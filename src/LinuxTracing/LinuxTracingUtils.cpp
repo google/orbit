@@ -5,24 +5,24 @@
 #include "LinuxTracingUtils.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <sys/resource.h>
 
 #include <algorithm>
-#include <array>
+#include <chrono>
+#include <cstdint>
 #include <ctime>
 #include <filesystem>
-#include <memory>
+#include <istream>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "ModuleUtils/ReadLinuxMaps.h"
@@ -30,6 +30,7 @@
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 
 namespace fs = std::filesystem;

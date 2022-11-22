@@ -4,9 +4,12 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base {
 TEST(RegisterContinuationOrCallDirectly, RegisteringSucceeds) {

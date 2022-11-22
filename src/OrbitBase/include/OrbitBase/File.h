@@ -8,9 +8,11 @@
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #include <filesystem>
 #include <string_view>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

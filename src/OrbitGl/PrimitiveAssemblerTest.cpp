@@ -2,10 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <GteVector.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <algorithm>
+#include <array>
+#include <memory>
+
+#include "BatcherInterface.h"
 #include "CoreMath.h"
+#include "Geometry.h"
 #include "MockBatcher.h"
+#include "PickingManager.h"
 #include "PickingManagerTest.h"
 #include "PrimitiveAssembler.h"
 

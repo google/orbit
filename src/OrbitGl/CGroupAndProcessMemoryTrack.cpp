@@ -6,8 +6,15 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/substitute.h>
+#include <stdint.h>
 
+#include <array>
+#include <optional>
+#include <string_view>
+
+#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_gl {
 

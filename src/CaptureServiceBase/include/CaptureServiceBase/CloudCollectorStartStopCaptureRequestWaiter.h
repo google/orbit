@@ -9,9 +9,12 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 
+#include <optional>
+
 #include "CaptureServiceBase/CaptureServiceBase.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_service_base {
 

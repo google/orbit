@@ -10,12 +10,13 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <absl/synchronization/mutex.h>
-#include <stddef.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
+#include <set>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -36,8 +37,10 @@
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "PerfEventOpen.h"
+#include "PerfEventOrderedStream.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
 

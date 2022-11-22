@@ -5,6 +5,7 @@
 #include "LinuxTracing/Tracer.h"
 
 #include <memory>
+#include <utility>
 
 #include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "TracerImpl.h"

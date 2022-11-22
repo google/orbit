@@ -5,7 +5,13 @@
 #ifndef ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <vector>
+
 #include "AccessibleInterfaceProvider.h"
+#include "CoreMath.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"

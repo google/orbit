@@ -2,12 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <QColor>
+#include <QString>
+#include <filesystem>
 #include <memory>
+#include <optional>
 
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
+#include "OrbitBase/Result.h"
 #include "OrbitGgp/Instance.h"
 #include "SessionSetup/TargetLabel.h"
 #include "TestUtils/TestUtils.h"

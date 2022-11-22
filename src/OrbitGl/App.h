@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/time/time.h>
 #include <absl/types/span.h>
 #include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/channel.h>
@@ -32,15 +33,25 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFileInfo/Manager.h"
 #include "CaptureWindow.h"
+#include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/DataManager.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/PageFaultsInfo.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeId.h"
+#include "ClientData/SystemMemoryInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TimerChain.h"
+#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientData/WineSyscallHandlingMethod.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientProtos/preset.pb.h"
@@ -50,6 +61,7 @@
 #include "DataViewFactory.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CallstackDataView.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "DataViews/ModulesDataView.h"
@@ -61,6 +73,7 @@
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
@@ -74,12 +87,15 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
+#include "PresetFile/PresetFile.h"
 #include "QtUtils/Throttle.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
+#include "Statistics/Histogram.h"
 #include "StringManager/StringManager.h"
 #include "SymbolLoader.h"
 #include "SymbolProvider/ModuleIdentifier.h"
+#include "TimeGraph.h"
 
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::AbstractCaptureListener<OrbitApp>,

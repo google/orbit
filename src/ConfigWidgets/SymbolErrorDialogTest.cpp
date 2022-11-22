@@ -4,11 +4,17 @@
 
 #include <gtest/gtest.h>
 
-#include <QCoreApplication>
+#include <QDialog>
 #include <QLabel>
+#include <QMetaObject>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QString>
 #include <QTest>
+#include <Qt>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 #include "ClientData/ModuleData.h"
 #include "ConfigWidgets/SymbolErrorDialog.h"

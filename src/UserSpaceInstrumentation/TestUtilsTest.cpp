@@ -3,16 +3,17 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
-#include <cstdint>
 #include <random>
 #include <string>
-#include <string_view>
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
 #include "UserSpaceInstrumentation/Attach.h"

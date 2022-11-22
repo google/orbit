@@ -23,6 +23,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 

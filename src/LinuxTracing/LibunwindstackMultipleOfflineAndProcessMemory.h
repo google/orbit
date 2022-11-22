@@ -6,9 +6,12 @@
 #define LINUX_TRACING_LIBUNWINDSTACK_MULTIPLE_OFFLINE_AND_PROCESS_MEMORY_H_
 
 #include <absl/base/casts.h>
+#include <stdint.h>
+#include <sys/types.h>
 #include <unwindstack/Memory.h>
 
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

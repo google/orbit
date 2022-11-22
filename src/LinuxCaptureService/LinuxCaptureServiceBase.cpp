@@ -4,38 +4,44 @@
 
 #include "LinuxCaptureService/LinuxCaptureServiceBase.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
-#include <stdint.h>
+#include <sys/types.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <map>
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
+#include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "ExtractSignalFromMinidump.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
 #include "MemoryWatchdog.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
-#include "OrbitVersion/OrbitVersion.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"

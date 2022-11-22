@@ -5,8 +5,14 @@
 #include "PresetFile/PresetFile.h"
 
 #include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/text_format.h>
+#include <string.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <string_view>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"

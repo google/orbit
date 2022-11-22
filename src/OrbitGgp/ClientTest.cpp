@@ -7,9 +7,14 @@
 
 #include <QCoreApplication>
 #include <QString>
+#include <QVector>
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <string>
+#include <type_traits>
+#include <variant>
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
@@ -20,6 +25,7 @@
 #include "OrbitGgp/Instance.h"
 #include "OrbitGgp/Project.h"
 #include "OrbitGgp/SshInfo.h"
+#include "OrbitGgp/SymbolDownloadInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "TestUtils/TestUtils.h"
 

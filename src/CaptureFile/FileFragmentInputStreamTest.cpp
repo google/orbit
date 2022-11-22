@@ -3,8 +3,16 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <stddef.h>
+
+#include <memory>
+#include <optional>
+#include <string_view>
+#include <utility>
 
 #include "FileFragmentInputStream.h"
+#include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_capture_file_internal {

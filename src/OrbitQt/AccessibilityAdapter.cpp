@@ -103,6 +103,8 @@
 
 #include "AccessibilityAdapter.h"
 
+#include <absl/meta/type_traits.h>
+
 #include <QAccessibleWidget>
 #include <QLatin1String>
 #include <mutex>

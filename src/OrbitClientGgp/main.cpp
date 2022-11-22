@@ -3,17 +3,20 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <absl/strings/string_view.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitClientGgp/ClientGgp.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"

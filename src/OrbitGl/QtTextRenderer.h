@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <QPainter>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -15,6 +16,7 @@
 #include "CoreMath.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
+#include "TextRendererInterface.h"
 
 namespace orbit_gl {
 

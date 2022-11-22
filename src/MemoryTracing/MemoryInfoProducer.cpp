@@ -5,6 +5,7 @@
 #include "MemoryTracing/MemoryInfoProducer.h"
 
 #include <absl/synchronization/mutex.h>
+#include <absl/time/clock.h>
 #include <absl/time/time.h>
 
 #include <thread>
@@ -12,6 +13,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryTracingUtils.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_memory_tracing {

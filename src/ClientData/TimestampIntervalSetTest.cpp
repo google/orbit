@@ -4,6 +4,10 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
+
+#include <map>
+#include <vector>
 
 #include "ClientData/TimestampIntervalSet.h"
 

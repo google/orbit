@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <type_traits>
 #include <utility>
 
 #include "App.h"
@@ -17,7 +16,10 @@
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
 #include "TimeGraph.h"
+#include "TrackContainer.h"
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ScopeId;

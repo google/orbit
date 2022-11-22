@@ -6,14 +6,16 @@
 
 #include <GteVector.h>
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
 
 #include "AccessibleTriangleToggle.h"
+#include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "PickingManager.h"
 #include "PrimitiveAssembler.h"
-#include "Track.h"
 
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;

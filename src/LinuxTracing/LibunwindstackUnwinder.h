@@ -6,6 +6,7 @@
 #define LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
 
 #include <asm/perf_regs.h>
+#include <sys/types.h>
 #include <unwindstack/Error.h>
 #include <unwindstack/MachineX86_64.h>
 #include <unwindstack/Maps.h>
@@ -15,7 +16,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>

@@ -6,9 +6,12 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/meta/type_traits.h>
 #include <llvm/Demangle/Demangle.h>
 
+#include <algorithm>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "CaptureClient/ApiEventProcessor.h"
@@ -21,8 +24,12 @@
 #include "ClientData/PageFaultsInfo.h"
 #include "ClientData/SystemMemoryInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {

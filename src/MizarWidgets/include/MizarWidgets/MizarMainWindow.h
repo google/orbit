@@ -6,9 +6,12 @@
 #define MIZAR_WIDGETS_MIZAR_MAIN_WINDOW_H_
 
 #include <QMainWindow>
+#include <QString>
+#include <QWidget>
 #include <memory>
 #include <string_view>
 
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 
 namespace Ui {

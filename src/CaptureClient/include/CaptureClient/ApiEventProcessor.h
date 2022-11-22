@@ -7,6 +7,9 @@
 
 #include <absl/container/flat_hash_map.h>
 
+#include <cstdint>
+#include <vector>
+
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
 

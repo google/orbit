@@ -4,7 +4,11 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <string>
+
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/NotFoundOr.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 
 namespace orbit_symbol_provider {

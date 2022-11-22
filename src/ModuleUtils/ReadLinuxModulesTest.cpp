@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #include <filesystem>
-#include <string_view>
+#include <string>
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"

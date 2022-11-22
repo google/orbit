@@ -4,13 +4,6 @@
 
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
-#include <absl/strings/str_format.h>
-
-#include <algorithm>
-#include <filesystem>
-#include <memory>
-#include <string>
-
 #include "OrbitBase/Align.h"
 #include "OrbitBase/Logging.h"
 

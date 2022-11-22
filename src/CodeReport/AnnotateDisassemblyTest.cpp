@@ -4,15 +4,26 @@
 
 #include <absl/strings/str_replace.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 #include "CodeReport/AnnotateDisassembly.h"
 #include "CodeReport/AnnotatingLine.h"
+#include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
-#include "OrbitBase/Logging.h"
+#include "GrpcProtos/symbol.pb.h"
+#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "Test/Path.h"
 
 using namespace std::string_view_literals;

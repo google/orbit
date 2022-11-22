@@ -7,6 +7,8 @@
 
 #include <QIntValidator>
 #include <QObject>
+#include <QString>
+#include <QValidator>
 
 namespace orbit_qt {
 

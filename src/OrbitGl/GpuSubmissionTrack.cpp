@@ -4,9 +4,10 @@
 
 #include "GpuSubmissionTrack.h"
 
-#include <absl/time/time.h>
+#include <GteVector.h>
 
 #include <memory>
+#include <optional>
 
 #include "App.h"
 #include "ClientData/TimerChain.h"
@@ -18,6 +19,7 @@
 #include "PrimitiveAssembler.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
+#include "TrackHeader.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_data::TimerChain;

@@ -4,14 +4,17 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
 #include <QSettings>
+#include <QString>
 #include <filesystem>
-#include <memory>
+#include <string>
+#include <vector>
 
+#include "ClientSymbols/PersistentStorageManager.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 
 const std::filesystem::path path0{"/path/to/symbols/path"};

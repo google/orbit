@@ -5,8 +5,14 @@
 #include "SystemMemoryTrack.h"
 
 #include <absl/strings/str_format.h>
+#include <stdint.h>
 
+#include <array>
+#include <optional>
+
+#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_gl {
 

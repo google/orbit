@@ -3,10 +3,12 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <unistd.h>
+#include <stdint.h>
 
 #include <memory>
 
+#include "GrpcProtos/process.pb.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessService/Process.h"
 

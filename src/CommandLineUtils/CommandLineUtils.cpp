@@ -5,6 +5,11 @@
 #include "CommandLineUtils/CommandLineUtils.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/commandlineflag.h>
+
+#include <QListData>
+#include <QString>
+#include <array>
 
 #include "ClientFlags/ClientFlags.h"
 #include "absl/flags/flag.h"

@@ -5,6 +5,8 @@
 #ifndef STATISTICS_HISTOGRAM_UTILS_H_
 #define STATISTICS_HISTOGRAM_UTILS_H_
 
+#include <stddef.h>
+
 #include <cstdint>
 
 #include "Statistics/DataSet.h"

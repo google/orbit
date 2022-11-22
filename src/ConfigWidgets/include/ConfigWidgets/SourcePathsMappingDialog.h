@@ -7,7 +7,14 @@
 
 #include <QDialog>
 #include <QItemSelection>
+#include <QObject>
+#include <QString>
+#include <QWidget>
+#include <memory>
+#include <utility>
+#include <vector>
 
+#include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingItemModel.h"
 
 namespace Ui {

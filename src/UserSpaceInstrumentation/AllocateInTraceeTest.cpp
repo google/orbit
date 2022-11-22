@@ -5,22 +5,27 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <linux/filter.h>
 #include <linux/seccomp.h>
+#include <signal.h>
+#include <stdint.h>
 #include <sys/prctl.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <syscall.h>
+#include <unistd.h>
 
-#include <filesystem>
+#include <array>
+#include <memory>
 #include <string>
-#include <thread>
+#include <utility>
 #include <vector>
 
 #include "AllocateInTracee.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 

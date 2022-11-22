@@ -4,8 +4,14 @@
 
 #include <ClientData/TimerData.h>
 
+#include <cstdint>
+#include <utility>
+
 #include "ApiInterface/Orbit.h"
+#include "ClientData/FastRenderingUtils.h"
+#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Logging.h"
 
 using orbit_client_protos::TimerInfo;
 

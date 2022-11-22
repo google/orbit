@@ -3,15 +3,20 @@
 // found in the LICENSE file.
 
 #include <dlfcn.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <csignal>
 #include <filesystem>
-#include <string>
+#include <utility>
+#include <vector>
 
 #include "GetTestLibLibraryPath.h"
+#include "GrpcProtos/module.pb.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

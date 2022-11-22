@@ -5,13 +5,17 @@
 #include "OrbitBase/ThreadPool.h"
 
 #include <absl/base/attributes.h>
+#include <absl/base/const_init.h>
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/meta/type_traits.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 
 #include <algorithm>
 #include <list>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 

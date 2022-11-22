@@ -6,6 +6,8 @@
 #define SYMBOL_PROVIDER_SYMBOL_LOADING_OUTCOME_H_
 
 #include <filesystem>
+#include <string>
+#include <utility>
 #include <variant>
 
 #include "OrbitBase/CanceledOr.h"

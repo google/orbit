@@ -11,9 +11,21 @@
 
 #include <array>
 #include <map>
+#include <unordered_map>
 
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "OrbitBase/Logging.h"  // IWYU pragma: keep
+#include "unwindstack/Arch.h"
+#include "unwindstack/DwarfLocation.h"
+#include "unwindstack/DwarfSection.h"
+#include "unwindstack/DwarfStructs.h"
+#include "unwindstack/Elf.h"
+#include "unwindstack/ElfInterface.h"
+#include "unwindstack/MachineX86_64.h"
+#include "unwindstack/MapInfo.h"
+#include "unwindstack/Maps.h"
+#include "unwindstack/Object.h"
+#include "unwindstack/Unwinder.h"
 
 namespace orbit_linux_tracing {
 

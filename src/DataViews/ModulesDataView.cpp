@@ -4,17 +4,21 @@
 
 #include "DataViews/ModulesDataView.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/ascii.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
-#include <stddef.h>
+#include <stdint.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
+#include <map>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -22,8 +26,8 @@
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::ModuleData;

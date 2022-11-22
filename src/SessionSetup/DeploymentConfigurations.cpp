@@ -4,6 +4,7 @@
 
 #include "SessionSetup/DeploymentConfigurations.h"
 
+#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 
 #include <QChar>
@@ -12,6 +13,7 @@
 #include <QDir>
 #include <QProcessEnvironment>
 #include <QString>
+#include <optional>
 
 #include "ClientFlags/ClientFlags.h"
 

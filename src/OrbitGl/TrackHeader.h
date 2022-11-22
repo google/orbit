@@ -5,11 +5,22 @@
 #ifndef ORBIT_GL_TRACK_HEADER_H_
 #define ORBIT_GL_TRACK_HEADER_H_
 
+#include <GteVector.h>
+#include <stdint.h>
+
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "CaptureViewElement.h"
+#include "CoreMath.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
+#include "TimeGraphLayout.h"
 #include "TrackControlInterface.h"
 #include "TriangleToggle.h"
+#include "Viewport.h"
 
 namespace orbit_gl {
 

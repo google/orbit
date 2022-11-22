@@ -5,7 +5,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <functional>
 #include <iterator>
+#include <vector>
 
 #include "OrbitBase/Sort.h"
 

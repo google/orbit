@@ -5,7 +5,16 @@
 
 #include "ClientData/ScopeStatsCollection.h"
 
+#include <absl/algorithm/container.h>
+#include <absl/meta/type_traits.h>
+#include <stdint.h>
+
+#include <iterator>
+#include <optional>
+#include <utility>
+
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Typedef.h"
 
 namespace orbit_client_data {
 

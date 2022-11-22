@@ -9,11 +9,21 @@
 #include <stdint.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "CaptureViewElement.h"
+#include "ClientData/CallstackType.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "CoreMath.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
+#include "TextRenderer.h"
 #include "ThreadBar.h"
+#include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

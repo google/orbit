@@ -6,7 +6,9 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <QObject>
 #include <QSignalSpy>
+#include <QString>
 #include <memory>
 
 #include "OrbitBase/Result.h"

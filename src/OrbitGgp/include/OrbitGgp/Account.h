@@ -5,6 +5,7 @@
 #ifndef ORBIT_GPP_ACCOUNT_H_
 #define ORBIT_GPP_ACCOUNT_H_
 
+#include <QByteArray>
 #include <QString>
 
 #include "OrbitBase/Result.h"

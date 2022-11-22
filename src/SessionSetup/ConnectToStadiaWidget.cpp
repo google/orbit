@@ -6,17 +6,12 @@
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
-#include <grpcpp/create_channel.h>
-#include <grpcpp/security/credentials.h>
-#include <grpcpp/support/channel_arguments.h>
+#include <grpc/grpc.h>
 
 #include <QApplication>
 #include <QCheckBox>
-#include <QComboBox>
-#include <QEventLoop>
-#include <QHBoxLayout>
+#include <QFrame>
 #include <QItemSelectionModel>
-#include <QLayout>
 #include <QMessageBox>
 #include <QModelIndexList>
 #include <QPushButton>
@@ -25,8 +20,7 @@
 #include <QTableView>
 #include <QVariant>
 #include <Qt>
-#include <algorithm>
-#include <filesystem>
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <system_error>
@@ -34,7 +28,6 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/InstanceItemModel.h"

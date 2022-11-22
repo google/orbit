@@ -7,20 +7,14 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
-#include <algorithm>
-#include <array>
-#include <deque>
 #include <filesystem>
-#include <iterator>
 #include <optional>
 #include <string>
-#include <variant>
-#include <vector>
 
 #include "GrpcProtos/services.pb.h"
-#include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
+#include "ProcessService/CpuTime.h"
 #include "ProcessServiceUtils.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"

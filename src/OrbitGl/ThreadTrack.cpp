@@ -4,31 +4,37 @@
 
 #include "ThreadTrack.h"
 
+#include <GteVector.h>
 #include <absl/strings/str_format.h>
-#include <absl/synchronization/mutex.h>
-#include <absl/time/time.h>
 
 #include <algorithm>
-#include <atomic>
-#include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <string_view>
+#include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "BatcherInterface.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "Geometry.h"
+#include "GlCanvas.h"
 #include "GlUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/Typedef.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "TimerTrack.h"
+#include "TrackHeader.h"
 #include "Viewport.h"
 
 using orbit_client_data::FunctionInfo;

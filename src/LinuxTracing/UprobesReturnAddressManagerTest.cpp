@@ -4,13 +4,13 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <unwindstack/Maps.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <ctime>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "LibunwindstackMaps.h"

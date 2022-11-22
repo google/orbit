@@ -4,6 +4,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <vulkan/vulkan_core.h>
+
+#include <memory>
 
 #include "DeviceManager.h"
 

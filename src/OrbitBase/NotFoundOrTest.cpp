@@ -5,6 +5,10 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <variant>
 
 #include "OrbitBase/NotFoundOr.h"
 

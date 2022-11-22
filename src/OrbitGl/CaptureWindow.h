@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <QPainter>
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,7 +16,11 @@
 #include "CaptureClient/AppInterface.h"
 #include "CaptureStats.h"
 #include "CaptureWindowDebugInterface.h"
+#include "ClientData/CaptureData.h"
+#include "ClientData/TimerTrackDataIdManager.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GlCanvas.h"
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "SimpleTimings.h"
 #include "TimeGraph.h"

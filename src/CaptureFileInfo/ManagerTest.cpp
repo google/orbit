@@ -2,16 +2,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/time/time.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QString>
 #include <chrono>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <set>
 #include <thread>
+#include <utility>
+#include <vector>
 
+#include "CaptureFileInfo/CaptureFileInfo.h"
 #include "CaptureFileInfo/Manager.h"
+#include "OrbitBase/Result.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 

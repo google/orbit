@@ -4,8 +4,10 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <initializer_list>
+#include <string>
 
 #include "DummyFunctionSymbolToKey.h"
 #include "MizarBase/FunctionSymbols.h"

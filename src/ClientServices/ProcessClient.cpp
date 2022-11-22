@@ -4,12 +4,12 @@
 
 #include "ClientServices/ProcessClient.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/types/span.h>
 #include <grpcpp/grpcpp.h>
 
 #include <chrono>
 #include <memory>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

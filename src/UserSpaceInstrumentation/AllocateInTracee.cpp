@@ -7,13 +7,16 @@
 #include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
 #include <linux/seccomp.h>
+#include <signal.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
-#include <thread>
+#include <utility>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -21,6 +24,7 @@
 #include "OrbitBase/SafeStrerror.h"
 #include "ReadSeccompModeOfThread.h"
 #include "RegisterState.h"
+#include "UserSpaceInstrumentation/AddressRange.h"
 
 namespace orbit_user_space_instrumentation {
 

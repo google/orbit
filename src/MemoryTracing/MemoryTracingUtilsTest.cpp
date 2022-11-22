@@ -5,10 +5,13 @@
 #include <absl/strings/substitute.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <string>
 
+#include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryTracingUtils.h"
+#include "OrbitBase/Result.h"
 
 using orbit_grpc_protos::CGroupMemoryUsage;
 using orbit_grpc_protos::ProcessMemoryUsage;

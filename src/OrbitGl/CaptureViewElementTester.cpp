@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <unordered_map>
+#include <vector>
 
 orbit_gl::CaptureViewElementTester::CaptureViewElementTester()
     : viewport_(1920, 1080), primitive_assembler_(&batcher_, &picking_manager_) {}

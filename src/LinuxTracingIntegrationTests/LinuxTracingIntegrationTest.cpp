@@ -7,27 +7,37 @@
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
+#include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 #include <sys/types.h>
-#include <unistd.h>
 
-#include <array>
+#include <algorithm>
 #include <cmath>
-#include <thread>
+#include <cstdint>
+#include <filesystem>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "IntegrationTestChildProcess.h"
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
+#include "LinuxTracing/UserSpaceInstrumentationAddresses.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_linux_tracing_integration_tests {

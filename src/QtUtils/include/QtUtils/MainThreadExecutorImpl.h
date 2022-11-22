@@ -5,9 +5,15 @@
 #ifndef QT_UTILS_MAIN_THREAD_EXECUTOR_IMPL_H_
 #define QT_UTILS_MAIN_THREAD_EXECUTOR_IMPL_H_
 
+#include <absl/types/span.h>
+
 #include <QObject>
+#include <QString>
+#include <chrono>
 #include <memory>
 
+#include "OrbitBase/Action.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 
 namespace orbit_qt_utils {

@@ -6,6 +6,7 @@
 #define STATISTICS_HISTOGRAM_H_
 
 #include <absl/types/span.h>
+#include <stddef.h>
 
 #include <cstdint>
 #include <optional>

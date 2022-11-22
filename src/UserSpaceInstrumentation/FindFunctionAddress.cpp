@@ -6,8 +6,10 @@
 
 #include <absl/strings/str_format.h>
 
+#include <memory>
 #include <string>
 
+#include "GrpcProtos/symbol.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 

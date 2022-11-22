@@ -4,6 +4,8 @@
 
 #include "LockFreeApiEventProducer.h"
 
+#include <variant>
+
 namespace orbit_api {
 
 orbit_grpc_protos::ProducerCaptureEvent* LockFreeApiEventProducer::TranslateIntermediateEvent(

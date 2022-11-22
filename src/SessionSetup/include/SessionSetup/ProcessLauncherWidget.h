@@ -5,11 +5,14 @@
 #ifndef SESSION_SETUP_PROCESS_LAUNCHER_WIDGET_H_
 #define SESSION_SETUP_PROCESS_LAUNCHER_WIDGET_H_
 
+#include <QObject>
 #include <QPushButton>
+#include <QString>
 #include <QWidget>
 #include <memory>
 
 #include "ClientServices/ProcessManager.h"
+#include "GrpcProtos/process.pb.h"
 
 namespace Ui {
 class ProcessLauncherWidget;

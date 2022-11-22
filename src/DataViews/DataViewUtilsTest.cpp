@@ -5,13 +5,17 @@
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "DataViewUtils.h"
 
 #ifdef _WIN32
 #include <windows.h>
+
 static void SetEnv(const char* name, const char* value) { _putenv_s(name, value); }
 #else
 #include <stdlib.h>
+
 static void SetEnv(const char* name, const char* value) { setenv(name, value, 1); }
 #endif
 

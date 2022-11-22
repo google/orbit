@@ -5,6 +5,10 @@
 #ifndef MEMORY_TRACING_MEMORY_TRACING_UTILS_H_
 #define MEMORY_TRACING_MEMORY_TRACING_UTILS_H_
 
+#include <stdint.h>
+#include <sys/types.h>
+
+#include <string>
 #include <string_view>
 
 #include "GrpcProtos/capture.pb.h"

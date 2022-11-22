@@ -5,6 +5,7 @@
 #ifndef MIZAR_DATA_GET_CALLSTACK_SAMPLING_INTERVALS_H_
 #define MIZAR_DATA_GET_CALLSTACK_SAMPLING_INTERVALS_H_
 
+#include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
 #include <vector>

@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_ACCESSIBLE_INTERFACE_PROVIDER_H_
 #define ORBIT_GL_ACCESSIBLE_INTERFACE_PROVIDER_H_
 
+#include <memory>
+
 #include "OrbitAccessibility/AccessibleInterface.h"
 
 namespace orbit_gl {

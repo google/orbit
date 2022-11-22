@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <stdint.h>
+#include <absl/strings/string_view.h>
 
+#include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 

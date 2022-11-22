@@ -4,14 +4,17 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 #include <sys/mman.h>
+#include <sys/types.h>
 
-#include <algorithm>
+#include <filesystem>
 #include <memory>
+#include <string>
 #include <utility>
-#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/module.pb.h"
 #include "LibunwindstackMaps.h"
 #include "MockTracerListener.h"
 #include "PerfEvent.h"
