@@ -1,0 +1,4 @@
+include(clang13_common)
+
+[settings]
+build_type=Debug

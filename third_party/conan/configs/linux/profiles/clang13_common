@@ -1,0 +1,8 @@
+include(clang_common)
+
+[settings]
+compiler.version=13
+
+[env]
+CC=clang-13
+CXX=clang++-13
