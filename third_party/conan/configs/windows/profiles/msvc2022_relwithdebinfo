@@ -1,0 +1,7 @@
+include(msvc2022_common)
+
+[settings]
+build_type=RelWithDebInfo
+
+# The openssl package does not support a RelWithDebInfo build.
+openssl:build_type=Release

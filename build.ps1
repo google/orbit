@@ -16,14 +16,14 @@ function conan_create_profile($profile) {
   $compiler_version = & $conan.Path profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
 
   if ($compiler -ne "Visual Studio") {
-    Throw "It seems conan couldn't detect your Visual Studio installation. Do you have Visual Studio installed? At least Visual Studio 2017 is required!"
+    Throw "It seems conan couldn't detect your Visual Studio installation. Do you have Visual Studio installed? At least Visual Studio 2019 is required!"
   }
 
-  if ([int]$compiler_version -ne 15 -and [int]$compiler_version -ne 16) {
-    Throw "Your version of Visual Studio is not supported. We currently only support VS2017 and VS2019."
+  if ([int]$compiler_version -ne 16 -and [int]$compiler_version -ne 17) {
+    Throw "Your version of Visual Studio is not supported. We currently only support VS2019 and VS2022."
   }
 
-  $compiler_version = if ($compiler_version -eq 15) { "msvc2017" } else { "msvc2019" }
+  $compiler_version = if ($compiler_version -eq 16) { "msvc2019" } else { "msvc2022" }
 
   $conan_dir = if ($env:CONAN_USER_HOME) { $env:CONAN_USER_HOME } else { $env:USERPROFILE }
   $conan_dir += "/.conan"
@@ -33,25 +33,22 @@ function conan_create_profile($profile) {
 
   if (!$Env:Qt5_DIR) {
     Write-Host ""
-    Write-Host "Compile Qt from source or use official distribution?"
-    Write-Host "====================================================`r`n"
-    Write-Host "Orbit depends on the Qt framework which can be either automatically compiled from source (can take several hours!)"
-    Write-Host "or can be provided by an official Qt distribution. We recommend the latter which is less cumbersome."
+    Write-Host "Qt5_DIR environment variable not set - Please provide path to Qt distribution`r`n"
+    Write-Host "=============================================================================`r`n"
+    Write-Host "Orbit depends on the Qt framework which has to be installed separately either using the official installer,`r`n"
+    Write-Host "compiled manually from source or installed using a third party installer like aqtinstall.`r`n"
     Write-Host "Check out DEVELOPMENT.md for more details on how to use an official Qt distribution.`r`n"
-    Write-Host "Press Ctrl+C to stop here and install Qt first. Press Enter to continue with compiling Qt from source."
-    Write-Host "Google-internal devs: Please press Enter!`r`n"
-    Read-Host  "Answer"
+    Write-Host "Press Ctrl+C to stop here and install Qt first. Make sure the Qt5_DIR environment variable is pointing to your`r`n"
+    Write-Host "Qt installation. Then call this script again.`r`n"
+    Exit 1
   }
 
   "include(${compiler_version}_${build_type})`r`n" | Set-Content -Path $profile_path
   "[settings]`r`n[options]" | Add-Content -Path $profile_path
 
   if ($Env:Qt5_DIR) {
-    Write-Host "Found Qt5_DIR environment variable. Using system provided Qt distribution."
-    "OrbitProfiler:system_qt=True`r`n[build_requires]`r`n[env]" | Add-Content -Path $profile_path
-    "OrbitProfiler:Qt5_DIR=`"$Env:Qt5_DIR`"" | Add-Content -Path $profile_path
-  } else {
-    "[build_requires]`r`n[env]" | Add-Content -Path $profile_path
+    Write-Host "Found Qt5_DIR environment variable. Using system provided Qt distribution from $Env:Qt5_DIR."
+    "`r`n[env]`r`nOrbitProfiler:Qt5_DIR=`"$Env:Qt5_DIR`"" | Add-Content -Path $profile_path
   }
 }
 
