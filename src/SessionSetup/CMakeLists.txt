@@ -59,7 +59,6 @@ target_link_libraries(
           ClientFlags
           ClientServices
           OrbitBase
-          OrbitGgp
           OrbitSsh
           OrbitSshQt
           QtUtils

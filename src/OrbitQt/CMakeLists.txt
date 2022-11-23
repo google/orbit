@@ -92,7 +92,6 @@ target_link_libraries(
           DisplayFormats
           OrbitAccessibility
           OrbitGl
-          OrbitGgp
           OrbitSshQt
           OrbitVersion
           QtUtils

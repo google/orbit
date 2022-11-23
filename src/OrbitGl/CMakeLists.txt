@@ -178,7 +178,6 @@ target_link_libraries(
          Http
          OrbitAccessibility
          OrbitBase
-         OrbitGgp
          OrbitPaths
          OrbitVersion
          PresetFile
