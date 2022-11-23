@@ -330,7 +330,7 @@ int main(int argc, char* argv[]) {
   if (!ssh_target_process.empty()) {
     const std::string& ssh_hostname = absl::GetFlag(FLAGS_ssh_hostname);
     const std::string& ssh_user = absl::GetFlag(FLAGS_ssh_user);
-    const uint16_t& ssh_port = absl::GetFlag(FLAGS_ssh_port);
+    uint16_t ssh_port = absl::GetFlag(FLAGS_ssh_port);
     const std::string& ssh_known_host_path = absl::GetFlag(FLAGS_ssh_known_host_path);
     const std::string& ssh_key_path = absl::GetFlag(FLAGS_ssh_key_path);
     if (ssh_hostname.empty() || ssh_user.empty() || ssh_known_host_path.empty() ||
