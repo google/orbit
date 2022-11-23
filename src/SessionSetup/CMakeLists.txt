@@ -18,7 +18,6 @@ target_sources(
           include/SessionSetup/OrbitServiceInstance.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/OtherUserDialog.h
-          include/SessionSetup/PersistentStorage.h
           include/SessionSetup/ProcessItemModel.h
           include/SessionSetup/ProcessLauncherWidget.h
           include/SessionSetup/ServiceDeployManager.h
@@ -42,7 +41,6 @@ target_sources(
           OtherUserDialog.ui
           OverlayWidget.cpp
           OverlayWidget.ui
-          PersistentStorage.cpp
           ProcessItemModel.cpp
           ProcessLauncherWidget.cpp
           ProcessLauncherWidget.ui
@@ -81,7 +79,6 @@ target_sources(
   SessionSetupTests
   PRIVATE ConnectToLocalWidgetTest.cpp
           DoubleClickableLabelTest.cpp
-          PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
           OrbitServiceInstanceTest.cpp
           OtherUserDialogTest.cpp
