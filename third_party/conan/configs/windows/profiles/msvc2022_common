@@ -1,0 +1,22 @@
+include(cmake_common)
+
+LD_FLAGS=/FIXED:NO /ignore:4099
+
+[settings]
+os=Windows
+os_build=Windows
+arch=x86_64
+arch_build=x86_64
+compiler=Visual Studio
+compiler.version=17
+abseil:compiler=Visual Studio
+abseil:compiler.cppstd=17
+gtest:compiler=Visual Studio
+gtest:compiler.cppstd=17
+grpc:compiler=Visual Studio
+grpc:compiler.cppstd=17
+
+[env]
+CONAN_CMAKE_SYSTEM_VERSION=10
+LDFLAGS=$LD_FLAGS
+gtest:CXXFLAGS=-std=c++17
