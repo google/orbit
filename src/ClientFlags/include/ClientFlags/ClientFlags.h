@@ -43,13 +43,7 @@ ABSL_DECLARE_FLAG(std::string, instance_symbols_folder);
 
 ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
 
-// VSI
-ABSL_DECLARE_FLAG(std::string, target_process);
-ABSL_DECLARE_FLAG(std::string, target_instance);
 ABSL_DECLARE_FLAG(std::vector<std::string>, additional_symbol_paths);
-
-// TestHub custom protocol support
-ABSL_DECLARE_FLAG(std::string, target_uri);
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_DECLARE_FLAG(bool, clear_settings);
@@ -73,5 +67,13 @@ ABSL_DECLARE_FLAG(bool, symbol_store_support);
 
 // Disables retrieving symbols from the instance.
 ABSL_DECLARE_FLAG(bool, disable_instance_symbols);
+
+// SSH related flags.
+ABSL_DECLARE_FLAG(std::string, ssh_hostname);
+ABSL_DECLARE_FLAG(uint16_t, ssh_port);
+ABSL_DECLARE_FLAG(std::string, ssh_user);
+ABSL_DECLARE_FLAG(std::string, ssh_known_host_path);
+ABSL_DECLARE_FLAG(std::string, ssh_key_path);
+ABSL_DECLARE_FLAG(std::string, ssh_target_process);
 
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

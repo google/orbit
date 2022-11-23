@@ -31,9 +31,13 @@ QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line
 
 QStringList RemoveFlagsNotPassedToMainWindow(const QStringList& flags) {
   QStringList result;
-  const std::array kDoNotPassTheseFlags{absl::GetFlagReflectionHandle(FLAGS_target_instance).Name(),
-                                        absl::GetFlagReflectionHandle(FLAGS_target_process).Name(),
-                                        absl::GetFlagReflectionHandle(FLAGS_target_uri).Name()};
+  const std::array kDoNotPassTheseFlags{
+      absl::GetFlagReflectionHandle(FLAGS_ssh_hostname).Name(),
+      absl::GetFlagReflectionHandle(FLAGS_ssh_port).Name(),
+      absl::GetFlagReflectionHandle(FLAGS_ssh_user).Name(),
+      absl::GetFlagReflectionHandle(FLAGS_ssh_known_host_path).Name(),
+      absl::GetFlagReflectionHandle(FLAGS_ssh_key_path).Name(),
+      absl::GetFlagReflectionHandle(FLAGS_ssh_target_process).Name()};
 
   for (const auto& flag : flags) {
     bool ignore_this_flag = false;

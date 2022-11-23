@@ -17,10 +17,13 @@ namespace orbit_command_line_utils {
 TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
   QStringList params{"--some_bool",
                      "-b",
-                     "--target_uri=orbitprofiler://instance?game_binary",
+                     "--ssh_hostname=1.1.1.1",
+                     "--ssh_target_process=ssh_target_process",
                      "--some_flag",
-                     "--target_process=1483",
-                     "--target_instance=johndoe-3"};
+                     "--ssh_port=300",
+                     "--ssh_user=username",
+                     "--ssh_known_host_path=path_placeholder",
+                     "--ssh_key_path=another_path"};
   QStringList expected{"--some_bool", "-b", "--some_flag"};
   QStringList result = RemoveFlagsNotPassedToMainWindow(params);
   EXPECT_EQ(expected, result);

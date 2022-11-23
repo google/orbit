@@ -130,6 +130,8 @@ void Session::ConnectToServer(orbit_ssh::Credentials creds) {
 void Session::Disconnect() {
   if (CurrentState() == State::kConnected) {
     SetState(State::kAboutToDisconnect);
+  } else {
+    SetState(State::kDone);
   }
 
   OnEvent();
