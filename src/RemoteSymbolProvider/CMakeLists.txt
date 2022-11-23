@@ -6,12 +6,10 @@ project(RemoteSymbolProvider)
 add_library(RemoteSymbolProvider STATIC)
 
 target_sources(RemoteSymbolProvider PRIVATE
-    MicrosoftSymbolServerSymbolProvider.cpp
-    StadiaSymbolStoreSymbolProvider.cpp)
+    MicrosoftSymbolServerSymbolProvider.cpp)
 
 target_sources(RemoteSymbolProvider PUBLIC
-    include/RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h
-    include/RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h)
+    include/RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h)
 
 target_include_directories(RemoteSymbolProvider PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -28,8 +26,7 @@ add_executable(RemoteSymbolProviderTests)
 
 target_sources(RemoteSymbolProviderTests PRIVATE
     MicrosoftSymbolServerSymbolProviderIntegrationTest.cpp
-    MicrosoftSymbolServerSymbolProviderTest.cpp
-    StadiaSymbolStoreSymbolProviderTest.cpp)
+    MicrosoftSymbolServerSymbolProviderTest.cpp)
 
 target_link_libraries(RemoteSymbolProviderTests PRIVATE
     GrpcProtos
