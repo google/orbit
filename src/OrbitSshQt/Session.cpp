@@ -127,14 +127,14 @@ void Session::ConnectToServer(orbit_ssh::Credentials creds) {
   OnEvent();
 }
 
-void Session::Disconnect() {
+Session::DisconnectResult Session::Disconnect() {
   if (CurrentState() == State::kConnected) {
     SetState(State::kAboutToDisconnect);
-  } else {
-    SetState(State::kDone);
+    OnEvent();
+    return DisconnectResult::kDisconnectStarted;
   }
 
-  OnEvent();
+  return DisconnectResult::kDisconnectedSuccessfully;
 }
 
 void Session::SetError(std::error_code e) {

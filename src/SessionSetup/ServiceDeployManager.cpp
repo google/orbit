@@ -795,9 +795,12 @@ ErrorMessageOr<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session
   auto error_handler = ConnectQuitHandler(&loop, session, &orbit_ssh_qt::Session::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  session->Disconnect();
+  orbit_ssh_qt::Session::DisconnectResult disconnect_result = session->Disconnect();
 
-  OUTCOME_TRY(loop.exec());
+  if (disconnect_result == orbit_ssh_qt::Session::DisconnectResult::kDisconnectStarted) {
+    OUTCOME_TRY(loop.exec());
+  }
+
   return outcome::success();
 }
 
