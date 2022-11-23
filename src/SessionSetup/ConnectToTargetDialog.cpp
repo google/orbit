@@ -105,7 +105,7 @@ ErrorMessageOr<void> ConnectToTargetDialog::DeployOrbitServiceAndSetupProcessMan
       QObject::connect(ui_->abortButton, &QPushButton::clicked, service_deploy_manager.get(),
                        &ServiceDeployManager::Cancel)};
 
-  OUTCOME_TRY(auto&& grpc_port, service_deploy_manager->Exec());
+  OUTCOME_TRY(const ServiceDeployManager::GrpcPort grpc_port, service_deploy_manager->Exec());
 
   auto grpc_channel = CreateGrpcChannel(grpc_port.grpc_port);
   ssh_connection_ = orbit_session_setup::SshConnection(target_.credentials.addr_and_port,
