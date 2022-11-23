@@ -660,8 +660,11 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  CaptureViewElement::UpdatePrimitives(primitive_assembler_, text_renderer_static_, min_tick,
-                                       max_tick, picking_mode);
+  // Only draw something if the time interval is non-empty.
+  if (min_tick != max_tick) {
+    CaptureViewElement::UpdatePrimitives(primitive_assembler_, text_renderer_static_, min_tick,
+                                         max_tick, picking_mode);
+  }
 
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
