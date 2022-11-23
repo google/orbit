@@ -107,29 +107,19 @@ function check_conan_version_sufficient() {
 }
 
 echo "Checking if conan is available..."
-which conan >/dev/null
+readonly CONAN="python3 -m conans.conan"
+readonly PIP="python3 -m pip"
+$CONAN --version >/dev/null
 if [ $? -ne 0 ]; then
   echo "Couldn't find conan. Trying to install via pip..."
-  pip3 install --user conan=="$CONAN_VERSION_REQUIRED" || exit $?
-
-  which conan >/dev/null
-  if [ $? -ne 0 ]; then
-    echo "Could not find conan in the path, although the installation reported success."
-    echo "Probably conan was installed into a directory which is not in the PATH."
-    echo "Please ensure conan is reachable via the PATH and call this script again."
-    echo "Hint: Probably you have to add $HOME/.local/bin to your path variable."
-    echo "      If you use bash, you can call 'export PATH=\$HOME/.local/bin:\$PATH'"
-    echo "      to do that. Add this line to your .bashrc file, to make this change"
-    echo "      persistent."
-    exit 1
-  fi
+  $PIP install --user conan=="$CONAN_VERSION_REQUIRED" || exit $?
 else
   echo "Found conan. Checking version..."
-  CONAN_VERSION="$(conan --version | cut -d' ' -f3)"
+  CONAN_VERSION="$($CONAN --version | cut -d' ' -f3)"
   
   if ! check_conan_version_sufficient "$CONAN_VERSION" "$CONAN_VERSION_REQUIRED"; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
-    pip3 install --upgrade --user conan=="$CONAN_VERSION_REQUIRED"
+    $PIP install --upgrade --user conan=="$CONAN_VERSION_REQUIRED"
     if [ $? -ne 0 ]; then
       echo "The upgrade of your conan installation failed. Probably because conan was not installed by this script."
       echo "Please manually update conan to at least version $CONAN_VERSION_REQUIRED."
@@ -141,8 +131,15 @@ else
   fi
 fi
 
+# We always pass the `--recreate-default-profiles` option here which removes all the previously automatically
+# created default profiles. This avoids problems with stale default profiles which can occur when the OS has been
+# updated and the previous default compiler is not available anymore.
+#
+# All changes made by the user to these profiles will be lost which is not ideal, but when calling bootstrap
+# we expect the user wants a clean and working build no matter what. There is no need to make changes to the
+# default profiles unless you try something out of the order and probably know what you are doing.
 echo "Installing conan configuration (profiles, settings, etc.)..."
-$DIR/third_party/conan/configs/install.sh $CONFIG_INSTALL_OPTIONS || exit $?
+$DIR/third_party/conan/configs/install.sh --recreate-default-profiles $CONFIG_INSTALL_OPTIONS || exit $?
 
 if [[ $DONT_COMPILE != "yes" ]]; then
   if [ -n "$1" ] ; then

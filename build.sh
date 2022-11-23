@@ -3,6 +3,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+set -euo pipefail
+
+# We call conan by going through python3 to avoid any PATH problems.
+# Sometimes tools installed by PIP are not automatically in the PATH.
+if [[ $(uname -s) == "Linux" ]]; then
+  CONAN="python3 -m conans.conan"
+else
+  CONAN="py -3 -m conans.conan"
+fi
+
+readonly CONAN
 
 default_profiles=( default_relwithdebinfo )
 
@@ -13,35 +24,39 @@ else
   for profile in "$@"; do profiles+=( "$profile" ); done
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+readonly DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function create_conan_profile {
   local readonly profile="$1"
-  if ! conan profile show default >/dev/null; then
-    conan profile new --detect default || exit $?
+  if ! $CONAN profile show default >/dev/null 2>&1; then
+    $CONAN profile new --detect default >/dev/null || exit $?
   fi
 
-  readonly compiler="$(conan profile show default | grep compiler= | cut -d= -f2 | sed -e 's/Visual Studio/msvc/')"
-  readonly compiler_version="$(conan profile show default | grep compiler.version= | cut -d= -f2 | sed -e 's/^15$/2017/' | sed -e 's/^16$/2019/')"
-  readonly conan_dir=${CONAN_USER_HOME:-~}/.conan
-  readonly build_type="${profile#default_}"
-  readonly profile_path="$conan_dir/profiles/$profile"
+  local readonly compiler="$($CONAN profile show default | grep compiler= | cut -d= -f2 | sed -e 's/Visual Studio/msvc/')"
+  local compiler_version="$($CONAN profile show default | grep compiler.version= | cut -d= -f2)"
+  if [[ $compiler == "msvc" ]]; then
+    compiler_version="$(echo $compiler_version | sed -e 's/^16$/2019/' | sed -e 's/^17$/2022/')"
+  fi
+  local readonly compiler_version
+  local readonly conan_dir=${CONAN_USER_HOME:-~}/.conan
+  local readonly build_type="${profile#default_}"
+  local readonly profile_path="$conan_dir/profiles/$profile"
 
   echo -e "include(${compiler}${compiler_version}_${build_type})\n" > $profile_path
   echo -e "[settings]\n[options]" >> $profile_path
   echo -e "[build_requires]\n[env]" >> $profile_path
 
-  if [ -n "$CC" ]; then
+  if [[ -v CC ]]; then
     echo "CC=$CC" >> $profile_path
   fi
 
-  if [ -n "$CXX" ]; then
+  if [[ -v CXX ]]; then
     echo "CXX=$CXX" >> $profile_path
   fi
 }
 
 function conan_profile_exists {
-  conan profile show $1 >/dev/null 2>&1
+  $CONAN profile show $1 >/dev/null 2>&1
   return $?
 }
 
@@ -54,6 +69,11 @@ for profile in ${profiles[@]}; do
     conan_profile_exists "$profile" || create_conan_profile "$profile"
   fi
 
-  conan install -pr:b "${build_profile}" -pr:h $profile -if build_$profile/ --build outdated "$DIR" || exit $?
-  conan build -bf build_$profile/ "$DIR" || exit $?
+  $CONAN install -pr:b "${build_profile}" -pr:h $profile -if build_$profile/ \
+         --build outdated --update "$DIR" || exit $?
+  $CONAN build -bf build_$profile/ "$DIR" || exit $?
+
+  if [[ $profile == default_* ]]; then
+    echo "The build finished successfully. Start Orbit with ./build_$profile/bin/Orbit!"
+  fi
 done
