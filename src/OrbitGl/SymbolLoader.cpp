@@ -82,15 +82,6 @@ void SymbolLoader::EnableDownloadForModules(const absl::flat_hash_set<std::strin
 void SymbolLoader::InitRemoteSymbolProviders() {
   download_manager_.emplace();
 
-  auto client_result = orbit_ggp::CreateClient();
-  if (client_result.has_error()) {
-    ORBIT_ERROR("Error creating ggp client: %s\nStadia symbol provider won't be created.",
-                client_result.error().message());
-  } else {
-    ggp_client_ = std::move(client_result.value());
-    stadia_symbol_provider_.emplace(&symbol_helper_, &*download_manager_, ggp_client_.get());
-  }
-
   microsoft_symbol_provider_.emplace(&symbol_helper_, &*download_manager_);
 }
 
@@ -411,26 +402,8 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
                   });
       }));
 
-  Future<SymbolRetrieveResult> retrieve_from_stadia_future =
-      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
-          main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken()](
-              const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
-            if (orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
-                stadia_symbol_provider_ == std::nullopt ||
-                !storage_manager.LoadEnableStadiaSymbolStore()) {
-              return {previous_result};
-            }
-
-            if (previous_result.has_value()) return {previous_result.value()};
-
-            return ConvertSymbolProviderRetrieveFuture(
-                stadia_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token)),
-                main_thread_executor_, "Stadia symbol store", previous_result.error().message());
-          }));
-
   Future<SymbolRetrieveResult> retrieve_from_microsoft_future =
-      orbit_base::UnwrapFuture(retrieve_from_stadia_future.Then(
+      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
           main_thread_executor_,
           [this, module_id, stop_token = stop_source.GetStopToken()](
               const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {

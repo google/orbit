@@ -27,10 +27,8 @@
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitGgp/Client.h"
 #include "OrbitPaths/Paths.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
-#include "RemoteSymbolProvider/StadiaSymbolStoreSymbolProvider.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
@@ -137,9 +135,6 @@ class SymbolLoader {
   // TODO(b/243520787) The SymbolProvider related logic should be moved to the ProxySymbolProvider
   //  as planned in our symbol refactoring discussion.
   std::optional<orbit_http::HttpDownloadManager> download_manager_;
-  std::unique_ptr<orbit_ggp::Client> ggp_client_;
-  std::optional<orbit_remote_symbol_provider::StadiaSymbolStoreSymbolProvider>
-      stadia_symbol_provider_ = std::nullopt;
   std::optional<orbit_remote_symbol_provider::MicrosoftSymbolServerSymbolProvider>
       microsoft_symbol_provider_ = std::nullopt;
 
