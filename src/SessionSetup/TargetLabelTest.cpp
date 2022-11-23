@@ -49,8 +49,9 @@ const char* kProcessName = "test process";
 const char* kInstanceName = "test instance";
 const double kCpuUsage = 50.1;
 const char* kCpuUsageDisplay = "50%";
+const char* kSshMachineId = "1.1.1.1:2222";
 
-static void ChangeToFakeStadiaTarget(TargetLabel& label) {
+static void ChangeToFakeSshTarget(TargetLabel& label) {
   orbit_client_data::ProcessData process;
   orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_name(kProcessName);
@@ -58,34 +59,20 @@ static void ChangeToFakeStadiaTarget(TargetLabel& label) {
   process_info.set_cpu_usage(kCpuUsage);
   process.SetProcessInfo(process_info);
 
-  auto maybe_instance =
-      orbit_ggp::Instance::CreateFromJson(QString{"{"
-                                                  "\"displayName\": \"%1\", "
-                                                  "\"id\": \"edge/test/instance\", "
-                                                  "\"ipAddress\": \"127.0.0.1\", "
-                                                  "\"state\": \"IN_USE\", "
-                                                  "\"owner\": \"unit@test\", "
-                                                  "\"lastUpdated\": \"2022-07-04T13:22:04Z\", "
-                                                  "\"pool\": \"unit-test-pool\""
-                                                  "}"}
-                                              .arg(kInstanceName)
-                                              .toUtf8());
-
-  ASSERT_THAT(maybe_instance, orbit_test_utils::HasValue());
-  label.ChangeToStadiaTarget(process, maybe_instance.value());
+  label.ChangeToSshTarget(process, kSshMachineId);
 }
 
-TEST(TargetLabel, ChangeToStadiaTarget) {
+TEST(TargetLabel, ChangeToSshTarget) {
   TargetLabel label{};
   const QColor initial_color = label.GetTargetColor();
 
-  ChangeToFakeStadiaTarget(label);
+  ChangeToFakeSshTarget(label);
 
   EXPECT_EQ(label.GetTargetText(),
-            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kSshMachineId));
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
-  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
+  EXPECT_TRUE(label.GetToolTip().contains(kSshMachineId));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
@@ -231,13 +218,13 @@ TEST(TargetLabel, SetFile) {
   TargetLabel label{};
   const QColor initial_color = label.GetTargetColor();
 
-  ChangeToFakeStadiaTarget(label);
+  ChangeToFakeSshTarget(label);
 
   EXPECT_EQ(label.GetTargetText(),
-            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kSshMachineId));
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
-  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
+  EXPECT_TRUE(label.GetToolTip().contains(kSshMachineId));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
@@ -247,10 +234,10 @@ TEST(TargetLabel, SetFile) {
   label.SetFile(path);
 
   EXPECT_EQ(label.GetTargetText(),
-            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kSshMachineId));
   EXPECT_EQ(label.GetFileText(), "file");
   EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
-  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
+  EXPECT_TRUE(label.GetToolTip().contains(kSshMachineId));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
@@ -286,8 +273,8 @@ TEST(TargetLabel, DifferentColors) {
   label.ChangeToFileTarget("test/path");
   const QColor file_color = label.GetTargetColor();
 
-  ChangeToFakeStadiaTarget(label);
-  const QColor stadia_color = label.GetTargetColor();
+  ChangeToFakeSshTarget(label);
+  const QColor ssh_color = label.GetTargetColor();
 
   label.ChangeToLocalTarget("test process", 0);
   const QColor local_color = label.GetTargetColor();
@@ -301,15 +288,15 @@ TEST(TargetLabel, DifferentColors) {
   label.SetConnectionDead("test error");
   const QColor connection_dead_color = label.GetTargetColor();
 
-  EXPECT_EQ(stadia_color, local_color);
-  EXPECT_EQ(stadia_color, cpu_usage_updated_color);
+  EXPECT_EQ(ssh_color, local_color);
+  EXPECT_EQ(ssh_color, cpu_usage_updated_color);
 
-  EXPECT_NE(file_color, stadia_color);
+  EXPECT_NE(file_color, ssh_color);
   EXPECT_NE(file_color, process_ended_color);
   EXPECT_NE(file_color, connection_dead_color);
 
-  EXPECT_NE(stadia_color, process_ended_color);
-  EXPECT_NE(stadia_color, connection_dead_color);
+  EXPECT_NE(ssh_color, process_ended_color);
+  EXPECT_NE(ssh_color, connection_dead_color);
 
   EXPECT_NE(process_ended_color, connection_dead_color);
 }

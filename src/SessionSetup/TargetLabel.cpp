@@ -119,26 +119,26 @@ void TargetLabel::ChangeToFileTarget(const fs::path& path) {
   emit SizeChanged();
 }
 
-void TargetLabel::ChangeToStadiaTarget(const StadiaTarget& stadia_target) {
-  ChangeToStadiaTarget(*stadia_target.GetProcess(), stadia_target.GetConnection()->GetInstance());
+void TargetLabel::ChangeToSshTarget(const SshTarget& ssh_target) {
+  ChangeToSshTarget(*ssh_target.GetProcess(),
+                    ssh_target.GetConnection()->GetAddrAndPort().GetHumanReadable());
 }
 
-void TargetLabel::ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
-                                       const orbit_ggp::Instance& instance) {
+void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& process,
+                                    const std::string& ssh_target_id) {
   Clear();
   process_ = QString::fromStdString(process.name());
-  machine_ = instance.display_name;
+  machine_ = QString::fromStdString(ssh_target_id);
   SetProcessCpuUsageInPercent(process.cpu_usage());
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
 
   setToolTip(
       QString{"Connection active.<br/><br/>"
-              "Instance: %1 (%2)<br/>"
-              "Process: %3 (%4)"}
-          .arg(instance.display_name, instance.id, process_,
-               QString::fromStdString(process.full_path())));
-  setAccessibleName("Stadia target");
+              "Machine: %1<br/>"
+              "Process: %2 (%3)"}
+          .arg(machine_, process_, QString::fromStdString(process.full_path())));
+  setAccessibleName("Ssh target");
 }
 
 void TargetLabel::ChangeToLocalTarget(const LocalTarget& local_target) {

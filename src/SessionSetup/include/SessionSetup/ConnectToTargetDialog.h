@@ -18,9 +18,6 @@
 #include "Connections.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Client.h"
-#include "OrbitGgp/Instance.h"
-#include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetupUtils.h"
@@ -50,17 +47,12 @@ class ConnectToTargetDialog : public QDialog {
   SshConnectionArtifacts* ssh_connection_artifacts_;
   ConnectionTarget target_;
 
-  using MaybeSshAndInstanceData =
-      std::tuple<ErrorMessageOr<orbit_ggp::SshInfo>, ErrorMessageOr<orbit_ggp::Instance>>;
-
-  std::unique_ptr<orbit_ggp::Client> ggp_client_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
 
-  std::optional<orbit_session_setup::StadiaConnection> stadia_connection_;
+  std::optional<orbit_session_setup::SshConnection> ssh_connection_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::optional<TargetConfiguration> target_configuration_;
 
-  ErrorMessageOr<void> OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
 
   [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>

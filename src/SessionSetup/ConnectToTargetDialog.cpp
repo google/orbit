@@ -19,10 +19,7 @@
 #include <variant>
 
 #include "ClientData/ProcessData.h"
-#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/WhenAll.h"
-#include "OrbitGgp/Project.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -55,27 +52,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
             target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
 
-  auto ggp_client_result = orbit_ggp::CreateClient();
-  if (ggp_client_result.has_error()) {
-    LogAndDisplayError(ggp_client_result.error());
-    return std::nullopt;
-  }
-  ggp_client_ = std::move(ggp_client_result.value());
-
-  SetStatusMessage("Loading encryption credentials for instance...");
-
-  auto process_future = ggp_client_->GetSshInfoAsync(target_.instance_name_or_id, std::nullopt);
-  auto instance_future = ggp_client_->DescribeInstanceAsync(target_.instance_name_or_id);
-  auto joined_future = orbit_base::WhenAll(process_future, instance_future);
-
-  joined_future.Then(main_thread_executor_.get(),
-                     [this](MaybeSshAndInstanceData ssh_instance_data) {
-                       auto result = OnAsyncDataAvailable(std::move(ssh_instance_data));
-                       if (result.has_error()) {
-                         LogAndDisplayError(result.error());
-                         reject();
-                       }
-                     });
+  ORBIT_FATAL("Not implemented");
 
   int rc = QDialog::exec();
 
@@ -86,38 +63,6 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   return std::move(target_configuration_);
 }
 
-ErrorMessageOr<void> ConnectToTargetDialog::OnAsyncDataAvailable(
-    MaybeSshAndInstanceData ssh_instance_data) {
-  OUTCOME_TRY(auto&& ssh_info, std::get<0>(ssh_instance_data));
-  OUTCOME_TRY(auto&& instance, std::get<1>(ssh_instance_data));
-
-  auto service_deploy_manager = std::make_unique<orbit_session_setup::ServiceDeployManager>(
-      ssh_connection_artifacts_->GetDeploymentConfiguration(),
-      ssh_connection_artifacts_->GetSshContext(), CredentialsFromSshInfo(ssh_info),
-      ssh_connection_artifacts_->GetGrpcPort());
-
-  OUTCOME_TRY(auto&& grpc_port, DeployOrbitService(service_deploy_manager.get()));
-
-  auto grpc_channel = CreateGrpcChannel(grpc_port.grpc_port);
-  stadia_connection_ = orbit_session_setup::StadiaConnection(
-      std::move(instance), std::move(service_deploy_manager), std::move(grpc_channel));
-
-  process_manager_ = orbit_client_services::ProcessManager::Create(
-      stadia_connection_.value().GetGrpcChannel(), absl::Milliseconds(1000));
-  process_manager_->SetProcessListUpdateListener(
-      [dialog = QPointer<ConnectToTargetDialog>(this)](
-          std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
-        if (dialog == nullptr) return;
-        QMetaObject::invokeMethod(dialog,
-                                  [dialog, process_list = std::move(process_list)]() mutable {
-                                    dialog->OnProcessListUpdate(std::move(process_list));
-                                  });
-      });
-  SetStatusMessage("Waiting for process to launch.");
-
-  return outcome::success();
-}
-
 void ConnectToTargetDialog::OnProcessListUpdate(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
   std::unique_ptr<orbit_client_data::ProcessData> matching_process =
@@ -126,8 +71,8 @@ void ConnectToTargetDialog::OnProcessListUpdate(
   if (matching_process != nullptr) {
     process_manager_->SetProcessListUpdateListener(nullptr);
     target_configuration_ =
-        orbit_session_setup::StadiaTarget(std::move(stadia_connection_.value()),
-                                          std::move(process_manager_), std::move(matching_process));
+        orbit_session_setup::SshTarget(std::move(ssh_connection_.value()),
+                                       std::move(process_manager_), std::move(matching_process));
     accept();
   }
 }

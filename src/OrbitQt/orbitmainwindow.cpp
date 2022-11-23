@@ -154,7 +154,7 @@ using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType_STACK_OVERFLOW;
 
 using orbit_session_setup::LocalTarget;
 using orbit_session_setup::ServiceDeployManager;
-using orbit_session_setup::StadiaTarget;
+using orbit_session_setup::SshTarget;
 using orbit_session_setup::TargetConfiguration;
 using orbit_session_setup::TargetLabel;
 
@@ -1676,15 +1676,17 @@ void OrbitMainWindow::OnConnectionError(const QString& error_message) {
   QMessageBox::critical(this, "Connection error", error_message, QMessageBox::Ok);
 }
 
-void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
-  ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
-  const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
+void OrbitMainWindow::OnSshConnectionError(std::error_code error) {
+  ORBIT_CHECK(std::holds_alternative<SshTarget>(target_configuration_));
+  const SshTarget& target = std::get<SshTarget>(target_configuration_);
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
-  QString error_message = QString("The connection to instance \"%1\" failed with error message: %2")
-                              .arg(target.GetConnection()->GetInstance().display_name)
-                              .arg(QString::fromStdString(error.message()));
+  QString error_message =
+      QString("The connection to machine \"%1\" failed with error message: %2")
+          .arg(QString::fromStdString(target.GetConnection()->GetAddrAndPort().GetHumanReadable()))
+          .arg(QString::fromStdString(error.message()));
+
   OnConnectionError(error_message);
 }
 
@@ -1697,18 +1699,18 @@ void OrbitMainWindow::OnLocalConnectionError(const QString& error_message) {
   OnConnectionError(error_message);
 }
 
-void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
-  const orbit_session_setup::StadiaConnection* connection = target.GetConnection();
+void OrbitMainWindow::SetTarget(const SshTarget& target) {
+  const orbit_session_setup::SshConnection* connection = target.GetConnection();
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
 
   QObject::connect(service_deploy_manager, &ServiceDeployManager::socketErrorOccurred, this,
-                   &OrbitMainWindow::OnStadiaConnectionError, Qt::UniqueConnection);
+                   &OrbitMainWindow::OnSshConnectionError, Qt::UniqueConnection);
 
   app_->SetGrpcChannel(connection->GetGrpcChannel());
   app_->SetProcessManager(target.GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
 
-  target_label_->ChangeToStadiaTarget(target);
+  target_label_->ChangeToSshTarget(target);
 
   using ProcessInfo = orbit_grpc_protos::ProcessInfo;
   target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
@@ -1781,8 +1783,8 @@ void OrbitMainWindow::OnProcessListUpdated(
 }
 
 TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
-  if (std::holds_alternative<StadiaTarget>(target_configuration_)) {
-    std::get<StadiaTarget>(target_configuration_)
+  if (std::holds_alternative<SshTarget>(target_configuration_)) {
+    std::get<SshTarget>(target_configuration_)
         .GetProcessManager()
         ->SetProcessListUpdateListener(nullptr);
   } else if (std::holds_alternative<LocalTarget>(target_configuration_)) {
@@ -2015,9 +2017,9 @@ OrbitMainWindow::DownloadFileFromInstance(std::filesystem::path path_on_instance
                                           std::filesystem::path local_path,
                                           orbit_base::StopToken stop_token) {
   ORBIT_CHECK(is_connected_);
-  ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
+  ORBIT_CHECK(std::holds_alternative<SshTarget>(target_configuration_));
   ServiceDeployManager* service_deploy_manager =
-      std::get<StadiaTarget>(target_configuration_).GetConnection()->GetServiceDeployManager();
+      std::get<SshTarget>(target_configuration_).GetConnection()->GetServiceDeployManager();
   ORBIT_CHECK(service_deploy_manager != nullptr);
 
   return service_deploy_manager->CopyFileToLocal(std::move(path_on_instance), std::move(local_path),

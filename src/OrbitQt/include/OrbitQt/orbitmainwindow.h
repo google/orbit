@@ -212,7 +212,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   QTabWidget* FindParentTabWidget(const QWidget* widget) const;
 
-  void SetTarget(const orbit_session_setup::StadiaTarget& target);
+  void SetTarget(const orbit_session_setup::SshTarget& target);
   void SetTarget(const orbit_session_setup::LocalTarget& target);
   void SetTarget(const orbit_session_setup::FileTarget& target);
 
@@ -250,7 +250,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void Exit(int return_code);
 
   void OnConnectionError(const QString& error_message);
-  void OnStadiaConnectionError(std::error_code error);
+  void OnSshConnectionError(std::error_code error);
   void OnLocalConnectionError(const QString& error_message);
 
   void UpdateCaptureToolbarIconOpacity();

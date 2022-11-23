@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
-#define SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
+#ifndef SESSION_SETUP_SESSION_SETUP_DIALOG_H_
+#define SESSION_SETUP_SESSION_SETUP_DIALOG_H_
 
 #include <grpcpp/channel.h>
 
@@ -46,7 +46,6 @@ class SessionSetupDialog : public QDialog {
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:
-  void SetupStadiaProcessManager();
   void SetupLocalProcessManager();
   void TearDownProcessManager();
   void ProcessSelectionChanged(const QModelIndex& current);
@@ -54,7 +53,6 @@ class SessionSetupDialog : public QDialog {
  signals:
   void ProcessSelected();
   void NoProcessSelected();
-  void StadiaIsConnected();
   void ProcessListUpdated();
 
  private:
@@ -70,13 +68,6 @@ class SessionSetupDialog : public QDialog {
 
   // State Machine & States
   QStateMachine state_machine_;
-  QState state_stadia_;
-  QHistoryState state_stadia_history_;
-  QState state_stadia_connecting_;
-  QState state_stadia_connected_;
-  QState state_stadia_processes_loading_;
-  QState state_stadia_process_selected_;
-  QState state_stadia_no_process_selected_;
 
   QState state_file_;
   QHistoryState state_file_history_;
@@ -91,18 +82,17 @@ class SessionSetupDialog : public QDialog {
   QState state_local_process_selected_;
   QState state_local_no_process_selected_;
 
-  void SetupStadiaStates();
   void SetupFileStates();
   void SetupLocalStates();
   void SetStateMachineInitialState();
   [[nodiscard]] bool TrySelectProcessByName(const std::string& process_name);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
   void SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel);
-  void SetTargetAndStateMachineInitialState(StadiaTarget target);
+  void SetTargetAndStateMachineInitialState(SshTarget target);
   void SetTargetAndStateMachineInitialState(LocalTarget target);
   void SetTargetAndStateMachineInitialState(FileTarget target);
 };
 
 }  // namespace orbit_session_setup
 
-#endif  // SESSION_SETUP_PROFILING_TARGET_DIALOG_H_
+#endif  // SESSION_SETUP_SESSION_SETUP_DIALOG_H_

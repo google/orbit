@@ -14,7 +14,6 @@
 #include <optional>
 
 #include "ClientData/ProcessData.h"
-#include "OrbitGgp/Instance.h"
 #include "TargetConfiguration.h"
 
 namespace Ui {
@@ -32,9 +31,9 @@ class TargetLabel : public QWidget {
 
   void ChangeToFileTarget(const FileTarget& file_target);
   void ChangeToFileTarget(const std::filesystem::path& path);
-  void ChangeToStadiaTarget(const StadiaTarget& stadia_target);
-  void ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
-                            const orbit_ggp::Instance& instance);
+  void ChangeToSshTarget(const SshTarget& ssh_target);
+  void ChangeToSshTarget(const orbit_client_data::ProcessData& process,
+                         const std::string& remote_machine_id);
   void ChangeToLocalTarget(const LocalTarget& local_target);
   void ChangeToLocalTarget(const orbit_client_data::ProcessData& process);
   void ChangeToLocalTarget(const QString& process_name, double cpu_usage);

@@ -85,9 +85,6 @@
           <widget class="orbit_session_setup::ConnectToLocalWidget" name="localProfilingWidget" native="true"/>
          </item>
          <item>
-          <widget class="orbit_session_setup::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
-         </item>
-         <item>
           <widget class="orbit_capture_file_info::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
          </item>
         </layout>
@@ -276,11 +273,6 @@
    <extends>QWidget</extends>
    <header>SessionSetup/OverlayWidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>orbit_session_setup::ConnectToStadiaWidget</class>
-   <extends>QWidget</extends>
-   <header>SessionSetup/ConnectToStadiaWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_capture_file_info::LoadCaptureWidget</class>
