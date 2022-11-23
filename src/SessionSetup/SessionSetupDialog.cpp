@@ -38,7 +38,6 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Instance.h"
 #include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/OrbitServiceInstance.h"

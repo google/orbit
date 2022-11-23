@@ -14,9 +14,7 @@
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
-#include "OrbitGgp/Instance.h"
 #include "SessionSetup/TargetLabel.h"
-#include "TestUtils/TestUtils.h"
 
 namespace orbit_session_setup {
 

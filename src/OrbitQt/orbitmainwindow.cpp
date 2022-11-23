@@ -101,7 +101,6 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
-#include "OrbitGgp/Instance.h"
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/DataViewFactory.h"
 #include "OrbitGl/GlCanvas.h"
