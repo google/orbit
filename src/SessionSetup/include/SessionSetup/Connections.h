@@ -13,7 +13,7 @@
 
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitGgp/Instance.h"
+#include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Context.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -52,26 +52,25 @@ class SshConnectionArtifacts {
 };
 
 /*
- * The class StadiaConnection describes an active connection to a stadia instance. This class holds
- * an Instance object it is connected. The ServiceDeployManager which carries the active connection
- * and the ssh tunnel. And the grpc channel that is used for the communication with the instance.
- * This class is meant to be constructed and then not modified anymore. Only ConnectToStadiaWidget
- * is allowed to modify the members, which is used to move out members for reusing them.
+ * The class `SshConnection` describes an active connection to a machine via ssh. This class holds
+ * a `AddrAndPort` which is the target of the ssh connection. The `ServiceDeployManager` which
+ * carries the active connection and the ssh tunnel. And the grpc channel that is used for the
+ * communication with the machine. This class is meant to be constructed and then not modified
+ * anymore. Only `SshConnectionWidget` is allowed to modify the members, which is used to move out
+ * members for reusing them.
  */
-class StadiaConnection {
-  friend class ConnectToStadiaWidget;
-
+class SshConnection {
  public:
-  explicit StadiaConnection(orbit_ggp::Instance&& instance,
-                            std::unique_ptr<ServiceDeployManager> service_deploy_manager,
-                            std::shared_ptr<grpc::Channel>&& grpc_channel)
-      : instance_(std::move(instance)),
+  explicit SshConnection(orbit_ssh::AddrAndPort addr_and_port,
+                         std::unique_ptr<ServiceDeployManager> service_deploy_manager,
+                         std::shared_ptr<grpc::Channel>&& grpc_channel)
+      : addr_and_port_(std::move(addr_and_port)),
         service_deploy_manager_(std::move(service_deploy_manager)),
         grpc_channel_(std::move(grpc_channel)) {
     ORBIT_CHECK(service_deploy_manager_ != nullptr);
     ORBIT_CHECK(grpc_channel_ != nullptr);
   }
-  [[nodiscard]] const orbit_ggp::Instance& GetInstance() const { return instance_; }
+  [[nodiscard]] const orbit_ssh::AddrAndPort& GetAddrAndPort() const { return addr_and_port_; }
   [[nodiscard]] ServiceDeployManager* GetServiceDeployManager() const {
     return service_deploy_manager_.get();
   }
@@ -80,7 +79,7 @@ class StadiaConnection {
   }
 
  private:
-  orbit_ggp::Instance instance_;
+  orbit_ssh::AddrAndPort addr_and_port_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 };

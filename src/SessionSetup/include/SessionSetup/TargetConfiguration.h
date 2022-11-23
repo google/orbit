@@ -14,32 +14,32 @@
 namespace orbit_session_setup {
 
 /*
- * StadiaTarget describes a successful connection to an instance and a selected process. The
- * class is built in SessionSetupDialog and mainly used in OrbitMainWindow. This class is meant
- * to be constructed and then not modified anymore. Only SessionSetupDialog is allowed to modify
+ * `SshTarget` describes a successful ssh connection to a machine and a selected process. The
+ * class is built in `SessionSetupDialog` and mainly used in `OrbitMainWindow`. This class is meant
+ * to be constructed and then not modified anymore. Only `SessionSetupDialog` is allowed to modify
  * the members, which is used to move out members for reusing them.
  */
-class StadiaTarget {
+class SshTarget {
   friend class SessionSetupDialog;
 
  public:
-  explicit StadiaTarget(StadiaConnection&& connection,
-                        std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
-                        std::unique_ptr<orbit_client_data::ProcessData> process)
+  explicit SshTarget(SshConnection&& connection,
+                     std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
+                     std::unique_ptr<orbit_client_data::ProcessData> process)
       : connection_(std::move(connection)),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
     ORBIT_CHECK(process_manager_ != nullptr);
     ORBIT_CHECK(process_ != nullptr);
   }
-  [[nodiscard]] const StadiaConnection* GetConnection() const { return &connection_; }
+  [[nodiscard]] const SshConnection* GetConnection() const { return &connection_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
     return process_manager_.get();
   }
   [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
 
  private:
-  StadiaConnection connection_;
+  SshConnection connection_;
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::unique_ptr<orbit_client_data::ProcessData> process_;
 };
@@ -92,7 +92,7 @@ class FileTarget {
   std::filesystem::path capture_file_path_;
 };
 
-using TargetConfiguration = std::variant<StadiaTarget, LocalTarget, FileTarget>;
+using TargetConfiguration = std::variant<SshTarget, LocalTarget, FileTarget>;
 
 }  // namespace orbit_session_setup
 

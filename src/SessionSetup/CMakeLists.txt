@@ -11,7 +11,6 @@ target_sources(
   SessionSetup
   PUBLIC  include/SessionSetup/Connections.h
           include/SessionSetup/ConnectToLocalWidget.h
-          include/SessionSetup/ConnectToStadiaWidget.h
           include/SessionSetup/ConnectToTargetDialog.h
           include/SessionSetup/DeploymentConfigurations.h
           include/SessionSetup/DoubleClickableLabel.h
@@ -22,8 +21,6 @@ target_sources(
           include/SessionSetup/PersistentStorage.h
           include/SessionSetup/ProcessItemModel.h
           include/SessionSetup/ProcessLauncherWidget.h
-          include/SessionSetup/RetrieveInstances.h
-          include/SessionSetup/RetrieveInstancesWidget.h
           include/SessionSetup/ServiceDeployManager.h
           include/SessionSetup/SessionSetupDialog.h
           include/SessionSetup/SessionSetupUtils.h
@@ -36,8 +33,6 @@ target_sources(
   SessionSetup
   PRIVATE ConnectToLocalWidget.cpp
           ConnectToLocalWidget.ui
-          ConnectToStadiaWidget.cpp
-          ConnectToStadiaWidget.ui
           ConnectToTargetDialog.cpp
           ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
@@ -51,9 +46,6 @@ target_sources(
           ProcessItemModel.cpp
           ProcessLauncherWidget.cpp
           ProcessLauncherWidget.ui
-          RetrieveInstances.cpp
-          RetrieveInstancesWidget.cpp
-          RetrieveInstancesWidget.ui
           ServiceDeployManager.cpp
           SessionSetupDialog.cpp
           SessionSetupDialog.ui
@@ -88,14 +80,11 @@ add_executable(SessionSetupTests)
 target_sources(
   SessionSetupTests
   PRIVATE ConnectToLocalWidgetTest.cpp
-          ConnectToStadiaWidgetTest.cpp
           DoubleClickableLabelTest.cpp
           PersistentStorageTest.cpp
           ProcessItemModelTest.cpp
           OrbitServiceInstanceTest.cpp
           OtherUserDialogTest.cpp
-          RetrieveInstancesTest.cpp
-          RetrieveInstancesWidgetTest.cpp
           SessionSetupDialogTest.cpp
           SessionSetupUtilsTest.cpp
           TargetLabelTest.cpp)
@@ -115,5 +104,3 @@ endif()
 if (NOT WIN32)
   register_test(SessionSetupTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
-
-add_subdirectory(RetrieveInstancesWidgetDemo)
