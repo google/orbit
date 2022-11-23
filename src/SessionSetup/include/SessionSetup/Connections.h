@@ -52,7 +52,7 @@ class SshConnectionArtifacts {
 };
 
 /*
- * The class SshConnection describes an active connection to a machine via ssh. This class holds
+ * The class `SshConnection` describes an active connection to a machine via ssh. This class holds
  * a AddrAndPort which is the target of the ssh connection. The ServiceDeployManager which carries
  * the active connection and the ssh tunnel. And the grpc channel that is used for the communication
  * with the machine. This class is meant to be constructed and then not modified anymore. Only
