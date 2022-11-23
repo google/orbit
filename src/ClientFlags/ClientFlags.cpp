@@ -44,27 +44,8 @@ ABSL_FLAG(std::string, instance_symbols_folder, "",
 ABSL_FLAG(bool, enforce_full_redraw, false,
           "Enforce full redraw every frame (used for performance measurements)");
 
-// VSI
-ABSL_FLAG(std::string, target_process, "",
-          "Process name or path. Specify this together with --target_instance to skip the "
-          "connection setup and open the main window instead. If the process can't be found or "
-          "deployment is aborted by the user Orbit will exit with return code -1 immediately. "
-          "If multiple instances of the same process exist, the one with the highest PID will be "
-          "chosen.");
-ABSL_FLAG(std::string, target_instance, "",
-          "Instance name or id. Specify this together with --target_process to skip the "
-          "connection setup and open the main window instead. If the instance can't be found or "
-          "deployment is aborted by the user Orbit will exit with return code -1 immediately.");
 ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
           "Additional local symbol locations (comma-separated)");
-
-// TestHub custom protocol support
-ABSL_FLAG(std::string, target_uri, "",
-          "Target URI in the format orbitprofiler://instance?process. Specify this to skip the "
-          "connection setup and open the main window instead. If the process can't be found or "
-          "deployment is aborted by the user Orbit will exit with return code -1 immediately. "
-          "If multiple instances of the same process exist, the one with the highest PID will be "
-          "chosen.");
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_FLAG(bool, clear_settings, false,
@@ -89,3 +70,15 @@ ABSL_FLAG(bool, symbol_store_support, false, "Enable experimental symbol store s
 
 // Disables retrieving symbols from the instance. This is intended for symbol store e2e tests.
 ABSL_FLAG(bool, disable_instance_symbols, false, "Disable retrieving symbols from the instance.");
+
+// SSH Flags
+ABSL_FLAG(std::string, ssh_hostname, "", "Hostname (IP address) of machine for an SSH connection.");
+ABSL_FLAG(uint16_t, ssh_port, 22, "Port for SSH connection. Default is 22");
+ABSL_FLAG(std::string, ssh_user, "", "User for SSH connection.");
+ABSL_FLAG(std::string, ssh_known_host_path, "", "Path to known_host file for SSH connection.");
+ABSL_FLAG(std::string, ssh_key_path, "", "Path to key file for SSH connection.");
+ABSL_FLAG(std::string, ssh_target_process, "",
+          "Process name or path for SSH connection. If specified, Orbit will directly set up a ssh "
+          "a SSH connection. This means --ssh_hostname, --ssh_user, --ssh_known_host_path and "
+          "--ssh_key_path also need to be specified (--ssh_port will default to 22). If multiple "
+          "instances of the same process exist, the one with the highest PID will be chosen.");

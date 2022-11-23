@@ -34,6 +34,8 @@
 #include "CommandLineUtils/CommandLineUtils.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitSsh/AddrAndPort.h"
+#include "OrbitSsh/Credentials.h"
 #include "SourcePathsMapping/Mapping.h"
 
 #ifdef _WIN32
@@ -319,34 +321,33 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  const std::string& target_process = absl::GetFlag(FLAGS_target_process);
-  const std::string& target_instance = absl::GetFlag(FLAGS_target_instance);
-
-  if (target_process.empty() != target_instance.empty()) {
-    ORBIT_LOG(
-        "Aborting startup: User specified only an instance or a process to connect to, but not "
-        "both.");
-    DisplayErrorToUser(
-        QString("Invalid combination of startup flags: You need to specify either both "
-                "--target_process and --target_instance, or none of them."));
-    return -1;
-  }
-
   std::optional<orbit_session_setup::ConnectionTarget> target;
-  if (!target_process.empty() && !target_instance.empty()) {
-    target = orbit_session_setup::ConnectionTarget(QString::fromStdString(target_process),
-                                                   QString::fromStdString(target_instance));
-  }
 
-  const std::string& target_uri = absl::GetFlag(FLAGS_target_uri);
-  if (!target_uri.empty()) {
-    auto maybe_target = orbit_session_setup::SplitTargetUri(QString::fromStdString(target_uri));
-    if (!maybe_target.has_value()) {
-      ORBIT_LOG("Invalid target URI specified.");
-      DisplayErrorToUser("Invalid target URI specified.");
+  const std::string& ssh_target_process = absl::GetFlag(FLAGS_ssh_target_process);
+  // If --ssh_target_process is specified, this is the sign to skip the SessionSetupDialog and go to
+  // the ConnectToTargetDialog. Otherwise the other ssh flags will just be used for filling the UI
+  // of ConnectToSshWidget.
+  if (!ssh_target_process.empty()) {
+    const std::string& ssh_hostname = absl::GetFlag(FLAGS_ssh_hostname);
+    const std::string& ssh_user = absl::GetFlag(FLAGS_ssh_user);
+    uint16_t ssh_port = absl::GetFlag(FLAGS_ssh_port);
+    const std::string& ssh_known_host_path = absl::GetFlag(FLAGS_ssh_known_host_path);
+    const std::string& ssh_key_path = absl::GetFlag(FLAGS_ssh_key_path);
+    if (ssh_hostname.empty() || ssh_user.empty() || ssh_known_host_path.empty() ||
+        ssh_key_path.empty()) {
+      std::string error =
+          "Invalid combination of ssh startup flags. If you specify --ssh_target_process, the "
+          "other ssh flags (--ssh_hostname, --ssh_user, --ssh_known_host_path, --ssh_key_path) "
+          "cannot be empty.";
+      ORBIT_LOG("%s", error);
+      DisplayErrorToUser(QString::fromStdString(error));
       return -1;
     }
-    target = maybe_target.value();
+
+    orbit_ssh::Credentials credentials{orbit_ssh::AddrAndPort{ssh_hostname, ssh_port}, ssh_user,
+                                       ssh_known_host_path, ssh_key_path};
+    target = orbit_session_setup::ConnectionTarget(QString::fromStdString(ssh_target_process),
+                                                   std::move(credentials));
   }
 
   if (capture_file_paths.size() > 0 && target.has_value()) {

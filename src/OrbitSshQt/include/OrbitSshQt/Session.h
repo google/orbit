@@ -58,7 +58,8 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
       : StateMachineHelper(parent), context_(context) {}
 
   void ConnectToServer(orbit_ssh::Credentials creds);
-  void Disconnect();
+  enum class DisconnectResult { kDisconnectedSuccessfully, kDisconnectStarted };
+  [[nodiscard]] DisconnectResult Disconnect();
 
   orbit_ssh::Session* GetRawSession() { return session_ ? &session_.value() : nullptr; }
 

@@ -4,6 +4,7 @@
 
 #include "SessionSetup/ConnectToTargetDialog.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
 #include <QApplication>
@@ -39,7 +40,8 @@ ConnectToTargetDialog::ConnectToTargetDialog(SshConnectionArtifacts* ssh_connect
   ORBIT_CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
-  ui_->instanceIdLabel->setText(target_.instance_name_or_id);
+  ui_->sshTargetLabel->setText(
+      QString::fromStdString(target_.credentials.addr_and_port.GetHumanReadable()));
   ui_->processIdLabel->setText(target_.process_name_or_path);
   setWindowFlags(Qt::Dialog | Qt::WindowTitleHint);
   setSizeGripEnabled(false);
@@ -49,10 +51,23 @@ ConnectToTargetDialog::ConnectToTargetDialog(SshConnectionArtifacts* ssh_connect
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
-            target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
+  const std::string status_message =
+      absl::StrFormat(R"(Trying to establish a connection to process "%s" on SSH target "%s")",
+                      target_.process_name_or_path.toStdString(),
+                      target_.credentials.addr_and_port.GetHumanReadable());
+  ORBIT_LOG("%s", status_message);
 
-  ORBIT_FATAL("Not implemented");
+  SetStatusMessage(QString::fromStdString(status_message));
+
+  // The call to `DeployOrbitServiceAndSetupProcessManager` is scheduled on the
+  // main thread, so it happens after the dialog is shown (via call to `Exec`).
+  main_thread_executor_->Schedule([this]() {
+    ErrorMessageOr<void> deploy_result = DeployOrbitServiceAndSetupProcessManager();
+    if (deploy_result.has_error()) {
+      LogAndDisplayError(deploy_result.error());
+      reject();
+    }
+  });
 
   int rc = QDialog::exec();
 
@@ -77,17 +92,40 @@ void ConnectToTargetDialog::OnProcessListUpdate(
   }
 }
 
-ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
-ConnectToTargetDialog::DeployOrbitService(
-    orbit_session_setup::ServiceDeployManager* service_deploy_manager) {
+ErrorMessageOr<void> ConnectToTargetDialog::DeployOrbitServiceAndSetupProcessManager() {
+  auto service_deploy_manager = std::make_unique<orbit_session_setup::ServiceDeployManager>(
+      ssh_connection_artifacts_->GetDeploymentConfiguration(),
+      ssh_connection_artifacts_->GetSshContext(), target_.credentials,
+      ssh_connection_artifacts_->GetGrpcPort());
+
   orbit_ssh_qt::ScopedConnection label_connection{
-      QObject::connect(service_deploy_manager, &ServiceDeployManager::statusMessage, this,
+      QObject::connect(service_deploy_manager.get(), &ServiceDeployManager::statusMessage, this,
                        &ConnectToTargetDialog::SetStatusMessage)};
   orbit_ssh_qt::ScopedConnection cancel_connection{
-      QObject::connect(ui_->abortButton, &QPushButton::clicked, service_deploy_manager,
+      QObject::connect(ui_->abortButton, &QPushButton::clicked, service_deploy_manager.get(),
                        &ServiceDeployManager::Cancel)};
 
-  return service_deploy_manager->Exec();
+  OUTCOME_TRY(const ServiceDeployManager::GrpcPort grpc_port, service_deploy_manager->Exec());
+
+  auto grpc_channel = CreateGrpcChannel(grpc_port.grpc_port);
+  ssh_connection_ = orbit_session_setup::SshConnection(target_.credentials.addr_and_port,
+                                                       std::move(service_deploy_manager),
+                                                       std::move(grpc_channel));
+
+  process_manager_ = orbit_client_services::ProcessManager::Create(
+      ssh_connection_.value().GetGrpcChannel(), absl::Milliseconds(1000));
+  process_manager_->SetProcessListUpdateListener(
+      [dialog = QPointer<ConnectToTargetDialog>(this)](
+          std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
+        if (dialog == nullptr) return;
+        QMetaObject::invokeMethod(dialog,
+                                  [dialog, process_list = std::move(process_list)]() mutable {
+                                    dialog->OnProcessListUpdate(std::move(process_list));
+                                  });
+      });
+  SetStatusMessage("Waiting for process to launch.");
+
+  return outcome::success();
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
