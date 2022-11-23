@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraphLayoutWidget.h"
+#include "OrbitQt/TimeGraphLayoutWidget.h"
 
 TEST(TimeGraphLayoutWidgetTest, SetScale) {
   orbit_qt::TimeGraphLayoutWidget widget{};

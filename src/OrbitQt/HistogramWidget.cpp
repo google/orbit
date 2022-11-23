@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "HistogramWidget.h"
+#include "OrbitQt/HistogramWidget.h"
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>

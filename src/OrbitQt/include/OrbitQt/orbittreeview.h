@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "DataViews/DataView.h"
-#include "orbittablemodel.h"
-#include "types.h"
+#include "OrbitQt/orbittablemodel.h"
+#include "OrbitQt/types.h"
 
 class OrbitTreeView : public QTreeView {
   Q_OBJECT

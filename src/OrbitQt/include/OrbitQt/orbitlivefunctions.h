@@ -19,10 +19,10 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
 #include "OrbitGl/LiveFunctionsController.h"
+#include "OrbitQt/orbiteventiterator.h"
+#include "OrbitQt/types.h"
 #include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"
-#include "orbiteventiterator.h"
-#include "types.h"
 
 namespace Ui {
 class OrbitLiveFunctions;

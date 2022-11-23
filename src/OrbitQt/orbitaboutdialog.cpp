@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbitaboutdialog.h"
+#include "OrbitQt/orbitaboutdialog.h"
 
 #include <QLabel>
 #include <QPlainTextEdit>
 
-#include "orbittreeview.h"
+#include "OrbitQt/orbittreeview.h"
 #include "ui_orbitaboutdialog.h"
 
 namespace orbit_qt {

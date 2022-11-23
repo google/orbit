@@ -18,7 +18,6 @@
 #include <utility>
 #include <vector>
 
-#include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
@@ -29,6 +28,7 @@
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitGl/CallTreeView.h"
+#include "OrbitQt/CallTreeViewItemModel.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 
 constexpr uint64_t kCallstackId = 1;

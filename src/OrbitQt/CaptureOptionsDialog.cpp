@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureOptionsDialog.h"
+#include "OrbitQt/CaptureOptionsDialog.h"
 
 #include <absl/flags/flag.h>
 
@@ -19,8 +19,8 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/capture.pb.h"
-#include "MultipleOfSpinBox.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitQt/MultipleOfSpinBox.h"
 #include "ui_CaptureOptionsDialog.h"
 
 namespace orbit_qt {

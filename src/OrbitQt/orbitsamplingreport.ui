@@ -158,7 +158,7 @@
   <customwidget>
    <class>OrbitDataViewPanel</class>
    <extends>QWidget</extends>
-   <header>orbitdataviewpanel.h</header>
+   <header>OrbitQt/orbitdataviewpanel.h</header>
   </customwidget>
   <customwidget>
    <class>NoticeWidget</class>

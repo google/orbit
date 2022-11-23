@@ -8,7 +8,7 @@
 #include <QValidator>
 #include <memory>
 
-#include "MultipleOfValidator.h"
+#include "OrbitQt/MultipleOfValidator.h"
 
 namespace orbit_qt {
 TEST(MultipleOfSpinBox, Validate) {

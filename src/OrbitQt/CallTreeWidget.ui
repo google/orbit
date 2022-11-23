@@ -70,7 +70,7 @@
   <customwidget>
    <class>CustomSignalsTreeView</class>
    <extends>QTreeView</extends>
-   <header>CustomSignalsTreeView.h</header>
+   <header>OrbitQt/CustomSignalsTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>NoticeWidget</class>

@@ -20,7 +20,6 @@
 #include <string_view>
 #include <utility>
 
-#include "AnnotatingSourceCodeDialog.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -31,6 +30,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitQt/AnnotatingSourceCodeDialog.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SymbolProvider/ModuleIdentifier.h"

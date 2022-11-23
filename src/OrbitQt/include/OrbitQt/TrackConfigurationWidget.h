@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "OrbitGl/TrackManager.h"
-#include "TrackTypeItemModel.h"
+#include "OrbitQt/TrackTypeItemModel.h"
 
 namespace Ui {
 class TrackConfigurationWidget;

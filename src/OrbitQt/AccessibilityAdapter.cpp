@@ -101,7 +101,7 @@
  * cleans up interfaces accordingly.
  */
 
-#include "AccessibilityAdapter.h"
+#include "OrbitQt/AccessibilityAdapter.h"
 
 #include <absl/meta/type_traits.h>
 
@@ -112,7 +112,7 @@
 
 #include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
 #include "OrbitGl/GlCanvas.h"
-#include "orbitglwidget.h"
+#include "OrbitQt/orbitglwidget.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleInterfaceRegistry;

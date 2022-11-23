@@ -41,11 +41,13 @@
 #else
 #endif
 
-#include "AccessibilityAdapter.h"
 #include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitPaths/Paths.h"
+#include "OrbitQt/AccessibilityAdapter.h"
+#include "OrbitQt/opengldetect.h"
+#include "OrbitQt/orbitmainwindow.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -58,8 +60,6 @@
 #include "SessionSetup/TargetConfiguration.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "Style/Style.h"
-#include "opengldetect.h"
-#include "orbitmainwindow.h"
 
 // This flag is needed by the E2E tests to ensure a clean state before running.
 ABSL_FLAG(bool, clear_source_paths_mappings, false, "Clear all the stored source paths mappings");

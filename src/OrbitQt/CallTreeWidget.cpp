@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CallTreeWidget.h"
+#include "OrbitQt/CallTreeWidget.h"
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
@@ -41,7 +41,6 @@
 #include <tuple>
 #include <utility>
 
-#include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
@@ -49,12 +48,13 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientFlags/ClientFlags.h"
-#include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitQt/CallTreeViewItemModel.h"
+#include "OrbitQt/CustomSignalsTreeView.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
 #include "ui_CallTreeWidget.h"

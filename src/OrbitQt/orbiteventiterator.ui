@@ -109,7 +109,7 @@
   <customwidget>
    <class>ElidedLabel</class>
    <extends>QLabel</extends>
-   <header>ElidedLabel.h</header>
+   <header>OrbitQt/ElidedLabel.h</header>
   </customwidget>
  </customwidgets>
  <resources>

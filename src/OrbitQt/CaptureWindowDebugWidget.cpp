@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureWindowDebugWidget.h"
+#include "OrbitQt/CaptureWindowDebugWidget.h"
 
 #include <QPlainTextEdit>
 #include <QWidget>
@@ -11,7 +11,7 @@
 #include <memory>
 #include <utility>
 
-#include "TimeGraphLayoutWidget.h"
+#include "OrbitQt/TimeGraphLayoutWidget.h"
 #include "ui_CaptureWindowDebugWidget.h"
 
 namespace orbit_qt {
