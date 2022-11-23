@@ -15,7 +15,7 @@ namespace orbit_session_setup {
 
 /*
  * `SshTarget` describes a successful ssh connection to a machine and a selected process. The
- * class is built in SessionSetupDialog and mainly used in OrbitMainWindow. This class is meant
+ * class is built in `SessionSetupDialog` and mainly used in `OrbitMainWindow`. This class is meant
  * to be constructed and then not modified anymore. Only SessionSetupDialog is allowed to modify
  * the members, which is used to move out members for reusing them.
  */
