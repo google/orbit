@@ -17,7 +17,6 @@ target_include_directories(RemoteSymbolProvider PUBLIC
 target_link_libraries(RemoteSymbolProvider PUBLIC
     Http
     OrbitBase
-    OrbitGgp
     QtUtils
     SymbolProvider
     Symbols)
