@@ -66,7 +66,8 @@ if (WIN32)
 target_link_libraries(ObjectUtils PUBLIC DIASDK::DIASDK)
 
 add_custom_command(TARGET ObjectUtils POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${DIASDK_DLL} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DIASDK_DLL}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/")
 endif()
 
 add_executable(ObjectUtilsTests)
