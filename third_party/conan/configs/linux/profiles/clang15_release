@@ -1,0 +1,4 @@
+include(clang15_common)
+
+[settings]
+build_type=Release
