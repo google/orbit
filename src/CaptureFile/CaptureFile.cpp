@@ -5,11 +5,8 @@
 #include "CaptureFile/CaptureFile.h"
 
 #include <absl/strings/str_format.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <unistd.h>
 
 #include <algorithm>
 #include <array>
@@ -30,6 +27,12 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "ProtoSectionInputStreamImpl.h"
+
+#ifdef __linux
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 namespace orbit_capture_file {
 
