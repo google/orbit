@@ -97,7 +97,6 @@ find_package(LLVM REQUIRED)
 find_package(gRPC REQUIRED)
 find_package(capstone REQUIRED)
 find_package(protobuf REQUIRED)
-find_package(Libssh2 REQUIRED)
 find_package(outcome REQUIRED)
 find_package(ZLIB REQUIRED)
 
@@ -109,6 +108,7 @@ if(WITH_GUI)
                Network
                Test
                Widgets)
+  find_package(Libssh2 REQUIRED)
 endif()
 
 find_package(Filesystem REQUIRED)
