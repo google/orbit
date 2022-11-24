@@ -6,10 +6,10 @@
 
 #include "OrbitBase/StringConversion.h"
 
-namespace orbit_base {
+namespace orbit_base_internal {
 
 void OutputToDebugger(const char* str) {
   std::wstring str_w = orbit_base::ToStdWString(str);
   ::OutputDebugStringW(str_w.c_str());
 }
-}  // namespace orbit_base
+}  // namespace orbit_base_internal

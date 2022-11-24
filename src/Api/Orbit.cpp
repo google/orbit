@@ -15,6 +15,10 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 
+#ifdef _WIN32
+#include "ApiUtils/ApiEnableInfo.h"
+#endif
+
 namespace {
 orbit_api::LockFreeApiEventProducer& GetCaptureEventProducer() {
   static orbit_api::LockFreeApiEventProducer producer;
