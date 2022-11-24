@@ -6,15 +6,18 @@
 
 #include <absl/strings/str_format.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdlib.h>
-#include <unistd.h>
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <system_error>
 
 #include "OrbitBase/SafeStrerror.h"
+
+#ifdef __linux
+#include <fcntl.h>
+#endif
 
 namespace orbit_base {
 
@@ -71,7 +74,8 @@ ErrorMessageOr<void> TemporaryFile::Init(std::string_view prefix) {
 void TemporaryFile::CloseAndRemove() {
   fd_.release();
   if (!file_path_.empty()) {
-    unlink(file_path_.string().c_str());
+    std::error_code err{};
+    std::filesystem::remove(file_path_, err);
   }
 }
 
