@@ -191,9 +191,17 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 
   std::vector<std::string_view> splits = absl::StrSplit(first_line, ' ', absl::SkipWhitespace{});
 
+  auto begin_field = splits.begin() + 1;  // The first field is the cpu ID `cpuXX`, so we skip that.
+  auto end_field = std::min(begin_field + 8, splits.end());
+  // We accumulate up to 8 fields. (Depending on what kernel version is available there might be
+  // fewer or more fields. We skip the 9th (`guest`) and the 10th field (`guest_nice`) because they
+  // are already included in the first field (`usertime`).)
+
+  if (begin_field >= end_field) return std::nullopt;
+
   const Jiffies jiffies{
-      std::accumulate(splits.begin() + 1, splits.end(), 0ul, [](auto sum, const auto& str) {
-        int potential_time = 0;
+      std::accumulate(begin_field, end_field, uint64_t{0}, [](uint64_t sum, std::string_view str) {
+        uint64_t potential_time = 0;
         if (absl::SimpleAtoi(str, &potential_time)) {
           sum += potential_time;
         }
