@@ -49,8 +49,6 @@ class LoadCaptureWidget : public QWidget, HasRadioButtonInterface {
   orbit_capture_file_info::ItemModel item_model_;
   QSortFilterProxyModel proxy_item_model_;
 
-  void showEvent(QShowEvent* event) override;
-  void DetachRadioButton();
   void SelectViaFilePicker();
 };
 

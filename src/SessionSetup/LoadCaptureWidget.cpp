@@ -109,31 +109,12 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
                    &QSortFilterProxyModel::setFilterFixedString);
 }
 
-bool LoadCaptureWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
+bool LoadCaptureWidget::IsActive() const { return ui_->radioButton->isChecked(); }
 
 void LoadCaptureWidget::SetActive(bool value) {
-  ui_->contentFrame->setEnabled(value);
+  ui_->tableContainer->setEnabled(value);
+  ui_->selectFileButton->setEnabled(value);
   ui_->radioButton->setChecked(value);
-}
-
-void LoadCaptureWidget::DetachRadioButton() {
-  ui_->titleBarLayout->removeWidget(ui_->radioButton);
-  ui_->radioButton->setParent(ui_->mainFrame);
-  int left = 0;
-  int top = 0;
-  ui_->mainFrame->layout()->getContentsMargins(&left, &top, nullptr, nullptr);
-  int frame_border_width = ui_->mainFrame->lineWidth();
-  ui_->radioButton->move(left + frame_border_width, top + frame_border_width);
-  ui_->radioButton->show();
-}
-
-void LoadCaptureWidget::showEvent(QShowEvent* event) {
-  QWidget::showEvent(event);
-  // It is important that the call to DetachRadioButton is done here and not during construction.
-  // For high dpi display settings in Windows (scaling) the the actual width and height of the radio
-  // button is not known during construction. Hence the call is done when the widget is shown, not
-  // when its constructed.
-  DetachRadioButton();
 }
 
 void LoadCaptureWidget::SelectViaFilePicker() {
