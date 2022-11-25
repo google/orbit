@@ -19,7 +19,6 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "SessionSetup/Connections.h"
-#include "SessionSetup/HasRadioButtonInterface.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 
 namespace Ui {
@@ -36,7 +35,7 @@ using OrbitServiceInstanceCreator =
 // checks every 250ms whether this channel is connected to OrbitService. If the user clicks the
 // "Start OrbitService" button, a OrbitServiceInstance is set up, to which the gRPC channel can
 // connect to.
-class ConnectToLocalWidget : public QWidget, HasRadioButtonInterface {
+class ConnectToLocalWidget : public QWidget {
   Q_OBJECT
 
  public:
@@ -52,7 +51,7 @@ class ConnectToLocalWidget : public QWidget, HasRadioButtonInterface {
     return local_connection_.GetGrpcChannel();
   }
 
-  QRadioButton* GetRadioButton() override;
+  [[nodiscard]] QRadioButton* GetRadioButton() const;
 
  signals:
   void Connected();

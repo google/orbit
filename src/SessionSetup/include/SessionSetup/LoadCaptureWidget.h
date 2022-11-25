@@ -16,7 +16,6 @@
 #include <memory>
 
 #include "CaptureFileInfo/ItemModel.h"
-#include "SessionSetup/HasRadioButtonInterface.h"
 
 namespace Ui {
 class LoadCaptureWidget;  // IWYU pragma: keep
@@ -24,14 +23,14 @@ class LoadCaptureWidget;  // IWYU pragma: keep
 
 namespace orbit_session_setup {
 
-class LoadCaptureWidget : public QWidget, HasRadioButtonInterface {
+class LoadCaptureWidget : public QWidget {
   Q_OBJECT
 
  public:
   explicit LoadCaptureWidget(QWidget* parent = nullptr);
   ~LoadCaptureWidget() override;
 
-  QRadioButton* GetRadioButton() override;
+  [[nodiscard]] QRadioButton* GetRadioButton() const;
 
  signals:
   void FileSelected(std::filesystem::path file_path);
