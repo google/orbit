@@ -30,7 +30,7 @@ class LoadCaptureWidget : public QWidget {
   explicit LoadCaptureWidget(QWidget* parent = nullptr);
   ~LoadCaptureWidget() override;
 
-  [[nodiscard]] QRadioButton* GetRadioButton() const;
+  [[nodiscard]] QRadioButton* GetRadioButton();
 
  signals:
   void FileSelected(std::filesystem::path file_path);

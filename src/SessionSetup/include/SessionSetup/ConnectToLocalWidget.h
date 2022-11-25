@@ -51,7 +51,7 @@ class ConnectToLocalWidget : public QWidget {
     return local_connection_.GetGrpcChannel();
   }
 
-  [[nodiscard]] QRadioButton* GetRadioButton() const;
+  [[nodiscard]] QRadioButton* GetRadioButton();
 
  signals:
   void Connected();
