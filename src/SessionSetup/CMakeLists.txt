@@ -15,6 +15,7 @@ target_sources(
           include/SessionSetup/DeploymentConfigurations.h
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
+          include/SessionSetup/HasRadioButtonInterface.h
           include/SessionSetup/OrbitServiceInstance.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/OtherUserDialog.h

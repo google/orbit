@@ -109,4 +109,6 @@ void ConnectToLocalWidget::OnStartOrbitServiceButtonClicked() {
                    });
 }
 
+QRadioButton* ConnectToLocalWidget::GetRadioButton() { return ui_->radioButton; }
+
 }  // namespace orbit_session_setup

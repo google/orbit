@@ -8,6 +8,7 @@
 #include <grpcpp/channel.h>
 
 #include <QObject>
+#include <QRadioButton>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
@@ -18,6 +19,7 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
 #include "SessionSetup/Connections.h"
+#include "SessionSetup/HasRadioButtonInterface.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 
 namespace Ui {
@@ -34,7 +36,7 @@ using OrbitServiceInstanceCreator =
 // checks every 250ms whether this channel is connected to OrbitService. If the user clicks the
 // "Start OrbitService" button, a OrbitServiceInstance is set up, to which the gRPC channel can
 // connect to.
-class ConnectToLocalWidget : public QWidget {
+class ConnectToLocalWidget : public QWidget, HasRadioButtonInterface {
   Q_OBJECT
   Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
@@ -52,6 +54,8 @@ class ConnectToLocalWidget : public QWidget {
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
     return local_connection_.GetGrpcChannel();
   }
+
+  QRadioButton* GetRadioButton() override;
 
  public slots:
   void SetActive(bool value);
