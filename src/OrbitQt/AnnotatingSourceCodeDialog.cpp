@@ -5,8 +5,10 @@
 #include "OrbitQt/AnnotatingSourceCodeDialog.h"
 
 #include <Qt>
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
+#include <ratio>
 #include <string>
 
 #include "CodeReport/AnnotateDisassembly.h"

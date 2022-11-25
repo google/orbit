@@ -11,13 +11,11 @@
 #include <vulkan/vk_layer.h>
 #include <vulkan/vulkan_core.h>
 
-#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "OrbitBase/File.h"

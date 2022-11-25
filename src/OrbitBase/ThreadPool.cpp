@@ -8,6 +8,7 @@
 #include <absl/base/const_init.h>
 #include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>

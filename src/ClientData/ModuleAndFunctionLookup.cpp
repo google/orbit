@@ -4,8 +4,6 @@
 
 #include "ClientData/ModuleAndFunctionLookup.h"
 
-#include <cstdint>
-
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"

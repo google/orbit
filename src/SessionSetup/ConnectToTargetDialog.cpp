@@ -15,12 +15,15 @@
 #include <QPushButton>
 #include <Qt>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <variant>
 
 #include "ClientData/ProcessData.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/AddrAndPort.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/ServiceDeployManager.h"

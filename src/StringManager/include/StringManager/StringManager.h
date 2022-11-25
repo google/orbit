@@ -6,6 +6,7 @@
 #define STRING_MANAGER_STRING_MANAGER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/synchronization/mutex.h>
 
 #include <cstdint>

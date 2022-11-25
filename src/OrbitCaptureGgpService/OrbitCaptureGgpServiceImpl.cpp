@@ -5,6 +5,7 @@
 #include "OrbitCaptureGgpServiceImpl.h"
 
 #include <absl/flags/declare.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
@@ -19,7 +20,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitClientGgp/ClientGgp.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
-#include "absl/flags/flag.h"
 
 ABSL_DECLARE_FLAG(uint16_t, orbit_service_grpc_port);
 ABSL_DECLARE_FLAG(int32_t, pid);

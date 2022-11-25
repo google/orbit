@@ -7,6 +7,7 @@
 #define CLIENT_DATA_SCOPE_STATS_COLLECTION_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 
 #include <cstdint>
 #include <vector>

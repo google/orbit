@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
@@ -11,7 +12,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

@@ -8,9 +8,6 @@
 
 #include <cstring>
 
-#include "ApiUtils/Event.h"
-#include "GrpcProtos/capture.pb.h"
-
 namespace orbit_api {
 
 std::string DecodeString(uint64_t encoded_chunk_1, uint64_t encoded_chunk_2,

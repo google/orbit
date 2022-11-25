@@ -6,7 +6,6 @@
 
 #include <absl/flags/flag.h>
 #include <absl/time/time.h>
-#include <grpcpp/grpcpp.h>
 
 #include <QFrame>
 #include <QHeaderView>

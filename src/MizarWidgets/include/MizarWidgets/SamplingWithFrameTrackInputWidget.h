@@ -46,6 +46,7 @@
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/FrameTrackListModel.h"
 #include "OrbitBase/Sort.h"
+#include "OrbitBase/Typedef.h"
 
 namespace Ui {
 class SamplingWithFrameTrackInputWidget;

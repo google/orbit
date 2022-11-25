@@ -9,7 +9,6 @@
 #include <sys/types.h>
 
 #include <filesystem>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
