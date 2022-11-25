@@ -126,6 +126,6 @@ void LoadCaptureWidget::SelectViaFilePicker() {
   emit SelectionConfirmed();
 }
 
-QRadioButton* LoadCaptureWidget::GetRadioButton() const { return ui_->radioButton; }
+QRadioButton* LoadCaptureWidget::GetRadioButton() { return ui_->radioButton; }
 
 }  // namespace orbit_session_setup
