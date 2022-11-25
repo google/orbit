@@ -8,6 +8,7 @@
 #include <grpcpp/channel.h>
 
 #include <QObject>
+#include <QRadioButton>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
@@ -36,13 +37,10 @@ using OrbitServiceInstanceCreator =
 // connect to.
 class ConnectToLocalWidget : public QWidget {
   Q_OBJECT
-  Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
  public:
   explicit ConnectToLocalWidget(QWidget* parent = nullptr);
   ~ConnectToLocalWidget() override;
-
-  [[nodiscard]] bool IsActive() const;
 
   void SetOrbitServiceInstanceCreateFunction(OrbitServiceInstanceCreator&& creator);
 
@@ -53,11 +51,9 @@ class ConnectToLocalWidget : public QWidget {
     return local_connection_.GetGrpcChannel();
   }
 
- public slots:
-  void SetActive(bool value);
+  [[nodiscard]] QRadioButton* GetRadioButton();
 
  signals:
-  void Activated();
   void Connected();
   void Disconnected();
 

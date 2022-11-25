@@ -23,15 +23,16 @@
 #include <memory>
 #include <optional>
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "CaptureFileInfo/Manager.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 #include "Test/Path.h"
 
-namespace orbit_capture_file_info {
+namespace orbit_session_setup {
 
 constexpr const char* kOrgName = "The Orbit Authors";
+using orbit_capture_file_info::Manager;
 
-TEST(LoadCaptureWidget, IsActiveSetActive) {
+TEST(LoadCaptureWidget, RadioButton) {
   QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName("LoadCaptureWidget.IsActiveSetActive");
 
@@ -46,47 +47,22 @@ TEST(LoadCaptureWidget, IsActiveSetActive) {
   auto* table_view = widget.findChild<QTableView*>("tableView");
   ASSERT_TRUE(table_view != nullptr);
 
-  // The widget needs to be shown so that the detaching of the radio button takes place. Otherwise
-  // the radioButton is not detached from the contentFrame and will be disabled when the widget is
-  // set inactive.
-  widget.show();
-  QApplication::processEvents();
-
-  // default is active
-  EXPECT_TRUE(widget.IsActive());
-  EXPECT_TRUE(capture_filter_line_edit->isEnabled());
-  EXPECT_TRUE(select_file_button->isEnabled());
-  EXPECT_TRUE(table_view->isEnabled());
   // radio button is always enabled
   EXPECT_TRUE(radio_button->isEnabled());
-
-  // set active false
-  widget.SetActive(false);
-  EXPECT_FALSE(widget.IsActive());
+  EXPECT_FALSE(radio_button->isChecked());
+  // default is disabled
   EXPECT_FALSE(capture_filter_line_edit->isEnabled());
   EXPECT_FALSE(select_file_button->isEnabled());
   EXPECT_FALSE(table_view->isEnabled());
-  EXPECT_FALSE(radio_button->isChecked());
+
+  QTest::mouseClick(radio_button, Qt::LeftButton);
   // radio button is always enabled
   EXPECT_TRUE(radio_button->isEnabled());
-
-  // set active true
-  widget.SetActive(true);
-  EXPECT_TRUE(widget.IsActive());
+  EXPECT_TRUE(radio_button->isChecked());
+  // After click on radio button, ui is enabled
   EXPECT_TRUE(capture_filter_line_edit->isEnabled());
   EXPECT_TRUE(select_file_button->isEnabled());
   EXPECT_TRUE(table_view->isEnabled());
-  EXPECT_TRUE(radio_button->isChecked());
-  // radio button is always enabled
-  EXPECT_TRUE(radio_button->isEnabled());
-
-  // set active to false and then activate by clicking on the radiobutton
-  widget.SetActive(false);
-  bool signal_received = false;
-  QObject::connect(&widget, &LoadCaptureWidget::Activated,
-                   [&signal_received]() { signal_received = true; });
-  QTest::mouseClick(radio_button, Qt::MouseButton::LeftButton, Qt::KeyboardModifier::NoModifier);
-  EXPECT_TRUE(signal_received);
 }
 
 TEST(LoadCaptureWidget, SelectFromTableView) {
@@ -101,6 +77,11 @@ TEST(LoadCaptureWidget, SelectFromTableView) {
   manager.AddOrTouchCaptureFile(test_file_path, std::nullopt);
 
   LoadCaptureWidget widget{};
+  auto* radio_button = widget.findChild<QRadioButton*>("radioButton");
+  ASSERT_NE(radio_button, nullptr);
+  // Enable the UI
+  QTest::mouseClick(radio_button, Qt::LeftButton);
+
   auto* table_view = widget.findChild<QTableView*>("tableView");
   ASSERT_TRUE(table_view != nullptr);
 
@@ -140,6 +121,11 @@ TEST(LoadCaptureWidget, EditCaptureFileFilter) {
   manager.AddOrTouchCaptureFile(test_file_path1, std::nullopt);
 
   LoadCaptureWidget widget{};
+  auto* radio_button = widget.findChild<QRadioButton*>("radioButton");
+  ASSERT_NE(radio_button, nullptr);
+  // Enable the UI
+  QTest::mouseClick(radio_button, Qt::LeftButton);
+
   auto* table_view = widget.findChild<QTableView*>("tableView");
   ASSERT_TRUE(table_view != nullptr);
   ASSERT_EQ(table_view->model()->rowCount(), 2);
@@ -154,4 +140,4 @@ TEST(LoadCaptureWidget, EditCaptureFileFilter) {
   ASSERT_EQ(table_view->model()->rowCount(), 0);
 }
 
-}  // namespace orbit_capture_file_info
+}  // namespace orbit_session_setup

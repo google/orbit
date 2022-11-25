@@ -11,8 +11,7 @@ target_sources(
   CaptureFileInfo
   PUBLIC  include/CaptureFileInfo/CaptureFileInfo.h
           include/CaptureFileInfo/ItemModel.h
-          include/CaptureFileInfo/Manager.h
-          include/CaptureFileInfo/LoadCaptureWidget.h)
+          include/CaptureFileInfo/Manager.h)
 
 target_include_directories(CaptureFileInfo PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -20,9 +19,7 @@ target_sources(
   CaptureFileInfo
   PRIVATE CaptureFileInfo.cpp
           ItemModel.cpp
-          Manager.cpp
-          LoadCaptureWidget.cpp
-          LoadCaptureWidget.ui)
+          Manager.cpp)
 
 
 target_link_libraries(
@@ -41,7 +38,6 @@ target_sources(
   CaptureFileInfoTests 
   PRIVATE CaptureFileInfoTest.cpp
           ItemModelTest.cpp
-          LoadCaptureWidgetTest.cpp
           ManagerTest.cpp)
 
 target_link_libraries(

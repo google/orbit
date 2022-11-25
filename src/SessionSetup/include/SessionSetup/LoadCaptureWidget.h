@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_FILE_INFO_LOAD_CAPTURE_WIDGET_H_
-#define CAPTURE_FILE_INFO_LOAD_CAPTURE_WIDGET_H_
+#ifndef SESSION_SETUP_LOAD_CAPTURE_WIDGET_H_
+#define SESSION_SETUP_LOAD_CAPTURE_WIDGET_H_
 
 #include <QEvent>
 #include <QObject>
+#include <QRadioButton>
 #include <QShowEvent>
 #include <QSortFilterProxyModel>
 #include <QString>
@@ -20,36 +21,30 @@ namespace Ui {
 class LoadCaptureWidget;  // IWYU pragma: keep
 }
 
-namespace orbit_capture_file_info {
+namespace orbit_session_setup {
 
 class LoadCaptureWidget : public QWidget {
   Q_OBJECT
-  Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
  public:
   explicit LoadCaptureWidget(QWidget* parent = nullptr);
   ~LoadCaptureWidget() override;
 
-  [[nodiscard]] bool IsActive() const;
-
- public slots:
-  void SetActive(bool value);
+  [[nodiscard]] QRadioButton* GetRadioButton();
 
  signals:
-  void Activated();
   void FileSelected(std::filesystem::path file_path);
   void SelectionConfirmed();
 
  private:
   std::unique_ptr<Ui::LoadCaptureWidget> ui_;
-  ItemModel item_model_;
+  orbit_capture_file_info::ItemModel item_model_;
   QSortFilterProxyModel proxy_item_model_;
 
-  void showEvent(QShowEvent* event) override;
-  void DetachRadioButton();
+  void SetActive(bool value);
   void SelectViaFilePicker();
 };
 
-}  // namespace orbit_capture_file_info
+}  // namespace orbit_session_setup
 
-#endif  // CAPTURE_FILE_INFO_LOAD_CAPTURE_WIDGET_H_
+#endif  // SESSION_SETUP_LOAD_CAPTURE_WIDGET_H_

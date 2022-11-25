@@ -8,6 +8,7 @@
 #include <absl/time/time.h>
 #include <grpcpp/grpcpp.h>
 
+#include <QButtonGroup>
 #include <QFrame>
 #include <QHeaderView>
 #include <QHistoryState>
@@ -32,7 +33,6 @@
 #include <variant>
 #include <vector>
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessManager.h"
 #include "GrpcProtos/process.pb.h"
@@ -40,6 +40,7 @@
 #include "OrbitBase/Result.h"
 #include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/Connections.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessItemModel.h"
@@ -53,7 +54,6 @@ constexpr int kProcessesRowHeight = 19;
 
 namespace orbit_session_setup {
 
-using orbit_capture_file_info::LoadCaptureWidget;
 using orbit_grpc_protos::ProcessInfo;
 
 SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_artifacts,
@@ -111,21 +111,17 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::SelectionConfirmed, this,
                    &QDialog::accept);
 
+  button_group_.addButton(ui_->localProfilingWidget->GetRadioButton());
+  button_group_.addButton(ui_->loadCaptureWidget->GetRadioButton());
+
   if (target_configuration_opt.has_value()) {
     TargetConfiguration config = std::move(target_configuration_opt.value());
     target_configuration_opt = std::nullopt;
     std::visit([this](auto&& target) { SetTargetAndStateMachineInitialState(std::move(target)); },
                config);
   } else {
-    SetStateMachineInitialState();
-  }
-}
-
-void SessionSetupDialog::SetStateMachineInitialState() {
-  if (ui_->localProfilingWidget->IsActive()) {
     state_machine_.setInitialState(&state_local_);
-  } else {
-    state_machine_.setInitialState(&state_file_);
+    ui_->localProfilingWidget->GetRadioButton()->setChecked(true);
   }
 }
 
@@ -187,8 +183,6 @@ void SessionSetupDialog::SetupLocalStates() {
   state_local_.assignProperty(
       ui_->confirmButton, "toolTip",
       "Please have a OrbitService run on the local machine and select a process.");
-  state_local_.assignProperty(ui_->localProfilingWidget, "active", true);
-  state_local_.assignProperty(ui_->loadCaptureWidget, "active", false);
 
   // STATE state_local_connecting
   state_local_connecting_.assignProperty(ui_->processesFrame, "enabled", false);
@@ -205,7 +199,7 @@ void SessionSetupDialog::SetupLocalStates() {
 
   // TRANSITIONS (and entered/exit events)
   // STATE state_local_
-  state_local_.addTransition(ui_->loadCaptureWidget, &LoadCaptureWidget::Activated,
+  state_local_.addTransition(ui_->loadCaptureWidget->GetRadioButton(), &QRadioButton::clicked,
                              &state_file_history_);
 
   // STATE state_local_connecting_
@@ -248,8 +242,6 @@ void SessionSetupDialog::SetupFileStates() {
   // STATE state_file_
   state_file_.assignProperty(ui_->confirmButton, "enabled", false);
   state_file_.assignProperty(ui_->confirmButton, "toolTip", "Please select a capture to load");
-  state_file_.assignProperty(ui_->localProfilingWidget, "active", false);
-  state_file_.assignProperty(ui_->loadCaptureWidget, "active", true);
   state_file_.assignProperty(ui_->processesFrame, "enabled", false);
 
   // STATE state_file_selected_
@@ -258,7 +250,7 @@ void SessionSetupDialog::SetupFileStates() {
 
   // TRANSITIONS (and entered/exit events)
   // STATE state_file_
-  state_file_.addTransition(ui_->localProfilingWidget, &ConnectToLocalWidget::Activated,
+  state_file_.addTransition(ui_->localProfilingWidget->GetRadioButton(), &QRadioButton::clicked,
                             &state_local_history_);
   state_file_.addTransition(ui_->loadCaptureWidget, &LoadCaptureWidget::FileSelected,
                             &state_file_selected_);

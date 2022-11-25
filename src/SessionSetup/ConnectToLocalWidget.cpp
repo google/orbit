@@ -40,19 +40,8 @@ ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
       check_connection_timer_(this) {
   ui_->setupUi(this);
 
-  // The following is to make the radioButton behave as if it was part of an exclusive button group
-  // in the parent widget (SessionSetupDialog). If a user clicks on the radioButton and it was
-  // not checked before, it is checked afterwards and this widget sends the activation signal.
-  // SessionSetupDialog reacts to the signal and deactivates the other widgets belonging to that
-  // button group. If a user clicks on a radio button that is already checked, nothing happens, the
-  // button does not get unchecked.
-  QObject::connect(ui_->radioButton, &QRadioButton::clicked, this, [this](bool checked) {
-    if (checked) {
-      emit Activated();
-    } else {
-      ui_->radioButton->setChecked(true);
-    }
-  });
+  QObject::connect(ui_->radioButton, &QRadioButton::toggled, ui_->contentFrame,
+                   &QWidget::setEnabled);
 
   QObject::connect(ui_->startOrbitServiceButton, &QPushButton::clicked, this,
                    &ConnectToLocalWidget::OnStartOrbitServiceButtonClicked);
@@ -71,13 +60,6 @@ ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
     }
   });
   check_connection_timer_.start(250);
-}
-
-bool ConnectToLocalWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
-
-void ConnectToLocalWidget::SetActive(bool value) {
-  ui_->contentFrame->setEnabled(value);
-  ui_->radioButton->setChecked(value);
 }
 
 void ConnectToLocalWidget::SetOrbitServiceInstanceCreateFunction(
@@ -108,5 +90,7 @@ void ConnectToLocalWidget::OnStartOrbitServiceButtonClicked() {
                      emit Disconnected();
                    });
 }
+
+QRadioButton* ConnectToLocalWidget::GetRadioButton() { return ui_->radioButton; }
 
 }  // namespace orbit_session_setup

@@ -51,13 +51,13 @@
         <property name="text">
          <string>Local profiling</string>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
       <item>
        <widget class="QFrame" name="contentFrame">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="lineWidth">
          <number>0</number>
         </property>

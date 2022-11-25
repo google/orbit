@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 
 #include <QFileDialog>
 #include <QFrame>
@@ -33,9 +33,10 @@
 #include "OrbitPaths/Paths.h"
 #include "ui_LoadCaptureWidget.h"
 
-constexpr int kRowHeight = 19;
+namespace orbit_session_setup {
 
-namespace orbit_capture_file_info {
+constexpr int kRowHeight = 19;
+using orbit_capture_file_info::ItemModel;
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::LoadCaptureWidget`. The header file only contains a forward declaration.
@@ -43,7 +44,7 @@ LoadCaptureWidget::~LoadCaptureWidget() = default;
 
 LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::LoadCaptureWidget>()) {
-  Manager manager;
+  orbit_capture_file_info::Manager manager;
 
   if (manager.GetCaptureFileInfos().empty()) {
     ErrorMessageOr<std::filesystem::path> capture_dir = orbit_paths::CreateOrGetCaptureDir();
@@ -71,19 +72,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
       static_cast<int>(ItemModel::Column::kCreated), QHeaderView::ResizeToContents);
   ui_->tableView->verticalHeader()->setDefaultSectionSize(kRowHeight);
 
-  // The following is to make the radiobutton behave as if it was part of an exclusive button group
-  // in the parent widget (SessionSetupDialog). If a user clicks on the radiobutton and it was
-  // not checked before, it is checked afterwards and this widget sends the activation signal.
-  // SessionSetupDialog reacts to the signal and deactivates the other widgets belonging to that
-  // button group. If a user clicks on a radio button that is already checked, nothing happens, the
-  // button does not get unchecked.
-  QObject::connect(ui_->radioButton, &QRadioButton::clicked, this, [this](bool checked) {
-    if (checked) {
-      emit Activated();
-    } else {
-      ui_->radioButton->setChecked(true);
-    }
-  });
+  QObject::connect(ui_->radioButton, &QRadioButton::toggled, this, &LoadCaptureWidget::SetActive);
 
   QObject::connect(ui_->selectFileButton, &QPushButton::clicked, this,
                    &LoadCaptureWidget::SelectViaFilePicker);
@@ -108,31 +97,9 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
                    &QSortFilterProxyModel::setFilterFixedString);
 }
 
-bool LoadCaptureWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
-
 void LoadCaptureWidget::SetActive(bool value) {
-  ui_->contentFrame->setEnabled(value);
-  ui_->radioButton->setChecked(value);
-}
-
-void LoadCaptureWidget::DetachRadioButton() {
-  ui_->titleBarLayout->removeWidget(ui_->radioButton);
-  ui_->radioButton->setParent(ui_->mainFrame);
-  int left = 0;
-  int top = 0;
-  ui_->mainFrame->layout()->getContentsMargins(&left, &top, nullptr, nullptr);
-  int frame_border_width = ui_->mainFrame->lineWidth();
-  ui_->radioButton->move(left + frame_border_width, top + frame_border_width);
-  ui_->radioButton->show();
-}
-
-void LoadCaptureWidget::showEvent(QShowEvent* event) {
-  QWidget::showEvent(event);
-  // It is important that the call to DetachRadioButton is done here and not during construction.
-  // For high dpi display settings in Windows (scaling) the the actual width and height of the radio
-  // button is not known during construction. Hence the call is done when the widget is shown, not
-  // when its constructed.
-  DetachRadioButton();
+  ui_->tableContainer->setEnabled(value);
+  ui_->selectFileButton->setEnabled(value);
 }
 
 void LoadCaptureWidget::SelectViaFilePicker() {
@@ -159,4 +126,6 @@ void LoadCaptureWidget::SelectViaFilePicker() {
   emit SelectionConfirmed();
 }
 
-}  // namespace orbit_capture_file_info
+QRadioButton* LoadCaptureWidget::GetRadioButton() { return ui_->radioButton; }
+
+}  // namespace orbit_session_setup
