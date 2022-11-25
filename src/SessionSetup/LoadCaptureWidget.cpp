@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 
 #include <QFileDialog>
 #include <QFrame>
@@ -33,9 +33,10 @@
 #include "OrbitPaths/Paths.h"
 #include "ui_LoadCaptureWidget.h"
 
-constexpr int kRowHeight = 19;
+namespace orbit_session_setup {
 
-namespace orbit_capture_file_info {
+constexpr int kRowHeight = 19;
+using orbit_capture_file_info::ItemModel;
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::LoadCaptureWidget`. The header file only contains a forward declaration.
@@ -43,7 +44,7 @@ LoadCaptureWidget::~LoadCaptureWidget() = default;
 
 LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::LoadCaptureWidget>()) {
-  Manager manager;
+  orbit_capture_file_info::Manager manager;
 
   if (manager.GetCaptureFileInfos().empty()) {
     ErrorMessageOr<std::filesystem::path> capture_dir = orbit_paths::CreateOrGetCaptureDir();
@@ -159,4 +160,4 @@ void LoadCaptureWidget::SelectViaFilePicker() {
   emit SelectionConfirmed();
 }
 
-}  // namespace orbit_capture_file_info
+}  // namespace orbit_session_setup

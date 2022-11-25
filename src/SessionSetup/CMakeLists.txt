@@ -16,6 +16,7 @@ target_sources(
           include/SessionSetup/DoubleClickableLabel.h
           include/SessionSetup/Error.h
           include/SessionSetup/HasRadioButtonInterface.h
+          include/SessionSetup/LoadCaptureWidget.h
           include/SessionSetup/OrbitServiceInstance.h
           include/SessionSetup/OverlayWidget.h
           include/SessionSetup/OtherUserDialog.h
@@ -37,6 +38,8 @@ target_sources(
           ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
           Error.cpp
+          LoadCaptureWidget.cpp
+          LoadCaptureWidget.ui
           OrbitServiceInstance.cpp
           OtherUserDialog.cpp
           OtherUserDialog.ui
@@ -79,9 +82,10 @@ target_sources(
   SessionSetupTests
   PRIVATE ConnectToLocalWidgetTest.cpp
           DoubleClickableLabelTest.cpp
-          ProcessItemModelTest.cpp
+          LoadCaptureWidgetTest.cpp
           OrbitServiceInstanceTest.cpp
           OtherUserDialogTest.cpp
+          ProcessItemModelTest.cpp
           SessionSetupDialogTest.cpp
           SessionSetupUtilsTest.cpp
           TargetLabelTest.cpp)

@@ -23,13 +23,14 @@
 #include <memory>
 #include <optional>
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "CaptureFileInfo/Manager.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 #include "Test/Path.h"
 
-namespace orbit_capture_file_info {
+namespace orbit_session_setup {
 
 constexpr const char* kOrgName = "The Orbit Authors";
+using orbit_capture_file_info::Manager;
 
 TEST(LoadCaptureWidget, IsActiveSetActive) {
   QCoreApplication::setOrganizationName(kOrgName);
@@ -154,4 +155,4 @@ TEST(LoadCaptureWidget, EditCaptureFileFilter) {
   ASSERT_EQ(table_view->model()->rowCount(), 0);
 }
 
-}  // namespace orbit_capture_file_info
+}  // namespace orbit_session_setup

@@ -85,7 +85,7 @@
           <widget class="orbit_session_setup::ConnectToLocalWidget" name="localProfilingWidget" native="true"/>
          </item>
          <item>
-          <widget class="orbit_capture_file_info::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
+          <widget class="orbit_session_setup::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
          </item>
         </layout>
        </widget>
@@ -275,9 +275,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>orbit_capture_file_info::LoadCaptureWidget</class>
+   <class>orbit_session_setup::LoadCaptureWidget</class>
    <extends>QWidget</extends>
-   <header>CaptureFileInfo/LoadCaptureWidget.h</header>
+   <header>SessionSetup/LoadCaptureWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_session_setup::TargetLabel</class>

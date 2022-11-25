@@ -32,7 +32,6 @@
 #include <variant>
 #include <vector>
 
-#include "CaptureFileInfo/LoadCaptureWidget.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessManager.h"
 #include "GrpcProtos/process.pb.h"
@@ -40,6 +39,7 @@
 #include "OrbitBase/Result.h"
 #include "SessionSetup/ConnectToLocalWidget.h"
 #include "SessionSetup/Connections.h"
+#include "SessionSetup/LoadCaptureWidget.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessItemModel.h"
@@ -53,7 +53,6 @@ constexpr int kProcessesRowHeight = 19;
 
 namespace orbit_session_setup {
 
-using orbit_capture_file_info::LoadCaptureWidget;
 using orbit_grpc_protos::ProcessInfo;
 
 SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_artifacts,
