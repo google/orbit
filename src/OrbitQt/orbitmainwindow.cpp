@@ -1679,7 +1679,7 @@ void OrbitMainWindow::OnSshConnectionError(std::error_code error) {
   ORBIT_CHECK(std::holds_alternative<SshTarget>(target_configuration_));
   const SshTarget& target = std::get<SshTarget>(target_configuration_);
 
-  target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
+  target.GetConnection()->GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
   QString error_message =
       QString("The connection to machine \"%1\" failed with error message: %2")
@@ -1693,7 +1693,7 @@ void OrbitMainWindow::OnLocalConnectionError(const QString& error_message) {
   ORBIT_CHECK(std::holds_alternative<LocalTarget>(target_configuration_));
   const LocalTarget& target = std::get<LocalTarget>(target_configuration_);
 
-  target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
+  target.GetConnection()->GetProcessManager()->SetProcessListUpdateListener(nullptr);
 
   OnConnectionError(error_message);
 }
@@ -1706,18 +1706,19 @@ void OrbitMainWindow::SetTarget(const SshTarget& target) {
                    &OrbitMainWindow::OnSshConnectionError, Qt::UniqueConnection);
 
   app_->SetGrpcChannel(connection->GetGrpcChannel());
-  app_->SetProcessManager(target.GetProcessManager());
+  app_->SetProcessManager(target.GetConnection()->GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
 
   target_label_->ChangeToSshTarget(target);
 
   using ProcessInfo = orbit_grpc_protos::ProcessInfo;
-  target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
-    // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
-    // to execute our logic on the main thread.
-    QMetaObject::invokeMethod(
-        this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
-  });
+  target.GetConnection()->GetProcessManager()->SetProcessListUpdateListener(
+      [&](std::vector<ProcessInfo> processes) {
+        // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
+        // to execute our logic on the main thread.
+        QMetaObject::invokeMethod(
+            this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
+      });
 
   is_connected_ = true;
 }
@@ -1730,18 +1731,19 @@ void OrbitMainWindow::SetTarget(const LocalTarget& target) {
                    &OrbitMainWindow::OnLocalConnectionError, Qt::UniqueConnection);
 
   app_->SetGrpcChannel(connection->GetGrpcChannel());
-  app_->SetProcessManager(target.GetProcessManager());
+  app_->SetProcessManager(target.GetConnection()->GetProcessManager());
   app_->SetTargetProcess(target.GetProcess());
 
   target_label_->ChangeToLocalTarget(target);
 
   using ProcessInfo = orbit_grpc_protos::ProcessInfo;
-  target.GetProcessManager()->SetProcessListUpdateListener([&](std::vector<ProcessInfo> processes) {
-    // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
-    // to execute our logic on the main thread.
-    QMetaObject::invokeMethod(
-        this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
-  });
+  target.GetConnection()->GetProcessManager()->SetProcessListUpdateListener(
+      [&](std::vector<ProcessInfo> processes) {
+        // This lambda is called from a background-thread, so we use QMetaObject::invokeMethod
+        // to execute our logic on the main thread.
+        QMetaObject::invokeMethod(
+            this, [&, processes = std::move(processes)]() { OnProcessListUpdated(processes); });
+      });
 
   is_connected_ = true;
 }
@@ -1784,11 +1786,13 @@ void OrbitMainWindow::OnProcessListUpdated(
 TargetConfiguration OrbitMainWindow::ClearTargetConfiguration() {
   if (std::holds_alternative<SshTarget>(target_configuration_)) {
     std::get<SshTarget>(target_configuration_)
-        .GetProcessManager()
+        .GetConnection()
+        ->GetProcessManager()
         ->SetProcessListUpdateListener(nullptr);
   } else if (std::holds_alternative<LocalTarget>(target_configuration_)) {
     std::get<LocalTarget>(target_configuration_)
-        .GetProcessManager()
+        .GetConnection()
+        ->GetProcessManager()
         ->SetProcessListUpdateListener(nullptr);
   }
   return std::move(target_configuration_);

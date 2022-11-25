@@ -149,6 +149,10 @@ void TargetLabel::ChangeToLocalTarget(const orbit_client_data::ProcessData& proc
   ChangeToLocalTarget(QString::fromStdString(process.name()), process.cpu_usage());
 }
 
+void TargetLabel::ChangeToLocalTarget(const orbit_grpc_protos::ProcessInfo& process_info) {
+  ChangeToLocalTarget(QString::fromStdString(process_info.name()), process_info.cpu_usage());
+}
+
 void TargetLabel::ChangeToLocalTarget(const QString& process_name, double cpu_usage) {
   Clear();
   process_ = process_name;

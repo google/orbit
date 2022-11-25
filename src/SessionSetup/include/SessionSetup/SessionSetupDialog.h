@@ -24,11 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/ProcessData.h"
-#include "ClientServices/ProcessManager.h"
 #include "Connections.h"
 #include "GrpcProtos/process.pb.h"
-#include "ProcessItemModel.h"
 #include "TargetConfiguration.h"
 
 namespace Ui {
@@ -47,9 +44,8 @@ class SessionSetupDialog : public QDialog {
 
   [[nodiscard]] std::optional<TargetConfiguration> Exec();
  private slots:
-  void SetupLocalProcessManager();
-  void TearDownProcessManager();
-  void ProcessSelectionChanged(const QModelIndex& current);
+  void ConnectLocalAndProcessWidget();
+  void DisconnectLocalAndProcessWidget();
 
  signals:
   void ProcessSelected();
@@ -59,12 +55,6 @@ class SessionSetupDialog : public QDialog {
  private:
   std::unique_ptr<Ui::SessionSetupDialog> ui_;
   QButtonGroup button_group_;
-
-  ProcessItemModel process_model_;
-  QSortFilterProxyModel process_proxy_model_;
-
-  std::unique_ptr<orbit_client_data::ProcessData> process_;
-  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
 
   std::filesystem::path selected_file_path_;
 
@@ -80,15 +70,11 @@ class SessionSetupDialog : public QDialog {
   QHistoryState state_local_history_;
   QState state_local_connecting_;
   QState state_local_connected_;
-  QState state_local_processes_loading_;
-  QState state_local_process_selected_;
   QState state_local_no_process_selected_;
+  QState state_local_process_selected_;
 
   void SetupFileStates();
   void SetupLocalStates();
-  [[nodiscard]] bool TrySelectProcessByName(const std::string& process_name);
-  void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
-  void SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel);
   void SetTargetAndStateMachineInitialState(SshTarget target);
   void SetTargetAndStateMachineInitialState(LocalTarget target);
   void SetTargetAndStateMachineInitialState(FileTarget target);

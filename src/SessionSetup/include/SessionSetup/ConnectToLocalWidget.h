@@ -15,6 +15,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
@@ -44,7 +45,7 @@ class ConnectToLocalWidget : public QWidget {
 
   void SetOrbitServiceInstanceCreateFunction(OrbitServiceInstanceCreator&& creator);
 
-  void SetConnection(LocalConnection&& connection) { local_connection_ = std::move(connection); }
+  void SetConnection(LocalConnection&& connection);
   [[nodiscard]] LocalConnection&& TakeConnection() { return std::move(local_connection_); }
 
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
@@ -56,6 +57,7 @@ class ConnectToLocalWidget : public QWidget {
  signals:
   void Connected();
   void Disconnected();
+  void ProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
 
  private:
   std::unique_ptr<Ui::ConnectToLocalWidget> ui_;
@@ -64,6 +66,8 @@ class ConnectToLocalWidget : public QWidget {
   QTimer check_connection_timer_;
 
   void OnStartOrbitServiceButtonClicked();
+  void CheckAndSignalConnection();
+  void SetupProcessListUpdater();
 };
 
 }  // namespace orbit_session_setup

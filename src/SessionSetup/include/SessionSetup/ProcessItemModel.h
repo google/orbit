@@ -42,5 +42,6 @@ class ProcessItemModel : public QAbstractItemModel {
 }  // namespace orbit_session_setup
 
 Q_DECLARE_METATYPE(const orbit_grpc_protos::ProcessInfo*);
+Q_DECLARE_METATYPE(orbit_grpc_protos::ProcessInfo);
 
 #endif  // SESSION_SETUP_PROCESS_ITEM_MODEL_H_

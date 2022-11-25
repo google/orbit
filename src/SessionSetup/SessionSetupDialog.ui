@@ -41,6 +41,9 @@
    </property>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,0">
+     <property name="spacing">
+      <number>0</number>
+     </property>
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -74,11 +77,8 @@
         <property name="lineWidth">
          <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,1">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
           <number>0</number>
          </property>
          <item>
@@ -89,137 +89,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QFrame" name="frame_4">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>2</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <property name="lineWidth">
-         <number>0</number>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>9</number>
-         </property>
-         <property name="rightMargin">
-          <number>9</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="QFrame" name="processesFrame">
-           <property name="accessibleName">
-            <string>ProcessesFrame</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_3">
-            <item>
-             <widget class="QLabel" name="selectProcessLabel">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>23</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Select a process</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="processFilterLineEdit">
-              <property name="accessibleName">
-               <string>FilterProcesses</string>
-              </property>
-              <property name="placeholderText">
-               <string>Filter</string>
-              </property>
-              <property name="clearButtonEnabled">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QFrame" name="frame2">
-              <layout class="QVBoxLayout" name="verticalLayout_2">
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QTableView" name="processesTableView">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="accessibleName">
-                  <string>ProcessList</string>
-                 </property>
-                 <property name="alternatingRowColors">
-                  <bool>true</bool>
-                 </property>
-                 <property name="selectionMode">
-                  <enum>QAbstractItemView::SingleSelection</enum>
-                 </property>
-                 <property name="selectionBehavior">
-                  <enum>QAbstractItemView::SelectRows</enum>
-                 </property>
-                 <property name="showGrid">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-              <widget class="orbit_session_setup::OverlayWidget" name="processesTableOverlay" native="true">
-               <property name="geometry">
-                <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>100</width>
-                 <height>30</height>
-                </rect>
-               </property>
-               <property name="visible">
-                <bool>false</bool>
-               </property>
-               <property name="accessibleName">
-                <string>ProcessListOverlay</string>
-               </property>
-              </widget>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+       <widget class="orbit_session_setup::ProcessListWidget" name="processListWidget" native="true"/>
       </widget>
      </item>
      <item>
@@ -269,12 +139,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_session_setup::OverlayWidget</class>
-   <extends>QWidget</extends>
-   <header>SessionSetup/OverlayWidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>orbit_session_setup::LoadCaptureWidget</class>
    <extends>QWidget</extends>
    <header>SessionSetup/LoadCaptureWidget.h</header>
@@ -289,26 +153,14 @@
    <extends>QWidget</extends>
    <header>SessionSetup/ConnectToLocalWidget.h</header>
   </customwidget>
+  <customwidget>
+   <class>orbit_session_setup::ProcessListWidget</class>
+   <extends>QWidget</extends>
+   <header>SessionSetup/ProcessListWidget.h</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="../../icons/orbiticons.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>processFilterLineEdit</sender>
-   <signal>returnPressed()</signal>
-   <receiver>confirmButton</receiver>
-   <slot>click()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1106</x>
-     <y>64</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1229</x>
-     <y>693</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

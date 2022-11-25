@@ -84,10 +84,9 @@ void ConnectToTargetDialog::OnProcessListUpdate(
       TryToFindProcessData(process_list, target_.process_name_or_path.toStdString());
 
   if (matching_process != nullptr) {
-    process_manager_->SetProcessListUpdateListener(nullptr);
-    target_configuration_ =
-        orbit_session_setup::SshTarget(std::move(ssh_connection_.value()),
-                                       std::move(process_manager_), std::move(matching_process));
+    ssh_connection_->GetProcessManager()->SetProcessListUpdateListener(nullptr);
+    target_configuration_ = orbit_session_setup::SshTarget(std::move(ssh_connection_.value()),
+                                                           std::move(matching_process));
     accept();
   }
 }
@@ -112,9 +111,7 @@ ErrorMessageOr<void> ConnectToTargetDialog::DeployOrbitServiceAndSetupProcessMan
                                                        std::move(service_deploy_manager),
                                                        std::move(grpc_channel));
 
-  process_manager_ = orbit_client_services::ProcessManager::Create(
-      ssh_connection_.value().GetGrpcChannel(), absl::Milliseconds(1000));
-  process_manager_->SetProcessListUpdateListener(
+  ssh_connection_->GetProcessManager()->SetProcessListUpdateListener(
       [dialog = QPointer<ConnectToTargetDialog>(this)](
           std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
         if (dialog == nullptr) return;

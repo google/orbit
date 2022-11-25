@@ -14,6 +14,7 @@
 #include <optional>
 
 #include "ClientData/ProcessData.h"
+#include "GrpcProtos/process.pb.h"
 #include "TargetConfiguration.h"
 
 namespace Ui {
@@ -36,6 +37,7 @@ class TargetLabel : public QWidget {
                          const std::string& ssh_target_id);
   void ChangeToLocalTarget(const LocalTarget& local_target);
   void ChangeToLocalTarget(const orbit_client_data::ProcessData& process);
+  void ChangeToLocalTarget(const orbit_grpc_protos::ProcessInfo& process_info);
   void ChangeToLocalTarget(const QString& process_name, double cpu_usage);
 
   bool SetProcessCpuUsageInPercent(double cpu_usage);

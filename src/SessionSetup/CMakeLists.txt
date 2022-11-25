@@ -21,6 +21,7 @@ target_sources(
           include/SessionSetup/OtherUserDialog.h
           include/SessionSetup/ProcessItemModel.h
           include/SessionSetup/ProcessLauncherWidget.h
+          include/SessionSetup/ProcessListWidget.h
           include/SessionSetup/ServiceDeployManager.h
           include/SessionSetup/SessionSetupDialog.h
           include/SessionSetup/SessionSetupUtils.h
@@ -47,6 +48,8 @@ target_sources(
           ProcessItemModel.cpp
           ProcessLauncherWidget.cpp
           ProcessLauncherWidget.ui
+          ProcessListWidget.cpp
+          ProcessListWidget.ui
           ServiceDeployManager.cpp
           SessionSetupDialog.cpp
           SessionSetupDialog.ui
@@ -85,6 +88,7 @@ target_sources(
           OrbitServiceInstanceTest.cpp
           OtherUserDialogTest.cpp
           ProcessItemModelTest.cpp
+          ProcessListWidgetTest.cpp
           SessionSetupDialogTest.cpp
           SessionSetupUtilsTest.cpp
           TargetLabelTest.cpp)

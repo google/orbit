@@ -19,12 +19,22 @@
 #include <memory>
 
 #include "ClientFlags/ClientFlags.h"
+#include "ClientServices/ProcessManager.h"
+#include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "SessionSetup/Connections.h"
 #include "ui_ConnectToLocalWidget.h"
 
 namespace orbit_session_setup {
+
+namespace {
+std::shared_ptr<grpc::Channel> CreateLocalhostGrpcChannel() {
+  const std::string target{absl::StrFormat("127.0.0.1:%d", absl::GetFlag(FLAGS_grpc_port))};
+  return grpc::CreateCustomChannel(target, grpc::InsecureChannelCredentials(),
+                                   grpc::ChannelArguments());
+}
+}  // namespace
 
 // The destructor needs to be defined here because it needs to see the type
 // `Ui::ConnectToLocalWidget`. The header file only contains a forward declaration.
@@ -33,10 +43,7 @@ ConnectToLocalWidget::~ConnectToLocalWidget() = default;
 ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
     : QWidget(parent),
       ui_(std::make_unique<Ui::ConnectToLocalWidget>()),
-      local_connection_(
-          grpc::CreateCustomChannel(absl::StrFormat("127.0.0.1:%d", absl::GetFlag(FLAGS_grpc_port)),
-                                    grpc::InsecureChannelCredentials(), grpc::ChannelArguments()),
-          nullptr),
+      local_connection_(CreateLocalhostGrpcChannel(), nullptr),
       check_connection_timer_(this) {
   ui_->setupUi(this);
 
@@ -46,20 +53,26 @@ ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
   QObject::connect(ui_->startOrbitServiceButton, &QPushButton::clicked, this,
                    &ConnectToLocalWidget::OnStartOrbitServiceButtonClicked);
 
-  QObject::connect(&check_connection_timer_, &QTimer::timeout, this, [this]() {
-    if (local_connection_.GetGrpcChannel()->GetState(true) == GRPC_CHANNEL_READY) {
-      ui_->statusLabel->setText("Connected to OrbitService");
-      emit Connected();
-    } else {
-      if (local_connection_.GetOrbitServiceInstance() == nullptr) {
-        ui_->statusLabel->setText("Waiting for OrbitService");
-      } else {
-        ui_->statusLabel->setText("Connecting to OrbitService ...");
-      }
-      emit Disconnected();
-    }
-  });
+  QObject::connect(&check_connection_timer_, &QTimer::timeout, this,
+                   &ConnectToLocalWidget::CheckAndSignalConnection);
+  CheckAndSignalConnection();
   check_connection_timer_.start(250);
+
+  SetupProcessListUpdater();
+}
+
+void ConnectToLocalWidget::CheckAndSignalConnection() {
+  if (local_connection_.GetGrpcChannel()->GetState(true) == GRPC_CHANNEL_READY) {
+    ui_->statusLabel->setText("Connected to OrbitService");
+    emit Connected();
+  } else {
+    if (local_connection_.GetOrbitServiceInstance() == nullptr) {
+      ui_->statusLabel->setText("Waiting for OrbitService");
+    } else {
+      ui_->statusLabel->setText("Connecting to OrbitService ...");
+    }
+    emit Disconnected();
+  }
 }
 
 void ConnectToLocalWidget::SetOrbitServiceInstanceCreateFunction(
@@ -81,7 +94,9 @@ void ConnectToLocalWidget::OnStartOrbitServiceButtonClicked() {
     return;
   }
 
-  local_connection_.orbit_service_instance_ = std::move(orbit_service_instance_or_error.value());
+  local_connection_ = LocalConnection(CreateLocalhostGrpcChannel(),
+                                      std::move(orbit_service_instance_or_error.value()));
+  SetupProcessListUpdater();
 
   QObject::connect(local_connection_.GetOrbitServiceInstance(),
                    &OrbitServiceInstance::ErrorOccurred, this, [this](const QString& message) {
@@ -89,6 +104,20 @@ void ConnectToLocalWidget::OnStartOrbitServiceButtonClicked() {
                      local_connection_.orbit_service_instance_ = nullptr;
                      emit Disconnected();
                    });
+}
+
+void ConnectToLocalWidget::SetConnection(LocalConnection&& connection) {
+  local_connection_ = std::move(connection);
+  SetupProcessListUpdater();
+}
+
+void ConnectToLocalWidget::SetupProcessListUpdater() {
+  local_connection_.GetProcessManager()->SetProcessListUpdateListener(
+      [self = QPointer<ConnectToLocalWidget>(this)](
+          std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
+        if (self == nullptr) return;
+        emit self->ProcessListUpdated(std::move(process_list));
+      });
 }
 
 QRadioButton* ConnectToLocalWidget::GetRadioButton() { return ui_->radioButton; }
