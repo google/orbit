@@ -26,21 +26,14 @@ namespace orbit_session_setup {
 
 class LoadCaptureWidget : public QWidget, HasRadioButtonInterface {
   Q_OBJECT
-  Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
  public:
   explicit LoadCaptureWidget(QWidget* parent = nullptr);
   ~LoadCaptureWidget() override;
 
-  [[nodiscard]] bool IsActive() const;
-
   QRadioButton* GetRadioButton() override;
 
- public slots:
-  void SetActive(bool value);
-
  signals:
-  void Activated();
   void FileSelected(std::filesystem::path file_path);
   void SelectionConfirmed();
 
@@ -49,6 +42,7 @@ class LoadCaptureWidget : public QWidget, HasRadioButtonInterface {
   orbit_capture_file_info::ItemModel item_model_;
   QSortFilterProxyModel proxy_item_model_;
 
+  void SetActive(bool value);
   void SelectViaFilePicker();
 };
 

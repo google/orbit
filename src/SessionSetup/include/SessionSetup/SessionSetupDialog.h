@@ -7,6 +7,7 @@
 
 #include <grpcpp/channel.h>
 
+#include <QButtonGroup>
 #include <QDialog>
 #include <QHistoryState>
 #include <QModelIndex>
@@ -57,6 +58,7 @@ class SessionSetupDialog : public QDialog {
 
  private:
   std::unique_ptr<Ui::SessionSetupDialog> ui_;
+  QButtonGroup button_group_;
 
   ProcessItemModel process_model_;
   QSortFilterProxyModel process_proxy_model_;
@@ -84,7 +86,6 @@ class SessionSetupDialog : public QDialog {
 
   void SetupFileStates();
   void SetupLocalStates();
-  void SetStateMachineInitialState();
   [[nodiscard]] bool TrySelectProcessByName(const std::string& process_name);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
   void SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel);

@@ -52,22 +52,16 @@ class ConnectToLocalWidgetTest : public ::testing::Test {
   QRadioButton* radio_button_;
 };
 
-TEST_F(ConnectToLocalWidgetTest, IsActiveSetActive) {
-  EXPECT_TRUE(widget_.IsActive());
-  EXPECT_TRUE(content_frame_->isEnabled());
+TEST_F(ConnectToLocalWidgetTest, RadioButton) {
+  // Default: radio_button_ not checked, content_frame_ not enabled
   EXPECT_TRUE(radio_button_->isEnabled());
-  EXPECT_TRUE(radio_button_->isChecked());
-
-  widget_.SetActive(false);
   EXPECT_FALSE(content_frame_->isEnabled());
-  EXPECT_TRUE(radio_button_->isEnabled());
   EXPECT_FALSE(radio_button_->isChecked());
 
-  QSignalSpy spy(&widget_, &ConnectToLocalWidget::Activated);
-
   QTest::mouseClick(radio_button_, Qt::LeftButton);
-  QCoreApplication::processEvents();
-  EXPECT_EQ(spy.count(), 1);
+  EXPECT_TRUE(radio_button_->isEnabled());
+  EXPECT_TRUE(content_frame_->isEnabled());
+  EXPECT_TRUE(radio_button_->isChecked());
 }
 
 TEST_F(ConnectToLocalWidgetTest, OrbitServiceStartedSuccessfullyThenStopped) {
@@ -77,6 +71,9 @@ TEST_F(ConnectToLocalWidgetTest, OrbitServiceStartedSuccessfullyThenStopped) {
         lambda_called = true;
         return std::make_unique<MockOrbitServiceInstance>();
       });
+
+  // Enable the UI
+  QTest::mouseClick(radio_button_, Qt::LeftButton);
 
   EXPECT_TRUE(start_orbit_service_button_->isEnabled());
 
@@ -100,6 +97,9 @@ TEST_F(ConnectToLocalWidgetTest, OrbitServiceStartError) {
         lambda_called = true;
         return ErrorMessage{"error"};
       });
+
+  // Enable the UI
+  QTest::mouseClick(radio_button_, Qt::LeftButton);
 
   EXPECT_TRUE(start_orbit_service_button_->isEnabled());
 

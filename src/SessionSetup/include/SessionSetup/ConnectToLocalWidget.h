@@ -38,13 +38,10 @@ using OrbitServiceInstanceCreator =
 // connect to.
 class ConnectToLocalWidget : public QWidget, HasRadioButtonInterface {
   Q_OBJECT
-  Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
  public:
   explicit ConnectToLocalWidget(QWidget* parent = nullptr);
   ~ConnectToLocalWidget() override;
-
-  [[nodiscard]] bool IsActive() const;
 
   void SetOrbitServiceInstanceCreateFunction(OrbitServiceInstanceCreator&& creator);
 
@@ -57,11 +54,7 @@ class ConnectToLocalWidget : public QWidget, HasRadioButtonInterface {
 
   QRadioButton* GetRadioButton() override;
 
- public slots:
-  void SetActive(bool value);
-
  signals:
-  void Activated();
   void Connected();
   void Disconnected();
 

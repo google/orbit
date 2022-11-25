@@ -72,19 +72,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
       static_cast<int>(ItemModel::Column::kCreated), QHeaderView::ResizeToContents);
   ui_->tableView->verticalHeader()->setDefaultSectionSize(kRowHeight);
 
-  // The following is to make the radiobutton behave as if it was part of an exclusive button group
-  // in the parent widget (SessionSetupDialog). If a user clicks on the radiobutton and it was
-  // not checked before, it is checked afterwards and this widget sends the activation signal.
-  // SessionSetupDialog reacts to the signal and deactivates the other widgets belonging to that
-  // button group. If a user clicks on a radio button that is already checked, nothing happens, the
-  // button does not get unchecked.
-  QObject::connect(ui_->radioButton, &QRadioButton::clicked, this, [this](bool checked) {
-    if (checked) {
-      emit Activated();
-    } else {
-      ui_->radioButton->setChecked(true);
-    }
-  });
+  QObject::connect(ui_->radioButton, &QRadioButton::toggled, this, &LoadCaptureWidget::SetActive);
 
   QObject::connect(ui_->selectFileButton, &QPushButton::clicked, this,
                    &LoadCaptureWidget::SelectViaFilePicker);
@@ -109,12 +97,9 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
                    &QSortFilterProxyModel::setFilterFixedString);
 }
 
-bool LoadCaptureWidget::IsActive() const { return ui_->radioButton->isChecked(); }
-
 void LoadCaptureWidget::SetActive(bool value) {
   ui_->tableContainer->setEnabled(value);
   ui_->selectFileButton->setEnabled(value);
-  ui_->radioButton->setChecked(value);
 }
 
 void LoadCaptureWidget::SelectViaFilePicker() {
