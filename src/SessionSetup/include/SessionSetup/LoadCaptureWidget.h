@@ -7,6 +7,7 @@
 
 #include <QEvent>
 #include <QObject>
+#include <QRadioButton>
 #include <QShowEvent>
 #include <QSortFilterProxyModel>
 #include <QString>
@@ -15,6 +16,7 @@
 #include <memory>
 
 #include "CaptureFileInfo/ItemModel.h"
+#include "SessionSetup/HasRadioButtonInterface.h"
 
 namespace Ui {
 class LoadCaptureWidget;  // IWYU pragma: keep
@@ -22,7 +24,7 @@ class LoadCaptureWidget;  // IWYU pragma: keep
 
 namespace orbit_session_setup {
 
-class LoadCaptureWidget : public QWidget {
+class LoadCaptureWidget : public QWidget, HasRadioButtonInterface {
   Q_OBJECT
   Q_PROPERTY(bool active READ IsActive WRITE SetActive)
 
@@ -31,6 +33,8 @@ class LoadCaptureWidget : public QWidget {
   ~LoadCaptureWidget() override;
 
   [[nodiscard]] bool IsActive() const;
+
+  QRadioButton* GetRadioButton() override;
 
  public slots:
   void SetActive(bool value);
