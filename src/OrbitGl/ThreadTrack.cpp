@@ -405,8 +405,9 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
           CreatePickingUserData(primitive_assembler, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] =
+      auto [pos_x, size_x] =
           timeline_info_->GetBoxPosXAndWidthFromTicks(timer_info->start(), timer_info->end());
+      pos_x = HorizontalClamp(pos_x);
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 

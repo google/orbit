@@ -29,6 +29,7 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetRoundingRadius() const = 0;
   [[nodiscard]] virtual float GetRoundingNumSides() const = 0;
   [[nodiscard]] virtual float GetTextOffset() const = 0;
+  [[nodiscard]] virtual float GetLeftMargin() const = 0;
   [[nodiscard]] virtual float GetRightMargin() const = 0;
   [[nodiscard]] virtual float GetMinButtonSize() const = 0;
   [[nodiscard]] virtual float GetButtonWidth() const = 0;

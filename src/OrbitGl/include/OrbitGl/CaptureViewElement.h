@@ -50,6 +50,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
   [[nodiscard]] virtual bool ShouldBeRendered() const { return GetVisible(); }
 
+  [[nodiscard]] float HorizontalClamp(float pos_x) const;
+
   void SetVisible(bool value);
   [[nodiscard]] bool GetVisible() const { return visible_; }
 

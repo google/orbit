@@ -91,6 +91,7 @@ void SchedulerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
 
       auto [box_start_x, box_width] =
           timeline_info_->GetBoxPosXAndWidthFromTicks(timer_info->start(), timer_info->end());
+      box_start_x = HorizontalClamp(box_start_x);
       const Vec2 pos = {box_start_x, world_timer_y};
       const Vec2 size = {box_width, box_height};
       primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));

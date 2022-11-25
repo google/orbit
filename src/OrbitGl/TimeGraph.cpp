@@ -397,7 +397,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
   const float kScrollingRatioPerDelta = 0.05f;
 
   if (modifiers.ctrl) {
-    double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetTimelineWidth();
+    double mouse_ratio = (mouse_pos[0] - GetTimelinePos()[0]) / GetTimelineWidth();
     ZoomTime(delta, mouse_ratio);
   } else {
     track_container_->IncrementVerticalScroll(delta * kScrollingRatioPerDelta);
@@ -424,7 +424,8 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us;
-    float pos = static_cast<float>(normalized_start * GetTimelineWidth());
+    float pos =
+        layout_->GetLeftMargin() + static_cast<float>(normalized_start * GetTimelineWidth());
     return pos;
   }
 
@@ -442,7 +443,8 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 uint64_t TimeGraph::GetNsSinceStart(uint64_t time) const { return time - capture_min_timestamp_; }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  double ratio = GetTimelineWidth() > 0 ? static_cast<double>(world_x / GetTimelineWidth()) : 0;
+  float relative_x = world_x - GetTimelinePos()[0];
+  double ratio = GetTimelineWidth() > 0 ? static_cast<double>(relative_x / GetTimelineWidth()) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
@@ -683,21 +685,21 @@ void TimeGraph::DoUpdateLayout() {
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // TimeGraph's children:
-  // ___________________________________________
-  // |            TIMELINE            |   |  +  |
-  // |                                |   |  -  |
-  // |--------------------------------|   |-----|
-  // |     SPACE TRACKS - TIMELINE              |
-  // |--------------------------------| M |-----|
-  // |                                | A |  S  |
-  // |                                | R |  L  |
-  // |         TRACK CONTAINER        | G |  I  |
-  // |                                | I |  D  |
-  // |                                | N |  E  |
-  // |                                |   |  R  |
-  // |________________________________|___|_____|
-  // |       HORIZONTAL SLIDER            |
-  // |------------------------------------|
+  // _______________________________________________
+  // | L |            TIMELINE            | R |  +  |
+  // | E |                                | I |  -  |
+  // | F |--------------------------------| G |-----|
+  // | T |     SPACE TRACKS - TIMELINE      H       |
+  // |   |--------------------------------| T |-----|
+  // | M |                                |   |  S  |
+  // | A |                                | M |  L  |
+  // | R |         TRACK CONTAINER        | A |  I  |
+  // | G |                                | R |  D  |
+  // | I |                                | G |  E  |
+  // | N |                                | I |  R  |
+  // |___|________________________________|_N_|_____|
+  // |       HORIZONTAL SLIDER                |
+  // |----------------------------------------|
 
   // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
   // its free space.
@@ -711,8 +713,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   float timegraph_current_y = GetPos()[1];
   const float total_right_margin = layout_->GetRightMargin() + vertical_slider_->GetWidth();
 
-  timeline_ui_->SetWidth(GetWidth() - total_right_margin);
-  timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
+  timeline_ui_->SetWidth(GetWidth() - total_right_margin - layout_->GetLeftMargin());
+  timeline_ui_->SetPos(timegraph_current_x + layout_->GetLeftMargin(), timegraph_current_y);
 
   plus_button_->SetWidth(layout_->GetButtonWidth());
   plus_button_->SetHeight(layout_->GetButtonHeight());
@@ -723,9 +725,10 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
                         timegraph_current_y + plus_button_->GetHeight());
 
+  float x_offset = layout_->GetLeftMargin();
   timegraph_current_y += timeline_ui_->GetHeight() + layout_->GetSpaceBetweenTracksAndTimeline();
-  track_container_->SetWidth(GetWidth() - total_right_margin);
-  track_container_->SetPos(timegraph_current_x, timegraph_current_y);
+  track_container_->SetWidth(GetWidth() - total_right_margin - x_offset);
+  track_container_->SetPos(timegraph_current_x + x_offset, timegraph_current_y);
 
   vertical_slider_->SetWidth(layout_->GetSliderWidth());
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
