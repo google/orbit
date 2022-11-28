@@ -64,7 +64,8 @@ class MockElfFile : public orbit_object_utils::ElfFile {
 
 namespace orbit_code_report {
 TEST(SourceCodeReport, Empty) {
-  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 0x100, "main()"};
+  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 0x100,
+                                                "main()",         false};
 
   MockElfFile elf_file{};
   EXPECT_CALL(elf_file, GetLineInfo).Times(0);
@@ -79,7 +80,8 @@ TEST(SourceCodeReport, Empty) {
 }
 
 TEST(SourceCodeReport, Simple) {
-  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 0x100, "main()"};
+  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 0x100,
+                                                "main()",         false};
 
   MockElfFile elf_file{};
   orbit_grpc_protos::LineInfo static_line_info{};
@@ -114,7 +116,8 @@ TEST(SourceCodeReport, NonMatchingSourceFileName) {
   // The test should discard all line info records that refer to a different source file than the
   // one given by the FunctionInfo object.
 
-  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 1, "main()"};
+  orbit_client_data::FunctionInfo function_info{"path/to/module", "buildid", 0x42, 1,
+                                                "main()",         false};
 
   MockElfFile elf_file{};
   orbit_grpc_protos::LineInfo static_line_info{};

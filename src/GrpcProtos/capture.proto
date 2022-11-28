@@ -25,6 +25,7 @@ message InstrumentedFunction {
 
   bool record_arguments = 8;
   bool record_return_value = 9;
+  bool is_hotpatchable = 11;
 }
 
 // Api functions are declared in Orbit.h. They are implemented in user code

@@ -173,6 +173,9 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
   // in DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol.
   symbol_info.set_size(kUnknownSymbolSize);
 
+  // We currently only support hotpatchable functions in elf files.
+  symbol_info.set_is_hotpatchable(false);
+
   return symbol_info;
 }
 
@@ -293,6 +296,8 @@ void CoffFileImpl::AddNewDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context
       symbol_info.set_demangled_name(llvm::demangle(name));
       symbol_info.set_address(low_pc);
       symbol_info.set_size(high_pc - low_pc);
+      // We currently only support hotpatchable functions in elf files.
+      symbol_info.set_is_hotpatchable(false);
     }
   }
 
@@ -481,6 +486,9 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadSymbolsFromExportTableInternal(
     } else {
       symbol_info.set_size(unwind_range_start_to_size_it->second);
     }
+
+    // We currently only support hotpatchable functions in elf files.
+    symbol_info.set_is_hotpatchable(false);
 
     *module_symbols.add_symbol_infos() = std::move(symbol_info);
   }
@@ -703,6 +711,8 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadExceptionTableEntriesAsSymbolsIn
     symbol_info->set_demangled_name(absl::StrFormat("[function@%#x]", unwind_range.start));
     symbol_info->set_address(unwind_range.start);
     symbol_info->set_size(unwind_range.end - unwind_range.start);
+    // We currently only support hotpatchable functions in elf files.
+    symbol_info->set_is_hotpatchable(false);
   }
 
   if (module_symbols.symbol_infos().empty()) {

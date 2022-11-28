@@ -177,6 +177,9 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
         if (dia_symbol->get_length(&length) != S_OK) return;
         symbol_info.set_size(length);
 
+        // We currently only support hotpatchable functions in elf files.
+        symbol_info.set_is_hotpatchable(false);
+
         addresses_from_module_info_stream.insert(symbol_info.address());
         *module_symbols.add_symbol_infos() = std::move(symbol_info);
       }));
@@ -226,6 +229,9 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
         ULONGLONG length = 0;
         if (dia_symbol->get_length(&length) != S_OK) return;
         symbol_info.set_size(length);
+
+        // We currently only support hotpatchable elf files.
+        symbol_info.set_is_hotpatchable(false);
 
         *module_symbols.add_symbol_infos() = std::move(symbol_info);
       }));

@@ -135,6 +135,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
     instrumented_function->set_function_virtual_address(function.address());
     instrumented_function->set_function_size(function.size());
     instrumented_function->set_function_name(function.pretty_name());
+    instrumented_function->set_is_hotpatchable(function.IsHotpatchable());
     instrumented_function->set_record_arguments(options.record_arguments);
     instrumented_function->set_record_return_value(options.record_return_values);
   }

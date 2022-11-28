@@ -59,21 +59,22 @@ struct FunctionsDataViewTest : public testing::Test {
  public:
   explicit FunctionsDataViewTest() : view_{&app_} {
     view_.Init();
-    FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()"};
+    FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()", false};
     functions_.emplace_back(std::move(function0));
 
-    FunctionInfo function1{"path/to/other", "buildid1", 0x100, 42, "main(int, char**)"};
+    FunctionInfo function1{"path/to/other", "buildid1", 0x100, 42, "main(int, char**)", false};
     functions_.emplace_back(std::move(function1));
 
-    FunctionInfo function2{"/somewhere/else/module", "buildid2", 0x330, 66,
-                           "operator==(A const&, A const&)"};
+    FunctionInfo function2{"/somewhere/else/module",         "buildid2", 0x330, 66,
+                           "operator==(A const&, A const&)", false};
     functions_.emplace_back(std::move(function2));
 
-    FunctionInfo function3{"/somewhere/else/CapitalizedModule", "buildid3", 0x33, 66, "ffind(int)"};
+    FunctionInfo function3{
+        "/somewhere/else/CapitalizedModule", "buildid3", 0x33, 66, "ffind(int)", false};
     functions_.emplace_back(std::move(function3));
 
-    FunctionInfo function4{"/somewhere/else/UPPERCASEMODULE", "buildid4", 0x33, 66,
-                           "bar(const char*)"};
+    FunctionInfo function4{
+        "/somewhere/else/UPPERCASEMODULE", "buildid4", 0x33, 66, "bar(const char*)", false};
     functions_.emplace_back(std::move(function4));
 
     ModuleInfo module_info0{};

@@ -20,17 +20,18 @@ class ModuleData;
 class ProcessData;
 
 // This class is used on the client to represent a function, containing a name, module path and
-// build ID, address and size.
+// build ID, address, size and whether the function is hotpatchable.
 class FunctionInfo {
  public:
   FunctionInfo() = delete;
   FunctionInfo(std::string module_path, std::string module_build_id, uint64_t address,
-               uint64_t size, std::string pretty_name)
+               uint64_t size, std::string pretty_name, bool is_hotpatchable)
       : module_path_(std::move(module_path)),
         module_build_id_(std::move(module_build_id)),
         address_(address),
         size_(size),
-        pretty_name_(std::move(pretty_name)) {}
+        pretty_name_(std::move(pretty_name)),
+        is_hotpatchable_(is_hotpatchable) {}
 
   FunctionInfo(const orbit_grpc_protos::SymbolInfo& symbol_info, std::string module_path,
                std::string module_build_id)
@@ -38,7 +39,8 @@ class FunctionInfo {
         module_build_id_{std::move(module_build_id)},
         address_{symbol_info.address()},
         size_{symbol_info.size()},
-        pretty_name_{symbol_info.demangled_name()} {}
+        pretty_name_{symbol_info.demangled_name()},
+        is_hotpatchable_(symbol_info.is_hotpatchable()) {}
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
@@ -49,6 +51,7 @@ class FunctionInfo {
   [[nodiscard]] uint64_t address() const { return address_; }
   [[nodiscard]] uint64_t size() const { return size_; }
   [[nodiscard]] const std::string& pretty_name() const { return pretty_name_; }
+  [[nodiscard]] bool IsHotpatchable() const { return is_hotpatchable_; }
 
   [[nodiscard]] uint64_t GetPrettyNameHash() const;
 
@@ -96,6 +99,7 @@ class FunctionInfo {
   uint64_t address_;
   uint64_t size_;
   std::string pretty_name_;
+  bool is_hotpatchable_;
 };
 
 }  // namespace orbit_client_data
