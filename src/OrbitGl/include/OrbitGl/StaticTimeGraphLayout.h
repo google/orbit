@@ -132,7 +132,7 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   constexpr static float kRoundingRadius = 8.f;
   constexpr static float kRoundingNumSides = 16;
   constexpr static float kTextOffset = 5.f;
-  constexpr static float kLeftMargin = 0.f;
+  constexpr static float kLeftMargin = 100.f;
   constexpr static float kRightMargin = 10.f;
   constexpr static float kMinButtonSize = 5.f;
   constexpr static float kButtonWidth = 15.f;
