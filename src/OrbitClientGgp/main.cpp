@@ -11,6 +11,7 @@
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <limits>
