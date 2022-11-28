@@ -258,8 +258,8 @@ class LiveFunctionsDataViewTest : public testing::Test {
 
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
-      FunctionInfo function{kModulePaths[i], kBuildIds[i], kAddresses[i], 0,
-                            kPrettyNames[i], false};
+      FunctionInfo function{kModulePaths[i], kBuildIds[i],    kAddresses[i],
+                            /*size=*/0,      kPrettyNames[i], /*is_hotpatchable=*/false};
       functions_.insert_or_assign(kScopeIds[i], std::move(function));
     }
   }

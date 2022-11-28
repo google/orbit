@@ -59,22 +59,36 @@ struct FunctionsDataViewTest : public testing::Test {
  public:
   explicit FunctionsDataViewTest() : view_{&app_} {
     view_.Init();
-    FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()", false};
+    FunctionInfo function0{"/path/to/module", "buildid", /*address=*/12,
+                           /*size=*/16,       "foo()",   /*is_hotpatchable=*/false};
     functions_.emplace_back(std::move(function0));
 
-    FunctionInfo function1{"path/to/other", "buildid1", 0x100, 42, "main(int, char**)", false};
+    FunctionInfo function1{"path/to/other", "buildid1",          /*address=*/0x100,
+                           /*size=*/42,     "main(int, char**)", /*is_hotpatchable=*/false};
     functions_.emplace_back(std::move(function1));
 
-    FunctionInfo function2{"/somewhere/else/module",         "buildid2", 0x330, 66,
-                           "operator==(A const&, A const&)", false};
+    FunctionInfo function2{"/somewhere/else/module",
+                           "buildid2",
+                           /*address=*/0x330,
+                           /*size=*/66,
+                           "operator==(A const&, A const&)",
+                           /*is_hotpatchable=*/false};
     functions_.emplace_back(std::move(function2));
 
-    FunctionInfo function3{
-        "/somewhere/else/CapitalizedModule", "buildid3", 0x33, 66, "ffind(int)", false};
+    FunctionInfo function3{"/somewhere/else/CapitalizedModule",
+                           "buildid3",
+                           /*address=*/0x33,
+                           /*size=*/66,
+                           "ffind(int)",
+                           /*is_hotpatchable=*/false};
     functions_.emplace_back(std::move(function3));
 
-    FunctionInfo function4{
-        "/somewhere/else/UPPERCASEMODULE", "buildid4", 0x33, 66, "bar(const char*)", false};
+    FunctionInfo function4{"/somewhere/else/UPPERCASEMODULE",
+                           "buildid4",
+                           /*address=*/0x33,
+                           /*size=*/66,
+                           "bar(const char*)",
+                           /*is_hotpatchable=*/false};
     functions_.emplace_back(std::move(function4));
 
     ModuleInfo module_info0{};

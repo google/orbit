@@ -28,7 +28,8 @@ static void CallMethodOnDifferentThreadAndExpectDeath(DataManager& data_manager,
 
 TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   DataManager data_manager;
-  FunctionInfo function{"path/to/module", "buildid", 12, 16, "foo()", false};
+  FunctionInfo function{"path/to/module", "buildid", /*address=*/12,
+                        /*size=*/16,      "foo()",   /*is_hotpatchable=*/false};
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SelectFunction, function);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::DeselectFunction, function);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SelectFunction, function);

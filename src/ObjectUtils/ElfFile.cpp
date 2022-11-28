@@ -475,6 +475,9 @@ absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
       continue;
     }
 
+    // We cannot use the type safe version getSectionContentsAsArray since the sh_entsize is not set
+    // correctly in the elf binaries (should be eight for 64 bit addresses but is zero). So we read
+    // the data as an array of bytes and convert it to 64 bit addresses later.
     llvm::Expected<llvm::ArrayRef<uint8_t>> contents_or_error =
         elf_file.getSectionContents(section);
     if (!contents_or_error) {
@@ -484,11 +487,9 @@ absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
     }
     const llvm::ArrayRef<uint8_t>& contents = contents_or_error.get();
     const size_t length = contents.size() / sizeof(uint64_t);
-    for (size_t i = 0; i < length; i++) {
-      uint64_t addr = 0;
-      memcpy(&addr, contents.data() + sizeof(uint64_t) * i, sizeof(uint64_t));
-      patchable_symbols.insert(addr);
-    }
+    std::vector<uint64_t> addresses(length);
+    memcpy(addresses.data(), contents.data(), length * sizeof(uint64_t));
+    patchable_symbols.insert(addresses.begin(), addresses.end());
   }
   return patchable_symbols;
 }
