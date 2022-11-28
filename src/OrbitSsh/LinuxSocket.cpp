@@ -9,6 +9,7 @@
 
 #include <string>
 #include <system_error>
+#include <type_traits>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

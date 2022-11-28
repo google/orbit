@@ -5,11 +5,13 @@
 #include "OrbitGl/SymbolLoader.h"
 
 #include <absl/flags/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
 #include <chrono>
+#include <memory>
 #include <type_traits>
 #include <utility>
 #include <variant>

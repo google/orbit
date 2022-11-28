@@ -9,6 +9,7 @@
 #include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <sys/uio.h>
@@ -40,7 +41,6 @@
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolUtils.h"
-#include "absl/strings/str_format.h"
 
 namespace orbit_process_service {
 

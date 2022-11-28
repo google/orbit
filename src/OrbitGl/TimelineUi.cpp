@@ -9,7 +9,6 @@
 #include <absl/time/time.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <optional>
 
 #include "ClientFlags/ClientFlags.h"
@@ -18,7 +17,6 @@
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TimelineTicks.h"
 
 namespace orbit_gl {

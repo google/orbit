@@ -8,7 +8,6 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 
-#include <memory>
 #include <string>
 
 #include "OrbitBase/File.h"

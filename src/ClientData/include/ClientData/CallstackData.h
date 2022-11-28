@@ -7,6 +7,7 @@
 
 #include <absl/container/btree_map.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <stdint.h>
 
 #include <cstdint>

@@ -5,6 +5,7 @@
 #include "ClientData/ModuleData.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 
 #include <algorithm>
 #include <cinttypes>
@@ -12,7 +13,6 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
-#include "absl/synchronization/mutex.h"
 
 using orbit_grpc_protos::ModuleInfo;
 

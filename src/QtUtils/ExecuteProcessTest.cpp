@@ -13,6 +13,7 @@
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+#include <algorithm>
 #include <filesystem>
 #include <memory>
 #include <string>

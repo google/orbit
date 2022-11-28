@@ -5,11 +5,9 @@
 #include "SessionSetup/LoadCaptureWidget.h"
 
 #include <QFileDialog>
-#include <QFrame>
 #include <QHeaderView>
 #include <QItemSelection>
 #include <QItemSelectionModel>
-#include <QLayout>
 #include <QLineEdit>
 #include <QList>
 #include <QModelIndex>
@@ -19,7 +17,6 @@
 #include <QRadioButton>
 #include <QStringList>
 #include <QTableView>
-#include <QVBoxLayout>
 #include <QVariant>
 #include <Qt>
 #include <memory>

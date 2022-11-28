@@ -7,6 +7,7 @@
 #include <absl/base/attributes.h>
 
 #include <QtGlobal>
+#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Logging.h"

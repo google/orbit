@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/UniqueResource.h"

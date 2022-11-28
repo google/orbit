@@ -10,7 +10,6 @@
 #include <absl/strings/str_split.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <numeric>
@@ -25,7 +24,6 @@
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/GraphTrackDataAggregator.h"
 #include "OrbitGl/TextRenderer.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TrackHeader.h"

@@ -5,7 +5,6 @@
 #include "OrbitQt/orbittablemodel.h"
 
 #include <QColor>
-#include <memory>
 #include <string>
 #include <vector>
 

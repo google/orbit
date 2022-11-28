@@ -5,6 +5,8 @@
 #include "CaptureClient/LoadCapture.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
+#include <google/protobuf/stubs/port.h>
 
 #include <cstdint>
 #include <filesystem>
