@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <memory>

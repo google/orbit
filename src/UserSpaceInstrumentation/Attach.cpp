@@ -5,6 +5,7 @@
 #include "UserSpaceInstrumentation/Attach.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <errno.h>
 #include <stdlib.h>

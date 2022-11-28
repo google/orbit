@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 #include "OrbitBase/Chunk.h"

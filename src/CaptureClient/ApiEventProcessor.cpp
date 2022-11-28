@@ -4,6 +4,8 @@
 
 #include "CaptureClient/ApiEventProcessor.h"
 
+#include <absl/hash/hash.h>
+
 #include <algorithm>
 #include <string>
 

@@ -6,6 +6,7 @@
 #define ORBIT_GL_QT_TEXT_RENDERER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 
 #include <QPainter>
 #include <QString>

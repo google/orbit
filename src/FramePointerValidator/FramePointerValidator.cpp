@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <string>
+#include <type_traits>
 
 #include "FramePointerValidator/FunctionFramePointerValidator.h"
 #include "OrbitBase/Logging.h"

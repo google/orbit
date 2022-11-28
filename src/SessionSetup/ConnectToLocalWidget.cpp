@@ -6,6 +6,7 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>

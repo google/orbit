@@ -9,6 +9,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/memory/memory.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
@@ -51,7 +52,6 @@
 #include <llvm/Support/Error.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <type_traits>

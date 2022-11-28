@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <memory>
+#include <functional>
 #include <set>
 #include <string>
 #include <string_view>

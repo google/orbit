@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/str_format.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdint.h>
@@ -14,7 +15,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "absl/strings/str_format.h"
 
 namespace orbit_base {
 

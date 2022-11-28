@@ -8,6 +8,7 @@
 #include <asm/perf_regs.h>
 #include <linux/perf_event.h>
 #include <sys/ioctl.h>
+#include <sys/syscall.h>
 #include <syscall.h>
 #include <unistd.h>
 

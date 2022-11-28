@@ -13,7 +13,6 @@
 #include <QTest>
 #include <Qt>
 #include <string>
-#include <utility>
 
 #include "ClientData/ModuleData.h"
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"

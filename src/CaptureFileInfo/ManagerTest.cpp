@@ -12,7 +12,6 @@
 #include <QString>
 #include <chrono>
 #include <filesystem>
-#include <memory>
 #include <optional>
 #include <set>
 #include <thread>
