@@ -7,20 +7,19 @@
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_split.h>
 #include <stdint.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <optional>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include "ClientData/CallstackData.h"

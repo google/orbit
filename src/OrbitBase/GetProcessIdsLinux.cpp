@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <sys/types.h>
 
@@ -17,7 +18,6 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "absl/strings/numbers.h"
 
 namespace orbit_base {
 

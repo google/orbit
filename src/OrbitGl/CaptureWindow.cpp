@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
+#include <absl/strings/str_format.h>
 
 #include <algorithm>
 #include <iterator>
@@ -41,12 +42,10 @@
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/QtTextRenderer.h"
 #include "OrbitGl/TextRenderer.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TrackContainer.h"
 #include "OrbitGl/TrackManager.h"
 #include "OrbitGl/Viewport.h"
-#include "absl/strings/str_format.h"
 
 using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;

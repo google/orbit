@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
-#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <memory>

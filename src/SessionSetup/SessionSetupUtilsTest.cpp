@@ -5,10 +5,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <QString>
-#include <filesystem>
 #include <memory>
-#include <optional>
 #include <vector>
 
 #include "ClientData/ProcessData.h"

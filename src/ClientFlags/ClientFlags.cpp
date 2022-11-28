@@ -5,6 +5,7 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/string_view.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <vector>

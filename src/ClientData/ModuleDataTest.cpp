@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <memory>
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"

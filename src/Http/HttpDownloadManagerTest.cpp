@@ -18,6 +18,7 @@
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <memory>

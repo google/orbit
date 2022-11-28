@@ -6,6 +6,7 @@
 #define ORBIT_GL_TRACK_CONTAINER_H_
 
 #include <ClientData/CaptureData.h>
+#include <absl/container/flat_hash_map.h>
 
 #include <cstdint>
 #include <memory>

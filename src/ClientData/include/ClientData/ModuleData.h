@@ -6,6 +6,8 @@
 #define CLIENT_DATA_MODULE_DATA_H_
 
 #include <absl/base/thread_annotations.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
 
 #include <cinttypes>
 #include <cstdint>

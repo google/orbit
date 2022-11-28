@@ -6,6 +6,7 @@
 #define PROCESS_SERVICE_PROCESS_LIST_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <sys/types.h>
 
 #include <algorithm>

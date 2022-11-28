@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
 #include <cstdint>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include "GpuTracepointVisitor.h"

@@ -6,6 +6,7 @@
 #define ORBIT_QT_CALL_TREE_WIDGET_H_
 
 #include <absl/strings/ascii.h>
+#include <absl/strings/str_split.h>
 
 #include <QColor>
 #include <QIdentityProxyModel>
@@ -22,6 +23,7 @@
 #include <QVariant>
 #include <QWidget>
 #include <Qt>
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>

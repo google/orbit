@@ -9,7 +9,6 @@
 #include <QFileDialog>
 #include <QItemSelectionModel>
 #include <QLineEdit>
-#include <QList>
 #include <QListView>
 #include <QMetaObject>
 #include <QModelIndex>

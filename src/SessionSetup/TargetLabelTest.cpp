@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QColor>
@@ -13,7 +12,6 @@
 
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
-#include "OrbitBase/Result.h"
 #include "SessionSetup/TargetLabel.h"
 
 namespace orbit_session_setup {

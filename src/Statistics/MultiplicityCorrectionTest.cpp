@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
-#include <utility>
 #include <vector>
 
 #include "Statistics/MultiplicityCorrection.h"
