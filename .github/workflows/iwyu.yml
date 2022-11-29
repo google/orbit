@@ -135,7 +135,7 @@ jobs:
               title: 'Automatically apply IWYU to the codebase',
               owner,
               repo,
-              head: env.IWYU_CLEANUP_BRANCH,
+              head: context.env.IWYU_CLEANUP_BRANCH,
               base: 'main',
               body: [
                 'This is an automatically generated pull request.',
