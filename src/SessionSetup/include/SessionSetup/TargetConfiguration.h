@@ -24,23 +24,15 @@ class SshTarget {
 
  public:
   explicit SshTarget(SshConnection&& connection,
-                     std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
                      std::unique_ptr<orbit_client_data::ProcessData> process)
-      : connection_(std::move(connection)),
-        process_manager_(std::move(process_manager)),
-        process_(std::move(process)) {
-    ORBIT_CHECK(process_manager_ != nullptr);
+      : connection_(std::move(connection)), process_(std::move(process)) {
     ORBIT_CHECK(process_ != nullptr);
   }
   [[nodiscard]] const SshConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
-    return process_manager_.get();
-  }
   [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   SshConnection connection_;
-  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::unique_ptr<orbit_client_data::ProcessData> process_;
 };
 
@@ -56,23 +48,15 @@ class LocalTarget {
 
  public:
   explicit LocalTarget(LocalConnection&& connection,
-                       std::unique_ptr<orbit_client_services::ProcessManager> process_manager,
                        std::unique_ptr<orbit_client_data::ProcessData> process)
-      : connection_(std::move(connection)),
-        process_manager_(std::move(process_manager)),
-        process_(std::move(process)) {
-    ORBIT_CHECK(process_manager_ != nullptr);
+      : connection_(std::move(connection)), process_(std::move(process)) {
     ORBIT_CHECK(process_ != nullptr);
   }
   [[nodiscard]] const LocalConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
-    return process_manager_.get();
-  }
   [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
 
  private:
   LocalConnection connection_;
-  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::unique_ptr<orbit_client_data::ProcessData> process_;
 };
 

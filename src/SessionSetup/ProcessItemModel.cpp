@@ -122,7 +122,7 @@ int ProcessItemModel::rowCount(const QModelIndex& parent) const {
   return processes_.size();
 }
 
-void ProcessItemModel::SetProcesses(std::vector<ProcessInfo> new_processes) {
+void ProcessItemModel::SetProcesses(QVector<ProcessInfo> new_processes) {
   orbit_base::sort(new_processes.begin(), new_processes.end(), &ProcessInfo::pid);
 
   auto old_iter = processes_.begin();

@@ -5,12 +5,14 @@
 #ifndef SESSION_SETUP_CONNECTIONS_H_
 #define SESSION_SETUP_CONNECTIONS_H_
 
+#include <absl/time/time.h>
 #include <grpcpp/channel.h>
 
 #include <memory>
 #include <optional>
 #include <utility>
 
+#include "ClientServices/ProcessManager.h"
 #include "DeploymentConfigurations.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/AddrAndPort.h"
@@ -66,9 +68,12 @@ class SshConnection {
                          std::shared_ptr<grpc::Channel>&& grpc_channel)
       : addr_and_port_(std::move(addr_and_port)),
         service_deploy_manager_(std::move(service_deploy_manager)),
-        grpc_channel_(std::move(grpc_channel)) {
+        grpc_channel_(std::move(grpc_channel)),
+        process_manager_(orbit_client_services::ProcessManager::Create(grpc_channel_,
+                                                                       absl::Milliseconds(1000))) {
     ORBIT_CHECK(service_deploy_manager_ != nullptr);
     ORBIT_CHECK(grpc_channel_ != nullptr);
+    ORBIT_CHECK(process_manager_ != nullptr);
   }
   [[nodiscard]] const orbit_ssh::AddrAndPort& GetAddrAndPort() const { return addr_and_port_; }
   [[nodiscard]] ServiceDeployManager* GetServiceDeployManager() const {
@@ -77,11 +82,15 @@ class SshConnection {
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
     return grpc_channel_;
   }
+  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
+    return process_manager_.get();
+  }
 
  private:
   orbit_ssh::AddrAndPort addr_and_port_;
   std::unique_ptr<ServiceDeployManager> service_deploy_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
+  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
 };
 
 /*
@@ -99,8 +108,11 @@ class LocalConnection {
   explicit LocalConnection(std::shared_ptr<grpc::Channel>&& grpc_channel,
                            std::unique_ptr<OrbitServiceInstance>&& orbit_service_instance)
       : grpc_channel_(std::move(grpc_channel)),
-        orbit_service_instance_(std::move(orbit_service_instance)) {
+        orbit_service_instance_(std::move(orbit_service_instance)),
+        process_manager_(orbit_client_services::ProcessManager::Create(grpc_channel_,
+                                                                       absl::Milliseconds(1000))) {
     ORBIT_CHECK(grpc_channel_ != nullptr);
+    ORBIT_CHECK(process_manager_ != nullptr);
   }
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
     return grpc_channel_;
@@ -108,10 +120,14 @@ class LocalConnection {
   [[nodiscard]] const OrbitServiceInstance* GetOrbitServiceInstance() const {
     return orbit_service_instance_.get();
   }
+  [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
+    return process_manager_.get();
+  }
 
  private:
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::unique_ptr<OrbitServiceInstance> orbit_service_instance_;
+  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
 };
 
 }  // namespace orbit_session_setup

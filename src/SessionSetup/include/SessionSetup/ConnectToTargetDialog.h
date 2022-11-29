@@ -49,7 +49,6 @@ class ConnectToTargetDialog : public QDialog {
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
 
   std::optional<orbit_session_setup::SshConnection> ssh_connection_;
-  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::optional<TargetConfiguration> target_configuration_;
 
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
