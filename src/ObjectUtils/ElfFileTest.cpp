@@ -595,6 +595,7 @@ TEST(ElfFile, GetDeclarationLocationOfFunction) {
 }
 
 TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
 #ifdef _WIN32
   GTEST_SKIP();
 #endif
@@ -614,6 +615,7 @@ TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionLibc) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
 #ifdef _WIN32
   GTEST_SKIP();
 #endif
@@ -633,6 +635,7 @@ TEST(ElfFile, GetLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
 #ifdef _WIN32
   GTEST_SKIP();
 #endif

@@ -35,6 +35,7 @@ TEST(ProcessLauncher, LaunchProcess) {
 }
 
 TEST(ProcessLauncher, LaunchSuspendResumeProcess) {
+// TODO(https://github.com/google/orbit/issues/4503): Enable test again.
 #ifdef _WIN32
   GTEST_SKIP();
 #endif
