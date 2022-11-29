@@ -17,7 +17,7 @@ if(NOT WIN32)
     # Create a custom version of compile_commands.json which does not include any compilation units from third_party
     # or any generated cpp-files. This will be used by include-what-you-use.
     add_custom_command(OUTPUT iwyu_commands.json
-      COMMAND jq 'map(select(.file | test(\"third_party|/build_|/build/\") != true)) ' > iwyu_commands.json < compile_commands.json
+      COMMAND jq 'map(select(.file | test(\"third_party|/build_|/build/|/volk.c\") != true)) ' > iwyu_commands.json < compile_commands.json
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 
@@ -29,10 +29,10 @@ if(NOT WIN32)
       COMMAND "${Python3_EXECUTABLE}" "${iwyu_tool_py}" -p iwyu_commands.json -o iwyu
         -j ${cpu_count} -- -w
         -Xiwyu "--mapping_file=${CMAKE_SOURCE_DIR}/contrib/iwyu/orbit.imp"
-        -Xiwyu --cxx17ns -Xiwyu --max_line_length=120 -Xiwyu --no_fwd_decls > include-what-you-use.log
+        -Xiwyu --cxx17ns -Xiwyu --max_line_length=120 -Xiwyu --no_fwd_decls | tee include-what-you-use.log
       DEPENDS iwyu_commands.json
       "${CMAKE_SOURCE_DIR}/contrib/iwyu/orbit.imp"
-      "${CMAKE_SOURCE_DIR}/contrib/iwyu/qt5_14.imp"
+      "${CMAKE_SOURCE_DIR}/contrib/iwyu/qt5_15.imp"
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       COMMENT "Running include-what-you-use"
       VERBATIM)
