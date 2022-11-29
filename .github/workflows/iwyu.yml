@@ -26,8 +26,6 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-22.04
     timeout-minutes: 180
-    env:
-      IWYU_CLEANUP_BRANCH: "cleanup/iwyu-${GITHUB_SHA}"
     steps:
       - name: Checkout Orbit
         uses: actions/checkout@v3
@@ -102,10 +100,13 @@ jobs:
       - name: CMake Build
         working-directory: ./orbit/build
         run: cmake --build . --target iwyu
+      - run: |
+          export IWYU_CLEANUP_BRANCH="cleanup/iwyu-${GITHUB_SHA}"
+          echo "IWYU_CLEANUP_BRANCH=${IWYU_CLEANUP_BRANCH}" >> $GITHUB_ENV
       - name: Try to apply changes
         working-directory: ./orbit
         run: |
-          git checkout -b "${IWYU_CLEANUP_BRANCH}"
+          git checkout -b ${{ env.IWYU_CLEANUP_BRANCH }}
           git update-index --refresh
           git apply --index build/iwyu.diff
       - name: Check for changes
@@ -122,7 +123,7 @@ jobs:
         working-directory: ./orbit
         run: |
           git commit --message="Automatically apply IWYU to the codebase"
-          git push --set-upstream origin "${IWYU_CLEANUP_BRANCH}"
+          git push --set-upstream origin ${{ env.IWYU_CLEANUP_BRANCH }}
       - name: Create Pull Request
         if: steps.check_changes.outputs.has_changes == 'true'
         uses: actions/github-script@v6
@@ -134,7 +135,7 @@ jobs:
               title: 'Automatically apply IWYU to the codebase',
               owner,
               repo,
-              head: process.env.IWYU_CLEANUP_BRANCH,
+              head: env.IWYU_CLEANUP_BRANCH,
               base: 'main',
               body: [
                 'This is an automatically generated pull request.',
