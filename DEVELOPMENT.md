@@ -139,30 +139,58 @@ Alternatively you can download prebuilts from [python.org](https://www.python.or
 (In both cases verify that `pip3.exe` is in the path, otherwise the bootstrap
 script will not be able to install conan for you.)
 
-## Running Orbit
+## Running Orbit 
 
-Like mentioned before, the collector currently only works for Linux. So the following
-only applies there:
+Documentation about how to use Orbit's UI to connect to OrbitService can be found
+[here](documentation/DOCUMENTATION.md#connect-orbit).
 
-1. Start Orbit via 
+Alternatively you can use command line flags to automate the connection setup. This
+is explained the next sections.
+
+> **Note:** As mentioned before, the collector currently only works for Linux.
+
+### Local Profiling
+
+1. Start OrbitService 
 ```bash
-./build_default_relwithdebinfo/bin/Orbit
+sudo ./build_default_relwithdebinfo/bin/OrbitService
 ```
-2. Start OrbitService by clicking the button `Start OrbitService`. To obtain scheduling
-   information, the collector needs to run as root, hence this will prompt you for a
-	 password (via [pkexec](https://linux.die.net/man/1/pkexec)). Alternatively, you can 
-	 start OrbitService yourself:
+2. Start Orbit with the `--process_name` flag
+```bash
+./build_default_relwithdebinfo/bin/Orbit --process_name="<your process>"
+```
+3. Click `Start Session` and continue to the **Main Window**
+
+
+
+### Remote Profiling (SSH connection)
+
+To automate remote profiling, start Orbit with the following flags:
 
 ```bash
-sudo ./build_default_relwithdebinfo/bin/OrbitService # Start the collector
+./build_default_relwithdebinfo/bin/Orbit \
+    --ssh_hostname="<ip address>" \
+    --ssh_port=1234 \ # default 22
+    --ssh_user="<username>" \
+    --ssh_key_path="<path to private key file>" \
+    --ssh_known_host_path="<path to known_hosts file>" \
+    --ssh_target_process="<process name>" \
+    --collector_root_password="<sudo password>"
 ```
 
-The frontend currently has no graphical user interface to connect to a generic
-remote instance. Only Stadia is supported as a special case. 
+This does the following:
+1. Start Orbit on the local machine
+2. Start a SSH connection to the remote machine
+3. Upload OrbitService to the remote machine
+4. Start OrbitService with sudo
+5. Select the target process
+6. Open the **Main Window**
 
-If you needed remote profiling support you could tunnel the mentioned TCP port through
-a SSH connection to an arbitrary Linux server. There are plans on adding generic
-SSH tunneling support but we can't promise any timeframe for that.
+> **Note**: If you omit the `--collector_root_password` flag, Orbit will assume OrbitService is
+already running and skip steps 3 and 4.
+
+> **Note**: If you omit the `--ssh_target_process` flag, Orbit will start with the
+**Connection Window** prefilled with the other flags.
 
 ## Consistent code styling
 
