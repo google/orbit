@@ -73,33 +73,31 @@ SignedDebianPackageDeployment::SignedDebianPackageDeployment() {
 }
 
 DeploymentConfiguration FigureOutDeploymentConfiguration() {
-  if (absl::GetFlag(FLAGS_nodeploy)) {
-    return NoDeployment{};
+  if (absl::GetFlag(FLAGS_signed_debian_package_deployment)) {
+    return SignedDebianPackageDeployment{};
   }
 
   constexpr const char* kEnvPackagePath = "ORBIT_COLLECTOR_PACKAGE_PATH";
   constexpr const char* kEnvSignaturePath = "ORBIT_COLLECTOR_SIGNATURE_PATH";
-  constexpr const char* kEnvNoDeployment = "ORBIT_COLLECTOR_NO_DEPLOYMENT";
 
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
   std::optional<std::string> collector_path = GetCollectorPath(env);
   std::optional<std::string> collector_password = GetCollectorRootPassword(env);
 
-  if (collector_path.has_value() && collector_password.has_value()) {
-    return orbit_session_setup::BareExecutableAndRootPasswordDeployment{collector_path.value(),
-                                                                        collector_password.value()};
+  if (collector_path.has_value() || collector_password.has_value()) {
+    const std::filesystem::path orbit_service_default_location =
+        std::filesystem::path{QCoreApplication::applicationDirPath().toStdString()} /
+        "OrbitService";
+    return BareExecutableAndRootPasswordDeployment{
+        collector_path.value_or(orbit_service_default_location), collector_password.value_or("")};
   }
 
   if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
-    return orbit_session_setup::SignedDebianPackageDeployment{
-        env.value(kEnvPackagePath).toStdString(), env.value(kEnvSignaturePath).toStdString()};
+    return SignedDebianPackageDeployment{env.value(kEnvPackagePath).toStdString(),
+                                         env.value(kEnvSignaturePath).toStdString()};
   }
 
-  if (env.contains(kEnvNoDeployment)) {
-    return NoDeployment{};
-  }
-
-  return orbit_session_setup::SignedDebianPackageDeployment{};
+  return NoDeployment{};
 }
 
 }  // namespace orbit_session_setup
