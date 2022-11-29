@@ -35,6 +35,9 @@ TEST(ProcessLauncher, LaunchProcess) {
 }
 
 TEST(ProcessLauncher, LaunchSuspendResumeProcess) {
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   ProcessLauncher launcher;
   auto launch_result =
       launcher.LaunchProcess(GetTestExecutablePath(), /*working_directory=*/"", /*arguments=*/"",

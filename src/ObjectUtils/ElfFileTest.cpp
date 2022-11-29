@@ -595,6 +595,9 @@ TEST(ElfFile, GetDeclarationLocationOfFunction) {
 }
 
 TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
@@ -611,6 +614,9 @@ TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionLibc) {
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
@@ -627,6 +633,9 @@ TEST(ElfFile, GetLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
