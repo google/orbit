@@ -8,7 +8,6 @@
 #include <absl/strings/str_format.h>
 #include <unistd.h>
 
-#include <cstdint>
 #include <string>
 
 #include "OrbitBase/Logging.h"

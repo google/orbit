@@ -10,6 +10,7 @@
 #include <unwindstack/RegsX86_64.h>
 
 #include <array>
+#include <cstddef>
 #include <map>
 #include <unordered_map>
 

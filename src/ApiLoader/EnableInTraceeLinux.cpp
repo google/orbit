@@ -10,6 +10,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <dlfcn.h>
 #include <stdint.h>
@@ -17,6 +18,7 @@
 
 #include <filesystem>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"

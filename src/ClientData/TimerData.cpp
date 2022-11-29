@@ -4,7 +4,6 @@
 
 #include <ClientData/TimerData.h>
 
-#include <cstdint>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

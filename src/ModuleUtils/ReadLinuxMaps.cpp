@@ -13,7 +13,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <memory>
 #include <vector>
 
 #include "OrbitBase/Logging.h"

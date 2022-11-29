@@ -8,7 +8,6 @@
 #include <stddef.h>
 
 #include <bitset>
-#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <string>

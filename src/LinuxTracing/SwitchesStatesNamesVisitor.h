@@ -6,6 +6,7 @@
 #define LINUX_TRACING_THREAD_STATE_VISITOR_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <sys/types.h>
 
 #include <algorithm>

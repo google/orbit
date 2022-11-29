@@ -19,7 +19,6 @@
 #include <Qt>
 #include <filesystem>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>

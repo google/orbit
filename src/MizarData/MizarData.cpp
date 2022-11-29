@@ -8,7 +8,6 @@
 
 #include <QString>
 #include <QStringLiteral>
-#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>

@@ -7,7 +7,6 @@
 #include <sys/mman.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>

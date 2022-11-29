@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModel>
-#include <QApplication>
 #include <QCoreApplication>
 #include <QLineEdit>
 #include <QModelIndex>

@@ -6,6 +6,8 @@
 
 #include <libssh2.h>
 
+#include <type_traits>
+
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"

@@ -6,6 +6,7 @@
 #define CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 
 #include "ClientData/FunctionInfo.h"
 

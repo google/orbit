@@ -6,6 +6,7 @@
 #define DATA_VIEWS_LIVE_FUNCTIONS_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <stdint.h>
 
 #include <algorithm>

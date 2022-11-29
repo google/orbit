@@ -4,6 +4,8 @@
 
 #include "ReadTracepoints.h"
 
+#include <absl/strings/str_format.h>
+
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
@@ -12,7 +14,6 @@
 
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Result.h"
-#include "absl/strings/str_format.h"
 
 namespace fs = std::filesystem;
 

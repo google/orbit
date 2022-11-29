@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_MOCK_BATCHER_H_
 #define ORBIT_GL_MOCK_BATCHER_H_
 
+#include <absl/container/btree_map.h>
 #include <stdint.h>
 
 #include <algorithm>

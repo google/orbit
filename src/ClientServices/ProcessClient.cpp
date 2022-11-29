@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"

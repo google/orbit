@@ -6,6 +6,7 @@
 #define LINUX_TRACING_CONTEXT_SWITCH_MANAGER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <stdint.h>
 #include <sys/types.h>
 

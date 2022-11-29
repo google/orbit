@@ -6,6 +6,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <llvm/ADT/ArrayRef.h>
@@ -37,7 +38,6 @@
 #include <llvm/Support/MemoryBuffer.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <cstring>
 #include <type_traits>
 #include <utility>
@@ -49,7 +49,6 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "llvm/DebugInfo/DWARF/DWARFUnitIndex.h"
 
 namespace orbit_object_utils {
 

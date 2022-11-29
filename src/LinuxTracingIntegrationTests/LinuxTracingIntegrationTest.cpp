@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/synchronization/mutex.h>

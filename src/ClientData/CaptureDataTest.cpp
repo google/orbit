@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/hash/hash.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_split.h>
 #include <absl/strings/string_view.h>
@@ -21,7 +22,6 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
@@ -33,6 +33,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Typedef.h"
 #include "Test/Path.h"
 
 using testing::ElementsAreArray;
