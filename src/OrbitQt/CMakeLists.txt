@@ -4,7 +4,7 @@
 
 project(OrbitQt CXX)
 
-add_library(OrbitQt OBJECT)
+add_library(OrbitQt STATIC)
 
 target_sources(
   OrbitQt
