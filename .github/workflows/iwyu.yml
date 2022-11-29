@@ -9,9 +9,6 @@ on:
       - 'main'
     paths:
       - 'src/**'
-  pull_request:
-    branches:
-      - 'main'
 
 permissions: read-all
 
