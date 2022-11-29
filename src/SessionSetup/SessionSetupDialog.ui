@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1289</width>
+    <width>1084</width>
     <height>721</height>
    </rect>
   </property>
@@ -77,12 +77,15 @@
         <property name="lineWidth">
          <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1">
          <property name="rightMargin">
           <number>0</number>
          </property>
          <item>
           <widget class="orbit_session_setup::ConnectToLocalWidget" name="localProfilingWidget" native="true"/>
+         </item>
+         <item>
+          <widget class="orbit_session_setup::ConnectToSshWidget" name="sshWidget" native="true"/>
          </item>
          <item>
           <widget class="orbit_session_setup::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
@@ -152,6 +155,11 @@
    <class>orbit_session_setup::ConnectToLocalWidget</class>
    <extends>QWidget</extends>
    <header>SessionSetup/ConnectToLocalWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>orbit_session_setup::ConnectToSshWidget</class>
+   <extends>QWidget</extends>
+   <header>SessionSetup/ConnectToSshWidget.h</header>
   </customwidget>
   <customwidget>
    <class>orbit_session_setup::ProcessListWidget</class>

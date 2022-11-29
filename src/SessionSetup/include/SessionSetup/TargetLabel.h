@@ -37,6 +37,10 @@ class TargetLabel : public QWidget {
   void ChangeToSshTarget(const SshTarget& ssh_target);
   void ChangeToSshTarget(const orbit_client_data::ProcessData& process,
                          std::string_view ssh_target_id);
+  void ChangeToSshTarget(const orbit_grpc_protos::ProcessInfo& process_info,
+                         std::string_view ssh_target_id);
+  void ChangeToSshTarget(std::string_view process_name, std::string_view process_path,
+                         double cpu_usage, std::string_view ssh_target_id);
   void ChangeToLocalTarget(const LocalTarget& local_target);
   void ChangeToLocalTarget(const orbit_client_data::ProcessData& process);
   void ChangeToLocalTarget(const orbit_grpc_protos::ProcessInfo& process_info);
