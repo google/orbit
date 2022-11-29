@@ -11,6 +11,7 @@ target_sources(
   SessionSetup
   PUBLIC  include/SessionSetup/Connections.h
           include/SessionSetup/ConnectToLocalWidget.h
+          include/SessionSetup/ConnectToSshWidget.h
           include/SessionSetup/ConnectToTargetDialog.h
           include/SessionSetup/DeploymentConfigurations.h
           include/SessionSetup/DoubleClickableLabel.h
@@ -34,6 +35,8 @@ target_sources(
   SessionSetup
   PRIVATE ConnectToLocalWidget.cpp
           ConnectToLocalWidget.ui
+          ConnectToSshWidget.cpp
+          ConnectToSshWidget.ui
           ConnectToTargetDialog.cpp
           ConnectToTargetDialog.ui
           DeploymentConfigurations.cpp
