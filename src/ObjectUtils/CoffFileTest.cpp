@@ -52,18 +52,21 @@ TEST(CoffFile, LoadDebugSymbols) {
       0x0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0xc);
+  EXPECT_EQ(symbol_info.is_hotpatchable(), false);
 
   symbol_info = symbol_infos[7];
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld");
   expected_address = 0x03a0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x1b);
+  EXPECT_EQ(symbol_info.is_hotpatchable(), false);
 
   symbol_info = symbol_infos.back();
   EXPECT_EQ(symbol_info.demangled_name(), "register_frame_ctor");
   expected_address = 0x1300 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x5);
+  EXPECT_EQ(symbol_info.is_hotpatchable(), false);
 
   // Size deduced as the distance from this function's address and the next function's address.
   symbol_info = symbol_infos[34];
@@ -71,6 +74,7 @@ TEST(CoffFile, LoadDebugSymbols) {
   expected_address = 0x1090 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x8);  // One six-byte jump plus two bytes of padding.
+  EXPECT_EQ(symbol_info.is_hotpatchable(), false);
 }
 
 TEST(CoffFile, HasDebugSymbols) {
@@ -91,11 +95,13 @@ TEST(CoffFile, HasDebugSymbols) {
 }
 
 static ::testing::Matcher<SymbolInfo> SymbolInfoEq(std::string_view demangled_name,
-                                                   uint64_t address, uint64_t size) {
+                                                   uint64_t address, uint64_t size,
+                                                   bool is_hotpatchable) {
   return testing::AllOf(
       testing::Property("demangled_name", &SymbolInfo::demangled_name, demangled_name),
       testing::Property("address", &SymbolInfo::address, address),
-      testing::Property("size", &SymbolInfo::size, size));
+      testing::Property("size", &SymbolInfo::size, size),
+      testing::Property("is_hotpatchable", &SymbolInfo::is_hotpatchable, is_hotpatchable));
 }
 
 TEST(CoffFile, LoadSymbolsFromExportTable) {
@@ -113,7 +119,8 @@ TEST(CoffFile, LoadSymbolsFromExportTable) {
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
   EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq(
-                                "PrintHelloWorld", coff_file->GetLoadBias() + 0x13a0, 27)));
+                                "PrintHelloWorld", /*address=*/coff_file->GetLoadBias() + 0x13a0,
+                                /*size=*/27, /*is_hotpatchable=*/false)));
 }
 
 TEST(CoffFile, LoadSymbolsFromExportTableOneExportedOnlyByOrdinal) {
@@ -131,9 +138,12 @@ TEST(CoffFile, LoadSymbolsFromExportTableOneExportedOnlyByOrdinal) {
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
   const uint64_t image_base = coff_file->GetLoadBias();
-  EXPECT_THAT(symbol_infos,
-              testing::ElementsAre(SymbolInfoEq("NONAME1", image_base + 0x1110, 43),
-                                   SymbolInfoEq("PrintHelloWorldNamed", image_base + 0x1150, 43)));
+  EXPECT_THAT(
+      symbol_infos,
+      testing::ElementsAre(SymbolInfoEq("NONAME1", /*address=*/image_base + 0x1110, /*size=*/43,
+                                        /*is_hotpatchable=*/false),
+                           SymbolInfoEq("PrintHelloWorldNamed", /*address=*/image_base + 0x1150,
+                                        /*size=*/43, /*is_hotpatchable=*/false)));
 }
 
 TEST(CoffFile, LoadSymbolsFromExportTableAllExportedOnlyByOrdinal) {
@@ -151,8 +161,11 @@ TEST(CoffFile, LoadSymbolsFromExportTableAllExportedOnlyByOrdinal) {
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
   const uint64_t image_base = coff_file->GetLoadBias();
-  EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq("NONAME1", image_base + 0x1110, 43),
-                                                 SymbolInfoEq("NONAME2", image_base + 0x1150, 43)));
+  EXPECT_THAT(symbol_infos,
+              testing::ElementsAre(SymbolInfoEq("NONAME1", /*address=*/image_base + 0x1110,
+                                                /*size=*/43, /*is_hotpatchable=*/false),
+                                   SymbolInfoEq("NONAME2", /*address=*/image_base + 0x1150,
+                                                /*size=*/43, /*is_hotpatchable=*/false)));
 }
 
 TEST(CoffFile, LoadSymbolsFromExportTableNoExportTable) {
@@ -189,12 +202,14 @@ TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsNoChainedInfo) {
   // Ground truth can be deduced from `dumpbin libtest.dll /UNWINDINFO`.
   // The corresponding function can then be obtained from
   // `dumpbin libtest.dll /SYMBOLS | findstr /c:"notype ()"`.
-  EXPECT_THAT(symbol_infos[0],
-              SymbolInfoEq("[function@0x62641000]", 0x62641000, 12));  // pre_c_init
+  EXPECT_THAT(symbol_infos[0], SymbolInfoEq("[function@0x62641000]", /*address=*/0x62641000,
+                                            /*size=*/12, /*is_hotpatchable=*/false));  // pre_c_init
   EXPECT_THAT(symbol_infos[3],
-              SymbolInfoEq("[function@0x62641350]", 0x62641350, 18));  // DllMainCRTStartup
+              SymbolInfoEq("[function@0x62641350]", /*address=*/0x62641350, /*size=*/18,
+                           /*is_hotpatchable=*/false));  // DllMainCRTStartup
   EXPECT_THAT(symbol_infos[7],
-              SymbolInfoEq("[function@0x626413a0]", 0x626413a0, 27));  // PrintHelloWorld
+              SymbolInfoEq("[function@0x626413a0]", /*address=*/0x626413a0, /*size=*/27,
+                           /*is_hotpatchable=*/false));  // PrintHelloWorld
 }
 
 TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsWithChainedInfo) {
@@ -211,22 +226,30 @@ TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsWithChainedInfo) {
                                        symbols_result.value().symbol_infos().end());
   // Verify all the functions for which there is chained unwind info.
   // Ground truth can be deduced from `dumpbin dllmain.dll /UNWINDINFO` looking for "CHAININFO".
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180086400]", 0x180086400,
-                                                           0x1800864b5 - 0x180086400)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090500]", 0x180090500,
-                                                           0x180090929 - 0x180090500)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090b50]", 0x180090b50,
-                                                           0x180090ef8 - 0x180090b50)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180090ff0]", 0x180090ff0,
-                                                           0x1800910dd - 0x180090ff0)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180091c70]", 0x180091c70,
-                                                           0x180091deb - 0x180091c70)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x180092510]", 0x180092510,
-                                                           0x1800928e0 - 0x180092510)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x1800c2220]", 0x1800c2220,
-                                                           0x1800c22dc - 0x1800c2220)));
-  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x1800c2350]", 0x1800c2350,
-                                                           0x1800c26ed - 0x1800c2350)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180086400]", /*address=*/0x180086400,
+                                /*size=*/0x1800864b5 - 0x180086400, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180090500]", /*address=*/0x180090500,
+                                /*size=*/0x180090929 - 0x180090500, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180090b50]", /*address=*/0x180090b50,
+                                /*size=*/0x180090ef8 - 0x180090b50, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180090ff0]", /*address=*/0x180090ff0,
+                                /*size=*/0x1800910dd - 0x180090ff0, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180091c70]", /*address=*/0x180091c70,
+                                /*size=*/0x180091deb - 0x180091c70, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x180092510]", /*address=*/0x180092510,
+                                /*size=*/0x1800928e0 - 0x180092510, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x1800c2220]", /*address=*/0x1800c2220,
+                                /*size=*/0x1800c22dc - 0x1800c2220, /*is_hotpatchable=*/false)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq(
+                                "[function@0x1800c2350]", /*address=*/0x1800c2350,
+                                /*size=*/0x1800c26ed - 0x1800c2350, /*is_hotpatchable=*/false)));
 }
 
 TEST(CoffFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols) {
@@ -244,14 +267,19 @@ TEST(CoffFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbols) {
                                        fallback_symbols.value().symbol_infos().end());
   ASSERT_EQ(symbol_infos.size(), 38);
   EXPECT_THAT(symbol_infos.front(),
-              SymbolInfoEq("[function@0x62641000]", 0x62641000, 12));  // `pre_c_init`
+              SymbolInfoEq("[function@0x62641000]", /*address=*/0x62641000, /*size=*/12,
+                           /*is_hotpatchable=*/false));  // `pre_c_init`
   EXPECT_THAT(symbol_infos.at(6),
-              SymbolInfoEq("[function@0x62641390]", 0x62641390, 1));  // `__gcc_deregister_frame`
-  EXPECT_THAT(symbol_infos.at(7), SymbolInfoEq("PrintHelloWorld", 0x626413a0, 27));
+              SymbolInfoEq("[function@0x62641390]", /*address=*/0x62641390, /*size=*/1,
+                           /*is_hotpatchable=*/false));  // `__gcc_deregister_frame`
+  EXPECT_THAT(symbol_infos.at(7), SymbolInfoEq("PrintHelloWorld", /*address=*/0x626413a0,
+                                               /*size=*/27, /*is_hotpatchable=*/false));
   EXPECT_THAT(symbol_infos.at(8),
-              SymbolInfoEq("[function@0x626413c0]", 0x626413c0, 58));  // `__do_global_dtors`
+              SymbolInfoEq("[function@0x626413c0]", /*address=*/0x626413c0, /*size=*/58,
+                           /*is_hotpatchable=*/false));  // `__do_global_dtors`
   EXPECT_THAT(symbol_infos.back(),
-              SymbolInfoEq("[function@0x62642300]", 0x62642300, 5));  // `register_frame_ctor`
+              SymbolInfoEq("[function@0x62642300]", /*address=*/0x62642300, /*size=*/5,
+                           /*is_hotpatchable=*/false));  // `register_frame_ctor`
 }
 
 TEST(CoffFile, GetFilePath) {

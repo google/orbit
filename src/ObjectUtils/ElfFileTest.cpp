@@ -24,6 +24,7 @@
 #include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_format.h"
+#include "gmock/gmock.h"
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_test_utils::HasError;
@@ -140,11 +141,48 @@ TEST(ElfFile, HasDynsym) {
 }
 
 static ::testing::Matcher<SymbolInfo> SymbolInfoEq(std::string_view demangled_name,
-                                                   uint64_t address, uint64_t size) {
+                                                   uint64_t address, uint64_t size,
+                                                   bool is_hotpatchable) {
   return testing::AllOf(
       testing::Property("demangled_name", &SymbolInfo::demangled_name, demangled_name),
       testing::Property("address", &SymbolInfo::address, address),
-      testing::Property("size", &SymbolInfo::size, size));
+      testing::Property("size", &SymbolInfo::size, size),
+      testing::Property("is_hotpatchable", &SymbolInfo::is_hotpatchable, is_hotpatchable));
+}
+
+TEST(ElfFile, LoadPatchableFunctionEntryFromDebugSymbols) {
+  const std::filesystem::path elf_path =
+      orbit_test::GetTestdataDir() / "elf_binary_with_patchable_function_entries";
+  auto elf_file_result = CreateElfFile(elf_path);
+  ASSERT_THAT(elf_file_result, HasNoError());
+  const std::unique_ptr<ElfFile>& elf_file = elf_file_result.value();
+  const auto symbols_result = elf_file->LoadDebugSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                             symbols_result.value().symbol_infos().end());
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("fun(int)", /*address=*/0x11D5,
+                                                           /*size=*/17, /*is_hotpatchable=*/true)));
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("main", /*address=*/0x11F5, /*size=*/76,
+                                                           /*is_hotpatchable=*/true)));
+}
+
+TEST(ElfFile, LoadPatchableFunctionEntryFromEhOrDebugFrameEntries) {
+  const std::filesystem::path elf_path =
+      orbit_test::GetTestdataDir() / "elf_binary_with_patchable_function_entries";
+  auto elf_file_result = CreateElfFile(elf_path);
+  ASSERT_THAT(elf_file_result, HasNoError());
+  const std::unique_ptr<ElfFile>& elf_file = elf_file_result.value();
+  const auto symbols_result = elf_file->LoadEhOrDebugFrameEntriesAsSymbols();
+  ASSERT_THAT(symbols_result, HasNoError());
+
+  const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
+                                             symbols_result.value().symbol_infos().end());
+  EXPECT_THAT(symbol_infos, testing::Contains(SymbolInfoEq("[function@0x11d5]", /*address=*/0x11D5,
+                                                           /*size=*/17, /*is_hotpatchable=*/true)));
+  EXPECT_THAT(symbol_infos,
+              testing::Contains(SymbolInfoEq("[function@0x11f5]", /*address=*/0x11F5, /*size=*/76,
+                                             /*is_hotpatchable=*/true)));
 }
 
 TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromEhFrame) {
@@ -159,15 +197,21 @@ TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromEhFrame) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  // These can be obtained with `objdump hello_world_elf --dwarf=frames` looking at the FDE entries.
-  EXPECT_THAT(
-      symbol_infos,
-      testing::ElementsAre(SymbolInfoEq("[function@0x1050]", 0x1050, 43),  // `_start`
-                           SymbolInfoEq("[function@0x1020]", 0x1020, 32),  // no function, `.plt`
-                           SymbolInfoEq("[function@0x1040]", 0x1040, 8),  // no function, `.plt.got`
-                           SymbolInfoEq("[function@0x1135]", 0x1135, 35),   // `main`
-                           SymbolInfoEq("[function@0x1160]", 0x1160, 93),   // `__libc_csu_init`
-                           SymbolInfoEq("[function@0x11c0]", 0x11c0, 1)));  // `__libc_csu_fini`
+  // These can be obtained with `objdump hello_world_elf --dwarf=frames` looking at the FDE
+  // entries.
+  EXPECT_THAT(symbol_infos, testing::ElementsAre(
+                                SymbolInfoEq("[function@0x1050]", /*address=*/0x1050, /*size=*/43,
+                                             /*is_hotpatchable=*/false),  // `_start`
+                                SymbolInfoEq("[function@0x1020]", /*address=*/0x1020, /*size=*/32,
+                                             /*is_hotpatchable=*/false),  // no function, `.plt`
+                                SymbolInfoEq("[function@0x1040]", /*address=*/0x1040, /*size=*/8,
+                                             /*is_hotpatchable=*/false),  // no function, `.plt.got`
+                                SymbolInfoEq("[function@0x1135]", /*address=*/0x1135, /*size=*/35,
+                                             /*is_hotpatchable=*/false),  // `main`
+                                SymbolInfoEq("[function@0x1160]", /*address=*/0x1160, /*size=*/93,
+                                             /*is_hotpatchable=*/false),  // `__libc_csu_init`
+                                SymbolInfoEq("[function@0x11c0]", /*address=*/0x11c0, /*size=*/1,
+                                             /*is_hotpatchable=*/false)));  // `__libc_csu_fini`
 }
 
 TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromDebugFrame) {
@@ -183,7 +227,9 @@ TEST(ElfFile, LoadEhOrDebugFrameEntriesAsSymbolsFromDebugFrame) {
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
   // There is only one function, the `main` function.
-  EXPECT_THAT(symbol_infos, testing::ElementsAre(SymbolInfoEq("[function@0x1140]", 0x1140, 22)));
+  EXPECT_THAT(symbol_infos,
+              testing::ElementsAre(SymbolInfoEq("[function@0x1140]", /*address=*/0x1140,
+                                                /*size=*/22, /*is_hotpatchable=*/false)));
 }
 
 TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithoutDynsym) {
@@ -199,14 +245,19 @@ TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithoutDynsym) {
 
   std::vector<SymbolInfo> symbol_infos(fallback_symbols.value().symbol_infos().begin(),
                                        fallback_symbols.value().symbol_infos().end());
-  EXPECT_THAT(
-      symbol_infos,
-      testing::ElementsAre(SymbolInfoEq("[function@0x1050]", 0x1050, 43),  // `_start`
-                           SymbolInfoEq("[function@0x1020]", 0x1020, 32),  // no function, `.plt`
-                           SymbolInfoEq("[function@0x1040]", 0x1040, 8),  // no function, `.plt.got`
-                           SymbolInfoEq("[function@0x1135]", 0x1135, 35),   // `main`
-                           SymbolInfoEq("[function@0x1160]", 0x1160, 93),   // `__libc_csu_init`
-                           SymbolInfoEq("[function@0x11c0]", 0x11c0, 1)));  // `__libc_csu_fini`
+  EXPECT_THAT(symbol_infos, testing::ElementsAre(
+                                SymbolInfoEq("[function@0x1050]", /*address=*/0x1050, /*size=*/43,
+                                             /*is_hotpatchable=*/false),  // `_start`
+                                SymbolInfoEq("[function@0x1020]", /*address=*/0x1020, /*size=*/32,
+                                             /*is_hotpatchable=*/false),  // no function, `.plt`
+                                SymbolInfoEq("[function@0x1040]", /*address=*/0x1040, /*size=*/8,
+                                             /*is_hotpatchable=*/false),  // no function, `.plt.got`
+                                SymbolInfoEq("[function@0x1135]", /*address=*/0x1135, /*size=*/35,
+                                             /*is_hotpatchable=*/false),  // `main`
+                                SymbolInfoEq("[function@0x1160]", /*address=*/0x1160, /*size=*/93,
+                                             /*is_hotpatchable=*/false),  // `__libc_csu_init`
+                                SymbolInfoEq("[function@0x11c0]", /*address=*/0x11c0, /*size=*/1,
+                                             /*is_hotpatchable=*/false)));  // `__libc_csu_fini`
 }
 
 TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithDynsym) {
@@ -222,11 +273,14 @@ TEST(ElfFile, LoadDynamicLinkingSymbolsAndUnwindRangesAsSymbolsWithDynsym) {
 
   std::vector<SymbolInfo> symbol_infos(fallback_symbols.value().symbol_infos().begin(),
                                        fallback_symbols.value().symbol_infos().end());
-  EXPECT_THAT(symbol_infos,
-              testing::ElementsAre(
-                  SymbolInfoEq("PrintHelloWorld", 0x1110, 12),
-                  SymbolInfoEq("[function@0x1020]", 0x1020, 32),   // no function, `.plt`
-                  SymbolInfoEq("[function@0x1040]", 0x1040, 8)));  // no function, `.plt.got`
+  EXPECT_THAT(
+      symbol_infos,
+      testing::ElementsAre(SymbolInfoEq("PrintHelloWorld", /*address=*/0x1110, /*size=*/12,
+                                        /*is_hotpatchable=*/false),
+                           SymbolInfoEq("[function@0x1020]", /*address=*/0x1020, /*size=*/32,
+                                        /*is_hotpatchable=*/false),  // no function, `.plt`
+                           SymbolInfoEq("[function@0x1040]", /*address=*/0x1040, /*size=*/8,
+                                        /*is_hotpatchable=*/false)));  // no function, `.plt.got`
 }
 
 TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndImageSize) {

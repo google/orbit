@@ -92,7 +92,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>* selected_functions,
     const std::string& file_path, const std::string& function_name, uint64_t file_offset,
-    uint64_t function_size, uint64_t function_id) {
+    uint64_t function_size, uint64_t function_id, bool is_hotpatchable) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -107,8 +107,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  orbit_client_data::FunctionInfo function_info{file_path, build_id, load_bias + file_offset,
-                                                function_size, function_name};
+  orbit_client_data::FunctionInfo function_info{
+      file_path, build_id, load_bias + file_offset, function_size, function_name, is_hotpatchable};
   selected_functions->emplace(function_id, function_info);
 }
 
@@ -340,6 +340,7 @@ int main(int argc, char* argv[]) {
   bool instrument_function = !file_path.empty() && file_offset != 0;
   const int64_t function_size = absl::GetFlag(FLAGS_instrument_size);
   const std::string function_name = absl::GetFlag(FLAGS_instrument_name);
+  const bool is_hotpatchable = absl::GetFlag(FLAGS_is_hotpatchable);
   options.dynamic_instrumentation_method = absl::GetFlag(FLAGS_user_space_instrumentation)
                                                ? CaptureOptions::kUserSpaceInstrumentation
                                                : CaptureOptions::kKernelUprobes;
@@ -401,7 +402,7 @@ int main(int argc, char* argv[]) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
         &module_manager, &options.selected_functions, file_path, function_name, file_offset,
-        function_size, kInstrumentedFunctionId);
+        function_size, kInstrumentedFunctionId, is_hotpatchable);
   }
 
   if (options.enable_api) {

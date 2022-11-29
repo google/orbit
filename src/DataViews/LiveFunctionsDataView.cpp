@@ -547,8 +547,12 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   const std::string& function_name = GetScopeInfo(scope_id.value()).GetName();
 
   // size is unknown
-  return FunctionInfo{instrumented_function.file_path(), instrumented_function.file_build_id(),
-                      instrumented_function.function_virtual_address(), /*size=*/0, function_name};
+  return FunctionInfo{instrumented_function.file_path(),
+                      instrumented_function.file_build_id(),
+                      instrumented_function.function_virtual_address(),
+                      /*size=*/0,
+                      function_name,
+                      instrumented_function.is_hotpatchable()};
 }
 
 [[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(

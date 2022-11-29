@@ -16,6 +16,7 @@ message SymbolInfo {
   string demangled_name = 2;
   uint64 address = 3;
   uint64 size = 4;
+  bool is_hotpatchable = 7;
 }
 
 message LineInfo {

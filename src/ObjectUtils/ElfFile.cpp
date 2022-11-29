@@ -100,7 +100,10 @@ class ElfFileImpl : public ElfFile {
   ErrorMessageOr<void> InitSections();
   ErrorMessageOr<void> InitProgramHeaders();
   ErrorMessageOr<void> InitDynamicEntries();
-  ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
+  ErrorMessageOr<SymbolInfo> CreateSymbolInfo(
+      const llvm::object::ELFSymbolRef& symbol_ref,
+      const absl::flat_hash_set<uint64_t>& hotpachable_addresses);
+  [[nodiscard]] absl::flat_hash_set<uint64_t> LoadHotpatchableAddresses();
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
@@ -110,6 +113,7 @@ class ElfFileImpl : public ElfFile {
   std::string soname_;
   bool has_symtab_section_;
   bool has_dynsym_section_;
+  bool has_patchable_function_entries_section_;
   bool has_debug_info_section_;
   std::optional<GnuDebugLinkInfo> gnu_debuglink_info_;
 
@@ -119,6 +123,15 @@ class ElfFileImpl : public ElfFile {
   uint64_t image_size_;
   std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> loadable_segments_;
 };
+
+bool IsHotpatchable(const absl::flat_hash_set<uint64_t>& hotpachable_addresses,
+                    uint64_t symbol_address) {
+  // The hotpatchable addresses stored in the elf file point to the first byte of the padding. We
+  // require the binary to be compiled with a five byte padding and a two byte nop at the function
+  // entry. So we check for "address - 5" to be listed as hotpatchable.
+  constexpr int kPaddingSize = 5;
+  return hotpachable_addresses.contains(symbol_address - kPaddingSize);
+}
 
 template <typename ElfT>
 ErrorMessageOr<GnuDebugLinkInfo> ReadGnuDebuglinkSection(
@@ -175,6 +188,7 @@ ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
       object_file_(llvm::dyn_cast<llvm::object::ELFObjectFile<ElfT>>(owning_binary_.getBinary())),
       has_symtab_section_(false),
       has_dynsym_section_(false),
+      has_patchable_function_entries_section_(false),
       has_debug_info_section_(false),
       load_bias_{0},
       executable_segment_offset_{0},
@@ -297,6 +311,11 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
       continue;
     }
 
+    if (name.str() == "__patchable_function_entries") {
+      has_patchable_function_entries_section_ = true;
+      continue;
+    }
+
     if (name.str() == ".debug_info") {
       has_debug_info_section_ = true;
       continue;
@@ -336,7 +355,8 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
 
 template <typename ElfT>
 ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
-    const llvm::object::ELFSymbolRef& symbol_ref) {
+    const llvm::object::ELFSymbolRef& symbol_ref,
+    const absl::flat_hash_set<uint64_t>& hotpachable_addresses) {
   std::string name;
   if (auto maybe_name = symbol_ref.getName(); maybe_name) name = maybe_name.get().str();
 
@@ -377,6 +397,7 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
   symbol_info.set_demangled_name(llvm::demangle(name));
   symbol_info.set_address(maybe_value.get());
   symbol_info.set_size(symbol_ref.getSize());
+  symbol_info.set_is_hotpatchable(IsHotpatchable(hotpachable_addresses, maybe_value.get()));
   return symbol_info;
 }
 
@@ -386,10 +407,11 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
     return ErrorMessage("ELF file does not have a .symtab section.");
   }
 
+  const absl::flat_hash_set<uint64_t> hotpachable_addresses = LoadHotpatchableAddresses();
   ModuleSymbols module_symbols;
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    auto symbol_or_error = CreateSymbolInfo(symbol_ref, hotpachable_addresses);
     if (symbol_or_error.has_value()) {
       *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
     }
@@ -408,10 +430,11 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
     return ErrorMessage("ELF file does not have a .dynsym section.");
   }
 
+  const absl::flat_hash_set<uint64_t> hotpachable_addresses = LoadHotpatchableAddresses();
   ModuleSymbols module_symbols;
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    auto symbol_or_error = CreateSymbolInfo(symbol_ref, hotpachable_addresses);
     if (symbol_or_error.has_value()) {
       *module_symbols.add_symbol_infos() = std::move(symbol_or_error.value());
     }
@@ -423,6 +446,52 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
         "found.");
   }
   return module_symbols;
+}
+
+template <typename ElfT>
+absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
+  if (!has_patchable_function_entries_section_) {
+    return absl::flat_hash_set<uint64_t>();
+  }
+  const llvm::object::ELFFile<ElfT>& elf_file = object_file_->getELFFile();
+  llvm::Expected<typename ElfT::ShdrRange> sections_or_error = elf_file.sections();
+  if (!sections_or_error) {
+    auto error_message = absl::StrFormat("Unable to load sections: %s",
+                                         llvm::toString(sections_or_error.takeError()));
+    ORBIT_ERROR("%s", error_message);
+    return absl::flat_hash_set<uint64_t>();
+  }
+
+  absl::flat_hash_set<uint64_t> patchable_symbols;
+  for (const typename ElfT::Shdr& section : sections_or_error.get()) {
+    llvm::Expected<llvm::StringRef> name_or_error = elf_file.getSectionName(section);
+    if (!name_or_error) {
+      ORBIT_ERROR("%s", absl::StrFormat("Unable to get section name: %s",
+                                        llvm::toString(name_or_error.takeError())));
+      return absl::flat_hash_set<uint64_t>();
+    }
+    llvm::StringRef name = name_or_error.get();
+    if (name.str() != "__patchable_function_entries") {
+      continue;
+    }
+
+    // We cannot use the type safe version getSectionContentsAsArray since the sh_entsize is not set
+    // correctly in the elf binaries (should be eight for 64 bit addresses but is zero). So we read
+    // the data as an array of bytes and convert it to 64 bit addresses later.
+    llvm::Expected<llvm::ArrayRef<uint8_t>> contents_or_error =
+        elf_file.getSectionContents(section);
+    if (!contents_or_error) {
+      ORBIT_ERROR("Could not read __patchable_function_entries section: %s",
+                  llvm::toString(contents_or_error.takeError()));
+      continue;
+    }
+    const llvm::ArrayRef<uint8_t>& contents = contents_or_error.get();
+    const size_t length = contents.size() / sizeof(uint64_t);
+    std::vector<uint64_t> addresses(length);
+    memcpy(addresses.data(), contents.data(), length * sizeof(uint64_t));
+    patchable_symbols.insert(addresses.begin(), addresses.end());
+  }
+  return patchable_symbols;
 }
 
 template <typename ElfT>
@@ -474,6 +543,7 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
     }
   }
 
+  const absl::flat_hash_set<uint64_t> hotpachable_addresses = LoadHotpatchableAddresses();
   ModuleSymbols module_symbols;
   for (const llvm::dwarf::FrameEntry& entry : *debug_or_eh_frame) {
     // We are only interested in Frame Descriptor Entries (skip Common Information Entries).
@@ -497,6 +567,7 @@ ElfFileImpl<ElfT>::LoadEhOrDebugFrameEntriesAsSymbols() {
     symbol_info->set_demangled_name(absl::StrFormat("[function@%#x]", address));
     symbol_info->set_address(address);
     symbol_info->set_size(fde.getAddressRange());
+    symbol_info->set_is_hotpatchable(IsHotpatchable(hotpachable_addresses, address));
   }
 
   if (module_symbols.symbol_infos().empty()) {

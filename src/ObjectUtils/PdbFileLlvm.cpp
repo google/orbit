@@ -128,6 +128,8 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
                                       *section_headers_);
     symbol_info.set_address(address);
     symbol_info.set_size(proc.CodeSize);
+    // We currently only support hotpatchable functions in elf files.
+    symbol_info.set_is_hotpatchable(false);
 
     ORBIT_CHECK(addresses_from_module_debug_stream_ != nullptr);
     addresses_from_module_debug_stream_->insert(symbol_info.address());
@@ -324,6 +326,9 @@ void LoadDebugSymbolsFromPublicSymbolStream(
     // placeholder to look-up the size in `SectionContributionsVisitor` or in
     // `DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol` (as a fallback).
     symbol_info.set_size(ObjectFile::kUnknownSymbolSize);
+    // We currently only support hotpatchable functions in elf files.
+    symbol_info.set_is_hotpatchable(false);
+
     symbol_infos->emplace_back(std::move(symbol_info));
   }
 }
