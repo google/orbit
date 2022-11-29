@@ -10,8 +10,8 @@
 #include <QObject>
 #include <QString>
 #include <QVariant>
+#include <QVector>
 #include <QtCore>
-#include <vector>
 
 #include "GrpcProtos/process.pb.h"
 
@@ -31,17 +31,16 @@ class ProcessItemModel : public QAbstractItemModel {
   [[nodiscard]] QModelIndex parent(const QModelIndex& parent) const override;
   [[nodiscard]] int rowCount(const QModelIndex& parent = {}) const override;
 
-  void SetProcesses(std::vector<orbit_grpc_protos::ProcessInfo> processes);
+  void SetProcesses(QVector<orbit_grpc_protos::ProcessInfo> processes);
   [[nodiscard]] bool HasProcesses() const { return !processes_.empty(); }
   void Clear() { SetProcesses({}); }
 
  private:
-  std::vector<orbit_grpc_protos::ProcessInfo> processes_;
+  QVector<orbit_grpc_protos::ProcessInfo> processes_;
 };
 
 }  // namespace orbit_session_setup
 
 Q_DECLARE_METATYPE(const orbit_grpc_protos::ProcessInfo*);
-Q_DECLARE_METATYPE(orbit_grpc_protos::ProcessInfo);
 
 #endif  // SESSION_SETUP_PROCESS_ITEM_MODEL_H_

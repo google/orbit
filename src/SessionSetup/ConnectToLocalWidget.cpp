@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 
@@ -29,7 +30,7 @@
 namespace orbit_session_setup {
 
 namespace {
-std::shared_ptr<grpc::Channel> CreateLocalhostGrpcChannel() {
+[[nodiscard]] std::shared_ptr<grpc::Channel> CreateLocalhostGrpcChannel() {
   const std::string target{absl::StrFormat("127.0.0.1:%d", absl::GetFlag(FLAGS_grpc_port))};
   return grpc::CreateCustomChannel(target, grpc::InsecureChannelCredentials(),
                                    grpc::ChannelArguments());
@@ -56,23 +57,26 @@ ConnectToLocalWidget::ConnectToLocalWidget(QWidget* parent)
   QObject::connect(&check_connection_timer_, &QTimer::timeout, this,
                    &ConnectToLocalWidget::CheckAndSignalConnection);
   CheckAndSignalConnection();
-  check_connection_timer_.start(250);
+  check_connection_timer_.start(std::chrono::milliseconds{250});
 
   SetupProcessListUpdater();
+
+  qRegisterMetaType<QVector<orbit_grpc_protos::ProcessInfo>>(
+      "QVector<orbit_grpc_protos::ProcessInfo>");
 }
 
 void ConnectToLocalWidget::CheckAndSignalConnection() {
   if (local_connection_.GetGrpcChannel()->GetState(true) == GRPC_CHANNEL_READY) {
     ui_->statusLabel->setText("Connected to OrbitService");
     emit Connected();
-  } else {
-    if (local_connection_.GetOrbitServiceInstance() == nullptr) {
-      ui_->statusLabel->setText("Waiting for OrbitService");
-    } else {
-      ui_->statusLabel->setText("Connecting to OrbitService ...");
-    }
-    emit Disconnected();
+    return;
   }
+  if (local_connection_.GetOrbitServiceInstance() == nullptr) {
+    ui_->statusLabel->setText("Waiting for OrbitService");
+  } else {
+    ui_->statusLabel->setText("Connecting to OrbitService ...");
+  }
+  emit Disconnected();
 }
 
 void ConnectToLocalWidget::SetOrbitServiceInstanceCreateFunction(
@@ -116,7 +120,8 @@ void ConnectToLocalWidget::SetupProcessListUpdater() {
       [self = QPointer<ConnectToLocalWidget>(this)](
           std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
         if (self == nullptr) return;
-        emit self->ProcessListUpdated(std::move(process_list));
+        emit self->ProcessListUpdated(
+            QVector<orbit_grpc_protos::ProcessInfo>(process_list.begin(), process_list.end()));
       });
 }
 

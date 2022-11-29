@@ -5,6 +5,7 @@
 #include "SessionSetup/ProcessListWidget.h"
 
 #include <QTableView>
+#include <QVector>
 #include <memory>
 
 #include "GrpcProtos/process.pb.h"
@@ -53,7 +54,7 @@ ProcessListWidget::ProcessListWidget(QWidget* parent)
   ui_->tableView->verticalHeader()->setVisible(false);
 
   QObject::connect(ui_->tableView->selectionModel(), &QItemSelectionModel::currentChanged, this,
-                   &ProcessListWidget::SelectionChanged);
+                   &ProcessListWidget::HandleSelectionChanged);
   QObject::connect(ui_->tableView, &QTableView::doubleClicked, this,
                    &ProcessListWidget::TryConfirm);
   QObject::connect(ui_->filterLineEdit, &QLineEdit::returnPressed, this,
@@ -69,7 +70,7 @@ void ProcessListWidget::Clear() {
   ui_->overlay->setVisible(false);
 }
 
-std::optional<orbit_grpc_protos::ProcessInfo> ProcessListWidget::GetSelectedProcess() {
+std::optional<orbit_grpc_protos::ProcessInfo> ProcessListWidget::GetSelectedProcess() const {
   const QItemSelectionModel* model = ui_->tableView->selectionModel();
 
   if (!model->hasSelection()) {
@@ -80,9 +81,9 @@ std::optional<orbit_grpc_protos::ProcessInfo> ProcessListWidget::GetSelectedProc
   return GetProcessFromIndex(model->selectedRows().first());
 }
 
-void ProcessListWidget::SelectionChanged(const QModelIndex& index) {
+void ProcessListWidget::HandleSelectionChanged(const QModelIndex& index) {
   if (!index.isValid()) {
-    emit NoSelection();
+    emit ProcessSelectionCleared();
     return;
   }
 
@@ -101,7 +102,7 @@ bool ProcessListWidget::TrySelectProcessByName(const std::string& process_name) 
   return true;
 }
 
-void ProcessListWidget::UpdateList(std::vector<ProcessInfo> list) {
+void ProcessListWidget::UpdateList(QVector<ProcessInfo> list) {
   ui_->overlay->setVisible(false);
   bool had_processes_before = model_.HasProcesses();
   model_.SetProcesses(std::move(list));
@@ -134,8 +135,8 @@ void ProcessListWidget::UpdateList(std::vector<ProcessInfo> list) {
 }
 
 void ProcessListWidget::TryConfirm() {
-  if (ui_->tableView->selectionModel()->hasSelection()) {
-    emit ProcessConfirmed();
+  if (std::optional<ProcessInfo> process_opt = GetSelectedProcess(); process_opt.has_value()) {
+    emit ProcessConfirmed(std::move(process_opt.value()));
   }
 }
 

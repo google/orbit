@@ -145,7 +145,7 @@ TEST_F(ProcessListWidgetTest, AutoSelection) {
 TEST_F(ProcessListWidgetTest, SetNameToSelect) {
   QSignalSpy selected_spy(&widget_, &ProcessListWidget::ProcessSelected);
 
-  widget_.SetNameToSelect(test_process_info_1_.name());
+  widget_.SetProcessNameToSelect(test_process_info_1_.name());
 
   widget_.UpdateList({test_process_info_1_, test_process_info_2_});
   ASSERT_EQ(selected_spy.count(), 1);
@@ -157,10 +157,10 @@ TEST_F(ProcessListWidgetTest, SetNameToSelect) {
 }
 
 TEST_F(ProcessListWidgetTest, NoSelection) {
-  QSignalSpy no_selection_spy(&widget_, &ProcessListWidget::NoSelection);
+  QSignalSpy no_selection_spy(&widget_, &ProcessListWidget::ProcessSelectionCleared);
 
   // setup, so there is a selection
-  widget_.SetNameToSelect(test_process_info_1_.name());
+  widget_.SetProcessNameToSelect(test_process_info_1_.name());
   widget_.UpdateList({test_process_info_1_});
   EXPECT_EQ(table_view_->model()->rowCount(), 1);
 
@@ -171,7 +171,7 @@ TEST_F(ProcessListWidgetTest, NoSelection) {
   no_selection_spy.clear();
 
   // setup, so there is a selection
-  widget_.SetNameToSelect(test_process_info_1_.name());
+  widget_.SetProcessNameToSelect(test_process_info_1_.name());
   widget_.UpdateList({test_process_info_1_});
   EXPECT_EQ(table_view_->model()->rowCount(), 1);
 

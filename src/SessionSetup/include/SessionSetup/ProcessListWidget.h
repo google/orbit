@@ -27,22 +27,27 @@ class ProcessListWidget : public QWidget {
   explicit ProcessListWidget(QWidget* parent = nullptr);
   ~ProcessListWidget() noexcept override;
 
-  void SetNameToSelect(std::string name) { name_to_select_ = std::move(name); }
-  std::optional<orbit_grpc_protos::ProcessInfo> GetSelectedProcess();
+  // `SetProcessNameToSelect` saves a process name that will be selected after the process list is
+  // filled for the first time (via `UpdateList`). This selection also happens when the process list
+  // was cleared (via `Clear`) and is then updated (via `UpdateList`). A call to
+  // `SetProcessNameToSelect` will not clear the selection a user made via the UI.
+  void SetProcessNameToSelect(std::string name) { name_to_select_ = std::move(name); }
+  [[nodiscard]] std::optional<orbit_grpc_protos::ProcessInfo> GetSelectedProcess() const;
 
- public slots:
   void Clear();
-  void UpdateList(std::vector<orbit_grpc_protos::ProcessInfo> list);
+  void UpdateList(QVector<orbit_grpc_protos::ProcessInfo> list);
 
  signals:
-  void NoSelection();
+  void ProcessSelectionCleared();
+  // `ProcessSelected` is emitted when the user selects a process in the UI and after each call to
+  // `UpdateList` when a valid selection exists.
   void ProcessSelected(orbit_grpc_protos::ProcessInfo process_info);
   // `ProcessConfirmed` is emitted when the user confirms the selection from the widget via a double
   // click onto the selected process.
-  void ProcessConfirmed();
+  void ProcessConfirmed(orbit_grpc_protos::ProcessInfo process_info);
 
  private:
-  void SelectionChanged(const QModelIndex& index);
+  void HandleSelectionChanged(const QModelIndex& index);
   bool TrySelectProcessByName(const std::string& process_name);
   void TryConfirm();
 
@@ -53,5 +58,7 @@ class ProcessListWidget : public QWidget {
 };
 
 }  // namespace orbit_session_setup
+
+Q_DECLARE_METATYPE(orbit_grpc_protos::ProcessInfo);
 
 #endif  // SESSION_SETUP_PROCESS_LIST_WIDGET_H_

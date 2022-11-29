@@ -81,8 +81,8 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
                    &QDialog::accept);
   QObject::connect(ui_->processListWidget, &ProcessListWidget::ProcessSelected, ui_->targetLabel,
                    qOverload<const ProcessInfo&>(&TargetLabel::ChangeToLocalTarget));
-  QObject::connect(ui_->processListWidget, &ProcessListWidget::NoSelection, ui_->targetLabel,
-                   &TargetLabel::Clear);
+  QObject::connect(ui_->processListWidget, &ProcessListWidget::ProcessSelectionCleared,
+                   ui_->targetLabel, &TargetLabel::Clear);
   QObject::connect(ui_->processListWidget, &ProcessListWidget::ProcessConfirmed, this,
                    &QDialog::accept);
 
@@ -97,10 +97,8 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   } else {
     state_machine_.setInitialState(&state_local_);
     ui_->localProfilingWidget->GetRadioButton()->setChecked(true);
-    ui_->processListWidget->SetNameToSelect(absl::GetFlag(FLAGS_process_name));
+    ui_->processListWidget->SetProcessNameToSelect(absl::GetFlag(FLAGS_process_name));
   }
-
-  qRegisterMetaType<std::vector<ProcessInfo>>("std::vector<orbit_grpc_protos::ProcessInfo>");
 }
 
 SessionSetupDialog::~SessionSetupDialog() = default;
@@ -115,7 +113,6 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
 
   if (state_machine_.configuration().contains(&state_local_)) {
     std::optional<ProcessInfo> process_info_opt = ui_->processListWidget->GetSelectedProcess();
-    ORBIT_CHECK(process_info_opt.has_value());
     return LocalTarget(ui_->localProfilingWidget->TakeConnection(),
                        std::make_unique<orbit_client_data::ProcessData>(process_info_opt.value()));
   } else if (state_machine_.configuration().contains(&state_file_)) {
@@ -165,8 +162,9 @@ void SessionSetupDialog::SetupLocalStates() {
       ui_->processListWidget, &ProcessListWidget::ProcessSelected, &state_local_process_selected_);
 
   // STATE state_local_process_selected_
-  state_local_process_selected_.addTransition(
-      ui_->processListWidget, &ProcessListWidget::NoSelection, &state_local_no_process_selected_);
+  state_local_process_selected_.addTransition(ui_->processListWidget,
+                                              &ProcessListWidget::ProcessSelectionCleared,
+                                              &state_local_no_process_selected_);
 }
 
 void SessionSetupDialog::SetupFileStates() {
@@ -213,7 +211,7 @@ void SessionSetupDialog::SetTargetAndStateMachineInitialState(SshTarget /*target
 }
 
 void SessionSetupDialog::SetTargetAndStateMachineInitialState(LocalTarget target) {
-  ui_->processListWidget->SetNameToSelect(target.process_->name());
+  ui_->processListWidget->SetProcessNameToSelect(target.process_->name());
   ui_->localProfilingWidget->SetConnection(std::move(target.connection_));
   ui_->localProfilingWidget->GetRadioButton()->setChecked(true);
 

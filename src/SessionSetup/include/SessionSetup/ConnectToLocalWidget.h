@@ -11,11 +11,11 @@
 #include <QRadioButton>
 #include <QString>
 #include <QTimer>
+#include <QVector>
 #include <QWidget>
 #include <functional>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
@@ -57,7 +57,7 @@ class ConnectToLocalWidget : public QWidget {
  signals:
   void Connected();
   void Disconnected();
-  void ProcessListUpdated(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
+  void ProcessListUpdated(QVector<orbit_grpc_protos::ProcessInfo> process_list);
 
  private:
   std::unique_ptr<Ui::ConnectToLocalWidget> ui_;
