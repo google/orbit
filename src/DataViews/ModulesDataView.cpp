@@ -5,6 +5,7 @@
 #include "DataViews/ModulesDataView.h"
 
 #include <absl/flags/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
@@ -12,12 +13,10 @@
 #include <stdint.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include "ClientData/ModuleData.h"

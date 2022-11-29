@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/hash/hash.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>

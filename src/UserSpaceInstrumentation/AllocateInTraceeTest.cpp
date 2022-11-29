@@ -12,8 +12,8 @@
 #include <signal.h>
 #include <stdint.h>
 #include <sys/prctl.h>
+#include <sys/syscall.h>
 #include <sys/wait.h>
-#include <syscall.h>
 #include <unistd.h>
 
 #include <array>

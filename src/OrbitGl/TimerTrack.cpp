@@ -5,6 +5,8 @@
 #include "OrbitGl/TimerTrack.h"
 
 #include <GteVector.h>
+#include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stddef.h>
 
@@ -27,12 +29,9 @@
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/PrimitiveAssembler.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
-#include "absl/flags/flag.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_data::ScopeId;
 using orbit_client_data::TimerChain;

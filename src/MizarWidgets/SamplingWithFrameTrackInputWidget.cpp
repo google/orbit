@@ -4,6 +4,7 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
+#include <absl/hash/hash.h>
 #include <stdint.h>
 
 #include <QComboBox>

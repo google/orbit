@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <cstdint>
 #include <iostream>
 #include <string>
 #include <thread>

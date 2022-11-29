@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/ascii.h>
+#include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -22,8 +25,6 @@
 #include "OrbitBase/Result.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
-#include "absl/strings/ascii.h"
-#include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::SymbolInfo;
 using orbit_test_utils::HasError;

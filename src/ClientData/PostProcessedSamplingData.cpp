@@ -13,7 +13,6 @@
 #include <iterator>
 #include <limits>
 #include <set>
-#include <type_traits>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"

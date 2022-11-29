@@ -6,6 +6,7 @@
 #define ORBIT_GL_TESTS_PICKING_MANAGER_TEST_H_
 
 #include <GteVector.h>
+#include <absl/base/casts.h>
 #include <stdint.h>
 
 #include <array>

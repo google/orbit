@@ -12,7 +12,6 @@
 #include <errno.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <functional>

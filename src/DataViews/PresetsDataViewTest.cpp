@@ -9,7 +9,6 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <algorithm>
 #include <filesystem>
 #include <string>
 #include <string_view>

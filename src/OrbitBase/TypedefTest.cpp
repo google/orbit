@@ -9,9 +9,9 @@
 #include <initializer_list>
 #include <memory>
 #include <mutex>
+#include <ratio>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>

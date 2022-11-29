@@ -11,6 +11,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <optional>

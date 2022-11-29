@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <QEventLoop>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <vector>

@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/arena.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/server_impl.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
 #include <stdint.h>

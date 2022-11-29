@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "ClientData/ProcessData.h"
 #include "TargetConfiguration.h"

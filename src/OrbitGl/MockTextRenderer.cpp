@@ -7,11 +7,9 @@
 #include <GteVector.h>
 #include <string.h>
 
-#include <cstdint>
 #include <limits>
 
 #include "OrbitGl/CoreMath.h"
-#include "OrbitGl/TextRendererInterface.h"
 
 namespace orbit_gl {
 

@@ -12,7 +12,6 @@
 #include <QString>
 #include <Qt>
 #include <memory>
-#include <utility>
 
 #include "SessionSetup/OtherUserDialog.h"
 #include "TestUtils/TestUtils.h"

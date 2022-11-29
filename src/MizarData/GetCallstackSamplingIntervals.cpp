@@ -5,7 +5,6 @@
 #include "MizarData/GetCallstackSamplingIntervals.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <optional>
 
 #include "ClientData/CallstackEvent.h"

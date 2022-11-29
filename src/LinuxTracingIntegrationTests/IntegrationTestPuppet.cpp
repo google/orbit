@@ -9,7 +9,6 @@
 #include <absl/time/time.h>
 #include <dlfcn.h>
 
-#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
