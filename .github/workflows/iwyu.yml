@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     env:
-      IWYU_CLEANUP_BRANCH: 'cleanup/iwyu-${{ GITHUB_SHA }}'
+      IWYU_CLEANUP_BRANCH: "cleanup/iwyu-${GITHUB_SHA}"
     steps:
       - name: Checkout Orbit
         uses: actions/checkout@v3
