@@ -165,7 +165,7 @@ jobs:
           CMAKE_C_COMPILER_LAUNCHER: "ccache"
         run: |
           py -3 -m conans.conan install -pr:b ${{ matrix.config.conan_profile }} -pr:h ${{ matrix.config.conan_profile }} -if build/ --build outdated --update ./
-          py -3 -m conans.conan build -bf build/
+          py -3 -m conans.conan build -bf build/ .
       - name: Clean up conan cache (Windows)
         run: py -3 -m conans.conan remove --src --builds --force *
         if: ${{ startsWith(matrix.config.os, 'windows') }}
