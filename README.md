@@ -63,7 +63,7 @@ please use the released
 
 Please have a look at the first three sections of our
 [development documentation](DEVELOPMENT.md). It describes how to build Orbit and
-what Compilers, Platforms, and Tools are supported and needed.
+which compilers, platforms, and tools are supported and needed.
 
 ## Workflow
 
