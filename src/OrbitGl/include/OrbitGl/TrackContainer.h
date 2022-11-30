@@ -53,7 +53,7 @@ class TrackContainer final : public CaptureViewElement {
   void VerticallyMoveIntoView(const orbit_client_protos::TimerInfo& timer_info);
   void VerticallyMoveIntoView(const Track& track);
 
-  void SetThreadFilter(const std::string& filter);
+  void SetThreadFilter(std::string_view filter);
 
   [[nodiscard]] int GetNumVisiblePrimitives() const;
 
@@ -99,8 +99,8 @@ class TrackContainer final : public CaptureViewElement {
                                  orbit_client_data::ThreadStateSliceInfo thread_state_slice,
                                  const Color& arrow_color, PickingMode picking_mode);
   void DrawIteratorBox(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
-                       Vec2 pos, Vec2 size, const Color& color, const std::string& label,
-                       const std::string& time, float text_box_y);
+                       Vec2 pos, Vec2 size, const Color& color, std::string_view label,
+                       std::string_view time, float text_box_y);
   void DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_assembler,
                                    PickingMode picking_mode);
 

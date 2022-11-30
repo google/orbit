@@ -20,7 +20,7 @@ namespace orbit_gl {
 PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent,
                                  const orbit_gl::TimelineInfoInterface* timeline_info,
                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                 const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
+                                 std::string cgroup_name, uint64_t memory_sampling_period_ms,
                                  const orbit_client_data::ModuleManager* module_manager,
                                  const orbit_client_data::CaptureData* capture_data)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
@@ -28,7 +28,7 @@ PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent,
           this, timeline_info, viewport, layout, cgroup_name, memory_sampling_period_ms,
           module_manager, capture_data)},
       minor_page_faults_track_{std::make_shared<MinorPageFaultsTrack>(
-          this, timeline_info, viewport, layout, cgroup_name, memory_sampling_period_ms,
+          this, timeline_info, viewport, layout, std::move(cgroup_name), memory_sampling_period_ms,
           module_manager, capture_data)} {
   // PageFaults track is collapsed by default. The major and minor page faults subtracks are
   // expanded by default, but not shown while the page faults track is collapsed.

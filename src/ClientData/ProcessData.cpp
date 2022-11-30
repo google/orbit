@@ -92,8 +92,7 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   ORBIT_DCHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
-std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
-    const std::string& module_path) const {
+std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(std::string_view module_path) const {
   absl::MutexLock lock(&mutex_);
   std::set<std::string> build_ids;
 
@@ -160,8 +159,8 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
   return module_in_memory;
 }
 
-std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(const std::string& module_path,
-                                                          const std::string& build_id) const {
+std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(std::string_view module_path,
+                                                          std::string_view build_id) const {
   absl::MutexLock lock(&mutex_);
   std::vector<uint64_t> result;
   for (const auto& [start_address, module_in_memory] : start_address_to_module_in_memory_) {
@@ -172,7 +171,7 @@ std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(const std::string& mod
   return result;
 }
 
-std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(const std::string& filename) const {
+std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(std::string_view filename) const {
   absl::MutexLock lock(&mutex_);
   std::vector<ModuleInMemory> result;
   for (const auto& [unused_start_address, module_in_memory] : start_address_to_module_in_memory_) {

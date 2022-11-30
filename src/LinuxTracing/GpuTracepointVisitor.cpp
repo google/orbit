@@ -20,8 +20,8 @@ namespace orbit_linux_tracing {
 
 using orbit_grpc_protos::FullGpuJob;
 
-int GpuTracepointVisitor::ComputeDepthForGpuJob(const std::string& timeline,
-                                                uint64_t start_timestamp, uint64_t end_timestamp) {
+int GpuTracepointVisitor::ComputeDepthForGpuJob(std::string_view timeline, uint64_t start_timestamp,
+                                                uint64_t end_timestamp) {
   if (!timeline_to_latest_timestamp_per_depth_.contains(timeline)) {
     timeline_to_latest_timestamp_per_depth_.emplace(timeline, std::vector<uint64_t>{});
   }

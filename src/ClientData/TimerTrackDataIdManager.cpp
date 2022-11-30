@@ -59,7 +59,7 @@ uint32_t TimerTrackDataIdManager::GenerateGpuTrackId(uint64_t timeline_hash) {
   return it->second;
 }
 
-uint32_t TimerTrackDataIdManager::GenerateAsyncTrackId(const std::string& name) {
+uint32_t TimerTrackDataIdManager::GenerateAsyncTrackId(std::string_view name) {
   absl::MutexLock lock(&mutex_);
   auto [it, inserted] = async_track_ids_.try_emplace(name, next_track_id_);
   if (inserted) {

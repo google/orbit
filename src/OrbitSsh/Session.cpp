@@ -124,23 +124,23 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   return outcome::success();
 }
 
-outcome::result<void> Session::Authenticate(const std::string& username,
+outcome::result<void> Session::Authenticate(std::string_view username,
                                             const std::filesystem::path& key_path,
-                                            const std::string& pass_phrase) {
+                                            std::string_view pass_phrase) {
   std::filesystem::path public_key_path = key_path;
   public_key_path.replace_filename(key_path.filename().string() + ".pub");
 
   const int rc = libssh2_userauth_publickey_fromfile(
-      raw_session_ptr_.get(), username.c_str(), public_key_path.string().c_str(),
-      key_path.string().c_str(), pass_phrase.c_str());
+      raw_session_ptr_.get(), std::string{username}.c_str(), public_key_path.string().c_str(),
+      key_path.string().c_str(), std::string{pass_phrase}.c_str());
 
   if (rc < 0) return static_cast<Error>(rc);
 
   return outcome::success();
 }
 
-outcome::result<void> Session::Disconnect(const std::string& message) {
-  const int rc = libssh2_session_disconnect(raw_session_ptr_.get(), message.c_str());
+outcome::result<void> Session::Disconnect(std::string_view message) {
+  const int rc = libssh2_session_disconnect(raw_session_ptr_.get(), std::string{message}.c_str());
 
   if (rc < 0) return static_cast<Error>(rc);
 

@@ -82,7 +82,7 @@ class SamplingReportDataView : public DataView {
   [[nodiscard]] std::string BuildToolTipUnwindErrors(
       const orbit_client_data::SampledFunction& function) const;
 
-  ErrorMessageOr<void> WriteStackEventsToCsv(const std::string& file_path);
+  ErrorMessageOr<void> WriteStackEventsToCsv(std::string_view file_path);
 
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the

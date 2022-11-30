@@ -129,8 +129,8 @@ void TrackContainer::UpdateTracksPosition() {
 
 namespace {
 
-[[nodiscard]] std::string GetLabelBetweenIterators(const std::string& function_from,
-                                                   const std::string& function_to) {
+[[nodiscard]] std::string GetLabelBetweenIterators(std::string_view function_from,
+                                                   std::string_view function_to) {
   return absl::StrFormat("%s to %s", function_from, function_to);
 }
 
@@ -152,8 +152,8 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 
 void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
                                      TextRenderer& text_renderer, Vec2 pos, Vec2 size,
-                                     const Color& color, const std::string& label,
-                                     const std::string& time, float text_box_y) {
+                                     const Color& color, std::string_view label,
+                                     std::string_view time, float text_box_y) {
   Quad box = MakeBox(pos, size);
   primitive_assembler.AddBox(box, GlCanvas::kZValueOverlay, color);
 
@@ -344,7 +344,7 @@ void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_a
   }
 }
 
-void TrackContainer::SetThreadFilter(const std::string& filter) {
+void TrackContainer::SetThreadFilter(std::string_view filter) {
   track_manager_->SetFilter(filter);
   RequestUpdate();
 }

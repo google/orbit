@@ -12,6 +12,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "GrpcProtos/services_ggp.grpc.pb.h"
@@ -33,7 +34,7 @@ using grpc::Status;
 
 class CaptureClientGgpClient::CaptureClientGgpClientImpl {
  public:
-  void SetupGrpcClient(const std::string& grpc_server_address);
+  void SetupGrpcClient(std::string_view grpc_server_address);
 
   [[nodiscard]] ErrorMessageOr<void> StartCapture();
   [[nodiscard]] ErrorMessageOr<void> StopCapture();
@@ -45,7 +46,7 @@ class CaptureClientGgpClient::CaptureClientGgpClientImpl {
   std::unique_ptr<orbit_grpc_protos::CaptureClientGgpService::Stub> capture_client_ggp_service_;
 };
 
-CaptureClientGgpClient::CaptureClientGgpClient(const std::string& grpc_server_address)
+CaptureClientGgpClient::CaptureClientGgpClient(std::string_view grpc_server_address)
     : pimpl{std::make_unique<CaptureClientGgpClientImpl>()} {
   pimpl->SetupGrpcClient(grpc_server_address);
 }
@@ -85,12 +86,12 @@ CaptureClientGgpClient::CaptureClientGgpClient(CaptureClientGgpClient&&) = defau
 CaptureClientGgpClient& CaptureClientGgpClient::operator=(CaptureClientGgpClient&&) = default;
 
 void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(
-    const std::string& grpc_server_address) {
+    std::string_view grpc_server_address) {
   grpc::ChannelArguments channel_arguments;
   channel_arguments.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
 
   std::shared_ptr<::grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
-      grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
+      std::string{grpc_server_address}, grpc::InsecureChannelCredentials(), channel_arguments);
   if (!grpc_channel) {
     ORBIT_ERROR("Unable to create GRPC channel to %s", grpc_server_address);
     return;

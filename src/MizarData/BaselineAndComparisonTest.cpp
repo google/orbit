@@ -75,8 +75,8 @@ static std::array<FunctionSymbol, N> MakeFunctionSymbols(
     const std::array<std::string, N>& functions) {
   std::array<FunctionSymbol, N> symbols;
   absl::c_transform(functions, kModuleNames, std::begin(symbols),
-                    [](const std::string& function, const std::string& module) {
-                      return FunctionSymbol{function, module};
+                    [](std::string_view function, std::string_view module) {
+                      return FunctionSymbol{std::string{function}, std::string{module}};
                     });
   return symbols;
 }

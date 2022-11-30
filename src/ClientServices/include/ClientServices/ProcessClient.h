@@ -37,7 +37,7 @@ class ProcessClient {
       uint32_t pid);
 
   [[nodiscard]] ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> FindDebugInfoFile(
-      const std::string& module_path, absl::Span<const std::string> additional_search_directories);
+      std::string_view module_path, absl::Span<const std::string> additional_search_directories);
 
   [[nodiscard]] ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
                                                               uint64_t size);

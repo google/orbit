@@ -85,12 +85,12 @@ ErrorMessageOr<std::vector<ModuleInfo>> ProcessClient::LoadModuleList(uint32_t p
 }
 
 ErrorMessageOr<orbit_base::NotFoundOr<std::filesystem::path>> ProcessClient::FindDebugInfoFile(
-    const std::string& module_path, absl::Span<const std::string> additional_search_directories) {
+    std::string_view module_path, absl::Span<const std::string> additional_search_directories) {
   ORBIT_SCOPE_FUNCTION;
   GetDebugInfoFileRequest request;
   GetDebugInfoFileResponse response;
 
-  request.set_module_path(module_path);
+  request.set_module_path(module_path.data(), module_path.size());
   *request.mutable_additional_search_directories() = {additional_search_directories.begin(),
                                                       additional_search_directories.end()};
 

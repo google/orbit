@@ -54,7 +54,7 @@ using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoun
 
 namespace {
 
-static void VerifyDownloadError(const DownloadResult& result, const std::string& expected_error) {
+static void VerifyDownloadError(const DownloadResult& result, std::string_view expected_error) {
   EXPECT_THAT(result, HasError(expected_error));
 }
 

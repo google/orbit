@@ -15,11 +15,11 @@
 namespace orbit_base {
 
 // Returns the address of a function in the specified loaded module.
-ErrorMessageOr<void*> GetProcAddress(const std::string& module, const std::string& function);
+ErrorMessageOr<void*> GetProcAddress(std::string_view module, std::string_view function);
 
 // Utility function to cast the return of GetProcAddress into the specified function pointer type.
 template <typename FunctionPrototypeT>
-inline FunctionPrototypeT GetProcAddress(const std::string& module, const std::string& function) {
+inline FunctionPrototypeT GetProcAddress(std::string_view module, std::string_view function) {
   auto result = GetProcAddress(module, function);
   if (result.has_error()) {
     ORBIT_ERROR("Calling GetProcAddress: %s", result.error().message());

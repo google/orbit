@@ -240,7 +240,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   context_menu.exec(mapToGlobal(pos));
 }
 
-void OrbitTreeView::OnMenuClicked(const std::string& action, int menu_index) {
+void OrbitTreeView::OnMenuClicked(std::string_view action, int menu_index) {
   if (model_ == nullptr) {
     return;
   }

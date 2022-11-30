@@ -71,9 +71,9 @@ ErrorMessageOr<bool> IsInodeInMapsFile(ino_t inode, pid_t pid) {
   return false;
 }
 
-ErrorMessageOr<ino_t> GetInodeFromFilePath(const std::string& file_path) {
+ErrorMessageOr<ino_t> GetInodeFromFilePath(const std::filesystem::path& file_path) {
   struct stat stat_buf {};
-  if (stat(file_path.c_str(), &stat_buf) != 0) {
+  if (stat(file_path.string().c_str(), &stat_buf) != 0) {
     return ErrorMessage{absl::StrFormat("Failed to obtain inode of '%s'", file_path)};
   }
   return stat_buf.st_ino;
@@ -87,7 +87,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   ASSERT_THAT(library_path_or_error, HasNoError());
   std::filesystem::path library_path = std::move(library_path_or_error.value());
 
-  ErrorMessageOr<ino_t> inode_of_library = GetInodeFromFilePath(library_path);
+  ErrorMessageOr<ino_t> inode_of_library = GetInodeFromFilePath(library_path.string());
   ASSERT_THAT(inode_of_library, HasNoError());
 
   // Tracee does not have the dynamic lib loaded, obviously.

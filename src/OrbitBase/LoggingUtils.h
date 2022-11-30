@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "OrbitBase/Result.h"
@@ -21,7 +22,7 @@ constexpr const char* kLogFileNameDelimiter = "Orbit-%s-%u.log";
 
 [[nodiscard]] std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
     const std::filesystem::path& dir);
-ErrorMessageOr<absl::Time> ParseLogFileTimestamp(const std::string& log_file_name);
+ErrorMessageOr<absl::Time> ParseLogFileTimestamp(std::string_view log_file_name);
 [[nodiscard]] std::vector<std::filesystem::path> FindOldLogFiles(
     const std::vector<std::filesystem::path>& log_file_paths);
 // This function tries to remove files even when an error is returned. If some files are unable to

@@ -82,11 +82,11 @@ void LogStacktrace() {
 
 namespace orbit_base_internal {
 
-void LogToFile(const std::string& message) {
+void LogToFile(std::string_view message) {
   absl::MutexLock lock(&orbit_base::log_file_mutex);
   if (orbit_base::log_file.get() != nullptr) {
     // Ignore any errors that can happen, we cannot do anything about them at this point anyways.
-    std::fwrite(message.c_str(), message.size(), 1, orbit_base::log_file.get());
+    std::fwrite(message.data(), message.size(), 1, orbit_base::log_file.get());
     std::fflush(orbit_base::log_file.get());
   }
 }

@@ -584,11 +584,11 @@ class ProcessDataModuleIntersectionTest : public ::testing::Test {
   static constexpr const char* kNewModulePath = "test/file/path";
   static constexpr const char* kNewBuildId = "build_id";
 
-  static ModuleInfo CreateModule(const std::string& module_path, const std::string& build_id,
+  static ModuleInfo CreateModule(std::string module_path, std::string build_id,
                                  uint64_t start_address, uint64_t end_address) {
     ModuleInfo module_info;
-    module_info.set_file_path(module_path);
-    module_info.set_build_id(build_id);
+    module_info.set_file_path(std::move(module_path));
+    module_info.set_build_id(std::move(build_id));
     module_info.set_address_start(start_address);
     module_info.set_address_end(end_address);
     return module_info;

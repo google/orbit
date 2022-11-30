@@ -15,11 +15,11 @@
 
 namespace orbit_producer_side_service {
 
-bool ProducerSideServer::BuildAndStart(const std::string& uri) {
+bool ProducerSideServer::BuildAndStart(std::string_view uri) {
   ORBIT_CHECK(server_ == nullptr);
 
   grpc::ServerBuilder builder;
-  builder.AddListeningPort(uri, grpc::InsecureServerCredentials());
+  builder.AddListeningPort(std::string{uri}, grpc::InsecureServerCredentials());
 
   builder.RegisterService(&producer_side_service_);
 

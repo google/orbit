@@ -37,9 +37,9 @@ ErrorMessageOr<PresetInfo> ReadPresetFromString(std::string_view content) {
   return preset_info;
 }
 
-ErrorMessageOr<PresetInfoLegacy> ReadLegacyPresetFromString(const std::string& content) {
+ErrorMessageOr<PresetInfoLegacy> ReadLegacyPresetFromString(std::string_view content) {
   PresetInfoLegacy preset_info;
-  if (!preset_info.ParseFromString(content)) {
+  if (!preset_info.ParseFromArray(content.data(), content.size())) {
     return ErrorMessage{"Unable to parse message"};
   }
 

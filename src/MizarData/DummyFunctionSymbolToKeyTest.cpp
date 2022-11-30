@@ -32,9 +32,9 @@ class SymbolToKey : public DummyFunctionSymbolToKey {
   SymbolToKey() : DummyFunctionSymbolToKey(kNameToKey, kMappableModules) {}
 };
 
-void ExpectCorrectKey(const SymbolToKey& symbol_to_key, const std::string& function_name,
-                      const std::string& module_name) {
-  FunctionSymbol symbol{function_name, module_name};
+void ExpectCorrectKey(const SymbolToKey& symbol_to_key, std::string_view function_name,
+                      std::string_view module_name) {
+  FunctionSymbol symbol{std::string{function_name}, std::string{module_name}};
   const std::string key = symbol_to_key.GetKey(symbol);
   if (kMappableModules->contains(module_name) && kNameToKey->contains(function_name)) {
     EXPECT_EQ(key, kNameToKey->at(function_name));

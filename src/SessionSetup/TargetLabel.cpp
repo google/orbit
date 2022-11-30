@@ -125,10 +125,10 @@ void TargetLabel::ChangeToSshTarget(const SshTarget& ssh_target) {
 }
 
 void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& process,
-                                    const std::string& ssh_target_id) {
+                                    std::string_view ssh_target_id) {
   Clear();
   process_ = QString::fromStdString(process.name());
-  machine_ = QString::fromStdString(ssh_target_id);
+  machine_ = QString::fromUtf8(ssh_target_id.data(), ssh_target_id.size());
   SetProcessCpuUsageInPercent(process.cpu_usage());
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);

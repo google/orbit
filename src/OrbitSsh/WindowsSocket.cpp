@@ -46,13 +46,13 @@ outcome::result<Socket> Socket::Accept() const {
   return Socket(descriptor);
 }
 
-void Socket::PrintWithLastError(const std::string& message) {
+void Socket::PrintWithLastError(std::string_view message) {
   LPWSTR error_string = nullptr;
   FormatMessage(
       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
       nullptr, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       reinterpret_cast<LPWSTR>(&error_string), 0, nullptr);
-  ORBIT_ERROR("%s: %s", message.c_str(), error_string);
+  ORBIT_ERROR("%s: %s", message, error_string);
   LocalFree(error_string);
 }
 

@@ -50,7 +50,7 @@ struct MDRawExceptionStream {
 };
 
 template <typename T>
-ErrorMessageOr<const T*> DataOrError(const std::string& content, uint64_t offset) {
+ErrorMessageOr<const T*> DataOrError(std::string_view content, uint64_t offset) {
   if (content.size() < offset + sizeof(T)) {
     return ErrorMessage("Unexpected end of data.");
   }
@@ -58,12 +58,12 @@ ErrorMessageOr<const T*> DataOrError(const std::string& content, uint64_t offset
 }
 
 template <typename T>
-ErrorMessageOr<const T*> ArrayElementOrError(const std::string& content, uint64_t offset,
+ErrorMessageOr<const T*> ArrayElementOrError(std::string_view content, uint64_t offset,
                                              uint64_t index) {
   return DataOrError<T>(content, offset + index * sizeof(T));
 }
 
-ErrorMessageOr<int32_t> ParseMinidumpForTerminationSignal(const std::string& content) {
+ErrorMessageOr<int32_t> ParseMinidumpForTerminationSignal(std::string_view content) {
   const uint32_t* stream_count = nullptr;
   OUTCOME_TRY(stream_count, DataOrError<uint32_t>(content, kStreamCountOffset));
   const uint32_t* stream_directory = nullptr;

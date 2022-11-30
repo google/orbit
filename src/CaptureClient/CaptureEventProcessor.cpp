@@ -134,7 +134,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   absl::flat_hash_set<uint64_t> callstack_hashes_seen_;
   void SendCallstackToListenerIfNecessary(uint64_t callstack_id,
                                           const orbit_grpc_protos::Callstack& callstack);
-  uint64_t GetStringHashAndSendToListenerIfNecessary(const std::string& str);
+  uint64_t GetStringHashAndSendToListenerIfNecessary(std::string_view str);
 
   GpuQueueSubmissionProcessor gpu_queue_submission_processor_;
   ApiEventProcessor api_event_processor_;
@@ -424,7 +424,7 @@ void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {
 
   std::vector<TimerInfo> vulkan_related_timers = gpu_queue_submission_processor_.ProcessGpuJob(
       gpu_job, string_intern_pool_,
-      [this](const std::string& str) { return GetStringHashAndSendToListenerIfNecessary(str); });
+      [this](std::string_view str) { return GetStringHashAndSendToListenerIfNecessary(str); });
   for (const TimerInfo& timer : vulkan_related_timers) {
     capture_listener_->OnTimer(timer);
   }
@@ -434,9 +434,8 @@ void CaptureEventProcessorForListener::ProcessGpuQueueSubmission(
     const GpuQueueSubmission& gpu_queue_submission) {
   std::vector<TimerInfo> vulkan_related_timers =
       gpu_queue_submission_processor_.ProcessGpuQueueSubmission(
-          gpu_queue_submission, string_intern_pool_, [this](const std::string& str) {
-            return GetStringHashAndSendToListenerIfNecessary(str);
-          });
+          gpu_queue_submission, string_intern_pool_,
+          [this](std::string_view str) { return GetStringHashAndSendToListenerIfNecessary(str); });
   for (const TimerInfo& timer : vulkan_related_timers) {
     capture_listener_->OnTimer(timer);
   }
@@ -674,11 +673,11 @@ void CaptureEventProcessorForListener::ProcessOutOfOrderEventsDiscardedEvent(
 }
 
 uint64_t CaptureEventProcessorForListener::GetStringHashAndSendToListenerIfNecessary(
-    const std::string& str) {
-  uint64_t hash = std::hash<std::string>{}(str);
+    std::string_view str) {
+  uint64_t hash = std::hash<std::string_view>{}(str);
   if (!string_intern_pool_.contains(hash)) {
     string_intern_pool_.emplace(hash, str);
-    capture_listener_->OnKeyAndString(hash, str);
+    capture_listener_->OnKeyAndString(hash, std::string{str});
   }
   return hash;
 }

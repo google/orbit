@@ -44,14 +44,14 @@ class MainWindowInterface {
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
   virtual void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
-                               const std::string& assembly,
+                               std::string_view assembly,
                                orbit_code_report::DisassemblyReport report) = 0;
 
   enum class CaptureLogSeverity { kInfo, kWarning, kSevereWarning, kError };
   virtual void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                   std::string_view message) = 0;
 
-  virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+  virtual void ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                              std::optional<ScopeId> scope_id) = 0;
 
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };

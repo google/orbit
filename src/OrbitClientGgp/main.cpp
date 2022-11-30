@@ -46,7 +46,7 @@ ABSL_FLAG(uint64_t, max_local_marker_depth_per_command_buffer, std::numeric_limi
 
 namespace {
 
-std::string GetLogFilePath(const std::string& log_directory) {
+std::string GetLogFilePath(std::string_view log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
   std::filesystem::path log_file_path = log_directory_path / "OrbitClientGgp.log";

@@ -25,10 +25,10 @@ class Session {
   outcome::result<void> Handshake(Socket* socket_ptr);
   outcome::result<void> MatchKnownHosts(const AddrAndPort& addr_and_port,
                                         const std::filesystem::path& known_hosts_path);
-  outcome::result<void> Authenticate(const std::string& username,
+  outcome::result<void> Authenticate(std::string_view username,
                                      const std::filesystem::path& key_path,
-                                     const std::string& pass_phrase = "");
-  outcome::result<void> Disconnect(const std::string& message = "Disconnecting normally");
+                                     std::string_view pass_phrase = "");
+  outcome::result<void> Disconnect(std::string_view message = "Disconnecting normally");
   [[nodiscard]] LIBSSH2_SESSION* GetRawSessionPtr() const { return raw_session_ptr_.get(); }
   void SetBlocking(bool value);
 

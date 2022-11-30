@@ -407,11 +407,11 @@ TEST(ProducerEventProcessor, TwoInternedCallstacksDifferentProducersSameIntern) 
   EXPECT_EQ(sample2.callstack_id(), actual_interned_callstack.key());
 }
 
-static ProducerCaptureEvent CreateInternedStringEvent(uint64_t key, const std::string& str) {
+static ProducerCaptureEvent CreateInternedStringEvent(uint64_t key, std::string str) {
   ProducerCaptureEvent interned_string_event;
   InternedString* interned_string = interned_string_event.mutable_interned_string();
   interned_string->set_key(key);
-  interned_string->set_intern(str);
+  interned_string->set_intern(std::move(str));
   return interned_string_event;
 }
 

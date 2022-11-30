@@ -47,10 +47,10 @@ using ::orbit_mizar_base::TID;
 ABSL_FLAG(std::string, baseline_path, "", "The path to the baseline capture file");
 ABSL_FLAG(std::string, comparison_path, "", "The path to the comparison capture file");
 
-static std::string ExpandPathHomeFolder(const std::string& path) {
-  const std::string kHomeForderEnvVariable = "HOME";
-  if (path[0] == '~') return getenv(kHomeForderEnvVariable.c_str()) + path.substr(1);
-  return path;
+static std::string ExpandPathHomeFolder(std::string_view path) {
+  constexpr const char* kHomeForderEnvVariable = "HOME";
+  if (path[0] == '~') return std::string{getenv(kHomeForderEnvVariable)}.append(path.substr(1));
+  return std::string{path};
 }
 
 [[nodiscard]] static QString MakeFileName(const std::filesystem::path& path) {

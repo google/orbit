@@ -27,9 +27,9 @@ std::optional<char> GetThreadState(pid_t tid);
 
 int GetNumCores();
 
-std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_content);
+std::optional<std::string> ExtractCpusetFromCgroup(std::string_view cgroup_content);
 
-std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content);
+std::vector<int> ParseCpusetCpus(std::string_view cpuset_cpus_content);
 
 std::vector<int> GetCpusetCpus(pid_t pid);
 

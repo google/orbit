@@ -29,10 +29,10 @@ NoticeWidget::NoticeWidget(QWidget* parent)
   connect(ui_->noticeButton, &QPushButton::clicked, this, &NoticeWidget::ButtonClicked);
 }
 
-void NoticeWidget::Initialize(const std::string& label_text, const std::string& button_text,
+void NoticeWidget::Initialize(std::string_view label_text, std::string_view button_text,
                               const QColor& color) {
-  ui_->noticeLabel->setText(QString::fromStdString(label_text));
-  ui_->noticeButton->setText(QString::fromStdString(button_text));
+  ui_->noticeLabel->setText(QString::fromUtf8(label_text.data(), label_text.size()));
+  ui_->noticeButton->setText(QString::fromUtf8(button_text.data(), button_text.size()));
   setStyleSheet(QString::fromStdString(absl::StrFormat(
       "QWidget#%s{ border-radius: 5px; border: 1px solid palette(text); "
       "background: rgba(%d, %d, %d, %d);}",

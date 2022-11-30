@@ -91,8 +91,8 @@ void InstallSigintHandler() {
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>* selected_functions,
-    const std::string& file_path, const std::string& function_name, uint64_t file_offset,
-    uint64_t function_size, uint64_t function_id, bool is_hotpatchable) {
+    std::string file_path, std::string function_name, uint64_t file_offset, uint64_t function_size,
+    uint64_t function_id, bool is_hotpatchable) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -107,16 +107,16 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  orbit_client_data::FunctionInfo function_info{
-      file_path, build_id, load_bias + file_offset, function_size, function_name, is_hotpatchable};
+  orbit_client_data::FunctionInfo function_info{std::move(file_path),     std::move(build_id),
+                                                load_bias + file_offset,  function_size,
+                                                std::move(function_name), is_hotpatchable};
   selected_functions->emplace(function_id, function_info);
 }
 
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>* selected_functions,
-    const std::string& file_path, const std::string& demangled_function_name,
-    uint64_t function_id) {
+    std::string file_path, std::string_view demangled_function_name, uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -146,7 +146,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   ORBIT_FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
                 demangled_function_name, file_path);
 
-  orbit_client_data::FunctionInfo function_info{symbol.value(), file_path, build_id};
+  orbit_client_data::FunctionInfo function_info{symbol.value(), std::move(file_path),
+                                                std::move(build_id)};
   selected_functions->emplace(function_id, function_info);
 }
 
@@ -154,7 +155,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
 // SymbolHelper. For a file binary.ext we look for symbols in binary.ext, binary.debug, and
 // binary.ext.debug.
 std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
-    const std::string& file_path) {
+    std::string_view file_path) {
   std::vector<std::filesystem::path> candidate_paths = {file_path};
   std::filesystem::path file_name = std::filesystem::path{file_path}.filename();
   std::filesystem::path file_dir = std::filesystem::path{file_path}.parent_path();
@@ -201,8 +202,8 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
 }
 
 void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
-    orbit_client_data::ModuleManager* module_manager, const std::string& file_path,
-    const std::string& demangled_function_prefix) {
+    orbit_client_data::ModuleManager* module_manager, std::string file_path,
+    std::string_view demangled_function_prefix) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -249,11 +250,11 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
 
   module_manager
       ->GetMutableModuleByModuleIdentifier(
-          orbit_symbol_provider::ModuleIdentifier{file_path, build_id})
+          orbit_symbol_provider::ModuleIdentifier{std::move(file_path), std::move(build_id)})
       ->AddSymbols(module_symbols);
 }
 
-uint32_t ReadPidFromFile(const std::string& file_path) {
+uint32_t ReadPidFromFile(std::string_view file_path) {
   ErrorMessageOr<std::string> pid_string = orbit_base::ReadFileToString(file_path);
   ORBIT_FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
                 pid_string.error().message());
@@ -263,14 +264,14 @@ uint32_t ReadPidFromFile(const std::string& file_path) {
   return process_id;
 }
 
-void WaitForFileModification(const std::string& file_path) {
+void WaitForFileModification(std::string_view file_path) {
   int inotify_fd = -1;
   int wd = -1;
 
   inotify_fd = inotify_init();
   ORBIT_FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
 
-  wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
+  wd = inotify_add_watch(inotify_fd, std::string{file_path}.c_str(), IN_MODIFY);
   ORBIT_FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
   ORBIT_LOG("Started to watch \"%s\"", file_path);
 

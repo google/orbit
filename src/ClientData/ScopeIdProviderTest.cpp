@@ -31,9 +31,9 @@ namespace orbit_client_data {
 const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 
 [[nodiscard]] static orbit_client_protos::TimerInfo MakeTimerInfo(
-    const std::string& name, orbit_client_protos::TimerInfo_Type type) {
+    std::string name, orbit_client_protos::TimerInfo_Type type) {
   orbit_client_protos::TimerInfo timer_info;
-  timer_info.set_api_scope_name(name);
+  timer_info.set_api_scope_name(std::move(name));
   timer_info.set_type(type);
   timer_info.set_function_id(orbit_grpc_protos::kInvalidFunctionId);
   return timer_info;
@@ -128,14 +128,14 @@ const std::array<uint64_t, kFunctionCount> kFunctionSize = {57, 108, 23};
 const std::array<bool, kFunctionCount> kFunctionIsHotpatchable = {false, false, true};
 
 static void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
-                                    uint64_t function_id, const std::string& name,
-                                    const std::string& file_path, const std::string& build_id,
-                                    uint64_t virtual_address, uint64_t size, bool is_hotpatchable) {
+                                    uint64_t function_id, std::string name, std::string file_path,
+                                    std::string build_id, uint64_t virtual_address, uint64_t size,
+                                    bool is_hotpatchable) {
   orbit_grpc_protos::InstrumentedFunction* function = capture_options.add_instrumented_functions();
   function->set_function_id(function_id);
-  function->set_function_name(name);
-  function->set_file_path(file_path);
-  function->set_file_build_id(build_id);
+  function->set_function_name(std::move(name));
+  function->set_file_path(std::move(file_path));
+  function->set_file_build_id(std::move(build_id));
   function->set_function_virtual_address(virtual_address);
   function->set_function_size(size);
   function->set_is_hotpatchable(is_hotpatchable);

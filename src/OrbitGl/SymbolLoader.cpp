@@ -65,7 +65,7 @@ SymbolLoader::SymbolLoader(AppInterface* app_interface, std::thread::id main_thr
   }
 }
 
-void SymbolLoader::DisableDownloadForModule(const std::string& module_path) {
+void SymbolLoader::DisableDownloadForModule(std::string_view module_path) {
   download_disabled_modules_.emplace(module_path);
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
   storage_manager.SaveDisabledModulePaths(download_disabled_modules_);
@@ -436,7 +436,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleFromInstance(
-    const std::string& module_file_path, StopToken stop_token) {
+    std::string_view module_file_path, StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
@@ -762,14 +762,14 @@ Future<ErrorMessageOr<std::filesystem::path>> SymbolLoader::RetrieveModuleWithDe
       });
 }
 
-void SymbolLoader::RequestSymbolDownloadStop(const std::string& module_path) {
+void SymbolLoader::RequestSymbolDownloadStop(std::string_view module_path) {
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
   if (symbol_files_currently_downloading_.contains(module_path)) {
     symbol_files_currently_downloading_.at(module_path).stop_source.RequestStop();
   }
 }
 
-bool SymbolLoader::IsModuleDownloading(const std::string& module_path) const {
+bool SymbolLoader::IsModuleDownloading(std::string_view module_path) const {
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
   return symbol_files_currently_downloading_.contains(module_path);
 }

@@ -31,6 +31,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -71,19 +72,20 @@ namespace {
 // module_symbol_file_mappings_ map.
 class OverrideMappingItem : public QListWidgetItem {
  public:
-  explicit OverrideMappingItem(const std::string& module_file_path,
+  explicit OverrideMappingItem(std::string_view module_file_path,
                                const std::filesystem::path& symbol_file_path,
                                QListWidget* parent = nullptr)
-      : QListWidgetItem(QIcon(":/actions/alert"),
-                        QString("%1 -> %2")
-                            .arg(QString::fromStdString(module_file_path))
-                            .arg(QString::fromStdString(symbol_file_path.string())),
-                        parent, kOverrideMappingItemType),
+      : QListWidgetItem(
+            QIcon(":/actions/alert"),
+            QString("%1 -> %2")
+                .arg(QString::fromUtf8(module_file_path.data(), module_file_path.size()))
+                .arg(QString::fromStdString(symbol_file_path.string())),
+            parent, kOverrideMappingItemType),
         module_file_path_(module_file_path) {
     setToolTip(
         QString(
             R"(This is a symbol file override. Orbit will always use the symbol file "%1" for the module "%2".)")
-            .arg(QString::fromStdString(module_file_path))
+            .arg(QString::fromUtf8(module_file_path.data(), module_file_path.size()))
             .arg(QString::fromStdString(symbol_file_path.string())));
   }
   std::string module_file_path_;

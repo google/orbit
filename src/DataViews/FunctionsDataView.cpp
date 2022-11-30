@@ -222,7 +222,7 @@ void FunctionsDataView::DoFilter() {
         std::string module = absl::AsciiStrToLower(
             std::filesystem::path(function->module_path()).filename().string());
 
-        const auto is_token_found = [&name, &module](const std::string& token) {
+        const auto is_token_found = [&name, &module](std::string_view token) {
           return name.find(token) != std::string::npos || module.find(token) != std::string::npos;
         };
 
@@ -248,7 +248,7 @@ void FunctionsDataView::AddFunctions(
   OnDataChanged();
 }
 
-void FunctionsDataView::RemoveFunctionsOfModule(const std::string& module_path) {
+void FunctionsDataView::RemoveFunctionsOfModule(std::string_view module_path) {
   functions_.erase(std::remove_if(functions_.begin(), functions_.end(),
                                   [&module_path](const FunctionInfo* function_info) {
                                     return function_info->module_path() == module_path;

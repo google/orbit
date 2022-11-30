@@ -94,14 +94,15 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
   };
 
  private:
-  static uint64_t ComputeStringKey(const std::string& str) { return std::hash<std::string>{}(str); }
+  static uint64_t ComputeStringKey(std::string_view str) {
+    return std::hash<std::string_view>{}(str);
+  }
 
   void ClearStringInternPool() {
     absl::MutexLock lock{&string_keys_sent_mutex_};
     string_keys_sent_.clear();
   }
 
- private:
   LockFreeBufferVulkanLayerProducer lock_free_producer_{this};
 
   absl::flat_hash_set<uint64_t> string_keys_sent_;

@@ -29,7 +29,7 @@ class TimerTrackDataIdManager {
   [[nodiscard]] uint32_t GenerateSchedulerTrackId() const { return scheduler_track_id_; }
   [[nodiscard]] uint32_t GenerateFrameTrackId(uint64_t function_id);
   [[nodiscard]] uint32_t GenerateGpuTrackId(uint64_t timeline_hash);
-  [[nodiscard]] uint32_t GenerateAsyncTrackId(const std::string& name);
+  [[nodiscard]] uint32_t GenerateAsyncTrackId(std::string_view name);
   [[nodiscard]] uint32_t GenerateThreadTrackId(uint32_t thread_id);
 
  private:

@@ -27,10 +27,10 @@ constexpr const char* kAnswerString = "Test Interned String";
 constexpr uint64_t kAnswerKey = 42;
 constexpr size_t kUploadBufferSize = 100;
 
-ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, const std::string& str) {
+ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, std::string str) {
   ClientCaptureEvent event;
   event.mutable_interned_string()->set_key(key);
-  event.mutable_interned_string()->set_intern(str);
+  event.mutable_interned_string()->set_intern(std::move(str));
   return event;
 }
 

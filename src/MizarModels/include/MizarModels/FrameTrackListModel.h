@@ -107,7 +107,7 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
                       *info);
   }
 
-  [[nodiscard]] QString MakeTooltip(FrameTrackId id, const std::string& name) const {
+  [[nodiscard]] QString MakeTooltip(FrameTrackId id, std::string_view name) const {
     const auto& [wall_clock_time, active_invocation_time] =
         data_->WallClockAndActiveInvocationTimeStats(
             *selected_tids_, id, *start_timestamp_,

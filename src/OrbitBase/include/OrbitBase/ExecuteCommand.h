@@ -12,7 +12,7 @@ namespace orbit_base {
 
 #if defined(__linux)
 
-std::optional<std::string> ExecuteCommand(const std::string& cmd);
+std::optional<std::string> ExecuteCommand(std::string_view cmd);
 
 #endif  // defined(__linux)
 

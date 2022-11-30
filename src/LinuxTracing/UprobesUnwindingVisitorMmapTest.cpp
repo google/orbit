@@ -36,7 +36,7 @@ class UprobesUnwindingVisitorMmapTest : public ::testing::Test {
     ON_CALL(maps_, Get).WillByDefault([this]() { return real_maps_->Get(); });
     ON_CALL(maps_, AddAndSort)
         .WillByDefault([this](uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
-                              const std::string& name) {
+                              std::string_view name) {
           return real_maps_->AddAndSort(start, end, offset, flags, name);
         });
   }

@@ -19,13 +19,14 @@
 namespace orbit_config_widgets {
 
 SymbolErrorDialog::SymbolErrorDialog(const orbit_client_data::ModuleData* module,
-                                     const std::string& detailed_error, QWidget* parent)
+                                     std::string_view detailed_error, QWidget* parent)
     : QDialog(parent), ui_(std::make_unique<Ui::SymbolErrorDialog>()), module_(module) {
   ORBIT_CHECK(module_ != nullptr);
   ui_->setupUi(this);
   QString module_file_path = QString::fromStdString(module_->file_path());
   ui_->moduleNameLabel->setText(module_file_path);
-  ui_->errorPlainTextEdit->setPlainText(QString::fromStdString(detailed_error));
+  ui_->errorPlainTextEdit->setPlainText(
+      QString::fromUtf8(detailed_error.data(), detailed_error.size()));
 
   // If the module has a build id, or unsafe symbols are allowed, then the user can continue to
   // resolve this error.

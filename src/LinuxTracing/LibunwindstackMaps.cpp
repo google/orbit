@@ -27,14 +27,14 @@ class LibunwindstackMapsImpl : public LibunwindstackMaps {
   unwindstack::Maps* Get() override { return maps_.get(); }
 
   void AddAndSort(uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
-                  const std::string& name) override;
+                  std::string_view name) override;
 
  private:
   std::unique_ptr<unwindstack::BufferMaps> maps_;
 };
 
 void LibunwindstackMapsImpl::AddAndSort(uint64_t start, uint64_t end, uint64_t offset,
-                                        uint64_t flags, const std::string& name) {
+                                        uint64_t flags, std::string_view name) {
   // First, remove existing maps that are fully contained in the new map, and resize or split
   // existing maps that intersect with the new map. This is how the kernel handles memory mappings
   // when using `mmap` with `MAP_FIXED` causes a new map that overlaps with existing ones. From the
@@ -59,11 +59,12 @@ void LibunwindstackMapsImpl::AddAndSort(uint64_t start, uint64_t end, uint64_t o
     if (end <= map_info->start()) {
       // The new map does not intersect map_info and is before it. Keep map_info untouched but add
       // the new map before it.
-      maps_->Insert(map_info_it, start, end, offset, flags, name);
+      maps_->Insert(map_info_it, start, end, offset, flags, std::string{name});
       // The new map will not intersect any other existing map, so stop.
       return;
+    }
 
-    } else if (start <= map_info->start() && end >= map_info->end()) {
+    if (start <= map_info->start() && end >= map_info->end()) {
       // The new map encloses map_info. Remove map_info.
       map_info_it = maps_->erase(map_info_it);
 
@@ -76,7 +77,7 @@ void LibunwindstackMapsImpl::AddAndSort(uint64_t start, uint64_t end, uint64_t o
       // The new map intersects the first part of map_info. Keep the second part of map_info but add
       // the new map before it.
       map_info_it = maps_->erase(map_info_it);
-      map_info_it = maps_->Insert(map_info_it, start, end, offset, flags, name);
+      map_info_it = maps_->Insert(map_info_it, start, end, offset, flags, std::string{name});
       ++map_info_it;
       maps_->Insert(map_info_it, end, map_info->end(), new_offset, map_info->flags(),
                     map_info->name());
@@ -103,7 +104,7 @@ void LibunwindstackMapsImpl::AddAndSort(uint64_t start, uint64_t end, uint64_t o
       }
       {
         // Add the new map.
-        map_info_it = maps_->Insert(map_info_it, start, end, offset, flags, name);
+        map_info_it = maps_->Insert(map_info_it, start, end, offset, flags, std::string{name});
         ++map_info_it;
       }
       {
@@ -123,13 +124,15 @@ void LibunwindstackMapsImpl::AddAndSort(uint64_t start, uint64_t end, uint64_t o
 
   // If the new map has not been added yet, it goes at the end.
   ORBIT_CHECK(maps_->Total() == 0 || (*(maps_->end() - 1))->end() <= start);
-  maps_->Insert(maps_->end(), start, end, offset, flags, name);
+  maps_->Insert(maps_->end(), start, end, offset, flags, std::string{name});
 }
 
 }  // namespace
 
-std::unique_ptr<LibunwindstackMaps> LibunwindstackMaps::ParseMaps(const std::string& maps_buffer) {
-  auto maps = std::make_unique<unwindstack::BufferMaps>(maps_buffer.c_str());
+std::unique_ptr<LibunwindstackMaps> LibunwindstackMaps::ParseMaps(std::string_view maps_buffer) {
+  std::string buffer{maps_buffer};  // Note that BufferMaps implicitly assume this string stays
+                                    // alive until Parse was called.
+  auto maps = std::make_unique<unwindstack::BufferMaps>(buffer.c_str());
   if (!maps->Parse()) {
     return nullptr;
   }
