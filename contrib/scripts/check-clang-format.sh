@@ -26,6 +26,9 @@ REFERENCE="origin/${GITHUB_BASE_REF:-main}"
 MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
 FORMATTING_DIFF="$(git diff -U0 --no-color --relative --diff-filter=r $MERGE_BASE -- 'third_party/libunwindstack/**' 'src/**' | clang-format-diff-14 -p1)"
 
+git diff -U0 --no-color --relative --diff-filter=r $MERGE_BASE -- 'third_party/libunwindstack/**' 'src/**' | clang-format-diff-14 -p1 -i
+git diff --minimal -U0 --no-color>> "${GITHUB_WORKSPACE}/clang_format.diff"
+
 if [ -n "$FORMATTING_DIFF" ]; then
   echo "clang-format determined the following necessary changes to your PR:"
   echo "$FORMATTING_DIFF"
