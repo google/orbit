@@ -19,6 +19,24 @@
 
 namespace orbit_gl {
 
+namespace {
+template <typename T>
+void CreateTestSlider(Viewport*, TimeGraphLayout*, std::unique_ptr<T>&) {}
+template <>
+void CreateTestSlider(Viewport* viewport, TimeGraphLayout* layout,
+                      std::unique_ptr<GlHorizontalSlider>& result) {
+  // The tests assume the default slider position and this specific width.
+  result = std::make_unique<GlHorizontalSlider>(nullptr, viewport, layout, nullptr);
+  result->SetWidth(viewport->GetScreenWidth() - layout->GetSliderWidth());
+}
+template <>
+void CreateTestSlider(Viewport* viewport, TimeGraphLayout* layout,
+                      std::unique_ptr<GlVerticalSlider>& result) {
+  result = std::make_unique<GlVerticalSlider>(nullptr, viewport, layout, nullptr);
+}
+
+}  // namespace
+
 template <int dim>
 void Pick(GlSlider& slider, int start, int other_dim = 0) {
   static_assert(dim >= 0 && dim <= 1);
@@ -66,8 +84,8 @@ Setup() {
   std::unique_ptr<Viewport> viewport =
       std::make_unique<Viewport>(100 + orthogonal_slider_width, 1000 + orthogonal_slider_width);
 
-  std::unique_ptr<SliderClass> slider =
-      std::make_unique<SliderClass>(nullptr, viewport.get(), tester->GetLayout(), nullptr);
+  std::unique_ptr<SliderClass> slider;
+  CreateTestSlider<SliderClass>(viewport.get(), tester->GetLayout(), slider);
 
   // Set the slider to be 50% of the maximum size, position in the middle
   slider->SetNormalizedPosition(0.5f);
@@ -346,8 +364,8 @@ TEST(Slider, MouseMoveRequestRedraw) {
   CaptureViewElementTester tester;
   Viewport* viewport = tester.GetViewport();
 
-  std::shared_ptr<GlHorizontalSlider> slider{
-      std::make_shared<GlHorizontalSlider>(nullptr, viewport, tester.GetLayout(), nullptr)};
+  std::unique_ptr<GlHorizontalSlider> slider;
+  CreateTestSlider<GlHorizontalSlider>(viewport, tester.GetLayout(), slider);
   tester.SimulatePreRender(slider.get());
 
   Vec2 kPosInSlider = slider->GetPos();
