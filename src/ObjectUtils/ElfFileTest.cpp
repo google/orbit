@@ -595,6 +595,10 @@ TEST(ElfFile, GetDeclarationLocationOfFunction) {
 }
 
 TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
@@ -611,6 +615,10 @@ TEST(ElfFile, GetDeclarationLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionLibc) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
@@ -627,6 +635,10 @@ TEST(ElfFile, GetLocationOfFunctionLibc) {
 }
 
 TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
+// TODO(https://github.com/google/orbit/issues/4502): Enable test again.
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   const std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libc.debug";
 
   auto program = CreateElfFile(file_path);
