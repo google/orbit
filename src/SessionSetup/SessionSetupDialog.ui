@@ -16,16 +16,6 @@
   <property name="accessibleName">
    <string>Orbit Profiler</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">QLineEdit {
-	background-image: url(:/actions/search_small_offset);
-	background-position: left center;
-	background-repeat: no-repeat;
-	height: 22px;
-	padding-left: 20px;
-	padding-bottom: 1px;
-}</string>
-  </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <property name="leftMargin">
     <number>0</number>

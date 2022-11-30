@@ -202,22 +202,22 @@
           </layout>
          </item>
         </layout>
+        <widget class="orbit_session_setup::OverlayWidget" name="overlay" native="true">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>100</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+        </widget>
        </widget>
       </item>
      </layout>
-     <widget class="orbit_session_setup::OverlayWidget" name="overlay" native="true">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>100</width>
-        <height>30</height>
-       </rect>
-      </property>
-      <property name="visible">
-       <bool>false</bool>
-      </property>
-     </widget>
     </widget>
    </item>
   </layout>
