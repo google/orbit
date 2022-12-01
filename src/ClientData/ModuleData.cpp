@@ -138,6 +138,7 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo new_module_info) {
             module_info_.file_path());
   functions_.clear();
   hash_to_function_map_.clear();
+  name_to_function_info_map_.clear();
   loaded_symbols_completeness_ = SymbolCompleteness::kNoSymbols;
 
   return true;
@@ -235,6 +236,7 @@ void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& modu
   ORBIT_CHECK(loaded_symbols_completeness_ < completeness);
   functions_.clear();
   hash_to_function_map_.clear();
+  name_to_function_info_map_.clear();
 
   uint32_t address_reuse_counter = 0;
   uint32_t name_reuse_counter = 0;
