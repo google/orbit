@@ -130,11 +130,11 @@ jobs:
             ccache-
       - run: ccache -p
       - run: ccache -z
-      - run: mkdir "build_${{ matrix.config.conan_profile }}"
+      - run: mkdir "build"
         if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
       - name: CMake Configure (Ubuntu)
         if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
-        working-directory: ./build_${{ matrix.config.conan_profile }}
+        working-directory: ./build
         env:
           CXX: ${{ matrix.config.cxx }}
           CC: ${{ matrix.config.cc }}
@@ -146,11 +146,11 @@ jobs:
            ${GITHUB_WORKSPACE}
       - name: CMake Build (Ubuntu)
         if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
-        working-directory: ./build_${{ matrix.config.conan_profile }}
+        working-directory: ./build
         run: cmake --build .
       - name: CMake Test (Ubuntu)
         if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
-        working-directory: ./build_${{ matrix.config.conan_profile }}
+        working-directory: ./build
         run: CTEST_OUTPUT_FAILURE=1 ARGS="-E IntegrationTest" cmake --build . --target test
       - name: Install conan config (Windows)
         if: ${{ startsWith(matrix.config.os, 'windows') }}
@@ -164,7 +164,7 @@ jobs:
           CMAKE_CXX_COMPILER_LAUNCHER: "ccache"
           CMAKE_C_COMPILER_LAUNCHER: "ccache"
         run: |
-          py -3 -m conans.conan install -pr:b ${{ matrix.config.conan_profile }} -pr:h ${{ matrix.config.conan_profile }} -if build/ --build outdated --update ./
+          py -3 -m conans.conan install -pr:b msvc2019_release -pr:h ${{ matrix.config.conan_profile }} -if build/ --build outdated --update ./
           py -3 -m conans.conan build -bf build/ .
       - name: Clean up conan cache (Windows)
         run: py -3 -m conans.conan remove --src --builds --force *
