@@ -480,9 +480,9 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   if (track == nullptr) {
     auto [unused1, submission_timer_data] = capture_data_->CreateTimerData();
     auto [unused2, marker_timer_data] = capture_data_->CreateTimerData();
-    track = std::make_shared<GpuTrack>(track_container_, timeline_info_, viewport_, layout_,
-                                       timeline_hash, app_, module_manager_, capture_data_,
-                                       submission_timer_data, marker_timer_data);
+    track = std::make_shared<GpuTrack>(
+        track_container_, timeline_info_, viewport_, layout_, timeline_hash, app_, module_manager_,
+        capture_data_, submission_timer_data, marker_timer_data, app_->GetStringManager());
     gpu_tracks_[timeline] = track;
     AddTrack(track);
   }

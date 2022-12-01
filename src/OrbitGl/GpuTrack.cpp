@@ -16,6 +16,7 @@
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/Viewport.h"
+#include "StringManager/StringManager.h"
 
 using orbit_client_protos::TimerInfo;
 
@@ -50,9 +51,10 @@ GpuTrack::GpuTrack(CaptureViewElement* parent, const orbit_gl::TimelineInfoInter
                    OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
                    const orbit_client_data::CaptureData* capture_data,
                    orbit_client_data::TimerData* submission_timer_data,
-                   orbit_client_data::TimerData* marker_timer_data)
+                   orbit_client_data::TimerData* marker_timer_data,
+                   orbit_string_manager::StringManager* string_manager)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
-      string_manager_{app->GetStringManager()},
+      string_manager_{string_manager},
       submission_track_{std::make_shared<GpuSubmissionTrack>(this, timeline_info, viewport, layout,
                                                              timeline_hash, app, module_manager,
                                                              capture_data, submission_timer_data)},
