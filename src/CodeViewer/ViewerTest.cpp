@@ -293,11 +293,15 @@ TEST(Viewer, Smoke) {
   QApplication::processEvents();
 
   // We also send a wheel event to trigger the scaling code.
-  auto wheel_event = std::make_unique<QWheelEvent>(
-      QPointF{viewer.geometry().center()}, QPointF{viewer.geometry().center()}, QPoint{},
-      QPoint{42, 42}, Qt::MouseButton::NoButton, Qt::KeyboardModifier::NoModifier,
-      Qt::NoScrollPhase, false);
-  QApplication::sendEvent(&viewer, wheel_event.release());
+  QWheelEvent wheel_event{QPointF{viewer.geometry().center()},
+                          QPointF{viewer.geometry().center()},
+                          QPoint{},
+                          QPoint{42, 42},
+                          Qt::MouseButton::NoButton,
+                          Qt::KeyboardModifier::NoModifier,
+                          Qt::NoScrollPhase,
+                          false};
+  QApplication::sendEvent(&viewer, &wheel_event);
 
   QApplication::processEvents();
 }
