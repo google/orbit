@@ -374,7 +374,7 @@ TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
     QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
-  QTimer::singleShot(100 /*ms*/, parent_object.get(), [&]() { parent_object.reset(); });
+  QTimer::singleShot(/*ms=*/100, parent_object.get(), [&]() { parent_object.reset(); });
 
   QCoreApplication::exec();
 
