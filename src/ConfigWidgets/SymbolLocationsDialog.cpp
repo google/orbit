@@ -242,7 +242,8 @@ void SymbolLocationsDialog::OnRemoveButtonClicked() {
       ORBIT_CHECK(module_symbol_file_mappings_.contains(mapping_item->module_file_path_));
       module_symbol_file_mappings_.erase(mapping_item->module_file_path_);
     }
-    ui_->listWidget->takeItem(ui_->listWidget->row(selected_item));
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+    delete selected_item;
   }
 }
 
