@@ -10,9 +10,11 @@
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
+#include <errno.h>
 
 #include <array>
 #include <cstdio>
+#include <type_traits>
 #include <vector>
 
 #include "LoggingUtils.h"

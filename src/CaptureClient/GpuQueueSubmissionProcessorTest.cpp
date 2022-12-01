@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 

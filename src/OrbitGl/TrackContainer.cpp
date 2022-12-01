@@ -6,10 +6,10 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stddef.h>
-#include <stdlib.h>
 
 #include <algorithm>
 #include <cmath>

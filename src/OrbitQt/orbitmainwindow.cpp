@@ -5,7 +5,9 @@
 #include "OrbitQt/orbitmainwindow.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/flags/internal/flag.h>
+#include <absl/flags/flag.h>
+#include <absl/strings/match.h>
+#include <absl/strings/str_format.h>
 
 #include <QAction>
 #include <QApplication>
@@ -123,6 +125,7 @@
 #include "OrbitQt/orbitsamplingreport.h"
 #include "OrbitQt/orbittreeview.h"
 #include "OrbitQt/types.h"
+#include "OrbitSsh/AddrAndPort.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/Connections.h"
@@ -138,9 +141,7 @@
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
-#include "absl/flags/flag.h"
-#include "absl/strings/match.h"
-#include "absl/strings/str_format.h"
+#include "absl/flags/internal/flag.h"
 #include "ui_orbitmainwindow.h"
 
 using orbit_capture_client::CaptureClient;

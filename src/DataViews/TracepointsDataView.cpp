@@ -9,9 +9,7 @@
 #include <stddef.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
-#include <memory>
 #include <utility>
 
 #include "DataViews/CompareAscendingOrDescending.h"

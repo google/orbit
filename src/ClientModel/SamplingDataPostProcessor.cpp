@@ -4,6 +4,9 @@
 
 #include "ClientModel/SamplingDataPostProcessor.h"
 
+#include <absl/container/btree_map.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 #include <stddef.h>
@@ -14,7 +17,6 @@
 #include <map>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -24,8 +26,6 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;

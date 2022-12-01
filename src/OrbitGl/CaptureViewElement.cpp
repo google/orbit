@@ -5,7 +5,6 @@
 #include "OrbitGl/CaptureViewElement.h"
 
 #include <GteVector.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <tuple>

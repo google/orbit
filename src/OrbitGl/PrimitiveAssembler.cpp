@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <GteVector2.h>
+#include <GteVector4.h>
 #include <OrbitBase/Logging.h>
 #include <stddef.h>
 

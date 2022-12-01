@@ -7,6 +7,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/security/server_credentials.h>
+#include <grpcpp/server_impl.h>
 #include <stdint.h>
 
 #include <limits>

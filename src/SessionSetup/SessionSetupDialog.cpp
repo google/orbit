@@ -7,29 +7,19 @@
 #include <absl/flags/flag.h>
 
 #include <QButtonGroup>
-#include <QFrame>
-#include <QHeaderView>
 #include <QHistoryState>
-#include <QItemSelectionModel>
-#include <QLineEdit>
-#include <QMetaObject>
-#include <QModelIndexList>
+#include <QNonConstOverload>
 #include <QObject>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QSet>
-#include <QSortFilterProxyModel>
-#include <QTableView>
-#include <QVariant>
 #include <QWidget>
 #include <Qt>
-#include <algorithm>
-#include <cstdint>
 #include <memory>
 #include <optional>
-#include <type_traits>
+#include <string>
 #include <utility>
 #include <variant>
-#include <vector>
 
 #include "ClientData/ProcessData.h"
 #include "ClientFlags/ClientFlags.h"

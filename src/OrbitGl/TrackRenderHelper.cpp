@@ -5,6 +5,7 @@
 #include "OrbitGl/TrackRenderHelper.h"
 
 #include <GteVector.h>
+#include <GteVector2.h>
 #include <stddef.h>
 
 #include <cmath>

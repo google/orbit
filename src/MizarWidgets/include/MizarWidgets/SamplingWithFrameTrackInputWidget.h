@@ -31,6 +31,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -46,6 +47,7 @@
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarModels/FrameTrackListModel.h"
 #include "OrbitBase/Sort.h"
+#include "OrbitBase/Typedef.h"
 
 namespace Ui {
 class SamplingWithFrameTrackInputWidget;

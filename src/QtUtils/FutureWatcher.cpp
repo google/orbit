@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QTimer>
+#include <algorithm>
 #include <chrono>
 
 #include "OrbitBase/WhenAll.h"

@@ -7,7 +7,6 @@
 
 #include <absl/algorithm/container.h>
 #include <absl/meta/type_traits.h>
-#include <stdint.h>
 
 #include <iterator>
 #include <optional>

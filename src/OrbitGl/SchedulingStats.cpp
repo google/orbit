@@ -7,7 +7,6 @@
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
-#include <cstdint>
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Sort.h"
