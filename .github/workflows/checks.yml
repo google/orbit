@@ -31,6 +31,22 @@ jobs:
       - name: Check formatting
         run: ./contrib/scripts/check-clang-format.sh
         shell: bash
+      - name: 'Upload clang-format diff'
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: clang_format_diff
+          path: clang_format.diff
+          retention-days: 1
+      - run: echo "${{ github.event.number }}" > pr_number.txt
+        if: success() || failure()
+      - name: 'Upload PR number'
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: pr_number
+          path: pr_number.txt
+          retention-days: 1
 
   check-license-headers:
     runs-on: ubuntu-22.04
@@ -42,7 +58,7 @@ jobs:
     - name: Check license headers
       run: ./contrib/scripts/check-license-headers.sh
       shell: bash
-    - name: 'Upload Artifact'
+    - name: 'Upload missing license headers'
       uses: actions/upload-artifact@v3
       if: success() || failure()
       with:
