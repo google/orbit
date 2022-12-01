@@ -49,7 +49,8 @@ class GpuTrack : public Track {
                     OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
                     const orbit_client_data::CaptureData* capture_data,
                     orbit_client_data::TimerData* submission_timer_data,
-                    orbit_client_data::TimerData* marker_timer_data);
+                    orbit_client_data::TimerData* marker_timer_data,
+                    orbit_string_manager::StringManager* string_manager);
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info);
 
