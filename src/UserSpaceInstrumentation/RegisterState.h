@@ -71,8 +71,8 @@ static_assert(sizeof(GeneralPurposeRegisters64) == 216,
               "GeneralPurposeRegisters64 is not 216 bytes of size");
 
 union GeneralPurposeRegisters {
-  GeneralPurposeRegisters64 x86_64;
   GeneralPurposeRegisters32 x86_32;
+  GeneralPurposeRegisters64 x86_64;
 };
 
 struct MmsAs80BitFloat {
@@ -82,11 +82,9 @@ struct MmsAs80BitFloat {
 static_assert(offsetof(MmsAs80BitFloat, sign_exp) == sizeof(MmsAs80BitFloat::mantissa),
               "MmsAs80BitFloat is not properly aligned.");
 
-struct MmsRegister {
-  union {
-    std::array<uint8_t, 10> bytes;
-    MmsAs80BitFloat as_float;
-  };
+union MmsRegister {
+  std::array<uint8_t, 10> bytes;
+  MmsAs80BitFloat as_float;
 };
 static_assert(sizeof(MmsRegister) == 16, "MmsRegister is not 16 bytes of size");
 
