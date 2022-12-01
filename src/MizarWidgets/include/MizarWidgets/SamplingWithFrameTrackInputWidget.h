@@ -141,10 +141,9 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   }
 
   void InitFrameTrackList(const PairedData& data) {
-    auto model =
-        std::make_unique<FrameTrackListModel>(&data, &selected_tids_, &start_timestamp_, parent());
+    frame_track_list_model_.emplace(&data, &selected_tids_, &start_timestamp_, parent());
 
-    GetFrameTrackList()->setModel(model.release());
+    GetFrameTrackList()->setModel(&frame_track_list_model_.value());
     OnFrameTrackSelectionChanged(0);
   }
 
@@ -152,6 +151,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     GetStartMs()->setValidator(new QIntValidator(0, std::numeric_limits<int>::max(), this));
     GetStartMs()->setText("0");
   }
+
+  std::optional<FrameTrackListModel> frame_track_list_model_;
 };
 
 using SamplingWithFrameTrackInputWidget =
