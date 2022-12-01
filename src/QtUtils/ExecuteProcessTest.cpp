@@ -348,12 +348,12 @@ TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
-  QObject* parent_object = new QObject{};
+  auto parent_object = std::make_unique<QObject>();
 
   // Note the timeout is 100ms and the parent is also deleted after 100ms. This means the outcome
   // can be either error
   Future<ErrorMessageOr<QByteArray>> future = ExecuteProcess(
-      program, QStringList{"--sleep_for_ms", "500"}, parent_object, absl::Milliseconds(100));
+      program, QStringList{"--sleep_for_ms", "500"}, parent_object.get(), absl::Milliseconds(100));
 
   bool lambda_was_called = false;
   future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
@@ -374,7 +374,7 @@ TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
     QTimer::singleShot(5, QCoreApplication::instance(), &QCoreApplication::quit);
   });
 
-  QTimer::singleShot(100, parent_object, &QObject::deleteLater);
+  QTimer::singleShot(100 /*ms*/, parent_object.get(), [&]() { parent_object.reset(); });
 
   QCoreApplication::exec();
 
