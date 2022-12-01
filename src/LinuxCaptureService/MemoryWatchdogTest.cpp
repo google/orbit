@@ -46,8 +46,9 @@ TEST(MemoryWatchdog, ExtractRssInPagesFromProcPidStatReturnsNulloptWhenRssIsNotP
 }
 
 static void IncreaseRss(uint64_t amount_words) {
-  // The memory leak is intended: if the test is run again in the same process (e.g., with
-  // --gtest_repeat) we want new memory to be allocated, not the previous one to be reused.
+  // The static storage of `allocations` is intended: if the test is run again in the same process
+  // (e.g., with --gtest_repeat) we want new memory to be allocated, not the previous one to be
+  // reused.
   static std::vector<std::unique_ptr<volatile uint64_t[]>> allocations;
   volatile uint64_t* ptr =
       allocations.emplace_back(std::make_unique<volatile uint64_t[]>(amount_words)).get();
