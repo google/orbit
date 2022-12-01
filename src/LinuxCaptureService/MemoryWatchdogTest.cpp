@@ -45,13 +45,14 @@ TEST(MemoryWatchdog, ExtractRssInPagesFromProcPidStatReturnsNulloptWhenRssIsNotP
   EXPECT_FALSE(ExtractRssInPagesFromProcPidStat(kProcPidStat).has_value());
 }
 
-static void IncreaseRss(uint64_t amount_bytes) {
+static void IncreaseRss(uint64_t amount_words) {
   // The memory leak is intended: if the test is run again in the same process (e.g., with
   // --gtest_repeat) we want new memory to be allocated, not the previous one to be reused.
-  void* ptr = malloc(amount_bytes);  // NOLINT
-  auto* typed_ptr = static_cast<volatile uint64_t*>(ptr);
-  for (uint64_t i = 0; i < amount_bytes / sizeof(uint64_t); ++i) {
-    typed_ptr[i] = i;
+  static std::vector<std::unique_ptr<volatile uint64_t[]>> allocations;
+  volatile uint64_t* ptr =
+      allocations.emplace_back(std::make_unique<volatile uint64_t[]>(amount_words)).get();
+  for (uint64_t i = 0; i < amount_words; ++i) {
+    ptr[i] = i;
   }
 }
 
@@ -62,7 +63,7 @@ TEST(MemoryWatchdog, ReadRssInBytesFromProcPidStatReturnsIncreasingValuesOnRssIn
 
   static constexpr uint64_t kRssIncrease = 8ULL * 1024 * 1024;
   static constexpr uint64_t kRssIncreaseTolerance = kRssIncrease / 8;
-  IncreaseRss(kRssIncrease);
+  IncreaseRss(kRssIncrease / sizeof(uint64_t));
   std::optional<uint64_t> new_rss = ReadRssInBytesFromProcPidStat();
   ASSERT_TRUE(new_rss.has_value());
   EXPECT_GT(new_rss.value(), 0);
