@@ -32,7 +32,6 @@
 #include <memory>
 #include <string>
 #include <tuple>
-#include <type_traits>
 
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/module.pb.h"

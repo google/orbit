@@ -12,7 +12,6 @@
 #include <QVariant>
 #include <algorithm>
 #include <filesystem>
-#include <type_traits>
 
 constexpr const char* kSymbolPathsSettingsKey = "symbol_directories";
 constexpr const char* kDirectoryPathKey = "directory_path";

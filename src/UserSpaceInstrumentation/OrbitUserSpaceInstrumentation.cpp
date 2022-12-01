@@ -6,6 +6,7 @@
 
 #include <google/protobuf/arena.h>
 
+#include <algorithm>
 #include <stack>
 #include <utility>
 #include <variant>

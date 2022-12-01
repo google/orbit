@@ -4,8 +4,8 @@
 
 #include "DispatchTable.h"
 
-#include "absl/base/casts.h"
-#include "absl/container/flat_hash_map.h"
+#include <absl/base/casts.h>
+
 // clang-format off
 #include "vulkan/vulkan.h" // IWYU pragma: keep
 #include "vulkan/vk_layer_dispatch_table.h" // IWYU pragma: keep

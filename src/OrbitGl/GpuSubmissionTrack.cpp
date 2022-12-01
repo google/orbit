@@ -5,6 +5,7 @@
 #include "OrbitGl/GpuSubmissionTrack.h"
 
 #include <GteVector.h>
+#include <absl/strings/str_format.h>
 
 #include <memory>
 #include <optional>
@@ -20,7 +21,6 @@
 #include "OrbitGl/ThreadColor.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TrackHeader.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;

@@ -4,6 +4,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <capstone/capstone.h>
 #include <dlfcn.h>
 #include <gmock/gmock.h>

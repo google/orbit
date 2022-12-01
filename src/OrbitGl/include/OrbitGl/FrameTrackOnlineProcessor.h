@@ -5,6 +5,10 @@
 #ifndef ORBIT_GL_FRAME_TRACK_ONLINE_PROCESSOR_H_
 #define ORBIT_GL_FRAME_TRACK_ONLINE_PROCESSOR_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
+
 #include <cstdint>
 
 #include "ClientData/CaptureData.h"

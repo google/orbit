@@ -11,7 +11,6 @@
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/PickingManager.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TrackRenderHelper.h"
 
 namespace orbit_gl {

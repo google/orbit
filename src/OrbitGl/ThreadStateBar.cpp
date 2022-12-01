@@ -8,7 +8,6 @@
 #include <absl/strings/str_format.h>
 
 #include <array>
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>

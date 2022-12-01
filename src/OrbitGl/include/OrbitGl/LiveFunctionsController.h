@@ -5,6 +5,8 @@
 #ifndef LIVE_FUNCTIONS_H_
 #define LIVE_FUNCTIONS_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include <cstdint>
 #include <functional>
 #include <optional>

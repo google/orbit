@@ -6,8 +6,6 @@
 
 #include <GteVector.h>
 #include <absl/meta/type_traits.h>
-#include <absl/strings/str_split.h>
-#include <string.h>
 
 #include <QColor>
 #include <QFont>

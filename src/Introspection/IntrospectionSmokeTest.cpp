@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 

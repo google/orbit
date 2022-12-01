@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitGl/SchedulerTrack.h"
 #include "OrbitGl/StaticTimeGraphLayout.h"

@@ -18,7 +18,6 @@
 #include <Qt>
 #include <filesystem>
 #include <memory>
-#include <utility>
 
 namespace orbit_source_paths_mapping_ui {
 constexpr const char* kAutocreateMappingKey = "auto_create_mapping";

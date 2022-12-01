@@ -10,8 +10,8 @@
 #include <signal.h>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
+#include <sys/syscall.h>
 #include <sys/wait.h>
-#include <syscall.h>
 #include <unistd.h>
 
 #include <array>

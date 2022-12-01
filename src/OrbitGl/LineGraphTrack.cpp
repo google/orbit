@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
 #include <iterator>
 #include <utility>
 #include <vector>

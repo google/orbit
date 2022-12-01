@@ -7,7 +7,6 @@
 #include <QFlags>
 #include <QModelIndex>
 #include <QVariant>
-#include <Qt>
 #include <algorithm>
 #include <filesystem>
 #include <utility>

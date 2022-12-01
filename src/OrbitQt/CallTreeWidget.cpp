@@ -6,7 +6,6 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
-#include <absl/flags/internal/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <stddef.h>
@@ -19,7 +18,6 @@
 #include <QHeaderView>
 #include <QItemSelectionModel>
 #include <QLineEdit>
-#include <QList>
 #include <QMenu>
 #include <QModelIndexList>
 #include <QPainter>
@@ -57,6 +55,7 @@
 #include "OrbitQt/CustomSignalsTreeView.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
+#include "absl/flags/internal/flag.h"
 #include "ui_CallTreeWidget.h"
 
 using orbit_client_data::CaptureData;

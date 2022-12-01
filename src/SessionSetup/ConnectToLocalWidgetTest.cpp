@@ -5,14 +5,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QCoreApplication>
 #include <QFrame>
 #include <QLabel>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QPushButton>
 #include <QRadioButton>
-#include <QSignalSpy>
 #include <QTest>
 #include <Qt>
 #include <memory>
