@@ -5,6 +5,7 @@
 #include "OrbitGl/GpuDebugMarkerTrack.h"
 
 #include <GteVector.h>
+#include <absl/strings/str_format.h>
 
 #include <algorithm>
 #include <memory>
@@ -18,7 +19,6 @@
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TimeGraphLayout.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
 using orbit_gl::PrimitiveAssembler;

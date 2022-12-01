@@ -4,6 +4,7 @@
 
 #include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/functional/bind_front.h>
 #include <absl/functional/function_ref.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -22,7 +23,6 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
-#include "absl/functional/bind_front.h"
 
 using ::testing::AnyOfArray;
 using ::testing::Pointwise;

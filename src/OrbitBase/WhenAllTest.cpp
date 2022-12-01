@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/types/span.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -12,7 +14,6 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/WhenAll.h"
-#include "absl/types/span.h"
 
 namespace orbit_base {
 

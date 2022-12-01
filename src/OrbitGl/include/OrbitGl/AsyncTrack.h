@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_ASYNC_TRACK_H_
 #define ORBIT_GL_ASYNC_TRACK_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>

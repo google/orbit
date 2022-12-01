@@ -9,7 +9,6 @@
 #include <Qt>
 #include <chrono>
 #include <memory>
-#include <utility>
 
 #include "OrbitQt/TimeGraphLayoutWidget.h"
 #include "ui_CaptureWindowDebugWidget.h"

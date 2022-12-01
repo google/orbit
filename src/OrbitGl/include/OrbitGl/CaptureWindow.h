@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CAPTURE_WINDOW_H_
 #define ORBIT_GL_CAPTURE_WINDOW_H_
 
+#include <absl/container/btree_map.h>
 #include <stdint.h>
 
 #include <QPainter>

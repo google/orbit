@@ -9,7 +9,6 @@
 
 #include <QOpenGLFunctions>
 #include <array>
-#include <cstdint>
 #include <cstring>
 
 #include "ApiInterface/Orbit.h"

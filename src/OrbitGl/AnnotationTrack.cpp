@@ -10,7 +10,6 @@
 
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/PickingManager.h"
-#include "OrbitGl/TextRendererInterface.h"
 
 namespace {
 

@@ -8,6 +8,7 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <google/protobuf/arena.h>
+#include <grpcpp/grpcpp.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 #include <grpcpp/support/sync_stream.h>
 #include <stdint.h>

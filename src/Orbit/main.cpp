@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
-#include <absl/flags/internal/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
@@ -37,6 +36,7 @@
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Credentials.h"
 #include "SourcePathsMapping/Mapping.h"
+#include "absl/flags/internal/flag.h"
 
 #ifdef _WIN32
 #include <process.h>

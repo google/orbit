@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <gtest/gtest.h>
 
+#include <exception>
 #include <optional>
 #include <string>
 #include <thread>

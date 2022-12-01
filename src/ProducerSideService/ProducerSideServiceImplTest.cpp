@@ -6,6 +6,7 @@
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/server_impl.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
 #include <stdint.h>

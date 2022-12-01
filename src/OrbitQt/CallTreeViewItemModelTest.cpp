@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <gtest/gtest.h>
 
 #include <QAbstractItemModelTester>
@@ -11,6 +12,7 @@
 #include <QStringLiteral>
 #include <QVariant>
 #include <Qt>
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>

@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <string.h>
-#include <syscall.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <string>

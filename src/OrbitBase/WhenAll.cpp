@@ -6,12 +6,12 @@
 
 #include <absl/types/span.h>
 
+#include <algorithm>
 #include <memory>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
-#include "absl/synchronization/mutex.h"
 
 namespace orbit_base {
 Future<void> WhenAll(absl::Span<const Future<void>> futures) {
