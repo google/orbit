@@ -89,8 +89,7 @@ static void VerifyDownloadSucceeded(const DownloadResult& result,
 class HttpDownloadManagerTest : public ::testing::Test {
  protected:
   HttpDownloadManagerTest()
-      : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-        manager_(new HttpDownloadManager) {
+      : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()), manager_(std::in_place) {
 #ifdef _WIN32
     local_http_server_process_.setProgram("py");
     local_http_server_process_.setArguments(
@@ -138,16 +137,12 @@ class HttpDownloadManagerTest : public ::testing::Test {
     loop.exec();
   }
 
-  ~HttpDownloadManagerTest() override {
-    if (manager_) manager_->~HttpDownloadManager();
-  }
-
   [[nodiscard]] std::string GetUrl(std::string filename) const {
     return absl::StrFormat("http://localhost:%s/%s", port_.toStdString(), filename);
   }
 
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
-  QPointer<HttpDownloadManager> manager_;
+  std::optional<HttpDownloadManager> manager_;
 
  private:
   QProcess local_http_server_process_;
@@ -255,7 +250,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleDestroyManagerEarly) {
   StopSource stop_source{};
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
-  manager_->~HttpDownloadManager();
+  manager_ = std::nullopt;
   future.Then(executor_.get(), [](DownloadResult result) {
     VerifyDownloadCanceled(result);
     QCoreApplication::exit();
