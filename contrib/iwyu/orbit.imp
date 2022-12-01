@@ -23,6 +23,7 @@
   { "include": ["<grpcpp/resource_quota_impl.h>", "private", "<grpcpp/resource_quota.h>", "public"] },
   { "include": ["<grpcpp/server_builder_impl.h>", "private", "<grpcpp/server_builder.h>", "public"] },
   { "include": ["<grpcpp/server_posix_impl.h>", "private", "<grpcpp/server_posix.h>", "public"] },
+  { "include": ["<grpcpp/server_impl.h>", "private", "<grpcpp/server.h>", "public"] },
 
   # Abseil
   { "include": ["\"absl/meta/type_traits.h\"", "private", "<absl/meta/type_traits.h>", "public"] },
