@@ -33,9 +33,9 @@ concurrency:
 
 jobs:
   job:
-    name: ${{ matrix.config.build_type }}.${{ matrix.config.cc }}.build-and-test-ubuntu
-    runs-on: ubuntu-22.04
-    timeout-minutes: 180
+    name: ${{ matrix.config.build_type }}.${{ matrix.config.cc }}.build-and-test-${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
@@ -44,31 +44,42 @@ jobs:
             name: "GCC Release",
             build_type: 'Release',
             cc: "gcc",
-            cxx: "g++"
+            cxx: "g++",
+            os: "ubuntu-22.04"
         }
         - {
             name: "Clang Release",
             build_type: 'Release',
             cc: "clang",
-            cxx: "clang++"
+            cxx: "clang++",
+            os: "ubuntu-22.04"
         }
         - {
             name: "Clang Debug",
             build_type: 'Debug',
             cc: "clang",
-            cxx: "clang++"
+            cxx: "clang++",
+            os: "ubuntu-22.04"
+        }
+        - {
+            name: "MSVC Release",
+            build_type: 'Release',
+            cc: "msvc",
+            os: "windows-2019",
+            conan_profile: "msvc2019_release"
         }
     env:
       CCACHE_BASEDIR: "${GITHUB_WORKSPACE}"
       CCACHE_DIR: "${GITHUB_WORKSPACE}/.ccache"
       CCACHE_COMPRESS: "true"
       CCACHE_COMPRESSLEVEL: "6"
-      CCACHE_MAXSIZE: "400M"
+      CCACHE_MAXSIZE: "600M"
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
-      - name: Install dependencies
+      - name: Install dependencies (Ubuntu)
+        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
         run: |
            sudo apt update &&                             \
            sudo apt install --yes --no-install-recommends \
@@ -94,19 +105,35 @@ jobs:
            libgmock-dev                                   \
            git                                            \
            libprotobuf-dev
+      - name: Install dependencies (Windows)
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        run: |
+          py -3 -m pip install aqtinstall
+          py -3 -m aqt install-qt  --outputdir C:\Qt windows desktop 5.15 win64_msvc2019_64
+          py -3 -m pip install conan==1.54.0
+          choco install -y ccache
+          echo "C:\ProgramData\chocolatey\lib\ccache\tools\ccache-4.7.3-windows-x86_64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Save CCache Timestamp
         id: ccache_timestamp
         run: echo "timestamp=$(date +%m-%d-%Y--%H:%M:%S)" >> $GITHUB_OUTPUT
+        shell: bash
       - name: Setup CCache Files
         uses: actions/cache@v3
         with:
-          path: .ccache
+          path: |
+            .ccache
+            ~/.conan
+            C:\.conan
           key: ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-${{ steps.ccache_timestamp.outputs.timestamp }}
           restore-keys: |
             ${{ matrix.config.build_type }}-${{ matrix.config.cc }}-ccache-
             ccache-
-      - run: mkdir build
-      - name: CMake Configure
+      - run: ccache -p
+      - run: ccache -z
+      - run: mkdir "build"
+        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+      - name: CMake Configure (Ubuntu)
+        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
         working-directory: ./build
         env:
           CXX: ${{ matrix.config.cxx }}
@@ -117,16 +144,33 @@ jobs:
            -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                          \
            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
            ${GITHUB_WORKSPACE}
-      - run: ccache -p
-      - run: ccache -z
-      - name: CMake Build
+      - name: CMake Build (Ubuntu)
+        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
         working-directory: ./build
         run: cmake --build .
-      - name: CCache Stats
-        run: ccache -s
-      - name: CMake Test
+      - name: CMake Test (Ubuntu)
+        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
         working-directory: ./build
         run: CTEST_OUTPUT_FAILURE=1 ARGS="-E IntegrationTest" cmake --build . --target test
+      - name: Install conan config (Windows)
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        run: |
+          py -3 -m conans.conan config install .\third_party\conan\configs\windows\
+          py -3 -m conans.conan config install .\third_party\conan\configs\windows_ci\
+      - name: Build & Test (Windows)
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        env:
+          Qt5_DIR: "C:\\Qt\\5.15.2\\msvc2019_64"
+          CMAKE_CXX_COMPILER_LAUNCHER: "ccache"
+          CMAKE_C_COMPILER_LAUNCHER: "ccache"
+        run: |
+          py -3 -m conans.conan install -pr:b msvc2019_release -pr:h ${{ matrix.config.conan_profile }} -if build/ --build outdated --update ./
+          py -3 -m conans.conan build -bf build/ .
+      - name: Clean up conan cache (Windows)
+        run: py -3 -m conans.conan remove --src --builds --force *
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
+      - name: CCache Stats
+        run: ccache -s -v
       - name: Upload test artifacts
         uses: actions/upload-artifact@v3
         if: success() || failure()

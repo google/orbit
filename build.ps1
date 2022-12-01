@@ -1,19 +1,19 @@
-$conan = Get-Command conan -ErrorAction Stop
+$py = Get-Command py -ErrorAction Stop
 
 function conan_profile_exists($profile) {
-  $process = Start-Process $conan.Path -windowstyle Hidden -ArgumentList "profile","show",$profile -PassThru -Wait  
+  $process = Start-Process $py.Path -windowstyle Hidden -ArgumentList "-3","-m","conans.conan","profile","show",$profile -PassThru -Wait
   return ($process.ExitCode -eq 0)
 }
 
 function conan_create_profile($profile) {
-  if (! (& $conan.Path profile show default)) {
-    if (! (& $conan.Path profile new --detect default)) {
+  if (! (& $py.Path -3 -m conans.conan profile show default)) {
+    if (! (& $py.Path -3 -m conans.conan profile new --detect default)) {
       exit $?
     }
   }
 
-  $compiler = & $conan.Path profile show default | Select-String -Pattern "compiler=" | ForEach-Object { ([string] $_).split("=")[1] }
-  $compiler_version = & $conan.Path profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
+  $compiler = & $py.Path -3 -m conans.conan profile show default | Select-String -Pattern "compiler=" | ForEach-Object { ([string] $_).split("=")[1] }
+  $compiler_version = & $py.Path -3 -m conans.conan profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
 
   if ($compiler -ne "Visual Studio") {
     Throw "It seems conan couldn't detect your Visual Studio installation. Do you have Visual Studio installed? At least Visual Studio 2019 is required!"
@@ -71,13 +71,13 @@ foreach ($profile in $profiles) {
  
   Write-Host "Building Orbit in build_$profile/ with conan profile $profile"
 
-  & $conan.Path install -if build_$profile\ --build outdated -pr:b $build_profile -pr:h $profile -u "$PSScriptRoot"
+  & $py.Path -3 -m conans.conan install -if build_$profile\ --build outdated -pr:b $build_profile -pr:h $profile -u "$PSScriptRoot"
 
   if ($LastExitCode -ne 0) {
     Throw "Error while running conan install."
   }
-  
-  $process = Start-Process $conan.Path -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "build","-bf","build_$profile/",$PSScriptRoot
+
+  $process = Start-Process $py.Path -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "-3","-m","conans.conan","build","-bf","build_$profile/",$PSScriptRoot
   $handle = $process.Handle # caching handle needed due to bug in .Net
   $process.WaitForExit()
   if ($process.ExitCode -ne 0) {
