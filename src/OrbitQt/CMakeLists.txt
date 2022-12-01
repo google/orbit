@@ -76,8 +76,7 @@ target_sources(
           TimeGraphLayoutWidget.cpp
           TrackConfigurationWidget.cpp
           TrackConfigurationWidget.ui
-          TrackTypeItemModel.cpp
-          ../../icons/orbiticons.qrc)
+          TrackTypeItemModel.cpp)
 
 target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(OrbitQt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -106,7 +105,6 @@ target_link_libraries(
 
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
-set_target_properties(OrbitQt PROPERTIES AUTORCC ON)
 iwyu_add_dependency(OrbitQt)
 
 if(WIN32)
