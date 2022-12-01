@@ -8,8 +8,8 @@
 
 #include <cstring>
 
-#include "ApiUtils/Event.h"
-#include "GrpcProtos/capture.pb.h"
+#include "ApiUtils/Event.h"         // IWYU pragma: keep
+#include "GrpcProtos/capture.pb.h"  // IWYU pragma: keep
 
 namespace orbit_api {
 
