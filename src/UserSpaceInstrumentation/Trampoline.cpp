@@ -526,10 +526,12 @@ void AppendRestoreCode(MachineCode& trampoline) {
 
   // Relocate addresses encoded in the trampoline.
   for (size_t pos : relocateable_addresses) {
-    const uint64_t address_in_trampoline = *absl::bit_cast<uint64_t*>(trampoline_code.data() + pos);
+    uint64_t address_in_trampoline{};
+    std::memcpy(&address_in_trampoline, trampoline_code.data() + pos,
+                sizeof(address_in_trampoline));
     auto it = relocation_map.find(address_in_trampoline);
     if (it != relocation_map.end()) {
-      *absl::bit_cast<uint64_t*>(trampoline_code.data() + pos) = it->second;
+      std::memcpy(trampoline_code.data() + pos, &it->second, sizeof(it->second));
     }
   }
 
