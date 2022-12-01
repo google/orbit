@@ -65,7 +65,6 @@ class EventLoop : public QObject {
   }
   bool isRunning() const { return loop_.isRunning(); }
   void wakeUp() { return loop_.wakeUp(); }
-  bool event(QEvent* event) { return loop_.event(event); }
 
   bool processEvents(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
     return loop_.processEvents(flags);
