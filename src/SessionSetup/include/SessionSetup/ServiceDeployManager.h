@@ -101,7 +101,7 @@ class ServiceDeployManager : public QObject {
   ErrorMessageOr<void> ShutdownTask(orbit_ssh_qt::Task* task);
   ErrorMessageOr<void> ShutdownSession(orbit_ssh_qt::Session* session);
   ErrorMessageOr<void> CopyFileToRemote(
-      const std::string& source, const std::string& dest,
+      std::string_view source, std::string_view dest,
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
   // TODO(http://b/209807583): With our current integration of libssh2 we can only ever have one

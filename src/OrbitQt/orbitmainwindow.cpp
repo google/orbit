@@ -363,18 +363,21 @@ void OrbitMainWindow::SetupMainWindow() {
       });
 
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
-    QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
+  app_->SetErrorMessageCallback([this](std::string_view title, std::string_view text) {
+    QMessageBox::critical(this, QString::fromUtf8(title.data(), title.size()),
+                          QString::fromUtf8(text.data(), text.size()));
   });
-  app_->SetWarningMessageCallback([this](const std::string& title, const std::string& text) {
-    QMessageBox::warning(this, QString::fromStdString(title), QString::fromStdString(text));
+  app_->SetWarningMessageCallback([this](std::string_view title, std::string_view text) {
+    QMessageBox::warning(this, QString::fromUtf8(title.data(), title.size()),
+                         QString::fromUtf8(text.data(), text.size()));
   });
-  app_->SetInfoMessageCallback([this](const std::string& title, const std::string& text) {
-    QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(text));
+  app_->SetInfoMessageCallback([this](std::string_view title, std::string_view text) {
+    QMessageBox::information(this, QString::fromUtf8(title.data(), title.size()),
+                             QString::fromUtf8(text.data(), text.size()));
   });
   app_->SetSaveFileCallback(
-      [this](const std::string& extension) { return this->OnGetSaveFileName(extension); });
-  app_->SetClipboardCallback([this](const std::string& text) { this->OnSetClipboard(text); });
+      [this](std::string_view extension) { return this->OnGetSaveFileName(extension); });
+  app_->SetClipboardCallback([this](std::string_view text) { this->OnSetClipboard(text); });
 
   auto capture_window = std::make_unique<CaptureWindow>(
       app_.get(), app_.get(), ui->debugTabWidget->GetCaptureWindowTimeGraphLayout());
@@ -912,11 +915,11 @@ void OrbitMainWindow::OnNewSelectionBottomUpView(
   ui->selectionBottomUpWidget->SetBottomUpView(std::move(selection_bottom_up_view));
 }
 
-std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
+std::string OrbitMainWindow::OnGetSaveFileName(std::string_view extension) {
   QFileDialog dialog(this);
   dialog.setFileMode(QFileDialog::FileMode::AnyFile);
   dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
-  dialog.setNameFilter(QString::fromStdString(extension + " (*" + extension + ")"));
+  dialog.setNameFilter(QString::fromStdString(absl::StrFormat("%s (*%s)", extension, extension)));
   dialog.setWindowTitle("Specify a file to save...");
   dialog.setDirectory(nullptr);
   std::string filename;
@@ -930,8 +933,8 @@ std::string OrbitMainWindow::OnGetSaveFileName(const std::string& extension) {
   return filename;
 }
 
-void OrbitMainWindow::OnSetClipboard(const std::string& text) {
-  QApplication::clipboard()->setText(QString::fromStdString(text));
+void OrbitMainWindow::OnSetClipboard(std::string_view text) {
+  QApplication::clipboard()->setText(QString::fromUtf8(text.data(), text.size()));
 }
 
 void OrbitMainWindow::on_actionReport_Missing_Feature_triggered() {
@@ -1502,7 +1505,7 @@ void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
   });
 }
 
-void OrbitMainWindow::OpenCapture(const std::string& filepath) {
+void OrbitMainWindow::OpenCapture(std::string_view filepath) {
   auto* loading_capture_dialog =
       new QProgressDialog("Waiting for the capture to be loaded...", nullptr, 0, 0, this, Qt::Tool);
   loading_capture_dialog->setWindowTitle("Loading capture");
@@ -1540,7 +1543,7 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
         }
       });
 
-  setWindowTitle(QString::fromStdString(filepath));
+  setWindowTitle(QString::fromUtf8(filepath.data(), filepath.size()));
   UpdateCaptureStateDependentWidgets();
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
 }
@@ -1824,10 +1827,9 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
   message_box.exec();
 }
 
-void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
-                                    const std::string& scope_name,
+void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                                     std::optional<ScopeId> scope_id) {
-  ui->liveFunctions->ShowHistogram(data, scope_name, scope_id);
+  ui->liveFunctions->ShowHistogram(data, std::move(scope_name), scope_id);
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(
@@ -1915,7 +1917,7 @@ void OrbitMainWindow::ShowSourceCode(
 }
 
 void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
-                                      const std::string& assembly,
+                                      std::string_view assembly,
                                       orbit_code_report::DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_qt::AnnotatingSourceCodeDialog>();
   dialog->setWindowTitle("Orbit Disassembly");
@@ -1923,7 +1925,8 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
   dialog->SetHighlightCurrentLine(true);
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::X86Assembly>();
-  dialog->SetMainContent(QString::fromStdString(assembly), std::move(syntax_highlighter));
+  dialog->SetMainContent(QString::fromUtf8(assembly.data(), assembly.size()),
+                         std::move(syntax_highlighter));
   uint32_t num_samples = report.GetNumSamples();
   dialog->SetDisassemblyCodeReport(std::move(report));
 

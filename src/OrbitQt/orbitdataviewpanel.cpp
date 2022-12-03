@@ -43,7 +43,9 @@ void OrbitDataViewPanel::Initialize(orbit_data_views::DataView* data_view,
     ui_->refreshButton->hide();
   }
 
-  data_view->SetUiFilterCallback([this](const std::string& filter) { SetFilter(filter.c_str()); });
+  data_view->SetUiFilterCallback([this](std::string_view filter) {
+    SetFilter(QString::fromUtf8(filter.data(), filter.size()));
+  });
 }
 
 void OrbitDataViewPanel::Deinitialize() { ui_->treeView->Deinitialize(); }

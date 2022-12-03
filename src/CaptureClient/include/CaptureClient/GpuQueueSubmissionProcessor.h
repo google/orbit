@@ -43,7 +43,7 @@ class GpuQueueSubmissionProcessor {
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuQueueSubmission(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
       const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-      const std::function<uint64_t(const std::string& str)>&
+      const std::function<uint64_t(std::string_view str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
   // If the matching `GpuQueueSubmission` has already been processed, it converts the
@@ -53,7 +53,7 @@ class GpuQueueSubmissionProcessor {
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuJob(
       const orbit_grpc_protos::GpuJob& gpu_job,
       const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-      const std::function<uint64_t(const std::string& str)>&
+      const std::function<uint64_t(std::string_view str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
   // In case we have recorded the submission containing the "begin" of a certain debug marker, we
@@ -68,7 +68,7 @@ class GpuQueueSubmissionProcessor {
   // This function tries to extract the "group id" from the given label, based on this encoding.
   // It returns `true` on success. In this case, the group id will be written to `out_group_id`.
   // In all other cases `false` will be returned.
-  static bool TryExtractDXVKVulkanGroupIdFromDebugLabel(const std::string& label,
+  static bool TryExtractDXVKVulkanGroupIdFromDebugLabel(std::string_view label,
                                                         uint64_t* out_group_id);
 
  private:
@@ -77,7 +77,7 @@ class GpuQueueSubmissionProcessor {
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,
       const orbit_grpc_protos::GpuJob& matching_gpu_job,
       const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-      const std::function<uint64_t(const std::string& str)>&
+      const std::function<uint64_t(std::string_view str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuCommandBuffers(
@@ -85,7 +85,7 @@ class GpuQueueSubmissionProcessor {
       const orbit_grpc_protos::GpuJob& matching_gpu_job,
       const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
       uint64_t timeline_hash,
-      const std::function<uint64_t(const std::string& str)>&
+      const std::function<uint64_t(std::string_view str)>&
           get_string_hash_and_send_to_listener_if_necessary);
 
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuDebugMarkers(

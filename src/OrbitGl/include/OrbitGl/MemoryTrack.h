@@ -49,8 +49,8 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
 
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kMemoryTrack; }
 
-  void TrySetValueUpperBound(const std::string& pretty_label, double raw_value);
-  void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
+  void TrySetValueUpperBound(std::string pretty_label, double raw_value);
+  void TrySetValueLowerBound(std::string pretty_label, double raw_value);
 
  protected:
   void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

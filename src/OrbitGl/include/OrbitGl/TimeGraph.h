@@ -161,8 +161,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
     return colors[id % colors.size()];
   }
 
-  [[nodiscard]] static Color GetColor(const std::string& str) {
-    return GetColor(std::hash<std::string>{}(str));
+  [[nodiscard]] static Color GetColor(std::string_view str) {
+    return GetColor(std::hash<std::string_view>{}(str));
   }
 
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }

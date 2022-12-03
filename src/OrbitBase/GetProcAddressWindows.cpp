@@ -11,12 +11,14 @@
 
 #include <absl/strings/str_format.h>
 
+#include <string_view>
+
 #include "OrbitBase/GetLastError.h"
 #include "OrbitBase/StringConversion.h"
 
 namespace orbit_base {
 
-ErrorMessageOr<void*> GetProcAddress(const std::string& module, const std::string& function) {
+ErrorMessageOr<void*> GetProcAddress(std::string_view module, std::string_view function) {
   std::wstring w_module = orbit_base::ToStdWString(module);
   HMODULE module_handle = GetModuleHandleW(w_module.c_str());
   if (module_handle == nullptr) {
@@ -25,7 +27,7 @@ ErrorMessageOr<void*> GetProcAddress(const std::string& module, const std::strin
                         module, function, GetLastErrorAsString()));
   }
 
-  void* address = ::GetProcAddress(module_handle, function.c_str());
+  void* address = ::GetProcAddress(module_handle, std::string{function}.c_str());
   if (address == nullptr) {
     return ErrorMessage(absl::StrFormat("Could not find function \"%s\" in module \"%s\": %s",
                                         function, module, GetLastErrorAsString()));

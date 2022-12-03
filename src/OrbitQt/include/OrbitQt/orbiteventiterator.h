@@ -43,7 +43,7 @@ class OrbitEventIterator : public QFrame {
     delete_button_callback_ = callback;
   }
 
-  void SetFunctionName(const std::string& function);
+  void SetFunctionName(std::string_view function);
   void SetMinMaxTime(uint64_t min_time_us, uint64_t max_time_us);
   void SetCurrentTime(uint64_t current_time_us);
 

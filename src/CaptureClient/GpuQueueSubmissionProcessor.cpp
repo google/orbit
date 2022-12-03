@@ -25,7 +25,7 @@ using orbit_grpc_protos::GpuQueueSubmission;
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
     const GpuQueueSubmission& gpu_queue_submission,
     const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-    const std::function<uint64_t(const std::string& str)>&
+    const std::function<uint64_t(std::string_view str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   uint32_t thread_id = gpu_queue_submission.meta_info().tid();
   uint64_t pre_submission_cpu_timestamp =
@@ -66,7 +66,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmission(
 }
 std::vector<orbit_client_protos::TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuJob(
     const GpuJob& gpu_job, const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-    const std::function<uint64_t(const std::string& str)>&
+    const std::function<uint64_t(std::string_view str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   uint32_t thread_id = gpu_job.tid();
   uint64_t amdgpu_cs_ioctl_time_ns = gpu_job.amdgpu_cs_ioctl_time_ns();
@@ -162,7 +162,7 @@ const GpuJob* GpuQueueSubmissionProcessor::FindMatchingGpuJob(
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWithMatchingGpuJob(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
     const absl::flat_hash_map<uint64_t, std::string>& string_intern_pool,
-    const std::function<uint64_t(const std::string& str)>&
+    const std::function<uint64_t(std::string_view str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   std::vector<TimerInfo> result;
   uint64_t timeline_key = matching_gpu_job.timeline_key();
@@ -255,7 +255,7 @@ void GpuQueueSubmissionProcessor::DeleteSavedGpuSubmission(uint32_t thread_id,
 std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
     const std::optional<GpuCommandBuffer>& first_command_buffer, uint64_t timeline_hash,
-    const std::function<uint64_t(const std::string& str)>&
+    const std::function<uint64_t(std::string_view str)>&
         get_string_hash_and_send_to_listener_if_necessary) {
   constexpr const char* kCommandBufferLabel = "command buffer";
   uint64_t command_buffer_text_key =
@@ -454,7 +454,7 @@ std::optional<GpuCommandBuffer> GpuQueueSubmissionProcessor::ExtractFirstCommand
 }
 
 bool GpuQueueSubmissionProcessor::TryExtractDXVKVulkanGroupIdFromDebugLabel(
-    const std::string& label, uint64_t* out_group_id) {
+    std::string_view label, uint64_t* out_group_id) {
   // We have special handling for DXVK instrumentation that extracts the encoded group_id from
   // the label's text. The encoding is:
   // 'DXVK__vkFunctionName#GROUP_ID', where 'GROUP_ID' is the group id.

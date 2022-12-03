@@ -16,15 +16,11 @@
 
 namespace orbit_gl {
 
-namespace {
-
-static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
-    const std::string& cgroup_name, const std::string& process_name) {
+[[nodiscard]] static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
+    std::string_view cgroup_name, std::string_view process_name) {
   return {absl::StrFormat("Process [%s]", process_name),
           absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
 }
-
-}  // namespace
 
 static constexpr uint8_t kTrackValueDecimalDigits = 0;
 static constexpr const char* kTrackValueUnits = "";

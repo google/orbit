@@ -87,22 +87,21 @@ class ProcessData final {
 
   // Returns module base addresses. Note that the same module could be mapped twice in which case
   // this function returns two base addresses. If no module found the function returns empty vector.
-  [[nodiscard]] std::vector<uint64_t> GetModuleBaseAddresses(const std::string& module_path,
-                                                             const std::string& build_id) const;
+  [[nodiscard]] std::vector<uint64_t> GetModuleBaseAddresses(std::string_view module_path,
+                                                             std::string_view build_id) const;
 
   [[nodiscard]] std::map<uint64_t, ModuleInMemory> GetMemoryMapCopy() const;
   [[nodiscard]] std::vector<orbit_symbol_provider::ModuleIdentifier> GetUniqueModuleIdentifiers()
       const;
 
   [[nodiscard]] std::vector<std::string> FindModuleBuildIdsByPath(
-      const std::string& module_path) const;
+      std::string_view module_path) const;
 
   // Returns the list of modules with the given filename. Note this method matches based on the
   // actual filename and not based on the full path.
-  [[nodiscard]] std::vector<ModuleInMemory> FindModulesByFilename(
-      const std::string& filename) const;
+  [[nodiscard]] std::vector<ModuleInMemory> FindModulesByFilename(std::string_view filename) const;
 
-  [[nodiscard]] bool IsModuleLoadedByProcess(const std::string& module_path) const {
+  [[nodiscard]] bool IsModuleLoadedByProcess(std::string_view module_path) const {
     return !FindModuleBuildIdsByPath(module_path).empty();
   }
 

@@ -66,13 +66,13 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   }
 }
 
-void DataView::OnFilter(const std::string& filter) {
-  filter_ = filter;
+void DataView::OnFilter(std::string filter) {
+  filter_ = std::move(filter);
   DoFilter();
   OnSort(sorting_column_, {});
 }
 
-void DataView::SetUiFilterString(const std::string& filter) {
+void DataView::SetUiFilterString(std::string_view filter) {
   if (filter_callback_) {
     filter_callback_(filter);
   }
@@ -138,7 +138,7 @@ std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
   return menu;
 }
 
-void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
+void DataView::OnContextMenu(std::string_view action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     OnLoadSymbolsRequested(item_indices);

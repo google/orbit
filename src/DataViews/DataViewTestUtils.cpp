@@ -48,7 +48,7 @@ void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view 
 
 void CheckCopySelectionIsInvoked(const FlattenContextMenu& context_menu,
                                  const MockAppInterface& app, DataView& view,
-                                 const std::string& expected_clipboard) {
+                                 std::string_view expected_clipboard) {
   const int action_index = GetActionIndexOnMenu(context_menu, kMenuActionCopySelection);
   EXPECT_TRUE(action_index != kInvalidActionIndex);
 
@@ -74,7 +74,7 @@ static void ExpectSameLines(const std::string_view& actual, const std::string_vi
 }
 
 void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
-                               DataView& view, const std::string& expected_contents,
+                               DataView& view, std::string_view expected_contents,
                                std::string_view action_name) {
   const int action_index = GetActionIndexOnMenu(context_menu, action_name);
   EXPECT_TRUE(action_index != kInvalidActionIndex);

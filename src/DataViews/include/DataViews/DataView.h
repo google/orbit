@@ -79,7 +79,7 @@ template <typename Range>
 ErrorMessageOr<void> WriteLineToCsv(const orbit_base::unique_fd& fd, const Range& cells) {
   std::string header_line = absl::StrJoin(
       cells, kFieldSeparator,
-      [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
+      [](std::string* out, std::string_view name) { out->append(FormatValueForCsv(name)); });
   header_line.append(kLineSeparator);
   return orbit_base::WriteFully(fd, header_line);
 }
@@ -134,18 +134,17 @@ class DataView {
   virtual std::string GetToolTip(int row, int column) { return GetValue(row, column); }
 
   // Called from UI layer.
-  void OnFilter(const std::string& filter);
+  void OnFilter(std::string filter);
   // Called internally to set the filter string programmatically in the UI.
-  void SetUiFilterString(const std::string& filter);
+  void SetUiFilterString(std::string_view filter);
   // Filter callback set from UI layer.
-  using FilterCallback = std::function<void(const std::string&)>;
+  using FilterCallback = std::function<void(std::string_view)>;
   void SetUiFilterCallback(FilterCallback callback) { filter_callback_ = std::move(callback); }
   virtual void OnRefresh(const std::vector<int>& /*visible_selected_indices*/,
                          const RefreshMode& /*mode*/) {}
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices);
+  void OnContextMenu(std::string_view action, int menu_index, const std::vector<int>& item_indices);
   virtual void OnSelect(const std::vector<int>& /*indices*/) {}
   // This method returns the intersection of selected indices and visible indices. The returned
   // value contains 0 or 1 index for a DataView with single selection, and contains 0 or
@@ -181,7 +180,7 @@ class DataView {
   void OnVerifyFramePointersRequested(const std::vector<int>& selection);
   void OnDisassemblyRequested(const std::vector<int>& selection);
   void OnSourceCodeRequested(const std::vector<int>& selection);
-  virtual void OnJumpToRequested(const std::string& /*action*/,
+  virtual void OnJumpToRequested(std::string_view /*action*/,
                                  const std::vector<int>& /*selection*/) {}
   virtual void OnLoadPresetRequested(const std::vector<int>& /*selection*/) {}
   virtual void OnDeletePresetRequested(const std::vector<int>& /*selection*/) {}

@@ -165,7 +165,7 @@ void LogStacktrace();
 
 namespace orbit_base_internal {
 
-void LogToFile(const std::string& message);
+void LogToFile(std::string_view message);
 
 #ifdef _WIN32
 // Add one indirection so that we can #include <Windows.h> in the .cpp instead of in this header.

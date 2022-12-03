@@ -11,7 +11,7 @@
 namespace orbit_producer_side_service {
 
 inline ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServerWithUri(
-    const std::string& uri) {
+    std::string_view uri) {
   auto producer_side_server = std::make_unique<ProducerSideServer>();
   ORBIT_LOG("Starting producer-side server at %s", uri);
   if (!producer_side_server->BuildAndStart(uri)) {

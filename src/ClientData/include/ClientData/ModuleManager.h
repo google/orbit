@@ -50,7 +50,7 @@ class ModuleManager final {
   [[nodiscard]] std::vector<const ModuleData*> GetAllModuleData() const;
 
   [[nodiscard]] std::vector<const ModuleData*> GetModulesByFilename(
-      const std::string& filename) const;
+      std::string_view filename) const;
 
  private:
   mutable absl::Mutex mutex_;

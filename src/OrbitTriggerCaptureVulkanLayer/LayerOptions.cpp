@@ -70,13 +70,13 @@ uint32_t LayerOptions::GetCaptureLengthSeconds() {
   return kCaptureLengthSecondsDefault;
 }
 
-std::vector<std::string> LayerOptions::BuildOrbitCaptureServiceArgv(const std::string& game_pid) {
+std::vector<std::string> LayerOptions::BuildOrbitCaptureServiceArgv(std::string_view game_pid) {
   std::vector<std::string> argv;
 
   // Set mandatory arguments: service, pid
   argv.push_back(kOrbitCaptureService);
   argv.push_back("-pid");
-  argv.push_back(game_pid);
+  argv.push_back(std::string{game_pid});
 
   // Set arguments that are always provided but can be set by the user
   // Create a log file for OrbitCaptureService; by default kLogDirectory

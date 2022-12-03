@@ -460,7 +460,7 @@ SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
 
-ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(const std::string& file_path) {
+ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(std::string_view file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   static const std::vector<std::string> kNames{"Thread", "Timestamp (ns)", "Names leaf/foo/main",

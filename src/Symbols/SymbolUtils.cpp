@@ -50,7 +50,7 @@ namespace orbit_symbols {
 
 template <typename FileT>
 ErrorMessageOr<void> VerifySymbolOrObjectFileWithBuildId(
-    const std::filesystem::path& symbols_or_object_path, const std::string& build_id,
+    const std::filesystem::path& symbols_or_object_path, std::string_view build_id,
     const std::function<ErrorMessageOr<std::unique_ptr<FileT>>(const std::filesystem::path&)>&
         create_symbols_or_object_file) {
   auto symbols_or_object_file_or_error = create_symbols_or_object_file(symbols_or_object_path);
@@ -87,7 +87,7 @@ static ErrorMessageOr<void> VerifyFileSize(const std::filesystem::path& symbols_
 }
 
 ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_path,
-                                      const std::string& build_id) {
+                                      std::string_view build_id) {
   return VerifySymbolOrObjectFileWithBuildId<orbit_object_utils::SymbolsFile>(
       symbol_file_path, build_id, [](const std::filesystem::path& symbols_path) {
         return CreateSymbolsFile(symbols_path, orbit_object_utils::ObjectFileInfo{});
@@ -108,7 +108,7 @@ ErrorMessageOr<void> VerifySymbolFile(const std::filesystem::path& symbol_file_p
 }
 
 ErrorMessageOr<void> VerifyObjectFile(const std::filesystem::path& object_file_path,
-                                      const std::string& build_id, uint64_t expected_file_size) {
+                                      std::string_view build_id, uint64_t expected_file_size) {
   OUTCOME_TRY(VerifySymbolOrObjectFileWithBuildId<orbit_object_utils::ObjectFile>(
       object_file_path, build_id, [](const std::filesystem::path& object_path) {
         return orbit_object_utils::CreateObjectFile(object_path);

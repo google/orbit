@@ -28,7 +28,7 @@ class GpuTracepointVisitorTest : public ::testing::Test {
 
 AmdgpuCsIoctlPerfEvent MakeFakeAmdgpuCsIoctlPerfEvent(pid_t pid, pid_t tid, uint64_t timestamp_ns,
                                                       uint32_t context, uint32_t seqno,
-                                                      const std::string& timeline) {
+                                                      std::string timeline) {
   return AmdgpuCsIoctlPerfEvent{
       .timestamp = timestamp_ns,
       .data =
@@ -37,35 +37,34 @@ AmdgpuCsIoctlPerfEvent MakeFakeAmdgpuCsIoctlPerfEvent(pid_t pid, pid_t tid, uint
               .tid = tid,
               .context = context,
               .seqno = seqno,
-              .timeline_string = timeline,
+              .timeline_string = std::move(timeline),
           },
   };
 }
 
 AmdgpuSchedRunJobPerfEvent MakeFakeAmdgpuSchedRunJobPerfEvent(uint64_t timestamp_ns,
                                                               uint32_t context, uint32_t seqno,
-                                                              const std::string& timeline) {
+                                                              std::string timeline) {
   return AmdgpuSchedRunJobPerfEvent{
       .timestamp = timestamp_ns,
       .data =
           {
               .context = context,
               .seqno = seqno,
-              .timeline_string = timeline,
+              .timeline_string = std::move(timeline),
           },
   };
 }
 
 DmaFenceSignaledPerfEvent MakeFakeDmaFenceSignaledPerfEvent(uint64_t timestamp_ns, uint32_t context,
-                                                            uint32_t seqno,
-                                                            const std::string& timeline) {
+                                                            uint32_t seqno, std::string timeline) {
   return DmaFenceSignaledPerfEvent{
       .timestamp = timestamp_ns,
       .data =
           {
               .context = context,
               .seqno = seqno,
-              .timeline_string = timeline,
+              .timeline_string = std::move(timeline),
           },
   };
 }

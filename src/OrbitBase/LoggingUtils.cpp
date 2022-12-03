@@ -9,6 +9,7 @@
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
 
+#include <string_view>
 #include <system_error>
 
 #include "OrbitBase/Logging.h"
@@ -54,12 +55,13 @@ std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
   return files_in_dir;
 }
 
-ErrorMessageOr<absl::Time> ParseLogFileTimestamp(const std::string& log_file_name) {
+ErrorMessageOr<absl::Time> ParseLogFileTimestamp(std::string_view log_file_name) {
   if (log_file_name.size() < kTimestampStartPos + kTimestampStringLength) {
     return ErrorMessage(
         absl::StrFormat("Unable to extract time information from log file: %s", log_file_name));
   }
-  std::string timestamp_string = log_file_name.substr(kTimestampStartPos, kTimestampStringLength);
+  std::string_view timestamp_string =
+      log_file_name.substr(kTimestampStartPos, kTimestampStringLength);
   absl::Time log_file_timestamp;
   std::string parse_time_error;
   if (!absl::ParseTime(kLogFileNameTimeFormat, timestamp_string, absl::UTCTimeZone(),

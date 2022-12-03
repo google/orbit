@@ -255,7 +255,7 @@ ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, const std::vector<Module
 // Given the path of a module in the process, get all loaded instances of that module (usually there
 // will only be one, but a module can be loaded more than once).
 ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(
-    const std::vector<ModuleInfo>& modules, const std::string& path,
+    const std::vector<ModuleInfo>& modules, std::string_view path,
     absl::flat_hash_map<std::string, std::vector<ModuleInfo>>* cache_of_modules_from_path) {
   ORBIT_CHECK(cache_of_modules_from_path != nullptr);
   auto cached_modules_from_path_it = cache_of_modules_from_path->find(path);

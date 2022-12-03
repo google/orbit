@@ -170,10 +170,10 @@ static void ExpectStatsEqual(const ScopeStats& actual, const ScopeStats& other) 
 }
 
 void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
-                             uint64_t function_id, const std::string& name) {
+                             uint64_t function_id, std::string name) {
   orbit_grpc_protos::InstrumentedFunction* function = capture_options.add_instrumented_functions();
   function->set_function_id(function_id);
-  function->set_function_name(name);
+  function->set_function_name(std::move(name));
 }
 
 [[nodiscard]] orbit_grpc_protos::CaptureStarted CreateCaptureStarted() {

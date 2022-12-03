@@ -30,10 +30,10 @@ void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view 
 
 void CheckCopySelectionIsInvoked(const FlattenContextMenu& flatten_context_menu,
                                  const MockAppInterface& app, DataView& view,
-                                 const std::string& expected_clipboard);
+                                 std::string_view expected_clipboard);
 
 void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
-                               DataView& view, const std::string& expected_contents,
+                               DataView& view, std::string_view expected_contents,
                                std::string_view action_name = kMenuActionExportToCsv);
 
 void CheckContextMenuOrder(const FlattenContextMenu& context_menu);

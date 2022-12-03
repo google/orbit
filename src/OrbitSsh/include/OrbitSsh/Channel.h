@@ -24,7 +24,7 @@ class Channel {
   // server. In most cases this third party is a program running on the remote
   // server and therefore third_party_host is 127.0.0.1
   static outcome::result<Channel> OpenTcpIpTunnel(Session* session_ptr,
-                                                  const std::string& third_party_host,
+                                                  std::string_view third_party_host,
                                                   int third_party_port);
   static outcome::result<Channel> OpenChannel(Session* session_ptr);
 
@@ -37,7 +37,7 @@ class Channel {
 
   outcome::result<void> WriteBlocking(std::string_view text);
   outcome::result<int> Write(std::string_view text);
-  outcome::result<void> Exec(const std::string& command);
+  outcome::result<void> Exec(std::string_view command);
   outcome::result<void> SendEOF();
   outcome::result<void> WaitRemoteEOF();
   outcome::result<void> Close();

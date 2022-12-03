@@ -31,10 +31,10 @@ class MockAppInterface : public AppInterface {
   using ScopeId = orbit_client_data::ScopeId;
 
  public:
-  MOCK_METHOD(void, SetClipboard, (const std::string&), (override));
-  MOCK_METHOD(std::string, GetSaveFile, (const std::string& extension), (const, override));
+  MOCK_METHOD(void, SetClipboard, (std::string_view), (override));
+  MOCK_METHOD(std::string, GetSaveFile, (std::string_view extension), (const, override));
 
-  MOCK_METHOD(void, SendErrorToUi, (const std::string& title, const std::string& text), (override));
+  MOCK_METHOD(void, SendErrorToUi, (std::string_view title, std::string_view text), (override));
 
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, LoadPreset,
               (const orbit_preset_file::PresetFile&), (override));
@@ -105,7 +105,7 @@ class MockAppInterface : public AppInterface {
               GetConfidenceIntervalEstimator, (), (const, override));
 
   MOCK_METHOD(void, ShowHistogram,
-              (const std::vector<uint64_t>* data, const std::string& function_name,
+              (const std::vector<uint64_t>* data, std::string function_name,
                std::optional<ScopeId> scope_id),
               (override));
 

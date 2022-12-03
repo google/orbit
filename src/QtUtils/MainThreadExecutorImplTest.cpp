@@ -255,11 +255,11 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessTwice) {
 
   bool second_called = false;
   auto second_chained_future = executor->ScheduleAfterIfSuccess(
-      first_chained_future, [&first_called, &second_called](const std::string& number) {
+      first_chained_future, [&first_called, &second_called](std::string_view number) {
         EXPECT_TRUE(first_called);
         EXPECT_EQ(number, "42");
         second_called = true;
-        return std::string{"The number is "} + number;
+        return std::string{"The number is "}.append(number);
       });
   EXPECT_FALSE(second_called);
   EXPECT_FALSE(second_chained_future.IsFinished());

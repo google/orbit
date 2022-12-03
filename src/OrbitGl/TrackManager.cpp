@@ -178,7 +178,7 @@ void TrackManager::SortTracks() {
   visible_track_list_needs_update_ = true;
 }
 
-void TrackManager::SetFilter(const std::string& filter) {
+void TrackManager::SetFilter(std::string_view filter) {
   filter_ = absl::AsciiStrToLower(filter);
   visible_track_list_needs_update_ = true;
 }
@@ -489,7 +489,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   return track.get();
 }
 
-VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
+VariableTrack* TrackManager::GetOrCreateVariableTrack(std::string name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<VariableTrack> track = variable_tracks_[name];
   if (track == nullptr) {
@@ -501,7 +501,7 @@ VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
   return track.get();
 }
 
-AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
+AsyncTrack* TrackManager::GetOrCreateAsyncTrack(std::string name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<AsyncTrack> track = async_tracks_[name];
   if (track == nullptr) {
@@ -511,7 +511,6 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
     async_tracks_[name] = track;
     AddTrack(track);
   }
-
   return track.get();
 }
 
@@ -549,24 +548,24 @@ SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack() {
 }
 
 CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTrack(
-    const std::string& cgroup_name) {
+    std::string_view cgroup_name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (cgroup_and_process_memory_track_ == nullptr) {
     cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
-        track_container_, timeline_info_, viewport_, layout_, cgroup_name, module_manager_,
-        capture_data_);
+        track_container_, timeline_info_, viewport_, layout_, std::string{cgroup_name},
+        module_manager_, capture_data_);
     AddTrack(cgroup_and_process_memory_track_);
   }
 
   return GetCGroupAndProcessMemoryTrack();
 }
 
-PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
+PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(std::string_view cgroup_name,
                                                            uint64_t memory_sampling_period_ms) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (page_faults_track_ == nullptr) {
     page_faults_track_ = std::make_shared<PageFaultsTrack>(
-        track_container_, timeline_info_, viewport_, layout_, cgroup_name,
+        track_container_, timeline_info_, viewport_, layout_, std::string{cgroup_name},
         memory_sampling_period_ms, module_manager_, capture_data_);
     AddTrack(page_faults_track_);
   }

@@ -34,7 +34,7 @@ class GpuTracepointVisitor : public PerfEventVisitor {
   // Keys are context, seqno, and timeline.
   using Key = std::tuple<uint32_t, uint32_t, std::string>;
 
-  int ComputeDepthForGpuJob(const std::string& timeline, uint64_t start_timestamp,
+  int ComputeDepthForGpuJob(std::string_view timeline, uint64_t start_timestamp,
                             uint64_t end_timestamp);
 
   void CreateGpuJobAndSendToListenerIfComplete(const Key& key);

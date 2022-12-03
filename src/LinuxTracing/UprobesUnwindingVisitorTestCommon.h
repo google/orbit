@@ -25,7 +25,7 @@ class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
   MOCK_METHOD(std::shared_ptr<unwindstack::MapInfo>, Find, (uint64_t), (override));
   MOCK_METHOD(unwindstack::Maps*, Get, (), (override));
-  MOCK_METHOD(void, AddAndSort, (uint64_t, uint64_t, uint64_t, uint64_t, const std::string&),
+  MOCK_METHOD(void, AddAndSort, (uint64_t, uint64_t, uint64_t, uint64_t, std::string_view),
               (override));
 };
 

@@ -30,12 +30,12 @@ static constexpr const char* kNotAnAnswerString = "Some odd number, not the answ
 static constexpr uint64_t kAnswerKey = 42;
 static constexpr uint64_t kNotAnAnswerKey = 43;
 
-static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent(
-    uint64_t key, const std::string& str) {
+static orbit_grpc_protos::ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key,
+                                                                              std::string str) {
   orbit_grpc_protos::ClientCaptureEvent event;
   orbit_grpc_protos::InternedString* interned_string = event.mutable_interned_string();
   interned_string->set_key(key);
-  interned_string->set_intern(str);
+  interned_string->set_intern(std::move(str));
   return event;
 }
 
@@ -54,7 +54,7 @@ TEST(CaptureFileOutputStream, Smoke) {
     ASSERT_FALSE(close_result.has_error()) << close_result.error().message();
   };
 
-  auto check_output_stream_content = [&](const std::string& stream_content) {
+  auto check_output_stream_content = [&](std::string_view stream_content) {
     ASSERT_GT(stream_content.size(), 24);
     ASSERT_EQ(stream_content.substr(0, 4), kFileSignature);
     uint64_t capture_section_offset = 0;

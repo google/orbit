@@ -118,11 +118,11 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] absl::Duration GetCaptureTime() const;
   [[nodiscard]] absl::Duration GetCaptureTimeAt(uint64_t timestamp_ns) const;
 
-  [[nodiscard]] std::string GetSaveFile(const std::string& extension) const override;
-  void SetClipboard(const std::string& text) override;
+  [[nodiscard]] std::string GetSaveFile(std::string_view extension) const override;
+  void SetClipboard(std::string_view text) override;
 
-  ErrorMessageOr<void> OnSavePreset(const std::string& file_name);
-  ErrorMessageOr<void> OnLoadPreset(const std::string& file_name);
+  ErrorMessageOr<void> OnSavePreset(std::string_view file_name);
+  ErrorMessageOr<void> OnLoadPreset(std::string_view file_name);
   orbit_base::Future<ErrorMessageOr<CaptureOutcome>> LoadCaptureFromFile(
       const std::filesystem::path& file_path);
 
@@ -272,15 +272,15 @@ class OrbitApp final : public DataViewFactory,
   void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
     select_live_tab_callback_ = std::move(callback);
   }
-  using ErrorMessageCallback = std::function<void(const std::string&, const std::string&)>;
+  using ErrorMessageCallback = std::function<void(std::string_view, std::string_view)>;
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
     error_message_callback_ = std::move(callback);
   }
-  using WarningMessageCallback = std::function<void(const std::string&, const std::string&)>;
+  using WarningMessageCallback = std::function<void(std::string_view, std::string_view)>;
   void SetWarningMessageCallback(WarningMessageCallback callback) {
     warning_message_callback_ = std::move(callback);
   }
-  using InfoMessageCallback = std::function<void(const std::string&, const std::string&)>;
+  using InfoMessageCallback = std::function<void(std::string_view, std::string_view)>;
   void SetInfoMessageCallback(InfoMessageCallback callback) {
     info_message_callback_ = std::move(callback);
   }
@@ -314,24 +314,24 @@ class OrbitApp final : public DataViewFactory,
     timer_selected_callback_ = std::move(callback);
   }
 
-  using SaveFileCallback = std::function<std::string(const std::string& extension)>;
+  using SaveFileCallback = std::function<std::string(std::string_view extension)>;
   void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(
       orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll);
   void OnModuleListUpdated() override {
     FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   }
-  using ClipboardCallback = std::function<void(const std::string&)>;
+  using ClipboardCallback = std::function<void(std::string_view)>;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
 
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
-  void SendTooltipToUi(const std::string& tooltip);
-  void SendInfoToUi(const std::string& title, const std::string& text);
-  void SendWarningToUi(const std::string& title, const std::string& text);
-  void SendErrorToUi(const std::string& title, const std::string& text) override;
+  void SendTooltipToUi(std::string_view tooltip);
+  void SendInfoToUi(std::string_view title, std::string_view text);
+  void SendWarningToUi(std::string_view title, std::string_view text);
+  void SendErrorToUi(std::string_view title, std::string_view text) override;
 
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
@@ -356,7 +356,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
   void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) override;
-  void FilterTracks(const std::string& filter);
+  void FilterTracks(std::string_view filter);
 
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
@@ -539,7 +539,7 @@ class OrbitApp final : public DataViewFactory,
       const orbit_client_data::ModuleData* module) const override;
   void RequestSymbolDownloadStop(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
-  void DisableDownloadForModule(const std::string& module_file_path);
+  void DisableDownloadForModule(std::string_view module_file_path);
 
   // Triggers symbol loading for all modules in ModuleManager that are not loaded yet. This is done
   // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
@@ -580,7 +580,7 @@ class OrbitApp final : public DataViewFactory,
       const std::filesystem::path& filename);
   ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
       const orbit_preset_file::PresetFile& preset_file);
-  ErrorMessageOr<void> SavePreset(const std::string& filename);
+  ErrorMessageOr<void> SavePreset(std::string_view filename);
 
   void AddFrameTrack(uint64_t instrumented_function_id);
   void RemoveFrameTrack(uint64_t instrumented_function_id);
@@ -598,7 +598,7 @@ class OrbitApp final : public DataViewFactory,
 
   void RequestUpdatePrimitives();
 
-  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+  void ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                      std::optional<ScopeId> scope_id) override;
 
   // Sets CaptureData's selection_callstack_data and selection_post_processed_sampling_data.

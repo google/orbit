@@ -25,7 +25,7 @@ class MajorPageFaultsTrack final : public BasicPageFaultsTrack {
  public:
   explicit MajorPageFaultsTrack(Track* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
                                 orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
+                                std::string cgroup_name, uint64_t memory_sampling_period_ms,
                                 const orbit_client_data::ModuleManager* module_manager,
                                 const orbit_client_data::CaptureData* capture_data);
 

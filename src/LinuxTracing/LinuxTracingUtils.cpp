@@ -32,6 +32,7 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "absl/strings/match.h"
 
 namespace fs = std::filesystem;
 
@@ -104,29 +105,26 @@ static ErrorMessageOr<std::string> ReadCgroupContent(pid_t pid) {
 }
 
 // Extract the cpuset entry from the content of /proc/<pid>/cgroup.
-std::optional<std::string> ExtractCpusetFromCgroup(const std::string& cgroup_content) {
-  std::istringstream cgroup_content_ss{cgroup_content};
-  std::string cgroup_line;
-  while (std::getline(cgroup_content_ss, cgroup_line)) {
-    if (cgroup_line.find("cpuset:") != std::string::npos ||
-        cgroup_line.find("cpuset,") != std::string::npos) {
+std::optional<std::string> ExtractCpusetFromCgroup(std::string_view cgroup_content) {
+  for (std::string_view cgroup_line : absl::StrSplit(cgroup_content, '\n')) {
+    if (absl::StrContains(cgroup_line, "cpuset:") || absl::StrContains(cgroup_line, "cpuset,")) {
       // For example "8:cpuset:/" or "8:cpuset:/game", but potentially also
       // "5:cpuacct,cpu,cpuset:/daemons".
-      return cgroup_line.substr(cgroup_line.find_last_of(':') + 1);
+      return std::string{cgroup_line.substr(cgroup_line.find_last_of(':') + 1)};
     }
   }
 
-  return std::optional<std::string>{};
+  return std::nullopt;
 }
 
 // Read /sys/fs/cgroup/cpuset/<cgroup>/cpuset.cpus.
-static ErrorMessageOr<std::string> ReadCpusetCpusContent(const std::string& cgroup_cpuset) {
+static ErrorMessageOr<std::string> ReadCpusetCpusContent(std::string_view cgroup_cpuset) {
   std::string cpuset_cpus_filename = absl::StrFormat("/sys/fs/cgroup/cpuset%s/cpuset.cpus",
                                                      cgroup_cpuset == "/" ? "" : cgroup_cpuset);
   return orbit_base::ReadFileToString(cpuset_cpus_filename);
 }
 
-std::vector<int> ParseCpusetCpus(const std::string& cpuset_cpus_content) {
+std::vector<int> ParseCpusetCpus(std::string_view cpuset_cpus_content) {
   std::vector<int> cpuset_cpus{};
   // Example of format: "0-2,7,12-14".
   for (const auto& range : absl::StrSplit(cpuset_cpus_content, ',', absl::SkipEmpty())) {

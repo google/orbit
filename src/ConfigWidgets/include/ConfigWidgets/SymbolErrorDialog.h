@@ -27,7 +27,7 @@ class SymbolErrorDialog : public QDialog {
   enum class Result { kCancel, kTryAgain, kAddSymbolLocation };
 
   explicit SymbolErrorDialog(const orbit_client_data::ModuleData* module,
-                             const std::string& detailed_error, QWidget* parent = nullptr);
+                             std::string_view detailed_error, QWidget* parent = nullptr);
   ~SymbolErrorDialog() override;
   [[nodiscard]] Result Exec();
 

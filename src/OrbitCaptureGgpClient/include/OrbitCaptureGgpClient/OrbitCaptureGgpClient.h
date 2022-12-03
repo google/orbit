@@ -7,11 +7,12 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class CaptureClientGgpClient {
  public:
-  explicit CaptureClientGgpClient(const std::string& grpc_server_address);
+  explicit CaptureClientGgpClient(std::string_view grpc_server_address);
   ~CaptureClientGgpClient();
   CaptureClientGgpClient(CaptureClientGgpClient&&);
   CaptureClientGgpClient& operator=(CaptureClientGgpClient&&);

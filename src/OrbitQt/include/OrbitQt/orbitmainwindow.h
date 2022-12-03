@@ -91,9 +91,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
   void OnNewSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view);
 
-  std::string OnGetSaveFileName(const std::string& extension);
-  void OnSetClipboard(const std::string& text);
-  void OpenCapture(const std::string& filepath);
+  std::string OnGetSaveFileName(std::string_view extension);
+  void OnSetClipboard(std::string_view text);
+  void OpenCapture(std::string_view filepath);
   void OnCaptureCleared();
 
   Ui::OrbitMainWindow* GetUi() { return ui; }
@@ -109,7 +109,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
   void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
-                       const std::string& assembly,
+                       std::string_view assembly,
                        orbit_code_report::DisassemblyReport report) override;
 
   void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
@@ -120,7 +120,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) override;
 
-  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
+  void ShowHistogram(const std::vector<uint64_t>* data, std::string function_name,
                      std::optional<ScopeId> function_id) override;
 
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(

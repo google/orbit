@@ -90,10 +90,10 @@ void ProcessListWidget::HandleSelectionChanged(const QModelIndex& index) {
   emit ProcessSelected(GetProcessFromIndex(index));
 }
 
-bool ProcessListWidget::TrySelectProcessByName(const std::string& process_name) {
+bool ProcessListWidget::TrySelectProcessByName(std::string_view process_name) {
   QModelIndexList matches = proxy_model_.match(
       proxy_model_.index(0, static_cast<int>(ProcessItemModel::Column::kName)), Qt::DisplayRole,
-      QVariant::fromValue(QString::fromStdString(process_name)));
+      QVariant::fromValue(QString::fromUtf8(process_name.data(), process_name.size())));
 
   if (matches.isEmpty()) return false;
 

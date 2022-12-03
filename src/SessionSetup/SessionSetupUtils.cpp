@@ -29,8 +29,8 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
 
 std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list,
-    const std::string& process_name_or_path) {
-  std::string shortened_process_name = process_name_or_path.substr(0, kMaxProcessNameLength);
+    std::string_view process_name_or_path) {
+  std::string_view shortened_process_name = process_name_or_path.substr(0, kMaxProcessNameLength);
 
   std::sort(
       process_list.begin(), process_list.end(),

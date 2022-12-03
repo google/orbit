@@ -56,7 +56,7 @@ absl::flat_hash_map<AbsoluteAddress, FunctionSymbol> MizarData::AllAddressToFunc
   return result;
 }
 
-[[nodiscard]] static std::string GetFilenameWithoutExtension(const std::string& path) {
+[[nodiscard]] static std::string GetFilenameWithoutExtension(std::string_view path) {
   return std::filesystem::path(path)
       .filename()
       .replace_extension()  // remove extension, so `app.exe` on Windows would match `app` on

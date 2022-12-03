@@ -21,9 +21,9 @@ QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line
   QStringList command_line_flags;
   absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),
                                                       positional_args.end());
-  for (const std::string& command_line_arg : command_line_args) {
+  for (std::string_view command_line_arg : command_line_args) {
     if (!positional_arg_set.contains(command_line_arg)) {
-      command_line_flags << QString::fromStdString(command_line_arg);
+      command_line_flags << QString::fromUtf8(command_line_arg.data(), command_line_arg.size());
     }
   }
   return command_line_flags;

@@ -36,10 +36,10 @@ outcome::result<Channel> Channel::OpenChannel(Session* session) {
 }
 
 outcome::result<Channel> Channel::OpenTcpIpTunnel(Session* session,
-                                                  const std::string& third_party_host,
+                                                  std::string_view third_party_host,
                                                   int third_party_port) {
   LIBSSH2_CHANNEL* raw_channel_ptr = libssh2_channel_direct_tcpip(
-      session->GetRawSessionPtr(), third_party_host.c_str(), third_party_port);
+      session->GetRawSessionPtr(), std::string{third_party_host}.c_str(), third_party_port);
   if (raw_channel_ptr != nullptr) {
     return outcome::success(Channel{raw_channel_ptr});
   }
@@ -51,8 +51,8 @@ outcome::result<Channel> Channel::OpenTcpIpTunnel(Session* session,
   return static_cast<Error>(last_errno);
 }
 
-outcome::result<void> Channel::Exec(const std::string& command) {
-  const int rc = libssh2_channel_exec(raw_channel_ptr_.get(), command.c_str());
+outcome::result<void> Channel::Exec(std::string_view command) {
+  const int rc = libssh2_channel_exec(raw_channel_ptr_.get(), std::string{command}.c_str());
   if (rc == 0) {
     return outcome::success();
   }

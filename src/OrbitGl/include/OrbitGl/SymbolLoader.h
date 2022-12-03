@@ -71,12 +71,12 @@ class SymbolLoader {
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const orbit_symbol_provider::ModuleIdentifier& module_id);
 
-  void DisableDownloadForModule(const std::string& module_path);
+  void DisableDownloadForModule(std::string_view module_path);
   void EnableDownloadForModules(const absl::flat_hash_set<std::string>& module_paths);
 
-  void RequestSymbolDownloadStop(const std::string& module_path);
+  void RequestSymbolDownloadStop(std::string_view module_path);
 
-  [[nodiscard]] bool IsModuleDownloading(const std::string& module_path) const;
+  [[nodiscard]] bool IsModuleDownloading(std::string_view module_path) const;
   [[nodiscard]] orbit_data_views::SymbolLoadingState GetSymbolLoadingStateForModule(
       const orbit_client_data::ModuleData* module) const;
   [[nodiscard]] bool IsSymbolLoadingInProgressForModule(
@@ -103,7 +103,7 @@ class SymbolLoader {
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleFromRemote(const orbit_symbol_provider::ModuleIdentifier& module_id);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromInstance(const std::string& module_file_path, orbit_base::StopToken stop_token);
+  RetrieveModuleFromInstance(std::string_view module_file_path, orbit_base::StopToken stop_token);
 
   // RetrieveModuleItselfAndLoadFallbackSymbols retrieves the module's binary by calling
   // `RetrieveModuleItself` and afterwards loads the fallback symbols by calling

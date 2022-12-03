@@ -1116,24 +1116,24 @@ absl::Duration OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
   return absl::Nanoseconds(timestamp_ns - capture_min_timestamp_ns);
 }
 
-std::string OrbitApp::GetSaveFile(const std::string& extension) const {
+std::string OrbitApp::GetSaveFile(std::string_view extension) const {
   ORBIT_CHECK(save_file_callback_);
   return save_file_callback_(extension);
 }
 
-void OrbitApp::SetClipboard(const std::string& text) {
+void OrbitApp::SetClipboard(std::string_view text) {
   ORBIT_CHECK(clipboard_callback_);
   clipboard_callback_(text);
 }
 
-ErrorMessageOr<void> OrbitApp::OnSavePreset(const std::string& filename) {
+ErrorMessageOr<void> OrbitApp::OnSavePreset(std::string_view filename) {
   OUTCOME_TRY(SavePreset(filename));
   ListPresets();
   FireRefreshCallbacks(DataViewType::kPresets);
   return outcome::success();
 }
 
-ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
+ErrorMessageOr<void> OrbitApp::SavePreset(std::string_view filename) {
   PresetInfo preset;
 
   for (const auto& function : data_manager_->GetSelectedFunctions()) {
@@ -1145,7 +1145,7 @@ ErrorMessageOr<void> OrbitApp::SavePreset(const std::string& filename) {
         function.pretty_name());
   }
 
-  std::string filename_with_ext = filename;
+  auto filename_with_ext = std::string{filename};
   if (!absl::EndsWith(filename, ".opr")) {
     filename_with_ext += ".opr";
   }
@@ -1163,7 +1163,7 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
   return orbit_preset_file::ReadPresetFromFile(file_path);
 }
 
-ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
+ErrorMessageOr<void> OrbitApp::OnLoadPreset(std::string_view filename) {
   OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
   (void)LoadPreset(preset_file)
       .ThenIfSuccess(main_thread_executor_, [this, preset_file_path = preset_file.file_path()]() {
@@ -1242,7 +1242,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
 }
 
 static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
-    CaptureListener* listener, const std::string& process_name,
+    CaptureListener* listener, std::string_view process_name,
     absl::flat_hash_set<uint64_t> frame_track_function_ids,
     const std::function<void(const ErrorMessage&)>& error_handler) {
   std::filesystem::path file_path = orbit_paths::CreateOrGetCaptureDirUnsafe() /
@@ -1287,7 +1287,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
 }
 
 static void FindAndAddFunctionToStopUnwindingAt(
-    const std::string& function_name, const std::string& module_name,
+    std::string_view function_name, std::string_view module_name,
     const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
     std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
   std::vector<orbit_client_data::ModuleInMemory> modules =
@@ -1531,25 +1531,25 @@ void OrbitApp::SendDisassemblyToUi(const orbit_client_data::FunctionInfo& functi
   });
 }
 
-void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
+void OrbitApp::SendTooltipToUi(std::string_view tooltip) {
   main_thread_executor_->Schedule([this, tooltip] { main_window_->ShowTooltip(tooltip); });
 }
 
-void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
+void OrbitApp::SendInfoToUi(std::string_view title, std::string_view text) {
   main_thread_executor_->Schedule([this, title, text] {
     ORBIT_CHECK(info_message_callback_);
     info_message_callback_(title, text);
   });
 }
 
-void OrbitApp::SendWarningToUi(const std::string& title, const std::string& text) {
+void OrbitApp::SendWarningToUi(std::string_view title, std::string_view text) {
   main_thread_executor_->Schedule([this, title, text] {
     ORBIT_CHECK(warning_message_callback_);
     warning_message_callback_(title, text);
   });
 }
 
-void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) {
+void OrbitApp::SendErrorToUi(std::string_view title, std::string_view text) {
   main_thread_executor_->Schedule([this, title, text] {
     ORBIT_CHECK(error_message_callback_);
     error_message_callback_(title, text);
@@ -1821,7 +1821,7 @@ Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file)
         size_t tried_to_load_amount = module_paths_not_found.size();
         module_paths_not_found.erase(
             std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
-                           [](const std::string& path) { return path.empty(); }),
+                           [](std::string_view path) { return path.empty(); }),
             module_paths_not_found.end());
 
         if (tried_to_load_amount == module_paths_not_found.size()) {
@@ -2437,7 +2437,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   return selection_callstack_data_view_.get();
 }
 
-void OrbitApp::FilterTracks(const std::string& filter) {
+void OrbitApp::FilterTracks(std::string_view filter) {
   GetMutableTimeGraph()->GetTrackContainer()->SetThreadFilter(filter);
 }
 
@@ -2755,9 +2755,9 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
   return confidence_interval_estimator_;
 }
 
-void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                              std::optional<ScopeId> scope_id) {
-  main_window_->ShowHistogram(data, scope_name, scope_id);
+  main_window_->ShowHistogram(data, std::move(scope_name), scope_id);
 }
 
 orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> OrbitApp::DownloadFileFromInstance(
@@ -2813,7 +2813,7 @@ void OrbitApp::RequestSymbolDownloadStop(
   RequestSymbolDownloadStop(modules, true);
 }
 
-void OrbitApp::DisableDownloadForModule(const std::string& module_file_path) {
+void OrbitApp::DisableDownloadForModule(std::string_view module_file_path) {
   symbol_loader_->DisableDownloadForModule(module_file_path);
 }
 

@@ -57,7 +57,7 @@ class LiveFunctionsDataView : public DataView {
   std::optional<int> GetRowFromScopeId(ScopeId scope_id);
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
-  void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;
+  void OnJumpToRequested(std::string_view action, const std::vector<int>& selection) override;
   // Export all events (including the function name, thread name and id, start timestamp, end
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
@@ -111,7 +111,7 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   [[nodiscard]] ErrorMessageOr<void> WriteEventsToCsv(const std::vector<int>& selection,
-                                                      const std::string& file_path) const;
+                                                      std::string_view file_path) const;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 

@@ -48,7 +48,7 @@ class ProcessListWidget : public QWidget {
 
  private:
   void HandleSelectionChanged(const QModelIndex& index);
-  bool TrySelectProcessByName(const std::string& process_name);
+  bool TrySelectProcessByName(std::string_view process_name);
   void TryConfirm();
 
   std::unique_ptr<Ui::ProcessListWidget> ui_;

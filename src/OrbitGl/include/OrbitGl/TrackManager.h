@@ -57,7 +57,7 @@ class TrackManager {
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
   void RequestTrackSorting() { sorting_invalidated_ = true; };
-  void SetFilter(const std::string& filter);
+  void SetFilter(std::string_view filter);
 
   void UpdateTrackListForRendering();
 
@@ -71,8 +71,8 @@ class TrackManager {
   ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
   [[nodiscard]] std::optional<ThreadTrack*> GetThreadTrack(uint32_t tid) const;
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
-  VariableTrack* GetOrCreateVariableTrack(const std::string& name);
-  AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
+  VariableTrack* GetOrCreateVariableTrack(std::string name);
+  AsyncTrack* GetOrCreateAsyncTrack(std::string name);
   FrameTrack* GetOrCreateFrameTrack(uint64_t function_id);
   [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const {
     return system_memory_track_.get();
@@ -82,9 +82,9 @@ class TrackManager {
     return cgroup_and_process_memory_track_.get();
   }
   [[nodiscard]] CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
-      const std::string& cgroup_name);
+      std::string_view cgroup_name);
   PageFaultsTrack* GetPageFaultsTrack() const { return page_faults_track_.get(); }
-  PageFaultsTrack* CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
+  PageFaultsTrack* CreateAndGetPageFaultsTrack(std::string_view cgroup_name,
                                                uint64_t memory_sampling_period_ms);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }

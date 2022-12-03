@@ -80,7 +80,7 @@ template <typename Func>
       [loop]() { loop->error(make_error_code(Error::kUserCanceledServiceDeployment)); })};
 }
 
-void PrintAsOrbitService(const std::string& buffer) {
+void PrintAsOrbitService(std::string_view buffer) {
   std::vector<std::string_view> lines = absl::StrSplit(buffer, '\n');
   for (const auto& line : lines) {
     if (!line.empty()) {
@@ -262,7 +262,7 @@ ServiceDeployManager::StartSftpChannel() {
 }
 
 ErrorMessageOr<void> ServiceDeployManager::CopyFileToRemote(
-    const std::string& source, const std::string& dest,
+    std::string_view source, std::string_view dest,
     orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   orbit_ssh_qt::SftpCopyToRemoteOperation operation{&session_.value(), sftp_channel_.get()};

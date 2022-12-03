@@ -37,8 +37,8 @@ void OrbitEventIterator::on_DeleteButton_clicked() {
   }
 }
 
-void OrbitEventIterator::SetFunctionName(const std::string& function_name) {
-  ui->Label->setTextWithElision(QString::fromStdString(function_name));
+void OrbitEventIterator::SetFunctionName(std::string_view function_name) {
+  ui->Label->setTextWithElision(QString::fromUtf8(function_name.data(), function_name.size()));
 }
 
 void OrbitEventIterator::SetMinMaxTime(uint64_t min_time, uint64_t max_time) {

@@ -110,9 +110,9 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
 
 [[nodiscard]] static CallTreeFunction* GetOrCreateFunctionNode(CallTreeNode* current_node,
                                                                uint64_t frame,
-                                                               const std::string& function_name,
-                                                               const std::string& module_path,
-                                                               const std::string& module_build_id) {
+                                                               std::string_view function_name,
+                                                               std::string_view module_path,
+                                                               std::string_view module_build_id) {
   CallTreeFunction* function_node = current_node->GetFunctionOrNull(frame);
   if (function_node == nullptr) {
     std::string formatted_function_name;
@@ -121,8 +121,9 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
     } else {
       formatted_function_name = absl::StrFormat("[unknown@%#llx]", frame);
     }
-    function_node = current_node->AddAndGetFunction(frame, std::move(formatted_function_name),
-                                                    module_path, module_build_id);
+    function_node =
+        current_node->AddAndGetFunction(frame, std::move(formatted_function_name),
+                                        std::string{module_path}, std::string{module_build_id});
   }
   return function_node;
 }
@@ -190,7 +191,7 @@ static void AddUnwindErrorToTopDownThread(
 }
 
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
-    CallTreeNode* current_node, uint32_t tid, const std::string& process_name,
+    CallTreeNode* current_node, uint32_t tid, std::string_view process_name,
     const absl::flat_hash_map<uint32_t, std::string>& thread_names) {
   CallTreeThread* thread_node = current_node->GetThreadOrNull(tid);
   if (thread_node == nullptr) {

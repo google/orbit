@@ -28,14 +28,14 @@ class AnnotationTrack {
     return value_lower_bound_;
   }
 
-  void SetWarningThreshold(const std::string& pretty_label, double raw_value) {
-    warning_threshold_ = std::make_pair(pretty_label, raw_value);
+  void SetWarningThreshold(std::string pretty_label, double raw_value) {
+    warning_threshold_ = std::make_pair(std::move(pretty_label), raw_value);
   }
-  virtual void SetValueUpperBound(const std::string& pretty_label, double raw_value) {
-    value_upper_bound_ = std::make_pair(pretty_label, raw_value);
+  virtual void SetValueUpperBound(std::string pretty_label, double raw_value) {
+    value_upper_bound_ = std::make_pair(std::move(pretty_label), raw_value);
   }
-  virtual void SetValueLowerBound(const std::string& pretty_label, double raw_value) {
-    value_lower_bound_ = std::make_pair(pretty_label, raw_value);
+  virtual void SetValueLowerBound(std::string pretty_label, double raw_value) {
+    value_lower_bound_ = std::make_pair(std::move(pretty_label), raw_value);
   }
 
   void DrawAnnotation(orbit_gl::PrimitiveAssembler& primitive_assembler,

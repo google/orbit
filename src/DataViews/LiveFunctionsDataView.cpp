@@ -372,7 +372,7 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
   }
 }
 
-void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
+void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
                                               const std::vector<int>& selection) {
   ORBIT_CHECK(selection.size() == 1);
   auto scope_id = GetScopeId(selection[0]);
@@ -388,7 +388,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 }
 
 [[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCsv(
-    const std::vector<int>& selection, const std::string& file_path) const {
+    const std::vector<int>& selection, std::string_view file_path) const {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
@@ -453,7 +453,7 @@ void LiveFunctionsDataView::DoFilter() {
 
     bool match = true;
 
-    for (const std::string& filter_token : tokens) {
+    for (std::string_view filter_token : tokens) {
       if (name.find(filter_token) == std::string::npos) {
         match = false;
         break;

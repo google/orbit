@@ -184,7 +184,7 @@ SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
           CreateStructuredDebugDirectorySymbolProviders(structured_debug_directories)) {}
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
-    const fs::path& module_path, const std::string& build_id,
+    const fs::path& module_path, std::string_view build_id,
     const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) const {
   ORBIT_SCOPE_FUNCTION;
   if (build_id.empty()) {
@@ -196,7 +196,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   // structured debug directories is only supported for elf files
   if (object_file_type == ModuleInfo::kElfFile) {
     for (const auto& provider : structured_debug_directory_providers_) {
-      const ModuleIdentifier module_id{module_path.string(), build_id};
+      const ModuleIdentifier module_id{module_path.string(), std::string{build_id}};
       const orbit_base::StopSource stop_source;
       orbit_base::Future<SymbolLoadingOutcome> future =
           provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
@@ -256,7 +256,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 }
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
-                                                          const std::string& build_id) const {
+                                                          std::string_view build_id) const {
   return FindSymbolsInCacheImpl(module_path, "symbols",
                                 [&build_id](const std::filesystem::path& cache_file_path) {
                                   return VerifySymbolFile(cache_file_path, build_id);
@@ -272,7 +272,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module
 }
 
 ErrorMessageOr<std::filesystem::path> SymbolHelper::FindObjectInCache(
-    const std::filesystem::path& module_path, const std::string& build_id,
+    const std::filesystem::path& module_path, std::string_view build_id,
     uint64_t expected_file_size) const {
   return FindSymbolsInCacheImpl(
       module_path, "object file",

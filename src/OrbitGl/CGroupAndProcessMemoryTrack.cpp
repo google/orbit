@@ -18,30 +18,27 @@
 
 namespace orbit_gl {
 
-namespace {
-const std::string kTrackValueLabelUnit = "MB";
+constexpr std::string_view kTrackValueLabelUnit = "MB";
 
-static std::array<std::string, kCGroupAndProcessMemoryTrackDimension> CreateSeriesName(
-    const std::string& cgroup_name, const std::string& process_name) {
+[[nodiscard]] static std::array<std::string, kCGroupAndProcessMemoryTrackDimension>
+CreateSeriesName(std::string_view cgroup_name, std::string_view process_name) {
   return {absl::StrFormat("Process [%s] RssAnon", process_name), "Other Processes RssAnon",
           absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
           absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
 }
 
-}  // namespace
-
 static constexpr uint8_t kTrackValueDecimalDigits = 2;
 
 CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
-    orbit_gl::Viewport* viewport, TimeGraphLayout* layout, const std::string& cgroup_name,
+    orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string cgroup_name,
     const orbit_client_data::ModuleManager* module_manager,
     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
           parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueLabelUnit, module_manager, capture_data),
-      cgroup_name_(cgroup_name) {
+          std::string{kTrackValueLabelUnit}, module_manager, capture_data),
+      cgroup_name_(std::move(cgroup_name)) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.

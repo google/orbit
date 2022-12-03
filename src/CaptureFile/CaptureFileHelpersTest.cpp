@@ -35,11 +35,11 @@ static constexpr uint64_t kNotAnAnswerKey = 43;
 
 using orbit_grpc_protos::ClientCaptureEvent;
 
-static ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, const std::string& str) {
+static ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, std::string str) {
   ClientCaptureEvent event;
   orbit_grpc_protos::InternedString* interned_string = event.mutable_interned_string();
   interned_string->set_key(key);
-  interned_string->set_intern(str);
+  interned_string->set_intern(std::move(str));
   return event;
 }
 

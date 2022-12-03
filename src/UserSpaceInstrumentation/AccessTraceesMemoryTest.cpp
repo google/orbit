@@ -34,7 +34,7 @@ namespace {
 
 using orbit_test_utils::HasError;
 
-AddressRange AddressRangeFromString(const std::string& string_address) {
+AddressRange AddressRangeFromString(std::string_view string_address) {
   AddressRange result;
   const std::vector<std::string> addresses = absl::StrSplit(string_address, '-');
   if (addresses.size() != 2) {

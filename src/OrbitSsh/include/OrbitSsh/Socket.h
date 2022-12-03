@@ -45,7 +45,7 @@ class Socket {
 
   static outcome::result<Socket> Create(int domain = AF_INET, int type = SOCK_STREAM,
                                         int protocol = IPPROTO_TCP);
-  static void PrintWithLastError(const std::string& message);
+  static void PrintWithLastError(std::string_view message);
 
   [[nodiscard]] outcome::result<void> Connect(const AddrAndPort& addr_and_port,
                                               int domain = AF_INET) const;

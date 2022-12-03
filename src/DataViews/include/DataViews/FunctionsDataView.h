@@ -37,7 +37,7 @@ class FunctionsDataView : public DataView {
   // Note that this class and these methods are not thread-safe and should only be called from the
   // main thread.
   void AddFunctions(std::vector<const orbit_client_data::FunctionInfo*> functions);
-  void RemoveFunctionsOfModule(const std::string& module_path);
+  void RemoveFunctionsOfModule(std::string_view module_path);
   void ClearFunctions();
 
  protected:

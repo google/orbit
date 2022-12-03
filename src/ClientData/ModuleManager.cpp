@@ -132,7 +132,7 @@ std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
 }
 
 std::vector<const ModuleData*> ModuleManager::GetModulesByFilename(
-    const std::string& filename) const {
+    std::string_view filename) const {
   absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;
   for (const auto& [module_id, module_data] : module_map_) {
