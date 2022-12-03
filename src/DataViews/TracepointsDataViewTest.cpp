@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -64,7 +65,7 @@ class TracepointsDataViewTest : public testing::Test {
     }
   }
 
-  void SetTracepointsByIndices(const std::vector<size_t>& indices) {
+  void SetTracepointsByIndices(absl::Span<size_t const> indices) {
     std::vector<TracepointInfo> tracepoints_to_add;
     for (size_t index : indices) {
       ORBIT_CHECK(index < kNumTracepoints);
@@ -124,7 +125,7 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return tracepoints_selected.at(index.value());
       });
 
-  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
+  auto verify_context_menu_action_availability = [&](absl::Span<int const> selected_indices) {
     FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
         view_.GetContextMenuWithGrouping(0, selected_indices));
 

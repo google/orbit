@@ -6,6 +6,7 @@
 #define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 
 #include <QApplication>
@@ -218,7 +219,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void UpdateTargetLabelPosition();
 
-  void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
+  void OnProcessListUpdated(absl::Span<orbit_grpc_protos::ProcessInfo const> processes);
 
   void ExecuteSymbolLocationsDialog(std::optional<const orbit_client_data::ModuleData*> module);
 

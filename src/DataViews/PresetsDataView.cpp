@@ -9,6 +9,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <errno.h>
 
 #include <algorithm>
@@ -81,19 +82,19 @@ PresetsDataView::PresetsDataView(AppInterface* app)
     : DataView(DataViewType::kPresets, app),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
-std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
+std::string PresetsDataView::GetModulesList(absl::Span<ModuleView const> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.module_name);
   });
 }
 
-std::string PresetsDataView::GetFunctionCountList(const std::vector<ModuleView>& modules) {
+std::string PresetsDataView::GetFunctionCountList(absl::Span<ModuleView const> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.function_count);
   });
 }
 
-std::string PresetsDataView::GetModuleAndFunctionCountList(const std::vector<ModuleView>& modules) {
+std::string PresetsDataView::GetModuleAndFunctionCountList(absl::Span<ModuleView const> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppendFormat(out, "%s: %u function(s)", module.module_name, module.function_count);
   });
@@ -184,7 +185,7 @@ void PresetsDataView::DoSort() {
 }
 
 DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action, int clicked_index,
-                                                        const std::vector<int>& selected_indices) {
+                                                        absl::Span<int const> selected_indices) {
   // Note that the UI already enforces a single selection.
   ORBIT_CHECK(selected_indices.size() == 1);
 
@@ -202,7 +203,7 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
   }
 }
 
-void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
+void PresetsDataView::OnLoadPresetRequested(absl::Span<int const> selection) {
   PresetFile& preset = GetMutablePreset(selection[0]);
   (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
                                                [this, preset_file_path = preset.file_path()]() {
@@ -210,7 +211,7 @@ void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
                                                });
 }
 
-void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
+void PresetsDataView::OnDeletePresetRequested(absl::Span<int const> selection) {
   int row = selection[0];
   const PresetFile& preset = GetPreset(row);
   const std::string& filename = preset.file_path().string();
@@ -225,7 +226,7 @@ void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection)
   }
 }
 
-void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selection) {
+void PresetsDataView::OnShowInExplorerRequested(absl::Span<int const> selection) {
   const PresetFile& preset = GetPreset(selection[0]);
   app_->ShowPresetInExplorer(preset);
 }

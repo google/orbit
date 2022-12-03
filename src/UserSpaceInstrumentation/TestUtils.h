@@ -5,6 +5,8 @@
 #ifndef USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_
 #define USER_SPACE_INSTRUMENTATION_TEST_UTILS_H_
 
+#include <absl/types/span.h>
+
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -30,7 +32,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
 // This is for debugging only. Disassembles the `code` and dumps it into the log. `start_address` is
 // the address of the code in virtual memory. If this is not applicable or you don't have it just
 // hand over zero.
-void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address);
+void DumpDisassembly(absl::Span<uint8_t const> code, uint64_t start_address);
 
 }  // namespace orbit_user_space_instrumentation
 

@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_INTEGRATION_TESTS_INTEGRATION_TEST_COMMONS_H_
 #define LINUX_TRACING_INTEGRATION_TESTS_INTEGRATION_TEST_COMMONS_H_
 
+#include <absl/types/span.h>
 #include <sys/types.h>
 
 #include "GrpcProtos/capture.pb.h"
@@ -22,7 +23,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
 // dynamically instrumenting `IntegrationTestPuppet`'s functions `OuterFunctionToInstrument` and
 // `InnerFunctionToInstrument`.
 void VerifyFunctionCallsOfPuppetOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::FunctionCall>& function_calls, uint32_t pid,
+    absl::Span<orbit_grpc_protos::FunctionCall const> function_calls, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id, bool expect_return_value_and_registers);
 
 }  // namespace orbit_linux_tracing_integration_tests

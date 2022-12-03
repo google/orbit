@@ -130,7 +130,7 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
 // Hence, we choose the step leading to the number of ticks closest to `optimal_tick_count`.
 // If the available tick count is either 0 or 1, the step yielding zero ticks may be returned.
 [[nodiscard]] static TickStep ChooseBestStep(double min, double max,
-                                             const std::vector<TickStep>& steps,
+                                             absl::Span<TickStep const> steps,
                                              uint32_t optimal_tick_count) {
   std::optional<TickStep> best_step;
   int best_deviation = std::numeric_limits<int>::max();
@@ -156,7 +156,7 @@ struct Ticks {
 };
 }  // namespace
 
-[[nodiscard]] static Ticks MakeTicksFromValues(const std::vector<double>& values, int precision) {
+[[nodiscard]] static Ticks MakeTicksFromValues(absl::Span<double const> values, int precision) {
   std::vector<QString> labels;
   std::transform(
       std::begin(values), std::end(values), std::back_inserter(labels),
@@ -164,7 +164,7 @@ struct Ticks {
   return {labels, values, precision};
 }
 
-[[nodiscard]] static Ticks MakeTicks(double min, double max, const std::vector<TickStep>& steps,
+[[nodiscard]] static Ticks MakeTicks(double min, double max, absl::Span<TickStep const> steps,
                                      uint32_t optimal_tick_count) {
   TickStep step = ChooseBestStep(min, max, steps, optimal_tick_count);
   std::vector<double> values = MakeLabelValues(min, max, step.value);

@@ -10,6 +10,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -152,7 +153,7 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
   return {visible_selected_index.value()};
 }
 
-void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
+void LiveFunctionsDataView::UpdateHighlightedFunctionId(absl::Span<int const> rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
     app_->SetHighlightedScopeId(std::nullopt);
@@ -166,7 +167,7 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(
-    const std::vector<int>& visible_selected_indices) {
+    absl::Span<int const> visible_selected_indices) {
   std::vector<ScopeId> scope_ids;
   std::transform(std::begin(visible_selected_indices), std::end(visible_selected_indices),
                  std::back_inserter(scope_ids),
@@ -175,7 +176,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
   UpdateHistogramWithScopeIds(scope_ids);
 }
 
-void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<ScopeId>& scope_ids) {
+void LiveFunctionsDataView::UpdateHistogramWithScopeIds(absl::Span<ScopeId const> scope_ids) {
   const std::vector<uint64_t>* timer_durations =
       (app_->HasCaptureData() && !scope_ids.empty())
           ? app_->GetCaptureData().GetSortedTimerDurationsForScopeId(scope_ids[0])
@@ -191,7 +192,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<ScopeI
   app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
 
-void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
+void LiveFunctionsDataView::OnSelect(absl::Span<int const> rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
 
@@ -278,7 +279,7 @@ void LiveFunctionsDataView::DoSort() {
 }
 
 DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
-    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+    std::string_view action, int clicked_index, absl::Span<int const> selected_indices) {
   if (action == kMenuActionExportEventsToCsv) return ActionStatus::kVisibleAndEnabled;
 
   const CaptureData& capture_data = app_->GetCaptureData();
@@ -357,7 +358,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   return enabled_for_any ? ActionStatus::kVisibleAndEnabled : ActionStatus::kVisibleButDisabled;
 }
 
-void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
+void LiveFunctionsDataView::OnIteratorRequested(absl::Span<int const> selection) {
   for (int i : selection) {
     ScopeId scope_id = GetScopeId(i);
     const FunctionInfo* function_info = GetFunctionInfoFromRow(i);
@@ -371,7 +372,7 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
 }
 
 void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
-                                              const std::vector<int>& selection) {
+                                              absl::Span<int const> selection) {
   ORBIT_CHECK(selection.size() == 1);
   auto scope_id = GetScopeId(selection[0]);
   if (action == kMenuActionJumpToFirst) {
@@ -386,7 +387,7 @@ void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
 }
 
 [[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCsv(
-    const std::vector<int>& selection, std::string_view file_path) const {
+    absl::Span<int const> selection, std::string_view file_path) const {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
@@ -428,7 +429,7 @@ void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
   return outcome::success();
 }
 
-void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
+void LiveFunctionsDataView::OnExportEventsToCsvRequested(absl::Span<int const> selection) {
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
 
@@ -501,7 +502,7 @@ void LiveFunctionsDataView::OnTimer() {
   OnSort(sorting_column_, {});
 }
 
-void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_indices,
+void LiveFunctionsDataView::OnRefresh(absl::Span<int const> visible_selected_indices,
                                       const RefreshMode& mode) {
   if (mode == RefreshMode::kOnFilter || mode == RefreshMode::kOnSort) {
     UpdateHighlightedFunctionId(visible_selected_indices);

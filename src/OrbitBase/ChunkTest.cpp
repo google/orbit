@@ -20,8 +20,7 @@ namespace {
 // Tests that all elements of input array are accounted for by the spans and that the spans don't
 // overflow.
 template <typename T>
-void TestChunksCoverage(const std::vector<T>& test_vector,
-                        const std::vector<absl::Span<T>>& chunks) {
+void TestChunksCoverage(absl::Span<T const> test_vector, absl::Span<absl::Span<T> const> chunks) {
   const T* element = test_vector.data();
   for (const absl::Span<T>& chunk : chunks) {
     EXPECT_EQ(element, chunk.data());

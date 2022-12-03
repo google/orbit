@@ -6,6 +6,7 @@
 #define FAKE_PRODUCER_SIDE_SERVICE_FAKE_PRODUCER_SIDE_SERVICE_H_
 
 #include <absl/synchronization/mutex.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <gtest/gtest.h>
@@ -113,7 +114,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   void ReAllowRpc() { rpc_allowed_ = true; }
 
   MOCK_METHOD(void, OnCaptureEventsReceived,
-              (const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events), ());
+              (absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events), ());
   MOCK_METHOD(void, OnAllEventsSentReceived, (), ());
 
  private:

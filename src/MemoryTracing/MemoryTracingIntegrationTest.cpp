@@ -5,6 +5,7 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <gtest/gtest.h>
 #include <sys/types.h>
 
@@ -128,7 +129,7 @@ class MemoryTracingIntegrationTestFixture {
   return fixture->StopTracingAndGetEvents();
 }
 
-void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& events,
+void VerifyOrderAndContentOfEvents(absl::Span<ProducerCaptureEvent const> events,
                                    uint64_t sampling_period_ns) {
   const uint64_t kMemoryEventsTimeDifferenceTolerance =
       static_cast<uint64_t>(sampling_period_ns * 0.2);
@@ -189,7 +190,7 @@ void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& even
 
 // Verify whether the memory_sampling_period_ns_ works as expected by checking the number of
 // received events.
-void VerifyEventCounts(const std::vector<ProducerCaptureEvent>& events, size_t expected_counts) {
+void VerifyEventCounts(absl::Span<ProducerCaptureEvent const> events, size_t expected_counts) {
   constexpr size_t kEventCountsErrorTolerance = 2;
 
   size_t num_received_events = 0;

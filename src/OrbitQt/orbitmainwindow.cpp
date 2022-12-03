@@ -8,6 +8,7 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 
 #include <QAction>
 #include <QApplication>
@@ -746,7 +747,7 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
   // Automatically switch between (complete capture) report and selection report tabs
   // if applicable
   auto show_corresponding_selection_tab = [this, capture_parent, selection_has_samples](
-                                              const std::vector<QWidget*>& report_tabs,
+                                              absl::Span<QWidget* const> report_tabs,
                                               QWidget* selection_tab) {
     QTabWidget* selection_parent = FindParentTabWidget(selection_tab);
 
@@ -1769,7 +1770,7 @@ void OrbitMainWindow::UpdateTargetLabelPosition() {
 }
 
 void OrbitMainWindow::OnProcessListUpdated(
-    const std::vector<orbit_grpc_protos::ProcessInfo>& processes) {
+    absl::Span<orbit_grpc_protos::ProcessInfo const> processes) {
   const auto is_current_process = [this](const auto& process) {
     const orbit_client_data::ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();

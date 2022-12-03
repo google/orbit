@@ -6,6 +6,7 @@
 #define DATA_VIEWS_CALLSTACK_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -86,7 +87,7 @@ class CallstackDataView : public DataView {
   };
 
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             const std::vector<int>& selected_indices) override;
+                                             absl::Span<int const> selected_indices) override;
 
  private:
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {

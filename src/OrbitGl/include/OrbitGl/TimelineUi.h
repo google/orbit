@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_TIMELINE_UI_H_
 #define ORBIT_GL_TIMELINE_UI_H_
 
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <memory>
@@ -60,9 +61,9 @@ class TimelineUi : public CaptureViewElement {
                         uint64_t mouse_tick_ns) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(
-      TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks) const;
+      TextRenderer& text_renderer, absl::Span<uint64_t const> all_major_ticks) const;
   [[nodiscard]] bool WillLabelsOverlap(TextRenderer& text_renderer,
-                                       const std::vector<uint64_t>& tick_list) const;
+                                       absl::Span<uint64_t const> tick_list) const;
   [[nodiscard]] float GetTickWorldXPos(uint64_t tick_ns) const;
   [[nodiscard]] uint32_t GetNumDecimalsInLabels() const { return num_decimals_in_labels_; }
   void UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);

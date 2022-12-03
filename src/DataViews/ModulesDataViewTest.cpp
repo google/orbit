@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -80,7 +81,7 @@ class ModulesDataViewTest : public testing::Test {
     }
   }
 
-  void AddModulesByIndices(const std::vector<size_t>& indices) {
+  void AddModulesByIndices(absl::Span<size_t const> indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumModules);

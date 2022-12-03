@@ -7,6 +7,7 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 
 #include <string>
 
@@ -38,7 +39,7 @@ using orbit_base::ReadFileToString;
 }
 
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
-                                                      const std::vector<uint8_t>& bytes) {
+                                                      absl::Span<uint8_t const> bytes) {
   ORBIT_CHECK(!bytes.empty());
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));

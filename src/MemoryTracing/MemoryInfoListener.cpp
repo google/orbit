@@ -4,6 +4,8 @@
 
 #include "MemoryTracing/MemoryInfoListener.h"
 
+#include <absl/types/span.h>
+
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -19,7 +21,7 @@ namespace orbit_memory_tracing {
 
 // This method computes the arithmetic mean of input timestamps.
 [[nodiscard]] static uint64_t GetSynchronizedSamplingTimestamp(
-    const std::vector<uint64_t>& sampling_timestamps) {
+    absl::Span<uint64_t const> sampling_timestamps) {
   uint64_t offset = *std::min_element(sampling_timestamps.begin(), sampling_timestamps.end());
   uint64_t sum = 0;
   for (uint64_t timestamp : sampling_timestamps) sum += timestamp - offset;

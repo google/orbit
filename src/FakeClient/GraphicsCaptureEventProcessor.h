@@ -5,6 +5,8 @@
 #ifndef FAKE_CLIENT_GRAPHICS_CAPTURE_EVENT_PROCESSOR_H_
 #define FAKE_CLIENT_GRAPHICS_CAPTURE_EVENT_PROCESSOR_H_
 
+#include <absl/types/span.h>
+
 #include <cstdint>
 
 #include "CaptureClient/CaptureEventProcessor.h"
@@ -148,7 +150,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   }
 
   static void PrintCommandBufferTimestamps(
-      const std::vector<CommandBufferTimestamps>& command_buffers_timestamps) {
+      absl::Span<CommandBufferTimestamps const> command_buffers_timestamps) {
     for (size_t i = 0; i < command_buffers_timestamps.size(); ++i) {
       const uint64_t begin_timestamp_ns = command_buffers_timestamps[i].begin;
       const uint64_t end_timestamp_ns = command_buffers_timestamps[i].end;

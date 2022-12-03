@@ -5,6 +5,7 @@
 #include "CaptureFile/CaptureFile.h"
 
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
@@ -90,7 +91,7 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<void> ReadHeader();
   ErrorMessageOr<void> ReadSectionList();
   ErrorMessageOr<void> CalculateCaptureSectionSize();
-  ErrorMessageOr<void> WriteSectionList(const std::vector<CaptureFileSection>& section_list,
+  ErrorMessageOr<void> WriteSectionList(absl::Span<CaptureFileSection const> section_list,
                                         uint64_t offset);
   [[nodiscard]] bool IsThereSectionWithOffsetAfterSectionList() const;
   // Calculates where the current content of the file ends. This is the position where new data can
@@ -445,7 +446,7 @@ ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::ExtendSection(uint64_t
 }
 
 ErrorMessageOr<void> CaptureFileImpl::WriteSectionList(
-    const std::vector<CaptureFileSection>& section_list, uint64_t offset) {
+    absl::Span<CaptureFileSection const> section_list, uint64_t offset) {
   uint64_t number_of_sections = section_list.size();
   // first write new section list at new offset
   OUTCOME_TRY(

@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -70,7 +71,7 @@ static std::multimap<int, uint64_t> SortCallstacksByCount(const ThreadSampleData
 }
 
 std::multimap<int, uint64_t> PostProcessedSamplingData::GetCallstacksFromFunctionAddresses(
-    const std::vector<uint64_t>& function_addresses, uint32_t thread_id) const {
+    absl::Span<uint64_t const> function_addresses, uint32_t thread_id) const {
   const auto& sample_data_it = thread_id_to_sample_data_.find(thread_id);
   if (sample_data_it == thread_id_to_sample_data_.end()) {
     return {};
@@ -92,7 +93,7 @@ std::multimap<int, uint64_t> PostProcessedSamplingData::GetCallstacksFromFunctio
 
 std::unique_ptr<SortedCallstackReport>
 PostProcessedSamplingData::GetSortedCallstackReportFromFunctionAddresses(
-    const std::vector<uint64_t>& function_addresses, uint32_t thread_id) const {
+    absl::Span<uint64_t const> function_addresses, uint32_t thread_id) const {
   std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
   std::multimap<int, uint64_t> count_to_callstack_id =
       GetCallstacksFromFunctionAddresses(function_addresses, thread_id);

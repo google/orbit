@@ -4,6 +4,7 @@
 
 #include "OrbitCaptureGgpClient/OrbitCaptureGgpClient.h"
 
+#include <absl/types/span.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
@@ -39,7 +40,7 @@ class CaptureClientGgpClient::CaptureClientGgpClientImpl {
   [[nodiscard]] ErrorMessageOr<void> StartCapture();
   [[nodiscard]] ErrorMessageOr<void> StopCapture();
   [[nodiscard]] ErrorMessageOr<void> UpdateSelectedFunctions(
-      const std::vector<std::string>& selected_functions);
+      absl::Span<std::string const> selected_functions);
   void ShutdownService();
 
  private:
@@ -70,7 +71,7 @@ int CaptureClientGgpClient::StopCapture() {
 }
 
 int CaptureClientGgpClient::UpdateSelectedFunctions(
-    const std::vector<std::string>& selected_functions) {
+    absl::Span<std::string const> selected_functions) {
   ErrorMessageOr<void> result = pimpl->UpdateSelectedFunctions(selected_functions);
   if (result.has_error()) {
     ORBIT_ERROR("Not possible to update functions %s", result.error().message());
@@ -133,7 +134,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopCap
 }
 
 ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::UpdateSelectedFunctions(
-    const std::vector<std::string>& selected_functions) {
+    absl::Span<std::string const> selected_functions) {
   UpdateSelectedFunctionsRequest request;
   UpdateSelectedFunctionsResponse response;
   auto context = std::make_unique<ClientContext>();

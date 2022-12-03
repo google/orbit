@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -120,7 +121,7 @@ class BaselineAndComparisonTmpl {
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
     for (const TID tid : config.tids) {
       data.ForEachCallstackEvent(tid, config.start_relative, config.EndRelative(),
-                                 [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
+                                 [&total_callstacks, &counts](absl::Span<SFID const> callstack) {
                                    total_callstacks++;
                                    if (callstack.empty()) return;
                                    for (const SFID sfid : callstack) {

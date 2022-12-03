@@ -5,6 +5,7 @@
 #ifndef DATA_VIEWS_TRACEPOINTS_DATA_VIEW_H_
 #define DATA_VIEWS_TRACEPOINTS_DATA_VIEW_H_
 
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <deque>
@@ -26,14 +27,14 @@ class TracepointsDataView : public DataView {
   int GetDefaultSortingColumn() override { return kColumnCategory; }
   std::string GetValue(int row, int column) override;
 
-  void OnSelectRequested(const std::vector<int>& selection) override;
-  void OnUnselectRequested(const std::vector<int>& selection) override;
+  void OnSelectRequested(absl::Span<int const> selection) override;
+  void OnUnselectRequested(absl::Span<int const> selection) override;
 
-  void SetTracepoints(const std::vector<orbit_grpc_protos::TracepointInfo>& tracepoints);
+  void SetTracepoints(absl::Span<orbit_grpc_protos::TracepointInfo const> tracepoints);
 
  private:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             const std::vector<int>& selected_indices) override;
+                                             absl::Span<int const> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
 

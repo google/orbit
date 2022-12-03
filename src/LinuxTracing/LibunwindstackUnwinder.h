@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
 #define LINUX_TRACING_LIBUNWINDSTACK_UNWINDER_H_
 
+#include <absl/types/span.h>
 #include <asm/perf_regs.h>
 #include <sys/types.h>
 #include <unwindstack/Error.h>
@@ -55,7 +56,7 @@ class LibunwindstackUnwinder {
 
   virtual LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                                       const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                                      const std::vector<StackSliceView>& stack_slices,
+                                      absl::Span<StackSliceView const> stack_slices,
                                       bool offline_memory_only = false,
                                       size_t max_frames = kDefaultMaxFrames) = 0;
 

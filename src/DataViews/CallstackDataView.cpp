@@ -9,6 +9,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -111,8 +112,9 @@ const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
 
-DataView::ActionStatus CallstackDataView::GetActionStatus(
-    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+DataView::ActionStatus CallstackDataView::GetActionStatus(std::string_view action,
+                                                          int clicked_index,
+                                                          absl::Span<int const> selected_indices) {
   bool is_capture_connected = app_->IsCaptureConnected(app_->GetCaptureData());
   if (!is_capture_connected &&
       (action == kMenuActionSelect || action == kMenuActionUnselect ||

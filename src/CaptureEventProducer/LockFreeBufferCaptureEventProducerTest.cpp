@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/arena.h>
 #include <grpcpp/grpcpp.h>
@@ -95,7 +96,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEventIfCapturi
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
@@ -147,7 +148,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEvent) {
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
@@ -203,7 +204,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DuplicatedCommands) {
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
@@ -304,7 +305,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, ServiceDisconnects) {
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
@@ -344,7 +345,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));

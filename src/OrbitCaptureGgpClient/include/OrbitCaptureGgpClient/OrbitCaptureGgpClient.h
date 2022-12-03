@@ -5,6 +5,8 @@
 #ifndef ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 #define ORBIT_CAPTURE_GGP_CLIENT_ORBIT_CAPTURE_GGP_CLIENT_H_
 
+#include <absl/types/span.h>
+
 #include <memory>
 #include <string>
 #include <string_view>
@@ -19,7 +21,7 @@ class CaptureClientGgpClient {
 
   int StartCapture();
   int StopCapture();
-  int UpdateSelectedFunctions(const std::vector<std::string>& selected_functions);
+  int UpdateSelectedFunctions(absl::Span<std::string const> selected_functions);
   void ShutdownService();
 
  private:

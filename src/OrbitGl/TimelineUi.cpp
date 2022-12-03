@@ -7,6 +7,7 @@
 #include <GteVector.h>
 #include <absl/flags/flag.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 
 #include <algorithm>
 #include <optional>
@@ -151,7 +152,7 @@ float TimelineUi::GetTickWorldXPos(uint64_t tick_ns) const {
 }
 
 std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
-    TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks) const {
+    TextRenderer& text_renderer, absl::Span<uint64_t const> all_major_ticks) const {
   if (all_major_ticks.size() <= 1) return all_major_ticks;
   uint64_t ns_between_major_ticks = all_major_ticks[1] - all_major_ticks[0];
 
@@ -176,7 +177,7 @@ std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
 }
 
 bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
-                                   const std::vector<uint64_t>& tick_list) const {
+                                   absl::Span<uint64_t const> tick_list) const {
   if (tick_list.size() <= 1) return false;
   float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
   for (auto tick_ns : tick_list) {

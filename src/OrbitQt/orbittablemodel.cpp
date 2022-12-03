@@ -4,6 +4,8 @@
 
 #include "OrbitQt/orbittablemodel.h"
 
+#include <absl/types/span.h>
+
 #include <QColor>
 #include <string>
 #include <vector>
@@ -100,4 +102,4 @@ void OrbitTableModel::OnFilter(const QString& filter) {
   data_view_->OnFilter(filter.toStdString());
 }
 
-void OrbitTableModel::OnRowsSelected(const std::vector<int>& rows) { data_view_->OnSelect(rows); }
+void OrbitTableModel::OnRowsSelected(absl::Span<int const> rows) { data_view_->OnSelect(rows); }

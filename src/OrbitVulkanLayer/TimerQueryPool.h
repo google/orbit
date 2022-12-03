@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
+#include <absl/types/span.h>
 #include <vulkan/vulkan.h>
 
 #include <fstream>
@@ -145,7 +146,7 @@ class TimerQueryPool {
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
-  void MarkQuerySlotsDoneReading(VkDevice device, const std::vector<uint32_t>& slot_indices) {
+  void MarkQuerySlotsDoneReading(VkDevice device, absl::Span<uint32_t const> slot_indices) {
     if (slot_indices.empty()) {
       return;
     }
@@ -180,7 +181,7 @@ class TimerQueryPool {
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
-  void MarkQuerySlotsForReset(VkDevice device, const std::vector<uint32_t>& slot_indices) {
+  void MarkQuerySlotsForReset(VkDevice device, absl::Span<uint32_t const> slot_indices) {
     if (slot_indices.empty()) {
       return;
     }
@@ -212,7 +213,7 @@ class TimerQueryPool {
   // Note that the pool must be initialized using `InitializeTimerQueryPool` before.
   // Further, the given slots must be in the `kReadyForQueryIssue` state, i.e. must be a result
   // of `NextReadyQuerySlot` and must not have been reset yet.
-  void RollbackPendingQuerySlots(VkDevice device, const std::vector<uint32_t>& slot_indices) {
+  void RollbackPendingQuerySlots(VkDevice device, absl::Span<uint32_t const> slot_indices) {
     if (slot_indices.empty()) {
       return;
     }

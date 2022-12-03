@@ -4,6 +4,7 @@
 
 #include "UprobesUnwindingVisitor.h"
 
+#include <absl/types/span.h>
 #include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Object.h>
@@ -40,7 +41,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ThreadStateSliceCallstack;
 
 static bool CallstackIsInUserSpaceInstrumentation(
-    const std::vector<unwindstack::FrameData>& frames,
+    absl::Span<unwindstack::FrameData const> frames,
     const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
   ORBIT_CHECK(!frames.empty());
 

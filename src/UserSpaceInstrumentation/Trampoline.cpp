@@ -11,6 +11,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
 #include <cpuid.h>
@@ -76,7 +77,7 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 178;
   return __get_cpuid(0x01, &eax, &ebx, &ecx, &edx) && (ecx & bit_AVX);
 }
 
-[[nodiscard]] std::string BytesAsString(const std::vector<uint8_t>& code) {
+[[nodiscard]] std::string BytesAsString(absl::Span<uint8_t const> code) {
   std::string result;
   for (const auto& c : code) {
     result.append(absl::StrFormat("%0.2x ", c));
@@ -95,7 +96,7 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 178;
 // However analysing existing code shows that many of the problematic jumps are in small functions
 // that are written in assembly. These are detected by the function below.
 bool CheckForRelativeJumpIntoFirstFiveBytes(uint64_t function_address,
-                                            const std::vector<uint8_t>& function,
+                                            absl::Span<uint8_t const> function,
                                             csh capstone_handle) {
   cs_insn* instruction = cs_malloc(capstone_handle);
   ORBIT_FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
@@ -489,7 +490,7 @@ void AppendRestoreCode(MachineCode& trampoline) {
 // one are included (function_address will contain a valid instruction - the jump into the
 // trampoline - when we are done).
 [[nodiscard]] ErrorMessageOr<uint64_t> AppendRelocatedPrologueCode(
-    uint64_t function_address, const std::vector<uint8_t>& function, uint64_t trampoline_address,
+    uint64_t function_address, absl::Span<uint8_t const> function, uint64_t trampoline_address,
     csh capstone_handle, absl::flat_hash_map<uint64_t, uint64_t>& global_relocation_map,
     MachineCode& trampoline) {
   cs_insn* instruction = cs_malloc(capstone_handle);
@@ -860,7 +861,7 @@ bool DoAddressRangesOverlap(const AddressRange& a, const AddressRange& b) {
   return !(b.end <= a.start || b.start >= a.end);
 }
 
-std::optional<size_t> LowestIntersectingAddressRange(const std::vector<AddressRange>& ranges_sorted,
+std::optional<size_t> LowestIntersectingAddressRange(absl::Span<AddressRange const> ranges_sorted,
                                                      const AddressRange& range) {
   for (size_t i = 0; i < ranges_sorted.size(); i++) {
     if (DoAddressRangesOverlap(ranges_sorted[i], range)) {
@@ -870,8 +871,8 @@ std::optional<size_t> LowestIntersectingAddressRange(const std::vector<AddressRa
   return std::nullopt;
 }
 
-std::optional<size_t> HighestIntersectingAddressRange(
-    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range) {
+std::optional<size_t> HighestIntersectingAddressRange(absl::Span<AddressRange const> ranges_sorted,
+                                                      const AddressRange& range) {
   for (int i = ranges_sorted.size() - 1; i >= 0; i--) {
     if (DoAddressRangesOverlap(ranges_sorted[i], range)) {
       return i;
@@ -919,7 +920,7 @@ ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid)
 }
 
 ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
-    const std::vector<AddressRange>& unavailable_ranges, const AddressRange& code_range,
+    absl::Span<AddressRange const> unavailable_ranges, const AddressRange& code_range,
     uint64_t size) {
   constexpr uint64_t kMax32BitOffset = INT32_MAX;
   constexpr uint64_t kMax64BitAddress = UINT64_MAX;
@@ -1170,7 +1171,7 @@ uint64_t GetMaxTrampolineSize() {
 }
 
 ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
-                                          const std::vector<uint8_t>& function,
+                                          absl::Span<uint8_t const> function,
                                           uint64_t trampoline_address,
                                           uint64_t entry_payload_function_address,
                                           uint64_t return_trampoline_address, csh capstone_handle,

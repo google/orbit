@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -115,7 +116,7 @@ MATCHER_P(CallstackIdToCallstackEventsEq, that, "") {
 }
 
 SortedCallstackReport MakeSortedCallstackReport(
-    const std::vector<std::pair<int, uint64_t>>& counts_and_callstack_ids) {
+    absl::Span<std::pair<int, uint64_t> const> counts_and_callstack_ids) {
   SortedCallstackReport report{};
   for (const auto& [count, callstack_id] : counts_and_callstack_ids) {
     report.total_callstack_count += count;
@@ -167,7 +168,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   CaptureData capture_data_{CaptureStarted{}, std::filesystem::path{},
                             absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kLiveCapture};
 
-  void AddCallstackInfo(uint64_t callstack_id, const std::vector<uint64_t>& callstack_frames,
+  void AddCallstackInfo(uint64_t callstack_id, absl::Span<uint64_t const> callstack_frames,
                         CallstackType callstack_type) {
     CallstackInfo callstack_info{{callstack_frames.begin(), callstack_frames.end()},
                                  callstack_type};
