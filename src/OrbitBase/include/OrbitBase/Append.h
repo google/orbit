@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <initializer_list>
+#include <type_traits>
 #include <vector>
 
 #ifndef ORBIT_BASE_APPEND_H_
@@ -9,9 +11,23 @@
 
 namespace orbit_base {
 
-template <class T>
-void Append(std::vector<T>& dest, const std::vector<T>& source) {
-  dest.insert(std::end(dest), std::begin(source), std::end(source));
+// Append adds the elements given by the range in the second argument to the back of the vector
+// given in the first argument. The range can be anything that defines `Range::value_type` and has
+// cbegin and cend iterators.
+template <class T, class Range,
+          class = typename std::enable_if_t<std::is_convertible_v<typename Range::value_type, T>>>
+void Append(std::vector<T>& dest, const Range& source) {
+  using std::cbegin;
+  using std::cend;
+  dest.insert(std::end(dest), cbegin(source), cend(source));
+}
+
+// This overload makes initializer lists as the second argument work.
+template <class T, class U, class = typename std::enable_if_t<std::is_convertible_v<U, T>>>
+void Append(std::vector<T>& dest, std::initializer_list<U> source) {
+  using std::cbegin;
+  using std::cend;
+  dest.insert(std::end(dest), cbegin(source), cend(source));
 }
 
 }  // namespace orbit_base
