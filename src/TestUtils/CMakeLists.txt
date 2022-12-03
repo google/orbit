@@ -6,8 +6,9 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(TestUtils INTERFACE)
 target_sources(TestUtils INTERFACE
-  include/TestUtils/TestUtils.h
-  include/TestUtils/ContainerHelpers.h)
+  include/TestUtils/ContainerHelpers.h
+  include/TestUtils/SaveRangeFromArg.h
+  include/TestUtils/TestUtils.h)
 target_include_directories(TestUtils INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 target_link_libraries(TestUtils INTERFACE
   absl::flat_hash_map
@@ -17,7 +18,8 @@ target_link_libraries(TestUtils INTERFACE
   GTest::gtest)
 
 add_executable(TestUtilsTests
-  TestUtilsTest.cpp
-  ContainerHelpersTest.cpp)
+  ContainerHelpersTest.cpp
+  SaveRangeFromArgTest.cpp
+  TestUtilsTest.cpp)
 target_link_libraries(TestUtilsTests PRIVATE TestUtils GTest::Main)
 register_test(TestUtilsTests)
