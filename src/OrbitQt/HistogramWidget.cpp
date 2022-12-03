@@ -156,12 +156,12 @@ struct Ticks {
 };
 }  // namespace
 
-[[nodiscard]] static Ticks MakeTicksFromValues(absl::Span<const double> values, int precision) {
+[[nodiscard]] static Ticks MakeTicksFromValues(std::vector<double> values, int precision) {
   std::vector<QString> labels;
   std::transform(
       std::begin(values), std::end(values), std::back_inserter(labels),
       [precision](const double value) { return QString::number(value, 'f', precision); });
-  return {labels, values, precision};
+  return {labels, std::move(values), precision};
 }
 
 [[nodiscard]] static Ticks MakeTicks(double min, double max, absl::Span<const TickStep> steps,

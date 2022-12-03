@@ -328,7 +328,7 @@ void SamplingReportDataView::LinkDataView(DataView* data_view) {
 }
 
 void SamplingReportDataView::SetSampledFunctions(absl::Span<const SampledFunction> functions) {
-  functions_ = functions;
+  functions_.assign(functions.begin(), functions.end());
   RestoreSelectedIndicesAfterFunctionsChanged();
 
   size_t num_functions = functions_.size();

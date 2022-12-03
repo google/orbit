@@ -146,11 +146,12 @@ const std::vector<orbit_client_data::CallstackInfo> kCallstackInfos = [] {
                             kSampledAbsoluteAddresses[2]},
       std::vector<uint64_t>{kSampledAbsoluteAddresses[2], kSampledAbsoluteAddresses[1]}};
   std::vector<orbit_client_data::CallstackInfo> result;
-  std::transform(std::begin(array_of_vectors_of_frames), std::end(array_of_vectors_of_frames),
-                 std::back_inserter(result),
-                 [](absl::Span<uint64_t const> frames) -> orbit_client_data::CallstackInfo {
-                   return {frames, orbit_client_data::CallstackType::kComplete};
-                 });
+  std::transform(
+      std::begin(array_of_vectors_of_frames), std::end(array_of_vectors_of_frames),
+      std::back_inserter(result),
+      [](absl::Span<uint64_t const> frames) -> orbit_client_data::CallstackInfo {
+        return {{frames.begin(), frames.end()}, orbit_client_data::CallstackType::kComplete};
+      });
   return result;
 }();
 constexpr std::array<uint64_t, kCallstackInfoNum> kTimestamps = {123456, 456789, 789456};

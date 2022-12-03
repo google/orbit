@@ -28,10 +28,13 @@
 #include "MockTracerListener.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
+#include "TestUtils/SaveRangeFromArg.h"
 #include "UprobesFunctionCallManager.h"
 #include "UprobesUnwindingVisitor.h"
 #include "UprobesUnwindingVisitorTestCommon.h"
 #include "unwindstack/SharedString.h"
+
+using orbit_test_utils::SaveRangeFromArg;
 
 namespace orbit_linux_tracing {
 
@@ -242,7 +245,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                                       ::testing::_, ::testing::_, ::testing::_))
       .Times(1)
       .WillOnce(
-          ::testing::DoAll(::testing::SaveArg<3>(&actual_stack_slices),
+          ::testing::DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
@@ -1271,7 +1274,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest, VisitStackSampleUsesUser
                                       ::testing::_, ::testing::_, ::testing::_))
       .Times(1)
       .WillOnce(
-          ::testing::DoAll(::testing::SaveArg<3>(&actual_stack_slices),
+          ::testing::DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
@@ -1388,7 +1391,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                                       ::testing::_, ::testing::_, ::testing::_))
       .Times(1)
       .WillOnce(
-          ::testing::DoAll(::testing::SaveArg<3>(&actual_stack_slices),
+          ::testing::DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
@@ -1525,7 +1528,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                                       ::testing::_, ::testing::_, ::testing::_))
       .Times(1)
       .WillOnce(
-          ::testing::DoAll(::testing::SaveArg<3>(&actual_stack_slices),
+          ::testing::DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
@@ -1662,7 +1665,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
                                       ::testing::_, ::testing::_, ::testing::_))
       .Times(1)
       .WillOnce(
-          ::testing::DoAll(::testing::SaveArg<3>(&actual_stack_slices),
+          ::testing::DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                            ::testing::Return(LibunwindstackResult{
                                libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 

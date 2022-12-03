@@ -32,10 +32,12 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
+#include "TestUtils/SaveRangeFromArg.h"
 #include "unwindstack/MachineX86_64.h"
 #include "unwindstack/Regs.h"
 #include "unwindstack/RegsX86_64.h"
 
+using ::orbit_test_utils::SaveRangeFromArg;
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::DoAll;
@@ -47,7 +49,6 @@ using ::testing::Lt;
 using ::testing::NotNull;
 using ::testing::Property;
 using ::testing::Return;
-using ::testing::SaveArg;
 
 using orbit_grpc_protos::Callstack;
 
@@ -211,7 +212,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(orbit_test_utils::SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -261,7 +262,7 @@ TEST_F(
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -367,7 +368,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   std::vector<StackSliceView> actual_stack_slices;
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+      .WillOnce(DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                       Return(LibunwindstackResult{
                           {}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -404,7 +405,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -472,7 +473,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -522,7 +523,7 @@ TEST_F(LeafFunctionCallManagerTest,
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
@@ -570,7 +571,7 @@ TEST_F(LeafFunctionCallManagerTest,
   EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
       .WillOnce(
-          DoAll(SaveArg<3>(&actual_stack_slices),
+          DoAll(SaveRangeFromArg<3>(&actual_stack_slices),
                 Return(LibunwindstackResult{
                     {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 

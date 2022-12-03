@@ -38,7 +38,7 @@ TEST(SpanUtils, SpansCoverage) {
   constexpr size_t kNumElements = 1024;
   std::vector<uint32_t> counters(kNumElements);
   for (size_t i = 0; i < 32; ++i) {
-    TestChunksCoverage(counters, CreateChunksOfSize(counters, i));
+    TestChunksCoverage<uint32_t>(counters, CreateChunksOfSize(counters, i));
   }
 }
 
