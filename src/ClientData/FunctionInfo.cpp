@@ -9,7 +9,6 @@
 #include <absl/strings/str_join.h>
 #include <xxhash.h>
 
-#include <cstdint>
 #include <vector>
 
 #include "ClientData/ModuleData.h"

@@ -5,18 +5,16 @@
 #include "ClientData/ProcessData.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <filesystem>
 #include <set>
-#include <type_traits>
 #include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "SymbolProvider/ModuleIdentifier.h"
-#include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::ModuleInfo;
 

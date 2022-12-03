@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
-#include <absl/flags/internal/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/strings/string_view.h>
 
@@ -11,6 +10,8 @@
 #include <future>
 #include <iostream>
 #include <thread>
+
+#include "absl/flags/internal/flag.h"
 
 ABSL_FLAG(int, sleep_for_ms, 0, "The program will sleep for X milliseconds");
 

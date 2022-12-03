@@ -5,6 +5,8 @@
 #ifndef LINUX_TRACING_THREAD_STATE_MANAGER_H_
 #define LINUX_TRACING_THREAD_STATE_MANAGER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <stdint.h>
 #include <sys/types.h>
 

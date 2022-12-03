@@ -4,6 +4,7 @@
 
 #include "CodeReport/SourceCodeReport.h"
 
+#include <absl/hash/hash.h>
 #include <stdint.h>
 
 #include <algorithm>

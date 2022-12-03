@@ -5,7 +5,6 @@
 #include "SessionSetup/ConnectToTargetDialog.h"
 
 #include <absl/strings/str_format.h>
-#include <absl/time/time.h>
 
 #include <QApplication>
 #include <QLabel>
@@ -15,12 +14,16 @@
 #include <QPushButton>
 #include <Qt>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <variant>
 
 #include "ClientData/ProcessData.h"
+#include "ClientServices/ProcessManager.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/AddrAndPort.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/ServiceDeployManager.h"

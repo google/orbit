@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+#include <absl/flags/usage.h>
+#include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/string_view.h>
 #include <absl/time/clock.h>
@@ -21,10 +25,6 @@
 #include "OrbitClientGgp/ClientGgp.h"
 #include "OrbitClientGgp/ClientGgpOptions.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/flags/usage_config.h"
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "Grpc service's port");
 ABSL_FLAG(int32_t, pid, 0, "pid to capture");

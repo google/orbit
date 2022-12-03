@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <ctime>
 #include <string>
 #include <thread>
 #include <vector>

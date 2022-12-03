@@ -10,7 +10,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"

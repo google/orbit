@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <string_view>
 
 #include "OrbitBase/Result.h"
 

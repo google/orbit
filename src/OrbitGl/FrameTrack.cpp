@@ -19,7 +19,6 @@
 #include "OrbitGl/GlUtils.h"
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TextRenderer.h"
-#include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/TimeGraphLayout.h"
 
 using orbit_client_data::CaptureData;

@@ -6,11 +6,13 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>

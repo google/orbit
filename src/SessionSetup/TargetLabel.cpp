@@ -17,9 +17,11 @@
 #include <chrono>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitSsh/AddrAndPort.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/DoubleClickableLabel.h"
 #include "SessionSetup/TargetConfiguration.h"

@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <string.h>
 
 #include <QString>
 #include <QStringList>

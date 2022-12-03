@@ -4,6 +4,7 @@
 
 #include "ClientData/TimerTrackDataIdManager.h"
 
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 
 #include "ClientProtos/capture_data.pb.h"

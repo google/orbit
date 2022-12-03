@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
@@ -16,6 +17,7 @@
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
 #include <errno.h>
+#include <google/protobuf/stubs/port.h>
 #include <stdio.h>
 
 #include <QObject>
@@ -68,7 +70,6 @@
 #include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
-#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"

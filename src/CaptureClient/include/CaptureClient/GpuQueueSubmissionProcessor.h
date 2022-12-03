@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/node_hash_map.h>
+#include <absl/hash/hash.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -15,6 +16,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientProtos/capture_data.pb.h"

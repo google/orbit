@@ -7,7 +7,6 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 
-#include "OrbitQt/orbittreeview.h"
 #include "ui_orbitaboutdialog.h"
 
 namespace orbit_qt {

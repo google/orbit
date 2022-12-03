@@ -6,10 +6,12 @@
 #define LINUX_TRACING_GPU_TRACEPOINT_EVENT_PROCESSOR_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <sys/types.h>
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 

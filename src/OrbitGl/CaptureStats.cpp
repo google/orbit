@@ -4,12 +4,10 @@
 
 #include "OrbitGl/CaptureStats.h"
 
-#include <cstdint>
 #include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitGl/CaptureWindow.h"

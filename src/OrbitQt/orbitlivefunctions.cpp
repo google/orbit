@@ -5,6 +5,7 @@
 #include "OrbitQt/orbitlivefunctions.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 #include <stddef.h>
 
@@ -15,7 +16,6 @@
 #include <QModelIndex>
 #include <QObject>
 #include <QTabWidget>
-#include <cstdint>
 #include <utility>
 
 #include "ClientData/ScopeId.h"

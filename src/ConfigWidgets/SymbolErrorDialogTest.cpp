@@ -13,7 +13,7 @@
 #include <QTest>
 #include <Qt>
 #include <string>
-#include <type_traits>
+#include <string_view>
 #include <utility>
 
 #include "ClientData/ModuleData.h"

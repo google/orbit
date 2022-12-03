@@ -6,6 +6,7 @@
 #define ORBIT_VULKAN_LAYER_VULKAN_LAYER_PRODUCER_IMPL_H_
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/synchronization/mutex.h>
 #include <google/protobuf/arena.h>
 #include <grpcpp/channel.h>
@@ -13,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"

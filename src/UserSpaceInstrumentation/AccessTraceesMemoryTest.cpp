@@ -15,9 +15,9 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
-#include <memory>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "AccessTraceesMemory.h"

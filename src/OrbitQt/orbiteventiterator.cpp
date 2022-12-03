@@ -4,12 +4,13 @@
 
 #include "OrbitQt/orbiteventiterator.h"
 
+#include <absl/strings/str_format.h>
+
 #include <QLabel>
 #include <QPushButton>
 #include <algorithm>
 
 #include "OrbitQt/ElidedLabel.h"
-#include "absl/strings/str_format.h"
 #include "ui_orbiteventiterator.h"
 
 OrbitEventIterator::OrbitEventIterator(QWidget* parent)

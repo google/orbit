@@ -5,10 +5,14 @@
 #ifndef CLIENT_DATA_MODULE_MANAGER_H_
 #define CLIENT_DATA_MODULE_MANAGER_H_
 
+#include <absl/container/node_hash_map.h>
+#include <absl/hash/hash.h>
+#include <absl/synchronization/mutex.h>
 #include <absl/types/span.h>
 #include <stdint.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/ModuleData.h"

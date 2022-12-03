@@ -5,6 +5,10 @@
 #ifndef CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 #define CLIENT_DATA_POST_PROCESSED_SAMPLING_DATA_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
+
 #include <cstdint>
 #include <map>
 #include <memory>

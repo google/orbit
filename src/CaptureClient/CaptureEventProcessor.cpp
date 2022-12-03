@@ -6,11 +6,14 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
+#include <google/protobuf/stubs/port.h>
 #include <llvm/Demangle/Demangle.h>
 
 #include <algorithm>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 

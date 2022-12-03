@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <type_traits>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -17,7 +17,6 @@
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "SymbolProvider/ModuleIdentifier.h"
-#include "absl/synchronization/mutex.h"
 
 using orbit_symbol_provider::ModuleIdentifier;
 

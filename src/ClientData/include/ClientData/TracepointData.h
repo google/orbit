@@ -7,6 +7,7 @@
 
 #include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/synchronization/mutex.h>
 
 #include <atomic>

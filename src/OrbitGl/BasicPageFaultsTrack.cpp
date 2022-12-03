@@ -8,8 +8,8 @@
 
 #include <algorithm>
 #include <functional>
+#include <string_view>
 
-#include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/MultivariateTimeSeries.h"
 #include "OrbitGl/PickingManager.h"

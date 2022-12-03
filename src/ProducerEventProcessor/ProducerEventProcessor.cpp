@@ -5,13 +5,12 @@
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
 #include <absl/synchronization/mutex.h>
+#include <google/protobuf/stubs/port.h>
 
-#include <algorithm>
-#include <cstdint>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

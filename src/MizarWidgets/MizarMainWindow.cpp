@@ -8,7 +8,7 @@
 #include <QMessageBox>
 #include <QObject>
 #include <memory>
-#include <string>
+#include <string_view>
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 #include "ui_MizarMainWindow.h"

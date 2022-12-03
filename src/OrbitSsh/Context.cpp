@@ -6,6 +6,8 @@
 
 #include <libssh2.h>
 
+#include <type_traits>
+
 #include "OrbitSsh/Error.h"
 
 namespace orbit_ssh {

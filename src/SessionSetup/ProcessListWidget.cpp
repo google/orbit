@@ -4,12 +4,19 @@
 
 #include "SessionSetup/ProcessListWidget.h"
 
+#include <QHeaderView>
+#include <QItemSelectionModel>
+#include <QLineEdit>
+#include <QModelIndexList>
 #include <QTableView>
+#include <QVariant>
 #include <QVector>
+#include <Qt>
 #include <memory>
 
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
+#include "SessionSetup/OverlayWidget.h"
 #include "ui_ProcessListWidget.h"
 
 namespace orbit_session_setup {

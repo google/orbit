@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <string>
 
 #include "ApiInterface/Orbit.h"
 #include "CaptureClient/CaptureEventProcessor.h"

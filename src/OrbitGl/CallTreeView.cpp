@@ -9,7 +9,7 @@
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
-#include <type_traits>
+#include <string_view>
 
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
