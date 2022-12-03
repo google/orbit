@@ -134,7 +134,7 @@ class DataView {
   virtual std::string GetToolTip(int row, int column) { return GetValue(row, column); }
 
   // Called from UI layer.
-  void OnFilter(std::string_view filter);
+  void OnFilter(std::string filter);
   // Called internally to set the filter string programmatically in the UI.
   void SetUiFilterString(std::string_view filter);
   // Filter callback set from UI layer.

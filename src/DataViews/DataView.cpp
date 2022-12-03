@@ -66,8 +66,8 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   }
 }
 
-void DataView::OnFilter(std::string_view filter) {
-  filter_ = filter;
+void DataView::OnFilter(std::string filter) {
+  filter_ = std::move(filter);
   DoFilter();
   OnSort(sorting_column_, {});
 }
