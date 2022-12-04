@@ -170,10 +170,10 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
   constexpr float kDotRadius = 2.f;
 
   float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
-  float clamped_x0 = ClampToWorldExtentsX(x0);
+  // `this->` is required because we are a deriving from a templated base class.
+  float clamped_x0 = this->ClampToWorldExtentsX(x0);
   bool is_x0_clamped = (x0 != clamped_x0);
   x0 = clamped_x0;
-  // `this->` is required because we are a deriving from a templated base class.
   float x1 = this->ClampToWorldExtentsX(this->timeline_info_->GetWorldFromTick(end_tick));
   float content_height = this->GetGraphContentHeight();
   float base_y = this->GetGraphContentBottomY();
