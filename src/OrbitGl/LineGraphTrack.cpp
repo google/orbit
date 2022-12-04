@@ -168,14 +168,20 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
     const std::array<float, Dimension>& prev_normalized_values,
     const std::array<float, Dimension>& curr_normalized_values, float z, bool is_last) {
   constexpr float kDotRadius = 2.f;
+
   float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
-  float x1 = this->timeline_info_->GetWorldFromTick(end_tick);
+  float clamped_x0 = ClampToWorldExtentsX(x0);
+  bool is_x0_clamped = (x0 != clamped_x0);
+  x0 = clamped_x0;
+  float x1 = ClampToWorldExtentsX(this->timeline_info_->GetWorldFromTick(end_tick));
   float content_height = this->GetGraphContentHeight();
   float base_y = this->GetGraphContentBottomY();
 
   for (size_t i = Dimension; i-- > 0;) {
     float y0 = base_y - prev_normalized_values[i] * content_height;
-    DrawSquareDot(primitive_assembler, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
+    if (!is_x0_clamped) {
+      DrawSquareDot(primitive_assembler, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
+    }
     primitive_assembler.AddLine(Vec2(x0, y0), Vec2(x1, y0), z, this->GetColor(i));
     if (!is_last) {
       float y1 = base_y - curr_normalized_values[i] * content_height;

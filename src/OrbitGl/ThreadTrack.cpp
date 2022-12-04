@@ -407,7 +407,8 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
       auto box_height = GetDefaultBoxHeight();
       auto [pos_x, size_x] =
           timeline_info_->GetBoxPosXAndWidthFromTicks(timer_info->start(), timer_info->end());
-      pos_x = HorizontalClamp(pos_x);
+      pos_x = ClampToWorldExtentsX(pos_x);
+      size_x = ClampToWorldExtentsX(pos_x + size_x) - pos_x;
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 

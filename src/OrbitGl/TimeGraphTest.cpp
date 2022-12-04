@@ -25,7 +25,8 @@ class UnitTestTimeGraph : public testing::Test {
  public:
   explicit UnitTestTimeGraph() {
     capture_data_ = TrackTestData::GenerateTestCaptureData();
-    viewport_ = std::make_unique<Viewport>(100, 200);
+    // Make the viewport big enough to account for a left margin.
+    viewport_ = std::make_unique<Viewport>(1000, 200);
     time_graph_ = std::make_unique<TimeGraph>(nullptr, nullptr, viewport_.get(),
                                               capture_data_.get(), nullptr, &time_graph_layout_);
     time_graph_->ZoomAll();
@@ -117,9 +118,17 @@ TEST_F(UnitTestTimeGraph, MouseWheel) {
   const TimeGraph* time_graph = GetTimeGraph();
 
   double original_time_window_us = time_graph->GetTimeWindowUs();
-  Vec2 kLeftmostTimelineMousePosition = time_graph->GetTimelineUi()->GetPos();
-  Vec2 kCenteredMousePosition{time_graph->GetPos()[0] + time_graph->GetSize()[0] / 2.f,
-                              time_graph->GetPos()[1] + time_graph->GetSize()[1] / 2.f};
+  const orbit_gl::TimelineUi* timeline_ui = time_graph->GetTimelineUi();
+  const Vec2 kLeftmostTimelineMousePosition = timeline_ui->GetPos();
+
+  // The interactive area starts at the position of the timeline.
+  const Vec2 kInteractiveAreaPos = {timeline_ui->GetPos()[0], timeline_ui->GetPos()[1]};
+  // That area is the size of the timeline in X and extends to the size of the timegraph in Y.
+  const Vec2 kInteractiveAreaSize = {timeline_ui->GetSize()[0], time_graph->GetSize()[1]};
+  // Mouse position in the center of the interactive area.
+  const Vec2 kCenteredMousePosition{kInteractiveAreaPos[0] + kInteractiveAreaSize[0] / 2.f,
+                                    kInteractiveAreaPos[1] + kInteractiveAreaSize[1] / 2.f};
+
   MouseWheelUp(kCenteredMousePosition, /*ctrl=*/false);
 
   // MouseWheel should scroll when ctrl is not pressed and therefore not modify the time_window.

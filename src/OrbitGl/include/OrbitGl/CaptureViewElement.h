@@ -50,7 +50,10 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
   [[nodiscard]] virtual bool ShouldBeRendered() const { return GetVisible(); }
 
-  [[nodiscard]] float HorizontalClamp(float pos_x) const;
+  // Clamp the passed in x value to the horizontal world extents.
+  [[nodiscard]] float ClampToWorldExtentsX(float pos_x) const {
+    return std::clamp(pos_x, pos_[0], pos_[0] + width_);
+  }
 
   void SetVisible(bool value);
   [[nodiscard]] bool GetVisible() const { return visible_; }

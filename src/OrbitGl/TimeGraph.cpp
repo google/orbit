@@ -886,11 +886,6 @@ void TimeGraph::DrawMarginsBetweenChildren(
   Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_->GetSpaceBetweenTracksAndTimeline());
   primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
                              GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
-
-  // Margin between the Tracks and the vertical scrollbar.
-  Vec2 right_margin_pos{GetWidth() - GetRightMargin(), GetPos()[1]};
-  Quad box = MakeBox(right_margin_pos, GetSize() - (right_margin_pos - GetPos()));
-  primitive_assembler.AddBox(box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
 }
 
 void TimeGraph::DrawText(QPainter* painter, float layer) {

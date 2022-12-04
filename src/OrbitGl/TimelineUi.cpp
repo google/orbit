@@ -88,9 +88,11 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
   float label_width = text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize());
-  // Check that the label is visible or partially visible.
-  if (ClosedInterval<float> label_x_interval{world_x, world_x + label_width};
-      !label_x_interval.Intersects(ClosedInterval<float>{GetPos()[0], GetPos()[0] + GetWidth()})) {
+  
+  ClosedInterval<float> timeline_x_interval{GetPos()[0], GetPos()[0] + GetWidth()};
+  // Label must be fully contained by the timeline to not draw beyond our allocated space.
+  if (!timeline_x_interval.Contains(world_x) ||
+      !timeline_x_interval.Contains(world_x + label_width)) {
     return;
   }
 

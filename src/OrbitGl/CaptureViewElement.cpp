@@ -126,10 +126,6 @@ void CaptureViewElement::SetVisible(bool value) {
   RequestUpdate();
 }
 
-float CaptureViewElement::HorizontalClamp(float pos_x) const {
-  return std::clamp(pos_x, pos_[0], pos_[0] + width_);
-}
-
 void CaptureViewElement::OnPick(int x, int y) {
   mouse_pos_last_click_ = viewport_->ScreenToWorld(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;

@@ -264,8 +264,9 @@ void ThreadStateBar::DrawThreadStateSliceOutline(PrimitiveAssembler& primitive_a
                                                  const ThreadStateSliceInfo& slice,
                                                  const Color& outline_color) const {
   float left_x = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
-  left_x = HorizontalClamp(left_x);
+  left_x = ClampToWorldExtentsX(left_x);
   float right_x = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
+  right_x = ClampToWorldExtentsX(right_x);
   float top_y = GetPos()[1];
   float bottom_y = GetPos()[1] + GetHeight();
   std::array<Vec2, 4> outline_points{
@@ -292,7 +293,8 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
       [&](const ThreadStateSliceInfo& slice) {
         auto [box_start_x, box_width] = timeline_info_->GetBoxPosXAndWidthFromTicks(
             slice.begin_timestamp_ns(), slice.end_timestamp_ns());
-        box_start_x = HorizontalClamp(box_start_x);
+        box_start_x = ClampToWorldExtentsX(box_start_x);
+        box_width = ClampToWorldExtentsX(box_start_x + box_width) - box_start_x;
         const Vec2 pos{box_start_x, GetPos()[1]};
         const Vec2 size{box_width, GetHeight()};
 

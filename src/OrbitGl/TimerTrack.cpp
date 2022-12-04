@@ -105,7 +105,7 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
   const auto elapsed_time_length = elapsed_time.length();
   const Color kTextWhite(255, 255, 255, 255);
   float pos_x = std::max(box_pos[0], min_x);
-  float max_size = box_pos[0] + box_size[0] - pos_x;
+  float max_size = ClampToWorldExtentsX(box_pos[0] + box_size[0]) - pos_x;
 
   TextRenderer::TextFormatting formatting{layout_->GetFontSize(), kTextWhite, max_size};
   formatting.valign = TextRenderer::VAlign::Bottom;
@@ -227,6 +227,13 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height);
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
+
+    // Clamp to world extents in x.
+    top_left[0] = ClampToWorldExtentsX(top_left[0]);
+    bottom_left[0] = ClampToWorldExtentsX(bottom_left[0]);
+    bottom_right[0] = ClampToWorldExtentsX(bottom_right[0]);
+    top_right[0] = ClampToWorldExtentsX(top_right[0]);
+
     Quad trapezium({top_left, bottom_left, bottom_right, top_right});
     draw_data.primitive_assembler->AddShadedTrapezium(
         trapezium, draw_data.z, color,
