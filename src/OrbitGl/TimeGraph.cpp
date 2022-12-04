@@ -886,6 +886,20 @@ void TimeGraph::DrawMarginsBetweenChildren(
   Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_->GetSpaceBetweenTracksAndTimeline());
   primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
                              GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
+
+  // Right margin mask for Timeline.
+  float right_margin_width = GetRightMargin();
+  float right_margin_height = timeline_ui_->GetHeight();
+  Vec2 right_margin_pos{GetWidth() - right_margin_width, GetPos()[1]};
+  Quad right_margin_box = MakeBox(right_margin_pos, Vec2(right_margin_width, right_margin_height));
+  primitive_assembler.AddBox(right_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
+
+  // Left margin mask for Timeline.
+  float left_margin_width = layout_->GetLeftMargin();
+  float left_margin_height = timeline_ui_->GetHeight();
+  Vec2 left_margin_pos = GetPos();
+  Quad left_margin_box = MakeBox(left_margin_pos, Vec2(left_margin_width, left_margin_height));
+  primitive_assembler.AddBox(left_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
 }
 
 void TimeGraph::DrawText(QPainter* painter, float layer) {
