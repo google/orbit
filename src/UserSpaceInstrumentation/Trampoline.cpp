@@ -11,7 +11,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
-#include <capstone.h>
+#include <capstone/capstone.h>
 #include <capstone/x86.h>
 #include <cpuid.h>
 #include <unistd.h>
