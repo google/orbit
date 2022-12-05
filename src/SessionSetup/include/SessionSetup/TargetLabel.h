@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"

@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <string>
+#include <string_view>
 
 #include "ui_orbitdataviewpanel.h"
 

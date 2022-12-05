@@ -16,6 +16,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "ClientData/CallstackType.h"

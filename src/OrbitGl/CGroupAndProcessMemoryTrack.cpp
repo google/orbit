@@ -11,6 +11,7 @@
 #include <array>
 #include <optional>
 #include <string_view>
+#include <utility>
 
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"

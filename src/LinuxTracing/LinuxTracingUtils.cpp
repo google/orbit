@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/meta/type_traits.h>
+#include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -16,7 +17,6 @@
 #include <chrono>
 #include <ctime>
 #include <filesystem>
-#include <istream>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -31,7 +31,6 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "absl/strings/match.h"
 
 namespace fs = std::filesystem;
 

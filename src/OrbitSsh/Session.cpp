@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <filesystem>
+#include <string>
 #include <type_traits>
 
 #include "LibSsh2Utils.h"
