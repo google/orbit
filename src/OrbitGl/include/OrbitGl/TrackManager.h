@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -72,8 +73,8 @@ class TrackManager {
   ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
   [[nodiscard]] std::optional<ThreadTrack*> GetThreadTrack(uint32_t tid) const;
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
-  VariableTrack* GetOrCreateVariableTrack(std::string name);
-  AsyncTrack* GetOrCreateAsyncTrack(std::string name);
+  VariableTrack* GetOrCreateVariableTrack(std::string_view name);
+  AsyncTrack* GetOrCreateAsyncTrack(std::string_view name);
   FrameTrack* GetOrCreateFrameTrack(uint64_t function_id);
   [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const {
     return system_memory_track_.get();
@@ -116,8 +117,8 @@ class TrackManager {
 
   std::vector<std::shared_ptr<Track>> all_tracks_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
-  std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
-  std::map<std::string, std::shared_ptr<VariableTrack>> variable_tracks_;
+  std::map<std::string, std::shared_ptr<AsyncTrack>, std::less<>> async_tracks_;
+  std::map<std::string, std::shared_ptr<VariableTrack>, std::less<>> variable_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.

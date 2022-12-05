@@ -488,28 +488,31 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   return track.get();
 }
 
-VariableTrack* TrackManager::GetOrCreateVariableTrack(std::string name) {
+VariableTrack* TrackManager::GetOrCreateVariableTrack(std::string_view name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<VariableTrack> track = variable_tracks_[name];
-  if (track == nullptr) {
-    track = std::make_shared<VariableTrack>(track_container_, timeline_info_, viewport_, layout_,
-                                            name, module_manager_, capture_data_);
-    variable_tracks_[name] = track;
-    AddTrack(track);
-  }
+
+  auto existing_track = variable_tracks_.find(name);
+  if (existing_track != variable_tracks_.end()) return existing_track->second.get();
+
+  auto track = std::make_shared<VariableTrack>(track_container_, timeline_info_, viewport_, layout_,
+                                               std::string{name}, module_manager_, capture_data_);
+  variable_tracks_.emplace(name, track);
+  AddTrack(track);
   return track.get();
 }
 
-AsyncTrack* TrackManager::GetOrCreateAsyncTrack(std::string name) {
+AsyncTrack* TrackManager::GetOrCreateAsyncTrack(std::string_view name) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<AsyncTrack> track = async_tracks_[name];
-  if (track == nullptr) {
-    auto [unused, timer_data] = capture_data_->CreateTimerData();
-    track = std::make_shared<AsyncTrack>(track_container_, timeline_info_, viewport_, layout_, name,
-                                         app_, module_manager_, capture_data_, timer_data);
-    async_tracks_[name] = track;
-    AddTrack(track);
-  }
+
+  auto existing_track = async_tracks_.find(name);
+  if (existing_track != async_tracks_.end()) return existing_track->second.get();
+
+  auto [unused, timer_data] = capture_data_->CreateTimerData();
+  auto track = std::make_shared<AsyncTrack>(track_container_, timeline_info_, viewport_, layout_,
+                                            std::string{name}, app_, module_manager_, capture_data_,
+                                            timer_data);
+  async_tracks_.emplace(name, track);
+  AddTrack(track);
   return track.get();
 }
 
