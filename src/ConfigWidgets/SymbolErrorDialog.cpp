@@ -11,6 +11,7 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <memory>
+#include <string>
 
 #include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Logging.h"

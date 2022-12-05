@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"

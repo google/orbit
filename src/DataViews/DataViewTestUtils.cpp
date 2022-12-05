@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <string>
 #include <utility>
 
 #include "OrbitBase/ReadFileToString.h"
