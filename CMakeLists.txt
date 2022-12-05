@@ -69,8 +69,7 @@ option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/cmake")
 
 if (NOT WIN32)
   # Make all executables position independent on Linux
