@@ -41,6 +41,7 @@ jobs:
         with:
           github-token: '${{ secrets.ORBITPROFILER_BOT_PAT }}'
           script: |
+            const {repo, owner} = context.repo;
             await github.paginate(
                 'GET /repos/{owner}/{repo}/pulls{?state,head,base,sort,direction,per_page,page}',
                 {
