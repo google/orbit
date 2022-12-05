@@ -89,7 +89,8 @@ DeploymentConfiguration FigureOutDeploymentConfiguration() {
         std::filesystem::path{QCoreApplication::applicationDirPath().toStdString()} /
         "OrbitService";
     return BareExecutableAndRootPasswordDeployment{
-        collector_path.value_or(orbit_service_default_location), collector_password.value_or("")};
+        collector_path.value_or(orbit_service_default_location.string()),
+        collector_password.value_or("")};
   }
 
   if (env.contains(kEnvPackagePath) && env.contains(kEnvSignaturePath)) {
