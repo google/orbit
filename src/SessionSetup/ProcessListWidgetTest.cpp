@@ -5,15 +5,20 @@
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
-#include <QApplication>
+#include <QAbstractItemModel>
+#include <QItemSelectionModel>
 #include <QLineEdit>
-#include <QMetaType>
+#include <QList>
+#include <QRect>
 #include <QSignalSpy>
+#include <QString>
 #include <QTableView>
 #include <QTest>
-#include <chrono>
-#include <thread>
+#include <QVariant>
+#include <Qt>
+#include <memory>
 
+#include "GrpcProtos/process.pb.h"
 #include "SessionSetup/OverlayWidget.h"
 #include "SessionSetup/ProcessListWidget.h"
 

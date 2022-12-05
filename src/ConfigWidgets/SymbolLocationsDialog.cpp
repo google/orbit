@@ -33,7 +33,6 @@
 #include <string>
 #include <string_view>
 #include <tuple>
-#include <type_traits>
 
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/module.pb.h"

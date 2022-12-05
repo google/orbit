@@ -12,15 +12,16 @@
 #include <QEventLoop>
 #include <QMetaEnum>
 #include <QObject>
-#include <QPointer>
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>

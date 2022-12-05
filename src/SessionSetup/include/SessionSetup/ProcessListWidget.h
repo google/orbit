@@ -5,11 +5,17 @@
 #ifndef SESSION_SETUP_PROCESS_LIST_WIDGET_H_
 #define SESSION_SETUP_PROCESS_LIST_WIDGET_H_
 
+#include <QMetaType>
 #include <QModelIndex>
+#include <QObject>
 #include <QSortFilterProxyModel>
+#include <QString>
+#include <QVector>
 #include <QWidget>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
 #include "GrpcProtos/process.pb.h"
 #include "SessionSetup/ProcessItemModel.h"

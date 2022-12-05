@@ -5,6 +5,7 @@
 #include "DataViews/SamplingReportDataView.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
@@ -17,7 +18,6 @@
 #include <filesystem>
 #include <functional>
 #include <limits>
-#include <memory>
 #include <utility>
 #include <vector>
 

@@ -6,6 +6,7 @@
 
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
@@ -13,11 +14,15 @@
 #include <QFrame>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPointer>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QtCore>
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessManager.h"

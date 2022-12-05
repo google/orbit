@@ -4,7 +4,6 @@
 
 #include "OrbitQt/orbittreeview.h"
 
-#include <QAbstractItemView>
 #include <QAction>
 #include <QFont>
 #include <QFontDatabase>
@@ -12,7 +11,6 @@
 #include <QItemSelectionModel>
 #include <QKeyEvent>
 #include <QKeySequence>
-#include <QList>
 #include <QMenu>
 #include <QModelIndexList>
 #include <QMouseEvent>

@@ -29,6 +29,7 @@
 #include <QTextOption>
 #include <QWheelEvent>
 #include <Qt>
+#include <QtGlobal>
 #include <algorithm>
 #include <cmath>
 #include <memory>

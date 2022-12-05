@@ -3,11 +3,13 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_replace.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>

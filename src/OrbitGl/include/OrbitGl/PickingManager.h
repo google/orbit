@@ -5,6 +5,9 @@
 #ifndef ORBIT_GL_PICKING_MANAGER_H
 #define ORBIT_GL_PICKING_MANAGER_H
 
+#include <absl/base/casts.h>
+#include <absl/synchronization/mutex.h>
+
 #include <array>
 #include <cstdint>
 #include <cstring>

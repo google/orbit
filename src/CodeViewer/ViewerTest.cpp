@@ -19,7 +19,6 @@
 #include <QWheelEvent>
 #include <Qt>
 #include <array>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>

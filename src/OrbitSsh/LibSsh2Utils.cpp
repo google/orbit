@@ -4,7 +4,7 @@
 
 #include "LibSsh2Utils.h"
 
-#include "absl/strings/str_format.h"
+#include <absl/strings/str_format.h>
 
 namespace orbit_ssh {
 

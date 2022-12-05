@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/synchronization/mutex.h>
+#include <absl/time/clock.h>
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -13,8 +16,6 @@
 #include "OrbitBase/Action.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ThreadPool.h"
-#include "absl/synchronization/mutex.h"
-#include "absl/time/clock.h"
 
 using orbit_base::ThreadPool;
 

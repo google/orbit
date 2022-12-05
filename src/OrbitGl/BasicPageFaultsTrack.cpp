@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <functional>
 
-#include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/MultivariateTimeSeries.h"
 #include "OrbitGl/PickingManager.h"

@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_REGISTER_STATE_H_
 #define USER_SPACE_INSTRUMENTATION_REGISTER_STATE_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
 

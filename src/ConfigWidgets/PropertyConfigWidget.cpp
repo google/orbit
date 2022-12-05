@@ -14,7 +14,6 @@
 #include <QWidget>
 #include <Qt>
 #include <string_view>
-#include <utility>
 
 namespace orbit_config_widgets {
 

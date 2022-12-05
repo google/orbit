@@ -11,14 +11,12 @@
 #include <cstdint>
 #include <iterator>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
 
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
-#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MizarBase/Time.h"

@@ -4,6 +4,7 @@
 
 #include "RegisterState.h"
 
+#include <absl/strings/str_format.h>
 #include <cpuid.h>
 #include <elf.h>
 #include <errno.h>
@@ -15,7 +16,6 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
-#include "absl/strings/str_format.h"
 
 namespace orbit_user_space_instrumentation {
 

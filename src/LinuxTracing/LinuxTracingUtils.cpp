@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
 #include <ctime>
 #include <filesystem>
 #include <istream>

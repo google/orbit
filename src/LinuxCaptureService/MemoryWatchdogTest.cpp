@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdlib.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <vector>
 
 #include "MemoryWatchdog.h"
 

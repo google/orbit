@@ -9,8 +9,6 @@
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
-#include <type_traits>
-
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "Introspection/Introspection.h"

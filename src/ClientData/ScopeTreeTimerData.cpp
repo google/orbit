@@ -6,7 +6,6 @@
 #include <absl/container/btree_map.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

@@ -6,7 +6,6 @@
 
 #include <absl/strings/str_format.h>
 
-#include <cstdint>
 #include <memory>
 
 #include "OrbitBase/MakeUniqueForOverwrite.h"

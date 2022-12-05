@@ -11,7 +11,6 @@
 #include <limits>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include "ApiInterface/Orbit.h"

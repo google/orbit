@@ -5,9 +5,9 @@
 #include "OrbitGl/IntrospectionWindow.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <stdint.h>
 
-#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -26,7 +26,6 @@
 #include "ClientData/PageFaultsInfo.h"
 #include "ClientData/SystemMemoryInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
-#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientData/TracepointEventInfo.h"
 #include "ClientData/TracepointInfo.h"
 #include "ClientProtos/capture_data.pb.h"

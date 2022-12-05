@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <string.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>

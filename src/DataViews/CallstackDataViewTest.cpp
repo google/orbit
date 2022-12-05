@@ -3,12 +3,14 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>
