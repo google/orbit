@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"

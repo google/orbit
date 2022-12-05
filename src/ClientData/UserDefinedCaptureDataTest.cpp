@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <string>
+#include <utility>
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/UserDefinedCaptureData.h"

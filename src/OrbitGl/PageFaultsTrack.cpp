@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "OrbitGl/CoreMath.h"

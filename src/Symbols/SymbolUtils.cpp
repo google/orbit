@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"

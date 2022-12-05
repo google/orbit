@@ -10,6 +10,7 @@
 #include <grpcpp/support/channel_arguments.h>
 
 #include <algorithm>
+#include <string>
 
 #include "OrbitBase/Logging.h"
 

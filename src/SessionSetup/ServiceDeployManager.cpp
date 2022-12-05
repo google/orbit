@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <string>
 #include <string_view>
 #include <system_error>
 #include <thread>

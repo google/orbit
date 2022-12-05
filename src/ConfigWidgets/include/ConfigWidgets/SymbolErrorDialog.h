@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "ClientData/ModuleData.h"
 

@@ -17,6 +17,7 @@
 #include <QWidget>
 #include <functional>
 #include <string>
+#include <string_view>
 
 #include "absl/container/flat_hash_map.h"
 
