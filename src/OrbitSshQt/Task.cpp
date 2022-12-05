@@ -8,7 +8,6 @@
 
 #include <QTimer>
 #include <chrono>
-#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
