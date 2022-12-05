@@ -13,7 +13,7 @@
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
 ABSL_FLAG(bool, signed_debian_package_deployment, false,
-          "Deploy OrbitService via the Signed debian package deployment method. (Use this for "
+          "Deploy OrbitService via the signed debian package deployment method. (Use this for "
           "connecting to a Stadia instance).");
 
 ABSL_FLAG(std::string, collector, "", "Full path of collector to be deployed");

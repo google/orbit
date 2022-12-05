@@ -122,7 +122,7 @@ void ConnectToSshWidget::SetConnection(std::optional<SshConnection> connection_o
   ui_->overlay->SetSpinning(false);
   ui_->overlay->SetStatusMessage(
       QString("Connected to %1")
-          .arg(QString::fromStdString(ssh_connection_->addr_and_port_.GetHumanReadable())));
+          .arg(QString::fromStdString(ssh_connection_->GetAddrAndPort().GetHumanReadable())));
   ui_->overlay->SetButtonMessage("Disconnect");
 
   QObject::connect(ui_->overlay, &OverlayWidget::Cancelled, this,
@@ -155,9 +155,9 @@ void ConnectToSshWidget::SetConnection(std::optional<SshConnection> connection_o
   emit Connected();
 }
 
-[[nodiscard]] SshConnection&& ConnectToSshWidget::TakeConnection() {
+[[nodiscard]] SshConnection ConnectToSshWidget::TakeConnection() {
   ORBIT_CHECK(ssh_connection_.has_value());
-  return std::move(ssh_connection_.value());
+  return std::move(ssh_connection_).value();
 }
 
 void ConnectToSshWidget::OnConnectClicked() {
@@ -237,7 +237,7 @@ ErrorMessageOr<void> ConnectToSshWidget::TryConnect() {
 }
 
 void ConnectToSshWidget::OnDisconnectClicked() {
-  ssh_connection_->service_deploy_manager_->Shutdown();
+  ssh_connection_->GetServiceDeployManager()->Shutdown();
   SetConnection(std::nullopt);
 }
 

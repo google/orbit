@@ -139,15 +139,16 @@ Alternatively you can download prebuilts from [python.org](https://www.python.or
 (In both cases verify that `pip3.exe` is in the path, otherwise the bootstrap
 script will not be able to install conan for you.)
 
-## Running Orbit 
+## Running Orbit
 
 Documentation about how to use Orbit's UI to connect to OrbitService can be found
 [here](documentation/DOCUMENTATION.md#connect-orbit).
 
 Alternatively you can use command line flags to automate the connection setup. This
-is explained the next sections.
+is explained in the next sections.
 
-> **Note:** As mentioned before, the collector currently only works for Linux.
+> **Note:** As mentioned before, the collector currently only works for Linux. So
+> Local Profiling as described in the next section only works on Linux.
 
 ### Local Profiling
 
@@ -186,11 +187,11 @@ This does the following:
 5. Select the target process
 6. Open the **Main Window**
 
-> **Note**: If you omit the `--collector_root_password` flag, Orbit will assume OrbitService is
-already running and skip steps 3 and 4.
-
 > **Note**: If you omit the `--ssh_target_process` flag, Orbit will start with the
 **Connection Window** prefilled with the other flags.
+
+> **Note**: If you omit the `--collector_root_password` flag, Orbit will assume OrbitService is
+already running and skip steps 3 and 4.
 
 ## Consistent code styling
 

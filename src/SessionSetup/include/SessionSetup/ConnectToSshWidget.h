@@ -48,7 +48,7 @@ class ConnectToSshWidget : public QWidget {
 
   void SetSshConnectionArtifacts(const SshConnectionArtifacts& connection_artifacts);
   void SetConnection(std::optional<SshConnection> connection_opt);
-  [[nodiscard]] SshConnection&& TakeConnection();
+  [[nodiscard]] SshConnection TakeConnection();
   [[nodiscard]] std::optional<orbit_ssh::AddrAndPort> GetTargetAddrAndPort() const;
 
   [[nodiscard]] QRadioButton* GetRadioButton();

@@ -93,10 +93,9 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   ui_->sshWidget->SetSshConnectionArtifacts(*ssh_connection_artifacts);
 
   if (target_configuration_opt.has_value()) {
-    TargetConfiguration config = std::move(target_configuration_opt.value());
-    target_configuration_opt = std::nullopt;
-    std::visit([this](auto&& target) { SetTargetAndStateMachineInitialState(std::move(target)); },
-               config);
+    TargetConfiguration config = std::move(target_configuration_opt).value();
+    std::visit([this](auto target) { SetTargetAndStateMachineInitialState(std::move(target)); },
+               std::move(config));
     return;
   }
 

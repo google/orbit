@@ -62,8 +62,6 @@ class SshConnectionArtifacts {
  * members for reusing them.
  */
 class SshConnection {
-  friend class ConnectToSshWidget;
-
  public:
   explicit SshConnection(orbit_ssh::AddrAndPort addr_and_port,
                          std::unique_ptr<ServiceDeployManager> service_deploy_manager,
