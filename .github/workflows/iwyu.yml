@@ -41,42 +41,19 @@ jobs:
         with:
           github-token: '${{ secrets.ORBITPROFILER_BOT_PAT }}'
           script: |
-            async function checkHasOpenIwyuPr() {
-              const {repo, owner} = context.repo;
-            
-              let page = 1;
-              let continue_requests = true;
-            
-              while (continue_requests) {
-                const result = await github.request(
-                    `GET /repos/${owner}/${repo}/pulls{?state,head,base,sort,direction,per_page,page}`,
-                    {
-                      owner: owner,
-                      repo: repo,
-                      state: 'open',
-                      per_page: 100,
-                      page: page
-                    });
-            
-                if (result.status !== 200 /*OK*/) {
-                  throw new Error(`Unexpected status code: ${result.status}`);
-                }
-            
-                if (result.data.find(
+            await github.paginate(
+                'GET /repos/{owner}/{repo}/pulls{?state,head,base,sort,direction,per_page,page}',
+                {
+                  owner: owner,
+                  repo: repo,
+                  state: 'open'
+                },
+                (response => response.data.some(
                     pr => pr.title === 'Automatically apply IWYU to the codebase'
-                        && pr.user.login === 'orbitprofiler-bot')) {
-                  return true;
-                }
-            
-                continue_requests = result.data.length > 0;
-                page++;
-              }
-            
-              return false;
-            }
-            
-            const hasOpenIwyuPr = await checkHasOpenIwyuPr();
-            core.setOutput('has_open_iwyu_pr', hasOpenIwyuPr);
+                        && pr.user.login === 'orbitprofiler-bot'))).then(
+                (hasOpenIwyuPr) => {
+                  core.setOutput('has_open_iwyu_pr', hasOpenIwyuPr)
+                });
       - name: Add llvm-15 repo
         if: steps.check_has_open_iwyu_pr.outputs.has_open_iwyu_pr == 'false'
         run: |
