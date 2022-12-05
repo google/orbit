@@ -14,8 +14,6 @@
 #include <sys/select.h>
 #endif
 
-#include <type_traits>
-
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/Error.h"
 
