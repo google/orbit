@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <mutex>
@@ -246,9 +247,13 @@ ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, const std::vector<Module
   constexpr const char* kSetOrbitThreadsFunctionName = "SetOrbitThreads";
   OUTCOME_TRY(void* set_orbit_threads_function_address,
               DlsymInTracee(pid, modules, library_handle, kSetOrbitThreadsFunctionName));
-  OUTCOME_TRY(ExecuteInProcess(pid, set_orbit_threads_function_address, orbit_threads[0],
-                               orbit_threads[1], orbit_threads[2], orbit_threads[3],
-                               orbit_threads[4], orbit_threads[5]));
+  const auto safe_get_tid = [&orbit_threads](size_t index) {
+    if (index < orbit_threads.size()) return orbit_threads.at(index);
+    return -1;
+  };
+  OUTCOME_TRY(ExecuteInProcess(pid, set_orbit_threads_function_address, safe_get_tid(0),
+                               safe_get_tid(1), safe_get_tid(2), safe_get_tid(3), safe_get_tid(4),
+                               safe_get_tid(5)));
   return outcome::success();
 }
 
