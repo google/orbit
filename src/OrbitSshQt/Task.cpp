@@ -7,7 +7,6 @@
 #include <absl/base/attributes.h>
 
 #include <QTimer>
-#include <boost/outcome/basic_result.hpp>
 #include <chrono>
 #include <type_traits>
 #include <utility>

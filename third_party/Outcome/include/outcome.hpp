@@ -15,10 +15,10 @@
 // consume the following includes.
 #define BOOST_OUTCOME_THROW_EXCEPTION(...) std::abort();
 
-#include <boost/outcome/config.hpp>
-#include <boost/outcome/std_result.hpp>
-#include <boost/outcome/success_failure.hpp>
-#include <boost/outcome/try.hpp>
+#include <boost/outcome/config.hpp> // IWYU pragma: export
+#include <boost/outcome/std_result.hpp> // IWYU pragma: export
+#include <boost/outcome/success_failure.hpp> // IWYU pragma: export
+#include <boost/outcome/try.hpp> // IWYU pragma: export
 #include <system_error>
 #include <utility>
 
