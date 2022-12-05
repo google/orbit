@@ -56,6 +56,8 @@ jobs:
       with:
         github-token: ${{ secrets.ORBITPROFILER_BOT_PAT }}
         script: |
+          const {repo, owner} = context.repo;
+          
           function* createComments() {
             const gitDiffParser = require('gitdiff-parser');
             const escapeJSON = require('escape-json-node');
@@ -83,10 +85,36 @@ jobs:
               }
             }
           }
+          
+          async function deleteOldBotComments(pr_number) {
+            await github.paginate(
+                'GET /repos/{owner}/{repo}/pulls/{pull_number}/comments{?sort,direction,since,per_page,page}',
+                {
+                  owner: owner,
+                  repo: repo,
+                  pull_number: pr_number
+                },
+                (response => response.data.filter(
+                    comment => comment.user.login === 'orbitprofiler-bot').map(
+                    comment => comment.id))).then(
+                comment_ids => {
+                  comment_ids.forEach(comment_id => {
+                    console.log(`deleting comment: ${comment_id}`);
+                    github.request(
+                        'DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}', {
+                          owner: owner,
+                          repo: repo,
+                          comment_id: comment_id
+                    });
+                  });
+                }
+            );
+          }
+          
+          deleteOldBotComments(process.env.PR_NUMBER);
 
           const comments = [...createComments()];
 
-          const {repo, owner} = context.repo;
           const request = {
             owner: owner,
             repo: repo,
