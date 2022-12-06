@@ -45,6 +45,8 @@ class MockBatcher : public Batcher {
 
   void DrawLayer(float /*layer*/, bool /*picking*/) override {}
 
+  [[nodiscard]] size_t GetReservedMemorySize() const override { return 0; };
+
   [[nodiscard]] const PickingUserData* GetUserData(PickingId /*id*/) const override {
     return nullptr;
   }

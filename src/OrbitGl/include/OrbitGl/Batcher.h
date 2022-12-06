@@ -23,6 +23,8 @@ class Batcher : public BatcherInterface {
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
 
+  [[nodiscard]] virtual size_t GetReservedMemorySize() const = 0;
+
  protected:
   orbit_gl::TranslationStack translations_;
 
