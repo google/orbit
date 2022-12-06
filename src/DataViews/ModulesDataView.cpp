@@ -4,7 +4,6 @@
 
 #include "DataViews/ModulesDataView.h"
 
-#include <absl/flags/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
@@ -21,7 +20,6 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientFlags/ClientFlags.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
