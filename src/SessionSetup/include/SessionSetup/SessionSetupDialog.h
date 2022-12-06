@@ -75,7 +75,7 @@ class SessionSetupDialog : public QDialog {
 
   void SetupFileStates();
   void SetupLocalStates();
-  static void SetTargetAndStateMachineInitialState(SshTarget target);
+  void SetTargetAndStateMachineInitialState(SshTarget target);
   void SetTargetAndStateMachineInitialState(LocalTarget target);
   void SetTargetAndStateMachineInitialState(FileTarget target);
 };
