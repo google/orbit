@@ -1524,19 +1524,20 @@ void OrbitApp::SendDisassemblyToUi(const orbit_client_data::FunctionInfo& functi
   });
 }
 
-void OrbitApp::SendTooltipToUi(std::string_view tooltip) {
-  main_thread_executor_->Schedule([this, tooltip] { main_window_->ShowTooltip(tooltip); });
+void OrbitApp::SendTooltipToUi(std::string tooltip) {
+  main_thread_executor_->Schedule(
+      [this, tooltip = std::move(tooltip)] { main_window_->ShowTooltip(tooltip); });
 }
 
-void OrbitApp::SendWarningToUi(std::string_view title, std::string_view text) {
-  main_thread_executor_->Schedule([this, title, text] {
+void OrbitApp::SendWarningToUi(std::string title, std::string text) {
+  main_thread_executor_->Schedule([this, title = std::move(title), text = std::move(text)] {
     ORBIT_CHECK(warning_message_callback_);
     warning_message_callback_(title, text);
   });
 }
 
-void OrbitApp::SendErrorToUi(std::string_view title, std::string_view text) {
-  main_thread_executor_->Schedule([this, title, text] {
+void OrbitApp::SendErrorToUi(std::string title, std::string text) {
+  main_thread_executor_->Schedule([this, title = std::move(title), text = std::move(text)] {
     ORBIT_CHECK(error_message_callback_);
     error_message_callback_(title, text);
   });

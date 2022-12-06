@@ -34,7 +34,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, SetClipboard, (std::string_view), (override));
   MOCK_METHOD(std::string, GetSaveFile, (std::string_view extension), (const, override));
 
-  MOCK_METHOD(void, SendErrorToUi, (std::string_view title, std::string_view text), (override));
+  MOCK_METHOD(void, SendErrorToUi, (std::string title, std::string text), (override));
 
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, LoadPreset,
               (const orbit_preset_file::PresetFile&), (override));
