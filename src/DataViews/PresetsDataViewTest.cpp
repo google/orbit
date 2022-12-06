@@ -25,8 +25,8 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
@@ -265,7 +265,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(PresetLoadState::kLoadable));
 
-  auto temporary_preset_file = orbit_base::TemporaryFile::Create();
+  auto temporary_preset_file = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temporary_preset_file, orbit_test_utils::HasNoError());
   temporary_preset_file.value().CloseAndRemove();
 

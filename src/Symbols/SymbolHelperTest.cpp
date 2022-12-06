@@ -19,9 +19,9 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "Symbols/SymbolHelper.h"
 #include "Test/Path.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -35,7 +35,7 @@ using orbit_test_utils::HasValue;
 namespace fs = std::filesystem;
 
 TEST(ReadSymbolsFile, Empty) {
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   std::vector<fs::path> paths =
@@ -45,7 +45,7 @@ TEST(ReadSymbolsFile, Empty) {
 }
 
 TEST(ReadSymbolsFile, EmptyWithComments) {
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   ASSERT_THAT(
@@ -62,7 +62,7 @@ TEST(ReadSymbolsFile, EmptyWithComments) {
 }
 
 TEST(ReadSymbolsFile, OnePath) {
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
@@ -77,7 +77,7 @@ TEST(ReadSymbolsFile, OnePath) {
 
 TEST(ReadSymbolsFile, TwoPaths) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(temp_file_or_error.value().fd(),
@@ -94,7 +94,7 @@ TEST(ReadSymbolsFile, TwoPaths) {
 }
 
 TEST(ReadSymbolsFile, OnePathInQuotes) {
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   ASSERT_THAT(
@@ -109,7 +109,7 @@ TEST(ReadSymbolsFile, OnePathInQuotes) {
 }
 
 TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
-  auto temp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
   ASSERT_THAT(
@@ -541,7 +541,7 @@ TEST(FileStartsWithDeprecationNote, FileDoesNotExist) {
 }
 
 TEST(FileStartsWithDeprecationNote, EmptyFile) {
-  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto tmp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
 
   ErrorMessageOr<bool> result =
@@ -552,7 +552,7 @@ TEST(FileStartsWithDeprecationNote, EmptyFile) {
 }
 
 TEST(FileStartsWithDeprecationNote, NoDeprecationNote) {
-  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto tmp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(tmp_file_or_error.value().fd(),
@@ -567,7 +567,7 @@ TEST(FileStartsWithDeprecationNote, NoDeprecationNote) {
 }
 
 TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
-  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto tmp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
 
   ASSERT_THAT(orbit_base::WriteFully(
@@ -595,9 +595,9 @@ TEST(AddDeprecationNoteToFile, FileDoesNotExist) {
 }
 
 TEST(AddDeprecationNoteToFile, AddNote) {
-  auto tmp_file_or_error = orbit_base::TemporaryFile::Create();
+  auto tmp_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
-  orbit_base::TemporaryFile& file{tmp_file_or_error.value()};
+  orbit_test_utils::TemporaryFile& file{tmp_file_or_error.value()};
 
   constexpr std::string_view kFileContent = "Some file content.\nC:\\path\n\\\\ This is a comment";
   ASSERT_THAT(orbit_base::WriteFully(file.fd(), kFileContent), HasNoError());

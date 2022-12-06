@@ -13,9 +13,9 @@
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
-namespace orbit_base {
+namespace orbit_test_utils {
 
 using testing::HasSubstr;
 using testing::Not;
@@ -160,7 +160,7 @@ TEST(TemporaryFile, CleanupAfterReopen) {
 
     // Check that the file is removed even if we call RemoveAndClose and then recreate it.
     tmp_file.CloseAndRemove();
-    auto fd_or_error = OpenFileForWriting(file_path_copy);
+    auto fd_or_error = orbit_base::OpenFileForWriting(file_path_copy);
     ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
   }
 
@@ -192,4 +192,4 @@ TEST(TemporaryFile, CustomPrefix) {
   EXPECT_EQ(tmp_file.file_path(), file_path_copy);
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_test_utils

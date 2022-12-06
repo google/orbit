@@ -47,7 +47,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/StopSource.h
         include/OrbitBase/StopToken.h
         include/OrbitBase/TaskGroup.h
-        include/OrbitBase/TemporaryFile.h
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
@@ -69,7 +68,6 @@ target_sources(OrbitBase PRIVATE
         SafeStrerror.cpp
         SimpleExecutor.cpp
         StringConversion.cpp
-        TemporaryFile.cpp
         ThreadPool.cpp
         WhenAll.cpp
         WriteStringToFile.cpp)
@@ -134,7 +132,6 @@ target_sources(OrbitBaseTests PRIVATE
         StopSourceTest.cpp
         StopTokenTest.cpp
         TaskGroupTest.cpp
-        TemporaryFileTest.cpp
         TypedefTest.cpp
         ThreadUtilsTest.cpp
         UniqueResourceTest.cpp
