@@ -20,8 +20,8 @@
 namespace orbit_containers {
 
 struct TestScope {
-  uint64_t start() const { return start_; }
-  uint64_t end() const { return end_; }
+  [[nodiscard]] uint64_t start() const { return start_; }
+  [[nodiscard]] uint64_t end() const { return end_; }
   uint64_t start_;
   uint64_t end_;
 };
