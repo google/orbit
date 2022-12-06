@@ -6,6 +6,7 @@
 
 #include <linux/seccomp.h>
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
