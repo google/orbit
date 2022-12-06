@@ -37,7 +37,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
       } else if (orientation == Qt::Vertical) {
         return section;
       } else {
-        return QVariant();
+        return {};
       }
 
     case Qt::InitialSortOrderRole:
@@ -50,7 +50,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
       break;
   }
 
-  return QVariant();
+  return {};
 }
 
 QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
@@ -71,7 +71,7 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
     return static_cast<Qt::Alignment::Int>(text_alignment_);
   }
 
-  return QVariant();
+  return {};
 }
 
 void OrbitTableModel::sort(int column, Qt::SortOrder order) {

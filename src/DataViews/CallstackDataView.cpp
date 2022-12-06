@@ -253,11 +253,11 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
       orbit_client_data::FindModuleByAddress(*capture_data.process(), *module_manager, address);
 
   if (function != nullptr) {
-    return CallstackDataViewFrame(address, function, module);
+    return {address, function, module};
   }
   const std::string& fallback_name =
       orbit_client_data::GetFunctionNameByAddress(*module_manager, capture_data, address);
-  return CallstackDataViewFrame(address, fallback_name, module);
+  return {address, fallback_name, module};
 }
 
 }  // namespace orbit_data_views

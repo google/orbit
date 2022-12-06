@@ -46,7 +46,7 @@ QVariant TrackTypeItemModel::data(const QModelIndex& idx, int role) const {
       break;
   }
 
-  return QVariant();
+  return {};
 }
 
 bool TrackTypeItemModel::setData(const QModelIndex& idx, const QVariant& value, int role) {

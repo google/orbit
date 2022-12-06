@@ -110,7 +110,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
             absl::StrFormat("%.2f%%", unwind_error_type_item->GetPercentOfParent()));
     }
   }
-  return QVariant();
+  return {};
 }
 
 QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const {
@@ -168,7 +168,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
         return unwind_error_type_item->GetPercentOfParent();
     }
   }
-  return QVariant();
+  return {};
 }
 
 QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
@@ -190,7 +190,7 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
             orbit_client_data::CallstackTypeToDescription(unwind_error_type_item->error_type()));
     }
   }
-  return QVariant();
+  return {};
 }
 
 QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) const {
@@ -211,7 +211,7 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
     static const QColor kUnwindErrorFunctionColor{Qt::lightGray};
     return kUnwindErrorFunctionColor;
   }
-  return QVariant();
+  return {};
 }
 
 QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
@@ -221,7 +221,7 @@ QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) 
   if (function_item != nullptr) {
     return QString::fromStdString(function_item->module_path());
   }
-  return QVariant();
+  return {};
 }
 
 QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) const {
@@ -231,7 +231,7 @@ QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& inde
   if (function_item != nullptr) {
     return QString::fromStdString(function_item->module_build_id());
   }
-  return QVariant();
+  return {};
 }
 
 // For columns with two values, a percentage and a raw number, only copy the percentage, so that it
@@ -281,7 +281,7 @@ QVariant CallTreeViewItemModel::GetExclusiveCallstackEventsRoleData(const QModel
 
 QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
-    return QVariant();
+    return {};
   }
   switch (role) {
     case Qt::DisplayRole:
@@ -303,7 +303,7 @@ QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
     case kExclusiveCallstackEventsRole:
       return GetExclusiveCallstackEventsRoleData(index);
   }
-  return QVariant();
+  return {};
 }
 
 Qt::ItemFlags CallTreeViewItemModel::flags(const QModelIndex& index) const {
@@ -316,7 +316,7 @@ Qt::ItemFlags CallTreeViewItemModel::flags(const QModelIndex& index) const {
 QVariant CallTreeViewItemModel::headerData(int section, Qt::Orientation orientation,
                                            int role) const {
   if (orientation != Qt::Horizontal) {
-    return QVariant();
+    return {};
   }
   switch (role) {
     case Qt::DisplayRole:
@@ -354,12 +354,12 @@ QVariant CallTreeViewItemModel::headerData(int section, Qt::Orientation orientat
       }
     } break;
   }
-  return QVariant();
+  return {};
 }
 
 QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex& parent) const {
   if (!hasIndex(row, column, parent)) {
-    return QModelIndex();
+    return {};
   }
 
   CallTreeNode* parent_item;
@@ -371,7 +371,7 @@ QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex&
 
   const std::vector<const CallTreeNode*>& siblings = parent_item->children();
   if (row < 0 || static_cast<size_t>(row) >= siblings.size()) {
-    return QModelIndex();
+    return {};
   }
   const CallTreeNode* item = siblings[row];
   return createIndex(row, column, const_cast<CallTreeNode*>(item));
@@ -379,13 +379,13 @@ QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex&
 
 QModelIndex CallTreeViewItemModel::parent(const QModelIndex& index) const {
   if (!index.isValid()) {
-    return QModelIndex();
+    return {};
   }
 
   auto* child_item = static_cast<CallTreeNode*>(index.internalPointer());
   const CallTreeNode* item = child_item->parent();
   if (item == call_tree_view_.get()) {
-    return QModelIndex();
+    return {};
   }
 
   const CallTreeNode* parent_item = item->parent();

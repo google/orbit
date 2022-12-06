@@ -221,11 +221,10 @@ QRect AccessibilityAdapter::rect() const {
 
   if (bridge != nullptr) {
     QRect bridge_rect = bridge->rect();
-    return QRect(rect.left + bridge_rect.left(), rect.top + bridge_rect.top(), rect.width,
-                 rect.height);
+    return {rect.left + bridge_rect.left(), rect.top + bridge_rect.top(), rect.width, rect.height};
   }
 
-  return QRect(rect.left, rect.top, rect.width, rect.height);
+  return {rect.left, rect.top, rect.width, rect.height};
 }
 
 QAccessible::Role AccessibilityAdapter::role() const {
