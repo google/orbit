@@ -19,6 +19,7 @@
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -34,11 +35,11 @@ Collects primitives to be rendered at a later point in time.
 
 By calling PrimitiveAssembler::AddXXX, primitives are added to internal CPU buffers, and sorted
 into layers formed by equal z-coordinates. Each layer can then be drawn seperately with
-PrimitiveAssembler::DrawLayer(), or all layers can be drawn at once in their correct order using
-PrimitiveAssembler::Draw():
+PrimitiveAssembler::DrawRenderGroup(), or all layers can be drawn at once in their correct order
+using PrimitiveAssembler::Draw():
 
 NOTE: PrimitiveAssembler has a few pure virtual functions that have to be implemented: A few
-AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
+AddInternalMethods, ResetElements(), GetRenderGroups() and DrawLayers().
 **/
 class PrimitiveAssembler {
  public:
@@ -123,6 +124,13 @@ class PrimitiveAssembler {
                         const Color& arrow_color, ArrowDirection arrow_direction);
 
   void StartNewFrame();
+
+  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const {
+    return batcher_->GetCurrentRenderGroup();
+  }
+  virtual void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) {
+    batcher_->SetCurrentRenderGroup(render_group);
+  }
 
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {

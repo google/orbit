@@ -4,12 +4,17 @@
 
 #include "OrbitGl/CaptureWindow.h"
 
+#include <GL/gl.h>
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
+#include <qnamespace.h>
 
+#include <QFontDatabase>
+#include <QOpenGLFunctions>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -26,7 +31,6 @@
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "Introspection/Introspection.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Append.h"
@@ -34,6 +38,7 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/CoreMath.h"
@@ -41,6 +46,7 @@
 #include "OrbitGl/GlUtils.h"
 #include "OrbitGl/OpenGlBatcher.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitGl/PickingManager.h"
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/QtTextRenderer.h"
 #include "OrbitGl/TextRenderer.h"
@@ -538,27 +544,46 @@ void CaptureWindow::Draw(QPainter* painter) {
 }
 
 void CaptureWindow::RenderAllLayers(QPainter* painter) {
-  std::vector<float> all_layers{};
-  if (time_graph_ != nullptr) {
-    all_layers = time_graph_->GetBatcher().GetLayers();
-    orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
-  }
-  orbit_base::Append(all_layers, ui_batcher_.GetLayers());
-  orbit_base::Append(all_layers, text_renderer_.GetLayers());
+  std::vector<orbit_gl::BatchRenderGroupId> all_groups_sorted{};
 
-  // Sort and remove duplicates.
-  std::sort(all_layers.begin(), all_layers.end());
-  auto it = std::unique(all_layers.begin(), all_layers.end());
-  all_layers.resize(std::distance(all_layers.begin(), it));
-  if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
-    ORBIT_ERROR("Too many z-layers. The current number is %d", all_layers.size());
-  }
-
-  for (float layer : all_layers) {
+  {
+    ORBIT_SCOPE("Layer gathering and sorting");
     if (time_graph_ != nullptr) {
-      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+      all_groups_sorted = time_graph_->GetBatcher().GetNonEmptyRenderGroups();
+      orbit_base::Append(all_groups_sorted, time_graph_->GetTextRenderer()->GetRenderGroups());
     }
-    ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+    orbit_base::Append(all_groups_sorted, ui_batcher_.GetNonEmptyRenderGroups());
+    orbit_base::Append(all_groups_sorted, text_renderer_.GetRenderGroups());
+
+    // Sort and remove duplicates.
+    std::sort(all_groups_sorted.begin(), all_groups_sorted.end());
+    auto it = std::unique(all_groups_sorted.begin(), all_groups_sorted.end());
+    all_groups_sorted.resize(std::distance(all_groups_sorted.begin(), it));
+  }
+
+  last_rendered_layers_ = all_groups_sorted.size();
+
+  if (time_graph_layout_->GetRenderDebugLayers() && picking_mode_ == PickingMode::kNone) {
+    DrawLayerDebugInfo(all_groups_sorted, painter);
+    return;
+  }
+
+  for (const orbit_gl::BatchRenderGroupId& group : all_groups_sorted) {
+    auto stencil = orbit_gl::BatchRenderGroupManager::GetGroupState(group).stencil;
+    if (stencil.enabled) {
+      Vec2i stencil_screen_pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
+      Vec2i stencil_screen_size = viewport_.WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
+      painter->setClipRect(QRect(stencil_screen_pos[0], stencil_screen_pos[1],
+                                 stencil_screen_size[0], stencil_screen_size[1]));
+      painter->setClipping(true);
+    } else {
+      painter->setClipping(false);
+    }
+
+    if (time_graph_ != nullptr) {
+      time_graph_->GetBatcher().DrawRenderGroup(group, picking_mode_ != PickingMode::kNone);
+    }
+    ui_batcher_.DrawRenderGroup(group, picking_mode_ != PickingMode::kNone);
 
     // The painter is in "native painting mode" all the time and we merely leave it for rendering
     // the text here. Compare GlCanvas::Render - that's where we enter native painting.
@@ -566,8 +591,11 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     painter->endNativePainting();
 
     if (picking_mode_ == PickingMode::kNone) {
-      text_renderer_.RenderLayer(painter, layer);
-      RenderText(painter, layer);
+      text_renderer_.DrawRenderGroup(painter, group);
+      if (time_graph_ != nullptr) {
+        ORBIT_SCOPE("CaptureWindow: Text Rendering");
+        time_graph_->GetTextRenderer()->DrawRenderGroup(painter, group);
+      }
     }
 
     painter->beginNativePainting();
@@ -697,14 +725,6 @@ std::string CaptureWindow::GetPerformanceInfo() const {
 
 std::string CaptureWindow::GetSelectionSummary() const { return selection_stats_.GetSummary(); }
 
-void CaptureWindow::RenderText(QPainter* painter, float layer) {
-  ORBIT_SCOPE_FUNCTION;
-  if (time_graph_ == nullptr) return;
-  if (picking_mode_ == PickingMode::kNone) {
-    time_graph_->DrawText(painter, layer);
-  }
-}
-
 void CaptureWindow::RenderHelpUi() {
   constexpr int kOffset = 30;
   Vec2 world_pos = viewport_.ScreenToWorld(Vec2i(kOffset, kOffset));
@@ -788,4 +808,42 @@ void CaptureWindow::RenderSelectionOverlay() {
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
                          GlCanvas::kZValueOverlay, formatting);
+}
+
+void CaptureWindow::DrawLayerDebugInfo(
+    const std::vector<orbit_gl::BatchRenderGroupId>& sorted_layers, QPainter* painter) {
+  QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
+
+  for (const auto& layer : sorted_layers) {
+    const orbit_gl::StencilConfig& stencil =
+        orbit_gl::BatchRenderGroupManager::GetGroupState(layer).stencil;
+    if (!stencil.enabled) continue;
+
+    PrepareGlState();
+    if (time_graph_ != nullptr) {
+      Color color = time_graph_->GetColor(static_cast<uint32_t>(
+          std::hash<std::string>()(layer.name) % std::numeric_limits<uint32_t>::max()));
+      glColor4f(static_cast<float>(color[0]) / 255.f, static_cast<float>(color[1]) / 255.f,
+                static_cast<float>(color[2]) / 255.f, 1.f);
+    } else {
+      glColor4f(1, 0, 0, 1);
+    }
+    glBegin(GL_POLYGON);
+    {
+      glVertex2f(stencil.pos[0], stencil.pos[1]);
+      glVertex2f(stencil.pos[0] + stencil.size[0], stencil.pos[1]);
+      glVertex2f(stencil.pos[0] + stencil.size[0], stencil.pos[1] + stencil.size[1]);
+      glVertex2f(stencil.pos[0], stencil.pos[1] + stencil.size[1]);
+    }
+    glEnd();
+    CleanupGlState();
+
+    painter->endNativePainting();
+    font.setPixelSize(14);
+    painter->setFont(font);
+    painter->setPen(QColor(255, 255, 255));
+    Vec2i pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
+    painter->drawText(pos[0], pos[1], 100, 20, Qt::AlignLeft, QString::fromStdString(layer.name));
+    painter->beginNativePainting();
+  }
 }

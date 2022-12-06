@@ -11,6 +11,7 @@
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
@@ -19,6 +20,9 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewpor
                                        const TimeGraphLayout* layout)
     : viewport_(viewport), layout_(layout), parent_(parent) {
   ORBIT_CHECK(layout != nullptr);
+
+  static uint32_t uid_counter = 0;
+  uid_ = uid_counter++;
 }
 
 void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -26,8 +30,7 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
   ORBIT_SCOPE_FUNCTION;
 
   draw_requested_ = false;
-  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
-  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+  PreRender(primitive_assembler, text_renderer);
 
   DoDraw(primitive_assembler, text_renderer, draw_context);
 
@@ -35,8 +38,7 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
     child->Draw(primitive_assembler, text_renderer, draw_context);
   }
 
-  text_renderer.PopTranslation();
-  primitive_assembler.PopTranslation();
+  PostRender(primitive_assembler, text_renderer);
 }
 
 void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assembler,
@@ -45,9 +47,7 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
   ORBIT_SCOPE_FUNCTION;
 
   update_primitives_requested_ = false;
-
-  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
-  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+  PreRender(primitive_assembler, text_renderer);
 
   DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
 
@@ -57,8 +57,7 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
     }
   }
 
-  text_renderer.PopTranslation();
-  primitive_assembler.PopTranslation();
+  PostRender(primitive_assembler, text_renderer);
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
@@ -246,6 +245,40 @@ void CaptureViewElement::RequestUpdate(RequestUpdateScope scope) {
   if (parent_ != nullptr) {
     parent_->RequestUpdate(scope);
   }
+}
+
+void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
+                                   TextRenderer& text_renderer) {
+  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
+  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+
+  if (RestrictDrawingToBody()) {
+    previous_batcher_render_group_ = primitive_assembler.GetCurrentRenderGroup();
+    previous_text_render_group_ = text_renderer.GetCurrentRenderGroup();
+
+    BatchRenderGroupId new_render_group;
+    const std::string kRenderGroupName = std::string("rg_cve_") + std::to_string(GetUid());
+    new_render_group.name = kRenderGroupName;
+
+    BatchRenderGroupState state = BatchRenderGroupManager::GetGroupState(new_render_group);
+    state.stencil.pos = {GetPos()[0], GetPos()[1]};
+    state.stencil.size = {GetSize()[0], GetSize()[1]};
+    state.stencil.enabled = true;
+    BatchRenderGroupManager::SetGroupState(new_render_group, state);
+
+    primitive_assembler.SetCurrentRenderGroup(new_render_group);
+    text_renderer.SetCurrentRenderGroup(new_render_group);
+  }
+}
+
+void CaptureViewElement::PostRender(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer) {
+  if (RestrictDrawingToBody()) {
+    primitive_assembler.SetCurrentRenderGroup(previous_batcher_render_group_);
+    text_renderer.SetCurrentRenderGroup(previous_text_render_group_);
+  }
+  text_renderer.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
 }  // namespace orbit_gl

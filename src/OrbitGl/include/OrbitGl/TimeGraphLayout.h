@@ -48,6 +48,7 @@ class TimeGraphLayout {
   [[nodiscard]] virtual bool GetDrawTrackBackground() const = 0;
   [[nodiscard]] virtual uint32_t GetFontSize() const = 0;
   [[nodiscard]] virtual int GetMaxLayoutingLoops() const = 0;
+  [[nodiscard]] virtual bool GetRenderDebugLayers() const = 0;
   virtual void SetScale(float value) = 0;
 
   ~TimeGraphLayout() = default;

@@ -875,11 +875,6 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
     primitive_assembler.AddVerticalLine(green_line_pos, GetHeight(), GlCanvas::kZValueUi,
                                         white_line_color);
   }
-
-  // TODO(http://b/217719000): We are drawing boxes in margin positions because some elements are
-  // being drawn partially outside the TrackContainer space. This hack is needed until we assure
-  // that no element is drawn outside of its parent's area.
-  DrawMarginsBetweenChildren(primitive_assembler);
 }
 
 void TimeGraph::DrawMarginsBetweenChildren(
@@ -903,10 +898,6 @@ void TimeGraph::DrawMarginsBetweenChildren(
   Vec2 left_margin_pos = GetPos();
   Quad left_margin_box = MakeBox(left_margin_pos, Vec2(left_margin_width, left_margin_height));
   primitive_assembler.AddBox(left_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
-}
-
-void TimeGraph::DrawText(QPainter* painter, float layer) {
-  text_renderer_static_.RenderLayer(painter, layer);
 }
 
 bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {

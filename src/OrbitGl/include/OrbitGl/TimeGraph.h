@@ -60,7 +60,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   void DrawAllElements(orbit_gl::PrimitiveAssembler& primitive_assembler,
                        orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode);
-  void DrawText(QPainter* painter, float layer);
 
   // TODO(b/214282122): Move Process Timers function outside the UI.
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info);
@@ -149,6 +148,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
     if (draw_requested_) return RedrawType::kDraw;
     return RedrawType::kNone;
   }
+
+  [[nodiscard]] bool RestrictDrawingToBody() const override { return false; }
 
   [[nodiscard]] orbit_gl::TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] orbit_gl::Batcher& GetBatcher() { return batcher_; }

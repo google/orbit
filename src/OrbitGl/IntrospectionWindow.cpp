@@ -299,11 +299,6 @@ void IntrospectionWindow::Draw(QPainter* painter) {
   CaptureWindow::Draw(painter);
 }
 
-void IntrospectionWindow::RenderText(QPainter* painter, float layer) {
-  ORBIT_SCOPE_FUNCTION;
-  CaptureWindow::RenderText(painter, layer);
-}
-
 void IntrospectionWindow::ToggleRecording() {
   if (!IsIntrospecting()) {
     StartIntrospection();

@@ -22,6 +22,7 @@
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/TranslationStack.h"
 #include "OrbitGl/Viewport.h"
 
@@ -70,28 +71,40 @@ float GetXOffsetFromAlignment(QtTextRenderer::HAlign alignment, float width) {
 
 }  // namespace
 
-void QtTextRenderer::RenderLayer(QPainter* painter, float layer) {
+void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId& group) {
   ORBIT_SCOPE_FUNCTION;
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
-  auto text_for_layer = stored_text_.find(layer);
+  auto text_for_layer = stored_text_.find(group);
   if (text_for_layer == stored_text_.end()) {
     return;
   }
-  for (const auto& text_entry : text_for_layer->second) {
+  for (const auto& text_entry : text_for_layer->second.second) {
     font.setPixelSize(text_entry.formatting.font_size);
     painter->setFont(font);
     painter->setPen(QColor(text_entry.formatting.color[0], text_entry.formatting.color[1],
                            text_entry.formatting.color[2], text_entry.formatting.color[3]));
+
+    auto stencil = BatchRenderGroupManager::GetGroupState(group).stencil;
+    if (stencil.enabled) {
+      Vec2i stencil_screen_pos = viewport_->WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
+      Vec2i stencil_screen_size = viewport_->WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
+      painter->setClipRect(QRect(stencil_screen_pos[0], stencil_screen_pos[1],
+                                 stencil_screen_size[0], stencil_screen_size[1]));
+      painter->setClipping(true);
+    } else {
+      painter->setClipping(false);
+    }
+
     painter->drawText(text_entry.x, text_entry.y, text_entry.w, text_entry.h, Qt::AlignCenter,
                       text_entry.text);
   }
 }
 
-std::vector<float> QtTextRenderer::GetLayers() const {
-  std::vector<float> result(stored_text_.size());
+std::vector<BatchRenderGroupId> QtTextRenderer::GetRenderGroups() const {
+  std::vector<BatchRenderGroupId> result(stored_text_.size());
   int index = 0;
-  for (const auto& [layer_z, unused_text] : stored_text_) {
-    result[index++] = layer_z;
+  for (const auto& [group, unused_text] : stored_text_) {
+    result[index++] = group;
   }
   std::sort(result.begin(), result.end());
   return result;
@@ -121,6 +134,11 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   Vec2i pen_pos = viewport_->WorldToScreen(Vec2(x, y));
   LayeredVec2 transformed = translations_.TranslateXYZAndFloorXY(
       {{static_cast<float>(pen_pos[0]), static_cast<float>(pen_pos[1])}, z});
+
+  current_render_group_.layer = transformed.z;
+  stored_text_[current_render_group_].first = current_render_group_;
+  BatchRenderGroupManager::TouchId(current_render_group_);
+
   const int max_width = static_cast<int>(viewport_->WorldToScreen({formatting.max_size, 0})[0]);
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   font.setPixelSize(formatting.font_size);
@@ -135,10 +153,10 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
     const float width = GetStringWidth(elided_line, formatting.font_size);
     max_line_width = std::max(max_line_width, width);
     const float x_offset = GetXOffsetFromAlignment(formatting.halign, width);
-    stored_text_[transformed.z].emplace_back(elided_line, std::lround(transformed.xy[0] + x_offset),
-                                             std::lround(transformed.xy[1] + y_offset),
-                                             std::lround(width), std::lround(single_line_height),
-                                             formatting);
+    stored_text_[current_render_group_].second.emplace_back(
+        elided_line, std::lround(transformed.xy[0] + x_offset),
+        std::lround(transformed.xy[1] + y_offset), std::lround(width),
+        std::lround(single_line_height), formatting);
     y_offset += single_line_height;
   }
 
@@ -251,7 +269,12 @@ float QtTextRenderer::AddFittingSingleLineText(const QString& text, float x, flo
       {{static_cast<float>(pen_pos[0]), static_cast<float>(pen_pos[1])}, z});
   const float x_offset = GetXOffsetFromAlignment(formatting.halign, width);
   float y_offset = GetYOffsetFromAlignment(formatting.valign, single_line_height);
-  stored_text_[transformed.z].emplace_back(
+
+  current_render_group_.layer = transformed.z;
+  stored_text_[current_render_group_].first = current_render_group_;
+  BatchRenderGroupManager::TouchId(current_render_group_);
+
+  stored_text_[current_render_group_].second.emplace_back(
       text, std::lround(transformed.xy[0] + x_offset), std::lround(transformed.xy[1] + y_offset),
       std::lround(width), std::lround(single_line_height), formatting);
   return width;

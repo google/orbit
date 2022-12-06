@@ -36,7 +36,6 @@ class IntrospectionWindow : public CaptureWindow {
 
  protected:
   void Draw(QPainter* painter) override;
-  void RenderText(QPainter* painter, float layer) override;
   bool ShouldSkipRendering() const override { return false; };
 
  private:

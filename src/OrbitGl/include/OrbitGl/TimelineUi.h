@@ -37,6 +37,8 @@ class TimelineUi : public CaptureViewElement {
 
   [[nodiscard]] float GetHeight() const override { return layout_->GetTimeBarHeight(); }
 
+  [[nodiscard]] bool RestrictDrawingToBody() const override { return true; }
+
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  protected:

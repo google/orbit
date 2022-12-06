@@ -58,8 +58,8 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
   // Simulate drawing by simple appending all colors to internal
   // buffers. Only a single color per element will be appended
   // (start point for line, first vertex for triangle and box)
-  void DrawLayer(float layer, bool picking = false) override {
-    auto& buffer = primitive_buffers_by_layer_.at(layer);
+  void DrawRenderGroup(const BatchRenderGroupId& group, bool picking = false) override {
+    auto& buffer = primitive_buffers_by_group_.at(group);
     if (picking) {
       for (auto it = buffer.line_buffer.picking_colors_.begin();
            it != buffer.line_buffer.picking_colors_.end();) {
@@ -105,8 +105,8 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
     }
   }
 
-  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(float layer) const {
-    return primitive_buffers_by_layer_.at(layer);
+  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(const BatchRenderGroupId& group) const {
+    return primitive_buffers_by_group_.at(group);
   }
 
  private:
@@ -119,8 +119,8 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
                 uint32_t box_count) {
   batcher.ResetMockDrawCounts();
 
-  for (auto layer : batcher.GetLayers()) {
-    batcher.DrawLayer(layer);
+  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+    batcher.DrawRenderGroup(group);
   }
   EXPECT_EQ(batcher.GetDrawnLineColors().size(), line_count);
   EXPECT_EQ(batcher.GetDrawnTriangleColors().size(), triangle_count);
@@ -177,8 +177,8 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
   batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
-  for (auto layer : batcher.GetLayers()) {
-    batcher.DrawLayer(layer, true);
+  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+    batcher.DrawRenderGroup(group, true);
   }
 
   ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
@@ -208,8 +208,8 @@ TEST(OpenGlBatcher, MultipleDrawCalls) {
   batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
-  for (auto layer : batcher.GetLayers()) {
-    batcher.DrawLayer(layer, true);
+  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+    batcher.DrawRenderGroup(group, true);
   }
 
   auto line_color = batcher.GetDrawnLineColors()[0];
@@ -252,7 +252,7 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
                                        original_expectation.end_point + transform};
 
   const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
-    return *batcher.GetInternalBuffers(z).line_buffer.lines_.begin();
+    return *batcher.GetInternalBuffers(BatchRenderGroupId(z)).line_buffer.lines_.begin();
   };
 
   const auto add_line_assert_eq = [&batcher, &first_from_layer](const Line3D& expectation) {

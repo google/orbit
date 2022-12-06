@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "Containers/BlockChain.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -76,6 +77,7 @@ struct PrimitiveBuffers {
   LineBuffer line_buffer;
   BoxBuffer box_buffer;
   TriangleBuffer triangle_buffer;
+  BatchRenderGroupState metadata;
 };
 
 }  // namespace orbit_gl_internal
@@ -100,21 +102,38 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
                    std::unique_ptr<PickingUserData> user_data = nullptr) override;
 
   [[nodiscard]] uint32_t GetNumElements() const override { return user_data_.size(); }
-  [[nodiscard]] std::vector<float> GetLayers() const override;
-  void DrawLayer(float layer, bool picking) override;
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override;
+  void DrawRenderGroup(const BatchRenderGroupId& group, bool picking) override;
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
 
   [[nodiscard]] Statistics GetStatistics() const override;
 
  protected:
-  std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
+  std::unordered_map<BatchRenderGroupId, orbit_gl_internal::PrimitiveBuffers>
+      primitive_buffers_by_group_;
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
-  void DrawLineBuffer(float layer, bool picking);
-  void DrawBoxBuffer(float layer, bool picking);
-  void DrawTriangleBuffer(float layer, bool picking);
+  void DrawLineBuffer(const BatchRenderGroupId& group, bool picking);
+  void DrawBoxBuffer(const BatchRenderGroupId& group, bool picking);
+  void DrawTriangleBuffer(const BatchRenderGroupId& group, bool picking);
+
+  inline void UpdateRenderGroupZ(float layer_z_value) {
+    // This should be refactored in the future:
+    // Different z-values mean different render groups. Adjusting the z-value of the current render
+    // group should be done explicitly by the users of this class instead of implicitly here.
+    // However, this would mean a lot of changes to all the rendering code, we'd remove all
+    // z-parameters from all "AddXXX" calls and instead rely on a stateful "current z" setting in
+    // the batcher.
+    [[unlikely]] if (current_render_group_.layer != layer_z_value) {
+      // We also need to copy over the state to the new group, because users of this class assume to
+      // set the state once and keep it until they explicitly change the render group.
+      auto current_group_state = BatchRenderGroupManager::GetGroupState(current_render_group_);
+      current_render_group_.layer = layer_z_value;
+      BatchRenderGroupManager::SetGroupState(current_render_group_, current_group_state);
+    }
+  }
 };
 
 }  // namespace orbit_gl

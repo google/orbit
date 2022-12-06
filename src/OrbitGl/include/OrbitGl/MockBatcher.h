@@ -40,11 +40,11 @@ class MockBatcher : public Batcher {
   void ResetElements() override;
   [[nodiscard]] uint32_t GetNumElements() const override;
 
-  [[nodiscard]] std::vector<float> GetLayers() const override {
-    return std::vector<float>(z_layers_.begin(), z_layers_.end());
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override {
+    return std::vector<BatchRenderGroupId>(render_groups_.begin(), render_groups_.end());
   }
 
-  void DrawLayer(float /*layer*/, bool /*picking*/) override {}
+  void DrawRenderGroup(const BatchRenderGroupId& /*group*/, bool /*picking*/) override {}
 
   [[nodiscard]] Statistics GetStatistics() const override { return {}; }
 
@@ -67,7 +67,7 @@ class MockBatcher : public Batcher {
 
   Vec2 min_point_;
   Vec2 max_point_;
-  std::set<float> z_layers_;
+  std::set<BatchRenderGroupId> render_groups_;
   int num_vertical_lines_ = 0;
   int num_horizontal_lines_ = 0;
   absl::btree_map<Color, int> num_lines_by_color_;

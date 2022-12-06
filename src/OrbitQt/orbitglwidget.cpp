@@ -24,6 +24,7 @@
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   QSurfaceFormat requested_format = QSurfaceFormat::defaultFormat();
+
   ORBIT_LOG("OpenGL version requested: %i.%i", requested_format.majorVersion(),
             requested_format.minorVersion());
   setFocusPolicy(Qt::WheelFocus);

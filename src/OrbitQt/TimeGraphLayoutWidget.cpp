@@ -48,6 +48,7 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&thread_dependency_arrow_head_height_);
   AddWidgetForProperty(&thread_dependency_arrow_body_width_);
   AddWidgetForProperty(&scale_);
+  AddWidgetForProperty(&render_debug_layers_);
 }
 
 float TimeGraphLayoutWidget::GetCollapseButtonSize(int indentation_level) const {

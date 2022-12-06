@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_TEXT_RENDERER_H_
 #define ORBIT_GL_TEXT_RENDERER_H_
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/TextRendererInterface.h"
 #include "OrbitGl/Viewport.h"
 
@@ -17,10 +18,18 @@ class TextRenderer : public TextRendererInterface {
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
 
+  void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) override {
+    current_render_group_ = render_group;
+  }
+  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const override {
+    return current_render_group_;
+  }
+
  protected:
   Viewport* viewport_ = nullptr;
 
   TranslationStack translations_;
+  BatchRenderGroupId current_render_group_;
 };
 
 }  // namespace orbit_gl

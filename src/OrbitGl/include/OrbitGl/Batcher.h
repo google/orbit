@@ -32,19 +32,28 @@ class Batcher : public BatcherInterface {
     uint32_t draw_calls = 0;
     uint32_t stored_layers = 0;
     uint32_t stored_vertices = 0;
+
+    friend bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
+    friend bool operator!=(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
   };
 
   [[nodiscard]] virtual Statistics GetStatistics() const = 0;
-
-  friend bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
-  friend bool operator!=(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
+  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const override {
+    return current_render_group_;
+  }
+  void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) override {
+    current_render_group_ = render_group;
+  }
 
  protected:
   orbit_gl::TranslationStack translations_;
+  BatchRenderGroupId current_render_group_;
 
  private:
   BatcherId batcher_id_;
 };
+
+[[nodiscard]] bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
 
 }  // namespace orbit_gl
 
