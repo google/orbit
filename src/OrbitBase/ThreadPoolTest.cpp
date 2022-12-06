@@ -81,6 +81,10 @@ TEST(ThreadPool, QueuedActionsExecutedOnShutdown) {
 }
 
 TEST(ThreadPool, CheckTtl) {
+// TODO(https://github.com/google/orbit/issues/4503): Enable test again.
+#ifdef _WIN32
+  GTEST_SKIP();
+#endif
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 5;
   constexpr size_t kThreadTtlMillis = 5;
