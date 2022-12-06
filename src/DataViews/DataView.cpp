@@ -120,7 +120,7 @@ std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
   // Hooking related actions
   try_add_action_group({kMenuActionLoadSymbols, kMenuActionStopDownload, kMenuActionSelect,
                         kMenuActionUnselect, kMenuActionEnableFrameTrack,
-                        kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers});
+                        kMenuActionDisableFrameTrack});
 
   try_add_action_group({kMenuActionDisassembly, kMenuActionSourceCode});
 
@@ -153,9 +153,6 @@ void DataView::OnContextMenu(std::string_view action, int /*menu_index*/,
     OnDisableFrameTrackRequested(item_indices);
   } else if (action == kMenuActionAddIterator) {
     OnIteratorRequested(item_indices);
-  } else if (action == kMenuActionVerifyFramePointers) {
-    OnVerifyFramePointersRequested(item_indices);
-
   } else if (action == kMenuActionDisassembly) {
     OnDisassemblyRequested(item_indices);
   } else if (action == kMenuActionSourceCode) {
@@ -268,19 +265,6 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
     // However, disable the frame track, so it is not recreated on the next capture.
     app_->DisableFrameTrack(*function);
     app_->RemoveFrameTrack(*function);
-  }
-}
-
-void DataView::OnVerifyFramePointersRequested(const std::vector<int>& selection) {
-  std::vector<const ModuleData*> modules_to_validate;
-  modules_to_validate.reserve(selection.size());
-  for (int i : selection) {
-    const ModuleData* module = GetModuleDataFromRow(i);
-    modules_to_validate.push_back(module);
-  }
-
-  if (!modules_to_validate.empty()) {
-    app_->OnValidateFramePointers(modules_to_validate);
   }
 }
 

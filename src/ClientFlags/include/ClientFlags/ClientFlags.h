@@ -26,9 +26,6 @@ ABSL_DECLARE_FLAG(std::string, process_name);
 // TODO(b/160549506): Remove this flag once it can be specified in the ui.
 ABSL_DECLARE_FLAG(bool, frame_pointer_unwinding);
 
-// TODO(kuebler): remove this once we have the validator complete
-ABSL_DECLARE_FLAG(bool, enable_frame_pointer_validator);
-
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_DECLARE_FLAG(bool, show_return_values);
 

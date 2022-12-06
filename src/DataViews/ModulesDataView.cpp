@@ -132,11 +132,6 @@ void ModulesDataView::DoSort() {
 
 DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action, int clicked_index,
                                                         const std::vector<int>& selected_indices) {
-  if (action == kMenuActionVerifyFramePointers &&
-      !absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    return ActionStatus::kInvisible;
-  }
-
   // transform selected_indices into modules
   std::vector<const ModuleData*> modules;
   modules.reserve(selected_indices.size());
@@ -144,15 +139,6 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
     const ModuleData* module = GetModuleDataFromRow(index);
     ORBIT_CHECK(module);
     modules.emplace_back(module);
-  }
-
-  if (action == kMenuActionVerifyFramePointers) {
-    bool at_least_one_module_is_loaded =
-        std::any_of(modules.begin(), modules.end(),
-                    [](const ModuleData* module) { return module->AreDebugSymbolsLoaded(); });
-
-    return at_least_one_module_is_loaded ? ActionStatus::kVisibleAndEnabled
-                                         : ActionStatus::kVisibleButDisabled;
   }
 
   bool at_least_one_module_can_be_loaded =

@@ -30,7 +30,6 @@ target_sources(
          include/OrbitGl/CoreMath.h
          include/OrbitGl/DrawingInterface.h
          include/OrbitGl/FormatCallstackForTooltip.h
-         include/OrbitGl/FramePointerValidatorClient.h
          include/OrbitGl/FrameTrack.h
          include/OrbitGl/FrameTrackOnlineProcessor.h
          include/OrbitGl/Geometry.h
@@ -110,7 +109,6 @@ target_sources(
           CaptureWindow.cpp
           CGroupAndProcessMemoryTrack.cpp
           FormatCallstackForTooltip.cpp
-          FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
           GlCanvas.cpp

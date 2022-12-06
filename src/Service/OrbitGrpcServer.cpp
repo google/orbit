@@ -18,7 +18,6 @@
 #ifdef __linux
 
 #include "CrashService/CrashServiceImpl.h"
-#include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
 #include "LinuxCaptureService/LinuxCaptureService.h"
 #include "ProcessService/ProcessServiceImpl.h"
 #include "TracepointService/TracepointServiceImpl.h"
@@ -55,8 +54,6 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   orbit_linux_capture_service::LinuxCaptureService capture_service_;
   orbit_process_service::ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
-  orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl
-      frame_pointer_validator_service_;
   orbit_crash_service::CrashServiceImpl crash_service_;
 #else
   orbit_windows_capture_service::WindowsCaptureService capture_service_;
@@ -80,7 +77,6 @@ bool OrbitGrpcServerImpl::Init(std::string_view server_address, bool dev_mode) {
 
 #ifdef __linux
   builder.RegisterService(&tracepoint_service_);
-  builder.RegisterService(&frame_pointer_validator_service_);
   if (dev_mode) {
     builder.RegisterService(&crash_service_);
   }

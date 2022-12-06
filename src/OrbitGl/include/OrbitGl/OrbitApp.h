@@ -81,7 +81,6 @@
 #include "OrbitGl/CallTreeView.h"
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/DataViewFactory.h"
-#include "OrbitGl/FramePointerValidatorClient.h"
 #include "OrbitGl/FrameTrackOnlineProcessor.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/IntrospectionWindow.h"
@@ -199,9 +198,6 @@ class OrbitApp final : public DataViewFactory,
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override;
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override;
-
-  void OnValidateFramePointers(
-      std::vector<const orbit_client_data::ModuleData*> modules_to_validate) override;
 
   void SetCaptureWindow(CaptureWindow* capture);
   [[nodiscard]] const TimeGraph* GetTimeGraph() const {
@@ -664,8 +660,6 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   orbit_client_data::ProcessData* process_ = nullptr;
-
-  std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

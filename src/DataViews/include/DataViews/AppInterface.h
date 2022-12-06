@@ -77,8 +77,6 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   [[nodiscard]] virtual orbit_client_data::ModuleManager* GetMutableModuleManager() = 0;
 
   // Functions needed by ModulesDataView
-  virtual void OnValidateFramePointers(
-      std::vector<const orbit_client_data::ModuleData*> modules_to_validate) = 0;
   virtual orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() = 0;
 
   // Functions needed by TracepointsDataView
