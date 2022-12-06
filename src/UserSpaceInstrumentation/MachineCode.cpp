@@ -7,6 +7,8 @@
 #include <absl/base/casts.h>
 #include <absl/types/span.h>
 
+#include <algorithm>
+
 namespace orbit_user_space_instrumentation {
 
 MachineCode& MachineCode::AppendBytes(absl::Span<const uint8_t> data) {

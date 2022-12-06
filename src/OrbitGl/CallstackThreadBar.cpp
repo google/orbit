@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/CallstackData.h"

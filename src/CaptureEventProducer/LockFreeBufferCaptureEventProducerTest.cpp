@@ -17,7 +17,6 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include <vector>
 
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
 #include "FakeProducerSideService/FakeProducerSideService.h"

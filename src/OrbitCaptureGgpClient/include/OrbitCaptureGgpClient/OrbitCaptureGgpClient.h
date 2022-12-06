@@ -26,6 +26,7 @@ class CaptureClientGgpClient {
 
  private:
   class CaptureClientGgpClientImpl;
+
   std::unique_ptr<CaptureClientGgpClientImpl> pimpl;
 };
 

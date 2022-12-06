@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"

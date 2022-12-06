@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
@@ -13,7 +14,6 @@
 #include <optional>
 #include <string>
 #include <thread>
-#include <vector>
 
 #include "CaptureEventProducer/CaptureEventProducer.h"
 #include "FakeProducerSideService/FakeProducerSideService.h"

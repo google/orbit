@@ -6,11 +6,14 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
+#include <stdint.h>
 
 #include <filesystem>
 #include <limits>
 #include <random>
+#include <string>
 #include <system_error>
+#include <tuple>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"

@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include "GrpcProtos/services_ggp.grpc.pb.h"
 #include "GrpcProtos/services_ggp.pb.h"

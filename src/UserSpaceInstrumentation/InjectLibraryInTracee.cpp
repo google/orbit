@@ -9,6 +9,7 @@
 #include <absl/types/span.h>
 #include <dlfcn.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <string>
