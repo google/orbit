@@ -6,7 +6,7 @@ load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
 package(default_visibility = [
     "//:__subpackages__",
-    "//:users",  
+    "//:users",
 ])
 
 licenses(["notice"])
@@ -15,7 +15,6 @@ orbit_cc_library(
     name = "ProducerEventProcessor",
     deps = [
         "//src/CaptureFile",
-        "//src/CaptureUploader",
         "//src/GrpcProtos",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/GrpcProtos:services_cc_grpc_proto",

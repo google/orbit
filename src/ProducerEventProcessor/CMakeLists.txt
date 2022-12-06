@@ -14,17 +14,14 @@ target_include_directories(ProducerEventProcessor PRIVATE
 target_sources(ProducerEventProcessor PUBLIC
         include/ProducerEventProcessor/ClientCaptureEventCollector.h
         include/ProducerEventProcessor/GrpcClientCaptureEventCollector.h
-        include/ProducerEventProcessor/ProducerEventProcessor.h
-        include/ProducerEventProcessor/UploaderClientCaptureEventCollector.h)
+        include/ProducerEventProcessor/ProducerEventProcessor.h)
 
 target_sources(ProducerEventProcessor PRIVATE
         GrpcClientCaptureEventCollector.cpp
-        ProducerEventProcessor.cpp
-        UploaderClientCaptureEventCollector.cpp)
+        ProducerEventProcessor.cpp)
 
 target_link_libraries(ProducerEventProcessor PUBLIC
         CaptureFile
-        CaptureUploader
         GrpcProtos
         Introspection
         OrbitBase)
@@ -33,8 +30,7 @@ add_executable(ProducerEventProcessorTests)
 
 target_sources(ProducerEventProcessorTests PRIVATE
         GrpcClientCaptureEventCollectorTest.cpp
-        ProducerEventProcessorTest.cpp
-        UploaderClientCaptureEventCollectorTest.cpp)
+        ProducerEventProcessorTest.cpp)
 
 target_link_libraries(ProducerEventProcessorTests PRIVATE
         TestUtils
