@@ -52,7 +52,7 @@ class unique_resource {
 
   ~unique_resource() { RunDeleter(); }
 
-  Resource get() const { return resource_.value(); }
+  const Resource& get() const { return resource_.value(); }
   Deleter& get_deleter() { return deleter_; }
   const Deleter& get_deleter() const { return deleter_; }
 

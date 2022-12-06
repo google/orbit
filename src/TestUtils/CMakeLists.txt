@@ -8,10 +8,12 @@ add_library(TestUtils STATIC)
 target_sources(TestUtils PUBLIC
   include/TestUtils/ContainerHelpers.h
   include/TestUtils/SaveRangeFromArg.h
+  include/TestUtils/TemporaryDirectory.h
   include/TestUtils/TemporaryFile.h
   include/TestUtils/TestUtils.h)
 
 target_sources(TestUtils PRIVATE
+  TemporaryDirectory.cpp
   TemporaryFile.cpp)
 
 target_include_directories(TestUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -27,6 +29,7 @@ target_link_libraries(TestUtils PUBLIC
 add_executable(TestUtilsTests
   ContainerHelpersTest.cpp
   SaveRangeFromArgTest.cpp
+  TemporaryDirectoryTest.cpp
   TemporaryFileTest.cpp
   TestUtilsTest.cpp)
 target_link_libraries(TestUtilsTests PRIVATE TestUtils GTest::Main)
