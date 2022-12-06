@@ -32,8 +32,6 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   void SetNormalizedLength(float length_ratio);   // [0,1]
   [[nodiscard]] float GetSliderWidth() const { return layout_->GetSliderWidth(); }
 
-  [[nodiscard]] Color GetBarColor() const { return slider_color_; }
-
   // Parameter: Position in [0, 1], relative to the size of the current data window
   using DragCallback = std::function<void(float)>;
   void SetDragCallback(DragCallback callback) { drag_callback_ = std::move(callback); }

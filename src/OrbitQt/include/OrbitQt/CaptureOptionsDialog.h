@@ -117,7 +117,6 @@ class CaptureOptionsDialog : public QDialog {
   // because the kernel stores this in a short and because of alignment reasons.
   // But the size the kernel actually returns is smaller and we leave some extra room (see
   // `PerfEventOpen.cpp`).
-  static constexpr uint16_t kMaxCopyRawStackSizeMaxValue = 65000;
   static constexpr uint16_t kMaxCopyRawStackSizeDefaultValue = 512;
   static constexpr uint16_t kThreadStateChangeMaxCopyRawStackSizeDefaultValue = 256;
 

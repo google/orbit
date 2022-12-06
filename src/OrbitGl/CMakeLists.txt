@@ -40,7 +40,6 @@ target_sources(
          include/OrbitGl/GpuTrack.h
          include/OrbitGl/GraphTrack.h
          include/OrbitGl/GraphTrackDataAggregator.h
-         include/OrbitGl/Images.h
          include/OrbitGl/IntrospectionWindow.h
          include/OrbitGl/LineGraphTrack.h
          include/OrbitGl/LiveFunctionsController.h

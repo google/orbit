@@ -80,15 +80,6 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
     return result;
   };
 
-  void AddChild(std::unique_ptr<CaptureViewElement>&& element) {
-    // TODO (b/226376237): This should not be needed
-    if (element->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
-      element->SetWidth(GetWidth());
-    }
-    children_.push_back(std::move(element));
-    UpdateLayout();
-  }
-
  protected:
   void DoUpdateLayout() override {
     float current_y = GetPos()[1];

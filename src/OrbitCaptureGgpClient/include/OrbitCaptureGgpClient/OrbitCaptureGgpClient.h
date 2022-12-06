@@ -16,7 +16,7 @@ class CaptureClientGgpClient {
  public:
   explicit CaptureClientGgpClient(std::string_view grpc_server_address);
   ~CaptureClientGgpClient();
-  CaptureClientGgpClient(CaptureClientGgpClient&&);
+  [[maybe_unused]] CaptureClientGgpClient(CaptureClientGgpClient&&);
   CaptureClientGgpClient& operator=(CaptureClientGgpClient&&);
 
   int StartCapture();

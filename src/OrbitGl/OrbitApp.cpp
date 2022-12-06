@@ -1528,13 +1528,6 @@ void OrbitApp::SendTooltipToUi(std::string_view tooltip) {
   main_thread_executor_->Schedule([this, tooltip] { main_window_->ShowTooltip(tooltip); });
 }
 
-void OrbitApp::SendInfoToUi(std::string_view title, std::string_view text) {
-  main_thread_executor_->Schedule([this, title, text] {
-    ORBIT_CHECK(info_message_callback_);
-    info_message_callback_(title, text);
-  });
-}
-
 void OrbitApp::SendWarningToUi(std::string_view title, std::string_view text) {
   main_thread_executor_->Schedule([this, title, text] {
     ORBIT_CHECK(warning_message_callback_);

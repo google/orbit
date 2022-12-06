@@ -33,9 +33,6 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
     }
     return height;
   }
-  [[nodiscard]] float GetVariableTrackHeight() const override {
-    return kVariableTrackHeight * scale_;
-  }
   [[nodiscard]] float GetTrackContentBottomMargin() const override {
     return kTrackContentBottomMargin * scale_;
   }

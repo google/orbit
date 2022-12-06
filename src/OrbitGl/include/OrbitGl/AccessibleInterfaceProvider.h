@@ -17,9 +17,6 @@ class AccessibleInterfaceProvider {
   virtual ~AccessibleInterfaceProvider() = default;
 
   [[nodiscard]] orbit_accessibility::AccessibleInterface* GetOrCreateAccessibleInterface();
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* GetAccessibleInterface() const {
-    return accessibility_.get();
-  }
 
  private:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>

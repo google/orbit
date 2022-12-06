@@ -13,7 +13,6 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetTextCoresHeight() const = 0;
   [[nodiscard]] virtual float GetThreadStateTrackHeight() const = 0;
   [[nodiscard]] virtual float GetEventTrackHeightFromTid(uint32_t tid) const = 0;
-  [[nodiscard]] virtual float GetVariableTrackHeight() const = 0;
   [[nodiscard]] virtual float GetTrackContentBottomMargin() const = 0;
   [[nodiscard]] virtual float GetTrackContentTopMargin() const = 0;
   [[nodiscard]] virtual float GetTrackLabelOffsetX() const = 0;

@@ -22,7 +22,6 @@ class Timer {
     return static_cast<double>(ElapsedNanos()) / 1000.0;
   }
   [[nodiscard]] double ElapsedMillis() const { return ElapsedMicros() / 1000.0; }
-  [[nodiscard]] double ElapsedSeconds() const { return ElapsedMillis() / 1000.0; }
 
  private:
   [[nodiscard]] uint64_t EndOrNow() const { return end_ == 0 ? Now() : end_; }
