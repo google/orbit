@@ -4,6 +4,8 @@
 
 #include "OrbitAccessibility/AccessibleInterfaceRegistry.h"
 
+#include <utility>
+
 #include "OrbitBase/Logging.h"
 
 namespace orbit_accessibility {
