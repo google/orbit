@@ -20,7 +20,7 @@
 #include "CaptureFile/ProtoSectionInputStream.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "TestUtils/TemporaryFile.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_client {
@@ -30,7 +30,7 @@ using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
-using orbit_test_utils::TemporaryFile;
+using orbit_test_utils::TemporaryDirectory;
 
 static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, const char* intern) {
   ClientCaptureEvent event;
@@ -47,17 +47,16 @@ static ClientCaptureEvent CreateCaptureFinishedEvent() {
 }
 
 TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCapture) {
-  auto temporary_file_or_error = TemporaryFile::Create();
-  ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-  TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+  auto temporary_dir_or_error = TemporaryDirectory::Create();
+  ASSERT_TRUE(temporary_dir_or_error.has_value()) << temporary_dir_or_error.error().message();
+  TemporaryDirectory temporary_dir = std::move(temporary_dir_or_error.value());
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
 
   auto error_handler = [](const ErrorMessage& error) { FAIL() << error.message(); };
 
-  temporary_file.CloseAndRemove();
-
+  std::filesystem::path capture_file_path = temporary_dir.GetDirectoryPath() / "capture.orbit";
   auto capture_event_processor_or_error =
-      CaptureEventProcessor::CreateSaveToFileProcessor(temporary_file.file_path(), error_handler);
+      CaptureEventProcessor::CreateSaveToFileProcessor(capture_file_path, error_handler);
   ASSERT_TRUE(capture_event_processor_or_error.has_value())
       << capture_event_processor_or_error.error().message();
 
@@ -70,7 +69,7 @@ TEST(SaveToFileEventProcessor, SaveAndLoadSimpleCapture) {
 
   capture_event_processor.reset();
 
-  auto capture_file_or_error = CaptureFile::OpenForReadWrite(temporary_file.file_path());
+  auto capture_file_or_error = CaptureFile::OpenForReadWrite(capture_file_path);
   ASSERT_THAT(capture_event_processor_or_error, HasValue());
   auto capture_file = std::move(capture_file_or_error.value());
 

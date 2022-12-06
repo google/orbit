@@ -22,7 +22,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "TestUtils/TemporaryFile.h"
+#include "TestUtils/TemporaryDirectory.h"
 
 namespace orbit_capture_file {
 
@@ -91,12 +91,13 @@ TEST(CaptureFileOutputStream, Smoke) {
 
   // Test the case of outputting capture file content to a file
   {
-    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
-    ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-    orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
-    temporary_file.CloseAndRemove();
+    auto temporary_dir_or_error = orbit_test_utils::TemporaryDirectory::Create();
+    ASSERT_TRUE(temporary_dir_or_error.has_value()) << temporary_dir_or_error.error().message();
+    orbit_test_utils::TemporaryDirectory temporary_directory =
+        std::move(temporary_dir_or_error.value());
 
-    std::string temp_file_name = temporary_file.file_path().string();
+    std::string temp_file_name =
+        (temporary_directory.GetDirectoryPath() / "capture.orbit").string();
     auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
     ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
 
@@ -143,12 +144,11 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
 
   // Test the case of outputting capture file content to a file
   {
-    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
-    ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-    orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
-    temporary_file.CloseAndRemove();
+    auto temporary_dir_or_error = orbit_test_utils::TemporaryDirectory::Create();
+    ASSERT_TRUE(temporary_dir_or_error.has_value()) << temporary_dir_or_error.error().message();
+    orbit_test_utils::TemporaryDirectory temporary_dir = std::move(temporary_dir_or_error.value());
 
-    std::string temp_file_name = temporary_file.file_path().string();
+    std::string temp_file_name = (temporary_dir.GetDirectoryPath() / "capture.orbit").string();
     auto output_stream_or_error = CaptureFileOutputStream::Create(temp_file_name);
     ASSERT_TRUE(output_stream_or_error.has_value()) << output_stream_or_error.error().message();
     std::unique_ptr<CaptureFileOutputStream> output_stream =

@@ -15,7 +15,7 @@
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "TestUtils/TemporaryFile.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_data_views {
@@ -68,11 +68,18 @@ static void ExpectSameLines(const std::string_view& actual, const std::string_vi
   EXPECT_THAT(actual_lines, testing::UnorderedElementsAreArray(expected_lines));
 }
 
-[[nodiscard]] orbit_test_utils::TemporaryFile GetTemporaryFilePath() {
+orbit_test_utils::TemporaryFile GetTemporaryFile() {
   ErrorMessageOr<orbit_test_utils::TemporaryFile> temporary_file_or_error =
       orbit_test_utils::TemporaryFile::Create();
   EXPECT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
   return std::move(temporary_file_or_error.value());
+}
+
+orbit_test_utils::TemporaryDirectory GetTemporaryDirectory() {
+  ErrorMessageOr<orbit_test_utils::TemporaryDirectory> temporary_dir_or_error =
+      orbit_test_utils::TemporaryDirectory::Create();
+  EXPECT_THAT(temporary_dir_or_error, orbit_test_utils::HasNoError());
+  return std::move(temporary_dir_or_error.value());
 }
 
 void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
@@ -81,20 +88,13 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
   const int action_index = GetActionIndexOnMenu(context_menu, action_name);
   EXPECT_TRUE(action_index != kInvalidActionIndex);
 
-  orbit_test_utils::TemporaryFile temporary_file = GetTemporaryFilePath();
+  orbit_test_utils::TemporaryDirectory temporary_dir = GetTemporaryDirectory();
+  std::filesystem::path temporary_file_path = temporary_dir.GetDirectoryPath() / "test.txt";
 
-  // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
-  // filepath. The TemporaryFile instance will still take care of deleting our new file when it
-  // gets out of scope.
-  temporary_file.CloseAndRemove();
-
-  EXPECT_CALL(app, GetSaveFile)
-      .Times(1)
-      .WillOnce(testing::Return(temporary_file.file_path().string()));
+  EXPECT_CALL(app, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
   view.OnContextMenu(std::string{action_name}, action_index, {0});
 
-  ErrorMessageOr<std::string> contents_or_error =
-      orbit_base::ReadFileToString(temporary_file.file_path());
+  ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
   ExpectSameLines(contents_or_error.value(), expected_contents);
