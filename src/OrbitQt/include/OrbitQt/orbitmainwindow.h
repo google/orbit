@@ -144,7 +144,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   }
 
   void SetLiveTabScopeStatsCollection(
-      orbit_client_data::ScopeStatsCollection scope_collection) override;
+      std::unique_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;

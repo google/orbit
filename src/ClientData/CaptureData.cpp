@@ -19,6 +19,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Typedef.h"
 #include "SymbolProvider/ModuleIdentifier.h"
@@ -270,13 +271,15 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
   return all_scopes_->GetSortedTimerDurationsForScopeId(scope_id);
 }
 
-ScopeStatsCollection CaptureData::GetAllScopeStatsCollection() const { return *all_scopes_; }
+std::unique_ptr<ScopeStatsCollection> CaptureData::GetAllScopeStatsCollection() const {
+  return std::make_unique<ScopeStatsCollection>(*all_scopes_);
+}
 
-ScopeStatsCollection CaptureData::CreateScopeStatsCollection(uint64_t min_tick,
-                                                             uint64_t max_tick) const {
+std::unique_ptr<ScopeStatsCollection> CaptureData::CreateScopeStatsCollection(
+    uint64_t min_tick, uint64_t max_tick) const {
   ORBIT_CHECK(scope_id_provider_);
   auto timers = GetAllScopeTimers(kAllValidScopeTypes, min_tick, max_tick);
-  return ScopeStatsCollection(*scope_id_provider_, timers);
+  return std::make_unique<ScopeStatsCollection>(*scope_id_provider_, timers);
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(

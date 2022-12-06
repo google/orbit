@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "ClientData/CaptureData.h"
@@ -267,7 +268,6 @@ std::optional<ScopeId> LiveFunctionsController::FunctionIdToScopeId(uint64_t fun
 }
 
 void LiveFunctionsController::SetScopeStatsCollection(
-    orbit_client_data::ScopeStatsCollection scope_collection) {
-  live_functions_data_view_.SetScopeStatsCollection(
-      std::make_unique<orbit_client_data::ScopeStatsCollection>(scope_collection));
+    std::unique_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) {
+  live_functions_data_view_.SetScopeStatsCollection(std::move(scope_collection));
 }

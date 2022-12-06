@@ -275,8 +275,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
                             /*size=*/0,      kPrettyNames[i], /*is_hotpatchable=*/false};
       functions_.insert_or_assign(kScopeIds[i], std::move(function));
     }
-    view_.SetScopeStatsCollection(std::make_unique<orbit_client_data::ScopeStatsCollection>(
-        capture_data_->GetAllScopeStatsCollection()));
+    view_.SetScopeStatsCollection(capture_data_->GetAllScopeStatsCollection());
   }
 
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
