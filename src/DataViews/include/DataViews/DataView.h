@@ -45,8 +45,6 @@ constexpr std::string_view kMenuActionEnableFrameTrack = "Enable frame track(s)"
 constexpr std::string_view kMenuActionDisableFrameTrack = "Disable frame track(s)";
 constexpr std::string_view kMenuActionAddIterator = "Add iterator(s)";
 
-constexpr std::string_view kMenuActionVerifyFramePointers = "Verify Frame Pointers";
-
 constexpr std::string_view kMenuActionDisassembly = "Go to Disassembly";
 constexpr std::string_view kMenuActionSourceCode = "Go to Source code";
 
@@ -178,7 +176,6 @@ class DataView {
   void OnEnableFrameTrackRequested(const std::vector<int>& selection);
   void OnDisableFrameTrackRequested(const std::vector<int>& selection);
   virtual void OnIteratorRequested(const std::vector<int>& /*selection*/) {}
-  void OnVerifyFramePointersRequested(const std::vector<int>& selection);
   void OnDisassemblyRequested(const std::vector<int>& selection);
   void OnSourceCodeRequested(const std::vector<int>& selection);
   virtual void OnJumpToRequested(std::string_view /*action*/,

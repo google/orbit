@@ -24,9 +24,6 @@ ABSL_FLAG(uint16_t, grpc_port, 44765,
 ABSL_FLAG(std::string, process_name, "",
           "Automatically select and connect to the specified process");
 
-// TODO(kuebler): remove this once we have the validator complete
-ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
-
 // TODO: Remove this flag once we have a way to toggle the display return values
 ABSL_FLAG(bool, show_return_values, false, "Show return values on time slices");
 

@@ -30,7 +30,6 @@ target_link_libraries(OrbitServiceLib PUBLIC
 else()
 target_link_libraries(OrbitServiceLib PUBLIC
         CrashService
-        FramePointerValidatorService
         LinuxCaptureService
         ProcessService
         TracepointService)

@@ -721,12 +721,6 @@ void OrbitApp::OnOutOfOrderEventsDiscardedEvent(
   });
 }
 
-void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to_validate) {
-  thread_pool_->Schedule([modules_to_validate = std::move(modules_to_validate), this] {
-    frame_pointer_validator_client_->AnalyzeModules(modules_to_validate);
-  });
-}
-
 std::unique_ptr<OrbitApp> OrbitApp::Create(orbit_gl::MainWindowInterface* main_window,
                                            orbit_base::MainThreadExecutor* main_thread_executor) {
   return std::make_unique<OrbitApp>(main_window, main_thread_executor);
@@ -744,9 +738,6 @@ void OrbitApp::PostInit(bool is_connected) {
     if (GetTargetProcess() != nullptr) {
       std::ignore = UpdateProcessAndModuleList();
     }
-
-    frame_pointer_validator_client_ =
-        std::make_unique<FramePointerValidatorClient>(this, grpc_channel_);
 
     if (IsDevMode()) {
       crash_manager_ = CrashManager::Create(grpc_channel_);

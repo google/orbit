@@ -121,20 +121,6 @@ service TracepointService {
       returns (GetTracepointListResponse) {}
 }
 
-message ValidateFramePointersRequest {
-  string module_path = 1;
-  repeated CodeBlock functions = 2;
-}
-
-message ValidateFramePointersResponse {
-  repeated CodeBlock functions_without_frame_pointer = 1;
-}
-
-service FramePointerValidatorService {
-  rpc ValidateFramePointers(ValidateFramePointersRequest)
-      returns (ValidateFramePointersResponse) {}
-}
-
 message CrashOrbitServiceRequest {
   enum CrashType {
     CHECK_FALSE = 0;

@@ -103,7 +103,7 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
   const std::vector<std::string_view> ordered_action_names = {
       /* Hooking related actions */
       kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect, kMenuActionEnableFrameTrack,
-      kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers,
+      kMenuActionDisableFrameTrack,
       /* Disassembly & source code related actions */
       kMenuActionDisassembly, kMenuActionSourceCode,
       /* Navigating related actions */

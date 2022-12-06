@@ -68,8 +68,6 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_client_data::ModuleManager*, GetModuleManager, (), (const, override));
   MOCK_METHOD(orbit_client_data::ModuleManager*, GetMutableModuleManager, (), (override));
 
-  MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>),
-              (override));
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, UpdateProcessAndModuleList, (), (override));
 
   // This needs to be called from the main thread.
