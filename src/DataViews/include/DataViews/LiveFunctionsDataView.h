@@ -68,7 +68,7 @@ class LiveFunctionsDataView : public DataView {
   void UpdateHistogramWithScopeIds(const std::vector<ScopeId>& scope_ids);
 
   void SetScopeStatsCollection(
-      std::shared_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection);
+      std::unique_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection);
 
   std::string GetToolTip(int /*row*/, int column) override;
 
@@ -153,8 +153,8 @@ class LiveFunctionsDataView : public DataView {
 
   [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(ScopeId scope_id) const;
 
-  std::shared_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection_ =
-      std::make_shared<orbit_client_data::ScopeStatsCollection>();
+  std::unique_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection_ =
+      std::make_unique<orbit_client_data::ScopeStatsCollection>();
 };
 
 }  // namespace orbit_data_views

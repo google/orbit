@@ -47,8 +47,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
     add_iterator_callback_ = std::move(callback);
   }
 
-  void SetScopeStatsCollection(
-      std::shared_ptr<orbit_client_data::ScopeStatsCollection> scope_collection);
+  void SetScopeStatsCollection(orbit_client_data::ScopeStatsCollection scope_collection);
 
   [[nodiscard]] uint64_t GetCaptureMin() const;
   [[nodiscard]] uint64_t GetCaptureMax() const;

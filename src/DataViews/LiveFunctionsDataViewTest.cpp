@@ -7,8 +7,6 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -278,26 +276,28 @@ class LiveFunctionsDataViewTest : public testing::Test {
                             /*size=*/0,      kPrettyNames[i], /*is_hotpatchable=*/false};
       functions_.insert_or_assign(kScopeIds[i], std::move(function));
     }
-    view_.SetScopeStatsCollection(capture_data_->GetAllScopeStatsCollection());
+    view_.SetScopeStatsCollection(std::make_unique<orbit_client_data::ScopeStatsCollection>(
+        capture_data_->GetAllScopeStatsCollection()));
   }
 
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
-    scope_stats_collection_ = std::make_shared<MockScopeStatsCollection>();
+    auto scope_stats_collection = std::make_unique<MockScopeStatsCollection>();
     std::vector<ScopeId> ids;
     absl::c_transform(indices, std::back_inserter(ids),
                       [](const size_t index) { return ScopeId(kScopeIds[index]); });
-    EXPECT_CALL(*scope_stats_collection_, GetAllProvidedScopeIds).WillRepeatedly(Return(ids));
+    EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds).WillRepeatedly(Return(ids));
     for (size_t index : indices) {
-      EXPECT_CALL(*scope_stats_collection_, GetScopeStatsOrDefault(kScopeIds[index]))
+      EXPECT_CALL(*scope_stats_collection, GetScopeStatsOrDefault(kScopeIds[index]))
           .WillRepeatedly(testing::ReturnRef(kScopeStats[index]));
     }
+    EXPECT_CALL(*scope_stats_collection, GetSortedTimerDurationsForScopeId(kScopeIds[0]))
+        .WillRepeatedly(Return(&kDurations));
 
-    view_.SetScopeStatsCollection(scope_stats_collection_);
+    view_.SetScopeStatsCollection(std::move(scope_stats_collection));
   }
 
  protected:
   MockLiveFunctionsInterface live_functions_;
-  std::shared_ptr<orbit_client_data::MockScopeStatsCollection> scope_stats_collection_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::LiveFunctionsDataView view_;
 
@@ -902,9 +902,6 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   }));
 
   AddFunctionsByIndices({0});
-
-  EXPECT_CALL(*scope_stats_collection_, GetSortedTimerDurationsForScopeId(kScopeIds[0]))
-      .WillRepeatedly(Return(&kDurations));
 
   EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0],
                                   std::optional<ScopeId>(kScopeIds[0])))

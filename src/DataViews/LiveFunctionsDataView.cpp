@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -582,7 +583,7 @@ std::string LiveFunctionsDataView::GetToolTip(int row, int column) {
 }
 
 void LiveFunctionsDataView::SetScopeStatsCollection(
-    std::shared_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection) {
+    std::unique_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection) {
   scope_stats_collection_ = std::move(scope_stats_collection);
   OnDataChanged();
   app_->SetHighlightedScopeId(std::nullopt);

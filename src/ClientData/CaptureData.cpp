@@ -270,15 +270,13 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
   return all_scopes_->GetSortedTimerDurationsForScopeId(scope_id);
 }
 
-std::shared_ptr<ScopeStatsCollection> CaptureData::GetAllScopeStatsCollection() const {
-  return all_scopes_;
-}
+ScopeStatsCollection CaptureData::GetAllScopeStatsCollection() const { return *all_scopes_; }
 
-std::shared_ptr<ScopeStatsCollection> CaptureData::CreateScopeStatsCollection(
-    uint64_t min_tick, uint64_t max_tick) const {
+ScopeStatsCollection CaptureData::CreateScopeStatsCollection(uint64_t min_tick,
+                                                             uint64_t max_tick) const {
   ORBIT_CHECK(scope_id_provider_);
   auto timers = GetAllScopeTimers(kAllValidScopeTypes, min_tick, max_tick);
-  return std::make_shared<ScopeStatsCollection>(*scope_id_provider_, timers);
+  return ScopeStatsCollection(*scope_id_provider_, timers);
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(

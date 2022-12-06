@@ -270,6 +270,7 @@ std::optional<ScopeId> LiveFunctionsController::FunctionIdToScopeId(uint64_t fun
 }
 
 void LiveFunctionsController::SetScopeStatsCollection(
-    std::shared_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) {
-  live_functions_data_view_.SetScopeStatsCollection(std::move(scope_collection));
+    orbit_client_data::ScopeStatsCollection scope_collection) {
+  live_functions_data_view_.SetScopeStatsCollection(
+      std::make_unique<orbit_client_data::ScopeStatsCollection>(scope_collection));
 }

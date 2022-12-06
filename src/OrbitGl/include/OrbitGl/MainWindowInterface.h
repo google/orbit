@@ -79,7 +79,7 @@ class MainWindowInterface {
   [[nodiscard]] virtual bool IsLocalTarget() const = 0;
 
   virtual void SetLiveTabScopeStatsCollection(
-      std::shared_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) = 0;
+      orbit_client_data::ScopeStatsCollection scope_collection) = 0;
 };
 
 }  // namespace orbit_gl
