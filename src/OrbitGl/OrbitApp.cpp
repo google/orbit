@@ -1513,7 +1513,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
          selected_process->full_path() == capture_process->full_path();
 }
 
-bool OrbitApp::IsDevMode() const { return absl::GetFlag(FLAGS_devmode); }
+bool OrbitApp::IsDevMode() { return absl::GetFlag(FLAGS_devmode); }
 
 void OrbitApp::SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                                    std::string disassembly,

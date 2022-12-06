@@ -56,7 +56,7 @@ class ConnectToTargetDialog : public QDialog {
   [[nodiscard]] ErrorMessageOr<void> DeployOrbitServiceAndSetupProcessManager();
 
   void SetStatusMessage(const QString& message);
-  void LogAndDisplayError(const ErrorMessage& message);
+  static void LogAndDisplayError(const ErrorMessage& message);
 };
 
 }  // namespace orbit_session_setup

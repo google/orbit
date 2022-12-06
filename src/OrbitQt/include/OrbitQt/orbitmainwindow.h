@@ -93,7 +93,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnNewSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view);
 
   std::string OnGetSaveFileName(std::string_view extension);
-  void OnSetClipboard(std::string_view text);
+  static void OnSetClipboard(std::string_view text);
   void OpenCapture(std::string_view filepath);
   void OnCaptureCleared();
 
@@ -172,8 +172,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionHelp_toggled(bool checked);
   void on_actionIntrospection_triggered();
 
-  void on_actionCheckFalse_triggered();
-  void on_actionStackOverflow_triggered();
+  static void on_actionCheckFalse_triggered();
+  static void on_actionStackOverflow_triggered();
   void on_actionServiceCheckFalse_triggered();
   void on_actionServiceStackOverflow_triggered();
 

@@ -250,7 +250,7 @@ class MockFunctionTimeComparator {
       const Comparison<SamplingCounts>& /*comparison_counts*/,
       const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
-  [[nodiscard]] orbit_mizar_statistics::ComparisonResult Compare(SampledFunctionId sfid) const {
+  [[nodiscard]] static orbit_mizar_statistics::ComparisonResult Compare(SampledFunctionId sfid) {
     return {kStatistic, kSfidToPvalue.at(sfid)};
   };
 };

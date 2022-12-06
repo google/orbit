@@ -352,7 +352,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolHelper::LoadFallbackSymbo
 }
 
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
-    std::string_view filename, uint32_t checksum, absl::Span<const fs::path> directories) const {
+    std::string_view filename, uint32_t checksum, absl::Span<const fs::path> directories) {
   std::set<fs::path> search_paths;
   for (const auto& directory : directories) {
     search_paths.insert(directory / filename);

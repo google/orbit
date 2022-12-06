@@ -171,7 +171,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
   return QVariant();
 }
 
-QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
@@ -193,7 +193,7 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
   return QVariant();
 }
 
-QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
@@ -214,7 +214,7 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
   return QVariant();
 }
 
-QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
@@ -224,7 +224,7 @@ QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) 
   return QVariant();
 }
 
-QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) const {
+QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);

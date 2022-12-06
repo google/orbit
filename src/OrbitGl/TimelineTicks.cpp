@@ -89,7 +89,7 @@ std::optional<uint64_t> TimelineTicks::GetPreviousMajorTick(uint64_t start_ns,
   return major_ticks[0] - major_tick_scale;
 }
 
-uint32_t TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
+uint32_t TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) {
   constexpr uint32_t kMaxDigitsPrecision = 9;  // 1ns = 0.000'000'001s
 
   uint64_t current_precision_ns = kNanosecondsPerSecond;
@@ -109,7 +109,7 @@ uint64_t TimelineTicks::GetMinorTicksScale(uint64_t visible_ns) const {
   return *std::prev(kTimelineScales.lower_bound(major_scale));
 }
 
-uint64_t TimelineTicks::GetMajorTicksScale(uint64_t visible_ns) const {
+uint64_t TimelineTicks::GetMajorTicksScale(uint64_t visible_ns) {
   // Biggest scale smaller than half the total range, as we want to see at least 2 major ticks.
   uint64_t half_visible_ns = visible_ns / 2;
   ORBIT_CHECK(half_visible_ns > 0);

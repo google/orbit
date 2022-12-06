@@ -70,14 +70,15 @@ class TracerImpl : public Tracer {
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(absl::Span<const int32_t> cpus);
   bool OpenUprobesToRecordAdditionalStackOn(absl::Span<const int32_t> cpus);
-  bool OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                   absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+  static bool OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
+                          absl::Span<const int32_t> cpus,
+                          absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUprobesWithStack(const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
                             absl::Span<const int32_t> cpus,
                             absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                      absl::Span<const int32_t> cpus,
-                      absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+  static bool OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
+                             absl::Span<const int32_t> cpus,
+                             absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(absl::Span<const int32_t> cpus);
   bool OpenSampling(absl::Span<const int32_t> cpus);
 
@@ -108,7 +109,7 @@ class TracerImpl : public Tracer {
                                                               PerfEventRingBuffer* ring_buffer);
   [[nodiscard]] uint64_t ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
                                                             PerfEventRingBuffer* ring_buffer);
-  [[nodiscard]] uint64_t ProcessThrottleUnthrottleEventAndReturnTimestamp(
+  [[nodiscard]] static uint64_t ProcessThrottleUnthrottleEventAndReturnTimestamp(
       const perf_event_header& header, PerfEventRingBuffer* ring_buffer);
 
   void DeferEvent(PerfEvent&& event);

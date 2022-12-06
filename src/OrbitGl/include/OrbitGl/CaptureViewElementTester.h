@@ -40,7 +40,7 @@ class CaptureViewElementTester {
   //    to be set.
   // In most cases, you'll want to use `SimulateDrawLoopAndCheckFlags` to combine flag checking
   // and an update / render loop.
-  void CheckDrawFlags(CaptureViewElement* element, bool draw, bool update_primitives);
+  static void CheckDrawFlags(CaptureViewElement* element, bool draw, bool update_primitives);
 
   // Run layout updates without rendering. This is equal to what would happen during
   // CaptureWindow::PreRender. You'll want to use this when you want to verify that a particular
@@ -68,7 +68,7 @@ class CaptureViewElementTester {
   StaticTimeGraphLayout layout_;
 
  private:
-  void TestWidthPropagationToChildren(CaptureViewElement* element);
+  static void TestWidthPropagationToChildren(CaptureViewElement* element);
 
   MockBatcher batcher_;
   MockTextRenderer text_renderer_;

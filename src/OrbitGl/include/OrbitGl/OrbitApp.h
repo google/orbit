@@ -238,7 +238,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool IsCaptureConnected(
       const orbit_client_data::CaptureData& capture) const override;
 
-  [[nodiscard]] bool IsDevMode() const;
+  [[nodiscard]] static bool IsDevMode();
 
   // Callbacks
   using CaptureStartedCallback = std::function<void(const std::optional<std::filesystem::path>&)>;

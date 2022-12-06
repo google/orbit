@@ -26,7 +26,7 @@ class OrbitTestImpl {
   void Loop();
   void TestFunc(uint32_t depth = 0);
   void TestFunc2(uint32_t depth = 0);
-  void BusyWork(uint64_t microseconds);
+  static void BusyWork(uint64_t microseconds);
   void ManualInstrumentationApiTest();
   void OutputOrbitApiState();
 
