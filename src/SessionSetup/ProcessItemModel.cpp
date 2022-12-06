@@ -71,11 +71,11 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
   if (role == Qt::TextAlignmentRole) {
     switch (static_cast<Column>(idx.column())) {
       case Column::kPid:
-        return {Qt::AlignVCenter | Qt::AlignRight};
+        return QVariant::fromValue(Qt::AlignVCenter | Qt::AlignRight);
       case Column::kName:
         return {};
       case Column::kCpu:
-        return {Qt::AlignVCenter | Qt::AlignRight};
+        return QVariant::fromValue(Qt::AlignVCenter | Qt::AlignRight);
       case Column::kEnd:
         ORBIT_UNREACHABLE();
     }
