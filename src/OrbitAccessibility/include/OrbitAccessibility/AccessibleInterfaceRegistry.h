@@ -34,7 +34,7 @@ class AccessibleInterfaceRegistry {
   static AccessibleInterfaceRegistry& Get();
 
  private:
-  AccessibleInterfaceRegistry(){};
+  AccessibleInterfaceRegistry() = default;
   ~AccessibleInterfaceRegistry();
 
   absl::flat_hash_set<AccessibleInterface*> interfaces_;

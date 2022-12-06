@@ -7,13 +7,13 @@
 #include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
 #include <linux/seccomp.h>
-#include <signal.h>
-#include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
+#include <csignal>
 #include <cstdint>
+#include <cstdlib>
 #include <optional>
 #include <string>
 #include <utility>
@@ -145,7 +145,7 @@ namespace {
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
   // Syscalls return -4095, ..., -1 on failure. And these are actually (-1 * errno)
-  const int64_t result_as_int = absl::bit_cast<int64_t>(result);
+  const auto result_as_int = absl::bit_cast<int64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
     return ErrorMessage(absl::StrFormat("Syscall failed. Return value: %s (%d).%s",
                                         SafeStrerror(-result_as_int), result_as_int,

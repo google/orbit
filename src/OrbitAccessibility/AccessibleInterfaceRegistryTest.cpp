@@ -14,7 +14,7 @@ namespace orbit_accessibility {
 
 TEST(AccessibleInterfaceRegistry, Management) {
   auto impl = std::make_unique<AccessibleObjectFake>(nullptr);
-  auto impl_ptr = impl.get();
+  auto* impl_ptr = impl.get();
   EXPECT_TRUE(AccessibleInterfaceRegistry::Get().Exists(impl_ptr));
   impl.reset();
   EXPECT_FALSE(AccessibleInterfaceRegistry::Get().Exists(impl_ptr));

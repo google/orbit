@@ -9,14 +9,14 @@
 #include <gtest/gtest.h>
 #include <linux/filter.h>
 #include <linux/seccomp.h>
-#include <signal.h>
-#include <stdint.h>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <array>
+#include <csignal>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -93,7 +93,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   // Allocation fails for invalid process.
-  constexpr uint64_t kMemorySize = 1024 * 1024;
+  constexpr uint64_t kMemorySize = 1024u * 1024u;
   auto my_memory_or_error = MemoryInTracee::Create(-1, 0, kMemorySize);
   EXPECT_THAT(my_memory_or_error, HasError("No such process"));
 
@@ -159,7 +159,7 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   // Stop the process using our tooling.
   ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
-  constexpr uint64_t kMemorySize = 1024 * 1024;
+  constexpr uint64_t kMemorySize = 1024u * 1024u;
   uint64_t address = 0;
   {
     auto automatic_memory_or_error = AutomaticMemoryInTracee::Create(pid, 0, kMemorySize);
@@ -207,13 +207,13 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
   ORBIT_CHECK(close(child_to_parent_pipe[1]) == 0);
 
   // Wait for the child to execute the seccomp syscall.
-  char buf[1];
-  ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
+  std::array<char, 1> buf{};
+  ORBIT_CHECK(read(child_to_parent_pipe[0], buf.data(), 1) == 1);
 
   // Stop the process using our tooling.
   ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
-  constexpr uint64_t kMemorySize = 1024 * 1024;
+  constexpr uint64_t kMemorySize = 1024u * 1024u;
   // Allocation will fail because of seccomp.
   auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
   EXPECT_THAT(
@@ -272,13 +272,13 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccompFilter) {
   ORBIT_CHECK(close(child_to_parent_pipe[1]) == 0);
 
   // Wait for the child to execute the seccomp syscall.
-  char buf[1];
-  ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
+  std::array<char, 1> buf{};
+  ORBIT_CHECK(read(child_to_parent_pipe[0], buf.data(), 1) == 1);
 
   // Stop the process using our tooling.
   ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
-  constexpr uint64_t kMemorySize = 1024 * 1024;
+  constexpr uint64_t kMemorySize = 1024u * 1024u;
   // Allocation will fail because of seccomp.
   auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
   EXPECT_THAT(

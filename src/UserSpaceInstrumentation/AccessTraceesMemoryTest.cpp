@@ -7,12 +7,12 @@
 #include <absl/strings/str_split.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <csignal>
 #include <cstdint>
 #include <iterator>
 #include <random>
@@ -35,7 +35,7 @@ namespace {
 using orbit_test_utils::HasError;
 
 AddressRange AddressRangeFromString(std::string_view string_address) {
-  AddressRange result;
+  AddressRange result{};
   const std::vector<std::string> addresses = absl::StrSplit(string_address, '-');
   if (addresses.size() != 2) {
     ORBIT_FATAL("Not an address range: %s", string_address);
@@ -54,7 +54,7 @@ AddressRange AddressRangeFromString(std::string_view string_address) {
   OUTCOME_TRY(auto&& maps, orbit_base::ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   bool is_first = true;
-  AddressRange result;
+  AddressRange result{};
   for (const auto& line : lines) {
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
     if (tokens.size() < 2 || tokens[1].size() != 4) continue;
@@ -210,7 +210,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   ORBIT_CHECK(memory_region_or_error.has_value());
   const uint64_t address = memory_region_or_error.value().start;
 
-  constexpr uint64_t kMemorySize = 4 * 1024;
+  constexpr uint64_t kMemorySize = 4u * 1024u;
   auto backup = ReadTraceesMemory(pid, address, kMemorySize);
   ASSERT_TRUE(backup.has_value());
 

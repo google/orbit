@@ -15,24 +15,20 @@ namespace orbit_accessibility {
  */
 class AccessibleWidgetBridge : public AccessibleInterface {
  public:
-  [[nodiscard]] virtual int AccessibleChildCount() const override { return 0; }
-  [[nodiscard]] virtual const AccessibleInterface* AccessibleChild(int /*index*/) const override {
+  [[nodiscard]] int AccessibleChildCount() const override { return 0; }
+  [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
     return nullptr;
   }
-  [[nodiscard]] virtual const AccessibleInterface* AccessibleParent() const override {
-    return nullptr;
-  }
+  [[nodiscard]] const AccessibleInterface* AccessibleParent() const override { return nullptr; }
 
   // The methods below are usually not used and are instead handled by the QtWidget.
   // See the implementation of OpenGlWidgetAccessible in AccessibilityAdapter.cpp!
-  [[nodiscard]] virtual std::string AccessibleName() const override { return ""; };
-  [[nodiscard]] virtual AccessibilityRole AccessibleRole() const override {
+  [[nodiscard]] std::string AccessibleName() const override { return ""; };
+  [[nodiscard]] AccessibilityRole AccessibleRole() const override {
     return AccessibilityRole::Grouping;
   }
-  [[nodiscard]] virtual AccessibilityRect AccessibleRect() const override {
-    return AccessibilityRect();
-  }
-  [[nodiscard]] virtual AccessibilityState AccessibleState() const override {
+  [[nodiscard]] AccessibilityRect AccessibleRect() const override { return {}; }
+  [[nodiscard]] AccessibilityState AccessibleState() const override {
     return AccessibilityState::Normal;
   }
 };
