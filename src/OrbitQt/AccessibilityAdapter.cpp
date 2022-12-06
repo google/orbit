@@ -237,8 +237,8 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
  public:
   explicit OrbitGlWidgetAccessible(OrbitGLWidget* widget);
 
-  QAccessibleInterface* child(int index) const override;
-  int childCount() const override;
+  [[nodiscard]] QAccessibleInterface* child(int index) const override;
+  [[nodiscard]] int childCount() const override;
   int indexOfChild(const QAccessibleInterface* child) const override;
 };
 

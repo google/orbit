@@ -59,13 +59,13 @@ class TestStack {
 
   void HijackTop(uint64_t new_value) { data_[0] = new_value; }
 
-  uint64_t GetSp() const { return sp_; }
+  [[nodiscard]] uint64_t GetSp() const { return sp_; }
 
-  uint64_t GetTop() const { return data_[0]; }
+  [[nodiscard]] uint64_t GetTop() const { return data_[0]; }
 
   [[nodiscard]] void* GetData() { return data_.data(); }
 
-  uint64_t GetSize() const { return data_.size() * sizeof(uint64_t); }
+  [[nodiscard]] uint64_t GetSize() const { return data_.size() * sizeof(uint64_t); }
 
  private:
   uint64_t sp_;

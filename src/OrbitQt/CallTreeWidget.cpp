@@ -142,7 +142,7 @@ class HideValuesForTopDownProxyModel : public QIdentityProxyModel {
  public:
   explicit HideValuesForTopDownProxyModel(QObject* parent) : QIdentityProxyModel(parent) {}
 
-  QVariant data(const QModelIndex& proxy_index, int role) const override {
+  [[nodiscard]] QVariant data(const QModelIndex& proxy_index, int role) const override {
     // Don't show "Exclusive" and "Of parent" for the first level (the thread level).
     if (!proxy_index.parent().isValid() && role == Qt::DisplayRole &&
         (proxy_index.column() == CallTreeViewItemModel::kExclusive ||
@@ -157,7 +157,7 @@ class HideValuesForBottomUpProxyModel : public QIdentityProxyModel {
  public:
   explicit HideValuesForBottomUpProxyModel(QObject* parent) : QIdentityProxyModel(parent) {}
 
-  QVariant data(const QModelIndex& proxy_index, int role) const override {
+  [[nodiscard]] QVariant data(const QModelIndex& proxy_index, int role) const override {
     // Don't show "Of parent" for the first level (the innermost functions).
     if (!proxy_index.parent().isValid() && role == Qt::DisplayRole &&
         proxy_index.column() == CallTreeViewItemModel::kOfParent) {
