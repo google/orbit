@@ -28,7 +28,6 @@ target_sources(
          include/OrbitGl/CaptureWindow.h
          include/OrbitGl/CGroupAndProcessMemoryTrack.h
          include/OrbitGl/CoreMath.h
-         include/OrbitGl/DrawingInterface.h
          include/OrbitGl/FormatCallstackForTooltip.h
          include/OrbitGl/FrameTrack.h
          include/OrbitGl/FrameTrackOnlineProcessor.h

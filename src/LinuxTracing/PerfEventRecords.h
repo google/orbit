@@ -20,18 +20,6 @@ struct __attribute__((__packed__)) perf_event_sample_id_tid_time_streamid_cpu {
   uint32_t cpu, res;  /* if PERF_SAMPLE_CPU */
 };
 
-struct __attribute__((__packed__)) perf_event_context_switch {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-};
-
-struct __attribute__((__packed__)) perf_event_context_switch_cpu_wide {
-  perf_event_header header;
-  uint32_t next_prev_pid;
-  uint32_t next_prev_tid;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-};
-
 struct __attribute__((__packed__)) perf_event_fork_exit {
   perf_event_header header;
   uint32_t pid, ppid;
@@ -110,18 +98,6 @@ struct __attribute__((__packed__)) perf_event_stack_sample_fixed {
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   // char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
   // uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
-};
-
-struct __attribute__((__packed__)) perf_event_callchain_sample_fixed {
-  perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  uint64_t nr;
-  // Following this field there are the following fields, which we read dynamically:
-  // uint64_t[nr] ips;
-  // perf_event_sample_regs_user_all regs;
-  // uint64_t size;
-  // char data[size];
-  // uint64_t dyn_size;
 };
 
 struct __attribute__((__packed__)) perf_event_sp_ip_arguments_8bytes_sample {
