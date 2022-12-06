@@ -96,11 +96,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OpenCapture(std::string_view filepath);
   void OnCaptureCleared();
 
-  Ui::OrbitMainWindow* GetUi() { return ui; }
-
   bool eventFilter(QObject* watched, QEvent* event) override;
-
-  void RestoreDefaultTabLayout();
 
   [[nodiscard]] orbit_session_setup::TargetConfiguration ClearTargetConfiguration();
 

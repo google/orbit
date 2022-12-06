@@ -1409,19 +1409,6 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   introspection_widget_->show();
 }
 
-void OrbitMainWindow::RestoreDefaultTabLayout() {
-  for (auto& widget_and_layout : default_tab_layout_) {
-    QTabWidget* tab_widget = widget_and_layout.first;
-    tab_widget->clear();
-    for (auto& tab_and_title : widget_and_layout.second.tabs_and_titles) {
-      tab_widget->addTab(tab_and_title.first, tab_and_title.second);
-    }
-    tab_widget->setCurrentIndex(widget_and_layout.second.current_index);
-  }
-
-  UpdateCaptureStateDependentWidgets();
-}
-
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
   std::optional<int> selected_row(std::nullopt);
   const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();

@@ -19,7 +19,6 @@ class MultipleOfValidator : public QIntValidator {
   explicit MultipleOfValidator(QObject* parent = nullptr) : QIntValidator(parent) {}
   MultipleOfValidator(int bottom, int top, int multiple_of, QObject* parent = nullptr)
       : QIntValidator(bottom, top, parent), multiple_of_{multiple_of} {}
-  void SetMultipleOf(int multiple_of) { multiple_of_ = multiple_of; }
   [[nodiscard]] QValidator::State validate(QString& input, int& pos) const override;
 
  private:

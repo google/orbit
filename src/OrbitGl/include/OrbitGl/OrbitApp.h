@@ -208,7 +208,6 @@ class OrbitApp final : public DataViewFactory,
     ORBIT_CHECK(capture_window_ != nullptr);
     return capture_window_->GetTimeGraph();
   }
-  void SetDebugCanvas(GlCanvas* debug_canvas);
   void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();
 
@@ -325,7 +324,6 @@ class OrbitApp final : public DataViewFactory,
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(std::string_view tooltip);
-  void SendInfoToUi(std::string_view title, std::string_view text);
   void SendWarningToUi(std::string_view title, std::string_view text);
   void SendErrorToUi(std::string_view title, std::string_view text) override;
 
@@ -417,10 +415,6 @@ class OrbitApp final : public DataViewFactory,
   }
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const {
     return GetCaptureData().memory_warning_threshold_kb();
-  }
-  [[nodiscard]] orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
-  GetThreadStateChangeCallstackCollection() const {
-    return data_manager_->thread_state_change_callstack_collection();
   }
   void SetThreadStateChangeCallstackCollection(
       orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
@@ -637,7 +631,6 @@ class OrbitApp final : public DataViewFactory,
 
   CaptureWindow* capture_window_ = nullptr;
   IntrospectionWindow* introspection_window_ = nullptr;
-  GlCanvas* debug_canvas_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;

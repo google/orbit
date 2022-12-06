@@ -18,14 +18,8 @@ using Vec3 = gte::Vector3<float>;
 using Vec4 = gte::Vector4<float>;
 
 using Vec2i = gte::Vector2<int>;
-using Vec3i = gte::Vector3<int>;
-using Vec4i = gte::Vector4<int>;
 
 using Color = gte::Vector4<unsigned char>;
-
-// TODO(b/229089446): Test these methods.
-[[nodiscard]] inline Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
-[[nodiscard]] inline Vec3 Vec2ToVec3(Vec2 vertex, float z = 0) { return {vertex[0], vertex[1], z}; }
 
 namespace orbit_gl {
 

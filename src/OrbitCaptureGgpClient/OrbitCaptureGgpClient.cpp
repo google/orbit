@@ -82,7 +82,7 @@ int CaptureClientGgpClient::UpdateSelectedFunctions(
 void CaptureClientGgpClient::ShutdownService() { pimpl->ShutdownService(); }
 
 CaptureClientGgpClient::~CaptureClientGgpClient() = default;
-CaptureClientGgpClient::CaptureClientGgpClient(CaptureClientGgpClient&&) = default;
+[[maybe_unused]] CaptureClientGgpClient::CaptureClientGgpClient(CaptureClientGgpClient&&) = default;
 CaptureClientGgpClient& CaptureClientGgpClient::operator=(CaptureClientGgpClient&&) = default;
 
 void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(

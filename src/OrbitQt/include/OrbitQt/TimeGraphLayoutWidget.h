@@ -34,9 +34,6 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
     return thread_state_track_height_.value() * scale_.value();
   }
   [[nodiscard]] float GetEventTrackHeightFromTid(uint32_t tid) const override;
-  [[nodiscard]] float GetVariableTrackHeight() const override {
-    return variable_track_height_.value() * scale_.value();
-  }
   [[nodiscard]] float GetTrackContentBottomMargin() const override {
     return track_content_bottom_margin_.value() * scale_.value();
   }
@@ -257,10 +254,6 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Button Height:",
   }};
 
-  FloatProperty toolbar_icon_height_{{
-      .initial_value = 24.f,
-      .label = "Toolbar Icon Height:",
-  }};
   FloatProperty generic_fixed_spacer_width_{{
       .initial_value = 10.f,
       .label = "Generic fixed Spacer width:",

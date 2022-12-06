@@ -60,7 +60,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   [[nodiscard]] virtual bool IsRedrawNeeded() const;
   void RequestRedraw() { redraw_requested_ = true; }
 
-  [[nodiscard]] bool GetIsMouseOver() const { return is_mouse_over_; }
   virtual void SetIsMouseOver(bool value) { is_mouse_over_ = value; }
 
   [[nodiscard]] PickingManager& GetPickingManager() { return picking_manager_; }
@@ -111,7 +110,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   Vec2 select_start_pos_world_ = Vec2(0, 0);
   Vec2 select_stop_pos_world_ = Vec2(0, 0);
 
-  float delta_time_;
   bool is_selecting_;
   Timer hover_timer_;
   int hover_delay_ms_;

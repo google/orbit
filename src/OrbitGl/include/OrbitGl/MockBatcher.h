@@ -52,14 +52,6 @@ class MockBatcher : public Batcher {
   [[nodiscard]] int GetNumLinesByColor(Color color) const {
     return num_lines_by_color_.contains(color) ? num_lines_by_color_.at(color) : 0;
   }
-  [[nodiscard]] int GetNumTrianglesByColor(Color color) const {
-    return num_triangles_by_color_.contains(color) ? num_triangles_by_color_.at(color) : 0;
-  }
-  [[nodiscard]] int GetNumBoxesByColor(Color color) const {
-    return num_boxes_by_color_.contains(color) ? num_boxes_by_color_.at(color) : 0;
-  }
-  [[nodiscard]] int GetNumHorizontalLines() const { return num_horizontal_lines_; }
-  [[nodiscard]] int GetNumVerticalLines() const { return num_vertical_lines_; }
   [[nodiscard]] int GetNumLines() const;
   [[nodiscard]] int GetNumTriangles() const;
   [[nodiscard]] int GetNumBoxes() const;

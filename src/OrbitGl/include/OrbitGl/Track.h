@@ -100,7 +100,6 @@ class Track : public orbit_gl::CaptureViewElement,
 
   void SetCollapsed(bool collapsed);
 
-  [[nodiscard]] bool GetHeadless() const { return headless_; }
   void SetHeadless(bool value);
 
   void SetIndentationLevel(uint32_t level);
