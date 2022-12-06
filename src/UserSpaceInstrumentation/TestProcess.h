@@ -10,7 +10,7 @@
 #include <set>
 #include <thread>
 
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
 namespace orbit_user_space_instrumentation {
 
@@ -35,7 +35,7 @@ class TestProcess {
   pid_t pid_;
   absl::Mutex joinable_threads_mutex_;
   std::set<std::thread::id> joinable_threads_;
-  std::optional<orbit_base::TemporaryFile> flag_file_run_child_;
-  std::optional<orbit_base::TemporaryFile> flag_file_child_started_;
+  std::optional<orbit_test_utils::TemporaryFile> flag_file_run_child_;
+  std::optional<orbit_test_utils::TemporaryFile> flag_file_child_started_;
 };
 }  // namespace orbit_user_space_instrumentation

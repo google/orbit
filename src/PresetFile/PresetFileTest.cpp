@@ -12,17 +12,17 @@
 #include "ClientProtos/preset.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "PresetFile/PresetFile.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_preset_file {
 
-using orbit_base::TemporaryFile;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetInfoLegacy;
 using orbit_client_protos::PresetModule;
 using orbit_client_protos::PresetModuleLegacy;
+using orbit_test_utils::TemporaryFile;
 
 static TemporaryFile CreateTemporaryFileOrDie() {
   auto temporary_file_or_error = TemporaryFile::Create();

@@ -4,13 +4,20 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-add_library(TestUtils INTERFACE)
-target_sources(TestUtils INTERFACE
+add_library(TestUtils STATIC)
+target_sources(TestUtils PUBLIC
   include/TestUtils/ContainerHelpers.h
   include/TestUtils/SaveRangeFromArg.h
+  include/TestUtils/TemporaryFile.h
   include/TestUtils/TestUtils.h)
-target_include_directories(TestUtils INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
-target_link_libraries(TestUtils INTERFACE
+
+target_sources(TestUtils PRIVATE
+  TemporaryFile.cpp)
+
+target_include_directories(TestUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+
+target_link_libraries(TestUtils PUBLIC
+  OrbitBase
   absl::flat_hash_map
   absl::flat_hash_set
   absl::strings
@@ -20,6 +27,7 @@ target_link_libraries(TestUtils INTERFACE
 add_executable(TestUtilsTests
   ContainerHelpersTest.cpp
   SaveRangeFromArgTest.cpp
+  TemporaryFileTest.cpp
   TestUtilsTest.cpp)
 target_link_libraries(TestUtilsTests PRIVATE TestUtils GTest::Main)
 register_test(TestUtilsTests)

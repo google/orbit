@@ -24,12 +24,12 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/MockSymbolCache.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_remote_symbol_provider {
@@ -39,9 +39,9 @@ using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 
 TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLoadDebugSymbols) {
-  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_THAT(temporary_file_or_error, HasNoError());
-  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+  orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
   ASSERT_TRUE(temporary_file.file_path().has_parent_path());
   const std::filesystem::path kSymbolCacheDir = temporary_file.file_path().parent_path();
 

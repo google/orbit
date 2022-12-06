@@ -13,14 +13,14 @@
 #include "FileFragmentInputStream.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
 namespace orbit_capture_file_internal {
 
 TEST(FileFragmentInputStream, ReadBlocksOfTen) {
-  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
   ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-  orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+  orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   auto write_result =
       orbit_base::WriteFully(temporary_file.fd(),

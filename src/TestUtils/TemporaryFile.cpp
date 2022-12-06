@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
 #include <absl/strings/str_format.h>
 #include <errno.h>
@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #endif
 
-namespace orbit_base {
+namespace orbit_test_utils {
 
 ErrorMessageOr<TemporaryFile> TemporaryFile::Create(std::string_view prefix) {
   TemporaryFile temporary_file;
@@ -48,7 +48,7 @@ ErrorMessageOr<void> TemporaryFile::Init(std::string_view prefix) {
         absl::StrFormat("Unable to create a temporary file: %s", SafeStrerror(errno))};
   }
 
-  fd_ = unique_fd(fd);
+  fd_ = orbit_base::unique_fd(fd);
 #elif defined(_WIN32)
   // _mktemp_s expects the `size` to include the NULL character at the end.
   errno_t errnum = _mktemp_s(file_path.data(), file_path.size() + 1);
@@ -57,7 +57,7 @@ ErrorMessageOr<void> TemporaryFile::Init(std::string_view prefix) {
         absl::StrFormat("Unable to create a temporary file: %s", SafeStrerror(errnum))};
   }
 
-  auto fd_or_error = OpenNewFileForReadWrite(file_path);
+  auto fd_or_error = orbit_base::OpenNewFileForReadWrite(file_path);
   if (fd_or_error.has_error()) {
     return ErrorMessage{
         absl::StrFormat("Unable to create a temporary file: %s", fd_or_error.error().message())};
@@ -79,4 +79,4 @@ void TemporaryFile::CloseAndRemove() {
   }
 }
 
-}  // namespace orbit_base
+}  // namespace orbit_test_utils

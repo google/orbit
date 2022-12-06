@@ -20,17 +20,17 @@
 #include "CaptureFile/ProtoSectionInputStream.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_client {
 
-using orbit_base::TemporaryFile;
 using orbit_capture_file::CaptureFile;
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
+using orbit_test_utils::TemporaryFile;
 
 static ClientCaptureEvent CreateInternedStringEvent(uint64_t key, const char* intern) {
   ClientCaptureEvent event;

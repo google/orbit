@@ -22,7 +22,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
 namespace orbit_capture_file {
 
@@ -91,9 +91,9 @@ TEST(CaptureFileOutputStream, Smoke) {
 
   // Test the case of outputting capture file content to a file
   {
-    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
     ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-    orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+    orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
     temporary_file.CloseAndRemove();
 
     std::string temp_file_name = temporary_file.file_path().string();
@@ -143,9 +143,9 @@ TEST(CaptureFileOutputStream, WriteAfterClose) {
 
   // Test the case of outputting capture file content to a file
   {
-    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
     ASSERT_TRUE(temporary_file_or_error.has_value()) << temporary_file_or_error.error().message();
-    orbit_base::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+    orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
     temporary_file.CloseAndRemove();
 
     std::string temp_file_name = temporary_file.file_path().string();

@@ -36,10 +36,10 @@
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WhenAll.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "Test/Path.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_http {
@@ -49,9 +49,9 @@ using orbit_base::GetNotCanceled;
 using orbit_base::IsCanceled;
 using orbit_base::IsNotFound;
 using orbit_base::StopSource;
-using orbit_base::TemporaryFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+using orbit_test_utils::TemporaryFile;
 using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>;
 
 namespace {
@@ -83,7 +83,7 @@ static void VerifyDownloadSucceeded(const DownloadResult& result,
 }
 
 [[nodiscard]] static TemporaryFile GetTemporaryFile() {
-  auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+  auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
   EXPECT_THAT(temporary_file_or_error, HasNoError());
   return std::move(temporary_file_or_error.value());
 }
