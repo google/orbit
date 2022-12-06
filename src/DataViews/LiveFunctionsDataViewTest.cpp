@@ -7,6 +7,7 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -264,7 +265,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     }
   }
 
-  void AddFunctionsByIndices(const std::vector<size_t>& indices) {
+  void AddFunctionsByIndices(absl::Span<const size_t> indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumFunctions);

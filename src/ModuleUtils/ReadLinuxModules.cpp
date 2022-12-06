@@ -6,6 +6,7 @@
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -262,7 +263,7 @@ class FileMappedIntoMemory {
 };
 }  // namespace
 
-std::vector<ModuleInfo> ReadModulesFromMaps(const std::vector<LinuxMemoryMapping>& maps) {
+std::vector<ModuleInfo> ReadModulesFromMaps(absl::Span<const LinuxMemoryMapping> maps) {
   std::vector<ModuleInfo> result;
 
   std::optional<FileMappedIntoMemory> last_file_mapped_into_memory;

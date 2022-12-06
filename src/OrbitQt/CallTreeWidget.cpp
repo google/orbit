@@ -8,6 +8,7 @@
 #include <absl/flags/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -520,7 +521,7 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
 }
 
 static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
-                                                      const std::vector<QModelIndex>& indices) {
+                                                      absl::Span<const QModelIndex> indices) {
   absl::flat_hash_set<ModuleIdentifier> unique_module_ids;
   for (const auto& index : indices) {
     const QModelIndex model_index =
@@ -543,7 +544,7 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 }
 
 static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
-    OrbitApp* app, const std::vector<QModelIndex>& indices) {
+    OrbitApp* app, absl::Span<const QModelIndex> indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
   const CaptureData& capture_data = app->GetCaptureData();
   const ModuleManager* module_manager = app->GetModuleManager();
@@ -593,7 +594,7 @@ static void GetCallstackEventsUnderSelectionRecursively(
 }
 
 static absl::flat_hash_set<orbit_client_data::CallstackEvent> GetCallstackEventsUnderSelection(
-    const std::vector<QModelIndex>& indices) {
+    absl::Span<const QModelIndex> indices) {
   // We can have duplicate CallstackEvents in the selection, e.g., with the top-down view when
   // selecting both from the "(all threads)" tree and other single-thread trees. Hence the set.
   absl::flat_hash_set<orbit_client_data::CallstackEvent> callstack_events;
@@ -762,7 +763,8 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     app_->InspectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::InspectCallstackEvents as simple as it is now.
-        {selected_callstack_events.begin(), selected_callstack_events.end()},
+        std::vector<orbit_client_data::CallstackEvent>{selected_callstack_events.begin(),
+                                                       selected_callstack_events.end()},
         origin_is_multiple_threads);
   } else if (action->text() == kActionSelectCallstacks) {
     absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
@@ -777,7 +779,8 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     app_->SelectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::SelectCallstackEvents as simple as it is now.
-        {selected_callstack_events.begin(), selected_callstack_events.end()},
+        std::vector<orbit_client_data::CallstackEvent>{selected_callstack_events.begin(),
+                                                       selected_callstack_events.end()},
         origin_is_multiple_threads);
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(BuildStringFromIndices(

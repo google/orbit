@@ -7,6 +7,8 @@
 
 #include <absl/algorithm/container.h>
 #include <absl/meta/type_traits.h>
+#include <absl/types/span.h>
+#include <stdint.h>
 
 #include <iterator>
 #include <optional>
@@ -20,7 +22,7 @@ namespace orbit_client_data {
 static const ScopeStats kDefaultScopeStats;
 
 ScopeStatsCollection::ScopeStatsCollection(ScopeIdProvider& scope_id_provider,
-                                           const std::vector<const TimerInfo*>& timers) {
+                                           absl::Span<const TimerInfo* const> timers) {
   for (const TimerInfo* timer : timers) {
     std::optional<ScopeId> scope_id = scope_id_provider.ProvideId(*timer);
     if (scope_id.has_value()) {

@@ -7,6 +7,7 @@
 #include <GteVector.h>
 #include <absl/flags/flag.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 
 #include <algorithm>
 #include <optional>
@@ -151,15 +152,15 @@ float TimelineUi::GetTickWorldXPos(uint64_t tick_ns) const {
 }
 
 std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
-    TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks) const {
-  if (all_major_ticks.size() <= 1) return all_major_ticks;
+    TextRenderer& text_renderer, absl::Span<const uint64_t> all_major_ticks) const {
+  if (all_major_ticks.size() <= 1) return {all_major_ticks.begin(), all_major_ticks.end()};
   uint64_t ns_between_major_ticks = all_major_ticks[1] - all_major_ticks[0];
 
   // In general, all major tick labels will fit in screen. In extreme cases with long labels
   // and small screens, we will skip the same number of labels in between visible ones for
   // consistency.
   int num_consecutive_skipped_labels = 0;
-  std::vector<uint64_t> visible_labels = all_major_ticks;
+  std::vector<uint64_t> visible_labels{all_major_ticks.begin(), all_major_ticks.end()};
   while (WillLabelsOverlap(text_renderer, visible_labels)) {
     visible_labels.clear();
     num_consecutive_skipped_labels++;
@@ -176,7 +177,7 @@ std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
 }
 
 bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
-                                   const std::vector<uint64_t>& tick_list) const {
+                                   absl::Span<const uint64_t> tick_list) const {
   if (tick_list.size() <= 1) return false;
   float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
   for (auto tick_ns : tick_list) {

@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_EXECUTE_IN_PROCESS_H_
 #define USER_SPACE_INSTRUMENTATION_EXECUTE_IN_PROCESS_H_
 
+#include <absl/types/span.h>
 #include <sys/types.h>
 
 #include <cstdint>
@@ -29,7 +30,7 @@ namespace orbit_user_space_instrumentation {
 // Assumes that the library identified by `library_handle` is loaded into this process using
 // `DlopenInTracee`.
 [[nodiscard]] ErrorMessageOr<uint64_t> ExecuteInProcess(
-    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* library_handle,
+    pid_t pid, absl::Span<const orbit_grpc_protos::ModuleInfo> modules, void* library_handle,
     std::string_view function, uint64_t param_1 = 0, uint64_t param_2 = 0, uint64_t param_3 = 0,
     uint64_t param_4 = 0, uint64_t param_5 = 0, uint64_t param_6 = 0);
 

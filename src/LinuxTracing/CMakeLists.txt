@@ -71,6 +71,7 @@ target_link_libraries(LinuxTracing PUBLIC
         ModuleUtils
         ObjectUtils
         OrbitBase
+        TestUtils
         absl::flat_hash_map
         absl::flat_hash_set
         absl::meta

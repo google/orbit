@@ -9,6 +9,7 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -129,7 +130,7 @@ void ModulesDataView::DoSort() {
 }
 
 DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action, int clicked_index,
-                                                        const std::vector<int>& selected_indices) {
+                                                        absl::Span<const int> selected_indices) {
   // transform selected_indices into modules
   std::vector<const ModuleData*> modules;
   modules.reserve(selected_indices.size());

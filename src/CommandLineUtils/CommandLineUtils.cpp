@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/commandlineflag.h>
 #include <absl/flags/flag.h>
+#include <absl/types/span.h>
 
 #include <QString>
 #include <array>
@@ -16,8 +17,8 @@
 
 namespace orbit_command_line_utils {
 
-QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line_args,
-                                    const std::vector<char*>& positional_args) {
+QStringList ExtractCommandLineFlags(absl::Span<const std::string> command_line_args,
+                                    absl::Span<char* const> positional_args) {
   QStringList command_line_flags;
   absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),
                                                       positional_args.end());

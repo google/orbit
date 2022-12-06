@@ -6,6 +6,7 @@
 #define USER_SPACE_INSTRUMENTATION_TRAMPOLINE_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/types/span.h>
 #include <capstone/capstone.h>
 #include <stddef.h>
 #include <sys/types.h>
@@ -29,13 +30,13 @@ namespace orbit_user_space_instrumentation {
 // `ranges_sorted` needs to contain non-overlapping ranges in ascending order (as provided by
 // `GetUnavailableAddressRanges`).
 [[nodiscard]] std::optional<size_t> LowestIntersectingAddressRange(
-    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range);
+    absl::Span<const AddressRange> ranges_sorted, const AddressRange& range);
 
 // Returns the index of the highest range in `ranges_sorted` that is intersecting with `range`.
 // `ranges_sorted` needs to contain non-overlapping ranges in ascending order (as provided by
 // `GetUnavailableAddressRanges`).
 [[nodiscard]] std::optional<size_t> HighestIntersectingAddressRange(
-    const std::vector<AddressRange>& ranges_sorted, const AddressRange& range);
+    absl::Span<const AddressRange> ranges_sorted, const AddressRange& range);
 
 // Parses the /proc/pid/maps file of a process and returns all the taken address ranges (joining
 // directly neighboring ones). We also add a range [0, /proc/sys/vm/mmap_min_addr] to block the
@@ -50,7 +51,7 @@ namespace orbit_user_space_instrumentation {
 // `unavailable_ranges` needs to contain non-overlapping ranges in ascending order; the smallest
 // range needs to start at zero (as provided by `GetUnavailableAddressRanges`).
 [[nodiscard]] ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
-    const std::vector<AddressRange>& unavailable_ranges, const AddressRange& code_range,
+    absl::Span<const AddressRange> unavailable_ranges, const AddressRange& code_range,
     uint64_t size);
 
 // Allocates `size` bytes in the tracee close to `code_range`. The memory segment will be placed
@@ -131,7 +132,7 @@ struct RelocatedInstruction {
 // value is the address of the first instruction not relocated into the trampoline (i.e. the address
 // the trampoline jump back to).
 [[nodiscard]] ErrorMessageOr<uint64_t> CreateTrampoline(
-    pid_t pid, uint64_t function_address, const std::vector<uint8_t>& function,
+    pid_t pid, uint64_t function_address, absl::Span<const uint8_t> function,
     uint64_t trampoline_address, uint64_t entry_payload_function_address,
     uint64_t return_trampoline_address, csh capstone_handle,
     absl::flat_hash_map<uint64_t, uint64_t>& relocation_map);

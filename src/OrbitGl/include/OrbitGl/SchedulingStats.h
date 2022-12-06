@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_SCHEDULING_STATS_H_
 #define ORBIT_GL_SCHEDULING_STATS_H_
 
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <functional>
@@ -27,7 +28,7 @@ class SchedulingStats {
   using ThreadNameProvider = std::function<std::string(int32_t)>;
 
   SchedulingStats() = delete;
-  SchedulingStats(const std::vector<const orbit_client_protos::TimerInfo*>& scheduling_scopes,
+  SchedulingStats(absl::Span<const orbit_client_protos::TimerInfo* const> scheduling_scopes,
                   const ThreadNameProvider& thread_name_provider, uint64_t start_ns,
                   uint64_t end_ns);
 

@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_ACCESS_TRACEES_MEMORY_H_
 #define USER_SPACE_INSTRUMENTATION_ACCESS_TRACEES_MEMORY_H_
 
+#include <absl/types/span.h>
 #include <sys/types.h>
 
 #include <cstdint>
@@ -24,7 +25,7 @@ namespace orbit_user_space_instrumentation {
 // Write `bytes` into memory of process `pid` starting from `start_address`.
 // Assumes we are already attached to the tracee `pid` e.g. using `AttachAndStopProcess`.
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
-                                                      const std::vector<uint8_t>& bytes);
+                                                      absl::Span<const uint8_t> bytes);
 
 // Returns the address range of an executable memory region. One options is usually the second line
 // in the `maps` file corresponding to the code of the process we look at. However we don't really

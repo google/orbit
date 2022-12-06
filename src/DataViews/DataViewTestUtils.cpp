@@ -5,6 +5,7 @@
 #include "DataViewTestUtils.h"
 
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -125,7 +126,7 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
 }
 
 FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    const std::vector<DataView::ActionGroup>& menu_with_grouping) {
+    absl::Span<const DataView::ActionGroup> menu_with_grouping) {
   FlattenContextMenu menu;
   for (const DataView::ActionGroup& action_group : menu_with_grouping) {
     for (const auto& action : action_group) menu.push_back(action);

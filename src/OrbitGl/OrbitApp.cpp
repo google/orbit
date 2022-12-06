@@ -16,6 +16,7 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <errno.h>
 #include <google/protobuf/stubs/port.h>
 #include <stdio.h>
@@ -236,7 +237,7 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
 // the result vector. After iterating through the prio_substring list, all remaining (not found)
 // modules are added to the result vector.
 [[nodiscard]] std::vector<const ModuleData*> SortModuleListWithPrioritizationList(
-    std::vector<const ModuleData*> modules, absl::Span<std::string_view const> prio_substrings) {
+    std::vector<const ModuleData*> modules, absl::Span<const std::string_view> prio_substrings) {
   std::vector<const ModuleData*> prioritized_modules;
   prioritized_modules.reserve(modules.size());
 
@@ -1879,15 +1880,14 @@ Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
       [this] { return process_manager_->LoadModuleList(GetTargetProcess()->pid()); });
 
   auto all_reloaded_modules = module_infos.ThenIfSuccess(
-      main_thread_executor_,
-      [this](const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos) {
+      main_thread_executor_, [this](absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
         return ReloadModules(module_infos);
       });
 
   // `all_modules_reloaded` is a future in a future. So we have to unwrap here.
   return orbit_base::UnwrapFuture(all_reloaded_modules)
       .ThenIfSuccess(main_thread_executor_,
-                     [this](const std::vector<ErrorMessageOr<void>>& reload_results) {
+                     [this](absl::Span<const ErrorMessageOr<void>> reload_results) {
                        // We ignore whether reloading a particular module failed to preserve the
                        // behaviour from before refactoring this. This can be changed in the future.
                        std::ignore = reload_results;
@@ -2264,7 +2264,7 @@ uint64_t OrbitApp::GetGroupIdToHighlight() const {
 }
 
 void OrbitApp::SetCaptureDataSelectionFields(
-    const std::vector<CallstackEvent>& selected_callstack_events, bool origin_is_multiple_threads) {
+    absl::Span<const CallstackEvent> selected_callstack_events, bool origin_is_multiple_threads) {
   const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
@@ -2281,7 +2281,7 @@ void OrbitApp::SetCaptureDataSelectionFields(
       std::move(selection_post_processed_sampling_data));
 }
 
-void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
+void OrbitApp::SelectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events,
                                      bool origin_is_multiple_threads) {
   main_window_->ClearCallstackInspection();
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
@@ -2294,7 +2294,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
                      /*has_summary*/ origin_is_multiple_threads);
 }
 
-void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
+void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events,
                                       bool origin_is_multiple_threads) {
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
   std::unique_ptr<SamplingReport> report =

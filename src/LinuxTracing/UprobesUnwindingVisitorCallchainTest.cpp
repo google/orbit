@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/mman.h>
@@ -130,7 +131,7 @@ class UprobesUnwindingVisitorCallchainTest : public ::testing::Test {
                                    PROT_EXEC | PROT_READ, kNonExecutableName);
 };
 
-CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uint64_t>& callchain) {
+CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(absl::Span<const uint64_t> callchain) {
   constexpr uint64_t kTotalNumOfRegisters =
       sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
 

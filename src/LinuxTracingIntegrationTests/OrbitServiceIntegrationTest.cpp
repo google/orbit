@@ -6,6 +6,7 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
@@ -248,7 +249,7 @@ static void VerifyCaptureFinishedEvent(const ClientCaptureEvent& event) {
   EXPECT_EQ(capture_finished.error_message(), "");
 }
 
-static void VerifyInitialAndFinalEvents(const std::vector<ClientCaptureEvent>& events,
+static void VerifyInitialAndFinalEvents(absl::Span<const ClientCaptureEvent> events,
                                         const CaptureOptions& original_capture_options) {
   ASSERT_GE(events.size(), 3);
   VerifyCaptureStartedEvent(events.front(), original_capture_options);
@@ -256,7 +257,7 @@ static void VerifyInitialAndFinalEvents(const std::vector<ClientCaptureEvent>& e
   VerifyCaptureFinishedEvent(events.back());
 }
 
-static void VerifyErrorEvents(const std::vector<ClientCaptureEvent>& events) {
+static void VerifyErrorEvents(absl::Span<const ClientCaptureEvent> events) {
   bool errors_with_perf_event_open_event_found = false;
   for (const ClientCaptureEvent& event : events) {
     EXPECT_NE(event.event_case(), ClientCaptureEvent::kErrorEnablingOrbitApiEvent);
@@ -282,9 +283,9 @@ TEST(OrbitServiceIntegrationTest, CaptureSmoke) {
   VerifyErrorEvents(events);
 }
 
-static void VerifyFunctionCallsOfOuterAndInnerFunction(
-    const std::vector<ClientCaptureEvent>& events, uint32_t pid, uint64_t outer_function_id,
-    uint64_t inner_function_id) {
+static void VerifyFunctionCallsOfOuterAndInnerFunction(absl::Span<const ClientCaptureEvent> events,
+                                                       uint32_t pid, uint64_t outer_function_id,
+                                                       uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
   for (const ClientCaptureEvent& event : events) {
     if (!event.has_function_call()) {

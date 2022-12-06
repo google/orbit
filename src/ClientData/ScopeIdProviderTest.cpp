@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
@@ -41,15 +42,15 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 }
 
 [[nodiscard]] static std::vector<orbit_client_protos::TimerInfo> MakeTimerInfos(
-    const std::vector<std::string>& names, orbit_client_protos::TimerInfo_Type type) {
+    absl::Span<const std::string> names, orbit_client_protos::TimerInfo_Type type) {
   std::vector<orbit_client_protos::TimerInfo> timer_infos;
   std::transform(std::begin(names), std::end(names), std::back_inserter(timer_infos),
                  [type](const auto& name) { return MakeTimerInfo(name, type); });
   return timer_infos;
 }
 
-static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::TimerInfo>& timers,
-                                      const std::vector<ScopeId>& ids) {
+static void AssertNameToIdIsBijective(absl::Span<const orbit_client_protos::TimerInfo> timers,
+                                      absl::Span<const ScopeId> ids) {
   absl::flat_hash_map<std::string, ScopeId> name_to_id;
   for (size_t i = 0; i < timers.size(); ++i) {
     name_to_id[timers[i].api_scope_name()] = ids[i];
@@ -64,7 +65,7 @@ static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::Tim
 }
 
 static std::vector<ScopeId> GetIds(ScopeIdProvider* id_provider,
-                                   const std::vector<orbit_client_protos::TimerInfo>& timers) {
+                                   absl::Span<const orbit_client_protos::TimerInfo> timers) {
   std::vector<ScopeId> ids;
   std::transform(
       std::begin(timers), std::end(timers), std::back_inserter(ids),

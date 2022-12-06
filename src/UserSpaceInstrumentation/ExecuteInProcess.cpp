@@ -5,6 +5,7 @@
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 
 #include <absl/base/casts.h>
+#include <absl/types/span.h>
 
 #include <memory>
 
@@ -63,7 +64,7 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uin
 }
 
 ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid,
-                                          const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+                                          absl::Span<const orbit_grpc_protos::ModuleInfo> modules,
                                           void* library_handle, std::string_view function,
                                           uint64_t param_0, uint64_t param_1, uint64_t param_2,
                                           uint64_t param_3, uint64_t param_4, uint64_t param_5) {

@@ -5,6 +5,8 @@
 #ifndef DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
 #define DATA_VIEWS_FUNCTIONS_DATA_VIEW_H_
 
+#include <absl/types/span.h>
+
 #include <string>
 #include <string_view>
 #include <vector>
@@ -42,7 +44,7 @@ class FunctionsDataView : public DataView {
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             const std::vector<int>& selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
 

@@ -9,6 +9,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
+#include <absl/types/span.h>
 #include <linux/perf_event.h>
 #include <sys/types.h>
 
@@ -67,19 +68,18 @@ class TracerImpl : public Tracer {
   void Shutdown();
   void ProcessOneRecord(PerfEventRingBuffer* ring_buffer);
   void InitUprobesEventVisitor();
-  bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
-  bool OpenUprobesToRecordAdditionalStackOn(const std::vector<int32_t>& cpus);
+  bool OpenUserSpaceProbes(absl::Span<const int32_t> cpus);
+  bool OpenUprobesToRecordAdditionalStackOn(absl::Span<const int32_t> cpus);
   bool OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                   const std::vector<int32_t>& cpus,
-                   absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+                   absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUprobesWithStack(const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
-                            const std::vector<int32_t>& cpus,
+                            absl::Span<const int32_t> cpus,
                             absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                      const std::vector<int32_t>& cpus,
+                      absl::Span<const int32_t> cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenMmapTask(const std::vector<int32_t>& cpus);
-  bool OpenSampling(const std::vector<int32_t>& cpus);
+  bool OpenMmapTask(absl::Span<const int32_t> cpus);
+  bool OpenSampling(absl::Span<const int32_t> cpus);
 
   void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
                                  const orbit_grpc_protos::InstrumentedFunction& function);
@@ -87,14 +87,14 @@ class TracerImpl : public Tracer {
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
                                     const orbit_grpc_protos::InstrumentedFunction& function);
 
-  bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenThreadNameTracepoints(absl::Span<const int32_t> cpus);
   void InitSwitchesStatesNamesVisitor();
-  bool OpenContextSwitchAndThreadStateTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenContextSwitchAndThreadStateTracepoints(absl::Span<const int32_t> cpus);
 
   void InitGpuTracepointEventVisitor();
-  bool OpenGpuTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenGpuTracepoints(absl::Span<const int32_t> cpus);
 
-  bool OpenInstrumentedTracepoints(const std::vector<int32_t>& cpus);
+  bool OpenInstrumentedTracepoints(absl::Span<const int32_t> cpus);
 
   void InitLostAndDiscardedEventVisitor();
 

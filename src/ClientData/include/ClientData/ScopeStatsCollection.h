@@ -8,6 +8,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 
 #include <cstdint>
 #include <vector>
@@ -26,7 +27,7 @@ class ScopeStatsCollection {
  public:
   explicit ScopeStatsCollection() = default;
   explicit ScopeStatsCollection(ScopeIdProvider& scope_id_provider,
-                                const std::vector<const TimerInfo*>& timers);
+                                absl::Span<const TimerInfo* const> timers);
 
   [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const;
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;

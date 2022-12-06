@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -160,7 +161,7 @@ const absl::flat_hash_map<TID, uint64_t> kTidToCallstackCount = {
     {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
 
 [[nodiscard]] static std::vector<SampledFunctionId> SFIDsForCallstacks(
-    const std::vector<uint64_t>& addresses) {
+    absl::Span<const uint64_t> addresses) {
   std::vector<AbsoluteAddress> good_addresses;
   ForEachFrame(addresses, [&good_addresses](AbsoluteAddress address) {
     if (kAddressToId.contains(address)) {

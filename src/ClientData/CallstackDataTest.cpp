@@ -6,6 +6,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/functional/bind_front.h>
 #include <absl/functional/function_ref.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

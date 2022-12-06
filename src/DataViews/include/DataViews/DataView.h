@@ -9,6 +9,7 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_join.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -126,7 +127,7 @@ class DataView {
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }
   std::vector<ActionGroup> GetContextMenuWithGrouping(int clicked_index,
-                                                      const std::vector<int>& selected_indices);
+                                                      absl::Span<const int> selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
   virtual std::string GetValueForCopy(int row, int column) { return GetValue(row, column); }
@@ -139,12 +140,12 @@ class DataView {
   // Filter callback set from UI layer.
   using FilterCallback = std::function<void(std::string_view)>;
   void SetUiFilterCallback(FilterCallback callback) { filter_callback_ = std::move(callback); }
-  virtual void OnRefresh(const std::vector<int>& /*visible_selected_indices*/,
+  virtual void OnRefresh(absl::Span<const int> /*visible_selected_indices*/,
                          const RefreshMode& /*mode*/) {}
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
-  void OnContextMenu(std::string_view action, int menu_index, const std::vector<int>& item_indices);
-  virtual void OnSelect(const std::vector<int>& /*indices*/) {}
+  void OnContextMenu(std::string_view action, int menu_index, absl::Span<const int> item_indices);
+  virtual void OnSelect(absl::Span<const int> /*indices*/) {}
   // This method returns the intersection of selected indices and visible indices. The returned
   // value contains 0 or 1 index for a DataView with single selection, and contains 0 or
   // multiple indices for a DataView with multi-selection.
@@ -169,23 +170,23 @@ class DataView {
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
-  void OnLoadSymbolsRequested(const std::vector<int>& selection);
-  void OnStopDownloadRequested(const std::vector<int>& selection);
-  virtual void OnSelectRequested(const std::vector<int>& selection);
-  virtual void OnUnselectRequested(const std::vector<int>& selection);
-  void OnEnableFrameTrackRequested(const std::vector<int>& selection);
-  void OnDisableFrameTrackRequested(const std::vector<int>& selection);
-  virtual void OnIteratorRequested(const std::vector<int>& /*selection*/) {}
-  void OnDisassemblyRequested(const std::vector<int>& selection);
-  void OnSourceCodeRequested(const std::vector<int>& selection);
-  virtual void OnJumpToRequested(std::string_view /*action*/,
-                                 const std::vector<int>& /*selection*/) {}
-  virtual void OnLoadPresetRequested(const std::vector<int>& /*selection*/) {}
-  virtual void OnDeletePresetRequested(const std::vector<int>& /*selection*/) {}
-  virtual void OnShowInExplorerRequested(const std::vector<int>& /*selection*/) {}
-  void OnCopySelectionRequested(const std::vector<int>& selection);
+  void OnLoadSymbolsRequested(absl::Span<const int> selection);
+  void OnStopDownloadRequested(absl::Span<const int> selection);
+  virtual void OnSelectRequested(absl::Span<const int> selection);
+  virtual void OnUnselectRequested(absl::Span<const int> selection);
+  void OnEnableFrameTrackRequested(absl::Span<const int> selection);
+  void OnDisableFrameTrackRequested(absl::Span<const int> selection);
+  virtual void OnIteratorRequested(absl::Span<const int> /*selection*/) {}
+  void OnDisassemblyRequested(absl::Span<const int> selection);
+  void OnSourceCodeRequested(absl::Span<const int> selection);
+  virtual void OnJumpToRequested(std::string_view /*action*/, absl::Span<const int> /*selection*/) {
+  }
+  virtual void OnLoadPresetRequested(absl::Span<const int> /*selection*/) {}
+  virtual void OnDeletePresetRequested(absl::Span<const int> /*selection*/) {}
+  virtual void OnShowInExplorerRequested(absl::Span<const int> /*selection*/) {}
+  void OnCopySelectionRequested(absl::Span<const int> selection);
   void OnExportToCsvRequested();
-  virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
+  virtual void OnExportEventsToCsvRequested(absl::Span<const int> /*selection*/) {}
 
  protected:
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleDataFromRow(
@@ -208,7 +209,7 @@ class DataView {
 
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
   [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                                     const std::vector<int>& selected_indices);
+                                                     absl::Span<const int> selected_indices);
 
   void InitSortingOrders();
   virtual void DoSort() {}

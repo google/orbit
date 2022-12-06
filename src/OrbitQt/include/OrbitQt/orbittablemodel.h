@@ -5,6 +5,8 @@
 #ifndef ORBIT_QT_ORBIT_TABLE_MODEL_H_
 #define ORBIT_QT_ORBIT_TABLE_MODEL_H_
 
+#include <absl/types/span.h>
+
 #include <QAbstractTableModel>
 #include <QFlags>
 #include <QModelIndex>
@@ -46,7 +48,7 @@ class OrbitTableModel : public QAbstractTableModel {
 
   void OnTimer();
   void OnFilter(const QString& filter);
-  void OnRowsSelected(const std::vector<int>& rows);
+  void OnRowsSelected(absl::Span<const int> rows);
 
  protected:
   orbit_data_views::DataView* data_view_;
