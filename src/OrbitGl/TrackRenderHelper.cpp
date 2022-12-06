@@ -9,6 +9,7 @@
 #include <absl/types/span.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <cmath>
 
 #include "OrbitGl/Geometry.h"

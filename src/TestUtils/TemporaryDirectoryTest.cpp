@@ -6,6 +6,8 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <memory>
+#include <utility>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"

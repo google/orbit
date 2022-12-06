@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 #include <random>
-#include <string>
+#include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"

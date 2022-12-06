@@ -9,6 +9,7 @@
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
 
+#include <algorithm>
 #include <string>
 
 #include "OrbitBase/File.h"
