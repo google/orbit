@@ -21,16 +21,16 @@ constexpr float kGradientFactor = 0.25f;
 
 [[nodiscard]] Color GetLighterColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f + kGradientFactor;
-  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
+  return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 
 [[nodiscard]] Color GetDarkerColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f - kGradientFactor;
-  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
+  return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 }  // namespace
 

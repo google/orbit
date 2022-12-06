@@ -87,16 +87,16 @@ void GlSlider::SetNormalizedLength(float length_ratio)  // [0,1]
 
 Color GlSlider::GetLighterColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f + kGradientFactor;
-  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
+  return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 
 Color GlSlider::GetDarkerColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f - kGradientFactor;
-  return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[1] * kLocalGradientFactor),
-               static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
+  return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[1] * kLocalGradientFactor),
+          static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 
 void GlSlider::OnDrag(int x, int y) {

@@ -67,9 +67,8 @@ orbit_accessibility::AccessibilityRect AccessibleCaptureViewElement::AccessibleR
     screen_pos[0] = 0;
   }
 
-  return orbit_accessibility::AccessibilityRect(static_cast<int>(screen_pos[0]),
-                                                static_cast<int>(screen_pos[1]), screen_size[0],
-                                                screen_size[1]);
+  return {static_cast<int>(screen_pos[0]), static_cast<int>(screen_pos[1]), screen_size[0],
+          screen_size[1]};
 }
 
 }  // namespace orbit_gl
