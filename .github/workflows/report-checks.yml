@@ -87,28 +87,25 @@ jobs:
           }
           
           async function deleteOldBotComments(pr_number) {
-            await github.paginate(
+            const comments = await github.paginate(
                 'GET /repos/{owner}/{repo}/pulls/{pull_number}/comments{?sort,direction,since,per_page,page}',
                 {
                   owner: owner,
                   repo: repo,
                   pull_number: pr_number
-                },
-                (response => response.data.filter(
-                    comment => comment.user.login === 'orbitprofiler-bot').map(
-                    comment => comment.id))).then(
-                comment_ids => {
-                  comment_ids.forEach(comment_id => {
-                    console.log(`deleting comment: ${comment_id}`);
-                    github.request(
-                        'DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}', {
-                          owner: owner,
-                          repo: repo,
-                          comment_id: comment_id
-                    });
+                });
+            const comment_ids = comments.filter(
+                comment => comment.user.login === 'orbitprofiler-bot').map(
+                comment => comment.id);
+            await Promise.all(comment_ids.map(async (comment_id) => {
+              console.log(`deleting comment: ${comment_id}`);
+              await github.request(
+                  'DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}', {
+                    owner: owner,
+                    repo: repo,
+                    comment_id: comment_id
                   });
-                }
-            );
+            }));
           }
           
           deleteOldBotComments(process.env.PR_NUMBER);
