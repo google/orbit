@@ -466,10 +466,10 @@ class OrbitApp final : public DataViewFactory,
   // origin_is_multiple_threads defines if the selection is specific to a single thread,
   // or spans across multiple threads.
   void SelectCallstackEvents(
-      absl::Span<orbit_client_data::CallstackEvent const> selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
   void InspectCallstackEvents(
-      absl::Span<orbit_client_data::CallstackEvent const> selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
   void ClearInspection();
 
@@ -599,7 +599,7 @@ class OrbitApp final : public DataViewFactory,
 
   // Sets CaptureData's selection_callstack_data and selection_post_processed_sampling_data.
   void SetCaptureDataSelectionFields(
-      absl::Span<orbit_client_data::CallstackEvent const> selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;

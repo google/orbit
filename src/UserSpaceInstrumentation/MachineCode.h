@@ -24,7 +24,7 @@ namespace orbit_user_space_instrumentation {
 //
 class MachineCode {
  public:
-  MachineCode& AppendBytes(absl::Span<uint8_t const> data);
+  MachineCode& AppendBytes(absl::Span<const uint8_t> data);
   MachineCode& AppendImmediate64(uint64_t data);
   MachineCode& AppendImmediate32(uint32_t data);
   MachineCode& AppendImmediate32(int32_t data);

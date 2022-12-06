@@ -219,7 +219,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void UpdateTargetLabelPosition();
 
-  void OnProcessListUpdated(absl::Span<orbit_grpc_protos::ProcessInfo const> processes);
+  void OnProcessListUpdated(absl::Span<const orbit_grpc_protos::ProcessInfo> processes);
 
   void ExecuteSymbolLocationsDialog(std::optional<const orbit_client_data::ModuleData*> module);
 

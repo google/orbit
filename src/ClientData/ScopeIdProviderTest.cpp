@@ -42,15 +42,15 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 }
 
 [[nodiscard]] static std::vector<orbit_client_protos::TimerInfo> MakeTimerInfos(
-    absl::Span<std::string const> names, orbit_client_protos::TimerInfo_Type type) {
+    absl::Span<const std::string> names, orbit_client_protos::TimerInfo_Type type) {
   std::vector<orbit_client_protos::TimerInfo> timer_infos;
   std::transform(std::begin(names), std::end(names), std::back_inserter(timer_infos),
                  [type](const auto& name) { return MakeTimerInfo(name, type); });
   return timer_infos;
 }
 
-static void AssertNameToIdIsBijective(absl::Span<orbit_client_protos::TimerInfo const> timers,
-                                      absl::Span<ScopeId const> ids) {
+static void AssertNameToIdIsBijective(absl::Span<const orbit_client_protos::TimerInfo> timers,
+                                      absl::Span<const ScopeId> ids) {
   absl::flat_hash_map<std::string, ScopeId> name_to_id;
   for (size_t i = 0; i < timers.size(); ++i) {
     name_to_id[timers[i].api_scope_name()] = ids[i];
@@ -65,7 +65,7 @@ static void AssertNameToIdIsBijective(absl::Span<orbit_client_protos::TimerInfo 
 }
 
 static std::vector<ScopeId> GetIds(ScopeIdProvider* id_provider,
-                                   absl::Span<orbit_client_protos::TimerInfo const> timers) {
+                                   absl::Span<const orbit_client_protos::TimerInfo> timers) {
   std::vector<ScopeId> ids;
   std::transform(
       std::begin(timers), std::end(timers), std::back_inserter(ids),

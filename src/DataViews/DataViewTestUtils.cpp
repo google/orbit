@@ -126,7 +126,7 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
 }
 
 FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    absl::Span<DataView::ActionGroup const> menu_with_grouping) {
+    absl::Span<const DataView::ActionGroup> menu_with_grouping) {
   FlattenContextMenu menu;
   for (const DataView::ActionGroup& action_group : menu_with_grouping) {
     for (const auto& action : action_group) menu.push_back(action);

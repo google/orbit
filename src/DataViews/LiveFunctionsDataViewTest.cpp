@@ -265,7 +265,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     }
   }
 
-  void AddFunctionsByIndices(absl::Span<size_t const> indices) {
+  void AddFunctionsByIndices(absl::Span<const size_t> indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumFunctions);

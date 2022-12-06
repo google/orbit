@@ -21,7 +21,7 @@ namespace orbit_memory_tracing {
 
 // This method computes the arithmetic mean of input timestamps.
 [[nodiscard]] static uint64_t GetSynchronizedSamplingTimestamp(
-    absl::Span<uint64_t const> sampling_timestamps) {
+    absl::Span<const uint64_t> sampling_timestamps) {
   uint64_t offset = *std::min_element(sampling_timestamps.begin(), sampling_timestamps.end());
   uint64_t sum = 0;
   for (uint64_t timestamp : sampling_timestamps) sum += timestamp - offset;

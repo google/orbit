@@ -44,7 +44,7 @@ class FunctionsDataView : public DataView {
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             absl::Span<int const> selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
 

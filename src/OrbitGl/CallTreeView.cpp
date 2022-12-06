@@ -140,7 +140,7 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
 
 static void AddCallstackToTopDownThread(
     CallTreeThread* thread_node, const CallstackInfo& resolved_callstack,
-    absl::Span<orbit_client_data::CallstackEvent const> callstack_events,
+    absl::Span<const orbit_client_data::CallstackEvent> callstack_events,
     const ModuleManager& module_manager, const CaptureData& capture_data) {
   uint64_t callstack_sample_count = callstack_events.size();
 
@@ -164,7 +164,7 @@ static void AddCallstackToTopDownThread(
 
 static void AddUnwindErrorToTopDownThread(
     CallTreeThread* thread_node, const CallstackInfo& resolved_callstack,
-    absl::Span<orbit_client_data::CallstackEvent const> callstack_events,
+    absl::Span<const orbit_client_data::CallstackEvent> callstack_events,
     const ModuleManager& module_manager, const CaptureData& capture_data) {
   CallTreeUnwindErrors* unwind_errors_node = thread_node->GetUnwindErrorsOrNull();
   if (unwind_errors_node == nullptr) {

@@ -85,7 +85,7 @@ void DataView::OnDataChanged() {
 }
 
 DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /* clicked_index */,
-                                                 absl::Span<int const> /* selected_indices */) {
+                                                 absl::Span<const int> /* selected_indices */) {
   if (action == kMenuActionCopySelection || action == kMenuActionExportToCsv) {
     return ActionStatus::kVisibleAndEnabled;
   }
@@ -94,7 +94,7 @@ DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /*
 }
 
 std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
-    int clicked_index, absl::Span<int const> selected_indices) {
+    int clicked_index, absl::Span<const int> selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
   // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
   // should not be empty.
@@ -139,7 +139,7 @@ std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
 }
 
 void DataView::OnContextMenu(std::string_view action, int /*menu_index*/,
-                             absl::Span<int const> item_indices) {
+                             absl::Span<const int> item_indices) {
   if (action == kMenuActionLoadSymbols) {
     OnLoadSymbolsRequested(item_indices);
   } else if (action == kMenuActionStopDownload) {
@@ -189,7 +189,7 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
   return visible_selected_indices;
 }
 
-void DataView::OnLoadSymbolsRequested(absl::Span<int const> selection) {
+void DataView::OnLoadSymbolsRequested(absl::Span<const int> selection) {
   std::vector<const ModuleData*> modules_to_load;
   for (int index : selection) {
     const ModuleData* module_data = GetModuleDataFromRow(index);
@@ -200,7 +200,7 @@ void DataView::OnLoadSymbolsRequested(absl::Span<int const> selection) {
   app_->LoadSymbolsManually(modules_to_load);
 }
 
-void DataView::OnStopDownloadRequested(absl::Span<int const> selection) {
+void DataView::OnStopDownloadRequested(absl::Span<const int> selection) {
   std::vector<const ModuleData*> modules_to_stop;
   for (int index : selection) {
     const ModuleData* module = GetModuleDataFromRow(index);
@@ -212,7 +212,7 @@ void DataView::OnStopDownloadRequested(absl::Span<int const> selection) {
   app_->RequestSymbolDownloadStop(modules_to_stop);
 }
 
-void DataView::OnSelectRequested(absl::Span<int const> selection) {
+void DataView::OnSelectRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     // Only hook functions for which we have symbols loaded.
@@ -222,7 +222,7 @@ void DataView::OnSelectRequested(absl::Span<int const> selection) {
   }
 }
 
-void DataView::OnUnselectRequested(absl::Span<int const> selection) {
+void DataView::OnUnselectRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     // If the frame belongs to a function for which no symbol is loaded 'function' is nullptr and
@@ -239,7 +239,7 @@ void DataView::OnUnselectRequested(absl::Span<int const> selection) {
   }
 }
 
-void DataView::OnEnableFrameTrackRequested(absl::Span<int const> selection) {
+void DataView::OnEnableFrameTrackRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function == nullptr) continue;
@@ -256,7 +256,7 @@ void DataView::OnEnableFrameTrackRequested(absl::Span<int const> selection) {
   }
 }
 
-void DataView::OnDisableFrameTrackRequested(absl::Span<int const> selection) {
+void DataView::OnDisableFrameTrackRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function == nullptr) continue;
@@ -269,7 +269,7 @@ void DataView::OnDisableFrameTrackRequested(absl::Span<int const> selection) {
   }
 }
 
-void DataView::OnDisassemblyRequested(absl::Span<int const> selection) {
+void DataView::OnDisassemblyRequested(absl::Span<const int> selection) {
   const ProcessData* process_data = app_->GetTargetProcess();
   const uint32_t pid =
       process_data == nullptr ? app_->GetCaptureData().process_id() : process_data->pid();
@@ -284,7 +284,7 @@ void DataView::OnDisassemblyRequested(absl::Span<int const> selection) {
   }
 }
 
-void DataView::OnSourceCodeRequested(absl::Span<int const> selection) {
+void DataView::OnSourceCodeRequested(absl::Span<const int> selection) {
   constexpr int kMaxNumberOfWindowsToOpen = 10;
   int j = 0;
   for (int i : selection) {
@@ -327,7 +327,7 @@ void DataView::OnExportToCsvRequested() {
   ReportErrorIfAny(ExportToCsv(save_file), kMenuActionExportToCsv);
 }
 
-void DataView::OnCopySelectionRequested(absl::Span<int const> selection) {
+void DataView::OnCopySelectionRequested(absl::Span<const int> selection) {
   constexpr const char* kFieldSeparator = "\t";
   constexpr const char* kLineSeparator = "\n";
 

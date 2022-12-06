@@ -205,7 +205,7 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
   std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
-                         absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                         absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         capture_events_received_count += events.size();
       });
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived).Times(::testing::Between(1, 3));
@@ -249,8 +249,8 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
 }
 
 static void ExpectInternedStrings(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> actual_events,
-    absl::Span<std::pair<std::string, uint64_t> const> expected_interns) {
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> actual_events,
+    absl::Span<const std::pair<std::string, uint64_t> > expected_interns) {
   ASSERT_EQ(actual_events.size(), expected_interns.size());
   for (size_t i = 0; i < actual_events.size(); ++i) {
     ASSERT_EQ(actual_events[i].event_case(),
@@ -275,7 +275,7 @@ TEST_F(VulkanLayerProducerImplTest, InternStringIfNecessaryAndGetKey) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly([&events_received, &events_received_mutex](
-                          absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                          absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         absl::MutexLock lock{&events_received_mutex};
         events_received.insert(events_received.end(), events.begin(), events.end());
       });
@@ -343,7 +343,7 @@ TEST_F(VulkanLayerProducerImplTest, DontSendInternTwice) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(1)
       .WillRepeatedly([&events_received, &events_received_mutex](
-                          absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                          absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         absl::MutexLock lock{&events_received_mutex};
         events_received.insert(events_received.end(), events.begin(), events.end());
       });
@@ -391,7 +391,7 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly([&events_received, &events_received_mutex](
-                          absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                          absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         absl::MutexLock lock{&events_received_mutex};
         events_received.insert(events_received.end(), events.begin(), events.end());
       });
@@ -444,7 +444,7 @@ TEST_F(VulkanLayerProducerImplTest, ReInternInNewCapture) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly([&events_received, &events_received_mutex](
-                          absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                          absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         absl::MutexLock lock{&events_received_mutex};
         events_received.insert(events_received.end(), events.begin(), events.end());
       });
@@ -532,7 +532,7 @@ TEST_F(VulkanLayerProducerImplTest, InternOnlyWhenCapturing) {
   EXPECT_CALL(*fake_service_, OnCaptureEventsReceived)
       .Times(::testing::Between(1, 2))
       .WillRepeatedly([&events_received, &events_received_mutex](
-                          absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+                          absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
         absl::MutexLock lock{&events_received_mutex};
         events_received.insert(events_received.end(), events.begin(), events.end());
       });

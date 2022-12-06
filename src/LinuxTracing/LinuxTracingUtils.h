@@ -76,9 +76,9 @@ inline size_t GetPageSize() {
 // Returns an std::map (so that the order by function id is preserved) from function id to a message
 // describing the issue for that function.
 [[nodiscard]] std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
-    absl::Span<orbit_module_utils::LinuxMemoryMapping const> maps,
-    absl::Span<orbit_grpc_protos::ModuleInfo const> modules,
-    absl::Span<orbit_grpc_protos::InstrumentedFunction const> functions);
+    absl::Span<const orbit_module_utils::LinuxMemoryMapping> maps,
+    absl::Span<const orbit_grpc_protos::ModuleInfo> modules,
+    absl::Span<const orbit_grpc_protos::InstrumentedFunction> functions);
 
 }  // namespace orbit_linux_tracing
 

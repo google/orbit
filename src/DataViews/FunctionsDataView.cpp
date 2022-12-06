@@ -167,7 +167,7 @@ void FunctionsDataView::DoSort() {
 
 DataView::ActionStatus FunctionsDataView::GetActionStatus(std::string_view action,
                                                           int clicked_index,
-                                                          absl::Span<int const> selected_indices) {
+                                                          absl::Span<const int> selected_indices) {
   if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
     return ActionStatus::kVisibleAndEnabled;
   }

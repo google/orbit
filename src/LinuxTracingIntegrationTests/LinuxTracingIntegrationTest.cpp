@@ -341,7 +341,7 @@ using PuppetConstants = IntegrationTestPuppetConstants;
   return fixture->StopTracingAndGetEvents();
 }
 
-void VerifyOrderOfAllEvents(absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+void VerifyOrderOfAllEvents(absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
   uint64_t previous_event_timestamp_ns = 0;
   for (const auto& event : events) {
     // Please keep the cases alphabetically ordered, as in the definition of the
@@ -473,7 +473,7 @@ void VerifyOrderOfAllEvents(absl::Span<orbit_grpc_protos::ProducerCaptureEvent c
 }
 
 void VerifyNoLostOrDiscardedEvents(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
   for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
     EXPECT_FALSE(event.has_lost_perf_records_event());
     EXPECT_FALSE(event.has_out_of_order_events_discarded_event());
@@ -481,7 +481,7 @@ void VerifyNoLostOrDiscardedEvents(
 }
 
 void VerifyErrorsWithPerfEventOpenEvent(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
   bool errors_with_perf_event_open_event_found = false;
   for (const auto& event : events) {
     if (event.has_errors_with_perf_event_open_event()) {
@@ -493,7 +493,7 @@ void VerifyErrorsWithPerfEventOpenEvent(
 }
 
 void VerifyNoWarningInstrumentingWithUprobesEvents(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
   for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
     EXPECT_FALSE(event.has_warning_instrumenting_with_uprobes_event());
   }
@@ -543,7 +543,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
 }
 
 void VerifyFunctionCallsOfOuterAndInnerFunction(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;
   for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
@@ -623,7 +623,7 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
 }
 
 absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events,
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events,
     const std::filesystem::path& executable_path,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range) {
@@ -660,7 +660,7 @@ absl::flat_hash_set<uint64_t> VerifyAndGetAddressInfosWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunction(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received, bool unwound_with_frame_pointers) {
@@ -749,7 +749,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -759,7 +759,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunctionForDwarfUnwinding(
 }
 
 void VerifyCallstackSamplesWithOuterAndInnerFunctionForFramePointerUnwinding(
-    absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events, uint32_t pid,
     std::pair<uint64_t, uint64_t> outer_function_virtual_address_range,
     std::pair<uint64_t, uint64_t> inner_function_virtual_address_range, double sampling_rate,
     const absl::flat_hash_set<uint64_t>* address_infos_received) {
@@ -843,7 +843,7 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
       inner_function_virtual_address_range, sampling_rate, &address_infos_received);
 }
 
-void VerifyNoAddressInfos(absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events) {
+void VerifyNoAddressInfos(absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events) {
   for (const auto& event : events) {
     EXPECT_NE(event.event_case(), orbit_grpc_protos::ProducerCaptureEvent::kFullAddressInfo);
   }

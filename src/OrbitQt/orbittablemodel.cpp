@@ -102,4 +102,4 @@ void OrbitTableModel::OnFilter(const QString& filter) {
   data_view_->OnFilter(filter.toStdString());
 }
 
-void OrbitTableModel::OnRowsSelected(absl::Span<int const> rows) { data_view_->OnSelect(rows); }
+void OrbitTableModel::OnRowsSelected(absl::Span<const int> rows) { data_view_->OnSelect(rows); }

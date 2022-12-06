@@ -46,7 +46,7 @@ const orbit_client_data::CallstackInfo kCallstackInfo({},
                                                       orbit_client_data::CallstackType::kComplete);
 
 [[nodiscard]] static std::vector<uint64_t> GetExpectedIntervals(
-    absl::Span<uint64_t const> timestamps) {
+    absl::Span<const uint64_t> timestamps) {
   std::vector<uint64_t> intervals;
   for (size_t i = 1; i < timestamps.size(); ++i) {
     intervals.push_back(timestamps[i] - timestamps[i - 1]);
@@ -60,7 +60,7 @@ class GetCallstackSamplingIntervalsTest : public ::testing::Test {
     callstack_data_->AddUniqueCallstack(kCallstackSampleId, kCallstackInfo);
   }
 
-  void PopulateCallstackData(absl::Span<uint64_t const> timestamps, TID tid) const {
+  void PopulateCallstackData(absl::Span<const uint64_t> timestamps, TID tid) const {
     for (const uint64_t timestamp : timestamps) {
       callstack_data_->AddCallstackEvent({timestamp, kCallstackSampleId, *tid});
     }

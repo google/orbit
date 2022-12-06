@@ -30,7 +30,7 @@ class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
-                        absl::Span<std::filesystem::path const> structured_debug_directories);
+                        absl::Span<const std::filesystem::path> structured_debug_directories);
 
   ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, std::string_view build_id,

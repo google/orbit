@@ -114,7 +114,7 @@ const std::string CallstackDataView::kHighlightedFunctionBlankString =
 
 DataView::ActionStatus CallstackDataView::GetActionStatus(std::string_view action,
                                                           int clicked_index,
-                                                          absl::Span<int const> selected_indices) {
+                                                          absl::Span<const int> selected_indices) {
   bool is_capture_connected = app_->IsCaptureConnected(app_->GetCaptureData());
   if (!is_capture_connected &&
       (action == kMenuActionSelect || action == kMenuActionUnselect ||

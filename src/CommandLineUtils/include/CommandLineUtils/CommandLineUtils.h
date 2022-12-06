@@ -15,7 +15,7 @@ namespace orbit_command_line_utils {
 
 // Extract command line flags by filtering the positional arguments out from the command line
 // arguments.
-QStringList ExtractCommandLineFlags(absl::Span<std::string const> command_line_args,
+QStringList ExtractCommandLineFlags(absl::Span<const std::string> command_line_args,
                                     absl::Span<char* const> positional_args);
 QStringList RemoveFlagsNotPassedToMainWindow(const QStringList& flags);
 

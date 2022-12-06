@@ -23,7 +23,7 @@ namespace orbit_user_space_instrumentation {
 // (compare https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html) of the module
 // exactly.
 [[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(
-    absl::Span<orbit_grpc_protos::ModuleInfo const> modules, std::string_view module_soname,
+    absl::Span<const orbit_grpc_protos::ModuleInfo> modules, std::string_view module_soname,
     std::string_view function_name);
 
 }  // namespace orbit_user_space_instrumentation

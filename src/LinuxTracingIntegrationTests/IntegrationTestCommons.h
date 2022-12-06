@@ -23,7 +23,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
 // dynamically instrumenting `IntegrationTestPuppet`'s functions `OuterFunctionToInstrument` and
 // `InnerFunctionToInstrument`.
 void VerifyFunctionCallsOfPuppetOuterAndInnerFunction(
-    absl::Span<orbit_grpc_protos::FunctionCall const> function_calls, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::FunctionCall> function_calls, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id, bool expect_return_value_and_registers);
 
 }  // namespace orbit_linux_tracing_integration_tests

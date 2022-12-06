@@ -114,7 +114,7 @@ class FakeProducerSideService : public orbit_grpc_protos::ProducerSideService::S
   void ReAllowRpc() { rpc_allowed_ = true; }
 
   MOCK_METHOD(void, OnCaptureEventsReceived,
-              (absl::Span<orbit_grpc_protos::ProducerCaptureEvent const> events), ());
+              (absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> events), ());
   MOCK_METHOD(void, OnAllEventsSentReceived, (), ());
 
  private:

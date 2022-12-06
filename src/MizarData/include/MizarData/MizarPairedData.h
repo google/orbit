@@ -225,7 +225,7 @@ class MizarPairedDataTmpl {
     return CallstackWithSFIDs(callstack->frames());
   }
 
-  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(absl::Span<uint64_t const> frames) const {
+  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(absl::Span<const uint64_t> frames) const {
     std::vector<SFID> result;
     orbit_mizar_base::ForEachFrame(frames, [this, &result](AbsoluteAddress address) {
       if (auto it = address_to_sfid_.find(address); it != address_to_sfid_.end()) {

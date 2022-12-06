@@ -186,7 +186,7 @@ void TracerImpl::ProcessFunctionExit(const orbit_grpc_protos::FunctionExit& func
   DeferEvent(event);
 }
 
-static void CloseFileDescriptors(absl::Span<int const> fds) {
+static void CloseFileDescriptors(absl::Span<const int> fds) {
   for (int fd : fds) {
     close(fd);
   }
@@ -243,7 +243,7 @@ void TracerImpl::InitUprobesEventVisitor() {
 }
 
 bool TracerImpl::OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                             absl::Span<int32_t const> cpus,
+                             absl::Span<const int32_t> cpus,
                              absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
@@ -266,7 +266,7 @@ bool TracerImpl::OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& func
 }
 
 bool TracerImpl::OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                                absl::Span<int32_t const> cpus,
+                                absl::Span<const int32_t> cpus,
                                 absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
@@ -320,7 +320,7 @@ void TracerImpl::AddUretprobesFileDescriptors(
   }
 }
 
-bool TracerImpl::OpenUserSpaceProbes(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenUserSpaceProbes(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
 
@@ -356,7 +356,7 @@ bool TracerImpl::OpenUserSpaceProbes(absl::Span<int32_t const> cpus) {
 
 bool TracerImpl::OpenUprobesWithStack(
     const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
-    absl::Span<int32_t const> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+    absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
@@ -373,7 +373,7 @@ bool TracerImpl::OpenUprobesWithStack(
   return true;
 }
 
-bool TracerImpl::OpenUprobesToRecordAdditionalStackOn(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenUprobesToRecordAdditionalStackOn(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> fds_per_cpu_for_redirection{};
@@ -400,7 +400,7 @@ bool TracerImpl::OpenUprobesToRecordAdditionalStackOn(absl::Span<int32_t const> 
   return !uprobes_event_open_errors;
 }
 
-bool TracerImpl::OpenMmapTask(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenMmapTask(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<int> mmap_task_tracing_fds;
   std::vector<PerfEventRingBuffer> mmap_task_ring_buffers;
@@ -428,7 +428,7 @@ bool TracerImpl::OpenMmapTask(absl::Span<int32_t const> cpus) {
   return true;
 }
 
-bool TracerImpl::OpenSampling(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenSampling(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(sampling_period_ns_.has_value());
   ORBIT_CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
@@ -499,7 +499,7 @@ struct TracepointToOpen {
 }  // namespace
 
 static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
-    absl::Span<TracepointToOpen const> tracepoints_to_open, absl::Span<int32_t const> cpus,
+    absl::Span<const TracepointToOpen> tracepoints_to_open, absl::Span<const int32_t> cpus,
     std::vector<int>* tracing_fds, uint64_t ring_buffer_size_kb,
     absl::flat_hash_map<int32_t, int>* tracepoint_ring_buffer_fds_per_cpu_for_redirection,
     std::vector<PerfEventRingBuffer>* ring_buffers, uint32_t stack_dump_size = 0,
@@ -576,7 +576,7 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
   return true;
 }
 
-bool TracerImpl::OpenThreadNameTracepoints(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenThreadNameTracepoints(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> thread_name_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
@@ -602,7 +602,7 @@ void TracerImpl::InitSwitchesStatesNamesVisitor() {
   event_processor_.AddVisitor(switches_states_names_visitor_.get());
 }
 
-bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   std::vector<TracepointToOpen> tracepoints_to_open;
   absl::flat_hash_set<uint64_t>* current_sched_switch_ids = &sched_switch_ids_;
@@ -662,7 +662,7 @@ void TracerImpl::InitGpuTracepointEventVisitor() {
 // same timeline, context, and seqno.
 // We have to record events system-wide (per CPU) to ensure we record all relevant events.
 // This method returns true on success, otherwise false.
-bool TracerImpl::OpenGpuTracepoints(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenGpuTracepoints(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   absl::flat_hash_map<int32_t, int> gpu_tracepoint_ring_buffer_fds_per_cpu;
   return OpenFileDescriptorsAndRingBuffersForAllTracepoints(
@@ -673,7 +673,7 @@ bool TracerImpl::OpenGpuTracepoints(absl::Span<int32_t const> cpus) {
       &ring_buffers_);
 }
 
-bool TracerImpl::OpenInstrumentedTracepoints(absl::Span<int32_t const> cpus) {
+bool TracerImpl::OpenInstrumentedTracepoints(absl::Span<const int32_t> cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool tracepoint_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> tracepoint_ring_buffer_fds_per_cpu;

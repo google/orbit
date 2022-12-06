@@ -68,18 +68,18 @@ class TracerImpl : public Tracer {
   void Shutdown();
   void ProcessOneRecord(PerfEventRingBuffer* ring_buffer);
   void InitUprobesEventVisitor();
-  bool OpenUserSpaceProbes(absl::Span<int32_t const> cpus);
-  bool OpenUprobesToRecordAdditionalStackOn(absl::Span<int32_t const> cpus);
+  bool OpenUserSpaceProbes(absl::Span<const int32_t> cpus);
+  bool OpenUprobesToRecordAdditionalStackOn(absl::Span<const int32_t> cpus);
   bool OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                   absl::Span<int32_t const> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+                   absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUprobesWithStack(const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
-                            absl::Span<int32_t const> cpus,
+                            absl::Span<const int32_t> cpus,
                             absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
-                      absl::Span<int32_t const> cpus,
+                      absl::Span<const int32_t> cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenMmapTask(absl::Span<int32_t const> cpus);
-  bool OpenSampling(absl::Span<int32_t const> cpus);
+  bool OpenMmapTask(absl::Span<const int32_t> cpus);
+  bool OpenSampling(absl::Span<const int32_t> cpus);
 
   void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
                                  const orbit_grpc_protos::InstrumentedFunction& function);
@@ -87,14 +87,14 @@ class TracerImpl : public Tracer {
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
                                     const orbit_grpc_protos::InstrumentedFunction& function);
 
-  bool OpenThreadNameTracepoints(absl::Span<int32_t const> cpus);
+  bool OpenThreadNameTracepoints(absl::Span<const int32_t> cpus);
   void InitSwitchesStatesNamesVisitor();
-  bool OpenContextSwitchAndThreadStateTracepoints(absl::Span<int32_t const> cpus);
+  bool OpenContextSwitchAndThreadStateTracepoints(absl::Span<const int32_t> cpus);
 
   void InitGpuTracepointEventVisitor();
-  bool OpenGpuTracepoints(absl::Span<int32_t const> cpus);
+  bool OpenGpuTracepoints(absl::Span<const int32_t> cpus);
 
-  bool OpenInstrumentedTracepoints(absl::Span<int32_t const> cpus);
+  bool OpenInstrumentedTracepoints(absl::Span<const int32_t> cpus);
 
   void InitLostAndDiscardedEventVisitor();
 

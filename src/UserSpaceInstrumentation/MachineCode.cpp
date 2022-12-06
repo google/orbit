@@ -9,7 +9,7 @@
 
 namespace orbit_user_space_instrumentation {
 
-MachineCode& MachineCode::AppendBytes(absl::Span<uint8_t const> data) {
+MachineCode& MachineCode::AppendBytes(absl::Span<const uint8_t> data) {
   data_.insert(data_.end(), data.begin(), data.end());
   return *this;
 }

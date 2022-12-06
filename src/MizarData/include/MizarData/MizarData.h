@@ -143,7 +143,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                                         /*out_of_order_events_discarded_event*/) override {}
 
  private:
-  void UpdateModules(absl::Span<orbit_grpc_protos::ModuleInfo const> module_infos);
+  void UpdateModules(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
   void LoadSymbolsForAllModules();
 

@@ -153,7 +153,7 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
   return {visible_selected_index.value()};
 }
 
-void LiveFunctionsDataView::UpdateHighlightedFunctionId(absl::Span<int const> rows) {
+void LiveFunctionsDataView::UpdateHighlightedFunctionId(absl::Span<const int> rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
     app_->SetHighlightedScopeId(std::nullopt);
@@ -167,7 +167,7 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(
-    absl::Span<int const> visible_selected_indices) {
+    absl::Span<const int> visible_selected_indices) {
   std::vector<ScopeId> scope_ids;
   std::transform(std::begin(visible_selected_indices), std::end(visible_selected_indices),
                  std::back_inserter(scope_ids),
@@ -176,7 +176,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
   UpdateHistogramWithScopeIds(scope_ids);
 }
 
-void LiveFunctionsDataView::UpdateHistogramWithScopeIds(absl::Span<ScopeId const> scope_ids) {
+void LiveFunctionsDataView::UpdateHistogramWithScopeIds(absl::Span<const ScopeId> scope_ids) {
   const std::vector<uint64_t>* timer_durations =
       (app_->HasCaptureData() && !scope_ids.empty())
           ? app_->GetCaptureData().GetSortedTimerDurationsForScopeId(scope_ids[0])
@@ -192,7 +192,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(absl::Span<ScopeId const
   app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
 
-void LiveFunctionsDataView::OnSelect(absl::Span<int const> rows) {
+void LiveFunctionsDataView::OnSelect(absl::Span<const int> rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
 
@@ -279,7 +279,7 @@ void LiveFunctionsDataView::DoSort() {
 }
 
 DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
-    std::string_view action, int clicked_index, absl::Span<int const> selected_indices) {
+    std::string_view action, int clicked_index, absl::Span<const int> selected_indices) {
   if (action == kMenuActionExportEventsToCsv) return ActionStatus::kVisibleAndEnabled;
 
   const CaptureData& capture_data = app_->GetCaptureData();
@@ -358,7 +358,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   return enabled_for_any ? ActionStatus::kVisibleAndEnabled : ActionStatus::kVisibleButDisabled;
 }
 
-void LiveFunctionsDataView::OnIteratorRequested(absl::Span<int const> selection) {
+void LiveFunctionsDataView::OnIteratorRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     ScopeId scope_id = GetScopeId(i);
     const FunctionInfo* function_info = GetFunctionInfoFromRow(i);
@@ -372,7 +372,7 @@ void LiveFunctionsDataView::OnIteratorRequested(absl::Span<int const> selection)
 }
 
 void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
-                                              absl::Span<int const> selection) {
+                                              absl::Span<const int> selection) {
   ORBIT_CHECK(selection.size() == 1);
   auto scope_id = GetScopeId(selection[0]);
   if (action == kMenuActionJumpToFirst) {
@@ -387,7 +387,7 @@ void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
 }
 
 [[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCsv(
-    absl::Span<int const> selection, std::string_view file_path) const {
+    absl::Span<const int> selection, std::string_view file_path) const {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
@@ -429,7 +429,7 @@ void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
   return outcome::success();
 }
 
-void LiveFunctionsDataView::OnExportEventsToCsvRequested(absl::Span<int const> selection) {
+void LiveFunctionsDataView::OnExportEventsToCsvRequested(absl::Span<const int> selection) {
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
 
@@ -502,7 +502,7 @@ void LiveFunctionsDataView::OnTimer() {
   OnSort(sorting_column_, {});
 }
 
-void LiveFunctionsDataView::OnRefresh(absl::Span<int const> visible_selected_indices,
+void LiveFunctionsDataView::OnRefresh(absl::Span<const int> visible_selected_indices,
                                       const RefreshMode& mode) {
   if (mode == RefreshMode::kOnFilter || mode == RefreshMode::kOnSort) {
     UpdateHighlightedFunctionId(visible_selected_indices);

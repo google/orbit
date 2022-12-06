@@ -42,23 +42,23 @@ class SamplingReportDataView : public DataView {
   std::string GetToolTip(int /*row*/, int /*column*/) override;
   const std::string& GetName() { return name_; }
 
-  void OnSelect(absl::Span<int const> indices) override;
-  void OnRefresh(absl::Span<int const> visible_selected_indices, const RefreshMode& mode) override;
+  void OnSelect(absl::Span<const int> indices) override;
+  void OnRefresh(absl::Span<const int> visible_selected_indices, const RefreshMode& mode) override;
 
   void LinkDataView(DataView* data_view) override;
   void SetSamplingReport(SamplingReportInterface* sampling_report) {
     sampling_report_ = sampling_report;
   }
-  void SetSampledFunctions(absl::Span<orbit_client_data::SampledFunction const> functions);
+  void SetSampledFunctions(absl::Span<const orbit_client_data::SampledFunction> functions);
   void SetThreadID(orbit_client_data::ThreadID tid);
   void SetStackEventsCount(uint32_t stack_events_count);
   orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
-  void OnExportEventsToCsvRequested(absl::Span<int const> selection) override;
+  void OnExportEventsToCsvRequested(absl::Span<const int> selection) override;
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             absl::Span<int const> selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
   const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
@@ -70,10 +70,10 @@ class SamplingReportDataView : public DataView {
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override;
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
-  void UpdateSelectedIndicesAndFunctionIds(absl::Span<int const> selected_indices);
+  void UpdateSelectedIndicesAndFunctionIds(absl::Span<const int> selected_indices);
   void RestoreSelectedIndicesAfterFunctionsChanged();
   // The callstack view will be updated according to the visible selected addresses and thread id.
-  void UpdateVisibleSelectedAddressesAndTid(absl::Span<int const> visible_selected_indices);
+  void UpdateVisibleSelectedAddressesAndTid(absl::Span<const int> visible_selected_indices);
 
   [[nodiscard]] std::string BuildPercentageString(float percentage) const;
 

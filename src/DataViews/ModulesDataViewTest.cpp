@@ -81,7 +81,7 @@ class ModulesDataViewTest : public testing::Test {
     }
   }
 
-  void AddModulesByIndices(absl::Span<size_t const> indices) {
+  void AddModulesByIndices(absl::Span<const size_t> indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumModules);

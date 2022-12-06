@@ -1770,7 +1770,7 @@ void OrbitMainWindow::UpdateTargetLabelPosition() {
 }
 
 void OrbitMainWindow::OnProcessListUpdated(
-    absl::Span<orbit_grpc_protos::ProcessInfo const> processes) {
+    absl::Span<const orbit_grpc_protos::ProcessInfo> processes) {
   const auto is_current_process = [this](const auto& process) {
     const orbit_client_data::ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();

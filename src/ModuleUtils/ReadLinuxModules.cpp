@@ -263,7 +263,7 @@ class FileMappedIntoMemory {
 };
 }  // namespace
 
-std::vector<ModuleInfo> ReadModulesFromMaps(absl::Span<LinuxMemoryMapping const> maps) {
+std::vector<ModuleInfo> ReadModulesFromMaps(absl::Span<const LinuxMemoryMapping> maps) {
   std::vector<ModuleInfo> result;
 
   std::optional<FileMappedIntoMemory> last_file_mapped_into_memory;

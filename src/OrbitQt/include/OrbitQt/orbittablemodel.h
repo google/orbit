@@ -48,7 +48,7 @@ class OrbitTableModel : public QAbstractTableModel {
 
   void OnTimer();
   void OnFilter(const QString& filter);
-  void OnRowsSelected(absl::Span<int const> rows);
+  void OnRowsSelected(absl::Span<const int> rows);
 
  protected:
   orbit_data_views::DataView* data_view_;

@@ -521,7 +521,7 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
 }
 
 static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
-                                                      absl::Span<QModelIndex const> indices) {
+                                                      absl::Span<const QModelIndex> indices) {
   absl::flat_hash_set<ModuleIdentifier> unique_module_ids;
   for (const auto& index : indices) {
     const QModelIndex model_index =
@@ -544,7 +544,7 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 }
 
 static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
-    OrbitApp* app, absl::Span<QModelIndex const> indices) {
+    OrbitApp* app, absl::Span<const QModelIndex> indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
   const CaptureData& capture_data = app->GetCaptureData();
   const ModuleManager* module_manager = app->GetModuleManager();
@@ -594,7 +594,7 @@ static void GetCallstackEventsUnderSelectionRecursively(
 }
 
 static absl::flat_hash_set<orbit_client_data::CallstackEvent> GetCallstackEventsUnderSelection(
-    absl::Span<QModelIndex const> indices) {
+    absl::Span<const QModelIndex> indices) {
   // We can have duplicate CallstackEvents in the selection, e.g., with the top-down view when
   // selecting both from the "(all threads)" tree and other single-thread trees. Hence the set.
   absl::flat_hash_set<orbit_client_data::CallstackEvent> callstack_events;

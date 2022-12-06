@@ -42,9 +42,9 @@ class PresetsDataView : public DataView {
 
   void SetPresets(std::vector<orbit_preset_file::PresetFile> presets);
 
-  void OnLoadPresetRequested(absl::Span<int const> selection) override;
-  void OnDeletePresetRequested(absl::Span<int const> selection) override;
-  void OnShowInExplorerRequested(absl::Span<int const> selection) override;
+  void OnLoadPresetRequested(absl::Span<const int> selection) override;
+  void OnDeletePresetRequested(absl::Span<const int> selection) override;
+  void OnShowInExplorerRequested(absl::Span<const int> selection) override;
   void OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path);
 
   static constexpr std::string_view kLoadedPresetPrefix{"* "};
@@ -61,13 +61,13 @@ class PresetsDataView : public DataView {
   };
 
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             absl::Span<int const> selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
-  [[nodiscard]] static std::string GetModulesList(absl::Span<ModuleView const> modules);
-  [[nodiscard]] static std::string GetFunctionCountList(absl::Span<ModuleView const> modules);
+  [[nodiscard]] static std::string GetModulesList(absl::Span<const ModuleView> modules);
+  [[nodiscard]] static std::string GetFunctionCountList(absl::Span<const ModuleView> modules);
   [[nodiscard]] static std::string GetModuleAndFunctionCountList(
-      absl::Span<ModuleView const> modules);
+      absl::Span<const ModuleView> modules);
   [[nodiscard]] const orbit_preset_file::PresetFile& GetPreset(unsigned int row) const;
   [[nodiscard]] const std::vector<ModuleView>& GetModules(uint32_t row) const;
 

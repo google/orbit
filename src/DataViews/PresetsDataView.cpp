@@ -82,19 +82,19 @@ PresetsDataView::PresetsDataView(AppInterface* app)
     : DataView(DataViewType::kPresets, app),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
-std::string PresetsDataView::GetModulesList(absl::Span<ModuleView const> modules) {
+std::string PresetsDataView::GetModulesList(absl::Span<const ModuleView> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.module_name);
   });
 }
 
-std::string PresetsDataView::GetFunctionCountList(absl::Span<ModuleView const> modules) {
+std::string PresetsDataView::GetFunctionCountList(absl::Span<const ModuleView> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppend(out, module.function_count);
   });
 }
 
-std::string PresetsDataView::GetModuleAndFunctionCountList(absl::Span<ModuleView const> modules) {
+std::string PresetsDataView::GetModuleAndFunctionCountList(absl::Span<const ModuleView> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
     absl::StrAppendFormat(out, "%s: %u function(s)", module.module_name, module.function_count);
   });
@@ -185,7 +185,7 @@ void PresetsDataView::DoSort() {
 }
 
 DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action, int clicked_index,
-                                                        absl::Span<int const> selected_indices) {
+                                                        absl::Span<const int> selected_indices) {
   // Note that the UI already enforces a single selection.
   ORBIT_CHECK(selected_indices.size() == 1);
 
@@ -203,7 +203,7 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
   }
 }
 
-void PresetsDataView::OnLoadPresetRequested(absl::Span<int const> selection) {
+void PresetsDataView::OnLoadPresetRequested(absl::Span<const int> selection) {
   PresetFile& preset = GetMutablePreset(selection[0]);
   (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
                                                [this, preset_file_path = preset.file_path()]() {
@@ -211,7 +211,7 @@ void PresetsDataView::OnLoadPresetRequested(absl::Span<int const> selection) {
                                                });
 }
 
-void PresetsDataView::OnDeletePresetRequested(absl::Span<int const> selection) {
+void PresetsDataView::OnDeletePresetRequested(absl::Span<const int> selection) {
   int row = selection[0];
   const PresetFile& preset = GetPreset(row);
   const std::string& filename = preset.file_path().string();
@@ -226,7 +226,7 @@ void PresetsDataView::OnDeletePresetRequested(absl::Span<int const> selection) {
   }
 }
 
-void PresetsDataView::OnShowInExplorerRequested(absl::Span<int const> selection) {
+void PresetsDataView::OnShowInExplorerRequested(absl::Span<const int> selection) {
   const PresetFile& preset = GetPreset(selection[0]);
   app_->ShowPresetInExplorer(preset);
 }

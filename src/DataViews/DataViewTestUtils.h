@@ -41,7 +41,7 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
 void CheckContextMenuOrder(const FlattenContextMenu& context_menu);
 
 [[nodiscard]] FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    absl::Span<DataView::ActionGroup const> menu_with_grouping);
+    absl::Span<const DataView::ActionGroup> menu_with_grouping);
 
 orbit_test_utils::TemporaryFile GetTemporaryFilePath();
 

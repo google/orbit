@@ -102,7 +102,7 @@ void TracepointsDataView::DoFilter() {
 }
 
 DataView::ActionStatus TracepointsDataView::GetActionStatus(
-    std::string_view action, int clicked_index, absl::Span<int const> selected_indices) {
+    std::string_view action, int clicked_index, absl::Span<const int> selected_indices) {
   std::function<bool(const TracepointInfo&)> is_visible_action_enabled;
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const TracepointInfo& tracepoint) {
@@ -125,19 +125,19 @@ DataView::ActionStatus TracepointsDataView::GetActionStatus(
   return ActionStatus::kVisibleButDisabled;
 }
 
-void TracepointsDataView::OnSelectRequested(absl::Span<int const> selection) {
+void TracepointsDataView::OnSelectRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     app_->SelectTracepoint(GetTracepoint(i));
   }
 }
 
-void TracepointsDataView::OnUnselectRequested(absl::Span<int const> selection) {
+void TracepointsDataView::OnUnselectRequested(absl::Span<const int> selection) {
   for (int i : selection) {
     app_->DeselectTracepoint(GetTracepoint(i));
   }
 }
 
-void TracepointsDataView::SetTracepoints(absl::Span<TracepointInfo const> tracepoints) {
+void TracepointsDataView::SetTracepoints(absl::Span<const TracepointInfo> tracepoints) {
   tracepoints_.assign(tracepoints.cbegin(), tracepoints.cend());
 
   indices_.resize(tracepoints_.size());

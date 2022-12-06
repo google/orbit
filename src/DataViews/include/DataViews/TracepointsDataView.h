@@ -27,14 +27,14 @@ class TracepointsDataView : public DataView {
   int GetDefaultSortingColumn() override { return kColumnCategory; }
   std::string GetValue(int row, int column) override;
 
-  void OnSelectRequested(absl::Span<int const> selection) override;
-  void OnUnselectRequested(absl::Span<int const> selection) override;
+  void OnSelectRequested(absl::Span<const int> selection) override;
+  void OnUnselectRequested(absl::Span<const int> selection) override;
 
-  void SetTracepoints(absl::Span<orbit_grpc_protos::TracepointInfo const> tracepoints);
+  void SetTracepoints(absl::Span<const orbit_grpc_protos::TracepointInfo> tracepoints);
 
  private:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             absl::Span<int const> selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
 

@@ -411,7 +411,7 @@ class SamplingReportDataViewTest : public testing::Test {
     view_.SetSamplingReport(&sampling_report_);
   }
 
-  void AddFunctionsByIndices(absl::Span<size_t const> indices) {
+  void AddFunctionsByIndices(absl::Span<const size_t> indices) {
     std::vector<SampledFunction> functions_to_add;
     for (size_t index : indices) {
       ORBIT_CHECK(index < kNumFunctions);
@@ -506,7 +506,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto get_context_menu_from_selected_indices =
-      [&](absl::Span<int const> selected_indices) -> FlattenContextMenu {
+      [&](absl::Span<const int> selected_indices) -> FlattenContextMenu {
     std::vector<int> selected_rows;
     for (int index : selected_indices) {
       for (int row = 0, row_counts = view_.GetNumElements(); row < row_counts; row++) {
@@ -520,7 +520,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         view_.GetContextMenuWithGrouping(0, selected_rows));
   };
 
-  auto verify_context_menu_action_availability = [&](absl::Span<int const> selected_indices) {
+  auto verify_context_menu_action_availability = [&](absl::Span<const int> selected_indices) {
     FlattenContextMenu context_menu = get_context_menu_from_selected_indices(selected_indices);
 
     // Common actions should always be available.

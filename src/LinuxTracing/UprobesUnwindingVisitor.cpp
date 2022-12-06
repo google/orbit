@@ -41,7 +41,7 @@ using orbit_grpc_protos::FunctionCall;
 using orbit_grpc_protos::ThreadStateSliceCallstack;
 
 static bool CallstackIsInUserSpaceInstrumentation(
-    absl::Span<unwindstack::FrameData const> frames,
+    absl::Span<const unwindstack::FrameData> frames,
     const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
   ORBIT_CHECK(!frames.empty());
 
@@ -309,7 +309,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
-  bool const success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack(),
+  const bool success = UnwindStack(event_data, thread_state_slice_callstack.mutable_callstack(),
                                    /*offline_memory_only=*/true);
 
   if (!success) {
@@ -485,7 +485,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   thread_state_slice_callstack.set_thread_state_slice_tid(event_data.prev_tid);
   thread_state_slice_callstack.set_timestamp_ns(event_timestamp);
 
-  bool const success =
+  const bool success =
       VisitCallchainEvent(event_data, thread_state_slice_callstack.mutable_callstack());
 
   if (!success) {

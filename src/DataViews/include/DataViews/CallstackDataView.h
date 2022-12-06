@@ -87,7 +87,7 @@ class CallstackDataView : public DataView {
   };
 
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
-                                             absl::Span<int const> selected_indices) override;
+                                             absl::Span<const int> selected_indices) override;
 
  private:
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {

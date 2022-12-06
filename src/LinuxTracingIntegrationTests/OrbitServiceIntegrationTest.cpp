@@ -249,7 +249,7 @@ static void VerifyCaptureFinishedEvent(const ClientCaptureEvent& event) {
   EXPECT_EQ(capture_finished.error_message(), "");
 }
 
-static void VerifyInitialAndFinalEvents(absl::Span<ClientCaptureEvent const> events,
+static void VerifyInitialAndFinalEvents(absl::Span<const ClientCaptureEvent> events,
                                         const CaptureOptions& original_capture_options) {
   ASSERT_GE(events.size(), 3);
   VerifyCaptureStartedEvent(events.front(), original_capture_options);
@@ -257,7 +257,7 @@ static void VerifyInitialAndFinalEvents(absl::Span<ClientCaptureEvent const> eve
   VerifyCaptureFinishedEvent(events.back());
 }
 
-static void VerifyErrorEvents(absl::Span<ClientCaptureEvent const> events) {
+static void VerifyErrorEvents(absl::Span<const ClientCaptureEvent> events) {
   bool errors_with_perf_event_open_event_found = false;
   for (const ClientCaptureEvent& event : events) {
     EXPECT_NE(event.event_case(), ClientCaptureEvent::kErrorEnablingOrbitApiEvent);
@@ -283,7 +283,7 @@ TEST(OrbitServiceIntegrationTest, CaptureSmoke) {
   VerifyErrorEvents(events);
 }
 
-static void VerifyFunctionCallsOfOuterAndInnerFunction(absl::Span<ClientCaptureEvent const> events,
+static void VerifyFunctionCallsOfOuterAndInnerFunction(absl::Span<const ClientCaptureEvent> events,
                                                        uint32_t pid, uint64_t outer_function_id,
                                                        uint64_t inner_function_id) {
   std::vector<orbit_grpc_protos::FunctionCall> function_calls;

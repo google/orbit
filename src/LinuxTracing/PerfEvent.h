@@ -98,7 +98,7 @@ struct CallchainSamplePerfEventData {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
-  void SetIps(absl::Span<uint64_t const> new_ips) const {
+  void SetIps(absl::Span<const uint64_t> new_ips) const {
     ips_size = new_ips.size();
     ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
     memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));
@@ -274,7 +274,7 @@ struct SchedWakeupWithCallchainPerfEventData {
     return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
-  void SetIps(absl::Span<uint64_t const> new_ips) const {
+  void SetIps(absl::Span<const uint64_t> new_ips) const {
     ips_size = new_ips.size();
     ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
     memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));
@@ -307,7 +307,7 @@ struct SchedSwitchWithCallchainPerfEventData {
     return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
-  void SetIps(absl::Span<uint64_t const> new_ips) const {
+  void SetIps(absl::Span<const uint64_t> new_ips) const {
     ips_size = new_ips.size();
     ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
     memcpy(ips.get(), new_ips.data(), ips_size * sizeof(uint64_t));

@@ -100,7 +100,7 @@ class PostProcessedSamplingData {
   [[nodiscard]] const CallstackInfo& GetResolvedCallstack(uint64_t sampled_callstack_id) const;
 
   [[nodiscard]] std::unique_ptr<SortedCallstackReport>
-  GetSortedCallstackReportFromFunctionAddresses(absl::Span<uint64_t const> function_addresses,
+  GetSortedCallstackReportFromFunctionAddresses(absl::Span<const uint64_t> function_addresses,
                                                 uint32_t thread_id) const;
 
   [[nodiscard]] std::vector<const ThreadSampleData*> GetSortedThreadSampleData() const;
@@ -111,7 +111,7 @@ class PostProcessedSamplingData {
 
  private:
   [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromFunctionAddresses(
-      absl::Span<uint64_t const> function_addresses, uint32_t thread_id) const;
+      absl::Span<const uint64_t> function_addresses, uint32_t thread_id) const;
 
   absl::flat_hash_map<uint32_t, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, CallstackInfo> id_to_resolved_callstack_;

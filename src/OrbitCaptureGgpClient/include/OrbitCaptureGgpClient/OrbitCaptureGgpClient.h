@@ -21,7 +21,7 @@ class CaptureClientGgpClient {
 
   int StartCapture();
   int StopCapture();
-  int UpdateSelectedFunctions(absl::Span<std::string const> selected_functions);
+  int UpdateSelectedFunctions(absl::Span<const std::string> selected_functions);
   void ShutdownService();
 
  private:

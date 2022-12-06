@@ -407,7 +407,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
-  auto verify_context_menu_action_availability = [&](absl::Span<int const> selected_indices) {
+  auto verify_context_menu_action_availability = [&](absl::Span<const int> selected_indices) {
     FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
         view_.GetContextMenuWithGrouping(0, selected_indices));
 

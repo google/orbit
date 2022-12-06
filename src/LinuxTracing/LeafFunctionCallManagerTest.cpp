@@ -70,7 +70,7 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
  public:
   MOCK_METHOD(LibunwindstackResult, Unwind,
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
-               absl::Span<StackSliceView const>, bool, size_t),
+               absl::Span<const StackSliceView>, bool, size_t),
               (override));
   MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, pid_t, unwindstack::Maps*),
               (override));
@@ -159,7 +159,7 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
 };
 
 CallchainSamplePerfEventData BuildFakeCallchainSamplePerfEventData(
-    absl::Span<uint64_t const> callchain) {
+    absl::Span<const uint64_t> callchain) {
   CallchainSamplePerfEventData event_data{
       .pid = 10,
       .tid = 11,

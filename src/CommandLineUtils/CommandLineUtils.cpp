@@ -17,7 +17,7 @@
 
 namespace orbit_command_line_utils {
 
-QStringList ExtractCommandLineFlags(absl::Span<std::string const> command_line_args,
+QStringList ExtractCommandLineFlags(absl::Span<const std::string> command_line_args,
                                     absl::Span<char* const> positional_args) {
   QStringList command_line_flags;
   absl::flat_hash_set<std::string> positional_arg_set(positional_args.begin(),

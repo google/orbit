@@ -229,7 +229,7 @@ std::optional<ModuleIdentifier> SamplingReportDataView::GetModuleIdentifierFromR
 }
 
 DataView::ActionStatus SamplingReportDataView::GetActionStatus(
-    std::string_view action, int clicked_index, absl::Span<int const> selected_indices) {
+    std::string_view action, int clicked_index, absl::Span<const int> selected_indices) {
   if (action == kMenuActionLoadSymbols) {
     for (int index : selected_indices) {
       const ModuleData* module = GetModuleDataFromRow(index);
@@ -283,7 +283,7 @@ ModuleData* SamplingReportDataView::GetModuleDataFromRow(int row) const {
 }
 
 void SamplingReportDataView::UpdateSelectedIndicesAndFunctionIds(
-    absl::Span<int const> selected_indices) {
+    absl::Span<const int> selected_indices) {
   selected_indices_.clear();
   selected_function_ids_.clear();
   for (int row : selected_indices) {
@@ -302,7 +302,7 @@ void SamplingReportDataView::RestoreSelectedIndicesAfterFunctionsChanged() {
 }
 
 void SamplingReportDataView::UpdateVisibleSelectedAddressesAndTid(
-    absl::Span<int const> visible_selected_indices) {
+    absl::Span<const int> visible_selected_indices) {
   absl::flat_hash_set<uint64_t> addresses;
   for (int index : visible_selected_indices) {
     addresses.insert(GetSampledFunction(index).absolute_address);
@@ -310,12 +310,12 @@ void SamplingReportDataView::UpdateVisibleSelectedAddressesAndTid(
   sampling_report_->OnSelectAddresses(addresses, tid_);
 }
 
-void SamplingReportDataView::OnSelect(absl::Span<int const> indices) {
+void SamplingReportDataView::OnSelect(absl::Span<const int> indices) {
   UpdateSelectedIndicesAndFunctionIds(indices);
   UpdateVisibleSelectedAddressesAndTid(indices);
 }
 
-void SamplingReportDataView::OnRefresh(absl::Span<int const> visible_selected_indices,
+void SamplingReportDataView::OnRefresh(absl::Span<const int> visible_selected_indices,
                                        const RefreshMode& mode) {
   if (mode != RefreshMode::kOnFilter && mode != RefreshMode::kOnSort) return;
   UpdateVisibleSelectedAddressesAndTid(visible_selected_indices);
@@ -327,7 +327,7 @@ void SamplingReportDataView::LinkDataView(DataView* data_view) {
   sampling_report_->SetCallstackDataView(static_cast<CallstackDataView*>(data_view));
 }
 
-void SamplingReportDataView::SetSampledFunctions(absl::Span<SampledFunction const> functions) {
+void SamplingReportDataView::SetSampledFunctions(absl::Span<const SampledFunction> functions) {
   functions_ = functions;
   RestoreSelectedIndicesAfterFunctionsChanged();
 
@@ -515,7 +515,7 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(std::string_v
 
 // The argument `selection` is ignored as the selected functions are more conveniently obtained as
 // `sampling_report_->GetSelectedCallstackIds()`
-void SamplingReportDataView::OnExportEventsToCsvRequested(absl::Span<int const> /*selection*/) {
+void SamplingReportDataView::OnExportEventsToCsvRequested(absl::Span<const int> /*selection*/) {
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
 

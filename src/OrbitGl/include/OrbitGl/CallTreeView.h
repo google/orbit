@@ -94,7 +94,7 @@ class CallTreeNode {
   }
 
   void AddExclusiveCallstackEvents(
-      absl::Span<orbit_client_data::CallstackEvent const> callstack_events) {
+      absl::Span<const orbit_client_data::CallstackEvent> callstack_events) {
     exclusive_callstack_events_.insert(exclusive_callstack_events_.end(), callstack_events.begin(),
                                        callstack_events.end());
   }

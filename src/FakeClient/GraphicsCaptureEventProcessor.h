@@ -150,7 +150,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   }
 
   static void PrintCommandBufferTimestamps(
-      absl::Span<CommandBufferTimestamps const> command_buffers_timestamps) {
+      absl::Span<const CommandBufferTimestamps> command_buffers_timestamps) {
     for (size_t i = 0; i < command_buffers_timestamps.size(); ++i) {
       const uint64_t begin_timestamp_ns = command_buffers_timestamps[i].begin;
       const uint64_t end_timestamp_ns = command_buffers_timestamps[i].end;

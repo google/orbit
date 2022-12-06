@@ -15,7 +15,7 @@
 
 namespace {
 
-std::vector<Vec2> RotatePoints(absl::Span<Vec2 const> points, float rotation) {
+std::vector<Vec2> RotatePoints(absl::Span<const Vec2> points, float rotation) {
   float cos_r = std::cos(kPiFloat * rotation / 180.f);
   float sin_r = std::sin(kPiFloat * rotation / 180.f);
   std::vector<Vec2> result;
@@ -46,7 +46,7 @@ std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
   return points;
 }
 
-void DrawTriangleFan(PrimitiveAssembler& primitive_assembler, absl::Span<Vec2 const> points,
+void DrawTriangleFan(PrimitiveAssembler& primitive_assembler, absl::Span<const Vec2> points,
                      const Vec2& pos, const Color& color, float rotation, float z,
                      std::shared_ptr<Pickable> pickable) {
   if (points.size() < 3) {

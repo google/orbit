@@ -101,7 +101,7 @@ std::optional<std::string> MizarData::GetFunctionNameFromAddress(AbsoluteAddress
   return name;
 }
 
-void MizarData::UpdateModules(absl::Span<orbit_grpc_protos::ModuleInfo const> module_infos) {
+void MizarData::UpdateModules(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos) {
   for (const auto* not_updated_module :
        module_manager_->AddOrUpdateNotLoadedModules(module_infos)) {
     ORBIT_LOG("Module %s is not updated", not_updated_module->file_path());

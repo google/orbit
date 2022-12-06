@@ -129,7 +129,7 @@ class MemoryTracingIntegrationTestFixture {
   return fixture->StopTracingAndGetEvents();
 }
 
-void VerifyOrderAndContentOfEvents(absl::Span<ProducerCaptureEvent const> events,
+void VerifyOrderAndContentOfEvents(absl::Span<const ProducerCaptureEvent> events,
                                    uint64_t sampling_period_ns) {
   const uint64_t kMemoryEventsTimeDifferenceTolerance =
       static_cast<uint64_t>(sampling_period_ns * 0.2);
@@ -190,7 +190,7 @@ void VerifyOrderAndContentOfEvents(absl::Span<ProducerCaptureEvent const> events
 
 // Verify whether the memory_sampling_period_ns_ works as expected by checking the number of
 // received events.
-void VerifyEventCounts(absl::Span<ProducerCaptureEvent const> events, size_t expected_counts) {
+void VerifyEventCounts(absl::Span<const ProducerCaptureEvent> events, size_t expected_counts) {
   constexpr size_t kEventCountsErrorTolerance = 2;
 
   size_t num_received_events = 0;

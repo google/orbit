@@ -161,7 +161,7 @@ const absl::flat_hash_map<TID, uint64_t> kTidToCallstackCount = {
     {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
 
 [[nodiscard]] static std::vector<SampledFunctionId> SFIDsForCallstacks(
-    absl::Span<uint64_t const> addresses) {
+    absl::Span<const uint64_t> addresses) {
   std::vector<AbsoluteAddress> good_addresses;
   ForEachFrame(addresses, [&good_addresses](AbsoluteAddress address) {
     if (kAddressToId.contains(address)) {
