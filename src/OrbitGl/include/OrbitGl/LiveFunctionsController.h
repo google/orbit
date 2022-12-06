@@ -6,11 +6,9 @@
 #define LIVE_FUNCTIONS_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <sys/types.h>
 
 #include <cstdint>
 #include <functional>
-#include <limits>
 #include <optional>
 #include <utility>
 

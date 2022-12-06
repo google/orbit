@@ -10,8 +10,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <memory>
-#include <type_traits>
 #include <utility>
 
 #include "ClientData/CaptureData.h"
@@ -26,7 +24,6 @@
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ScopeId;
-using orbit_client_data::ScopeStats;
 using orbit_client_protos::TimerInfo;
 
 namespace {

@@ -88,10 +88,9 @@ using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
-using ::testing::_;
 using ::testing::Invoke;
-using ::testing::Pointee;
 using ::testing::Return;
+using ::testing::ReturnRef;
 
 namespace {
 
@@ -267,8 +266,8 @@ class LiveFunctionsDataViewTest : public testing::Test {
       : view_{&live_functions_, &app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
-    EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+    EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(Return(true));
+    EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(ReturnRef(*capture_data_));
 
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
@@ -288,7 +287,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds).WillRepeatedly(Return(ids));
     for (size_t index : indices) {
       EXPECT_CALL(*scope_stats_collection, GetScopeStatsOrDefault(kScopeIds[index]))
-          .WillRepeatedly(testing::ReturnRef(kScopeStats[index]));
+          .WillRepeatedly(ReturnRef(kScopeStats[index]));
     }
     EXPECT_CALL(*scope_stats_collection, GetSortedTimerDurationsForScopeId(kScopeIds[0]))
         .WillRepeatedly(Return(&kDurations));
