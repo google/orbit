@@ -7,7 +7,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <linux/seccomp.h>
-#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
@@ -16,6 +15,7 @@
 
 #include <array>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <filesystem>
 #include <memory>

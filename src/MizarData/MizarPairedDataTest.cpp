@@ -7,10 +7,10 @@
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <limits>

@@ -29,9 +29,10 @@
 #include "ProtoSectionInputStreamImpl.h"
 
 #ifdef __linux
-#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <cerrno>
 #endif
 
 namespace orbit_capture_file {

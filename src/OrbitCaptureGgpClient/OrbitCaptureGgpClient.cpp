@@ -8,8 +8,8 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/support/channel_arguments.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <string>

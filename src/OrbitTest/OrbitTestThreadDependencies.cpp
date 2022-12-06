@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <stdio.h>
 
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <mutex>
 #include <string>
 #include <thread>

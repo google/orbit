@@ -4,9 +4,9 @@
 
 #include <absl/types/span.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 

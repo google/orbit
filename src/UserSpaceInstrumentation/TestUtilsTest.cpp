@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <random>
 #include <string>
 

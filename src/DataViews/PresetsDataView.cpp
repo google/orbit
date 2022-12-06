@@ -10,9 +10,9 @@
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <errno.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <filesystem>
 #include <functional>

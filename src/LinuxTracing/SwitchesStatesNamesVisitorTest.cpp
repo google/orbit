@@ -5,12 +5,12 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
-#include <string.h>
 #include <sys/types.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

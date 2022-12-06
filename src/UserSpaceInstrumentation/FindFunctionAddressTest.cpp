@@ -5,12 +5,12 @@
 #include <absl/strings/match.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <signal.h>
-#include <stdint.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <csignal>
+#include <cstdint>
 #include <string>
 #include <vector>
 

@@ -4,8 +4,9 @@
 
 #include <absl/synchronization/mutex.h>
 #include <gtest/gtest.h>
-#include <limits.h>
-#include <string.h>
+
+#include <climits>
+#include <cstring>
 
 #ifdef _WIN32
 // No special windows header needed

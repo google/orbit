@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <errno.h>
 #include <libssh2.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <string_view>
 #include <system_error>
 

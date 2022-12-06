@@ -8,8 +8,8 @@
 #include <absl/algorithm/container.h>
 #include <absl/meta/type_traits.h>
 #include <absl/types/span.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <iterator>
 #include <optional>
 #include <utility>

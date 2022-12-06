@@ -14,7 +14,7 @@
 
 static void SetEnv(const char* name, const char* value) { _putenv_s(name, value); }
 #else
-#include <stdlib.h>
+#include <cstdlib>
 
 static void SetEnv(const char* name, const char* value) { setenv(name, value, 1); }
 #endif

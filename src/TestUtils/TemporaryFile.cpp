@@ -5,9 +5,9 @@
 #include "TestUtils/TemporaryFile.h"
 
 #include <absl/strings/str_format.h>
-#include <errno.h>
-#include <stdlib.h>
 
+#include <cerrno>
+#include <cstdlib>
 #include <filesystem>
 #include <string>
 #include <string_view>

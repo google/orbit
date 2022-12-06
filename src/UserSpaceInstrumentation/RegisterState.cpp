@@ -7,11 +7,11 @@
 #include <absl/strings/str_format.h>
 #include <cpuid.h>
 #include <elf.h>
-#include <errno.h>
-#include <stdint.h>
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 
+#include <cerrno>
+#include <cstdint>
 #include <string>
 
 #include "OrbitBase/Logging.h"

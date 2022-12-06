@@ -4,8 +4,8 @@
 
 #include <absl/strings/str_replace.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>

@@ -5,8 +5,8 @@
 #include "OrbitSsh/Session.h"
 
 #include <libssh2.h>
-#include <stddef.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <string>
 

@@ -6,9 +6,9 @@
 
 #include <GteVector.h>
 #include <absl/strings/str_format.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <utility>
 

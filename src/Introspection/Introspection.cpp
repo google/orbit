@@ -9,9 +9,9 @@
 #include <absl/base/thread_annotations.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
-#include <stdint.h>
 
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <utility>

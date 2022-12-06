@@ -4,14 +4,14 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <signal.h>
-#include <stdlib.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <array>
+#include <csignal>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 
 #include "OrbitBase/Logging.h"

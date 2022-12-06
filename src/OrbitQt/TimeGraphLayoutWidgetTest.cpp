@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <QApplication>
+#include <cstdint>
 #include <memory>
 
 #include "OrbitBase/ThreadConstants.h"

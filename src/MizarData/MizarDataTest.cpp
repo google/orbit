@@ -8,10 +8,10 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <iterator>

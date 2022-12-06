@@ -4,9 +4,9 @@
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
-#include <stddef.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 

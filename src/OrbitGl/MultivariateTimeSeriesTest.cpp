@@ -4,9 +4,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>

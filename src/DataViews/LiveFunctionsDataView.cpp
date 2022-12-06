@@ -11,11 +11,11 @@
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
 #include <absl/types/span.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <iterator>

@@ -9,7 +9,6 @@
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
 #include <absl/types/span.h>
-#include <stdlib.h>
 
 #include <QColor>
 #include <QFlags>
@@ -27,6 +26,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <iterator>
 #include <limits>
 #include <optional>

@@ -5,8 +5,8 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <optional>

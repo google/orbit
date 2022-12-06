@@ -6,9 +6,9 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/strings/substitute.h>
-#include <stdint.h>
 
 #include <array>
+#include <cstdint>
 #include <optional>
 #include <string_view>
 #include <utility>

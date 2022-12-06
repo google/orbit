@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdint.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string_view>

@@ -9,9 +9,9 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <map>

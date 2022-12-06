@@ -7,12 +7,12 @@
 #include <absl/time/time.h>
 #include <absl/types/span.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <QObject>
 #include <QTimer>
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <thread>

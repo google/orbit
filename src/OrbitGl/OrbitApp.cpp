@@ -17,9 +17,7 @@
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
 #include <absl/types/span.h>
-#include <errno.h>
 #include <google/protobuf/stubs/port.h>
-#include <stdio.h>
 
 #include <QObject>
 #include <QProcess>
@@ -27,7 +25,9 @@
 #include <QStringList>
 #include <Qt>
 #include <algorithm>
+#include <cerrno>
 #include <cstddef>
+#include <cstdio>
 #include <limits>
 #include <map>
 #include <memory>

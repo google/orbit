@@ -4,8 +4,7 @@
 
 #include "FileFragmentInputStream.h"
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <utility>
 
 namespace orbit_capture_file_internal {

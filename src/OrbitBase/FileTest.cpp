@@ -7,11 +7,11 @@
 #include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <utility>

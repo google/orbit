@@ -4,7 +4,7 @@
 
 #include "OrbitSsh/Socket.h"
 
-#include <stddef.h>
+#include <cstddef>
 
 #ifdef _WIN32
 #include <winsock.h>

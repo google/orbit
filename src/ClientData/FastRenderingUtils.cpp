@@ -4,7 +4,7 @@
 
 #include "ClientData/FastRenderingUtils.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace orbit_client_data {
 

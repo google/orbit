@@ -4,10 +4,10 @@
 
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <QDateTime>
 #include <QString>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>

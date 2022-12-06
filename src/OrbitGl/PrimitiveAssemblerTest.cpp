@@ -4,10 +4,10 @@
 
 #include <GteVector.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <memory>
 
 #include "OrbitGl/BatcherInterface.h"

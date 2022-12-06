@@ -7,9 +7,9 @@
 #include <GteVector.h>
 #include <GteVector2.h>
 #include <absl/types/span.h>
-#include <stddef.h>
 
 #include <cmath>
+#include <cstddef>
 
 #include "OrbitGl/Geometry.h"
 

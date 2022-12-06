@@ -11,10 +11,10 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <errno.h>
 #include <sys/resource.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
 #include <ctime>
 #include <filesystem>

@@ -6,9 +6,9 @@
 
 #include <absl/time/time.h>
 #include <google/protobuf/arena.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

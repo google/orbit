@@ -10,13 +10,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <immintrin.h>
-#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <filesystem>
 #include <limits>

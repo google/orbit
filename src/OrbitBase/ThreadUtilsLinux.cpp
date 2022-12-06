@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <limits.h>
 #include <pthread.h>
-#include <stdint.h>
-#include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#include <climits>
+#include <cstdint>
+#include <cstring>
 #include <string>
 
 #include "OrbitBase/Logging.h"

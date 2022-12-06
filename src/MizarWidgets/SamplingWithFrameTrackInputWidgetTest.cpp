@@ -7,7 +7,6 @@
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <QAbstractItemModel>
 #include <QAbstractListModel>
@@ -24,6 +23,7 @@
 #include <QVariant>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <limits>

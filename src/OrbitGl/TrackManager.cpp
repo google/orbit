@@ -11,9 +11,9 @@
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_split.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <initializer_list>
 #include <iterator>

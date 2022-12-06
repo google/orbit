@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

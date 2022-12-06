@@ -4,9 +4,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <array>
+#include <cstddef>
 #include <memory>
 
 #include "Statistics/Gaussian.h"

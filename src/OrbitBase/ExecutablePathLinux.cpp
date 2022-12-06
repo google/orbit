@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdint.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <climits>
+#include <cstdint>
 #include <filesystem>
 #include <string>
 

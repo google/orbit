@@ -4,9 +4,9 @@
 
 #include "OrbitBase/File.h"
 
-#include <errno.h>
 #include <fcntl.h>
 
+#include <cerrno>
 #include <chrono>
 #include <ctime>
 #include <string>

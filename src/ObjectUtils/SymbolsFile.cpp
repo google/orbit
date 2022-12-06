@@ -5,9 +5,9 @@
 #include "ObjectUtils/SymbolsFile.h"
 
 #include <absl/strings/str_format.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>

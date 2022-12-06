@@ -6,13 +6,13 @@
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdlib.h>
-#include <string.h>
 #include <vulkan/vk_layer.h>
 #include <vulkan/vulkan_core.h>
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <optional>
 #include <string>

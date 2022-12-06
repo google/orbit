@@ -6,10 +6,10 @@
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <string_view>

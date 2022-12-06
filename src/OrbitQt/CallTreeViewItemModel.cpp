@@ -5,12 +5,12 @@
 #include "OrbitQt/CallTreeViewItemModel.h"
 
 #include <absl/strings/str_format.h>
-#include <stddef.h>
 
 #include <QColor>
 #include <QStringLiteral>
 #include <QtCore>
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <string>
 #include <utility>

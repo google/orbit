@@ -4,12 +4,11 @@
 
 #include "SourcePathsMapping/MappingManager.h"
 
-#include <stddef.h>
-
 #include <QSettings>
 #include <QString>
 #include <QVariant>
 #include <algorithm>
+#include <cstddef>
 
 #include "OrbitBase/Logging.h"
 

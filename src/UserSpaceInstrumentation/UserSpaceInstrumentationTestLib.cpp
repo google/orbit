@@ -4,10 +4,9 @@
 
 #include "UserSpaceInstrumentationTestLib.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <ratio>
 #include <stack>
 

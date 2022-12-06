@@ -5,9 +5,9 @@
 #include "OrbitGl/PageFaultsTrack.h"
 
 #include <GteVector.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

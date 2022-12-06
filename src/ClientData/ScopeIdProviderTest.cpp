@@ -6,10 +6,10 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/types/span.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <memory>

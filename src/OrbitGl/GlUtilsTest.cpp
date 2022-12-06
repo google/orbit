@@ -4,10 +4,10 @@
 
 #include <absl/time/time.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
-#include <stdlib.h>
 
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
 #include <memory>
 
 #include "OrbitGl/GlUtils.h"

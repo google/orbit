@@ -4,11 +4,11 @@
 
 #include "TestProcess.h"
 
-#include <stdlib.h>
 #include <sys/wait.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <system_error>
 #include <utility>

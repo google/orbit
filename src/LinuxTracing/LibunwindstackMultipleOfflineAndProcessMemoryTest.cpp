@@ -4,9 +4,9 @@
 
 #include <absl/base/casts.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>

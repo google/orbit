@@ -5,10 +5,10 @@
 #include "ProcessService/ProcessServiceImpl.h"
 
 #include <absl/strings/str_format.h>
-#include <stdint.h>
 #include <sys/types.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>

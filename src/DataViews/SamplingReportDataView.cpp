@@ -12,9 +12,9 @@
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <functional>

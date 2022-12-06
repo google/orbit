@@ -4,9 +4,8 @@
 
 #include "OrbitGl/SimpleTimings.h"
 
-#include <stddef.h>
-
 #include <algorithm>
+#include <cstddef>
 #include <limits>
 
 namespace orbit_gl {

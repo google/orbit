@@ -6,7 +6,6 @@
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <QCoreApplication>
 #include <QEventLoop>
@@ -19,6 +18,7 @@
 #include <QStringList>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <optional>

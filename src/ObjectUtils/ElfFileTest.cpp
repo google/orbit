@@ -7,8 +7,8 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/stubs/port.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>

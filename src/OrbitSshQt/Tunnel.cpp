@@ -5,11 +5,11 @@
 #include "OrbitSshQt/Tunnel.h"
 
 #include <absl/base/attributes.h>
-#include <stddef.h>
 
 #include <QByteArray>
 #include <QHostAddress>
 #include <QTimer>
+#include <cstddef>
 #include <string_view>
 #include <utility>
 

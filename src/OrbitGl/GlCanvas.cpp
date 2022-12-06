@@ -5,10 +5,10 @@
 #include "OrbitGl/GlCanvas.h"
 
 #include <GteVector.h>
-#include <stdint.h>
 
 #include <QOpenGLFunctions>
 #include <array>
+#include <cstdint>
 #include <cstring>
 
 #include "ApiInterface/Orbit.h"

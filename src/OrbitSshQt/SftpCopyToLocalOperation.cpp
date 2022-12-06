@@ -5,9 +5,9 @@
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"
 
 #include <absl/base/attributes.h>
-#include <stddef.h>
 
 #include <QIODevice>
+#include <cstddef>
 #include <string>
 #include <utility>
 

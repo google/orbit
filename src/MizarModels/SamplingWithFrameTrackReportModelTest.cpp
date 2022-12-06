@@ -7,7 +7,6 @@
 #include <absl/hash/hash.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <QList>
 #include <QMetaType>
@@ -18,6 +17,7 @@
 #include <Qt>
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <optional>

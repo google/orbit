@@ -5,12 +5,12 @@
 #include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QString>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <set>

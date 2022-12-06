@@ -7,9 +7,9 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <limits>
 #include <string>

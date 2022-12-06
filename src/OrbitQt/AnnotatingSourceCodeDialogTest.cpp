@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <QCoreApplication>
 #include <QObject>
@@ -14,6 +13,7 @@
 #include <QTimer>
 #include <Qt>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <string>

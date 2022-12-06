@@ -6,9 +6,9 @@
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 #include <sys/types.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <utility>

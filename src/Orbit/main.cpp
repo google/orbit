@@ -8,7 +8,6 @@
 #include <absl/flags/usage_config.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/string_view.h>
-#include <stddef.h>
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -21,6 +20,7 @@
 #include <QStringList>
 #include <Qt>
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <optional>

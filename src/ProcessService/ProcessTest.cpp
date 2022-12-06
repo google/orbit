@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <memory>
 
 #include "GrpcProtos/process.pb.h"

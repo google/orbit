@@ -4,7 +4,6 @@
 
 #include <absl/strings/str_format.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <QAbstractSocket>
 #include <QByteArray>
@@ -18,6 +17,7 @@
 #include <QTemporaryFile>
 #include <QTimer>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>

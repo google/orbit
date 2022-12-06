@@ -5,8 +5,8 @@
 #include <absl/hash/hash.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>

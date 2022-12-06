@@ -6,11 +6,11 @@
 #include <absl/synchronization/mutex.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>

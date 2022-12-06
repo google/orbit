@@ -13,9 +13,9 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <dlfcn.h>
-#include <stdint.h>
 #include <sys/types.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <type_traits>

@@ -5,10 +5,10 @@
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <thread>
 

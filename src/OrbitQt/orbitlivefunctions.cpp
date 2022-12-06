@@ -7,7 +7,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
-#include <stddef.h>
 
 #include <QBoxLayout>
 #include <QItemSelectionModel>
@@ -16,6 +15,7 @@
 #include <QModelIndex>
 #include <QObject>
 #include <QTabWidget>
+#include <cstddef>
 #include <utility>
 
 #include "ClientData/ScopeId.h"

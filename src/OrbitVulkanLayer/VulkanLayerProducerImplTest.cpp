@@ -8,11 +8,11 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>

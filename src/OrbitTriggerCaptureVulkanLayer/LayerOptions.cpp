@@ -5,11 +5,11 @@
 #include "LayerOptions.h"
 
 #include <absl/strings/str_format.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <string>
 #include <vector>
 

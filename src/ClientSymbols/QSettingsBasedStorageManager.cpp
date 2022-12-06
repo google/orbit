@@ -6,11 +6,11 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <stddef.h>
 
 #include <QSettings>
 #include <QVariant>
 #include <algorithm>
+#include <cstddef>
 #include <filesystem>
 
 constexpr const char* kSymbolPathsSettingsKey = "symbol_directories";

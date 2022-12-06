@@ -8,10 +8,10 @@
 #include <GteVector2.h>
 #include <GteVector4.h>
 #include <OrbitBase/Logging.h>
-#include <stddef.h>
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <utility>
 
 #include "OrbitGl/CoreMath.h"

@@ -10,9 +10,9 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>

@@ -6,7 +6,6 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <stdint.h>
 
 #include <QIODevice>
 #include <QMetaEnum>
@@ -14,6 +13,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QtGlobal>
+#include <cstdint>
 #include <memory>
 #include <string>
 

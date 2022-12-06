@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <stddef.h>
-
 #include <cmath>
+#include <cstddef>
 
 // extern "C" to have unmangled name in the symbol table.
 extern "C" double function_that_works_for_a_considerable_amount_of_time() {

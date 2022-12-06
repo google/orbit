@@ -4,11 +4,11 @@
 
 #include "PerfEventRingBuffer.h"
 
-#include <errno.h>
 #include <linux/perf_event.h>
-#include <string.h>
 #include <sys/mman.h>
 
+#include <cerrno>
+#include <cstring>
 #include <utility>
 
 #include "LinuxTracingUtils.h"

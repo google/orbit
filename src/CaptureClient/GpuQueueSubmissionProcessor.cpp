@@ -6,8 +6,8 @@
 
 #include <absl/meta/type_traits.h>
 #include <absl/strings/numbers.h>
-#include <stddef.h>
 
+#include <cstddef>
 #include <tuple>
 #include <utility>
 

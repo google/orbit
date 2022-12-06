@@ -7,9 +7,9 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/types/span.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <limits>

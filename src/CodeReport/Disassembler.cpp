@@ -8,9 +8,9 @@
 #include <absl/strings/str_replace.h>
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <utility>
 
 #include "ClientData/FunctionInfo.h"

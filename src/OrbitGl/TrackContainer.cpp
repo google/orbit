@@ -9,10 +9,10 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <optional>

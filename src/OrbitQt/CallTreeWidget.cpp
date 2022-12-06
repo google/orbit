@@ -9,8 +9,6 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <absl/types/span.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <QAbstractItemModel>
 #include <QAction>
@@ -33,6 +31,8 @@
 #include <Qt>
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <memory>

@@ -5,9 +5,9 @@
 #include "PerfEventQueue.h"
 
 #include <absl/meta/type_traits.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <utility>
 
 #include "OrbitBase/Logging.h"

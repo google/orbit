@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <stdio.h>
-
 #include <array>
+#include <cstdio>
 #include <memory>
 #include <optional>
 #include <string>

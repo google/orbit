@@ -5,9 +5,9 @@
 #include "OrbitGl/SystemMemoryTrack.h"
 
 #include <absl/strings/str_format.h>
-#include <stdint.h>
 
 #include <array>
+#include <cstdint>
 #include <optional>
 
 #include "DisplayFormats/DisplayFormats.h"

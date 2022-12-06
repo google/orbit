@@ -6,14 +6,14 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
-#include <errno.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include <stdint.h>
-#include <stdio.h>
 
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
 #include <optional>
 #include <string>
 #include <string_view>

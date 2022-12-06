@@ -5,9 +5,9 @@
 #include "PerfEventReaders.h"
 
 #include <linux/perf_event.h>
-#include <stddef.h>
 
 #include <bitset>
+#include <cstddef>
 #include <cstring>
 #include <memory>
 #include <string>

@@ -7,9 +7,9 @@
 #include <absl/strings/ascii.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <utility>
 

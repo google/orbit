@@ -8,8 +8,8 @@
 #include <absl/time/time.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>

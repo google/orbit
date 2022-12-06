@@ -4,10 +4,10 @@
 
 #include <absl/container/btree_map.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <random>
 #include <set>

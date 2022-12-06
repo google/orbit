@@ -5,8 +5,6 @@
 #include "CaptureFileInfo/Manager.h"
 
 #include <absl/time/time.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <QDateTime>
 #include <QFileInfo>
@@ -14,6 +12,8 @@
 #include <QString>
 #include <QVariant>
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <utility>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"

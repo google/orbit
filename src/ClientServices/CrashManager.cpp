@@ -5,9 +5,9 @@
 #include "ClientServices/CrashManager.h"
 
 #include <grpcpp/grpcpp.h>
-#include <stdint.h>
 
 #include <chrono>
+#include <cstdint>
 
 #include "GrpcProtos/services.grpc.pb.h"
 #include "OrbitBase/Logging.h"

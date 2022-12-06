@@ -5,7 +5,6 @@
 #include "OrbitQt/orbitsamplingreport.h"
 
 #include <absl/strings/str_format.h>
-#include <stdint.h>
 
 #include <QColor>
 #include <QGridLayout>
@@ -21,6 +20,7 @@
 #include <QTabWidget>
 #include <Qt>
 #include <algorithm>
+#include <cstdint>
 #include <string>
 #include <utility>
 

@@ -7,8 +7,6 @@
 #include <absl/hash/hash.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include <QModelIndex>
 #include <QString>
@@ -16,6 +14,8 @@
 #include <Qt>
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <string_view>

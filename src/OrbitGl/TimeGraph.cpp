@@ -6,10 +6,10 @@
 
 #include <GteVector.h>
 #include <absl/flags/flag.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <string>
 

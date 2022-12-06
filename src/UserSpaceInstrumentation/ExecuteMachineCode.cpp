@@ -4,11 +4,12 @@
 
 #include "ExecuteMachineCode.h"
 
-#include <signal.h>
-#include <stdlib.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <csignal>
+#include <cstdlib>
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"

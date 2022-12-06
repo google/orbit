@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
-#include <stdint.h>
-#include <string.h>
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
+
+#include <cstdint>
+#include <cstring>
 
 #include "DispatchTable.h"
 #include "LayerLogic.h"

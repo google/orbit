@@ -6,10 +6,10 @@
 
 #include <GteVector.h>
 #include <GteVector2.h>
-#include <stddef.h>
 
 #include <QOpenGLFunctions>
 #include <algorithm>
+#include <cstddef>
 #include <utility>
 
 #include "Introspection/Introspection.h"

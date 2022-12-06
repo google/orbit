@@ -5,8 +5,8 @@
 #include "OrbitGl/MockTextRenderer.h"
 
 #include <GteVector.h>
-#include <string.h>
 
+#include <cstring>
 #include <limits>
 
 #include "OrbitGl/CoreMath.h"

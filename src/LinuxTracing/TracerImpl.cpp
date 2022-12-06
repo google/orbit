@@ -12,11 +12,11 @@
 #include <absl/strings/str_join.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/types/span.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <set>
 #include <string>

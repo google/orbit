@@ -5,11 +5,11 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/strings/string_view.h>
-#include <stdlib.h>
 
 #include <QApplication>
 #include <QString>
 #include <atomic>
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>

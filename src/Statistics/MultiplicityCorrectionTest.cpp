@@ -5,10 +5,10 @@
 #include <absl/container/flat_hash_map.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stddef.h>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <iterator>
 #include <vector>
 

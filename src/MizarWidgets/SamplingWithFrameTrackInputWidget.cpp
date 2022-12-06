@@ -5,7 +5,6 @@
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
 #include <absl/hash/hash.h>
-#include <stdint.h>
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -16,6 +15,7 @@
 #include <QStringLiteral>
 #include <QWidget>
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <limits>
 #include <memory>

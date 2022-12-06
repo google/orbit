@@ -7,11 +7,11 @@
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/types/span.h>
-#include <stdint.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <limits>
 #include <memory>

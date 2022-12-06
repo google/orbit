@@ -6,11 +6,11 @@
 
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <thread>

@@ -7,9 +7,9 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/str_split.h>
-#include <stddef.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>

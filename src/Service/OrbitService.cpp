@@ -8,9 +8,9 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/string_view.h>
 #include <absl/strings/strip.h>
-#include <stdint.h>
 
 #include <chrono>
+#include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <string>

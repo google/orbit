@@ -5,12 +5,12 @@
 #include "OrbitBase/ReadFileToString.h"
 
 #include <absl/strings/str_format.h>
-#include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <sys/stat.h>
 
 #include <array>
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/SafeStrerror.h"

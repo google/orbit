@@ -8,9 +8,9 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>

@@ -7,8 +7,8 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <system_error>

@@ -4,8 +4,8 @@
 
 #include <GteVector.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <tuple>

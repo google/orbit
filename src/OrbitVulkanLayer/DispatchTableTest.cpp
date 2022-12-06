@@ -4,8 +4,9 @@
 
 #include <absl/base/casts.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
-#include <string.h>
+
+#include <cstdint>
+#include <cstring>
 
 // clang-format off
 // vulkan_core needs to be included before the dispatch table

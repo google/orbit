@@ -5,8 +5,8 @@
 #include <GteVector4.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <string>
 
 #include "OrbitGl/CaptureViewElementTester.h"
