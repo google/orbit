@@ -11,8 +11,7 @@ namespace orbit_accessibility {
 
 class AccessibleObjectFake : public AccessibleInterface {
  public:
-  explicit AccessibleObjectFake(AccessibleObjectFake* parent)
-      : AccessibleInterface(), parent_(parent) {}
+  explicit AccessibleObjectFake(AccessibleObjectFake* parent) : parent_(parent) {}
   [[nodiscard]] int AccessibleChildCount() const override { return children_.size(); }
   [[nodiscard]] AccessibleInterface* AccessibleChild(int index) const override {
     return children_[index].get();

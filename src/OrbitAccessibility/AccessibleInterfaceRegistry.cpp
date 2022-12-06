@@ -13,9 +13,7 @@ AccessibleInterfaceRegistry& AccessibleInterfaceRegistry::Get() {
   return registry;
 }
 
-AccessibleInterfaceRegistry::~AccessibleInterfaceRegistry() {
-  ORBIT_CHECK(interfaces_.size() == 0);
-}
+AccessibleInterfaceRegistry::~AccessibleInterfaceRegistry() { ORBIT_CHECK(interfaces_.empty()); }
 
 void AccessibleInterfaceRegistry::Register(AccessibleInterface* iface) {
   if (!interfaces_.contains(iface)) {
@@ -36,12 +34,12 @@ void AccessibleInterfaceRegistry::Unregister(AccessibleInterface* iface) {
 
 void AccessibleInterfaceRegistry::SetOnRegisterCallback(Callback callback) {
   ORBIT_CHECK(on_registered_ == nullptr);
-  on_registered_ = callback;
+  on_registered_ = std::move(callback);
 }
 
 void AccessibleInterfaceRegistry::SetOnUnregisterCallback(Callback callback) {
   ORBIT_CHECK(on_unregistered_ == nullptr);
-  on_unregistered_ = callback;
+  on_unregistered_ = std::move(callback);
 }
 
 }  // namespace orbit_accessibility

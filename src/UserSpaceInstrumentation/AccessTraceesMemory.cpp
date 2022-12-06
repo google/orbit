@@ -63,7 +63,7 @@ using orbit_base::ReadFileToString;
     if (tokens.size() >= 6 && (tokens[5] == "[vsyscall]" || tokens[5] == "[uprobes]")) continue;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
-    AddressRange result;
+    AddressRange result{};
     if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) continue;
     if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) continue;
     if (exclude_address >= result.start && exclude_address < result.end) continue;
