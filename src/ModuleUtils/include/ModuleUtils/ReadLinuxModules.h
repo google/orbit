@@ -7,6 +7,7 @@
 
 #ifdef __linux
 
+#include <absl/types/span.h>
 #include <stdint.h>
 #include <unistd.h>
 
@@ -26,7 +27,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModule(const std::filesystem
 ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(pid_t pid);
 
 [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo> ReadModulesFromMaps(
-    const std::vector<LinuxMemoryMapping>& maps);
+    absl::Span<const LinuxMemoryMapping> maps);
 
 }  // namespace orbit_module_utils
 

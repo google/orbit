@@ -75,8 +75,6 @@ GlCanvas::GlCanvas()
 
   ref_time_click_ = 0.0;
 
-  delta_time_ = 0.0f;
-
   hover_delay_ms_ = 300;
   ResetHoverTimer();
 }

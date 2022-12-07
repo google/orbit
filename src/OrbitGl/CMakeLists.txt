@@ -28,9 +28,7 @@ target_sources(
          include/OrbitGl/CaptureWindow.h
          include/OrbitGl/CGroupAndProcessMemoryTrack.h
          include/OrbitGl/CoreMath.h
-         include/OrbitGl/DrawingInterface.h
          include/OrbitGl/FormatCallstackForTooltip.h
-         include/OrbitGl/FramePointerValidatorClient.h
          include/OrbitGl/FrameTrack.h
          include/OrbitGl/FrameTrackOnlineProcessor.h
          include/OrbitGl/Geometry.h
@@ -42,7 +40,6 @@ target_sources(
          include/OrbitGl/GpuTrack.h
          include/OrbitGl/GraphTrack.h
          include/OrbitGl/GraphTrackDataAggregator.h
-         include/OrbitGl/Images.h
          include/OrbitGl/IntrospectionWindow.h
          include/OrbitGl/LineGraphTrack.h
          include/OrbitGl/LiveFunctionsController.h
@@ -110,7 +107,6 @@ target_sources(
           CaptureWindow.cpp
           CGroupAndProcessMemoryTrack.cpp
           FormatCallstackForTooltip.cpp
-          FramePointerValidatorClient.cpp
           FrameTrack.cpp
           FrameTrackOnlineProcessor.cpp
           GlCanvas.cpp

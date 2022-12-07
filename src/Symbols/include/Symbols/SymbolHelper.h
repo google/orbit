@@ -30,7 +30,7 @@ class SymbolHelper : public SymbolCacheInterface {
  public:
   explicit SymbolHelper(std::filesystem::path cache_directory);
   explicit SymbolHelper(std::filesystem::path cache_directory,
-                        const std::vector<std::filesystem::path>& structured_debug_directories);
+                        absl::Span<const std::filesystem::path> structured_debug_directories);
 
   ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, std::string_view build_id,
@@ -54,9 +54,9 @@ class SymbolHelper : public SymbolCacheInterface {
 
   [[nodiscard]] static bool IsMatchingDebugInfoFile(const std::filesystem::path& file_path,
                                                     uint32_t checksum);
-  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindDebugInfoFileLocally(
+  [[nodiscard]] static ErrorMessageOr<std::filesystem::path> FindDebugInfoFileLocally(
       std::string_view filename, uint32_t checksum,
-      absl::Span<const std::filesystem::path> directories) const;
+      absl::Span<const std::filesystem::path> directories);
 
  private:
   template <typename Verifier>

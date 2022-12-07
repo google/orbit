@@ -9,7 +9,6 @@
 
 #include <filesystem>
 #include <string>
-#include <type_traits>
 
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"

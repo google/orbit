@@ -34,7 +34,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, SetClipboard, (std::string_view), (override));
   MOCK_METHOD(std::string, GetSaveFile, (std::string_view extension), (const, override));
 
-  MOCK_METHOD(void, SendErrorToUi, (std::string_view title, std::string_view text), (override));
+  MOCK_METHOD(void, SendErrorToUi, (std::string title, std::string text), (override));
 
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, LoadPreset,
               (const orbit_preset_file::PresetFile&), (override));
@@ -68,8 +68,6 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_client_data::ModuleManager*, GetModuleManager, (), (const, override));
   MOCK_METHOD(orbit_client_data::ModuleManager*, GetMutableModuleManager, (), (override));
 
-  MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>),
-              (override));
   MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, UpdateProcessAndModuleList, (), (override));
 
   // This needs to be called from the main thread.

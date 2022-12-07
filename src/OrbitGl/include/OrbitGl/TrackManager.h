@@ -89,7 +89,6 @@ class TrackManager {
   PageFaultsTrack* CreateAndGetPageFaultsTrack(std::string_view cgroup_name,
                                                uint64_t memory_sampling_period_ms);
 
-  [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
 
   void RemoveFrameTrack(uint64_t function_address);

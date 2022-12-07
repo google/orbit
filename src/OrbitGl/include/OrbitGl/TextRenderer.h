@@ -17,11 +17,8 @@ class TextRenderer : public TextRendererInterface {
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
 
-  static void SetDrawOutline(bool value) { draw_outline_ = value; }
-
  protected:
   Viewport* viewport_ = nullptr;
-  inline static bool draw_outline_ = false;
 
   TranslationStack translations_;
 };

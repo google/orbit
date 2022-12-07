@@ -54,7 +54,7 @@ TimerTrack::TimerTrack(CaptureViewElement* parent,
       app_{app},
       timer_data_{timer_data} {}
 
-std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) const {
+std::string TimerTrack::GetExtraInfo(const TimerInfo& timer_info) {
   std::string info;
   static bool show_return_value = absl::GetFlag(FLAGS_show_return_values);
   if (show_return_value && timer_info.type() == TimerInfo::kNone) {
@@ -92,7 +92,7 @@ WorldXInfo ToWorldX(double start_us, double end_us, double inv_time_window, floa
 
 }  // namespace
 
-std::string TimerTrack::GetDisplayTime(const TimerInfo& timer) const {
+std::string TimerTrack::GetDisplayTime(const TimerInfo& timer) {
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(timer.end() - timer.start()));
 }
 

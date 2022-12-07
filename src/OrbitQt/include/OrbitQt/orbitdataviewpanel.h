@@ -34,7 +34,6 @@ class OrbitDataViewPanel : public QWidget {
   void Link(OrbitDataViewPanel* panel);
   void Refresh();
   void SetDataModel(orbit_data_views::DataView* model);
-  void ClearDataModel();
   void SetFilter(const QString& filter);
   OrbitTreeView* GetTreeView();
   QLineEdit* GetFilterLineEdit();

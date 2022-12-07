@@ -4,6 +4,8 @@
 
 #include "OrbitQt/orbittablemodel.h"
 
+#include <absl/types/span.h>
+
 #include <QColor>
 #include <string>
 #include <vector>
@@ -35,7 +37,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
       } else if (orientation == Qt::Vertical) {
         return section;
       } else {
-        return QVariant();
+        return {};
       }
 
     case Qt::InitialSortOrderRole:
@@ -48,7 +50,7 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
       break;
   }
 
-  return QVariant();
+  return {};
 }
 
 QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
@@ -69,7 +71,7 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
     return static_cast<Qt::Alignment::Int>(text_alignment_);
   }
 
-  return QVariant();
+  return {};
 }
 
 void OrbitTableModel::sort(int column, Qt::SortOrder order) {
@@ -100,4 +102,4 @@ void OrbitTableModel::OnFilter(const QString& filter) {
   data_view_->OnFilter(filter.toStdString());
 }
 
-void OrbitTableModel::OnRowsSelected(const std::vector<int>& rows) { data_view_->OnSelect(rows); }
+void OrbitTableModel::OnRowsSelected(absl::Span<const int> rows) { data_view_->OnSelect(rows); }

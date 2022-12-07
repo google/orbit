@@ -27,16 +27,16 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "Test/Path.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_file {
 
-using orbit_base::TemporaryFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
+using orbit_test_utils::TemporaryFile;
 
 static constexpr const char* kAnswerString =
     "Answer to the Ultimate Question of Life, The Universe, and Everything";

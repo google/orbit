@@ -165,7 +165,7 @@ FindStructuredDebugDirectorySymbolProviders() {
 
 // TODO(b/246743231): Remove this function when not needed anymore.
 [[nodiscard]] static std::vector<StructuredDebugDirectorySymbolProvider>
-CreateStructuredDebugDirectorySymbolProviders(const std::vector<std::filesystem::path>& paths) {
+CreateStructuredDebugDirectorySymbolProviders(absl::Span<const std::filesystem::path> paths) {
   std::vector<StructuredDebugDirectorySymbolProvider> result;
   result.reserve(paths.size());
   for (const auto& path : paths) {
@@ -179,7 +179,7 @@ SymbolHelper::SymbolHelper(fs::path cache_directory)
       structured_debug_directory_providers_(FindStructuredDebugDirectorySymbolProviders()) {}
 
 SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
-                           const std::vector<std::filesystem::path>& structured_debug_directories)
+                           absl::Span<const std::filesystem::path> structured_debug_directories)
     : cache_directory_(std::move(cache_directory)),
       structured_debug_directory_providers_(
           CreateStructuredDebugDirectorySymbolProviders(structured_debug_directories)) {}
@@ -352,7 +352,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolHelper::LoadFallbackSymbo
 }
 
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
-    std::string_view filename, uint32_t checksum, absl::Span<const fs::path> directories) const {
+    std::string_view filename, uint32_t checksum, absl::Span<const fs::path> directories) {
   std::set<fs::path> search_paths;
   for (const auto& directory : directories) {
     search_paths.insert(directory / filename);

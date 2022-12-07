@@ -6,6 +6,7 @@
 #define ORBIT_QT_ORBIT_MAIN_WINDOW_H_
 
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 
 #include <QApplication>
@@ -92,15 +93,11 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnNewSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view);
 
   std::string OnGetSaveFileName(std::string_view extension);
-  void OnSetClipboard(std::string_view text);
+  static void OnSetClipboard(std::string_view text);
   void OpenCapture(std::string_view filepath);
   void OnCaptureCleared();
 
-  Ui::OrbitMainWindow* GetUi() { return ui; }
-
   bool eventFilter(QObject* watched, QEvent* event) override;
-
-  void RestoreDefaultTabLayout();
 
   [[nodiscard]] orbit_session_setup::TargetConfiguration ClearTargetConfiguration();
 
@@ -178,8 +175,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void on_actionHelp_toggled(bool checked);
   void on_actionIntrospection_triggered();
 
-  void on_actionCheckFalse_triggered();
-  void on_actionStackOverflow_triggered();
+  static void on_actionCheckFalse_triggered();
+  static void on_actionStackOverflow_triggered();
   void on_actionServiceCheckFalse_triggered();
   void on_actionServiceStackOverflow_triggered();
 
@@ -221,7 +218,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void UpdateTargetLabelPosition();
 
-  void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
+  void OnProcessListUpdated(absl::Span<const orbit_grpc_protos::ProcessInfo> processes);
 
   void ExecuteSymbolLocationsDialog(std::optional<const orbit_client_data::ModuleData*> module);
 

@@ -7,6 +7,7 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -278,13 +279,14 @@ class LiveFunctionsDataViewTest : public testing::Test {
     view_.SetScopeStatsCollection(capture_data_->GetAllScopeStatsCollection());
   }
 
-  void AddFunctionsByIndices(const std::vector<size_t>& indices) {
+  void AddFunctionsByIndices(absl::Span<const size_t> indices) {
+    std::set index_set(indices.begin(), indices.end());
     auto scope_stats_collection = std::make_shared<MockScopeStatsCollection>();
     std::vector<ScopeId> ids;
-    absl::c_transform(indices, std::back_inserter(ids),
+    absl::c_transform(index_set, std::back_inserter(ids),
                       [](const size_t index) { return ScopeId(kScopeIds[index]); });
     EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds).WillRepeatedly(Return(ids));
-    for (size_t index : indices) {
+    for (size_t index : index_set) {
       EXPECT_CALL(*scope_stats_collection, GetScopeStatsOrDefault(kScopeIds[index]))
           .WillRepeatedly(ReturnRef(kScopeStats[index]));
     }

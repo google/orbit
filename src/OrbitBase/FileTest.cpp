@@ -21,14 +21,15 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "OrbitBase/WriteStringToFile.h"
 #include "Test/Path.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
+using orbit_test_utils::TemporaryFile;
 
 namespace orbit_base {
 

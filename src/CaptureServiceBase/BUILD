@@ -6,7 +6,7 @@ load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
 package(default_visibility = [
     "//:__subpackages__",
-    "//:users",  
+    "//:users",
 ])
 
 licenses(["notice"])
@@ -16,7 +16,6 @@ orbit_cc_library(
     deps = [
         "//src/ApiLoader",
         "//src/ApiUtils",
-        "//src/CaptureUploader",
         "//src/GrpcProtos",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/GrpcProtos:services_cc_grpc_proto",
@@ -28,7 +27,7 @@ orbit_cc_library(
         "//src/OrbitVersion",
         "//src/ProducerEventProcessor",
         "//src/UserSpaceInstrumentation",
-        "@com_google_absl//absl/base:core_headers",        
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/synchronization",

@@ -5,6 +5,8 @@
 #ifndef DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_
 #define DATA_VIEWS_DATA_VIEW_TEST_UTILS_H_
 
+#include <absl/types/span.h>
+
 #include <algorithm>
 #include <string>
 #include <string_view>
@@ -12,7 +14,7 @@
 
 #include "DataViews/DataView.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 
 namespace orbit_data_views {
 
@@ -39,9 +41,9 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
 void CheckContextMenuOrder(const FlattenContextMenu& context_menu);
 
 [[nodiscard]] FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    const std::vector<DataView::ActionGroup>& menu_with_grouping);
+    absl::Span<const DataView::ActionGroup> menu_with_grouping);
 
-orbit_base::TemporaryFile GetTemporaryFilePath();
+orbit_test_utils::TemporaryFile GetTemporaryFilePath();
 
 }  // namespace orbit_data_views
 

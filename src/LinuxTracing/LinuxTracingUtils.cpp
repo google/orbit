@@ -10,6 +10,7 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <errno.h>
 #include <sys/resource.h>
 
@@ -228,8 +229,8 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
 // the file from 0x400 to 0x1000 (i.e., with RVAs from 0x1000 to 0x1c00). But those functions are
 // mapped again in the anonymous map, and that's where they actually have their absolute address,
 // i.e., where they actually get executed.
-static bool FunctionIsAlwaysInFileMapping(const std::vector<LinuxMemoryMapping>& file_path_maps,
-                                          const std::vector<ModuleInfo>& file_path_modules,
+static bool FunctionIsAlwaysInFileMapping(absl::Span<const LinuxMemoryMapping> file_path_maps,
+                                          absl::Span<const ModuleInfo> file_path_modules,
                                           const InstrumentedFunction& function) {
   for (const ModuleInfo& module : file_path_modules) {
     ORBIT_CHECK(module.file_path() == function.file_path());
@@ -252,8 +253,8 @@ static bool FunctionIsAlwaysInFileMapping(const std::vector<LinuxMemoryMapping>&
 }
 
 std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
-    const std::vector<LinuxMemoryMapping>& maps, const std::vector<ModuleInfo>& modules,
-    const std::vector<InstrumentedFunction>& functions) {
+    absl::Span<const LinuxMemoryMapping> maps, absl::Span<const ModuleInfo> modules,
+    absl::Span<const InstrumentedFunction> functions) {
   absl::flat_hash_map<std::string, std::vector<LinuxMemoryMapping>> file_paths_to_maps;
   for (const LinuxMemoryMapping& map : maps) {
     if (map.inode() == 0 || map.pathname().empty()) continue;

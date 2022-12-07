@@ -221,11 +221,10 @@ QRect AccessibilityAdapter::rect() const {
 
   if (bridge != nullptr) {
     QRect bridge_rect = bridge->rect();
-    return QRect(rect.left + bridge_rect.left(), rect.top + bridge_rect.top(), rect.width,
-                 rect.height);
+    return {rect.left + bridge_rect.left(), rect.top + bridge_rect.top(), rect.width, rect.height};
   }
 
-  return QRect(rect.left, rect.top, rect.width, rect.height);
+  return {rect.left, rect.top, rect.width, rect.height};
 }
 
 QAccessible::Role AccessibilityAdapter::role() const {
@@ -237,8 +236,8 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
  public:
   explicit OrbitGlWidgetAccessible(OrbitGLWidget* widget);
 
-  QAccessibleInterface* child(int index) const override;
-  int childCount() const override;
+  [[nodiscard]] QAccessibleInterface* child(int index) const override;
+  [[nodiscard]] int childCount() const override;
   int indexOfChild(const QAccessibleInterface* child) const override;
 };
 

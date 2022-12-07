@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_TEMPORARY_FILE_H_
-#define ORBIT_BASE_TEMPORARY_FILE_H_
+#ifndef ORBIT_TEST_UTILS_TEMPORARY_FILE_H_
+#define ORBIT_TEST_UTILS_TEMPORARY_FILE_H_
 
 #include <filesystem>
 #include <string_view>
@@ -12,7 +12,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 
-namespace orbit_base {
+namespace orbit_test_utils {
 // Creates and opens a temporary file. It will be automatically deleted when this object gets out of
 // scope.
 class TemporaryFile final {
@@ -40,7 +40,7 @@ class TemporaryFile final {
 
   void CloseAndRemove();
 
-  [[nodiscard]] const unique_fd& fd() const { return fd_; }
+  [[nodiscard]] const orbit_base::unique_fd& fd() const { return fd_; }
   [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }
 
   // Call this function to create a new temporary file. The `prefix` is a component that is
@@ -52,10 +52,10 @@ class TemporaryFile final {
   TemporaryFile() = default;
   ErrorMessageOr<void> Init(std::string_view prefix);
 
-  unique_fd fd_;
+  orbit_base::unique_fd fd_;
   std::filesystem::path file_path_;
 };
 
-}  // namespace orbit_base
+}  // namespace orbit_test_utils
 
-#endif  // ORBIT_BASE_TEMPORARY_FILE_H_
+#endif  // ORBIT_TEST_UTILS_TEMPORARY_FILE_H_

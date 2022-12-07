@@ -135,8 +135,8 @@ Color FrameTrack::GetTimerColor(const orbit_client_protos::TimerInfo& timer_info
   if (timer_info.user_data_key() % 2 == 0) {
     color = 0.8f * color;
   }
-  return Color(static_cast<uint8_t>(color[0]), static_cast<uint8_t>(color[1]),
-               static_cast<uint8_t>(color[2]), static_cast<uint8_t>(color[3]));
+  return {static_cast<uint8_t>(color[0]), static_cast<uint8_t>(color[1]),
+          static_cast<uint8_t>(color[2]), static_cast<uint8_t>(color[3])};
 }
 
 void FrameTrack::OnTimer(const TimerInfo& timer_info) {

@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <filesystem>
@@ -142,7 +143,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                                         /*out_of_order_events_discarded_event*/) override {}
 
  private:
-  void UpdateModules(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+  void UpdateModules(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
   void LoadSymbolsForAllModules();
 

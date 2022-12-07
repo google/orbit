@@ -8,7 +8,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <algorithm>
 #include <csignal>
 #include <cstdint>
 #include <memory>

@@ -7,6 +7,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/types/span.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -224,7 +225,7 @@ class MizarPairedDataTmpl {
     return CallstackWithSFIDs(callstack->frames());
   }
 
-  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(const std::vector<uint64_t>& frames) const {
+  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(absl::Span<const uint64_t> frames) const {
     std::vector<SFID> result;
     orbit_mizar_base::ForEachFrame(frames, [this, &result](AbsoluteAddress address) {
       if (auto it = address_to_sfid_.find(address); it != address_to_sfid_.end()) {

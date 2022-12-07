@@ -716,38 +716,6 @@ const char* CaptureWindow::GetHelpText() const {
   return help_message;
 }
 
-inline double GetIncrementMs(double milli_seconds) {
-  constexpr double kDay = 24 * 60 * 60 * 1000;
-  constexpr double kHour = 60 * 60 * 1000;
-  constexpr double kMinute = 60 * 1000;
-  constexpr double kSecond = 1000;
-  constexpr double kMilli = 1;
-  constexpr double kMicro = 0.001;
-  constexpr double kNano = 0.000001;
-
-  std::string res;
-
-  if (milli_seconds < kMicro) {
-    return kNano;
-  }
-  if (milli_seconds < kMilli) {
-    return kMicro;
-  }
-  if (milli_seconds < kSecond) {
-    return kMilli;
-  }
-  if (milli_seconds < kMinute) {
-    return kSecond;
-  }
-  if (milli_seconds < kHour) {
-    return kMinute;
-  }
-  if (milli_seconds < kDay) {
-    return kHour;
-  }
-  return kDay;
-}
-
 void CaptureWindow::RenderSelectionOverlay() {
   if (time_graph_ == nullptr) return;
   if (picking_mode_ != PickingMode::kNone) return;

@@ -7,6 +7,7 @@
 
 #include <absl/container/node_hash_map.h>
 #include <absl/hash/hash.h>
+#include <absl/types/span.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -93,7 +94,7 @@ class CallTreeNode {
   }
 
   void AddExclusiveCallstackEvents(
-      const std::vector<orbit_client_data::CallstackEvent>& callstack_events) {
+      absl::Span<const orbit_client_data::CallstackEvent> callstack_events) {
     exclusive_callstack_events_.insert(exclusive_callstack_events_.end(), callstack_events.begin(),
                                        callstack_events.end());
   }

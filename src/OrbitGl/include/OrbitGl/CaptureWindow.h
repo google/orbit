@@ -71,7 +71,6 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
 
  protected:
   void Draw(QPainter* painter) override;
-  void UpdateChildrenPosAndSize();
 
   void RenderAllLayers(QPainter* painter);
 
@@ -83,9 +82,6 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   void RenderHelpUi();
   void RenderSelectionOverlay();
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
-
-  void UpdateHorizontalScroll(float ratio);
-  void UpdateVerticalScroll(float ratio);
 
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;

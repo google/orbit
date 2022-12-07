@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_UPROBES_UNWINDING_VISITOR_TEST_COMMON_H_
 #define LINUX_TRACING_UPROBES_UNWINDING_VISITOR_TEST_COMMON_H_
 
+#include <absl/types/span.h>
 #include <asm/perf_regs.h>
 #include <gmock/gmock.h>
 #include <unwindstack/MapInfo.h>
@@ -33,7 +34,7 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
  public:
   MOCK_METHOD(LibunwindstackResult, Unwind,
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
-               const std::vector<StackSliceView>&, bool, size_t),
+               absl::Span<const StackSliceView>, bool, size_t),
               (override));
   MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, pid_t, unwindstack::Maps*),
               (override));

@@ -75,7 +75,7 @@ class TimerTrack : public Track {
   [[nodiscard]] Type GetType() const override { return Type::kTimerTrack; }
 
   [[nodiscard]] uint32_t GetProcessId() const override { return timer_data_->GetProcessId(); }
-  [[nodiscard]] std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer) const;
+  [[nodiscard]] static std::string GetExtraInfo(const orbit_client_protos::TimerInfo& timer);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& timer_info) const override;
@@ -139,7 +139,7 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo& /*timer*/) const {
     return "";
   }
-  [[nodiscard]] std::string GetDisplayTime(const orbit_client_protos::TimerInfo&) const;
+  [[nodiscard]] static std::string GetDisplayTime(const orbit_client_protos::TimerInfo&);
 
   void DrawTimesliceText(orbit_gl::TextRenderer& text_renderer,
                          const orbit_client_protos::TimerInfo& timer, float min_x, Vec2 box_pos,

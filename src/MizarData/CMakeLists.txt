@@ -22,7 +22,6 @@ target_sources(MizarData PRIVATE
                 BaselineAndComparisonHelper.h
                 DummyFunctionSymbolToKey.cpp
                 DummyFunctionSymbolToKey.h
-                FunctionSymbolToKeyExactNameMatch.h
                 GetCallstackSamplingIntervals.cpp
                 MizarData.cpp)
 

@@ -6,6 +6,7 @@
 #define LINUX_TRACING_LIBUNWINDSTACK_MULTIPLE_OFFLINE_AND_PROCESS_MEMORY_H_
 
 #include <absl/base/casts.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <unwindstack/Memory.h>
@@ -50,10 +51,10 @@ class LibunwindstackMultipleOfflineAndProcessMemory : public unwindstack::Memory
   size_t Read(uint64_t addr, void* dst, size_t size) override;
 
   static std::shared_ptr<Memory> CreateWithProcessMemory(
-      pid_t pid, const std::vector<StackSliceView>& stack_slices);
+      pid_t pid, absl::Span<const StackSliceView> stack_slices);
 
   static std::shared_ptr<Memory> CreateWithoutProcessMemory(
-      const std::vector<StackSliceView>& stack_slices);
+      absl::Span<const StackSliceView> stack_slices);
 
  private:
   // This class is a thin layer around unwindstack::MemoryOfflineBuffer, that allows querying
@@ -86,7 +87,7 @@ class LibunwindstackMultipleOfflineAndProcessMemory : public unwindstack::Memory
         stack_memories_{std::move(std::move(stack_memories))} {}
 
   static std::vector<LibunwindstackOfflineMemory> CreateOfflineStackMemories(
-      const std::vector<StackSliceView>& stack_slices);
+      absl::Span<const StackSliceView> stack_slices);
 
   std::shared_ptr<Memory> process_memory_;
   std::vector<LibunwindstackOfflineMemory> stack_memories_;

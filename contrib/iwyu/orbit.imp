@@ -115,6 +115,7 @@
   { "include": ["\"absl/base/attributes.h\"", "private", "<absl/base/attributes.h>", "public"] },
   { "include": ["\"absl/base/call_once.h\"", "private", "<absl/base/call_once.h>", "public"] },
   { "include": ["\"absl/base/config.h\"", "private", "<absl/base/config.h>", "public"] },
+  { "symbol":  ["absl::Flag", "private", "<absl/flags/flag.h>", "public"]},
 
   # Hack: iwyu has a bug. It suggests to include <ext/alloc_traits> whenever std::vector::operator[] is used.
   # <ext/alloc_traits> is an implementation detail of libstdc++.

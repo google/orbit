@@ -5,6 +5,7 @@
 #include "FindFunctionAddress.h"
 
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 
 #include <memory>
 #include <string>
@@ -16,7 +17,7 @@
 namespace orbit_user_space_instrumentation {
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(
-    const std::vector<orbit_grpc_protos::ModuleInfo>& modules, std::string_view module_soname,
+    absl::Span<const orbit_grpc_protos::ModuleInfo> modules, std::string_view module_soname,
     std::string_view function_name) {
   std::string module_file_path;
   uint64_t module_base_address = 0;

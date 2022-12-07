@@ -6,7 +6,7 @@ load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
 package(default_visibility = [
     "//:__subpackages__",
-    "//:users",  
+    "//:users",
 ])
 
 licenses(["notice"])
@@ -21,8 +21,6 @@ orbit_cc_library(
         "//src/ApiUtils",
         "//src/CaptureServiceBase",
         "//src/CrashService",
-        "//src/FramePointerValidator",
-        "//src/FramePointerValidatorService",
         "//src/GrpcProtos",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/GrpcProtos:code_block_cc_proto",

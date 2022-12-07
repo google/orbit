@@ -8,6 +8,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/time/clock.h>
 #include <absl/time/time.h>
+#include <absl/types/span.h>
 
 #include <string>
 #include <string_view>
@@ -75,7 +76,7 @@ ErrorMessageOr<absl::Time> ParseLogFileTimestamp(std::string_view log_file_name)
 }
 
 std::vector<std::filesystem::path> FindOldLogFiles(
-    const std::vector<std::filesystem::path>& file_paths) {
+    absl::Span<const std::filesystem::path> file_paths) {
   std::vector<std::filesystem::path> old_files;
   absl::Time expiration_time = absl::Now() - kLogFileLifetime;
   for (const std::filesystem::path& log_file_path : file_paths) {
@@ -92,7 +93,7 @@ std::vector<std::filesystem::path> FindOldLogFiles(
   return old_files;
 }
 
-ErrorMessageOr<void> RemoveFiles(const std::vector<std::filesystem::path>& file_paths) {
+ErrorMessageOr<void> RemoveFiles(absl::Span<const std::filesystem::path> file_paths) {
   std::string error_message;
   for (const auto& file_path : file_paths) {
     std::error_code file_remove_error;

@@ -14,7 +14,6 @@ target_include_directories(CaptureServiceBase PRIVATE
 target_sources(CaptureServiceBase PUBLIC
         include/CaptureServiceBase/CaptureServiceBase.h
         include/CaptureServiceBase/CaptureStartStopListener.h
-        include/CaptureServiceBase/CloudCollectorStartStopCaptureRequestWaiter.h
         include/CaptureServiceBase/CommonProducerCaptureEventBuilders.h
         include/CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h
         include/CaptureServiceBase/StopCaptureReasonToString.h
@@ -22,12 +21,10 @@ target_sources(CaptureServiceBase PUBLIC
 
 target_sources(CaptureServiceBase PRIVATE
         CaptureServiceBase.cpp
-        CloudCollectorStartStopCaptureRequestWaiter.cpp
         CommonProducerCaptureEventBuilders.cpp
         GrpcStartStopCaptureRequestWaiter.cpp)
 
 target_link_libraries(CaptureServiceBase PUBLIC
-        CaptureUploader
         ProducerEventProcessor
         GrpcProtos
         Introspection

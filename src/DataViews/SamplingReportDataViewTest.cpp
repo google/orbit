@@ -6,6 +6,7 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -145,11 +146,12 @@ const std::vector<orbit_client_data::CallstackInfo> kCallstackInfos = [] {
                             kSampledAbsoluteAddresses[2]},
       std::vector<uint64_t>{kSampledAbsoluteAddresses[2], kSampledAbsoluteAddresses[1]}};
   std::vector<orbit_client_data::CallstackInfo> result;
-  std::transform(std::begin(array_of_vectors_of_frames), std::end(array_of_vectors_of_frames),
-                 std::back_inserter(result),
-                 [](const std::vector<uint64_t>& frames) -> orbit_client_data::CallstackInfo {
-                   return {frames, orbit_client_data::CallstackType::kComplete};
-                 });
+  std::transform(
+      std::begin(array_of_vectors_of_frames), std::end(array_of_vectors_of_frames),
+      std::back_inserter(result),
+      [](absl::Span<uint64_t const> frames) -> orbit_client_data::CallstackInfo {
+        return {{frames.begin(), frames.end()}, orbit_client_data::CallstackType::kComplete};
+      });
   return result;
 }();
 constexpr std::array<uint64_t, kCallstackInfoNum> kTimestamps = {123456, 456789, 789456};
@@ -410,7 +412,7 @@ class SamplingReportDataViewTest : public testing::Test {
     view_.SetSamplingReport(&sampling_report_);
   }
 
-  void AddFunctionsByIndices(const std::vector<size_t>& indices) {
+  void AddFunctionsByIndices(absl::Span<const size_t> indices) {
     std::vector<SampledFunction> functions_to_add;
     for (size_t index : indices) {
       ORBIT_CHECK(index < kNumFunctions);
@@ -505,7 +507,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto get_context_menu_from_selected_indices =
-      [&](const std::vector<int>& selected_indices) -> FlattenContextMenu {
+      [&](absl::Span<const int> selected_indices) -> FlattenContextMenu {
     std::vector<int> selected_rows;
     for (int index : selected_indices) {
       for (int row = 0, row_counts = view_.GetNumElements(); row < row_counts; row++) {
@@ -519,7 +521,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         view_.GetContextMenuWithGrouping(0, selected_rows));
   };
 
-  auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
+  auto verify_context_menu_action_availability = [&](absl::Span<const int> selected_indices) {
     FlattenContextMenu context_menu = get_context_menu_from_selected_indices(selected_indices);
 
     // Common actions should always be available.

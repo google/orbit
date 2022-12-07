@@ -45,7 +45,7 @@ class TrackTypeItemModel : public QAbstractTableModel {
   orbit_gl::TrackManager* track_manager_ = nullptr;
   std::vector<Track::Type> known_track_types_;
 
-  QString GetTrackTypeDisplayName(Track::Type track_type) const;
+  static QString GetTrackTypeDisplayName(Track::Type track_type);
 };
 
 }  // namespace orbit_qt

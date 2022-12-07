@@ -4,6 +4,7 @@
 
 #include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -67,7 +68,7 @@ static const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
     {"Foo", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
     {"Bar", orbit_client_data::ScopeType::kApiScope}};
 
-static std::vector<TimestampNs> MakeTimestamps(const std::vector<uint64_t>& raw) {
+static std::vector<TimestampNs> MakeTimestamps(absl::Span<const uint64_t> raw) {
   std::vector<TimestampNs> result;
   absl::c_transform(raw, std::back_inserter(result),
                     [](uint64_t value) { return TimestampNs(value); });
@@ -80,7 +81,7 @@ static const std::vector<std::vector<TimestampNs>> kScopeFrameTrackStartLists = 
     kFirstScopeStarts, kSecondScopeStarts};
 
 // Re-wrap the values form `TimestampNs` into `TimerInfos`
-static std::vector<TimerInfo> ToTimerInfos(const std::vector<TimestampNs>& starts) {
+static std::vector<TimerInfo> ToTimerInfos(absl::Span<const TimestampNs> starts) {
   std::vector<TimerInfo> result;
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
                  [](TimestampNs start) {
@@ -94,7 +95,7 @@ static std::vector<TimerInfo> ToTimerInfos(const std::vector<TimestampNs>& start
 static const std::vector<TimerInfo> kFirstScopeTimers = ToTimerInfos(kFirstScopeStarts);
 static const std::vector<TimerInfo> kSecondScopeTimers = ToTimerInfos(kSecondScopeStarts);
 
-static std::vector<const TimerInfo*> MakePtrs(const std::vector<TimerInfo>& timers) {
+static std::vector<const TimerInfo*> MakePtrs(absl::Span<const TimerInfo> timers) {
   std::vector<const TimerInfo*> result;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(result),
                  [](const TimerInfo& timer) { return &timer; });
@@ -115,7 +116,7 @@ static const absl::flat_hash_map<ScopeInfo, std::vector<TimestampNs>> kScopeInfo
 static const std::vector<TimestampNs> kDxgiFrameStarts = MakeTimestamps({10, 1, 2, 4, 20});
 static const std::vector<TimestampNs> kD3d9FrameStarts = MakeTimestamps({100, 10, 20, 40, 200});
 
-static std::vector<PresentEvent> MakePresentEvent(const std::vector<TimestampNs>& starts) {
+static std::vector<PresentEvent> MakePresentEvent(absl::Span<const TimestampNs> starts) {
   std::vector<PresentEvent> result;
   std::transform(std::begin(starts), std::end(starts), std::back_inserter(result),
                  [](const TimestampNs start) {
@@ -197,8 +198,8 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
   }
 
   void ExpectGetFrameTracksIsCorrect(
-      const std::vector<orbit_client_data::ScopeInfo>& expected_scope_info,
-      const std::vector<PresentEvent::Source>& expected_etw_sources) {
+      absl::Span<const orbit_client_data::ScopeInfo> expected_scope_info,
+      absl::Span<const PresentEvent::Source> expected_etw_sources) {
     const auto [scope_infos, etw_sources] = DecomposeSources(frame_track_manager_.GetFrameTracks());
 
     EXPECT_THAT(scope_infos, UnorderedElementsAreArray(expected_scope_info));

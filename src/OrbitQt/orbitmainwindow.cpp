@@ -8,6 +8,7 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 
 #include <QAction>
 #include <QApplication>
@@ -746,7 +747,7 @@ void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples)
   // Automatically switch between (complete capture) report and selection report tabs
   // if applicable
   auto show_corresponding_selection_tab = [this, capture_parent, selection_has_samples](
-                                              const std::vector<QWidget*>& report_tabs,
+                                              absl::Span<QWidget* const> report_tabs,
                                               QWidget* selection_tab) {
     QTabWidget* selection_parent = FindParentTabWidget(selection_tab);
 
@@ -1409,19 +1410,6 @@ void OrbitMainWindow::on_actionIntrospection_triggered() {
   introspection_widget_->show();
 }
 
-void OrbitMainWindow::RestoreDefaultTabLayout() {
-  for (auto& widget_and_layout : default_tab_layout_) {
-    QTabWidget* tab_widget = widget_and_layout.first;
-    tab_widget->clear();
-    for (auto& tab_and_title : widget_and_layout.second.tabs_and_titles) {
-      tab_widget->addTab(tab_and_title.first, tab_and_title.second);
-    }
-    tab_widget->setCurrentIndex(widget_and_layout.second.current_index);
-  }
-
-  UpdateCaptureStateDependentWidgets();
-}
-
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
   std::optional<int> selected_row(std::nullopt);
   const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
@@ -1769,7 +1757,7 @@ void OrbitMainWindow::UpdateTargetLabelPosition() {
 }
 
 void OrbitMainWindow::OnProcessListUpdated(
-    const std::vector<orbit_grpc_protos::ProcessInfo>& processes) {
+    absl::Span<const orbit_grpc_protos::ProcessInfo> processes) {
   const auto is_current_process = [this](const auto& process) {
     const orbit_client_data::ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();

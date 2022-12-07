@@ -9,6 +9,7 @@
 #include <absl/types/span.h>
 #include <dlfcn.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <string>
@@ -55,7 +56,7 @@ constexpr FunctionLocatorView kDlcloseFallbackInLibc{kLibcSoname, "__libc_dlclos
 // FindFunctionAddress, does but accepts a list of module and function names and returns
 // the address of the first found function.
 ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
-    const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    absl::Span<const orbit_grpc_protos::ModuleInfo> modules,
     absl::Span<const FunctionLocatorView> function_locators) {
   std::string error_message;
 
@@ -85,7 +86,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 }  // namespace
 
 [[nodiscard]] ErrorMessageOr<void*> DlmopenInTracee(
-    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    pid_t pid, absl::Span<const orbit_grpc_protos::ModuleInfo> modules,
     const std::filesystem::path& path, uint32_t flag, LinkerNamespace linker_namespace) {
   // Make sure file exists.
   auto file_exists_or_error = orbit_base::FileOrDirectoryExists(path);
@@ -147,7 +148,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 }
 
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(
-    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle,
+    pid_t pid, absl::Span<const orbit_grpc_protos::ModuleInfo> modules, void* handle,
     std::string_view symbol) {
   // Figure out address of dlsym.
   OUTCOME_TRY(auto&& dlsym_address,
@@ -201,7 +202,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 }
 
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(
-    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle) {
+    pid_t pid, absl::Span<const orbit_grpc_protos::ModuleInfo> modules, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(auto&& dlclose_address,
               FindFunctionAddressWithFallback(

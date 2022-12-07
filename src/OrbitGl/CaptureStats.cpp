@@ -4,6 +4,8 @@
 
 #include "OrbitGl/CaptureStats.h"
 
+#include <absl/types/span.h>
+
 #include <utility>
 #include <vector>
 

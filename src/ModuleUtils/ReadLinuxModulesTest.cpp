@@ -18,8 +18,8 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
 #include "Test/Path.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -228,9 +228,11 @@ TEST(ReadLinuxModules, ReadModulesFromMapsWithSpacesInPath) {
   std::string& elf_contents = elf_contents_or_error.value();
 
   // This file is created as a copy of hello_world_elf, but with the name containing spaces.
-  auto hello_world_elf_temporary_or_error = orbit_base::TemporaryFile::Create("hello world elf");
+  auto hello_world_elf_temporary_or_error =
+      orbit_test_utils::TemporaryFile::Create("hello world elf");
   ASSERT_THAT(hello_world_elf_temporary_or_error, HasNoError());
-  orbit_base::TemporaryFile& hello_world_elf_temporary = hello_world_elf_temporary_or_error.value();
+  orbit_test_utils::TemporaryFile& hello_world_elf_temporary =
+      hello_world_elf_temporary_or_error.value();
 
   ASSERT_THAT(orbit_base::WriteFully(hello_world_elf_temporary.fd(), elf_contents), HasNoError());
 

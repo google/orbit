@@ -6,6 +6,7 @@
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <capstone/capstone.h>
 #include <unistd.h>
 
@@ -14,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
@@ -109,7 +111,7 @@ FunctionLocation FindFunctionOrDie(std::string_view function_name) {
   ORBIT_FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
 }
 
-void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
+void DumpDisassembly(absl::Span<const uint8_t> code, uint64_t start_address) {
   // Init Capstone disassembler.
   csh capstone_handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);

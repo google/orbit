@@ -4,12 +4,12 @@
 
 #include "DataViews/ModulesDataView.h"
 
-#include <absl/flags/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/ascii.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -21,7 +21,6 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientFlags/ClientFlags.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
@@ -131,12 +130,7 @@ void ModulesDataView::DoSort() {
 }
 
 DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action, int clicked_index,
-                                                        const std::vector<int>& selected_indices) {
-  if (action == kMenuActionVerifyFramePointers &&
-      !absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    return ActionStatus::kInvisible;
-  }
-
+                                                        absl::Span<const int> selected_indices) {
   // transform selected_indices into modules
   std::vector<const ModuleData*> modules;
   modules.reserve(selected_indices.size());
@@ -144,15 +138,6 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
     const ModuleData* module = GetModuleDataFromRow(index);
     ORBIT_CHECK(module);
     modules.emplace_back(module);
-  }
-
-  if (action == kMenuActionVerifyFramePointers) {
-    bool at_least_one_module_is_loaded =
-        std::any_of(modules.begin(), modules.end(),
-                    [](const ModuleData* module) { return module->AreDebugSymbolsLoaded(); });
-
-    return at_least_one_module_is_loaded ? ActionStatus::kVisibleAndEnabled
-                                         : ActionStatus::kVisibleButDisabled;
   }
 
   bool at_least_one_module_can_be_loaded =

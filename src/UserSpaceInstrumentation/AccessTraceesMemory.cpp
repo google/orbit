@@ -7,7 +7,9 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 
+#include <algorithm>
 #include <string>
 
 #include "OrbitBase/File.h"
@@ -38,7 +40,7 @@ using orbit_base::ReadFileToString;
 }
 
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
-                                                      const std::vector<uint8_t>& bytes) {
+                                                      absl::Span<const uint8_t> bytes) {
   ORBIT_CHECK(!bytes.empty());
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
@@ -63,7 +65,7 @@ using orbit_base::ReadFileToString;
     if (tokens.size() >= 6 && (tokens[5] == "[vsyscall]" || tokens[5] == "[uprobes]")) continue;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
-    AddressRange result;
+    AddressRange result{};
     if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) continue;
     if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) continue;
     if (exclude_address >= result.start && exclude_address < result.end) continue;

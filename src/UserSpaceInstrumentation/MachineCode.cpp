@@ -5,10 +5,13 @@
 #include "MachineCode.h"
 
 #include <absl/base/casts.h>
+#include <absl/types/span.h>
+
+#include <algorithm>
 
 namespace orbit_user_space_instrumentation {
 
-MachineCode& MachineCode::AppendBytes(const std::vector<uint8_t>& data) {
+MachineCode& MachineCode::AppendBytes(absl::Span<const uint8_t> data) {
   data_.insert(data_.end(), data.begin(), data.end());
   return *this;
 }

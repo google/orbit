@@ -11,15 +11,6 @@
 
 namespace orbit_client_data {
 
-struct TimerMetadata {
-  bool is_empty;
-  size_t number_of_timers;
-  uint64_t min_time;
-  uint64_t max_time;
-  uint32_t depth;
-  uint32_t process_id;
-};
-
 // Interface to be use by TimerDataProvider to access data from TimerTracks.
 class TimerDataInterface {
  public:

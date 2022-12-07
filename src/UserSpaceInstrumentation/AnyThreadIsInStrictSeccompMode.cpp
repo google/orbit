@@ -6,6 +6,7 @@
 
 #include <linux/seccomp.h>
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
@@ -25,13 +26,12 @@ namespace orbit_user_space_instrumentation {
 // course the target could spawn a thread that switches to strict mode after the start of the
 // capture, but this is the best we can do.
 bool AnyThreadIsInStrictSeccompMode(pid_t pid) {
-  for (pid_t tid : orbit_base::GetTidsOfProcess(pid)) {
+  const std::vector<pid_t>& tids_of_process = orbit_base::GetTidsOfProcess(pid);
+  auto is_seccomp_mode_strict = [](pid_t tid) -> bool {
     const std::optional<int> seccomp_mode = ReadSeccompModeOfThread(tid);
-    if (seccomp_mode.has_value() && seccomp_mode.value() == SECCOMP_MODE_STRICT) {
-      return true;
-    }
-  }
-  return false;
+    return seccomp_mode.has_value() && seccomp_mode.value() == SECCOMP_MODE_STRICT;
+  };
+  return std::any_of(tids_of_process.begin(), tids_of_process.end(), is_seccomp_mode_strict);
 }
 
 }  // namespace orbit_user_space_instrumentation

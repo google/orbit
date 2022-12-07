@@ -35,13 +35,13 @@ void Touch(const fs::path& path) {
 
 TestProcess::TestProcess() {
   {
-    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
     ORBIT_CHECK(temporary_file_or_error.has_value());
     flag_file_run_child_.emplace(std::move(temporary_file_or_error.value()));
   }
 
   {
-    auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
+    auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
     ORBIT_CHECK(temporary_file_or_error.has_value());
     flag_file_child_started_.emplace(std::move(temporary_file_or_error.value()));
   }

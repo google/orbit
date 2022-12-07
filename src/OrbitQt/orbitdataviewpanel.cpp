@@ -65,8 +65,6 @@ void OrbitDataViewPanel::SetDataModel(orbit_data_views::DataView* model) {
   ui_->treeView->SetDataModel(model);
 }
 
-void OrbitDataViewPanel::ClearDataModel() { ui_->treeView->ClearDataModel(); }
-
 void OrbitDataViewPanel::SetFilter(const QString& filter) { ui_->FilterLineEdit->setText(filter); }
 
 void OrbitDataViewPanel::OnFilterLineEditTextChanged(const QString& text) {

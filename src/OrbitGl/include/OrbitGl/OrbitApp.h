@@ -81,7 +81,6 @@
 #include "OrbitGl/CallTreeView.h"
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/DataViewFactory.h"
-#include "OrbitGl/FramePointerValidatorClient.h"
 #include "OrbitGl/FrameTrackOnlineProcessor.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/IntrospectionWindow.h"
@@ -200,9 +199,6 @@ class OrbitApp final : public DataViewFactory,
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override;
 
-  void OnValidateFramePointers(
-      std::vector<const orbit_client_data::ModuleData*> modules_to_validate) override;
-
   void SetCaptureWindow(CaptureWindow* capture);
   [[nodiscard]] const TimeGraph* GetTimeGraph() const {
     ORBIT_CHECK(capture_window_ != nullptr);
@@ -212,7 +208,6 @@ class OrbitApp final : public DataViewFactory,
     ORBIT_CHECK(capture_window_ != nullptr);
     return capture_window_->GetTimeGraph();
   }
-  void SetDebugCanvas(GlCanvas* debug_canvas);
   void SetIntrospectionWindow(IntrospectionWindow* canvas);
   void StopIntrospection();
 
@@ -243,7 +238,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool IsCaptureConnected(
       const orbit_client_data::CaptureData& capture) const override;
 
-  [[nodiscard]] bool IsDevMode() const;
+  [[nodiscard]] static bool IsDevMode();
 
   // Callbacks
   using CaptureStartedCallback = std::function<void(const std::optional<std::filesystem::path>&)>;
@@ -328,10 +323,9 @@ class OrbitApp final : public DataViewFactory,
 
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
-  void SendTooltipToUi(std::string_view tooltip);
-  void SendInfoToUi(std::string_view title, std::string_view text);
-  void SendWarningToUi(std::string_view title, std::string_view text);
-  void SendErrorToUi(std::string_view title, std::string_view text) override;
+  void SendTooltipToUi(std::string tooltip);
+  void SendWarningToUi(std::string title, std::string text);
+  void SendErrorToUi(std::string title, std::string text) override;
 
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
@@ -422,10 +416,6 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const {
     return GetCaptureData().memory_warning_threshold_kb();
   }
-  [[nodiscard]] orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
-  GetThreadStateChangeCallstackCollection() const {
-    return data_manager_->thread_state_change_callstack_collection();
-  }
   void SetThreadStateChangeCallstackCollection(
       orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
           thread_state_change_callstack_collection) {
@@ -470,10 +460,10 @@ class OrbitApp final : public DataViewFactory,
   // origin_is_multiple_threads defines if the selection is specific to a single thread,
   // or spans across multiple threads.
   void SelectCallstackEvents(
-      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
   void InspectCallstackEvents(
-      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
   void ClearInspection();
 
@@ -606,7 +596,7 @@ class OrbitApp final : public DataViewFactory,
 
   // Sets CaptureData's selection_callstack_data and selection_post_processed_sampling_data.
   void SetCaptureDataSelectionFields(
-      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
+      absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
@@ -644,7 +634,6 @@ class OrbitApp final : public DataViewFactory,
 
   CaptureWindow* capture_window_ = nullptr;
   IntrospectionWindow* introspection_window_ = nullptr;
-  GlCanvas* debug_canvas_ = nullptr;
 
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
@@ -667,8 +656,6 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   orbit_client_data::ProcessData* process_ = nullptr;
-
-  std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

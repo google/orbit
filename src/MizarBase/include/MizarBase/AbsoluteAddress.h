@@ -5,6 +5,8 @@
 #ifndef MIZAR_BASE_ABSOLUTE_ADDRESS_H_
 #define MIZAR_BASE_ABSOLUTE_ADDRESS_H_
 
+#include <absl/types/span.h>
+
 #include <functional>
 
 #include "OrbitBase/Typedef.h"
@@ -16,7 +18,7 @@ struct AbsoluteAddressTag {};
 using AbsoluteAddress = orbit_base::Typedef<AbsoluteAddressTag, const uint64_t>;
 
 template <typename Action>
-inline void ForEachFrame(const std::vector<uint64_t>& frames, Action&& action) {
+inline void ForEachFrame(absl::Span<const uint64_t> frames, Action&& action) {
   for (const uint64_t raw_address : frames) {
     std::invoke(action, AbsoluteAddress(raw_address));
   }

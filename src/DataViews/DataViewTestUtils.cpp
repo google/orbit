@@ -5,6 +5,7 @@
 #include "DataViewTestUtils.h"
 
 #include <absl/strings/str_split.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -14,7 +15,7 @@
 
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/TemporaryFile.h"
+#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_data_views {
@@ -67,9 +68,9 @@ static void ExpectSameLines(const std::string_view& actual, const std::string_vi
   EXPECT_THAT(actual_lines, testing::UnorderedElementsAreArray(expected_lines));
 }
 
-[[nodiscard]] orbit_base::TemporaryFile GetTemporaryFilePath() {
-  ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
-      orbit_base::TemporaryFile::Create();
+[[nodiscard]] orbit_test_utils::TemporaryFile GetTemporaryFilePath() {
+  ErrorMessageOr<orbit_test_utils::TemporaryFile> temporary_file_or_error =
+      orbit_test_utils::TemporaryFile::Create();
   EXPECT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
   return std::move(temporary_file_or_error.value());
 }
@@ -80,7 +81,7 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
   const int action_index = GetActionIndexOnMenu(context_menu, action_name);
   EXPECT_TRUE(action_index != kInvalidActionIndex);
 
-  orbit_base::TemporaryFile temporary_file = GetTemporaryFilePath();
+  orbit_test_utils::TemporaryFile temporary_file = GetTemporaryFilePath();
 
   // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
   // filepath. The TemporaryFile instance will still take care of deleting our new file when it
@@ -103,7 +104,7 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
   const std::vector<std::string_view> ordered_action_names = {
       /* Hooking related actions */
       kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect, kMenuActionEnableFrameTrack,
-      kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers,
+      kMenuActionDisableFrameTrack,
       /* Disassembly & source code related actions */
       kMenuActionDisassembly, kMenuActionSourceCode,
       /* Navigating related actions */
@@ -125,7 +126,7 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
 }
 
 FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    const std::vector<DataView::ActionGroup>& menu_with_grouping) {
+    absl::Span<const DataView::ActionGroup> menu_with_grouping) {
   FlattenContextMenu menu;
   for (const DataView::ActionGroup& action_group : menu_with_grouping) {
     for (const auto& action : action_group) menu.push_back(action);

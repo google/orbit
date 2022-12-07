@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/strings/match.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -11,7 +12,6 @@
 #include <filesystem>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
@@ -69,7 +69,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
 }
 
 void VerifyFunctionCallsOfPuppetOuterAndInnerFunction(
-    const std::vector<orbit_grpc_protos::FunctionCall>& function_calls, uint32_t pid,
+    absl::Span<const orbit_grpc_protos::FunctionCall> function_calls, uint32_t pid,
     uint64_t outer_function_id, uint64_t inner_function_id,
     bool expect_return_value_and_registers) {
   for (const orbit_grpc_protos::FunctionCall& function_call : function_calls) {

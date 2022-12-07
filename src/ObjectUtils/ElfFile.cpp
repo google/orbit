@@ -450,7 +450,7 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
 template <typename ElfT>
 absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
   if (!has_patchable_function_entries_section_) {
-    return absl::flat_hash_set<uint64_t>();
+    return {};
   }
   const llvm::object::ELFFile<ElfT>& elf_file = object_file_->getELFFile();
   llvm::Expected<typename ElfT::ShdrRange> sections_or_error = elf_file.sections();
@@ -458,7 +458,7 @@ absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
     auto error_message = absl::StrFormat("Unable to load sections: %s",
                                          llvm::toString(sections_or_error.takeError()));
     ORBIT_ERROR("%s", error_message);
-    return absl::flat_hash_set<uint64_t>();
+    return {};
   }
 
   absl::flat_hash_set<uint64_t> patchable_symbols;
@@ -467,7 +467,7 @@ absl::flat_hash_set<uint64_t> ElfFileImpl<ElfT>::LoadHotpatchableAddresses() {
     if (!name_or_error) {
       ORBIT_ERROR("%s", absl::StrFormat("Unable to get section name: %s",
                                         llvm::toString(name_or_error.takeError())));
-      return absl::flat_hash_set<uint64_t>();
+      return {};
     }
     llvm::StringRef name = name_or_error.get();
     if (name.str() != "__patchable_function_entries") {
