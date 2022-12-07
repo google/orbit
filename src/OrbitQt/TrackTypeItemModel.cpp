@@ -121,7 +121,7 @@ void TrackTypeItemModel::SetTrackManager(orbit_gl::TrackManager* track_manager) 
   endInsertRows();
 }
 
-QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) const {
+QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) {
   switch (track_type) {
     case Track::Type::kSchedulerTrack:
       return "Scheduler";

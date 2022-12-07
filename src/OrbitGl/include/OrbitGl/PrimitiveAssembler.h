@@ -140,8 +140,9 @@ class PrimitiveAssembler {
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
-                            ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
+  static void GetBoxGradientColors(
+      const Color& color, std::array<Color, 4>* colors,
+      ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
   Batcher* batcher_;
   PickingManager* picking_manager_;

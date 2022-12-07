@@ -136,7 +136,7 @@ class PickingManager {
  private:
   [[nodiscard]] PickingId GetOrCreatePickableId(const std::shared_ptr<Pickable>& pickable,
                                                 BatcherId batcher_id);
-  [[nodiscard]] Color ColorFromPickingID(PickingId id) const;
+  [[nodiscard]] static Color ColorFromPickingID(PickingId id);
 
  private:
   uint32_t pickable_id_counter_ = 0;
