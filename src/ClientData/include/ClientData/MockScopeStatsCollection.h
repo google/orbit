@@ -18,7 +18,7 @@ class MockScopeStatsCollection : public ScopeStatsCollectionInterface {
   MOCK_METHOD(std::vector<ScopeId>, GetAllProvidedScopeIds, (), (const, override));
   MOCK_METHOD(const ScopeStats&, GetScopeStatsOrDefault, (ScopeId), (const, override));
   MOCK_METHOD(const std::vector<uint64_t>*, GetSortedTimerDurationsForScopeId, (ScopeId),
-              (override));
+              (const, override));
 
   MOCK_METHOD(void, UpdateScopeStats, (ScopeId, const TimerInfo& timer), (override));
   MOCK_METHOD(void, SetScopeStats, (ScopeId, ScopeStats), (override));

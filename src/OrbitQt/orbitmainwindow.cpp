@@ -2058,6 +2058,6 @@ orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
 }
 
 void OrbitMainWindow::SetLiveTabScopeStatsCollection(
-    std::unique_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) {
+    std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) {
   ui->liveFunctions->SetScopeStatsCollection(std::move(scope_collection));
 }

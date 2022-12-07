@@ -52,7 +52,7 @@ class OrbitLiveFunctions : public QWidget {
   void ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                      std::optional<orbit_client_data::ScopeId> scope_id);
   void SetScopeStatsCollection(
-      std::unique_ptr<orbit_client_data::ScopeStatsCollection> scope_collection);
+      std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection);
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;

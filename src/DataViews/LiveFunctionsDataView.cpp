@@ -583,7 +583,8 @@ std::string LiveFunctionsDataView::GetToolTip(int row, int column) {
 }
 
 void LiveFunctionsDataView::SetScopeStatsCollection(
-    std::unique_ptr<orbit_client_data::ScopeStatsCollectionInterface> scope_stats_collection) {
+    std::shared_ptr<const orbit_client_data::ScopeStatsCollectionInterface>
+        scope_stats_collection) {
   scope_stats_collection_ = std::move(scope_stats_collection);
   OnDataChanged();
   app_->SetHighlightedScopeId(std::nullopt);

@@ -175,6 +175,6 @@ void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data, std::s
 }
 
 void OrbitLiveFunctions::SetScopeStatsCollection(
-    std::unique_ptr<orbit_client_data::ScopeStatsCollection> scope_collection) {
+    std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) {
   live_functions_->SetScopeStatsCollection(std::move(scope_collection));
 }

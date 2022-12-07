@@ -29,7 +29,7 @@ class ScopeStatsCollectionInterface {
   [[nodiscard]] virtual std::vector<ScopeId> GetAllProvidedScopeIds() const = 0;
   [[nodiscard]] virtual const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const = 0;
   [[nodiscard]] virtual const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      ScopeId scope_id) = 0;
+      ScopeId scope_id) const = 0;
 
   // Calling this function causes the timer durations to no longer be sorted. OnCaptureComplete()
   // *must* be called after UpdateScopeStats and before GetSortedTimerDurationsForScopeId().
@@ -48,7 +48,7 @@ class ScopeStatsCollection : public ScopeStatsCollectionInterface {
   [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const override;
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const override;
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      ScopeId scope_id) override;
+      ScopeId scope_id) const override;
 
   void UpdateScopeStats(ScopeId scope_id, const TimerInfo& timer) override;
   void SetScopeStats(ScopeId scope_id, ScopeStats stats) override;

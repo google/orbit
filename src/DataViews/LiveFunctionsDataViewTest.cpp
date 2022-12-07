@@ -279,7 +279,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
   }
 
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
-    auto scope_stats_collection = std::make_unique<MockScopeStatsCollection>();
+    auto scope_stats_collection = std::make_shared<MockScopeStatsCollection>();
     std::vector<ScopeId> ids;
     absl::c_transform(indices, std::back_inserter(ids),
                       [](const size_t index) { return ScopeId(kScopeIds[index]); });
@@ -915,4 +915,21 @@ TEST_F(LiveFunctionsDataViewTest,
   EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(1);
 
   view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
+}
+
+TEST_F(LiveFunctionsDataViewTest, OnDataChangedUsesScopeStatsCollectionUpdates) {
+  // Start with an empty live tab.
+  auto scope_stats_collection = std::make_shared<orbit_client_data::MockScopeStatsCollection>();
+  EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds)
+      .Times(2)
+      .WillRepeatedly(Return(std::vector<ScopeId>{}));
+  view_.SetScopeStatsCollection(scope_stats_collection);
+  EXPECT_EQ(view_.GetRowFromScopeId(kScopeIds[0]), std::nullopt);
+
+  // Add something to scope_stats_collection and call OnDataChanged, expect an added row.
+  EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds)
+      .Times(2)
+      .WillRepeatedly(Return(std::vector<ScopeId>{kScopeIds[0]}));
+  view_.OnDataChanged();
+  EXPECT_EQ(view_.GetRowFromScopeId(kScopeIds[0]), 0);
 }
