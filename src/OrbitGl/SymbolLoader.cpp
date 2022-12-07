@@ -443,18 +443,18 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
   Future<ErrorMessageOr<NotFoundOr<std::filesystem::path>>> check_file_on_remote =
-      thread_pool_->Schedule(
-          [this, module_file_path]() -> ErrorMessageOr<NotFoundOr<std::filesystem::path>> {
-            std::vector<std::string> additional_instance_folder;
-            if (!absl::GetFlag(FLAGS_instance_symbols_folder).empty()) {
-              additional_instance_folder.emplace_back(absl::GetFlag(FLAGS_instance_symbols_folder));
-            }
-            ORBIT_CHECK(process_manager_ != nullptr);
-            return process_manager_->FindDebugInfoFile(module_file_path,
-                                                       additional_instance_folder);
-          });
+      thread_pool_->Schedule([this, module_file_path = std::string{module_file_path}]()
+                                 -> ErrorMessageOr<NotFoundOr<std::filesystem::path>> {
+        std::vector<std::string> additional_instance_folder;
+        if (!absl::GetFlag(FLAGS_instance_symbols_folder).empty()) {
+          additional_instance_folder.emplace_back(absl::GetFlag(FLAGS_instance_symbols_folder));
+        }
+        ORBIT_CHECK(process_manager_ != nullptr);
+        return process_manager_->FindDebugInfoFile(module_file_path, additional_instance_folder);
+      });
 
-  auto download_file = [this, module_file_path, stop_token = std::move(stop_token)](
+  auto download_file = [this, module_file_path = std::string{module_file_path},
+                        stop_token = std::move(stop_token)](
                            const NotFoundOr<std::filesystem::path>& remote_search_outcome) mutable
       -> Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
     // TODO(b/231455031): For now, we treat the ErrorMessage and the NotFound the same way.
