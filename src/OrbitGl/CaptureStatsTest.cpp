@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <list>
 #include <map>
 #include <string>
