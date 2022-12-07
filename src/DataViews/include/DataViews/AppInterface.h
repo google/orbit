@@ -40,7 +40,7 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   virtual void SetClipboard(std::string_view contents) = 0;
   [[nodiscard]] virtual std::string GetSaveFile(std::string_view extension) const = 0;
 
-  virtual void SendErrorToUi(std::string_view title, std::string_view text) = 0;
+  virtual void SendErrorToUi(std::string title, std::string text) = 0;
 
   // Functions needed by PresetsDataView
   virtual orbit_base::Future<ErrorMessageOr<void>> LoadPreset(

@@ -323,9 +323,9 @@ class OrbitApp final : public DataViewFactory,
 
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
-  void SendTooltipToUi(std::string_view tooltip);
-  void SendWarningToUi(std::string_view title, std::string_view text);
-  void SendErrorToUi(std::string_view title, std::string_view text) override;
+  void SendTooltipToUi(std::string tooltip);
+  void SendWarningToUi(std::string title, std::string text);
+  void SendErrorToUi(std::string title, std::string text) override;
 
   orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
