@@ -1121,14 +1121,14 @@ void OrbitApp::SetClipboard(std::string_view text) {
   clipboard_callback_(text);
 }
 
-ErrorMessageOr<void> OrbitApp::OnSavePreset(std::string_view filename) {
-  OUTCOME_TRY(SavePreset(filename));
+ErrorMessageOr<void> OrbitApp::OnSavePreset(std::string_view file_name) {
+  OUTCOME_TRY(SavePreset(file_name));
   ListPresets();
   FireRefreshCallbacks(DataViewType::kPresets);
   return outcome::success();
 }
 
-ErrorMessageOr<void> OrbitApp::SavePreset(std::string_view filename) {
+ErrorMessageOr<void> OrbitApp::SavePreset(std::string_view file_name) {
   PresetInfo preset;
 
   for (const auto& function : data_manager_->GetSelectedFunctions()) {
@@ -1140,8 +1140,8 @@ ErrorMessageOr<void> OrbitApp::SavePreset(std::string_view filename) {
         function.pretty_name());
   }
 
-  auto filename_with_ext = std::string{filename};
-  if (!absl::EndsWith(filename, ".opr")) {
+  auto filename_with_ext = std::string{file_name};
+  if (!absl::EndsWith(file_name, ".opr")) {
     filename_with_ext += ".opr";
   }
 

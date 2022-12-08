@@ -42,7 +42,7 @@ class BufferOutputStream : public google::protobuf::io::CopyingOutputStream {
  public:
   // Write `size` bytes from the provided buffer to the output stream's buffer.
   // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.zero_copy_stream_impl_lite#CopyingOutputStream.Write.details
-  bool Write(const void* buffer, int size) override;
+  bool Write(const void* data, int size) override;
 
   // Take buffered data away from the output stream.
   [[nodiscard]] std::vector<unsigned char> TakeBuffer();

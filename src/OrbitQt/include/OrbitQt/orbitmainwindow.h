@@ -117,8 +117,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) override;
 
-  void ShowHistogram(const std::vector<uint64_t>* data, std::string function_name,
-                     std::optional<ScopeId> function_id) override;
+  void ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
+                     std::optional<ScopeId> scope_id) override;
 
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,

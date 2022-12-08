@@ -76,7 +76,7 @@ void SetCurrentThreadName(const char* thread_name);
 [[nodiscard]] uint32_t FromNativeProcessId(pid_t pid);
 
 [[nodiscard]] pid_t ToNativeThreadId(uint32_t tid);
-[[nodiscard]] pid_t ToNativeProcessId(uint32_t tid);
+[[nodiscard]] pid_t ToNativeProcessId(uint32_t pid);
 #endif
 
 }  // namespace orbit_base

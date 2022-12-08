@@ -91,7 +91,7 @@ class TrackManager {
 
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
 
-  void RemoveFrameTrack(uint64_t function_address);
+  void RemoveFrameTrack(uint64_t function_id);
 
   void SetTrackTypeVisibility(Track::Type type, bool value);
   [[nodiscard]] bool GetTrackTypeVisibility(Track::Type type) const;

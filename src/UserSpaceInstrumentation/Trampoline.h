@@ -160,7 +160,7 @@ struct RelocatedInstruction {
 // `function_id` to the entry payload.
 [[nodiscard]] ErrorMessageOr<void> InstrumentFunction(pid_t pid, uint64_t function_address,
                                                       uint64_t function_id,
-                                                      uint64_t address_of_instruction_after_jump,
+                                                      uint64_t address_after_prologue,
                                                       uint64_t trampoline_address);
 
 // Move every instruction pointer that was in the middle of an overwritten function prologue to

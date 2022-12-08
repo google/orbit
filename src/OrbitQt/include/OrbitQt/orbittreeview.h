@@ -36,7 +36,7 @@ class OrbitTreeView : public QTreeView {
                   FontType font_type, bool uniform_row_height = true,
                   QFlags<Qt::AlignmentFlag> text_alignment = Qt::AlignVCenter | Qt::AlignLeft);
   void Deinitialize();
-  void SetDataModel(orbit_data_views::DataView* model);
+  void SetDataModel(orbit_data_views::DataView* data_view);
   void ClearDataModel();
   void OnFilter(const QString& filter);
   void Refresh(RefreshMode refresh_mode = RefreshMode::kOther);

@@ -40,7 +40,7 @@ class DataManager final {
   void DeselectFunction(const FunctionInfo& function);
   void ClearSelectedFunctions();
   void set_visible_scope_ids(absl::flat_hash_set<ScopeId> visible_scope_ids);
-  void set_highlighted_scope_id(std::optional<ScopeId> highlighted_function_id);
+  void set_highlighted_scope_id(std::optional<ScopeId> highlighted_scope_id);
   void set_highlighted_group_id(uint64_t highlighted_group_id);
   void set_selected_thread_id(uint32_t thread_id);
   void set_selected_thread_state_slice(
