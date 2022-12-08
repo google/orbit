@@ -48,8 +48,9 @@ class ServiceDeployManager : public QObject {
   };
 
   explicit ServiceDeployManager(const DeploymentConfiguration* deployment_configuration,
-                                const orbit_ssh::Context* context, orbit_ssh::Credentials credentials,
-                                const GrpcPort& grpc_port, QObject* parent = nullptr);
+                                const orbit_ssh::Context* context,
+                                orbit_ssh::Credentials credentials, const GrpcPort& grpc_port,
+                                QObject* parent = nullptr);
 
   ~ServiceDeployManager() override;
 
