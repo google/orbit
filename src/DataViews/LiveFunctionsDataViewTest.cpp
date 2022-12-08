@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
@@ -34,7 +35,6 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
-#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"

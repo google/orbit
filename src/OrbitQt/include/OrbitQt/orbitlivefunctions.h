@@ -13,12 +13,14 @@
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "OrbitGl/LiveFunctionsController.h"
 #include "OrbitQt/orbiteventiterator.h"
 #include "OrbitQt/types.h"

@@ -41,6 +41,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
