@@ -64,6 +64,7 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   [[nodiscard]] float GetRoundingRadius() const override { return kRoundingRadius * scale_; }
   [[nodiscard]] float GetRoundingNumSides() const override { return kRoundingNumSides; }
   [[nodiscard]] float GetTextOffset() const override { return kTextOffset * scale_; }
+  [[nodiscard]] float GetLeftMargin() const override { return kLeftMargin * scale_; }
   [[nodiscard]] float GetRightMargin() const override { return kRightMargin * scale_; }
   [[nodiscard]] float GetMinButtonSize() const override { return kMinButtonSize; }
   [[nodiscard]] float GetButtonWidth() const override { return kButtonWidth * scale_; }
@@ -131,6 +132,7 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   constexpr static float kRoundingRadius = 8.f;
   constexpr static float kRoundingNumSides = 16;
   constexpr static float kTextOffset = 5.f;
+  constexpr static float kLeftMargin = 100.f;
   constexpr static float kRightMargin = 10.f;
   constexpr static float kMinButtonSize = 5.f;
   constexpr static float kButtonWidth = 15.f;

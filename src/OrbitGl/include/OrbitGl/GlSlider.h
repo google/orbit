@@ -143,9 +143,6 @@ class GlHorizontalSlider : public GlSlider {
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
-  [[nodiscard]] float GetWidth() const override {
-    return viewport_->GetScreenWidth() - layout_->GetSliderWidth();
-  }
   [[nodiscard]] float GetHeight() const override { return GetSliderWidth(); }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;

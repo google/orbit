@@ -63,7 +63,8 @@ class NavigationTestCaptureWindow : public testing::Test {
     // viewport height should be changed and the test adjusted accordingly
     ORBIT_CHECK(capture_window_.GetTimeGraph()->GetTimelineUi()->GetHeight() <
                 kViewportHeight - kBottomSafetyMargin);
-    ORBIT_CHECK(capture_window_.GetTimeGraph()->GetTimelineUi()->GetPos()[0] == 0);
+    ORBIT_CHECK(capture_window_.GetTimeGraph()->GetTimelineUi()->GetPos()[0] ==
+                time_graph_layout_.GetLeftMargin());
   }
 
  protected:

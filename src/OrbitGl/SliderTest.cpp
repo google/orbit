@@ -19,6 +19,35 @@
 
 namespace orbit_gl {
 
+namespace {
+
+template <typename T>
+[[nodiscard]] std::shared_ptr<T> CreateTestSlider(Viewport*, TimeGraphLayout*) {}
+
+template <>
+[[nodiscard]] std::shared_ptr<GlHorizontalSlider> CreateTestSlider(Viewport* viewport,
+                                                                   TimeGraphLayout* layout) {
+  auto result = std::make_shared<GlHorizontalSlider>(/*parent=*/nullptr, viewport, layout,
+                                                     /*timeline_info=*/nullptr);
+  // The tests implicitly assume that the horizontal slider has a specific width which was
+  // previously the default, and only possible width, returned by the HorizontalSlider::GetWidth()
+  // function override: "viewport->GetScreenWidth() - layout->GetSliderWidth()". Since we can now
+  // set the slider width, and the default width is 0, we replicate the previous behavior by
+  // explicitly setting this width.
+  float test_width = viewport->GetScreenWidth() - layout->GetSliderWidth();
+  result->SetWidth(test_width);
+  return result;
+}
+
+template <>
+[[nodiscard]] std::shared_ptr<GlVerticalSlider> CreateTestSlider(Viewport* viewport,
+                                                                 TimeGraphLayout* layout) {
+  return std::make_shared<GlVerticalSlider>(/*parent=*/nullptr, viewport, layout,
+                                            /*timeline_info=*/nullptr);
+}
+
+}  // namespace
+
 template <int dim>
 void Pick(GlSlider& slider, int start, int other_dim = 0) {
   static_assert(dim >= 0 && dim <= 1);
@@ -57,7 +86,7 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 }
 
 template <typename SliderClass>
-std::tuple<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>,
+std::tuple<std::shared_ptr<SliderClass>, std::unique_ptr<Viewport>,
            std::unique_ptr<CaptureViewElementTester>>
 Setup() {
   std::unique_ptr<CaptureViewElementTester> tester = std::make_unique<CaptureViewElementTester>();
@@ -66,8 +95,9 @@ Setup() {
   std::unique_ptr<Viewport> viewport =
       std::make_unique<Viewport>(100 + orthogonal_slider_width, 1000 + orthogonal_slider_width);
 
-  std::unique_ptr<SliderClass> slider =
-      std::make_unique<SliderClass>(nullptr, viewport.get(), tester->GetLayout(), nullptr);
+  // Sliders use "shared_from_this", so we can't use std::unique_ptr here.
+  std::shared_ptr<SliderClass> slider =
+      CreateTestSlider<SliderClass>(viewport.get(), tester->GetLayout());
 
   // Set the slider to be 50% of the maximum size, position in the middle
   slider->SetNormalizedPosition(0.5f);
@@ -346,9 +376,13 @@ TEST(Slider, MouseMoveRequestRedraw) {
   CaptureViewElementTester tester;
   Viewport* viewport = tester.GetViewport();
 
-  std::shared_ptr<GlHorizontalSlider> slider{
-      std::make_shared<GlHorizontalSlider>(nullptr, viewport, tester.GetLayout(), nullptr)};
+  std::shared_ptr<GlHorizontalSlider> slider =
+      CreateTestSlider<GlHorizontalSlider>(viewport, tester.GetLayout());
   tester.SimulatePreRender(slider.get());
+
+  // In CreateTestSlider, we have called SetWidth() which sets "update_primitives_requested_" to
+  // true. Simulate a draw loop to reinitialize the draw flags before testing their values below.
+  tester.SimulateDrawLoop(slider.get(), true, true);
 
   Vec2 kPosInSlider = slider->GetPos();
 
