@@ -2281,7 +2281,7 @@ TEST(ProducerEventProcessor, WarningInstrumentingWithUserSpaceInstrumentationEve
   warning_event->set_timestamp_ns(kTimestampNs1);
   constexpr int kFunctionId = 42;
   constexpr const char* kErrorMessage = "error message";
-  auto function = warning_event->add_functions_that_failed_to_instrument();
+  auto* function = warning_event->add_functions_that_failed_to_instrument();
   function->set_function_id(kFunctionId);
   function->set_error_message(kErrorMessage);
 

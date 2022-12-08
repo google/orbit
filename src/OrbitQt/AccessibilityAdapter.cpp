@@ -134,7 +134,7 @@ AdapterRegistry& AdapterRegistry::Get() {
 QAccessibleInterface* AdapterRegistry::InterfaceWrapperFactory(const QString& classname,
                                                                QObject* object) {
   if (classname == QLatin1String("orbit_qt::OrbitGlInterfaceWrapper")) {
-    auto iface_obj = static_cast<OrbitGlInterfaceWrapper*>(object);
+    auto* iface_obj = static_cast<OrbitGlInterfaceWrapper*>(object);
     ORBIT_CHECK(!all_interfaces_map_.contains(iface_obj->GetInterface()));
     auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface_obj->GetInterface());
     QAccessibleInterface* result = new AccessibilityAdapter(iface_obj->GetInterface(), object);

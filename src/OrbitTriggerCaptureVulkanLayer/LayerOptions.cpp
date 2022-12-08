@@ -95,7 +95,7 @@ std::vector<std::string> LayerOptions::BuildOrbitCaptureServiceArgv(std::string_
       layer_config_.capture_service_arguments().functions_size() > 0) {
     argv.push_back("-functions");
     std::string functions_str;
-    for (auto& function : layer_config_.capture_service_arguments().functions()) {
+    for (const auto& function : layer_config_.capture_service_arguments().functions()) {
       if (functions_str.empty()) {
         absl::StrAppendFormat(&functions_str, "%s", function);
       } else {

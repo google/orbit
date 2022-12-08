@@ -195,7 +195,7 @@ double SamplingReport::ComputeUnwindErrorRatio(uint32_t thread_id) const {
   if (post_processed_sampling_data_ == nullptr) {
     return 0.;
   }
-  auto* thread_sampling_data =
+  const auto* thread_sampling_data =
       post_processed_sampling_data_->GetThreadSampleDataByThreadId(thread_id);
   if (thread_sampling_data == nullptr) {
     return 0.;

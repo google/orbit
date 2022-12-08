@@ -1762,7 +1762,8 @@ void OrbitMainWindow::OnProcessListUpdated(
     const orbit_client_data::ProcessData* const target_process = app_->GetTargetProcess();
     return target_process != nullptr && process.pid() == app_->GetTargetProcess()->pid();
   };
-  const auto current_process = std::find_if(processes.begin(), processes.end(), is_current_process);
+  const auto* const current_process =
+      std::find_if(processes.begin(), processes.end(), is_current_process);
   const bool process_ended = current_process == processes.end();
 
   if (process_ended) {

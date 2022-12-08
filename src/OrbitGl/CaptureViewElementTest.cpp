@@ -73,7 +73,7 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override {
     std::vector<CaptureViewElement*> result;
-    for (auto& child : children_) {
+    for (const auto& child : children_) {
       result.push_back(child.get());
     }
     return result;

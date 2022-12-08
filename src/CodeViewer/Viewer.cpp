@@ -531,7 +531,7 @@ LargestOccurringLineNumbers SetAnnotatingContentInDocument(
   // Lets first go through the main content and save line numbers as metadata.
   // If previously extra annotating content had been added, let's remove it now.
   for (auto current_block = document->begin(); current_block != document->end();) {
-    const auto metadata = static_cast<const Metadata*>(current_block.userData());
+    const auto* const metadata = static_cast<const Metadata*>(current_block.userData());
 
     if (metadata == nullptr) {
       auto user_data =
@@ -559,13 +559,13 @@ LargestOccurringLineNumbers SetAnnotatingContentInDocument(
   LargestOccurringLineNumbers largest_occuring_line_numbers{};
   largest_occuring_line_numbers.main_content = document->blockCount();
 
-  auto current_annotating_line = annotating_lines.begin();
+  const auto* current_annotating_line = annotating_lines.begin();
 
   // In a second pass we add the annotating lines
   for (auto current_block = document->begin();
        current_block != document->end() && current_annotating_line != annotating_lines.end();
        current_block = current_block.next()) {
-    const auto metadata = static_cast<const Metadata*>(current_block.userData());
+    const auto* const metadata = static_cast<const Metadata*>(current_block.userData());
     ORBIT_CHECK(metadata != nullptr);
 
     if (metadata->line_number == current_annotating_line->reference_line) {

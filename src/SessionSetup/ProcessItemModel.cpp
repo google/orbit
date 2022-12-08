@@ -125,8 +125,8 @@ int ProcessItemModel::rowCount(const QModelIndex& parent) const {
 void ProcessItemModel::SetProcesses(QVector<ProcessInfo> new_processes) {
   orbit_base::sort(new_processes.begin(), new_processes.end(), &ProcessInfo::pid);
 
-  auto old_iter = processes_.begin();
-  auto new_iter = new_processes.begin();
+  auto* old_iter = processes_.begin();
+  auto* new_iter = new_processes.begin();
 
   while (old_iter != processes_.end() && new_iter != new_processes.end()) {
     const int current_row = static_cast<int>(std::distance(processes_.begin(), old_iter));

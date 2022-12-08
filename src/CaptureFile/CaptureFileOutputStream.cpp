@@ -143,7 +143,7 @@ std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
   // There should not be any write error in the case of `OutputType::kBuffer` as we do not limit the
   // buffer size of BufferOutputStream.
   ORBIT_CHECK(output_type_ == OutputType::kFile);
-  auto file_output_stream =
+  auto* file_output_stream =
       static_cast<google::protobuf::io::FileOutputStream*>(zero_copy_output_stream_.get());
   return SafeStrerror(file_output_stream->GetErrno());
 }

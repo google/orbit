@@ -40,7 +40,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   auto context = orbit_ssh::Context::Create();
   ASSERT_TRUE(context);
 
-  auto app = QCoreApplication::instance();
+  auto* app = QCoreApplication::instance();
   ASSERT_EQ(app->arguments().size(), 6);
 
   orbit_ssh::Credentials creds{
@@ -223,7 +223,7 @@ TEST(OrbitSshQtTests, CopyToLocalTest) {
   auto context = orbit_ssh::Context::Create();
   ASSERT_TRUE(context);
 
-  auto app = QCoreApplication::instance();
+  auto* app = QCoreApplication::instance();
   ASSERT_EQ(app->arguments().size(), 6);
 
   orbit_ssh::Credentials creds{

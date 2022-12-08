@@ -330,7 +330,7 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying OrbitService package to the remote instance...");
 
-  auto& config = std::get<SignedDebianPackageDeployment>(*deployment_configuration_);
+  const auto& config = std::get<SignedDebianPackageDeployment>(*deployment_configuration_);
 
   using FileMode = orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode;
 

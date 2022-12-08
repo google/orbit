@@ -65,7 +65,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
 
-  auto& ordered_nodes = scope_tree_.GetOrderedNodesAtDepth(depth);
+  const auto& ordered_nodes = scope_tree_.GetOrderedNodesAtDepth(depth);
   if (ordered_nodes.empty()) return all_timers_at_depth;
 
   auto first_node_to_draw = ordered_nodes.upper_bound(start_ns);

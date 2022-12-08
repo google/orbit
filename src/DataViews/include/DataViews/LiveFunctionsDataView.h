@@ -131,7 +131,7 @@ class LiveFunctionsDataView : public DataView {
                                                                          ValueType default_value) {
     return MakeSorter(
         [this, getter, default_value](ScopeId id) {
-          auto info = app_->GetCaptureData().GetFunctionInfoByScopeId(id);
+          const auto* info = app_->GetCaptureData().GetFunctionInfoByScopeId(id);
           return info == nullptr ? default_value : getter(*info);
         },
         ascending);

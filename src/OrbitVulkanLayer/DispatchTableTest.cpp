@@ -27,7 +27,7 @@ namespace orbit_vulkan_layer {
 
 TEST(DispatchTable, CanInitializeInstance) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -38,7 +38,7 @@ TEST(DispatchTable, CanInitializeInstance) {
 
 TEST(DispatchTable, CannotInitializeInstanceTwice) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -53,7 +53,7 @@ TEST(DispatchTable, CannotInitializeInstanceTwice) {
 
 TEST(DispatchTable, CanRemoveInstance) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -64,7 +64,7 @@ TEST(DispatchTable, CanRemoveInstance) {
 
 TEST(DispatchTable, CanReinitializeInstanceAfterRemove) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -76,7 +76,7 @@ TEST(DispatchTable, CanReinitializeInstanceAfterRemove) {
 
 TEST(DispatchTable, CanInitializeDevice) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -86,7 +86,7 @@ TEST(DispatchTable, CanInitializeDevice) {
 
 TEST(DispatchTable, CannotInitializeDeviceTwice) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -99,7 +99,7 @@ TEST(DispatchTable, CannotInitializeDeviceTwice) {
 
 TEST(DispatchTable, CanRemoveDevice) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -110,7 +110,7 @@ TEST(DispatchTable, CanRemoveDevice) {
 
 TEST(DispatchTable, CanReinitializeDeviceAfterRemove) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -122,7 +122,7 @@ TEST(DispatchTable, CanReinitializeDeviceAfterRemove) {
 
 TEST(DispatchTable, NoDeviceExtensionAvailable) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -134,7 +134,7 @@ TEST(DispatchTable, NoDeviceExtensionAvailable) {
 
 TEST(DispatchTable, NoInstanceExtensionAvailable) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* /*name*/) -> PFN_vkVoidFunction { return nullptr; };
 
@@ -146,7 +146,7 @@ TEST(DispatchTable, NoInstanceExtensionAvailable) {
 
 TEST(DispatchTable, CanSupportDeviceDebugUtilsExtension) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCmdBeginDebugUtilsLabelEXT") == 0) {
@@ -201,7 +201,7 @@ TEST(DispatchTable, CanSupportDeviceDebugUtilsExtension) {
 
 TEST(DispatchTable, CanSupportInstanceDebugUtilsExtension) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateDebugUtilsMessengerEXT") == 0) {
@@ -234,7 +234,7 @@ TEST(DispatchTable, CanSupportInstanceDebugUtilsExtension) {
 
 TEST(DispatchTable, CanSupportDebugReportExtension) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCreateDebugReportCallbackEXT") == 0) {
@@ -267,7 +267,7 @@ TEST(DispatchTable, CanSupportDebugReportExtension) {
 
 TEST(DispatchTable, CanSupportDebugMarkerExtension) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkCmdDebugMarkerBeginEXT") == 0) {
@@ -309,7 +309,7 @@ TEST(DispatchTable, CanSupportDebugMarkerExtension) {
 
 TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
     if (strcmp(name, "vkEnumerateDeviceExtensionProperties") == 0) {
@@ -339,7 +339,7 @@ TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
 
 TEST(DispatchTable, CanCallGetPhysicalDeviceProperties) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   // This bool needs to be static, as it will be used in the lambda below, which must not capture
   // anything in order to convert it to a function pointer.
@@ -367,7 +367,7 @@ TEST(DispatchTable, CanCallGetPhysicalDeviceProperties) {
 
 TEST(DispatchTable, CanCallGetInstanceProcAddr) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -394,7 +394,7 @@ TEST(DispatchTable, CanCallGetInstanceProcAddr) {
 
 TEST(DispatchTable, CanCallGetDeviceProcAddr) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -421,7 +421,7 @@ TEST(DispatchTable, CanCallGetDeviceProcAddr) {
 
 TEST(DispatchTable, CanCallResetCommandPool) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -444,7 +444,7 @@ TEST(DispatchTable, CanCallResetCommandPool) {
 
 TEST(DispatchTable, CanCallAllocateCommandBuffers) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -467,7 +467,7 @@ TEST(DispatchTable, CanCallAllocateCommandBuffers) {
 
 TEST(DispatchTable, CanCallFreeCommandBuffers) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -494,7 +494,7 @@ TEST(DispatchTable, CanCallFreeCommandBuffers) {
 
 TEST(DispatchTable, CanCallBeginCommandBuffer) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -517,7 +517,7 @@ TEST(DispatchTable, CanCallBeginCommandBuffer) {
 
 TEST(DispatchTable, CanCallEndCommandBuffer) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -539,7 +539,7 @@ TEST(DispatchTable, CanCallEndCommandBuffer) {
 
 TEST(DispatchTable, CanCallResetCommandBuffer) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -563,7 +563,7 @@ TEST(DispatchTable, CanCallResetCommandBuffer) {
 
 TEST(DispatchTable, CanCallGetDeviceQueue) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -588,7 +588,7 @@ TEST(DispatchTable, CanCallGetDeviceQueue) {
 
 TEST(DispatchTable, CanCallGetDeviceQueue2) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -613,7 +613,7 @@ TEST(DispatchTable, CanCallGetDeviceQueue2) {
 
 TEST(DispatchTable, CanCallQueueSubmit) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -637,7 +637,7 @@ TEST(DispatchTable, CanCallQueueSubmit) {
 
 TEST(DispatchTable, CanCallQueuePresentKHR) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -659,7 +659,7 @@ TEST(DispatchTable, CanCallQueuePresentKHR) {
 
 TEST(DispatchTable, CanCallCreateQueryPool) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -682,7 +682,7 @@ TEST(DispatchTable, CanCallCreateQueryPool) {
 
 TEST(DispatchTable, CanCallResetQueryPoolEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -709,7 +709,7 @@ TEST(DispatchTable, CanCallResetQueryPoolEXT) {
 
 TEST(DispatchTable, CanCallGetQueryPoolResults) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -735,7 +735,7 @@ TEST(DispatchTable, CanCallGetQueryPoolResults) {
 
 TEST(DispatchTable, CanCallCmdWriteTimestamp) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -763,7 +763,7 @@ TEST(DispatchTable, CanCallCmdWriteTimestamp) {
 
 TEST(DispatchTable, CanCallCmdBeginDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -790,7 +790,7 @@ TEST(DispatchTable, CanCallCmdBeginDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallCmdEndDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -815,7 +815,7 @@ TEST(DispatchTable, CanCallCmdEndDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallCmdInsertDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -842,7 +842,7 @@ TEST(DispatchTable, CanCallCmdInsertDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallSetDebugUtilsObjectNameEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -864,7 +864,7 @@ TEST(DispatchTable, CanCallSetDebugUtilsObjectNameEXT) {
 
 TEST(DispatchTable, CanCallSetDebugUtilsObjectTagEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -886,7 +886,7 @@ TEST(DispatchTable, CanCallSetDebugUtilsObjectTagEXT) {
 
 TEST(DispatchTable, CanCallQueueBeginDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -911,7 +911,7 @@ TEST(DispatchTable, CanCallQueueBeginDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallQueueEndDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -934,7 +934,7 @@ TEST(DispatchTable, CanCallQueueEndDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallQueueInsertDebugUtilsLabelEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
@@ -959,7 +959,7 @@ TEST(DispatchTable, CanCallQueueInsertDebugUtilsLabelEXT) {
 
 TEST(DispatchTable, CanCallCreateDebugUtilsMessengerEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
@@ -983,7 +983,7 @@ TEST(DispatchTable, CanCallCreateDebugUtilsMessengerEXT) {
 
 TEST(DispatchTable, CanCallDestroyDebugUtilsMessengerEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -1007,7 +1007,7 @@ TEST(DispatchTable, CanCallDestroyDebugUtilsMessengerEXT) {
 
 TEST(DispatchTable, CanCallSubmitDebugUtilsMessageEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -1034,7 +1034,7 @@ TEST(DispatchTable, CanCallSubmitDebugUtilsMessageEXT) {
 
 TEST(DispatchTable, CanCallCreateDebugReportCallbackEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
       +[](VkInstance /*instance*/, const char* name) -> PFN_vkVoidFunction {
@@ -1058,7 +1058,7 @@ TEST(DispatchTable, CanCallCreateDebugReportCallbackEXT) {
 
 TEST(DispatchTable, CanCallDestroyDebugReportCallbackEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -1082,7 +1082,7 @@ TEST(DispatchTable, CanCallDestroyDebugReportCallbackEXT) {
 
 TEST(DispatchTable, CanCallDebugReportMessageEXT) {
   VkLayerInstanceDispatchTable some_dispatch_table = {};
-  auto instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
+  auto* instance = absl::bit_cast<VkInstance>(&some_dispatch_table);
 
   static bool was_called = false;
   PFN_vkGetInstanceProcAddr next_get_instance_proc_addr_function =
@@ -1110,7 +1110,7 @@ TEST(DispatchTable, CanCallDebugReportMessageEXT) {
 
 TEST(DispatchTable, CanCallCmdDebugMarkerBeginEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -1136,7 +1136,7 @@ TEST(DispatchTable, CanCallCmdDebugMarkerBeginEXT) {
 
 TEST(DispatchTable, CanCallCmdDebugMarkerEndEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -1161,7 +1161,7 @@ TEST(DispatchTable, CanCallCmdDebugMarkerEndEXT) {
 
 TEST(DispatchTable, CanCallCmdDebugMarkerInsertEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   static bool was_called = false;
 
@@ -1187,7 +1187,7 @@ TEST(DispatchTable, CanCallCmdDebugMarkerInsertEXT) {
 
 TEST(DispatchTable, CanCallDebugMarkerSetObjectTagEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {
@@ -1210,7 +1210,7 @@ TEST(DispatchTable, CanCallDebugMarkerSetObjectTagEXT) {
 
 TEST(DispatchTable, CanCallDebugMarkerSetObjectNameEXT) {
   VkLayerDispatchTable some_dispatch_table = {};
-  auto device = absl::bit_cast<VkDevice>(&some_dispatch_table);
+  auto* device = absl::bit_cast<VkDevice>(&some_dispatch_table);
 
   PFN_vkGetDeviceProcAddr next_get_device_proc_addr_function =
       +[](VkDevice /*device*/, const char* name) -> PFN_vkVoidFunction {

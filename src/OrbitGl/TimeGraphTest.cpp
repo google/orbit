@@ -71,7 +71,7 @@ class UnitTestTimeGraph : public testing::Test {
   void CheckMouseIsOnlyOverAChild(CaptureViewElement* child_over_mouse) {
     EXPECT_TRUE(time_graph_->IsMouseOver());
     EXPECT_TRUE(child_over_mouse->IsMouseOver());
-    for (auto child : GetTimeGraph()->GetNonHiddenChildren()) {
+    for (auto* child : GetTimeGraph()->GetNonHiddenChildren()) {
       if (child != child_over_mouse) {
         EXPECT_FALSE(child->IsMouseOver());
       }
