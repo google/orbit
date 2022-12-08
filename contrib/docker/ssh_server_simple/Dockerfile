@@ -12,6 +12,9 @@ EXPOSE 22
 RUN adduser --disabled-password loginuser && echo 'loginuser:loginpassword' | chpasswd
 COPY id_ed25519.pub /home/loginuser/.ssh/authorized_keys
 
+# This is just a plain text file with some ASCII content that can be used by tests. Mainly needed for the SFTP tests.
+COPY plain.txt /home/loginuser/plain.txt
+
 COPY sudoers /etc/sudoers
 RUN chmod 600 /etc/sudoers
 
