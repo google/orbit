@@ -56,6 +56,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimestampIntervalSet.h"
 #include "ClientData/TracepointCustom.h"

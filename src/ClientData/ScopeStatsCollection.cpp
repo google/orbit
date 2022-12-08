@@ -6,7 +6,6 @@
 #include "ClientData/ScopeStatsCollection.h"
 
 #include <absl/algorithm/container.h>
-#include <absl/meta/type_traits.h>
 #include <absl/types/span.h>
 
 #include <iterator>

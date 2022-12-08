@@ -9,11 +9,13 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <utility>
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/LiveFunctionsDataView.h"
