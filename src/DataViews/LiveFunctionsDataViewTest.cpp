@@ -919,16 +919,19 @@ TEST_F(LiveFunctionsDataViewTest,
   view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
 }
 
-TEST_F(LiveFunctionsDataViewTest, OnDataChangedUsesScopeStatsCollectionUpdates) {
-  // Start with an empty live tab.
+TEST_F(LiveFunctionsDataViewTest, LiveTabUsesScopeStatsCollection) {
   auto scope_stats_collection = std::make_shared<orbit_client_data::MockScopeStatsCollection>();
   EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds)
       .Times(2)
       .WillRepeatedly(Return(std::vector<ScopeId>{}));
   view_.SetScopeStatsCollection(scope_stats_collection);
   EXPECT_EQ(view_.GetRowFromScopeId(kScopeIds[0]), std::nullopt);
+}
 
-  // Add something to scope_stats_collection and call OnDataChanged, expect an added row.
+TEST_F(LiveFunctionsDataViewTest, OnDataChangedUsesScopeStatsCollectionUpdates) {
+  auto scope_stats_collection = std::make_shared<orbit_client_data::MockScopeStatsCollection>();
+  view_.SetScopeStatsCollection(scope_stats_collection);
+  EXPECT_EQ(view_.GetRowFromScopeId(kScopeIds[0]), std::nullopt);
   EXPECT_CALL(*scope_stats_collection, GetAllProvidedScopeIds)
       .Times(2)
       .WillRepeatedly(Return(std::vector<ScopeId>{kScopeIds[0]}));
