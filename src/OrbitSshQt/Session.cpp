@@ -132,7 +132,9 @@ Session::DisconnectResult Session::Disconnect() {
   if (CurrentState() == State::kConnected) {
     SetState(State::kAboutToDisconnect);
     OnEvent();
-    return DisconnectResult::kDisconnectStarted;
+    if (IsStopping()) {
+      return DisconnectResult::kDisconnectStarted;
+    }
   }
 
   return DisconnectResult::kDisconnectedSuccessfully;

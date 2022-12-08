@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 
+#include <QMetaType>
 #include <QObject>
 #include <QPointer>
 #include <QString>
@@ -103,5 +104,7 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
 };
 
 }  // namespace orbit_ssh_qt
+
+Q_DECLARE_METATYPE(size_t);
 
 #endif  // ORBIT_SSH_QT_TASK_H_
