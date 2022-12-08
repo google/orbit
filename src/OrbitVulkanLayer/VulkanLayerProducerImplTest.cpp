@@ -248,9 +248,8 @@ TEST_F(VulkanLayerProducerImplTest, EnqueueCaptureEvent) {
   EXPECT_FALSE(producer_->EnqueueCaptureEvent(orbit_grpc_protos::ProducerCaptureEvent()));
 }
 
-static void ExpectInternedStrings(
-    absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> actual_events,
-    absl::Span<const std::pair<std::string, uint64_t> > expected_interns) {
+void ExpectInternedStrings(absl::Span<const orbit_grpc_protos::ProducerCaptureEvent> actual_events,
+                           absl::Span<const std::pair<std::string, uint64_t> > expected_interns) {
   ASSERT_EQ(actual_events.size(), expected_interns.size());
   for (size_t i = 0; i < actual_events.size(); ++i) {
     ASSERT_EQ(actual_events[i].event_case(),

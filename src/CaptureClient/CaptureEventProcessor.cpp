@@ -534,7 +534,7 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
   }
 }
 
-[[nodiscard]] static ThreadStateSliceInfo::WakeupReason FromGrpcWakeupReasonToInfoWakeupReason(
+[[nodiscard]] ThreadStateSliceInfo::WakeupReason FromGrpcWakeupReasonToInfoWakeupReason(
     orbit_grpc_protos::ThreadStateSlice::WakeupReason reason) {
   switch (reason) {
     case orbit_grpc_protos::ThreadStateSlice::kNotApplicable:

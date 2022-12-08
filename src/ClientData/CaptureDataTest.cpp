@@ -118,14 +118,14 @@ const ThreadStateSliceInfo kSlice4{kSecondTid,
                                    kInvalidPidAndTid,
                                    kCallstackId3};
 
-static const std::array<uint64_t, kTimerCount> kDurations = [] {
+const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
   std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
   std::copy(std::begin(kDurationsForSecondId), std::end(kDurationsForSecondId),
             std::begin(result) + kTimersForFirstId);
   return result;
 }();
-static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
+const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
   std::array<TimerInfo, kTimerCount> result;
   for (size_t i = 0; i < kTimerCount; ++i) {
     result[i].set_function_id(*kTimerIds[i]);
@@ -162,7 +162,7 @@ const TimerInfo kTimerInfoWithInvalidScopeId = []() {
   return timer;
 }();
 
-static void ExpectStatsEqual(const ScopeStats& actual, const ScopeStats& other) {
+void ExpectStatsEqual(const ScopeStats& actual, const ScopeStats& other) {
   EXPECT_EQ(actual.total_time_ns(), other.total_time_ns());
   EXPECT_EQ(actual.min_ns(), other.min_ns());
   EXPECT_EQ(actual.max_ns(), other.max_ns());

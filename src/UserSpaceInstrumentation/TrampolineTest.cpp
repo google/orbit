@@ -55,8 +55,8 @@ using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 using testing::ElementsAreArray;
 
-static constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
-static constexpr const char* kExitPayloadFunctionName = "ExitPayload";
+constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
+constexpr const char* kExitPayloadFunctionName = "ExitPayload";
 
 extern "C" __attribute__((noinline)) int DoubleAndIncrement(int i) {
   i = 2 * i;

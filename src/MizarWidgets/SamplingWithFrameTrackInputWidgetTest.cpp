@@ -67,8 +67,8 @@ class MockPairedData {
               (const));
 };
 
-static constexpr size_t kFrameTracksCount = 4;
-static constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIds = {
+constexpr size_t kFrameTracksCount = 4;
+constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIds = {
     FrameTrackId(ScopeId(2)), FrameTrackId(ScopeId(1)), FrameTrackId(ScopeId(10)),
     FrameTrackId(PresentEvent::kD3d9)};
 
