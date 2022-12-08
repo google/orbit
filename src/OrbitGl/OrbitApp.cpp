@@ -1646,7 +1646,7 @@ void OrbitApp::AddFallbackSymbols(const ModuleIdentifier& module_id,
 }
 
 ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
-    const std::filesystem::path& module_path) {
+    const std::filesystem::path& module_path) const {
   std::vector<std::string> build_ids =
       GetTargetProcess()->FindModuleBuildIdsByPath(module_path.string());
 

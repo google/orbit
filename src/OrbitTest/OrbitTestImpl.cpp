@@ -122,7 +122,7 @@ static void ExecuteTask(uint32_t id) {
   ORBIT_STOP_ASYNC(id);
 }
 
-void OrbitTestImpl::OutputOrbitApiState() {
+void OrbitTestImpl::OutputOrbitApiState() const {
   while (!exit_requested_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     ORBIT_LOG("g_orbit_api.enabled = %u", g_orbit_api.enabled);

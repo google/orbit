@@ -150,7 +150,7 @@ class TestHandler {
     ++next_push_;
   }
 
-  void OnUretprobesAfterTailCallReturn(UprobesReturnAddressManager* return_address_manager) {
+  void OnUretprobesAfterTailCallReturn(UprobesReturnAddressManager* return_address_manager) const {
     // Do not fake popping other data as this function had ended with a tail
     // call, its frame was clear.
 

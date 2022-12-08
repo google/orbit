@@ -256,7 +256,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
     const GpuQueueSubmission& gpu_queue_submission, const GpuJob& matching_gpu_job,
     const std::optional<GpuCommandBuffer>& first_command_buffer, uint64_t timeline_hash,
     const std::function<uint64_t(std::string_view str)>&
-        get_string_hash_and_send_to_listener_if_necessary) {
+        get_string_hash_and_send_to_listener_if_necessary) const {
   constexpr const char* kCommandBufferLabel = "command buffer";
   uint64_t command_buffer_text_key =
       get_string_hash_and_send_to_listener_if_necessary(kCommandBufferLabel);

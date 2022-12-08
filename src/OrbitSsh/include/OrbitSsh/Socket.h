@@ -58,7 +58,7 @@ class Socket {
   [[nodiscard]] outcome::result<Socket> Accept() const;
 
   [[nodiscard]] outcome::result<void> Shutdown() const;
-  outcome::result<void> WaitDisconnect();
+  [[nodiscard]] outcome::result<void> WaitDisconnect() const;
   [[nodiscard]] Descriptor GetFileDescriptor() const { return descriptor_; }
 
   [[nodiscard]] outcome::result<void> CanBeRead() const;

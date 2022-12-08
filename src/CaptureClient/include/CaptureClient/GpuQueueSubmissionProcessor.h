@@ -88,7 +88,7 @@ class GpuQueueSubmissionProcessor {
       const std::optional<orbit_grpc_protos::GpuCommandBuffer>& first_command_buffer,
       uint64_t timeline_hash,
       const std::function<uint64_t(std::string_view str)>&
-          get_string_hash_and_send_to_listener_if_necessary);
+          get_string_hash_and_send_to_listener_if_necessary) const;
 
   [[nodiscard]] std::vector<orbit_client_protos::TimerInfo> ProcessGpuDebugMarkers(
       const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission,

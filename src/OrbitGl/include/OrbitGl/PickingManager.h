@@ -123,7 +123,7 @@ class PickingManager {
 
   void Pick(PickingId id, int x, int y);
   void Release();
-  void Drag(int x, int y);
+  void Drag(int x, int y) const;
   [[nodiscard]] std::shared_ptr<Pickable> GetPicked() const;
   [[nodiscard]] std::shared_ptr<Pickable> GetPickableFromId(PickingId id) const;
   [[nodiscard]] bool IsDragging() const;

@@ -28,7 +28,7 @@ class OrbitTestImpl {
   void TestFunc2(uint32_t depth = 0);
   static void BusyWork(uint64_t microseconds);
   void ManualInstrumentationApiTest();
-  void OutputOrbitApiState();
+  void OutputOrbitApiState() const;
 
  private:
   bool exit_requested_ = false;
