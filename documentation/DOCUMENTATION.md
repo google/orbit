@@ -14,38 +14,17 @@ have feature requests, consider creating an
 > **Note** Orbit is now mainly a **Linux** profiler. Windows support is
 > experimental and not all features are available on Windows.
 
-## Prerequisites
+## Start Orbit and OrbitService
 
-You need to have `Orbit` and `OrbitService`
-[built](../DEVELOPMENT.md#building-orbit) and
-[running](../DEVELOPMENT.md#building-orbit).
+When starting Orbit, the so-called **Connection Window** (screenshot below) is
+shown. From here, you can start a local or remote profiling session. 
 
-> **Note** For reasonable feature support, `OrbitService` needs to run as
-> **root** (or Administrator on Windows).
+![Connection Window][orbit_connection_window]
 
-> **Note** For remote profiling support you can tunnel the TCP port `44765`
-> through an SSH connection to an arbitrary Linux server.
+### Local Profiling
 
-## Profile your application
-
-In this section, we will go through a capture session showing you how to select
-your target process for profiling, dynamically instrument functions, and record
-a capture. Note that captures are saved automatically.
-
-### Connect Orbit
-
-This section shows you how to select your target process for profiling or load a
-saved capture.
-
-> **Note** Your application must already be running on the target instance.
-
-1. Launch `Orbit` and `OrbitService` as described
-   [here](../DEVELOPMENT.md#building-orbit).
-   Orbit will open the so-called **Connection Window** (screenshot below).
-
-   ![Choose Process in Orbit][orbit_processes]
-2. Select **Local profiling**.
-
+1. Select `Local Profiling`, click `Start OrbitService` and enter your root password
+   
    Once the connection gets established, the right pane shows the processes
    running on the target machine. Note that Orbit sorts processes by CPU usage
    and automatically selects the first process in the list.
@@ -55,7 +34,9 @@ saved capture.
    > window. For ease of access, Orbit maintains a list of captures that you
    > saved recently.
 
-3. To confirm the selected process and continue to the main window, click
+   ![Choose Process in Orbit][orbit_processes]
+
+2. To confirm the selected process and continue to the main window, click
    **Start Session** or <kbd>Double-Click</kbd> the process. In the
    **Main Window**, you can see the following:
 
@@ -68,11 +49,41 @@ saved capture.
 
    ![Orbit's main window with processes and modules][orbit_main_window_startup]
 
-4. To return to the startup window and select a different process, or connect
-   to a different instance, click **End Session**.
+3. To return to the **Connection Window** and select a different process, or 
+   connect to a different machine, click **End Session**.
 
    > **Note** If you loaded a capture from file, the right side of the menu bar
    displays the filename of the capture instead of connection details.
+
+### Remote Profiling (SSH)
+
+Orbit supports setting up and using a secure communication channel between the
+locally running UI and OrbitService running on a remote machine. To do that, 
+use the **Connection Window** and
+
+1. Select `Remote Profiling (SSH)`
+
+2. Fill all fields on the left side with the values you want to use for the SSH
+   connection. Orbit only supports file based authentication.
+
+3. Choose either `OrbitService started manually` or 
+  `Start OrbitService with sudo`.
+
+   Pick the former if you manually started OrbitService on the remote machine.
+
+   If you want Orbit to upload and start OrbitService, choose the other option
+   and provide a sudo password.
+
+4. Click `Connect` and wait for Orbit to establish the ssh connection.
+
+5. Continue by selecting your target process and starting the session in the 
+   same way as described [above](#local-profiling)
+
+## Profile your application
+
+In this section, we will go through a capture session. This includes recording
+a capture with callstack sampling, dynamically instrumenting functions and 
+more. Note that captures are saved automatically.
 
 ### Record a capture with callstack sampling
 
@@ -835,6 +846,7 @@ we highly recommend that you take a look at the references provided above.
 [linux-proc]: https://man7.org/linux/man-pages/man5/proc.5.html
 [linux-vmstat]: https://man7.org/linux/man-pages/man8/vmstat.8.html
 [linux-cgroup]: https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
+[orbit_connection_window]: orbit_connection_window.png
 [orbit_processes]: orbit_processes.png
 [orbit_main_window_default_capture]: orbit_main_window_default_capture.png
 [orbit_main_window_capture]: orbit_main_window_capture.png

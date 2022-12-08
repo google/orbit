@@ -13,7 +13,7 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
-ABSL_DECLARE_FLAG(bool, nodeploy);
+ABSL_DECLARE_FLAG(bool, signed_debian_package_deployment);
 
 ABSL_DECLARE_FLAG(std::string, collector);
 

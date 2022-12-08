@@ -46,6 +46,8 @@ class SessionSetupDialog : public QDialog {
  private slots:
   void ConnectLocalAndProcessWidget();
   void DisconnectLocalAndProcessWidget();
+  void ConnectSshAndProcessWidget();
+  void DisconnectSshAndProcessWidget();
 
  signals:
   void ProcessSelected();
@@ -73,11 +75,20 @@ class SessionSetupDialog : public QDialog {
   QState state_local_no_process_selected_;
   QState state_local_process_selected_;
 
+  QState state_ssh_;
+  QHistoryState state_ssh_history_;
+  QState state_ssh_connecting_;
+  QState state_ssh_connected_;
+  QState state_ssh_no_process_selected_;
+  QState state_ssh_process_selected_;
+
   void SetupFileStates();
   void SetupLocalStates();
+  void SetupSshStates();
   void SetTargetAndStateMachineInitialState(SshTarget target);
   void SetTargetAndStateMachineInitialState(LocalTarget target);
   void SetTargetAndStateMachineInitialState(FileTarget target);
+  void UpdateTargetLabelWithProcess(const orbit_grpc_protos::ProcessInfo& process_info);
 };
 
 }  // namespace orbit_session_setup

@@ -126,12 +126,23 @@ void TargetLabel::ChangeToSshTarget(const SshTarget& ssh_target) {
                     ssh_target.GetConnection()->GetAddrAndPort().GetHumanReadable());
 }
 
+void TargetLabel::ChangeToSshTarget(const orbit_grpc_protos::ProcessInfo& process_info,
+                                    std::string_view ssh_target_id) {
+  return ChangeToSshTarget(process_info.name(), process_info.full_path(), process_info.cpu_usage(),
+                           ssh_target_id);
+}
+
 void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& process,
                                     std::string_view ssh_target_id) {
+  return ChangeToSshTarget(process.name(), process.full_path(), process.cpu_usage(), ssh_target_id);
+}
+
+void TargetLabel::ChangeToSshTarget(std::string_view process_name, std::string_view process_path,
+                                    double cpu_usage, std::string_view ssh_target_id) {
   Clear();
-  process_ = QString::fromStdString(process.name());
+  process_ = QString::fromUtf8(process_name.data(), process_name.size());
   machine_ = QString::fromUtf8(ssh_target_id.data(), ssh_target_id.size());
-  SetProcessCpuUsageInPercent(process.cpu_usage());
+  SetProcessCpuUsageInPercent(cpu_usage);
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
 
@@ -139,7 +150,7 @@ void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& proces
       QString{"Connection active.<br/><br/>"
               "Machine: %1<br/>"
               "Process: %2 (%3)"}
-          .arg(machine_, process_, QString::fromStdString(process.full_path())));
+          .arg(machine_, process_, QString::fromUtf8(process_path.data(), process_path.size())));
   setAccessibleName("Ssh target");
 }
 

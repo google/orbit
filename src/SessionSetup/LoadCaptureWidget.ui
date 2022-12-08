@@ -117,6 +117,18 @@
                <property name="accessibleName">
                 <string>FilterCaptureFiles</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true">
+                 QLineEdit {
+                  background-image: url(:/actions/search_small_offset);
+                  background-position: left center;
+                  background-repeat: no-repeat;
+                  height: 22px;
+                  padding-left: 20px;
+                  padding-bottom: 1px;
+                 }
+                </string>
+               </property>
                <property name="placeholderText">
                 <string>Filter capture files</string>
                </property>
