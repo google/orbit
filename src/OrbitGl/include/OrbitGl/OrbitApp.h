@@ -547,8 +547,8 @@ class OrbitApp final : public DataViewFactory,
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
-  ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>> GetLoadedModulesByPath(
-      const std::filesystem::path& module_path);
+  [[nodiscard]] ErrorMessageOr<std::vector<const orbit_client_data::ModuleData*>>
+  GetLoadedModulesByPath(const std::filesystem::path& module_path) const;
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);

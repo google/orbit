@@ -71,7 +71,7 @@ void PickingManager::Release() {
   }
 }
 
-void PickingManager::Drag(int x, int y) {
+void PickingManager::Drag(int x, int y) const {
   auto picked = GetPicked();
   if (picked && picked->Draggable()) {
     picked->OnDrag(x, y);

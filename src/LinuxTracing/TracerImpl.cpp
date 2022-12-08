@@ -356,7 +356,7 @@ bool TracerImpl::OpenUserSpaceProbes(absl::Span<const int32_t> cpus) {
 
 bool TracerImpl::OpenUprobesWithStack(
     const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
-    absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+    absl::Span<const int32_t> cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu) const {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();

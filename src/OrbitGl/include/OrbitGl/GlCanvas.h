@@ -99,7 +99,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   virtual void Draw(QPainter* /*painter*/) {}
 
   void UpdateSpecialKeys(bool ctrl, bool shift, bool alt);
-  bool ControlPressed();
+  [[nodiscard]] bool ControlPressed() const;
 
   void ResetHoverTimer();
 

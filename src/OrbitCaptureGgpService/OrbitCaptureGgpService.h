@@ -12,7 +12,7 @@ class OrbitCaptureGgpService final {
  public:
   explicit OrbitCaptureGgpService(uint16_t grpc_port) : grpc_port_{grpc_port} {}
 
-  void RunServer();
+  void RunServer() const;
 
  private:
   uint16_t grpc_port_;

@@ -341,7 +341,8 @@ void TimeGraph::ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& s
   manual_instrumentation_manager_->ProcessStringEvent(string_event);
 }
 
-void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event) {
+void TimeGraph::ProcessApiTrackValueEvent(
+    const orbit_client_data::ApiTrackValue& track_event) const {
   VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack(track_event.track_name());
 
   uint64_t time = track_event.timestamp_ns();
@@ -413,7 +414,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseLeave() {
   return event_result;
 }
 
-void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) {
+void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) const {
   const std::string& track_name = timer_info.api_scope_name();
   AsyncTrack* track = GetTrackManager()->GetOrCreateAsyncTrack(track_name);
   track->OnTimer(timer_info);

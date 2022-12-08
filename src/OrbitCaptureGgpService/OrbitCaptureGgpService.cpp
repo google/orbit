@@ -20,7 +20,7 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 
-void OrbitCaptureGgpService::RunServer() {
+void OrbitCaptureGgpService::RunServer() const {
   std::string server_address = absl::StrFormat("127.0.0.1:%d", grpc_port_);
   CaptureClientGgpServiceImpl ggp_capture_service;
 

@@ -155,7 +155,7 @@ void GlCanvas::KeyReleased(unsigned int /*key_code*/, bool ctrl, bool shift, boo
 
 void GlCanvas::UpdateSpecialKeys(bool ctrl, bool /*shift*/, bool /*alt*/) { control_key_ = ctrl; }
 
-bool GlCanvas::ControlPressed() { return control_key_; }
+bool GlCanvas::ControlPressed() const { return control_key_; }
 
 void GlCanvas::PrepareGlViewport() {
   glViewport(0, 0, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
