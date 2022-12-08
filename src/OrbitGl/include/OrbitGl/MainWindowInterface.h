@@ -80,6 +80,16 @@ class MainWindowInterface {
 
   virtual void SetLiveTabScopeStatsCollection(
       std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) = 0;
+
+  virtual void SetTopDownView(std::unique_ptr<CallTreeView> view) = 0;
+  virtual void SetBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
+  virtual void SetSelectionTopDownView(std::unique_ptr<CallTreeView> view) = 0;
+  virtual void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
+  virtual void SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
+                                 const std::shared_ptr<class SamplingReport>& sampling_report) = 0;
+  virtual void SetSelectionSamplingReport(
+      orbit_data_views::DataView* callstack_data_view,
+      const std::shared_ptr<class SamplingReport>& selection_report) = 0;
 };
 
 }  // namespace orbit_gl

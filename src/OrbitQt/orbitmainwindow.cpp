@@ -336,34 +336,6 @@ void OrbitMainWindow::SetupMainWindow() {
     this->OnRefreshDataViewPanels(type);
   });
 
-  app_->SetSamplingReportCallback([this](orbit_data_views::DataView* callstack_data_view,
-                                         const std::shared_ptr<SamplingReport>& report) {
-    this->OnNewSamplingReport(callstack_data_view, report);
-  });
-
-  app_->SetSelectionReportCallback([this](orbit_data_views::DataView* callstack_data_view,
-                                          const std::shared_ptr<SamplingReport>& report) {
-    this->OnNewSelectionReport(callstack_data_view, report);
-  });
-
-  app_->SetTopDownViewCallback([this](std::unique_ptr<CallTreeView> top_down_view) {
-    this->OnNewTopDownView(std::move(top_down_view));
-  });
-
-  app_->SetSelectionTopDownViewCallback(
-      [this](std::unique_ptr<CallTreeView> selection_top_down_view) {
-        this->OnNewSelectionTopDownView(std::move(selection_top_down_view));
-      });
-
-  app_->SetBottomUpViewCallback([this](std::unique_ptr<CallTreeView> bottom_up_view) {
-    this->OnNewBottomUpView(std::move(bottom_up_view));
-  });
-
-  app_->SetSelectionBottomUpViewCallback(
-      [this](std::unique_ptr<CallTreeView> selection_bottom_up_view) {
-        this->OnNewSelectionBottomUpView(std::move(selection_bottom_up_view));
-      });
-
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   app_->SetErrorMessageCallback([this](std::string_view title, std::string_view text) {
     QMessageBox::critical(this, QString::fromUtf8(title.data(), title.size()),
@@ -861,8 +833,8 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
   }
 }
 
-void OrbitMainWindow::OnNewSamplingReport(orbit_data_views::DataView* callstack_data_view,
-                                          const std::shared_ptr<SamplingReport>& sampling_report) {
+void OrbitMainWindow::SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
+                                        const std::shared_ptr<SamplingReport>& sampling_report) {
   ui->samplingGridLayout->removeWidget(ui->samplingReport);
   delete ui->samplingReport;
 
@@ -884,7 +856,7 @@ void OrbitMainWindow::OnNewSamplingReport(orbit_data_views::DataView* callstack_
   }
 }
 
-void OrbitMainWindow::OnNewSelectionReport(
+void OrbitMainWindow::SetSelectionSamplingReport(
     orbit_data_views::DataView* callstack_data_view,
     const std::shared_ptr<SamplingReport>& selection_report) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
@@ -899,20 +871,20 @@ void OrbitMainWindow::OnNewSelectionReport(
   UpdateCaptureStateDependentWidgets();
 }
 
-void OrbitMainWindow::OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
+void OrbitMainWindow::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
   ui->topDownWidget->SetTopDownView(std::move(top_down_view));
 }
 
-void OrbitMainWindow::OnNewSelectionTopDownView(
+void OrbitMainWindow::SetSelectionTopDownView(
     std::unique_ptr<CallTreeView> selection_top_down_view) {
   ui->selectionTopDownWidget->SetTopDownView(std::move(selection_top_down_view));
 }
 
-void OrbitMainWindow::OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
+void OrbitMainWindow::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
   ui->bottomUpWidget->SetBottomUpView(std::move(bottom_up_view));
 }
 
-void OrbitMainWindow::OnNewSelectionBottomUpView(
+void OrbitMainWindow::SetSelectionBottomUpView(
     std::unique_ptr<CallTreeView> selection_bottom_up_view) {
   ui->selectionBottomUpWidget->SetBottomUpView(std::move(selection_bottom_up_view));
 }

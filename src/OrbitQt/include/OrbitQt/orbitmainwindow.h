@@ -81,16 +81,17 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnRefreshDataViewPanels(orbit_data_views::DataViewType type);
   void UpdatePanel(orbit_data_views::DataViewType type);
 
-  void OnNewSamplingReport(orbit_data_views::DataView* callstack_data_view,
-                           const std::shared_ptr<class SamplingReport>& sampling_report);
-  void OnNewSelectionReport(orbit_data_views::DataView* callstack_data_view,
-                            const std::shared_ptr<class SamplingReport>& selection_report);
+  void SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
+                         const std::shared_ptr<class SamplingReport>& sampling_report) override;
+  void SetSelectionSamplingReport(
+      orbit_data_views::DataView* callstack_data_view,
+      const std::shared_ptr<class SamplingReport>& selection_report) override;
 
-  void OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view);
-  void OnNewSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view);
+  void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) override;
+  void SetSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view) override;
 
-  void OnNewBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
-  void OnNewSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view);
+  void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) override;
+  void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view) override;
 
   std::string OnGetSaveFileName(std::string_view extension);
   static void OnSetClipboard(std::string_view text);
