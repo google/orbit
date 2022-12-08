@@ -21,7 +21,7 @@ constexpr std::string_view kTwoInts = "two ints";
 constexpr auto kFromInt = [](int /*unused*/) { return kInt; };
 constexpr auto kFromTwoInts = [](int /*unused*/, int /*unused*/) { return kTwoInts; };
 auto kFromIntMutable = [](int /*unused*/) mutable { return kInt; };
-constexpr auto kFromString = [](std::string /*unused*/) { return kString; };
+constexpr auto kFromString = [](const std::string& /*unused*/) { return kString; };
 
 std::string_view FromString(std::string /*unused*/) { return kString; }
 std::string_view FromInt(int /*unused*/) { return kInt; }

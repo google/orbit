@@ -179,7 +179,7 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
              : "???";
 }
 
-[[nodiscard]] std::string BuildExpectedExportEventsToCsvString(std::vector<size_t> indices) {
+[[nodiscard]] std::string BuildExpectedExportEventsToCsvString(const std::vector<size_t>& indices) {
   std::string result =
       "\"Thread\",\"Timestamp (ns)\",\"Names leaf/foo/main\",\"Addresses "
       "leaf_addr/foo_addr/main_addr\"";

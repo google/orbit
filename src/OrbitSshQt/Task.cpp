@@ -19,7 +19,8 @@ constexpr const std::chrono::milliseconds kShutdownTimeoutMs{2000};
 
 namespace orbit_ssh_qt {
 
-Task::Task(Session* session, std::string command) : session_(session), command_(command) {
+Task::Task(Session* session, std::string command)
+    : session_(session), command_(std::move(command)) {
   about_to_shutdown_connection_.emplace(
       QObject::connect(session_, &Session::aboutToShutdown, this, &Task::HandleSessionShutdown));
 }

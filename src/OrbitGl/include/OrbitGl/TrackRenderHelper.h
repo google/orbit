@@ -19,7 +19,7 @@
 namespace orbit_gl {
 void DrawTriangleFan(PrimitiveAssembler& primitive_assembler, absl::Span<const Vec2> points,
                      const Vec2& pos, const Color& color, float rotation, float z,
-                     std::shared_ptr<Pickable> pickable);
+                     const std::shared_ptr<Pickable>& pickable);
 [[nodiscard]] std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides);
 }  // namespace orbit_gl
 

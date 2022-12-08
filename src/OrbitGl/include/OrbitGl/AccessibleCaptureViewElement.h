@@ -6,6 +6,7 @@
 #define ORBIT_GL_ACCESSIBLE_CAPTURE_VIEW_ELEMENT_H_
 
 #include <string>
+#include <utility>
 
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
@@ -20,7 +21,7 @@ class AccessibleCaptureViewElement : public orbit_accessibility::AccessibleInter
                                             orbit_accessibility::AccessibilityRole::Pane,
                                         orbit_accessibility::AccessibilityState accessible_state =
                                             orbit_accessibility::AccessibilityState::Normal)
-      : accessible_name_(accessible_name),
+      : accessible_name_(std::move(accessible_name)),
         accessible_role_(accessible_role),
         accessible_state_(accessible_state),
         capture_view_element_(capture_view_element) {

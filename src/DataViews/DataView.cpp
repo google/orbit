@@ -101,7 +101,7 @@ std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
   ORBIT_CHECK(!selected_indices.empty());
 
   std::vector<ActionGroup> menu;
-  auto try_add_action_group = [&](std::vector<std::string_view> action_names) {
+  auto try_add_action_group = [&](const std::vector<std::string_view>& action_names) {
     ActionGroup action_group;
     for (std::string_view action_name : action_names) {
       switch (GetActionStatus(action_name, clicked_index, selected_indices)) {

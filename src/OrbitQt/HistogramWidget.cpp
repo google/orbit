@@ -240,7 +240,7 @@ static void SetBoldFont(QPainter& painter) {
   painter.setFont(font);
 }
 
-static void DrawHoverLabel(QPainter& painter, const QRect& rect, const QString text) {
+static void DrawHoverLabel(QPainter& painter, const QRect& rect, const QString& text) {
   SetBoldFont(painter);
   painter.fillRect(rect, kHoverLabelColor);
   painter.drawText(rect, Qt::AlignCenter, text);
@@ -360,8 +360,8 @@ static void DrawHorizontalHoverLabel(QPainter& painter, const QPoint& axes_inter
   DrawHoverLabel(painter, label_rect, label_text);
 }
 
-static void DrawOneLineOfHint(QPainter& painter, const QString message, const QPoint& bottom_right,
-                              const QColor color) {
+static void DrawOneLineOfHint(QPainter& painter, const QString& message, const QPoint& bottom_right,
+                              const QColor& color) {
   painter.setPen(color);
   const QRect rect(QPoint(0, 0), bottom_right);
   painter.drawText(rect, Qt::AlignRight | Qt::AlignBottom, message);

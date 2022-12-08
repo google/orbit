@@ -57,7 +57,7 @@ Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbol
       .ThenIfSuccess(
           main_thread_executor_.get(),
           [save_file_path = std::move(save_file_path)](
-              CanceledOr<NotFoundOr<void>> download_result) -> SymbolLoadingOutcome {
+              const CanceledOr<NotFoundOr<void>>& download_result) -> SymbolLoadingOutcome {
             if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};
             if (orbit_base::IsNotFound(orbit_base::GetNotCanceled(download_result))) {
               return {orbit_base::NotFound{"Symbols not found in Microsoft symbol server"}};

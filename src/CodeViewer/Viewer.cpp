@@ -46,7 +46,7 @@ static const QColor kTextEditForegroundColor{189, 189, 189};
 static const QColor kTitleBackgroundColor{30, 65, 89};
 static const QColor kHeatmapColor{Qt::red};
 
-static int StringWidthInPixels(const QFontMetrics& font_metrics, QString string) {
+static int StringWidthInPixels(const QFontMetrics& font_metrics, const QString& string) {
   return font_metrics.horizontalAdvance(string);
 }
 

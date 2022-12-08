@@ -210,7 +210,7 @@ void SessionSetupDialog::SetTargetAndStateMachineInitialState(LocalTarget target
   state_machine_.setInitialState(&state_local_);
 }
 
-void SessionSetupDialog::SetTargetAndStateMachineInitialState(FileTarget target) {
+void SessionSetupDialog::SetTargetAndStateMachineInitialState(const FileTarget& target) {
   ui_->loadCaptureWidget->GetRadioButton()->setChecked(true);
   selected_file_path_ = target.GetCaptureFilePath();
   state_file_.setInitialState(&state_file_selected_);

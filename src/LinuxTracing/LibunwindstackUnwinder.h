@@ -32,7 +32,7 @@ namespace orbit_linux_tracing {
 class LibunwindstackResult {
  public:
   explicit LibunwindstackResult(
-      std::vector<unwindstack::FrameData> frames, unwindstack::RegsX86_64 regs,
+      std::vector<unwindstack::FrameData> frames, const unwindstack::RegsX86_64& regs,
       unwindstack::ErrorCode error_code = unwindstack::ErrorCode::ERROR_NONE)
       : frames_{std::move(frames)}, regs_{std::move(regs)}, error_code_{error_code} {}
 

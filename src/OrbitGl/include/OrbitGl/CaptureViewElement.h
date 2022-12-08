@@ -87,7 +87,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   };
 
   enum class EventResult { kHandled, kIgnored };
-  [[nodiscard]] EventResult HandleMouseEvent(MouseEvent mouse_event,
+  [[nodiscard]] EventResult HandleMouseEvent(const MouseEvent& mouse_event,
                                              const ModifierKeys& modifiers = ModifierKeys());
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }

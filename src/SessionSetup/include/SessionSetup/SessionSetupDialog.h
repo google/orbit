@@ -77,7 +77,7 @@ class SessionSetupDialog : public QDialog {
   void SetupLocalStates();
   void SetTargetAndStateMachineInitialState(SshTarget target);
   void SetTargetAndStateMachineInitialState(LocalTarget target);
-  void SetTargetAndStateMachineInitialState(FileTarget target);
+  void SetTargetAndStateMachineInitialState(const FileTarget& target);
 };
 
 }  // namespace orbit_session_setup

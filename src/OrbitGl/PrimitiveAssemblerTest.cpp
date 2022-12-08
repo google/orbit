@@ -40,7 +40,7 @@ class PrimitiveAssemblerTester : public PrimitiveAssembler {
   [[nodiscard]] uint32_t GetNumTriangles() const { return mock_batcher_.GetNumTriangles(); }
   [[nodiscard]] uint32_t GetNumBoxes() const { return mock_batcher_.GetNumBoxes(); }
   [[nodiscard]] uint32_t GetNumElements() const { return mock_batcher_.GetNumElements(); }
-  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 pos, Vec2 size) const {
+  [[nodiscard]] bool IsEverythingInsideRectangle(const Vec2& pos, const Vec2& size) const {
     return mock_batcher_.IsEverythingInsideRectangle(pos, size);
   }
 

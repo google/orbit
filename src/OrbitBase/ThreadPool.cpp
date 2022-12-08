@@ -223,7 +223,7 @@ void ThreadPool::InitializeDefaultThreadPool() {
   (void)GetDefaultThreadPool();
 }
 
-void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
+void ThreadPool::SetDefaultThreadPool(const std::shared_ptr<ThreadPool>& thread_pool) {
   ORBIT_CHECK(thread_pool != nullptr);
   absl::MutexLock lock(&g_default_thread_pool_mutex);
   ORBIT_CHECK(g_default_thread_pool == nullptr);

@@ -30,7 +30,7 @@ struct Quad {
 
 struct Triangle {
   Triangle() = default;
-  Triangle(Vec2 v0, Vec2 v1, Vec2 v2) {
+  Triangle(const Vec2& v0, const Vec2& v1, const Vec2& v2) {
     vertices[0] = v0;
     vertices[1] = v1;
     vertices[2] = v2;

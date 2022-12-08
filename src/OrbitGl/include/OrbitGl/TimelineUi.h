@@ -55,8 +55,8 @@ class TimelineUi : public CaptureViewElement {
                     uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
   void RenderBackground(PrimitiveAssembler& primitive_assembler) const;
   void RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
-                   uint64_t tick_ns, uint32_t number_of_decimal_places, Color background_color,
-                   bool is_mouse_label = false) const;
+                   uint64_t tick_ns, uint32_t number_of_decimal_places,
+                   const Color& background_color, bool is_mouse_label = false) const;
   void RenderMouseLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                         uint64_t mouse_tick_ns) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const;
