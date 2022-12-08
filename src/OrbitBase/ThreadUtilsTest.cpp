@@ -72,7 +72,7 @@ TEST(ThreadUtils, GetThreadName) {
   absl::Mutex mutex;
   uint32_t other_tid = 0;
   bool other_name_read = false;
-  constexpr const char* kThreadName = "OtherThread";
+  static constexpr const char* kThreadName = "OtherThread";
 
   std::thread other_thread{[&mutex, &other_tid, &other_name_read] {
     orbit_base::SetCurrentThreadName(kThreadName);
