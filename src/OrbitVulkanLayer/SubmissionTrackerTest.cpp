@@ -816,7 +816,7 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   std::vector<uint32_t> actual_slots_done_reading;
   auto fake_mark_query_slots_done_reading = [&actual_slots_done_reading](
                                                 VkDevice /*device*/,
-                                                const std::vector<uint32_t> slots_to_reset) {
+                                                const std::vector<uint32_t>& slots_to_reset) {
     actual_slots_done_reading.insert(actual_slots_done_reading.end(), slots_to_reset.begin(),
                                      slots_to_reset.end());
   };
@@ -826,7 +826,7 @@ TEST_F(SubmissionTrackerTest, MultipleSubmissionsWontBeOutOfOrder) {
   std::vector<uint32_t> actual_slots_marked_reset;
   auto fake_mark_query_slots_for_reset = [&actual_slots_marked_reset](
                                              VkDevice /*device*/,
-                                             const std::vector<uint32_t> slots_to_reset) {
+                                             const std::vector<uint32_t>& slots_to_reset) {
     actual_slots_marked_reset.insert(actual_slots_marked_reset.end(), slots_to_reset.begin(),
                                      slots_to_reset.end());
   };
@@ -1045,7 +1045,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerTimestampsForACompleteSubmis
 
   const char* text = "Text";
   constexpr uint64_t expected_text_key = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text](const std::string& str) {
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
@@ -1105,7 +1105,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerEndEvenWhenBeginNotCaptured)
 
   const char* text = "Text";
   constexpr uint64_t expected_text_key = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text](const std::string& str) {
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
@@ -1161,7 +1161,8 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
   const std::string text_inner = "Inner";
   constexpr uint64_t expected_text_key_outer = 111;
   constexpr uint64_t expected_text_key_inner = 112;
-  auto mock_intern_string_if_necessary_and_get_key = [&text_outer, &text_inner](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text_outer,
+                                                      &text_inner](const std::string& str) {
     if (str == text_outer) {
       return expected_text_key_outer;
     }
@@ -1240,7 +1241,8 @@ TEST_F(SubmissionTrackerTest,
   const std::string text_inner = "Inner";
   constexpr uint64_t expected_text_key_outer = 111;
   constexpr uint64_t expected_text_key_inner = 112;
-  auto mock_intern_string_if_necessary_and_get_key = [&text_outer, &text_inner](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text_outer,
+                                                      &text_inner](const std::string& str) {
     if (str == text_outer) {
       return expected_text_key_outer;
     }
@@ -1322,7 +1324,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissions) {
 
   const char* text = "Text";
   constexpr uint64_t expected_text_key = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text](const std::string& str) {
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
@@ -1417,7 +1419,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveDebugMarkerAcrossTwoSubmissionsEvenWhen
 
   const char* text = "Text";
   constexpr uint64_t expected_text_key = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text](const std::string& str) {
     EXPECT_STREQ(text, str.c_str());
     return expected_text_key;
   };
@@ -1590,7 +1592,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
   const std::string text_outer = "Outer";
   const std::string text_inner = "Inner";
   constexpr uint64_t expected_text_key_outer = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text_outer](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text_outer](const std::string& str) {
     if (str == text_outer) {
       return expected_text_key_outer;
     }
@@ -1647,7 +1649,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   std::vector<uint32_t> actual_slots_done_reading;
   auto mock_mark_slots_done_reading = [&actual_slots_done_reading](
                                           VkDevice /*device*/,
-                                          const std::vector<uint32_t> slots_to_reset) {
+                                          const std::vector<uint32_t>& slots_to_reset) {
     actual_slots_done_reading.insert(actual_slots_done_reading.end(), slots_to_reset.begin(),
                                      slots_to_reset.end());
   };
@@ -1657,7 +1659,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   std::vector<uint32_t> actual_slots_marked_for_reset;
   auto mock_mark_slots_for_reset = [&actual_slots_marked_for_reset](
                                        VkDevice /*device*/,
-                                       const std::vector<uint32_t> slots_to_reset) {
+                                       const std::vector<uint32_t>& slots_to_reset) {
     actual_slots_marked_for_reset.insert(actual_slots_marked_for_reset.end(),
                                          slots_to_reset.begin(), slots_to_reset.end());
   };
@@ -1674,7 +1676,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBufferAcro
   const std::string text_outer = "Outer";
   const std::string text_inner = "Inner";
   constexpr uint64_t expected_outer_text_key = 111;
-  auto mock_intern_string_if_necessary_and_get_key = [&text_outer](std::string str) {
+  auto mock_intern_string_if_necessary_and_get_key = [&text_outer](const std::string& str) {
     EXPECT_EQ(text_outer, str);
     return expected_outer_text_key;
   };

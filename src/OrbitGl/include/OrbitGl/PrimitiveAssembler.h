@@ -61,28 +61,30 @@ class PrimitiveAssembler {
   void PushTranslation(float x, float y, float z = 0.f) { batcher_->PushTranslation(x, y, z); }
   void PopTranslation() { batcher_->PopTranslation(); }
 
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
+  void AddLine(const Vec2& from, const Vec2& to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
+  void AddVerticalLine(const Vec2& pos, float size, float z, const Color& color,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, std::shared_ptr<Pickable> pickable);
-  void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
-                       std::shared_ptr<Pickable> pickable);
+  void AddLine(const Vec2& from, const Vec2& to, float z, const Color& color,
+               const std::shared_ptr<Pickable>& pickable);
+  void AddVerticalLine(const Vec2& pos, float size, float z, const Color& color,
+                       const std::shared_ptr<Pickable>& pickable);
 
   void AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Quad& box, float z, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Quad& box, float z, const Color& color, std::shared_ptr<Pickable> pickable);
+  void AddBox(const Quad& box, float z, const Color& color,
+              const std::shared_ptr<Pickable>& pickable);
 
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+  void AddShadedBox(const Vec2& pos, const Vec2& size, float z, const Color& color);
+  void AddShadedBox(const Vec2& pos, const Vec2& size, float z, const Color& color,
                     ShadingDirection shading_direction);
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
+  void AddShadedBox(const Vec2& pos, const Vec2& size, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data,
                     ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
-  void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
-                    std::shared_ptr<Pickable> pickable,
+  void AddShadedBox(const Vec2& pos, const Vec2& size, float z, const Color& color,
+                    const std::shared_ptr<Pickable>& pickable,
                     ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Color& color,
                      float margin = 0);
@@ -92,7 +94,7 @@ class PrimitiveAssembler {
                           std::unique_ptr<PickingUserData> user_data,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, float z, const Color& color,
-                   std::shared_ptr<Pickable> pickable);
+                   const std::shared_ptr<Pickable>& pickable);
   void AddTriangle(const Triangle& triangle, float z, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
@@ -132,10 +134,10 @@ class PrimitiveAssembler {
  private:
   [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
 
-  void AddBottomLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddTopLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddBottomLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
+  void AddTopLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
+  void AddTopRightRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
+  void AddBottomRightRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
   void AddTriangle(const Triangle& triangle, float z, const Color& color,
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);

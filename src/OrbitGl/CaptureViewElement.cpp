@@ -157,7 +157,7 @@ bool CaptureViewElement::ContainsPointRecursively(const Vec2& point) const {
 }
 
 CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
-    MouseEvent mouse_event, const ModifierKeys& modifiers) {
+    const MouseEvent& mouse_event, const ModifierKeys& modifiers) {
   Vec2 mouse_pos = mouse_event.mouse_position;
 
   if (mouse_event.event_type != MouseEventType::kMouseLeave &&

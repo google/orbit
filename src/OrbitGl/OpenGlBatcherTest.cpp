@@ -33,7 +33,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
   }
 
   // Auxiliary methods to simplify the addition of lines, boxes and triangles.
-  void AddLineHelper(Vec2 from, Vec2 to, float z, const Color& color,
+  void AddLineHelper(const Vec2& from, const Vec2& to, float z, const Color& color,
                      std::unique_ptr<PickingUserData> user_data = nullptr) {
     Color picking_color = PickingId::ToColor(PickingType::kLine, GetNumElements(), GetBatcherId());
     return AddLine(from, to, z, color, picking_color, std::move(user_data));
@@ -231,7 +231,7 @@ struct Line3D {
   Vec3 end_point;
 };
 
-void LineEq(const Line3D lhs, const Line& rhs) {
+void LineEq(const Line3D& lhs, const Line& rhs) {
   EXPECT_EQ(lhs.start_point[0], rhs.start_point[0]);
   EXPECT_EQ(lhs.start_point[1], rhs.start_point[1]);
 

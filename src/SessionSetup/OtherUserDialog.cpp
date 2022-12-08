@@ -16,7 +16,7 @@ constexpr const char* kRememberKey = "OtherUserDialog.RememberKey";
 
 namespace orbit_session_setup {
 
-OtherUserDialog::OtherUserDialog(QString user_name, QWidget* parent)
+OtherUserDialog::OtherUserDialog(const QString& user_name, QWidget* parent)
     : QDialog(parent), ui_(std::make_unique<Ui::OtherUserDialog>()) {
   ui_->setupUi(this);
   ui_->userLabel->setText(user_name);

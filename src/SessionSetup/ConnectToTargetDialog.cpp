@@ -84,7 +84,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 void ConnectToTargetDialog::OnProcessListUpdate(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
   std::unique_ptr<orbit_client_data::ProcessData> matching_process =
-      TryToFindProcessData(process_list, target_.process_name_or_path.toStdString());
+      TryToFindProcessData(std::move(process_list), target_.process_name_or_path.toStdString());
 
   if (matching_process != nullptr) {
     ssh_connection_->GetProcessManager()->SetProcessListUpdateListener(nullptr);

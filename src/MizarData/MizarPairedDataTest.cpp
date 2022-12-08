@@ -261,7 +261,7 @@ TEST_F(MizarPairedDataTest, FrameTrackManagerIsProperlyInitialized) {
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   MizarPairedDataUnderTest mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<std::vector<SampledFunctionId>> actual_ids_fed_to_action;
-  auto action = [&actual_ids_fed_to_action](const std::vector<SampledFunctionId> ids) {
+  auto action = [&actual_ids_fed_to_action](const std::vector<SampledFunctionId>& ids) {
     actual_ids_fed_to_action.push_back(ids);
   };
 

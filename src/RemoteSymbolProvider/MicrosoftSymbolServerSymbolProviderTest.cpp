@@ -71,9 +71,9 @@ class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
     EXPECT_CALL(download_manager_, Download)
         .Times(1)
         .WillOnce([expected_state, expected_url = std::move(expected_url),
-                   error_msg = std::move(error_msg)](std::string url,
-                                                     std::filesystem::path /*save_file_path*/,
-                                                     orbit_base::StopToken /*token*/)
+                   error_msg = std::move(error_msg)](
+                      const std::string& url, const std::filesystem::path& /*save_file_path*/,
+                      const orbit_base::StopToken& /*token*/)
                       -> Future<ErrorMessageOr<CanceledOr<NotFoundOr<void>>>> {
           EXPECT_EQ(url, expected_url);
 

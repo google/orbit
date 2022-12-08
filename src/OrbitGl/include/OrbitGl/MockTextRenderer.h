@@ -49,7 +49,7 @@ class MockTextRenderer : public TextRenderer {
     return vertical_position_in_add_text.size() <= 1;
   }
   [[nodiscard]] const int GetNumAddTextCalls() const { return num_add_text_calls_; }
-  [[nodiscard]] bool IsTextInsideRectangle(Vec2 start, Vec2 size) const;
+  [[nodiscard]] bool IsTextInsideRectangle(const Vec2& start, const Vec2& size) const;
   [[nodiscard]] bool IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const;
 
  private:

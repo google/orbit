@@ -33,7 +33,7 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   MemoryInfoHandler(MemoryInfoHandler&&) = delete;
   MemoryInfoHandler& operator=(MemoryInfoHandler&&) = delete;
 
-  void Start(orbit_grpc_protos::CaptureOptions capture_options);
+  void Start(const orbit_grpc_protos::CaptureOptions& capture_options);
   void Stop();
 
  private:

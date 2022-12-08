@@ -21,7 +21,7 @@
 namespace orbit_data_views {
 
 int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_view action_name) {
-  auto matcher = [&action_name](DataView::Action action) {
+  auto matcher = [&action_name](const DataView::Action& action) {
     return action.name == std::string{action_name};
   };
 

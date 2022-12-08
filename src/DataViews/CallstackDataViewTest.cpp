@@ -6,6 +6,7 @@
 #include <absl/hash/hash.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -350,7 +351,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return functions_selected.at(index.value());
       });
 
-  auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
+  auto verify_context_menu_action_availability = [&](absl::Span<const int> selected_indices) {
     FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
         view_.GetContextMenuWithGrouping(0, selected_indices));
 

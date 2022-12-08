@@ -17,7 +17,7 @@
 
 namespace orbit_linux_capture_service {
 
-void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options) {
+void MemoryInfoHandler::Start(const orbit_grpc_protos::CaptureOptions& capture_options) {
   if (!capture_options.collect_memory_info()) return;
 
   SetSamplingStartTimestampNs(orbit_base::CaptureTimestampNs());
