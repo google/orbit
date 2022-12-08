@@ -919,7 +919,7 @@ void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
   }
 
   bool highlight = index.data(CallTreeViewItemModel::kMatchesCustomFilterRole).toBool();
-  if (option.state & QStyle::State_Selected) {
+  if (option.state & QStyle::State_Selected != 0u) {
     painter->fillRect(option.rect, option.palette.highlight());
     // Don't highlight the progress bar text when the row is selected, for consistency with the
     // other columns.

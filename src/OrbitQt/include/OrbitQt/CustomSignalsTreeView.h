@@ -25,7 +25,7 @@ class CustomSignalsTreeView : public QTreeView {
 
   void mousePressEvent(QMouseEvent* event) override {
     QModelIndex index = indexAt(event->pos());
-    bool alt_pressed = event->modifiers() & Qt::AltModifier;
+    bool alt_pressed = event->modifiers() & Qt::AltModifier != 0u;
     if (index.isValid() && alt_pressed) {
       emit altKeyAndMousePressed(event->pos());
     } else {

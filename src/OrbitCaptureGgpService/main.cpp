@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     orbit_base::InitLogFile(GetLogFilePath(log_directory));
   }
 
-  if (!absl::GetFlag(FLAGS_pid)) {
+  if (absl::GetFlag(FLAGS_pid) == 0) {
     ORBIT_FATAL("pid to capture not provided; set using -pid");
   }
 

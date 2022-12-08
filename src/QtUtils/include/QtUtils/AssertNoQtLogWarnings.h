@@ -26,8 +26,8 @@ class AssertNoQtLogWarnings {
                                  const QString& msg) {
     static bool NO_WARNING_MSG = true;
     QByteArray localMsg = msg.toLocal8Bit();
-    const char* file = context.file ? context.file : "";
-    const char* function = context.function ? context.function : "";
+    const char* file = context.file != nullptr ? context.file : "";
+    const char* function = context.function != nullptr ? context.function : "";
     switch (type) {
       case QtDebugMsg:
         ORBIT_LOG("Qt debug message: %s (%s:%u, %s)", localMsg.constData(), file, context.line,

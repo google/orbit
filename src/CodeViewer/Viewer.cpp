@@ -289,7 +289,7 @@ void Viewer::DrawLineNumbers(QPaintEvent* event) {
 
 // For example, from a value = 0.5, we want to print "50.00 %"
 static QString FractionToPercentageString(int a, int b) {
-  double ratio = (!b ? 0. : static_cast<double>(a) / b);
+  double ratio = (b == 0 ? 0. : static_cast<double>(a) / b);
   double percentage_ratio = std::clamp(ratio * 100., 0., 100.);
   return QString{"%1 %"}.arg(percentage_ratio, 0, 'f', 2);
 }

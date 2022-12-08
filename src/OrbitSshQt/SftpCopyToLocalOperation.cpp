@@ -188,7 +188,7 @@ void SftpCopyToLocalOperation::SetError(std::error_code e) {
 void SftpCopyToLocalOperation::HandleChannelShutdown() { SetError(Error::kUncleanChannelShutdown); }
 
 void SftpCopyToLocalOperation::HandleEagain() {
-  if (session_) {
+  if (session_ != nullptr) {
     session_->HandleEagain();
   }
 }

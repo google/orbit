@@ -1418,7 +1418,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
     live_functions_data_view = &live_functions_controller.value()->GetDataView();
   }
   bool is_live_function_data_view_initialized = live_functions_data_view != nullptr;
-  if (timer_info) {
+  if (timer_info != nullptr) {
     ORBIT_CHECK(is_live_function_data_view_initialized);
 
     if (const std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);

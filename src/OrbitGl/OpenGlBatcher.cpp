@@ -98,7 +98,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
 
 void OpenGlBatcher::DrawLayer(float layer, bool picking) {
   ORBIT_SCOPE_FUNCTION;
-  if (!primitive_buffers_by_layer_.count(layer)) return;
+  if (primitive_buffers_by_layer_.count(layer) == 0u) return;
   initializeOpenGLFunctions();
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);

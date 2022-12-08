@@ -81,56 +81,56 @@ struct PerfRecordSample {
   ring_buffer->ReadRawAtOffset(&event.header, 0, sizeof(perf_event_header));
   current_offset += sizeof(perf_event_header);
 
-  if (flags.sample_type & PERF_SAMPLE_IDENTIFIER) {
+  if ((flags.sample_type & PERF_SAMPLE_IDENTIFIER) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.sample_id, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_IP) {
+  if ((flags.sample_type & PERF_SAMPLE_IP) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.ip, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_TID) {
+  if ((flags.sample_type & PERF_SAMPLE_TID) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.pid, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
     ring_buffer->ReadRawAtOffset(&event.tid, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_TIME) {
+  if ((flags.sample_type & PERF_SAMPLE_TIME) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.time, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_ADDR) {
+  if ((flags.sample_type & PERF_SAMPLE_ADDR) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.addr, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_ID) {
+  if ((flags.sample_type & PERF_SAMPLE_ID) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.id, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_STREAM_ID) {
+  if ((flags.sample_type & PERF_SAMPLE_STREAM_ID) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.stream_id, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_CPU) {
+  if ((flags.sample_type & PERF_SAMPLE_CPU) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.cpu, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
     ring_buffer->ReadRawAtOffset(&event.res, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_PERIOD) {
+  if ((flags.sample_type & PERF_SAMPLE_PERIOD) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.period, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_CALLCHAIN) {
+  if ((flags.sample_type & PERF_SAMPLE_CALLCHAIN) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.ips_size, current_offset, sizeof(uint64_t));
 
     current_offset += sizeof(uint64_t);
@@ -142,7 +142,7 @@ struct PerfRecordSample {
     current_offset += event.ips_size * sizeof(uint64_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_RAW) {
+  if ((flags.sample_type & PERF_SAMPLE_RAW) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.raw_size, current_offset, sizeof(uint32_t));
     current_offset += sizeof(uint32_t);
     event.raw_data = make_unique_for_overwrite<uint8_t[]>(event.raw_size);
@@ -151,7 +151,7 @@ struct PerfRecordSample {
     current_offset += event.raw_size * sizeof(uint8_t);
   }
 
-  if (flags.sample_type & PERF_SAMPLE_REGS_USER) {
+  if ((flags.sample_type & PERF_SAMPLE_REGS_USER) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.abi, current_offset, sizeof(uint64_t));
 
     current_offset += sizeof(uint64_t);
@@ -166,7 +166,7 @@ struct PerfRecordSample {
     }
   }
 
-  if (flags.sample_type & PERF_SAMPLE_STACK_USER) {
+  if ((flags.sample_type & PERF_SAMPLE_STACK_USER) != 0u) {
     ring_buffer->ReadRawAtOffset(&event.stack_size, current_offset, sizeof(uint64_t));
     current_offset += sizeof(uint64_t);
     if (event.stack_size != 0u && copy_stack_related_data) {

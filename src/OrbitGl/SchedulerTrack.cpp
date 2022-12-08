@@ -121,7 +121,8 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
   }
   if (!IsTimerActive(timer_info)) {
     const TimerInfo* selected_timer = draw_data.selected_timer;
-    bool is_same_pid = selected_timer && timer_info.process_id() == selected_timer->process_id();
+    bool is_same_pid =
+        (selected_timer != nullptr) && timer_info.process_id() == selected_timer->process_id();
     return is_same_pid ? kSamePidColor : kInactiveColor;
   }
   return orbit_gl::GetThreadColor(timer_info.thread_id());
@@ -157,7 +158,7 @@ std::string SchedulerTrack::GetTooltip() const {
 std::string SchedulerTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
                                           PickingId id) const {
   const orbit_client_protos::TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
-  if (!timer_info) {
+  if (timer_info == nullptr) {
     return "";
   }
 
