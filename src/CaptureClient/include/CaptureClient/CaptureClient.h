@@ -41,7 +41,7 @@ class CaptureClient {
       std::unique_ptr<CaptureEventProcessor> capture_event_processor,
       const orbit_client_data::ModuleManager& module_manager,
       const orbit_client_data::ProcessData& process_data,
-      const ClientCaptureOptions& capture_client_options);
+      const ClientCaptureOptions& capture_options);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already

@@ -56,7 +56,7 @@ class MockBatcher : public Batcher {
   [[nodiscard]] int GetNumTriangles() const;
   [[nodiscard]] int GetNumBoxes() const;
 
-  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 start, Vec2 end) const;
+  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 start, Vec2 size) const;
   [[nodiscard]] bool IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) const;
 
  private:

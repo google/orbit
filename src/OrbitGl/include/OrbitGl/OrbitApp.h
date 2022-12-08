@@ -208,7 +208,7 @@ class OrbitApp final : public DataViewFactory,
     ORBIT_CHECK(capture_window_ != nullptr);
     return capture_window_->GetTimeGraph();
   }
-  void SetIntrospectionWindow(IntrospectionWindow* canvas);
+  void SetIntrospectionWindow(IntrospectionWindow* introspection_window);
   void StopIntrospection();
 
   void SetSamplingReport(
@@ -467,7 +467,7 @@ class OrbitApp final : public DataViewFactory,
       bool origin_is_multiple_threads);
   void ClearInspection();
 
-  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;
+  void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
 
   [[nodiscard]] bool IsTracepointSelected(

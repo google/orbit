@@ -41,7 +41,7 @@ class MappingItemModel : public QAbstractListModel {
   // in Qt.
   bool RemoveRows(int row, int count, const QModelIndex& parent = QModelIndex{});
 
-  bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+  bool setData(const QModelIndex& idx, const QVariant& value, int role = Qt::EditRole) override;
 
   [[nodiscard]] Qt::DropActions supportedDropActions() const override { return Qt::MoveAction; }
 
