@@ -843,17 +843,6 @@ void OrbitMainWindow::SetSamplingReport(orbit_data_views::DataView* callstack_da
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
   UpdateCaptureStateDependentWidgets();
-
-  // Switch to sampling tab if:
-  //  * Report is non-empty
-  //  * Sampling-tab is not in the same widget as the capture tab
-  //  * Live-tab isn't selected in the same widget as the sampling tab
-  bool has_samples = sampling_report != nullptr && sampling_report->HasSamples();
-  QTabWidget* sampling_tab_parent = FindParentTabWidget(ui->samplingTab);
-  if (has_samples && (FindParentTabWidget(ui->CaptureTab) != sampling_tab_parent) &&
-      (sampling_tab_parent->currentWidget() != ui->liveTab)) {
-    sampling_tab_parent->setCurrentWidget(ui->samplingTab);
-  }
 }
 
 void OrbitMainWindow::SetSelectionSamplingReport(

@@ -220,14 +220,14 @@ class OrbitApp final : public DataViewFactory,
       const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data,
       bool has_summary);
   void ClearSelectionReport();
-  void SetTopDownView(const orbit_client_data::CaptureData& capture_data);
+  void SetTopDownView(const orbit_client_data::PostProcessedSamplingData& post_processed_data);
   void ClearTopDownView();
   void SetSelectionTopDownView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
       const orbit_client_data::CaptureData& capture_data);
   void ClearSelectionTopDownView();
 
-  void SetBottomUpView(const orbit_client_data::CaptureData& capture_data);
+  void SetBottomUpView(const orbit_client_data::PostProcessedSamplingData& post_processed_data);
   void ClearBottomUpView();
   void SetSelectionBottomUpView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,

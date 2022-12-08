@@ -441,8 +441,8 @@ Future<void> OrbitApp::OnCaptureComplete() {
 
         SetSamplingReport(&GetCaptureData().GetCallstackData(),
                           &GetCaptureData().post_processed_sampling_data());
-        SetTopDownView(GetCaptureData());
-        SetBottomUpView(GetCaptureData());
+        SetTopDownView(GetCaptureData().post_processed_sampling_data());
+        SetBottomUpView(GetCaptureData().post_processed_sampling_data());
 
         ORBIT_CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
@@ -1034,11 +1034,12 @@ void OrbitApp::ClearSelectionReport() {
   main_window_->SetSelectionSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
 }
 
-void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
+void OrbitApp::SetTopDownView(
+    const orbit_client_data::PostProcessedSamplingData& post_processed_data) {
   ORBIT_SCOPE_FUNCTION;
   std::unique_ptr<CallTreeView> top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-          capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
+          post_processed_data, *module_manager_, GetCaptureData());
   main_window_->SetTopDownView(std::move(top_down_view));
 }
 
@@ -1059,11 +1060,12 @@ void OrbitApp::ClearSelectionTopDownView() {
   main_window_->SetSelectionTopDownView(std::make_unique<CallTreeView>());
 }
 
-void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
+void OrbitApp::SetBottomUpView(
+    const orbit_client_data::PostProcessedSamplingData& post_processed_data) {
   ORBIT_SCOPE_FUNCTION;
   std::unique_ptr<CallTreeView> bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
-          capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
+          post_processed_data, *module_manager_, GetCaptureData());
   main_window_->SetBottomUpView(std::move(bottom_up_view));
 }
 
@@ -2319,8 +2321,8 @@ void OrbitApp::UpdateAfterSymbolLoading() {
     GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
     sampling_report_->UpdateReport(&capture_data.GetCallstackData(),
                                    &capture_data.post_processed_sampling_data());
-    SetTopDownView(capture_data);
-    SetBottomUpView(capture_data);
+    SetTopDownView(capture_data.post_processed_sampling_data());
+    SetBottomUpView(capture_data.post_processed_sampling_data());
   }
 
   if (selection_report_ == nullptr) {
@@ -2807,10 +2809,31 @@ const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
 }
 
 void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
+  main_window_->ClearCallstackInspection();
+  auto selected_callstack_events =
+      GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(min, max);
+  SetCaptureDataSelectionFields(selected_callstack_events, /*origin_is_multiple_threads=*/true);
+
   main_window_->SetLiveTabScopeStatsCollection(
       GetCaptureData().CreateScopeStatsCollection(min, max));
+  SetTopDownView(GetCaptureData().selection_post_processed_sampling_data());
+  SetBottomUpView(GetCaptureData().selection_post_processed_sampling_data());
+  SetSamplingReport(&GetCaptureData().selection_callstack_data(),
+                    &GetCaptureData().selection_post_processed_sampling_data());
+
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::ClearTimeRangeSelection() {
+  main_window_->ClearCallstackInspection();
+  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
+                                /*origin_is_multiple_threads*/ false);
+
   main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
+  SetTopDownView(GetCaptureData().post_processed_sampling_data());
+  SetBottomUpView(GetCaptureData().post_processed_sampling_data());
+  SetSamplingReport(&GetCaptureData().GetCallstackData(),
+                    &GetCaptureData().post_processed_sampling_data());
+
+  FireRefreshCallbacks();
 }
