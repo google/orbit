@@ -9,7 +9,6 @@
 #include <QCoreApplication>
 #include <QMetaObject>
 #include <QSettings>
-#include <QString>
 #include <Qt>
 #include <memory>
 
