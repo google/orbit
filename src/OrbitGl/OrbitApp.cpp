@@ -1120,7 +1120,7 @@ void OrbitApp::SetClipboard(std::string_view text) {
 }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(std::string_view file_name) {
-  OUTCOME_TRY(SavePreset(filename));
+  OUTCOME_TRY(SavePreset(file_name));
   ListPresets();
   FireRefreshCallbacks(DataViewType::kPresets);
   return outcome::success();
@@ -1138,8 +1138,8 @@ ErrorMessageOr<void> OrbitApp::SavePreset(std::string_view file_name) {
         function.pretty_name());
   }
 
-  auto filename_with_ext = std::string{filename};
-  if (!absl::EndsWith(filename, ".opr")) {
+  auto filename_with_ext = std::string{file_name};
+  if (!absl::EndsWith(file_name, ".opr")) {
     filename_with_ext += ".opr";
   }
 
