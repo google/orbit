@@ -276,6 +276,10 @@ class CaptureData {
   [[nodiscard]] std::optional<ThreadStateSliceInfo> FindThreadStateSliceInfoFromTimestamp(
       int64_t thread_id, uint64_t timestamp) const;
 
+  [[nodiscard]] std::unique_ptr<const ScopeStatsCollection> CreateScopeStatsCollection(
+      uint64_t min_tick, uint64_t max_tick) const;
+  [[nodiscard]] std::shared_ptr<const ScopeStatsCollection> GetAllScopeStatsCollection() const;
+
  private:
   orbit_grpc_protos::CaptureStarted capture_started_;
 

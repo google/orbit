@@ -349,66 +349,68 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
   absl::MutexLock mutex_lock(&mutex);
   bool initialization_complete = false;
 
-  main_thread_executor_->Schedule(
-      [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
-       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
-        absl::flat_hash_map<Track::Type, bool> track_type_visibility;
-        bool had_capture = capture_window_->GetTimeGraph();
-        if (had_capture) {
-          track_type_visibility =
-              capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
-        }
+  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, &capture_started,
+                                   file_path = std::move(file_path),
+                                   frame_track_function_ids =
+                                       std::move(frame_track_function_ids)]() mutable {
+    absl::flat_hash_map<Track::Type, bool> track_type_visibility;
+    bool had_capture = capture_window_->GetTimeGraph();
+    if (had_capture) {
+      track_type_visibility =
+          capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
+    }
 
-        ClearCapture();
+    ClearCapture();
 
-        // It is safe to do this write on the main thread, as the capture thread is suspended until
-        // this task is completely executed.
-        ConstructCaptureData(capture_started, file_path, std::move(frame_track_function_ids),
-                             data_source_);
-        GetMutableCaptureData().set_memory_warning_threshold_kb(
-            data_manager_->memory_warning_threshold_kb());
-        capture_window_->CreateTimeGraph(&GetMutableCaptureData());
-        orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
-        track_manager->SetIsDataFromSavedCapture(data_source_ ==
-                                                 CaptureData::DataSource::kLoadedCapture);
-        if (had_capture) {
-          track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
-        }
+    // It is safe to do this write on the main thread, as the capture thread is suspended until
+    // this task is completely executed.
+    ConstructCaptureData(capture_started, file_path, std::move(frame_track_function_ids),
+                         data_source_);
+    GetMutableCaptureData().set_memory_warning_threshold_kb(
+        data_manager_->memory_warning_threshold_kb());
+    capture_window_->CreateTimeGraph(&GetMutableCaptureData());
+    orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
+    track_manager->SetIsDataFromSavedCapture(data_source_ ==
+                                             CaptureData::DataSource::kLoadedCapture);
+    if (had_capture) {
+      track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
+    }
 
-        frame_track_online_processor_ =
-            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+    frame_track_online_processor_ =
+        orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-        ORBIT_CHECK(capture_started_callback_ != nullptr);
-        capture_started_callback_(file_path);
+    ORBIT_CHECK(capture_started_callback_ != nullptr);
+    capture_started_callback_(file_path);
 
-        if (!GetCaptureData().GetAllProvidedScopeIds().empty()) {
-          ORBIT_CHECK(select_live_tab_callback_);
-          select_live_tab_callback_();
-        }
+    if (!GetCaptureData().GetAllProvidedScopeIds().empty()) {
+      ORBIT_CHECK(select_live_tab_callback_);
+      select_live_tab_callback_();
+      main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
+    }
 
-        FireRefreshCallbacks();
+    FireRefreshCallbacks();
 
-        main_window_->AppendToCaptureLog(
-            MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
-            absl::StrFormat(
-                "Capture started on %s.",
-                absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
-                                 absl::LocalTimeZone())));
+    main_window_->AppendToCaptureLog(
+        MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
+        absl::StrFormat(
+            "Capture started on %s.",
+            absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
+                             absl::LocalTimeZone())));
 
-        orbit_version::Version capture_version{capture_started.orbit_version_major(),
-                                               capture_started.orbit_version_minor()};
-        orbit_version::Version current_version = orbit_version::GetVersion();
-        if (capture_version > current_version) {
-          std::string warning_message = absl::Substitute(
-              "The capture was taken with Orbit version $0.$1, which is higher than the current "
-              "version. Please use Orbit v$0.$1 or above to ensure all features are supported.",
-              capture_version.major_version, capture_version.minor_version);
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
-                                           absl::ZeroDuration(), warning_message);
-        }
-        absl::MutexLock lock(&mutex);
-        initialization_complete = true;
-      });
+    orbit_version::Version capture_version{capture_started.orbit_version_major(),
+                                           capture_started.orbit_version_minor()};
+    orbit_version::Version current_version = orbit_version::GetVersion();
+    if (capture_version > current_version) {
+      std::string warning_message = absl::Substitute(
+          "The capture was taken with Orbit version $0.$1, which is higher than the current "
+          "version. Please use Orbit v$0.$1 or above to ensure all features are supported.",
+          capture_version.major_version, capture_version.minor_version);
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
+                                       absl::ZeroDuration(), warning_message);
+    }
+    absl::MutexLock lock(&mutex);
+    initialization_complete = true;
+  });
 
   mutex.Await(absl::Condition(&initialization_complete));
 }
@@ -2812,4 +2814,13 @@ const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
   }
   ORBIT_CHECK(process_ptr != nullptr);
   return *process_ptr;
+}
+
+void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
+  main_window_->SetLiveTabScopeStatsCollection(
+      GetCaptureData().CreateScopeStatsCollection(min, max));
+}
+
+void OrbitApp::ClearTimeRangeSelection() {
+  main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
 }

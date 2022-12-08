@@ -6,11 +6,15 @@
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
+#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
+#include <absl/time/time.h>
 
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <ostream>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -22,6 +26,7 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
@@ -282,6 +287,15 @@ void CaptureWindow::RightUp() {
     auto result = selection_stats_.Generate(this, select_start_time_, select_stop_time_);
     if (result.has_error()) {
       ORBIT_ERROR("%s", result.error().message());
+    }
+  }
+
+  if (absl::GetFlag(FLAGS_time_range_selection)) {
+    if (select_start_pos_world_[0] == select_stop_pos_world_[0]) {
+      app_->ClearTimeRangeSelection();
+    } else {
+      app_->OnTimeRangeSelection(std::min(select_start_time_, select_stop_time_),
+                                 std::max(select_start_time_, select_stop_time_));
     }
   }
 

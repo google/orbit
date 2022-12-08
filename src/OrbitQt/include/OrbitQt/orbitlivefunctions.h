@@ -23,7 +23,6 @@
 #include "OrbitQt/orbiteventiterator.h"
 #include "OrbitQt/types.h"
 #include "Statistics/Histogram.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace Ui {
 class OrbitLiveFunctions;
@@ -52,6 +51,8 @@ class OrbitLiveFunctions : public QWidget {
   }
   void ShowHistogram(const std::vector<uint64_t>* data, std::string scope_name,
                      std::optional<orbit_client_data::ScopeId> scope_id);
+  void SetScopeStatsCollection(
+      std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection);
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;

@@ -15,6 +15,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
+#include "ClientData/ScopeStatsCollection.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
@@ -76,6 +77,9 @@ class MainWindowInterface {
 
   virtual bool IsConnected() = 0;
   [[nodiscard]] virtual bool IsLocalTarget() const = 0;
+
+  virtual void SetLiveTabScopeStatsCollection(
+      std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) = 0;
 };
 
 }  // namespace orbit_gl

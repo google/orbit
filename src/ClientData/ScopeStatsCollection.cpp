@@ -59,7 +59,7 @@ const ScopeStats& ScopeStatsCollection::GetScopeStatsOrDefault(ScopeId scope_id)
 }
 
 const std::vector<uint64_t>* ScopeStatsCollection::GetSortedTimerDurationsForScopeId(
-    ScopeId scope_id) {
+    ScopeId scope_id) const {
   if (!timer_durations_are_sorted_) {
     ORBIT_ERROR(
         "Calling GetSortedTimerDurationsForScopeId on unsorted timers. Must call OnDataChanged() "
