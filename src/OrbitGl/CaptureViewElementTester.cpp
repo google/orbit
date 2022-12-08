@@ -24,14 +24,14 @@ void orbit_gl::CaptureViewElementTester::CheckDrawFlags(CaptureViewElement* elem
 }
 
 void orbit_gl::CaptureViewElementTester::SimulatePreRender(CaptureViewElement* element) {
-  const int kMaxLayoutLoops = layout_.GetMaxLayoutingLoops();
+  const int max_layout_loops = layout_.GetMaxLayoutingLoops();
   int layout_loops = 0;
 
   do {
     element->UpdateLayout();
-  } while (++layout_loops < kMaxLayoutLoops && element->HasLayoutChanged());
+  } while (++layout_loops < max_layout_loops && element->HasLayoutChanged());
 
-  EXPECT_LT(layout_loops, kMaxLayoutLoops);
+  EXPECT_LT(layout_loops, max_layout_loops);
 }
 
 void orbit_gl::CaptureViewElementTester::SimulateDrawLoop(CaptureViewElement* element, bool draw,
@@ -59,27 +59,27 @@ void orbit_gl::CaptureViewElementTester::SimulateDrawLoopAndCheckFlags(CaptureVi
 
 void orbit_gl::CaptureViewElementTester::TestWidthPropagationToChildren(
     CaptureViewElement* element) {
-  const float kWidth = 100, kUpdatedWidth = 50;
+  const float width = 100, updated_width = 50;
   std::unordered_map<CaptureViewElement*, float> old_widths;
   for (auto& child : element->GetAllChildren()) {
     old_widths[child] = child->GetWidth();
   }
 
-  element->SetWidth(kWidth);
+  element->SetWidth(width);
   for (auto& child : element->GetAllChildren()) {
     if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
         0u) {
-      EXPECT_EQ(kWidth, child->GetWidth());
+      EXPECT_EQ(width, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());
     }
   }
 
-  element->SetWidth(kUpdatedWidth);
+  element->SetWidth(updated_width);
   for (auto& child : element->GetAllChildren()) {
     if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
         0u) {
-      EXPECT_EQ(kUpdatedWidth, child->GetWidth());
+      EXPECT_EQ(updated_width, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());
     }

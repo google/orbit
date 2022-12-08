@@ -112,9 +112,9 @@ template <typename SliderClass, int dim>
 static void TestDragType() {
   auto [slider, viewport, tester] = Setup<SliderClass>();
 
-  const float kPos = 0.5f;
-  const float kSize = 0.5f;
-  const int kOffset = 2;
+  constexpr float kPos = 0.5f;
+  constexpr float kSize = 0.5f;
+  constexpr int kOffset = 2;
 
   int drag_count = 0;
   float pos = kPos;
@@ -189,17 +189,17 @@ static void TestScroll(float slider_length = 0.25) {
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
   float pos;
-  const int kOffset = 2;
+  constexpr int kOffset = 2;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
   slider->SetNormalizedLength(slider_length);
 
   PickDragRelease<dim>(*slider, kOffset);
   EXPECT_LT(pos, 0.5f);
-  const float kCurPos = pos;
+  const float cur_pos = pos;
 
   PickDragRelease<dim>(*slider, 100 * scale - kOffset);
-  EXPECT_GT(pos, kCurPos);
+  EXPECT_GT(pos, cur_pos);
 }
 
 TEST(Slider, Scroll) {
@@ -265,7 +265,7 @@ static void TestScaling() {
 
   float size = 0.5f;
   float pos = 0.5f;
-  const int kOffset = 2;
+  constexpr int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
@@ -327,7 +327,7 @@ static void TestBreakScaling() {
 
   float pos;
   float len;
-  const int kOffset = 2;
+  constexpr int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
@@ -384,16 +384,16 @@ TEST(Slider, MouseMoveRequestRedraw) {
   // true. Simulate a draw loop to reinitialize the draw flags before testing their values below.
   tester.SimulateDrawLoop(slider.get(), true, true);
 
-  Vec2 kPosInSlider = slider->GetPos();
+  Vec2 pos_in_slider = slider->GetPos();
 
   // Any mouse move or mouse leave should trigger a redraw in the slider.
   EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_in_slider}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 
   EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_in_slider}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 
@@ -403,7 +403,7 @@ TEST(Slider, MouseMoveRequestRedraw) {
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 
   EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_in_slider}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 }

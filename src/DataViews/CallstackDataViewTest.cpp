@@ -150,10 +150,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   }
 
   constexpr int32_t kProcessId = 42;
-  const std::string kExecutablePath = "/path/to/text.exe";
+  const std::string executable_path = "/path/to/text.exe";
   orbit_grpc_protos::CaptureStarted capture_started{};
   capture_started.set_process_id(kProcessId);
-  capture_started.set_executable_path(kExecutablePath);
+  capture_started.set_executable_path(executable_path);
 
   auto capture_data =
       std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
@@ -320,7 +320,7 @@ TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
 }
 
 TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
-  const std::vector<uint64_t> kCallstackFrameAddresses{
+  const std::vector<uint64_t> callstack_frame_addresses{
       // Corresponding CallstackDataViewFrame: frame.module             frame.function
       0x3140,  //                                module 0 (loaded)        function 0 (selected)
       0x9260,  //                                module 1 (loaded)        function 1 (not selected)
@@ -329,7 +329,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       0x2200,  //                                module 4 (not loaded)    nullptr
   };
   const std::vector<bool> kFrameModuleNotNull{true, true, false, true, true};
-  const std::vector<bool> kFrameFunctionNotNull{true, true, false, false, false};
+  const std::vector<bool> frame_function_not_null{true, true, false, false, false};
 
   bool capture_connected;
   std::vector<bool> functions_selected{true, false, true, true, false};
@@ -364,7 +364,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     ContextMenuEntry select = ContextMenuEntry::kDisabled;
     ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     for (int selected_index : selected_indices) {
-      if (kFrameFunctionNotNull[selected_index] && capture_connected) {
+      if (frame_function_not_null[selected_index] && capture_connected) {
         // Source code and disassembly actions are available if and only if: 1) capture is connected
         // and 2) there exists a function that is not null.
         source_code_or_disassembly = ContextMenuEntry::kEnabled;
@@ -394,7 +394,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
   };
 
-  SetCallstackFromFrames(kCallstackFrameAddresses);
+  SetCallstackFromFrames(callstack_frame_addresses);
 
   capture_connected = false;
   verify_context_menu_action_availability({0});

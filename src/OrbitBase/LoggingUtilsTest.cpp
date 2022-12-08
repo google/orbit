@@ -30,32 +30,32 @@ std::filesystem::path GenerateTestLogFilePath(const absl::Time& timestamp) {
 }  // namespace
 
 TEST(LoggingUtils, ParseLogFileTimestamp) {
-  const std::string kFilenameInvalidNoTimestamp = "sfsdf-.log ";
-  const std::string kFilenameInvalidValidTimestampWrongFormat =
+  const std::string filename_invalid_no_timestamp = "sfsdf-.log ";
+  const std::string filename_invalid_valid_timestamp_wrong_format =
       "Orbitfoobar-2021_01_31_00_00_00-.log";
-  const std::string kFilenameValid = "Orbit-2021_01_31_10_21_33-7188.log";
+  const std::string filename_valid = "Orbit-2021_01_31_10_21_33-7188.log";
 
   {
     ErrorMessageOr<absl::Time> timestamp_or_error =
-        ParseLogFileTimestamp(kFilenameInvalidNoTimestamp);
+        ParseLogFileTimestamp(filename_invalid_no_timestamp);
     ASSERT_TRUE(timestamp_or_error.has_error());
     EXPECT_EQ(timestamp_or_error.error().message(),
               absl::StrFormat("Unable to extract time information from log file: %s",
-                              kFilenameInvalidNoTimestamp));
+                              filename_invalid_no_timestamp));
   }
 
   {
     ErrorMessageOr<absl::Time> timestamp_or_error =
-        ParseLogFileTimestamp(kFilenameInvalidValidTimestampWrongFormat);
+        ParseLogFileTimestamp(filename_invalid_valid_timestamp_wrong_format);
     ASSERT_TRUE(timestamp_or_error.has_error());
     EXPECT_THAT(
         timestamp_or_error.error().message(),
         testing::HasSubstr(absl::StrFormat("Error while parsing time information from log file %s",
-                                           kFilenameInvalidValidTimestampWrongFormat)));
+                                           filename_invalid_valid_timestamp_wrong_format)));
   }
 
   {
-    ErrorMessageOr<absl::Time> timestamp_or_error = ParseLogFileTimestamp(kFilenameValid);
+    ErrorMessageOr<absl::Time> timestamp_or_error = ParseLogFileTimestamp(filename_valid);
     absl::Time expected_result =
         absl::FromCivil(absl::CivilSecond(2021, 1, 31, 10, 21, 33), absl::UTCTimeZone());
     ASSERT_FALSE(timestamp_or_error.has_error()) << timestamp_or_error.error().message();

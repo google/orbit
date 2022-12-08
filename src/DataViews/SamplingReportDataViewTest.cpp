@@ -254,10 +254,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   }
 
   constexpr int32_t kProcessId = 42;
-  const std::string kExecutablePath = "/path/to/text.exe";
+  const std::string executable_path = "/path/to/text.exe";
   orbit_grpc_protos::CaptureStarted capture_started{};
   capture_started.set_process_id(kProcessId);
-  capture_started.set_executable_path(kExecutablePath);
+  capture_started.set_executable_path(executable_path);
 
   auto capture_data =
       std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},

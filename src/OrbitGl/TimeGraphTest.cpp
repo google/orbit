@@ -119,40 +119,40 @@ TEST_F(UnitTestTimeGraph, MouseWheel) {
 
   double original_time_window_us = time_graph->GetTimeWindowUs();
   const orbit_gl::TimelineUi* timeline_ui = time_graph->GetTimelineUi();
-  const Vec2 kLeftmostTimelineMousePosition = timeline_ui->GetPos();
+  const Vec2 leftmost_timeline_mouse_position = timeline_ui->GetPos();
 
   // The interactive area starts at the position of the timeline.
-  const Vec2 kInteractiveAreaPos = {timeline_ui->GetPos()[0], timeline_ui->GetPos()[1]};
+  const Vec2 interactive_area_pos = {timeline_ui->GetPos()[0], timeline_ui->GetPos()[1]};
   // That area is the size of the timeline in X and extends to the size of the timegraph in Y.
-  const Vec2 kInteractiveAreaSize = {timeline_ui->GetSize()[0], time_graph->GetSize()[1]};
+  const Vec2 interactive_area_size = {timeline_ui->GetSize()[0], time_graph->GetSize()[1]};
   // Mouse position in the center of the interactive area.
-  const Vec2 kCenteredMousePosition{kInteractiveAreaPos[0] + kInteractiveAreaSize[0] / 2.f,
-                                    kInteractiveAreaPos[1] + kInteractiveAreaSize[1] / 2.f};
+  const Vec2 centered_mouse_position{interactive_area_pos[0] + interactive_area_size[0] / 2.f,
+                                    interactive_area_pos[1] + interactive_area_size[1] / 2.f};
 
-  MouseWheelUp(kCenteredMousePosition, /*ctrl=*/false);
+  MouseWheelUp(centered_mouse_position, /*ctrl=*/false);
 
   // MouseWheel should scroll when ctrl is not pressed and therefore not modify the time_window.
   // TODO(b/233855224): Test that vertical panning works as expected.
   EXPECT_EQ(original_time_window_us, time_graph->GetTimeWindowUs());
 
-  MouseWheelUp(kCenteredMousePosition, /*ctrl=*/true);
+  MouseWheelUp(centered_mouse_position, /*ctrl=*/true);
 
   // With ctrl modifier, mouseWheel in the center should modify the time window.
   EXPECT_GT(original_time_window_us, time_graph->GetTimeWindowUs());
 
   // MouseWheelDown should revert the previous MouseWheelUp.
-  MouseWheelDown(kCenteredMousePosition, /*ctrl=*/true);
+  MouseWheelDown(centered_mouse_position, /*ctrl=*/true);
   EXPECT_DOUBLE_EQ(original_time_window_us, time_graph->GetTimeWindowUs());
 
   // In the timeline, mouseWheel should also modify the time window. In addition, if the mouse is on
   // the leftmost position, the minimum visible timestamp shouldn't change.
   double min_visible_ns = time_graph->GetMinTimeUs();
-  MouseWheelUp(kLeftmostTimelineMousePosition, /*ctrl=*/false);
+  MouseWheelUp(leftmost_timeline_mouse_position, /*ctrl=*/false);
   EXPECT_GT(original_time_window_us, time_graph->GetTimeWindowUs());
   EXPECT_EQ(min_visible_ns, time_graph->GetMinTimeUs());
 
   // Again, MouseWheelDown in the Timeline should revert the previous change.
-  MouseWheelDown(kLeftmostTimelineMousePosition, /*ctrl=*/false);
+  MouseWheelDown(leftmost_timeline_mouse_position, /*ctrl=*/false);
   EXPECT_DOUBLE_EQ(original_time_window_us, time_graph->GetTimeWindowUs());
   EXPECT_EQ(min_visible_ns, time_graph->GetMinTimeUs());
 }

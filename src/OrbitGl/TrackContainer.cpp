@@ -143,9 +143,9 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 
 [[nodiscard]] Color GetIteratorBoxColor(uint64_t index) {
   constexpr uint64_t kNumColors = 2;
-  const Color kLightBlueGray = Color(177, 203, 250, 60);
-  const Color kMidBlueGray = Color(81, 102, 157, 60);
-  Color colors[kNumColors] = {kLightBlueGray, kMidBlueGray};
+  const Color light_blue_gray = Color(177, 203, 250, 60);
+  const Color mid_blue_gray = Color(81, 102, 157, 60);
+  Color colors[kNumColors] = {light_blue_gray, mid_blue_gray};
   return colors[index % kNumColors];
 }
 
@@ -162,10 +162,10 @@ void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
 
   float max_size = size[0];
 
-  const Color kBlack(0, 0, 0, 255);
+  const Color black(0, 0, 0, 255);
   float text_width = text_renderer.AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0], text_box_y + layout_->GetTextOffset(), GlCanvas::kZValueOverlayLabel,
-      {layout_->GetFontSize(), kBlack, max_size}, time.length());
+      {layout_->GetFontSize(), black, max_size}, time.length());
 
   float box_height = layout_->GetTextBoxHeight();
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
@@ -173,8 +173,8 @@ void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
 
   Quad white_box = MakeBox(white_box_position, white_box_size);
 
-  const Color kWhite(255, 255, 255, 255);
-  primitive_assembler.AddBox(white_box, GlCanvas::kZValueOverlayLabel, kWhite);
+  const Color white(255, 255, 255, 255);
+  primitive_assembler.AddBox(white_box, GlCanvas::kZValueOverlayLabel, white);
 
   Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + box_height / 2.f);
   Vec2 line_to(pos[0] + size[0], white_box_position[1] + box_height / 2.f);
@@ -275,8 +275,8 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
 
     // We do not want the overall box to add any color, so we just set alpha to
     // 0.
-    const Color kColorBlackTransparent(0, 0, 0, 0);
-    DrawIteratorBox(primitive_assembler, text_renderer, pos, size, kColorBlackTransparent, label,
+    const Color color_black_transparent(0, 0, 0, 0);
+    DrawIteratorBox(primitive_assembler, text_renderer, pos, size, color_black_transparent, label,
                     time, text_y);
   }
 }
@@ -339,8 +339,8 @@ void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_a
       });
     }
 
-    static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
-    primitive_assembler.AddBox(MakeBox(pos, size), z_value, kIncompleteDataIntervalOrange,
+    static const Color incomplete_data_interval_orange{255, 128, 0, 32};
+    primitive_assembler.AddBox(MakeBox(pos, size), z_value, incomplete_data_interval_orange,
                                std::move(user_data));
   }
 }
@@ -435,14 +435,14 @@ void TrackContainer::DrawThreadDependencyArrow(
 void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assembler,
                                           PickingMode picking_mode) {
   if (app_->selected_thread_state_slice() != std::nullopt) {
-    const Color kSelectedSliceArrowColor{255, 255, 255, 255};
+    const Color selected_slice_arrow_color{255, 255, 255, 255};
     DrawThreadDependencyArrow(primitive_assembler, app_->selected_thread_state_slice().value(),
-                              kSelectedSliceArrowColor, picking_mode);
+                              selected_slice_arrow_color, picking_mode);
   }
   if (app_->hovered_thread_state_slice() != std::nullopt) {
-    const Color kHoveredSliceArrowColor{255, 255, 255, 64};
+    const Color hovered_slice_arrow_color{255, 255, 255, 64};
     DrawThreadDependencyArrow(primitive_assembler, app_->hovered_thread_state_slice().value(),
-                              kHoveredSliceArrowColor, picking_mode);
+                              hovered_slice_arrow_color, picking_mode);
   }
 }
 

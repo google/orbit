@@ -395,7 +395,7 @@ void TimeGraph::ProcessPageFaultsInfo(const orbit_client_data::PageFaultsInfo& p
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& modifiers) {
   if (delta == 0) return EventResult::kIgnored;
-  const float kScrollingRatioPerDelta = 0.05f;
+  constexpr float kScrollingRatioPerDelta = 0.05f;
 
   if (modifiers.ctrl) {
     double mouse_ratio = (mouse_pos[0] - GetTimelinePos()[0]) / GetTimelineWidth();
@@ -868,10 +868,10 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   // Vertical green line at mouse x position.
   if (draw_context.picking_mode == PickingMode::kNone &&
       draw_context.current_mouse_tick.has_value()) {
-    const Color kGreenLineColor{0, 255, 0, 127};
+    const Color green_line_color{0, 255, 0, 127};
     Vec2 green_line_pos = {GetWorldFromTick(draw_context.current_mouse_tick.value()), GetPos()[1]};
     primitive_assembler.AddVerticalLine(green_line_pos, GetHeight(), GlCanvas::kZValueUi,
-                                        kGreenLineColor);
+                                        green_line_color);
   }
 
   // TODO(http://b/217719000): We are drawing boxes in margin positions because some elements are

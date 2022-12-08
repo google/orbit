@@ -49,21 +49,21 @@ QPixmap ColorizeIcon(const QPixmap& pixmap, const QColor& color) {
 }
 
 QPixmap GetGreenConnectedIcon() {
-  const static QPixmap kGreenConnectedIcon =
+  const static QPixmap green_connected_icon =
       ColorizeIcon(QPixmap{":/actions/connected"}, kGreenColor);
-  return kGreenConnectedIcon;
+  return green_connected_icon;
 }
 
 QPixmap GetOrangeDisconnectedIcon() {
-  const static QPixmap kOrangeDisconnectedIcon =
+  const static QPixmap orange_disconnected_icon =
       ColorizeIcon(QPixmap{":/actions/alert"}, kOrangeColor);
-  return kOrangeDisconnectedIcon;
+  return orange_disconnected_icon;
 }
 
 QPixmap GetRedDisconnectedIcon() {
-  const static QPixmap kRedDisconnectedIcon =
+  const static QPixmap red_disconnected_icon =
       ColorizeIcon(QPixmap{":/actions/disconnected"}, kRedColor);
-  return kRedDisconnectedIcon;
+  return red_disconnected_icon;
 }
 
 }  // namespace

@@ -77,11 +77,11 @@ TEST(Button, SizeCannotBeZero) {
 
 TEST(Button, NameWorksAsExpected) {
   orbit_gl::CaptureViewElementTester tester;
-  const std::string kName = "UnitTest";
+  const std::string name = "UnitTest";
   std::shared_ptr<Button> button =
-      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout(), kName);
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout(), name);
 
-  EXPECT_EQ(button->GetName(), kName);
+  EXPECT_EQ(button->GetName(), name);
 }
 
 TEST(Button, MouseReleaseCallback) {
@@ -118,11 +118,11 @@ TEST(Button, Rendering) {
   std::shared_ptr<Button> button =
       std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
-  const Vec2 kSize(400, 50);
-  const Vec2 kPos(10, 10);
-  button->SetWidth(kSize[0]);
-  button->SetHeight(kSize[1]);
-  button->SetPos(kPos[0], kPos[1]);
+  const Vec2 size(400, 50);
+  const Vec2 pos(10, 10);
+  button->SetWidth(size[0]);
+  button->SetHeight(size[1]);
+  button->SetPos(pos[0], pos[1]);
 
   tester.SimulateDrawLoop(button.get(), true, false);
 
@@ -132,7 +132,7 @@ TEST(Button, Rendering) {
   // I don't really care how the button is represented, but I expect at least a single box to be
   // drawn.
   EXPECT_GE(batcher.GetNumBoxes(), 1);
-  EXPECT_TRUE(batcher.IsEverythingInsideRectangle(kPos, kSize));
+  EXPECT_TRUE(batcher.IsEverythingInsideRectangle(pos, size));
   EXPECT_TRUE(
       batcher.IsEverythingBetweenZLayers(GlCanvas::kZValueButtonBg, GlCanvas::kZValueButton));
 

@@ -43,13 +43,13 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
   ASSERT_THAT(temporary_file_or_error, HasNoError());
   orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
   ASSERT_TRUE(temporary_file.file_path().has_parent_path());
-  const std::filesystem::path kSymbolCacheDir = temporary_file.file_path().parent_path();
+  const std::filesystem::path symbol_cache_dir = temporary_file.file_path().parent_path();
 
   orbit_symbols::MockSymbolCache symbol_cache;
   EXPECT_CALL(symbol_cache, GenerateCachedFilePath)
-      .WillRepeatedly([&kSymbolCacheDir](const std::filesystem::path& module_file_path) {
+      .WillRepeatedly([&symbol_cache_dir](const std::filesystem::path& module_file_path) {
         auto file_name = absl::StrReplaceAll(module_file_path.string(), {{"/", "_"}});
-        return kSymbolCacheDir / file_name;
+        return symbol_cache_dir / file_name;
       });
 
   orbit_http::HttpDownloadManager download_manager{};
@@ -58,13 +58,13 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor{
       orbit_qt_utils::MainThreadExecutorImpl::Create()};
 
-  const std::string kValidModuleName{"d3d11.pdb"};
-  const std::string kValidModuleBuildId{"FF5440275BFED43A86CC2B1F287A72151"};
-  orbit_symbol_provider::ModuleIdentifier kValidModuleId{kValidModuleName, kValidModuleBuildId};
+  const std::string valid_module_name{"d3d11.pdb"};
+  const std::string valid_module_build_id{"FF5440275BFED43A86CC2B1F287A72151"};
+  orbit_symbol_provider::ModuleIdentifier valid_module_id{valid_module_name, valid_module_build_id};
 
   orbit_base::StopSource stop_source{};
 
-  symbol_provider.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
+  symbol_provider.RetrieveSymbols(valid_module_id, stop_source.GetStopToken())
       .Then(executor.get(), [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         orbit_symbol_provider::SymbolLoadingSuccessResult success_result =

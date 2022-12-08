@@ -104,15 +104,15 @@ class TimelineUiTest : public TimelineUi {
                                                          GlCanvas::kZValueTimeBarLabel));
 
     // The label is the only thing that can be out of the expected space for the timeline.
-    const char* kOneMonthLabel = "730:00:00.000000000";
-    const float kMaxLabelWidth =
+    constexpr const char* kOneMonthLabel = "730:00:00.000000000";
+    const float max_label_width =
         mock_text_renderer_.GetStringWidth(kOneMonthLabel, layout_->GetFontSize());
-    const Vec2 kExpectedMinPos{GetPos()[0] - kMaxLabelWidth, GetPos()[1]};
-    const Vec2 kExpectedMaxPos{GetPos() + Vec2{GetSize()[0] + kMaxLabelWidth, GetSize()[1]}};
-    EXPECT_TRUE(mock_text_renderer_.IsTextInsideRectangle(kExpectedMinPos,
-                                                          kExpectedMaxPos - kExpectedMinPos));
-    EXPECT_TRUE(mock_batcher_.IsEverythingInsideRectangle(kExpectedMinPos,
-                                                          kExpectedMaxPos - kExpectedMinPos));
+    const Vec2 expected_min_pos{GetPos()[0] - max_label_width, GetPos()[1]};
+    const Vec2 expected_max_pos{GetPos() + Vec2{GetSize()[0] + max_label_width, GetSize()[1]}};
+    EXPECT_TRUE(mock_text_renderer_.IsTextInsideRectangle(expected_min_pos,
+                                                          expected_max_pos - expected_min_pos));
+    EXPECT_TRUE(mock_batcher_.IsEverythingInsideRectangle(expected_min_pos,
+                                                          expected_max_pos - expected_min_pos));
   }
 
   void TestDraw(uint64_t min_tick, uint64_t max_tick, std::optional<uint64_t> mouse_tick) {
@@ -125,11 +125,11 @@ class TimelineUiTest : public TimelineUi {
     Draw(primitive_assembler_, mock_text_renderer_, context);
 
     // One box and one label, both at kZValueTimeBarMouseLabel position.
-    const int kNumMouseLabels = mouse_tick.has_value() ? 1 : 0;
+    const int num_mouse_labels = mouse_tick.has_value() ? 1 : 0;
 
-    EXPECT_EQ(mock_batcher_.GetNumBoxes(), kNumMouseLabels);
-    EXPECT_EQ(mock_batcher_.GetNumElements(), kNumMouseLabels);
-    EXPECT_EQ(mock_text_renderer_.GetNumAddTextCalls(), kNumMouseLabels);
+    EXPECT_EQ(mock_batcher_.GetNumBoxes(), num_mouse_labels);
+    EXPECT_EQ(mock_batcher_.GetNumElements(), num_mouse_labels);
+    EXPECT_EQ(mock_text_renderer_.GetNumAddTextCalls(), num_mouse_labels);
 
     EXPECT_TRUE(mock_text_renderer_.IsTextBetweenZLayers(GlCanvas::kZValueTimeBarMouseLabel,
                                                          GlCanvas::kZValueTimeBarMouseLabel));
@@ -186,8 +186,8 @@ TEST(TimelineUi, Draw) {
   Viewport viewport(width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
 
-  const uint64_t kMinTick = 0;
-  const uint64_t kMaxTick = 1000;
+  constexpr uint64_t kMinTick = 0;
+  constexpr uint64_t kMaxTick = 1000;
 
   // Testing different positions of the mouse in the screen. It is expected that mouse_tick is
   // between than min_tick and max_tick or either nullopt.

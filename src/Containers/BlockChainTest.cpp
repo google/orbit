@@ -93,23 +93,23 @@ TEST(BlockChain, Clear) {
 }
 
 TEST(BlockChain, ElementIteration) {
-  constexpr const int v1 = 5;
-  constexpr const int v2 = 10;
-  constexpr const int v3 = 15;
+  constexpr const int kV1 = 5;
+  constexpr const int kV2 = 10;
+  constexpr const int kV3 = 15;
 
   BlockChain<int, 1024> chain;
 
-  chain.emplace_back(v1);
-  chain.emplace_back(v2);
-  chain.emplace_back(v3);
+  chain.emplace_back(kV1);
+  chain.emplace_back(kV2);
+  chain.emplace_back(kV3);
 
   // Note that only the "++it" operator is supported
   auto it = chain.begin();
-  EXPECT_EQ(*it, v1);
+  EXPECT_EQ(*it, kV1);
   ++it;
-  EXPECT_EQ(*it, v2);
+  EXPECT_EQ(*it, kV2);
   ++it;
-  EXPECT_EQ(*it, v3);
+  EXPECT_EQ(*it, kV3);
   ++it;
   // ... and also only !=, not ==
   EXPECT_FALSE(it != chain.end());
@@ -167,33 +167,33 @@ TEST(BlockChain, Reset) {
   BlockChain<int, 1024> chain;
   chain.push_back_n(5, 1024 * 3);
   EXPECT_GT(chain.size(), 0);
-  const Block<int, 1024>* blockPtr[] = {chain.root(), nullptr, nullptr};
-  blockPtr[1] = blockPtr[0]->next();
-  blockPtr[2] = blockPtr[1]->next();
+  const Block<int, 1024>* block_ptr[] = {chain.root(), nullptr, nullptr};
+  block_ptr[1] = block_ptr[0]->next();
+  block_ptr[2] = block_ptr[1]->next();
 
   // Tests below rely quite a lot on the internals of BlockChain, but this
   // seems the easiest way to actually test re-usage of the block pointers
   chain.Reset();
   EXPECT_EQ(chain.size(), 0);
-  EXPECT_EQ(blockPtr[0]->size(), 0);
-  EXPECT_EQ(blockPtr[1]->size(), 0);
-  EXPECT_EQ(blockPtr[2]->size(), 0);
+  EXPECT_EQ(block_ptr[0]->size(), 0);
+  EXPECT_EQ(block_ptr[1]->size(), 0);
+  EXPECT_EQ(block_ptr[2]->size(), 0);
 
   chain.push_back_n(10, 1024);
   EXPECT_GT(chain.size(), 0);
   EXPECT_EQ(chain.root()->data()[0], 10);
-  EXPECT_EQ(chain.root(), blockPtr[0]);
-  EXPECT_EQ(chain.root()->next(), blockPtr[1]);
-  EXPECT_EQ(blockPtr[1]->size(), 0);
+  EXPECT_EQ(chain.root(), block_ptr[0]);
+  EXPECT_EQ(chain.root()->next(), block_ptr[1]);
+  EXPECT_EQ(block_ptr[1]->size(), 0);
 
   chain.push_back_n(10, 1024);
-  EXPECT_EQ(chain.root()->next(), blockPtr[1]);
-  EXPECT_EQ(blockPtr[1]->size(), 1024);
-  EXPECT_EQ(blockPtr[2]->size(), 0);
+  EXPECT_EQ(chain.root()->next(), block_ptr[1]);
+  EXPECT_EQ(block_ptr[1]->size(), 1024);
+  EXPECT_EQ(block_ptr[2]->size(), 0);
 
   chain.push_back_n(10, 1024);
-  EXPECT_EQ(chain.root()->next()->next(), blockPtr[2]);
-  EXPECT_EQ(blockPtr[2]->size(), 1024);
+  EXPECT_EQ(chain.root()->next()->next(), block_ptr[2]);
+  EXPECT_EQ(block_ptr[2]->size(), 1024);
 }
 
 TEST(BlockChain, MovableType) {

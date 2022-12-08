@@ -44,7 +44,7 @@ TEST(TrackHeader, TrackHeaderDragsTheTrack) {
   CaptureViewElementTester tester;
 
   MockTrack track;
-  const int kDelta = 5;
+  constexpr int kDelta = 5;
 
   EXPECT_CALL(track, DragBy(kDelta)).Times(Exactly(2));
   EXPECT_CALL(track, Draggable()).Times(Exactly(2)).WillRepeatedly(Return(true));
@@ -62,7 +62,7 @@ TEST(TrackHeader, TrackHeaderDoesNotDragNonDraggableTracks) {
   CaptureViewElementTester tester;
 
   MockTrack track;
-  const int kDelta = 5;
+  constexpr int kDelta = 5;
 
   EXPECT_CALL(track, DragBy(kDelta)).Times(Exactly(0));
   EXPECT_CALL(track, Draggable()).Times(Exactly(2)).WillRepeatedly(Return(false));

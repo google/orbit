@@ -155,8 +155,8 @@ TEST(ScopeTreeTimerData, GetTimersAtDepthOptimized) {
   // Left, right and down timers
   AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
 
-  uint32_t kOnePixel = 1;
-  uint32_t kNormalResolution = 1000;
+  constexpr uint32_t kOnePixel = 1;
+  constexpr uint32_t kNormalResolution = 1000;
 
   auto verify_size = [&scope_tree_timer_data](uint32_t depth, uint32_t resolution,
                                               uint64_t start_ns, uint64_t end_ns,

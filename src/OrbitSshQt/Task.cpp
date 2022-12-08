@@ -68,7 +68,7 @@ outcome::result<void> Task::run() {
     // read stdout
     bool added_new_data_to_read_buffer = false;
     while (true) {
-      const size_t kChunkSize = 8192;
+      constexpr size_t kChunkSize = 8192;
       auto result = channel_->ReadStdOut(kChunkSize);
 
       if (!result && !orbit_ssh::ShouldITryAgain(result)) {
@@ -97,7 +97,7 @@ outcome::result<void> Task::run() {
     // read stderr
     added_new_data_to_read_buffer = false;
     while (true) {
-      const size_t kChunkSize = 8192;
+      constexpr size_t kChunkSize = 8192;
       auto result = channel_->ReadStdErr(kChunkSize);
 
       if (!result && !orbit_ssh::ShouldITryAgain(result)) {

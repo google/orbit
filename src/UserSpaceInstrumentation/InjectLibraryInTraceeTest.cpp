@@ -216,8 +216,8 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
 
   // Try to load non existing dynamic lib into tracee.
-  const std::string kNonExistingLibName = "libNotFound.so";
-  auto library_handle_or_error = DlmopenInTracee(pid, modules, kNonExistingLibName, RTLD_NOW,
+  const std::string non_existing_lib_name = "libNotFound.so";
+  auto library_handle_or_error = DlmopenInTracee(pid, modules, non_existing_lib_name, RTLD_NOW,
                                                  LinkerNamespace::kCreateNewNamespace);
   ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
 

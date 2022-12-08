@@ -103,11 +103,11 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
 
   const std::string elapsed_time = GetDisplayTime(timer);
   const auto elapsed_time_length = elapsed_time.length();
-  const Color kTextWhite(255, 255, 255, 255);
+  const Color text_white(255, 255, 255, 255);
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
 
-  TextRenderer::TextFormatting formatting{layout_->GetFontSize(), kTextWhite, max_size};
+  TextRenderer::TextFormatting formatting{layout_->GetFontSize(), text_white, max_size};
   formatting.valign = TextRenderer::VAlign::Bottom;
 
   text_renderer.AddTextTrailingCharsPrioritized(

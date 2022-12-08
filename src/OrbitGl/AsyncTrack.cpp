@@ -124,16 +124,16 @@ std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, bool is_highlighted,
                                 const internal::DrawData& /*draw_data*/) const {
   ORBIT_CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
-  const Color kInactiveColor(100, 100, 100, 255);
-  const Color kSelectionColor(0, 128, 255, 255);
+  const Color inactive_color(100, 100, 100, 255);
+  const Color selection_color(0, 128, 255, 255);
   if (is_highlighted) {
     return TimerTrack::kHighlightColor;
   }
   if (is_selected) {
-    return kSelectionColor;
+    return selection_color;
   }
   if (!IsTimerActive(timer_info)) {
-    return kInactiveColor;
+    return inactive_color;
   }
 
   if (timer_info.has_color()) {

@@ -567,15 +567,15 @@ TEST_F(VulkanLayerControllerTest, WillDumpPidOnCreateInstance) {
                                    .ppEnabledExtensionNames = nullptr};
 
   VkInstance created_instance;
-  constexpr const char* filename = "pid.txt";
-  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ 1);
+  constexpr const char* kFilename = "pid.txt";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
   VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
   uint32_t pid = orbit_base::GetCurrentProcessId();
-  ErrorMessageOr<std::string> pid_or_error = orbit_base::ReadFileToString(filename);
+  ErrorMessageOr<std::string> pid_or_error = orbit_base::ReadFileToString(kFilename);
   EXPECT_FALSE(pid_or_error.has_error());
   EXPECT_EQ(pid_or_error.value(), absl::StrFormat("%u", pid));
   EXPECT_EQ(result, VK_SUCCESS);
-  ErrorMessageOr<bool> removed_or_error = orbit_base::RemoveFile(filename);
+  ErrorMessageOr<bool> removed_or_error = orbit_base::RemoveFile(kFilename);
   EXPECT_FALSE(removed_or_error.has_error());
 }
 
@@ -620,8 +620,8 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByNonExisten
                                    .ppEnabledExtensionNames = nullptr};
 
   VkInstance created_instance;
-  constexpr const char* filename = "i_dont_exists_dir/pid.txt";
-  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ 1);
+  constexpr const char* kFilename = "i_dont_exists_dir/pid.txt";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
   [[maybe_unused]] VkResult result = VK_SUCCESS;
   EXPECT_DEATH(result = controller->OnCreateInstance(&create_info, nullptr, &created_instance),
                "Opening \"i_dont_exists_dir/pid.txt\": Unable to open file "
@@ -669,8 +669,8 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByInvalidFil
                                    .ppEnabledExtensionNames = nullptr};
 
   VkInstance created_instance;
-  constexpr const char* filename = "tmpdir/";
-  setenv("ORBIT_VULKAN_LAYER_PID_FILE", filename, /*overwrite*/ 1);
+  constexpr const char* kFilename = "tmpdir/";
+  setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
   [[maybe_unused]] VkResult result = VK_SUCCESS;
   EXPECT_DEATH(result = controller->OnCreateInstance(&create_info, nullptr, &created_instance),
                "Opening \"tmpdir/\": Unable to open file \"tmpdir/\": Is a directory");

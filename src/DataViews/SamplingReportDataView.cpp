@@ -464,11 +464,11 @@ SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
 ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(std::string_view file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
-  static const std::vector<std::string> kNames{"Thread", "Timestamp (ns)", "Names leaf/foo/main",
-                                               "Addresses leaf_addr/foo_addr/main_addr"};
+  static const std::vector<std::string> names{"Thread", "Timestamp (ns)", "Names leaf/foo/main",
+                                              "Addresses leaf_addr/foo_addr/main_addr"};
   constexpr std::string_view kFramesSeparator = "/";
 
-  OUTCOME_TRY(WriteLineToCsv(fd, kNames));
+  OUTCOME_TRY(WriteLineToCsv(fd, names));
   const orbit_client_data::CallstackData& callstack_data = sampling_report_->GetCallstackData();
 
   const std::vector<orbit_client_data::CallstackEvent> callstack_events =

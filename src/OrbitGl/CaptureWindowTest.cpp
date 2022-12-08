@@ -150,11 +150,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeline) {
   capture_window_.PreRender();
   ExpectInitialState();
   TimelineUi* timeline_ui = capture_window_.GetTimeGraph()->GetTimelineUi();
-  const Vec2i kTimelineSize = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetSize());
-  const Vec2i kTimelinePos = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetPos());
+  const Vec2i timeline_size = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetSize());
+  const Vec2i timeline_pos = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetPos());
 
-  int x = kTimelinePos[0] + kTimelineSize[0] / 2;
-  int y = kTimelinePos[1] + kTimelineSize[1] / 2;
+  int x = timeline_pos[0] + timeline_size[0] / 2;
+  int y = timeline_pos[1] + timeline_size[1] / 2;
 
   capture_window_.MouseWheelMoved(x, y, 1, /*ctrl=*/false);
   capture_window_.PreRender();
@@ -178,17 +178,17 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeline) {
 TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
   capture_window_.PreRender();
   ExpectInitialState();
-  const Vec2i kTimelineSize = capture_window_.GetViewport().WorldToScreen(
+  const Vec2i timeline_size = capture_window_.GetViewport().WorldToScreen(
       capture_window_.GetTimeGraph()->GetTimelineUi()->GetSize());
 
   std::random_device rd;
   std::mt19937 mt(rd());
-  std::uniform_int_distribution<int> dist(0, kTimelineSize[0]);
+  std::uniform_int_distribution<int> dist(0, timeline_size[0]);
 
   constexpr int kNumTries = 100;
   for (int i = 0; i < kNumTries; ++i) {
     const int x = dist(mt);
-    const int y = kTimelineSize[1] - kBottomSafetyMargin;
+    const int y = timeline_size[1] - kBottomSafetyMargin;
 
     // Zoom in twice, then zoom out twice. Check that the intermediate states match
     capture_window_.MouseWheelMoved(x, y, 1, /*ctrl=*/true);
@@ -244,11 +244,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheRightOfTimeline) {
   ExpectInitialState();
 
   TimelineUi* timeline_ui = capture_window_.GetTimeGraph()->GetTimelineUi();
-  const Vec2i kTimelineSize = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetSize());
-  const Vec2i kTimelinePos = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetPos());
+  const Vec2i timeline_size = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetSize());
+  const Vec2i timeline_pos = capture_window_.GetViewport().WorldToScreen(timeline_ui->GetPos());
 
-  int x = kTimelinePos[0] + kTimelineSize[0];
-  int y = kTimelinePos[1] + kTimelineSize[1] / 2;
+  int x = timeline_pos[0] + timeline_size[0];
+  int y = timeline_pos[1] + timeline_size[1] / 2;
 
   capture_window_.MouseWheelMoved(x, y, 1, /*ctrl=*/true);
   capture_window_.PreRender();
@@ -273,11 +273,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheLeftOfTimeline) {
   capture_window_.PreRender();
   ExpectInitialState();
 
-  const Vec2i kTimelinePos = capture_window_.GetViewport().WorldToScreen(
+  const Vec2i timeline_pos = capture_window_.GetViewport().WorldToScreen(
       capture_window_.GetTimeGraph()->GetTimelineUi()->GetPos());
 
-  int x = kTimelinePos[0];
-  int y = kTimelinePos[1];
+  int x = timeline_pos[0];
+  int y = timeline_pos[1];
 
   capture_window_.MouseWheelMoved(x, y, 1, /*ctrl=*/false);
   capture_window_.PreRender();
@@ -302,10 +302,10 @@ TEST_F(NavigationTestCaptureWindow, VerticalZoomWorksAsExpected) {
   capture_window_.PreRender();
   ExpectInitialState();
 
-  const Vec2i kTimeGraphSize =
+  const Vec2i time_graph_size =
       capture_window_.GetViewport().WorldToScreen(capture_window_.GetTimeGraph()->GetSize());
-  int x = kTimeGraphSize[0] / 2;
-  int y = kTimeGraphSize[1] - kBottomSafetyMargin;
+  int x = time_graph_size[0] / 2;
+  int y = time_graph_size[1] - kBottomSafetyMargin;
   capture_window_.MouseMoved(x, y, /*left=*/false, /*right=*/false, /*middle=*/false);
 
   float old_height =
@@ -348,21 +348,21 @@ TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
   EXPECT_NEAR(capture_window_.GetTimeGraph()->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
   EXPECT_NEAR(capture_window_.GetTimeGraph()->GetMinTimeUs(), 0.0, kEpsilon);
 
-  const int kRightArrowKeyCode = 20;
-  const int kLeftArrowKeyCode = 18;
-  capture_window_.KeyPressed(kRightArrowKeyCode, false, false, false);
+  const int right_arrow_key_code = 20;
+  const int left_arrow_key_code = 18;
+  capture_window_.KeyPressed(right_arrow_key_code, false, false, false);
   capture_window_.PreRender();
   EXPECT_GT(capture_window_.GetTimeGraph()->GetHorizontalSlider()->GetPosRatio(), 0.0);
   EXPECT_GT(capture_window_.GetTimeGraph()->GetMinTimeUs(), 0.0);
 
   double min_time_us_after_right_arrow = capture_window_.GetTimeGraph()->GetMinTimeUs();
-  capture_window_.KeyPressed(kRightArrowKeyCode, false, false, false);
-  capture_window_.KeyPressed(kLeftArrowKeyCode, false, false, false);
+  capture_window_.KeyPressed(right_arrow_key_code, false, false, false);
+  capture_window_.KeyPressed(left_arrow_key_code, false, false, false);
   // A right arrow key pressed followed by a left one should return to the original position.
   EXPECT_NEAR(min_time_us_after_right_arrow, capture_window_.GetTimeGraph()->GetMinTimeUs(),
               kEpsilon);
 
-  capture_window_.KeyPressed(kLeftArrowKeyCode, false, false, false);
+  capture_window_.KeyPressed(left_arrow_key_code, false, false, false);
   capture_window_.PreRender();
   EXPECT_NEAR(capture_window_.GetTimeGraph()->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
   EXPECT_NEAR(capture_window_.GetTimeGraph()->GetMinTimeUs(), 0.0, kEpsilon);

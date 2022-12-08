@@ -36,16 +36,16 @@ SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent,
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
-  const std::array<Color, kSystemMemoryTrackDimension> kSystemMemoryTrackColors{
+  const std::array<Color, kSystemMemoryTrackDimension> system_memory_track_colors{
       Color(231, 68, 53, 255),  // red
       Color(246, 196, 0, 255),  // orange
       Color(87, 166, 74, 255)   // green
   };
-  SetSeriesColors(kSystemMemoryTrackColors);
+  SetSeriesColors(system_memory_track_colors);
 
-  const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
+  const std::string value_lower_bound_label = "Minimum: 0 GB";
   constexpr double kValueLowerBoundRawValue = 0.0;
-  TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+  TrySetValueLowerBound(value_lower_bound_label, kValueLowerBoundRawValue);
 }
 
 std::string SystemMemoryTrack::GetName() const {
@@ -57,18 +57,18 @@ std::string SystemMemoryTrack::GetTooltip() const {
 }
 
 void SystemMemoryTrack::TrySetValueUpperBound(double total_mb) {
-  const std::string kValueUpperBoundLabel = "System Memory Total";
+  const std::string value_upper_bound_label = "System Memory Total";
   std::string pretty_size =
       orbit_display_formats::GetDisplaySize(static_cast<uint64_t>(total_mb * kMegabytesToBytes));
-  std::string pretty_label = absl::StrFormat("%s: %s", kValueUpperBoundLabel, pretty_size);
+  std::string pretty_label = absl::StrFormat("%s: %s", value_upper_bound_label, pretty_size);
   MemoryTrack<kSystemMemoryTrackDimension>::TrySetValueUpperBound(pretty_label, total_mb);
 }
 
 void SystemMemoryTrack::SetWarningThreshold(double warning_threshold_mb) {
-  const std::string kWarningThresholdLabel = "Production Limit";
+  const std::string warning_threshold_label = "Production Limit";
   std::string pretty_size = orbit_display_formats::GetDisplaySize(
       static_cast<uint64_t>(warning_threshold_mb * kMegabytesToBytes));
-  std::string pretty_label = absl::StrFormat("%s: %s", kWarningThresholdLabel, pretty_size);
+  std::string pretty_label = absl::StrFormat("%s: %s", warning_threshold_label, pretty_size);
   MemoryTrack<kSystemMemoryTrackDimension>::SetWarningThreshold(pretty_label, warning_threshold_mb);
 }
 

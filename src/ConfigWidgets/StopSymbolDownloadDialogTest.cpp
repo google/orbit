@@ -69,10 +69,10 @@ TEST_F(StopSymbolDownloadDialogTest, StopDownload) {
 }
 
 TEST_F(StopSymbolDownloadDialogTest, StopDownloadAndDisable) {
-  auto* rememberCheckBox = dialog_.findChild<QCheckBox*>("rememberCheckBox");
-  ASSERT_NE(rememberCheckBox, nullptr);
+  auto* remember_check_box = dialog_.findChild<QCheckBox*>("rememberCheckBox");
+  ASSERT_NE(remember_check_box, nullptr);
 
-  rememberCheckBox->setCheckState(Qt::Checked);
+  remember_check_box->setCheckState(Qt::Checked);
 
   QMetaObject::invokeMethod(
       &dialog_, [this] { QTest::mouseClick(stop_button_, Qt::LeftButton); }, Qt::QueuedConnection);

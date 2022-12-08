@@ -163,8 +163,8 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 absl::flat_hash_set<std::string> ListFileNamesOfAllMinidumps() {
   absl::flat_hash_set<std::string> result;
-  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
-  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  const std::string core_directory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(core_directory);
   if (!error_or_core_files.has_error()) {
     const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.[0-9]+\.core\.dmp)"));
     for (const std::filesystem::path& path : error_or_core_files.value()) {
@@ -204,8 +204,8 @@ TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
   }
 
   // Check whether we find a minidump. Otherwise we assume the process ended gracefully.
-  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
-  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  const std::string core_directory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(core_directory);
   if (error_or_core_files.has_error()) {
     // We can't access the directory with the core files; we return an error state.
     return result;

@@ -43,17 +43,18 @@ CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
-  const std::array<Color, kCGroupAndProcessMemoryTrackDimension> kCGroupAndProcessMemoryTrackColors{
-      Color(231, 68, 53, 255),    // red
-      Color(185, 117, 181, 255),  // purple
-      Color(246, 196, 0, 255),    // orange
-      Color(87, 166, 74, 255)     // green
-  };
-  SetSeriesColors(kCGroupAndProcessMemoryTrackColors);
+  const std::array<Color, kCGroupAndProcessMemoryTrackDimension>
+      c_group_and_process_memory_traccolors{
+          Color(231, 68, 53, 255),    // red
+          Color(185, 117, 181, 255),  // purple
+          Color(246, 196, 0, 255),    // orange
+          Color(87, 166, 74, 255)     // green
+      };
+  SetSeriesColors(c_group_and_process_memory_traccolors);
 
-  const std::string kValueLowerBoundLabel = "Minimum: 0 GB";
+  const std::string value_lower_bound_label = "Minimum: 0 GB";
   constexpr double kValueLowerBoundRawValue = 0.0;
-  TrySetValueLowerBound(kValueLowerBoundLabel, kValueLowerBoundRawValue);
+  TrySetValueLowerBound(value_lower_bound_label, kValueLowerBoundRawValue);
 }
 
 std::string CGroupAndProcessMemoryTrack::GetName() const {
@@ -67,12 +68,12 @@ std::string CGroupAndProcessMemoryTrack::GetTooltip() const {
 }
 
 void CGroupAndProcessMemoryTrack::TrySetValueUpperBound(double cgroup_limit_mb) {
-  const std::string kValueUpperBoundLabel =
+  const std::string value_upper_bound_label =
       absl::StrFormat("CGroup [%s] Memory Limit", cgroup_name_);
   constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
   std::string pretty_size = orbit_display_formats::GetDisplaySize(
       static_cast<uint64_t>(cgroup_limit_mb * kMegabytesToBytes));
-  std::string pretty_label = absl::StrFormat("%s: %s", kValueUpperBoundLabel, pretty_size);
+  std::string pretty_label = absl::StrFormat("%s: %s", value_upper_bound_label, pretty_size);
   MemoryTrack<kCGroupAndProcessMemoryTrackDimension>::TrySetValueUpperBound(pretty_label,
                                                                             cgroup_limit_mb);
 }
@@ -112,15 +113,15 @@ std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) 
 std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
   // The developer instances have all of the same cgroup limits as the production instances, except
   // the game cgroup limit. More detailed information can be found in go/gamelet-ram-budget.
-  std::string_view kGameCGroupName = "user.slice/user-1000.slice/game";
+  std::string_view game_c_group_name = "user.slice/user-1000.slice/game";
   constexpr float kGameCGroupLimitGB = 7;
 
-  if (cgroup_name_ != kGameCGroupName) return "";
+  if (cgroup_name_ != game_c_group_name) return "";
   return absl::StrFormat(
       "<b>The memory production limit of the %s cgroup is %.2fGB</b>.<br/><br/>"
       "<i>To launch game with the production cgroup limits, add the flag "
       "'--enforce-production-ram' to the 'ggp run' command</i>.",
-      kGameCGroupName, kGameCGroupLimitGB);
+      game_c_group_name, kGameCGroupLimitGB);
 }
 
 void CGroupAndProcessMemoryTrack::OnCgroupAndProcessMemoryInfo(

@@ -70,8 +70,8 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
   if (!HasLegend()) return 0;
 
   // Legend size should be smaller than all regular textboxes across Orbit.
-  const float kLegendHeight = layout_->GetTextBoxHeight() / 2.f;
-  return kLegendHeight;
+  const float legend_height = layout_->GetTextBoxHeight() / 2.f;
+  return legend_height;
 }
 
 template <size_t Dimension>
@@ -85,8 +85,8 @@ void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
   if (!HasLegend()) return;
 
   // Draw legends
-  const Color kWhite(255, 255, 255, 255);
-  DrawLegend(primitive_assembler, text_renderer, series_.GetSeriesNames(), kWhite);
+  const Color white(255, 255, 255, 255);
+  DrawLegend(primitive_assembler, text_renderer, series_.GetSeriesNames(), white);
 }
 
 template <size_t Dimension>
@@ -167,12 +167,12 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
                                            const DrawContext& draw_context) {
   if (!draw_context.current_mouse_tick.has_value()) return;
 
-  const float kTextLeftMargin = 2.f;
-  const float kTextRightMargin = kTextLeftMargin;
-  const float kTextTopMargin = layout_->GetTextOffset();
-  const float kTextBottomMargin = kTextTopMargin;
-  const Color kBlack(0, 0, 0, 255);
-  const Color kTransparentWhite(255, 255, 255, 180);
+  const float text_left_margin = 2.f;
+  const float text_right_margin = text_left_margin;
+  const float text_top_margin = layout_->GetTextOffset();
+  const float text_bottom_margin = text_top_margin;
+  const Color black(0, 0, 0, 255);
+  const Color transparent_white(255, 255, 255, 180);
 
   uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
   const std::array<double, Dimension>& values =
@@ -192,33 +192,33 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   Vec2 text_box_size(text_width, text_height);
 
   float arrow_width = text_box_size[1] / 2.f;
-  Vec2 arrow_box_size(text_box_size[0] + kTextLeftMargin + kTextRightMargin,
-                      text_box_size[1] + kTextTopMargin + kTextBottomMargin);
+  Vec2 arrow_box_size(text_box_size[0] + text_left_margin + text_right_margin,
+                      text_box_size[1] + text_top_margin + text_bottom_margin);
   bool arrow_is_left_directed = target_point_pos[0] < arrow_box_size[0] + arrow_width;
   Vec2 text_box_position(
       target_point_pos[0] + (arrow_is_left_directed
-                                 ? arrow_width + kTextLeftMargin
-                                 : -arrow_width - kTextRightMargin - text_box_size[0]),
+                                 ? arrow_width + text_left_margin
+                                 : -arrow_width - text_right_margin - text_box_size[0]),
       target_point_pos[1] - text_box_size[1] / 2.f);
 
   float label_z = GlCanvas::kZValueTrackLabel;
   text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], label_z,
-                        {font_size, kBlack, text_box_size[0]});
+                        {font_size, black, text_box_size[0]});
 
-  Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
-                          text_box_position[1] - kTextBottomMargin);
+  Vec2 arrow_box_position(text_box_position[0] - text_left_margin,
+                          text_box_position[1] - text_bottom_margin);
   Quad arrow_text_box = MakeBox(arrow_box_position, arrow_box_size);
   Vec2 arrow_extra_point(target_point_pos[0], target_point_pos[1]);
 
-  primitive_assembler.AddBox(arrow_text_box, label_z, kTransparentWhite);
+  primitive_assembler.AddBox(arrow_text_box, label_z, transparent_white);
   if (arrow_is_left_directed) {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
-        label_z, kTransparentWhite);
+        label_z, transparent_white);
   } else {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
-        label_z, kTransparentWhite);
+        label_z, transparent_white);
   }
 }
 
@@ -227,21 +227,21 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
                                        TextRenderer& text_renderer,
                                        const std::array<std::string, Dimension>& series_names,
                                        const Color& legend_text_color) {
-  const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
-  const float kSpaceBetweenLegendEntries = layout_->GetGenericFixedSpacerWidth() * 2;
+  const float space_between_legend_symbol_and_text = layout_->GetGenericFixedSpacerWidth();
+  const float space_between_legend_entries = layout_->GetGenericFixedSpacerWidth() * 2;
   const float legend_symbol_height = GetLegendHeight();
   const float legend_symbol_width = legend_symbol_height;
   float x0 = GetPos()[0] + layout_->GetRightMargin();
   const float y0 =
       header_->GetPos()[1] + header_->GetHeight() + layout_->GetTrackContentTopMargin();
   uint32_t font_size = GetLegendFontSize(indentation_level_);
-  const Color kFullyTransparent(255, 255, 255, 0);
+  const Color fully_transparent(255, 255, 255, 0);
 
   float text_z = GlCanvas::kZValueTrackText;
   for (size_t i = 0; i < Dimension; ++i) {
     primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(legend_symbol_width, legend_symbol_height),
                                      text_z, GetColor(i));
-    x0 += legend_symbol_width + kSpaceBetweenLegendSymbolAndText;
+    x0 += legend_symbol_width + space_between_legend_symbol_and_text;
 
     const float legend_text_width =
         text_renderer.GetStringWidth(series_names[i].c_str(), font_size);
@@ -254,10 +254,10 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
                           formatting);
     auto user_data = std::make_unique<PickingUserData>(
         nullptr, [this, i](PickingId /*id*/) { return GetLegendTooltips(i); });
-    primitive_assembler.AddShadedBox(Vec2(x0, y0), legend_text_box_size, text_z, kFullyTransparent,
+    primitive_assembler.AddShadedBox(Vec2(x0, y0), legend_text_box_size, text_z, fully_transparent,
                                      std::move(user_data));
 
-    x0 += legend_text_width + kSpaceBetweenLegendEntries;
+    x0 += legend_text_width + space_between_legend_entries;
   }
 }
 

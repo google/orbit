@@ -186,7 +186,7 @@ outcome::result<void> Tunnel::shutdown() {
 outcome::result<void> Tunnel::readFromChannel() {
   ORBIT_SCOPE_FUNCTION;
   while (true) {
-    const size_t kChunkSize = 1024 * 1024;
+    constexpr size_t kChunkSize = 1024 * 1024;
     const auto result = channel_->ReadStdOut(kChunkSize);
 
     if (!result && !orbit_ssh::ShouldITryAgain(result)) {

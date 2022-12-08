@@ -20,14 +20,14 @@ namespace {
 constexpr float kGradientFactor = 0.25f;
 
 [[nodiscard]] Color GetLighterColor(const Color& color) {
-  const float kLocalGradientFactor = 1.0f + kGradientFactor;
+  constexpr float kLocalGradientFactor = 1.0f + kGradientFactor;
   return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
           static_cast<unsigned char>(color[1] * kLocalGradientFactor),
           static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 
 [[nodiscard]] Color GetDarkerColor(const Color& color) {
-  const float kLocalGradientFactor = 1.0f - kGradientFactor;
+  constexpr float kLocalGradientFactor = 1.0f - kGradientFactor;
   return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
           static_cast<unsigned char>(color[1] * kLocalGradientFactor),
           static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
@@ -90,44 +90,44 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
   const Vec2 pos = GetPos();
   const Vec2 size = GetSize();
 
-  const Color kHighlightColor(75, 75, 75, 255);
-  const Color kBaseColor(68, 68, 68, 255);
-  const Color kDarkBorderColor = GetDarkerColor(kBaseColor);
-  const Color kLightBorderColor = GetLighterColor(kBaseColor);
+  const Color highlight_color(75, 75, 75, 255);
+  const Color base_color(68, 68, 68, 255);
+  const Color dark_border_color = GetDarkerColor(base_color);
+  const Color k_light_border_color = GetLighterColor(base_color);
 
-  const Vec2 kBorderSize = Vec2(1.f, 1.f);
+  const Vec2 border_size = Vec2(1.f, 1.f);
 
   Vec2 pos_w_border = pos;
   Vec2 size_w_border = size;
 
   // Dark border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kDarkBorderColor,
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, dark_border_color,
                              shared_from_this());
-  pos_w_border += kBorderSize;
-  size_w_border -= kBorderSize + kBorderSize;
+  pos_w_border += border_size;
+  size_w_border -= border_size + border_size;
 
   // Light border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kLightBorderColor,
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, k_light_border_color,
                              shared_from_this());
-  pos_w_border += kBorderSize;
-  size_w_border -= kBorderSize + kBorderSize;
+  pos_w_border += border_size;
+  size_w_border -= border_size + border_size;
 
   // Button itself
-  const Color slider_color = IsMouseOver() ? kHighlightColor : kBaseColor;
+  const Color slider_color = IsMouseOver() ? highlight_color : base_color;
   primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color, shared_from_this(),
                                    ShadingDirection::kTopToBottom);
   DrawSymbol(primitive_assembler);
 }
 
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
-  const Color kSymbolBaseColor(191, 191, 192, 255);
-  const Color kSymbolHighlightColor(255, 255, 255, 255);
+  const Color symbol_base_color(191, 191, 192, 255);
+  const Color symbol_highlight_color(255, 255, 255, 255);
   // Symbol width and the padding are related to the size of the button, so they can scale
   // proportionally if the button size changes.
   const float symbol_padding_size = GetWidth() / 5.f;
   const float symbol_width = GetWidth() / 5.f;
 
-  Color symbol_color = IsMouseOver() ? kSymbolHighlightColor : kSymbolBaseColor;
+  Color symbol_color = IsMouseOver() ? symbol_highlight_color : symbol_base_color;
 
   switch (symbol_type_) {
     case SymbolType::kNoSymbol:

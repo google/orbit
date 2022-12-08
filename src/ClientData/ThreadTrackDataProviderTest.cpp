@@ -72,8 +72,8 @@ TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
 }
 
 TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
-  const uint64_t kTimerStart = 2;
-  const uint64_t kTimerEnd = 5;
+  constexpr uint64_t kTimerStart = 2;
+  constexpr uint64_t kTimerEnd = 5;
   ThreadTrackDataProvider thread_track_data_provider;
 
   TimerInfo timer_info;
@@ -94,8 +94,8 @@ TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
 }
 
 TEST(ThreadTrackDataProvider, OnCaptureComplete) {
-  const uint64_t kTimerStart = 2;
-  const uint64_t kTimerEnd = 5;
+  constexpr uint64_t kTimerStart = 2;
+  constexpr uint64_t kTimerEnd = 5;
   // ScopeTree: Need OnCaptureComplete to process the data when loading a capture.
   ThreadTrackDataProvider thread_track_data_provider(true);
 

@@ -119,7 +119,7 @@ class LockFreeUserSpaceInstrumentationEventProducer
 
  private:
   template <class>
-  [[maybe_unused]] static constexpr bool always_false_v = false;
+  [[maybe_unused]] static constexpr bool kAlwaysFalseV = false;
 };
 
 LockFreeUserSpaceInstrumentationEventProducer& GetCaptureEventProducer() {
