@@ -98,7 +98,7 @@ void TrackContainer::VerticallyMoveIntoView(const Track& track) {
 
 int TrackContainer::GetNumVisiblePrimitives() const {
   int num_visible_primitives = 0;
-  for (auto track : track_manager_->GetAllTracks()) {
+  for (auto* track : track_manager_->GetAllTracks()) {
     num_visible_primitives += track->GetVisiblePrimitiveCount();
   }
   return num_visible_primitives;
@@ -119,7 +119,7 @@ void TrackContainer::UpdateTracksPosition() {
   float current_y = GetPos()[1] - vertical_scrolling_offset_;
 
   // Track height including space between them
-  for (auto& track : track_manager_->GetVisibleTracks()) {
+  for (const auto& track : track_manager_->GetVisibleTracks()) {
     if (!track->IsMoving()) {
       track->SetPos(track_pos_x, current_y);
     }

@@ -440,7 +440,7 @@ TEST_F(
 
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
   // There will be a call in the destructor.
-  auto actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
+  auto* actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
   EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_producer));
@@ -518,7 +518,7 @@ TEST_F(
   EXPECT_EQ(result, VK_SUCCESS);
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
   // There will be a call in the destructor.
-  auto actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
+  auto* actual_producer = absl::bit_cast<VulkanLayerProducer*>(static_cast<uintptr_t>(0xdeadbeef));
   EXPECT_CALL(*submission_tracker, SetVulkanLayerProducer)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_producer));

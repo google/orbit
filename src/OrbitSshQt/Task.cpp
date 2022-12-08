@@ -153,7 +153,7 @@ outcome::result<void> Task::startup() {
   switch (CurrentState()) {
     case State::kInitial:
     case State::kNoChannel: {
-      auto session = session_->GetRawSession();
+      auto* session = session_->GetRawSession();
       if (!session) {
         return orbit_ssh::Error::kEagain;
       }

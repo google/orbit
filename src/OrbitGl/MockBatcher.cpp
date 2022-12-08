@@ -61,7 +61,7 @@ uint32_t MockBatcher::GetNumElements() const {
 
 int MockBatcher::GetNumLines() const {
   int total_lines = 0;
-  for (auto& [unused_color, num_lines] : num_lines_by_color_) {
+  for (const auto& [unused_color, num_lines] : num_lines_by_color_) {
     total_lines += num_lines;
   }
   return total_lines;
@@ -69,7 +69,7 @@ int MockBatcher::GetNumLines() const {
 
 int MockBatcher::GetNumTriangles() const {
   int total_triangles = 0;
-  for (auto& [unused_color, num_triangles] : num_triangles_by_color_) {
+  for (const auto& [unused_color, num_triangles] : num_triangles_by_color_) {
     total_triangles += num_triangles;
   }
   return total_triangles;
@@ -77,7 +77,7 @@ int MockBatcher::GetNumTriangles() const {
 
 int MockBatcher::GetNumBoxes() const {
   int total_boxes = 0;
-  for (auto& [unused_color, num_boxes] : num_boxes_by_color_) {
+  for (const auto& [unused_color, num_boxes] : num_boxes_by_color_) {
     total_boxes += num_boxes;
   }
   return total_boxes;

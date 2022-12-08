@@ -113,7 +113,7 @@ static std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, u
 static void AddRoundedCornerTriangles(PrimitiveAssembler* batcher,
                                       const std::vector<Triangle> unit_triangles, Vec2 pos,
                                       float radius, float z, const Color& color) {
-  for (auto& unit_triangle : unit_triangles) {
+  for (const auto& unit_triangle : unit_triangles) {
     Triangle triangle = unit_triangle;
     triangle.vertices[1] *= radius;
     triangle.vertices[2] *= radius;

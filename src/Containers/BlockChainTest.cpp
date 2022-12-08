@@ -155,7 +155,7 @@ TEST(BlockChain, AddCopyableTypesN) {
   BlockChain<std::string, 1024> chain;
   chain.push_back_n(v1, 2000);
   EXPECT_EQ(chain.size(), 2000);
-  for (auto& it : chain) {
+  for (const auto& it : chain) {
     EXPECT_EQ(it, v1);
   }
 }

@@ -304,7 +304,7 @@ class ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest
       public WithParamInterface<ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTestCase> {};
 
 TEST_P(ForEachThreadStateSliceIntersectingTimeRangeDiscretizedTest, IterationIsCorrect) {
-  auto& test_case = GetParam();
+  const auto& test_case = GetParam();
 
   capture_data_.AddThreadStateSlice(kSlice1);
   capture_data_.AddThreadStateSlice(kSlice2);

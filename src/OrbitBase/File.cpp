@@ -143,7 +143,7 @@ ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer,
 
 ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size) {
   size_t bytes_left = size;
-  auto current_position = static_cast<uint8_t*>(buffer);
+  auto* current_position = static_cast<uint8_t*>(buffer);
 
   int64_t result = 0;
   while (bytes_left != 0 &&

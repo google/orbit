@@ -90,7 +90,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
 
 [[nodiscard]] std::vector<float> OpenGlBatcher::GetLayers() const {
   std::vector<float> layers;
-  for (auto& [layer, _] : primitive_buffers_by_layer_) {
+  for (const auto& [layer, _] : primitive_buffers_by_layer_) {
     layers.push_back(layer);
   }
   return layers;

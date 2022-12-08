@@ -113,7 +113,7 @@ void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assem
 
 std::string TracepointThreadBar::GetTracepointTooltip(PrimitiveAssembler& primitive_assembler,
                                                       PickingId id) const {
-  auto* user_data = primitive_assembler.GetUserData(id);
+  const auto* user_data = primitive_assembler.GetUserData(id);
   ORBIT_CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =
