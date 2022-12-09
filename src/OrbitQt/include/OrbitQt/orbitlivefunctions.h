@@ -63,7 +63,7 @@ class OrbitLiveFunctions : public QWidget {
   Ui::OrbitLiveFunctions* ui_;
   std::optional<LiveFunctionsController> live_functions_;
   absl::flat_hash_map<uint64_t, OrbitEventIterator*> iterator_uis_;
-  OrbitEventIterator* all_events_iterator_;
+  OrbitEventIterator* all_events_iterator_ = nullptr;
 };
 
 #endif  // ORBIT_QT_ORBIT_LIVE_FUNCTIONS_H_

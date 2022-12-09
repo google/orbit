@@ -18,9 +18,9 @@ namespace orbit_client_data {
 namespace {
 
 struct TimersInTest {
-  const TimerInfo* left;
-  const TimerInfo* right;
-  const TimerInfo* down;
+  const TimerInfo* left = nullptr;
+  const TimerInfo* right = nullptr;
+  const TimerInfo* down = nullptr;
 };
 
 constexpr uint32_t kProcessId = 22;

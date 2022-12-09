@@ -679,15 +679,15 @@ class InstrumentFunctionTest : public testing::Test {
   csh capstone_handle_ = 0;
   uint64_t max_trampoline_size_ = 0;
   std::unique_ptr<MemoryInTracee> trampoline_memory_;
-  uint64_t trampoline_address_;
-  uint64_t return_trampoline_address_;
-  uint64_t entry_payload_function_address_;
-  uint64_t exit_payload_function_address_;
+  uint64_t trampoline_address_ = 0;
+  uint64_t return_trampoline_address_ = 0;
+  uint64_t entry_payload_function_address_ = 0;
+  uint64_t exit_payload_function_address_ = 0;
 
   absl::flat_hash_map<uint64_t, uint64_t> relocation_map_;
 
   std::string function_name_;
-  uint64_t function_address_;
+  uint64_t function_address_ = 0;
   std::vector<uint8_t> function_code_;
 };
 

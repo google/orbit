@@ -40,7 +40,7 @@ TEST(PickingManager, BasicFunctionality) {
 
   ASSERT_EQ(pm.GetPickableColor(pickable1, BatcherId::kUi), col_vec1);
 
-  PickingId invalid_id;
+  PickingId invalid_id{};
   invalid_id.type = PickingType::kPickable;
   invalid_id.element_id = 0xdead;
   ASSERT_FALSE(pm.GetPickableFromId(invalid_id));

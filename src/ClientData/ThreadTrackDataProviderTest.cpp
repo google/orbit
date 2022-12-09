@@ -47,11 +47,11 @@ constexpr uint64_t kNumTimersInThread2 = 1;
 constexpr uint64_t kDepthThread2 = 1;
 
 struct TimersInTest {
-  const TimerInfo* left;
-  const TimerInfo* center;
-  const TimerInfo* right;
-  const TimerInfo* down;
-  const TimerInfo* other_thread_id;
+  const TimerInfo* left = nullptr;
+  const TimerInfo* center = nullptr;
+  const TimerInfo* right = nullptr;
+  const TimerInfo* down = nullptr;
+  const TimerInfo* other_thread_id = nullptr;
 };
 
 }  // namespace

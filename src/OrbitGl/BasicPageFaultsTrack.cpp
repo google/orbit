@@ -49,7 +49,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
 void BasicPageFaultsTrack::AddValues(
     uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
   if (previous_time_and_values_.has_value()) {
-    std::array<double, kBasicPageFaultsTrackDimension> differences;
+    std::array<double, kBasicPageFaultsTrackDimension> differences{};
     std::transform(values.begin(), values.end(), previous_time_and_values_.value().second.begin(),
                    differences.begin(), std::minus<double>());
     series_.AddValues(previous_time_and_values_.value().first, differences);

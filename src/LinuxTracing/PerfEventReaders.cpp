@@ -563,8 +563,8 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_switch_tracepoint sched_wakeup;
-  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+  sched_switch_tracepoint sched_switch;
+  std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));
 
   ring_buffer->SkipRecord(header);
 
@@ -585,9 +585,9 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
                 // exiting. This is not the case for data.prev_pid, whose value is always correct
                 // as it comes directly from the tracepoint data.
                 .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
-                .prev_tid = sched_wakeup.prev_pid,
-                .prev_state = sched_wakeup.prev_state,
-                .next_tid = sched_wakeup.next_pid,
+                .prev_tid = sched_switch.prev_pid,
+                .prev_state = sched_switch.prev_state,
+                .next_tid = sched_switch.next_pid,
             },
     };
   }
@@ -599,9 +599,9 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
               .cpu = res.cpu,
               // See above why we use "res.pid" as process id of the previous thread.
               .prev_pid_or_minus_one = static_cast<pid_t>(res.pid),
-              .prev_tid = sched_wakeup.prev_pid,
-              .prev_state = sched_wakeup.prev_state,
-              .next_tid = sched_wakeup.next_pid,
+              .prev_tid = sched_switch.prev_pid,
+              .prev_state = sched_switch.prev_state,
+              .next_tid = sched_switch.next_pid,
               .regs = std::move(res.regs),
               .dyn_size = res.dyn_size,
               .data = std::move(res.stack_data),

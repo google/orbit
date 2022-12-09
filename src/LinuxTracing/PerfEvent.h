@@ -35,7 +35,7 @@ perf_event_sample_regs_user_all_to_register_array(const perf_event_sample_regs_u
 // while the `data` field holds the data specific to the individual event.
 template <typename PerfEventDataT>
 struct TypedPerfEvent {
-  uint64_t timestamp;
+  uint64_t timestamp = 0;
   PerfEventOrderedStream ordered_stream = PerfEventOrderedStream::kNone;
   PerfEventDataT data;
 };

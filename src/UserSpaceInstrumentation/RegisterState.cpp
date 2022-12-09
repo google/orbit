@@ -80,9 +80,7 @@ bool RegisterState::HasAvxDataStored() {
 ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   tid_ = tid;
 
-  iovec iov;
-  iov.iov_base = &general_purpose_registers_;
-  iov.iov_len = sizeof(GeneralPurposeRegisters);
+  iovec iov{.iov_base = &general_purpose_registers_, .iov_len = sizeof(GeneralPurposeRegisters)};
   auto result = ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
   if (result == -1) {
     return ErrorMessage(absl::StrFormat("PTRACE_GETREGS, NT_PRSTATUS failed with errno: %d: %s",
@@ -123,10 +121,9 @@ ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   // BackupRegisters needs to be called before RestoreRegisters.
   ORBIT_CHECK(tid_ != -1);
 
-  iovec iov;
-  iov.iov_base = &general_purpose_registers_;
-  iov.iov_len = (bitness_ == Bitness::k32Bit) ? sizeof(GeneralPurposeRegisters32)
-                                              : sizeof(GeneralPurposeRegisters64);
+  iovec iov{.iov_base = &general_purpose_registers_,
+            .iov_len = (bitness_ == Bitness::k32Bit) ? sizeof(GeneralPurposeRegisters32)
+                                                     : sizeof(GeneralPurposeRegisters64)};
   auto result = ptrace(PTRACE_SETREGSET, tid_, NT_PRSTATUS, &iov);
   if (result == -1) {
     return ErrorMessage(

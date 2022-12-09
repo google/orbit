@@ -644,8 +644,8 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
 
   uint32_t tid = orbit_base::GetCurrentThreadId();
   uint32_t pid = orbit_base::GetCurrentProcessId();
-  std::array<uint64_t, 2> pre_submit_times;
-  std::array<uint64_t, 2> post_submit_times;
+  std::array<uint64_t, 2> pre_submit_times{};
+  std::array<uint64_t, 2> post_submit_times{};
 
   pre_submit_times[0] = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
