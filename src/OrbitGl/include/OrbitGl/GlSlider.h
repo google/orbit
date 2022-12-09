@@ -88,7 +88,7 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
     return value * LenToPixel(1.0f - length_ratio_);
   }
 
-  constexpr float kGradientFactor = 0.25f;
+  static constexpr float kGradientFactor = 0.25f;
   const bool is_vertical_;
 
   TimelineInfoInterface* timeline_info_;
