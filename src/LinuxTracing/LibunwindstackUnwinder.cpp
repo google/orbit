@@ -103,7 +103,7 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 // It does so by verifying if "Canonical Frame Address" gets computed immediately from $rbp (with
 // offset 16 to skip the old frame pointer and the return address).
 // The function returns nullopt if the required Dwarf information is not available.
-static std::optional<bool> HasFramePointerSetFromDwarfSection(
+std::optional<bool> HasFramePointerSetFromDwarfSection(
     uint64_t rel_pc, unwindstack::DwarfSection* dwarf_section,
     std::map<uint64_t, unwindstack::DwarfLocations>* loc_regs_cache) {
   if (dwarf_section == nullptr) {

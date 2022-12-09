@@ -25,26 +25,26 @@ const uint32_t kThreadId2 = 2;
 const uint32_t kProcessId = 42;
 
 // Thread1
-static constexpr uint64_t kLeftTimerStart = 2;
-static constexpr uint64_t kLeftTimerEnd = 5;
-static constexpr uint64_t kCenterTimerStart = 6;
-static constexpr uint64_t kCenterTimerEnd = 9;
-static constexpr uint64_t kRightTimerStart = 9;
-static constexpr uint64_t kRightTimerEnd = 10;
-static constexpr uint64_t kDownTimerStart = 7;
-static constexpr uint64_t kDownTimerEnd = 9;
+constexpr uint64_t kLeftTimerStart = 2;
+constexpr uint64_t kLeftTimerEnd = 5;
+constexpr uint64_t kCenterTimerStart = 6;
+constexpr uint64_t kCenterTimerEnd = 9;
+constexpr uint64_t kRightTimerStart = 9;
+constexpr uint64_t kRightTimerEnd = 10;
+constexpr uint64_t kDownTimerStart = 7;
+constexpr uint64_t kDownTimerEnd = 9;
 
-static constexpr uint64_t kNumTimersInThread1 = 4;
-static constexpr uint64_t kDepthThread1 = 2;
-static constexpr uint64_t kMinTimestampinThread1 = 2;
-static constexpr uint64_t kMaxTimestampinThread1 = 10;
+constexpr uint64_t kNumTimersInThread1 = 4;
+constexpr uint64_t kDepthThread1 = 2;
+constexpr uint64_t kMinTimestampinThread1 = 2;
+constexpr uint64_t kMaxTimestampinThread1 = 10;
 
 // Thread2
-static constexpr uint64_t kOtherThreadIdTimerStart = 5;
-static constexpr uint64_t kOtherThreadIdTimerEnd = 11;
+constexpr uint64_t kOtherThreadIdTimerStart = 5;
+constexpr uint64_t kOtherThreadIdTimerEnd = 11;
 
-static constexpr uint64_t kNumTimersInThread2 = 1;
-static constexpr uint64_t kDepthThread2 = 1;
+constexpr uint64_t kNumTimersInThread2 = 1;
+constexpr uint64_t kDepthThread2 = 1;
 
 struct TimersInTest {
   const TimerInfo* left;

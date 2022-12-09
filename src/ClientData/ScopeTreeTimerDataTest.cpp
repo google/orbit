@@ -23,17 +23,17 @@ struct TimersInTest {
   const TimerInfo* down;
 };
 
-static constexpr uint32_t kProcessId = 22;
-static constexpr uint64_t kLeftTimerStart = 2;
-static constexpr uint64_t kLeftTimerEnd = 5;
-static constexpr uint64_t kRightTimerStart = 8;
-static constexpr uint64_t kRightTimerEnd = 11;
-static constexpr uint64_t kDownTimerStart = 10;
-static constexpr uint64_t kDownTimerEnd = 11;
-static constexpr uint64_t kNumTimers = 3;
-static constexpr uint64_t kDepth = 2;
-static constexpr uint64_t kMinTimestamp = 2;
-static constexpr uint64_t kMaxTimestamp = 11;
+constexpr uint32_t kProcessId = 22;
+constexpr uint64_t kLeftTimerStart = 2;
+constexpr uint64_t kLeftTimerEnd = 5;
+constexpr uint64_t kRightTimerStart = 8;
+constexpr uint64_t kRightTimerEnd = 11;
+constexpr uint64_t kDownTimerStart = 10;
+constexpr uint64_t kDownTimerEnd = 11;
+constexpr uint64_t kNumTimers = 3;
+constexpr uint64_t kDepth = 2;
+constexpr uint64_t kMinTimestamp = 2;
+constexpr uint64_t kMaxTimestamp = 11;
 
 TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
   TimersInTest inserted_timers;

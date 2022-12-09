@@ -143,7 +143,7 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
 constexpr uint32_t kTid = 42;
 constexpr uint32_t kAnotherTid = 43;
 
-static inline constexpr uint64_t kCallstackId1 = 12;
+inline constexpr uint64_t kCallstackId1 = 12;
 constexpr uint64_t kCallstackId2 = 13;
 
 constexpr uint64_t kCloneAddress = 0x10;
