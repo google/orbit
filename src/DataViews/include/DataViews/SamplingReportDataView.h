@@ -52,7 +52,7 @@ class SamplingReportDataView : public DataView {
   void SetSampledFunctions(absl::Span<const orbit_client_data::SampledFunction> functions);
   void SetThreadID(orbit_client_data::ThreadID tid);
   void SetStackEventsCount(uint32_t stack_events_count);
-  orbit_client_data::ThreadID GetThreadID() const { return tid_; }
+  [[nodiscard]] orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
   void OnExportEventsToCsvRequested(absl::Span<const int> selection) override;
 
@@ -61,7 +61,8 @@ class SamplingReportDataView : public DataView {
                                              absl::Span<const int> selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
-  const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
+  [[nodiscard]] const orbit_client_data::SampledFunction& GetSampledFunction(
+      unsigned int row) const;
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
   [[nodiscard]] std::optional<orbit_symbol_provider::ModuleIdentifier> GetModuleIdentifierFromRow(
       int row) const;

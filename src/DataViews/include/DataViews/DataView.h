@@ -160,13 +160,13 @@ class DataView {
     return false;
   }
   virtual std::string GetLabel() { return ""; }
-  virtual bool HasRefreshButton() const { return false; }
+  [[nodiscard]] virtual bool HasRefreshButton() const { return false; }
   virtual void OnRefreshButtonClicked() {}
   virtual void LinkDataView(DataView* /*data_view*/) {}
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
 
-  int GetUpdatePeriodMs() const { return update_period_ms_; }
+  [[nodiscard]] int GetUpdatePeriodMs() const { return update_period_ms_; }
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 

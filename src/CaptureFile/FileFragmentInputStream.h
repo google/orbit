@@ -46,7 +46,7 @@ class FileFragmentInputStream : public google::protobuf::io::ZeroCopyInputStream
   // Skips a number of bytes.
   // https://developers.google.com/protocol-buffers/docs/reference/cpp/google.protobuf.io.zero_copy_stream#ZeroCopyInputStream.Skip.details
   bool Skip(int count) override;
-  int64_t ByteCount() const override;
+  [[nodiscard]] int64_t ByteCount() const override;
 
   [[nodiscard]] std::optional<ErrorMessage> GetLastError() const { return last_error_; }
 

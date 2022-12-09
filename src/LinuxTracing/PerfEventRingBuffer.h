@@ -25,9 +25,9 @@ class PerfEventRingBuffer {
   PerfEventRingBuffer(const PerfEventRingBuffer&) = delete;
   PerfEventRingBuffer& operator=(const PerfEventRingBuffer&) = delete;
 
-  bool IsOpen() const { return ring_buffer_ != nullptr; }
-  int GetFileDescriptor() const { return file_descriptor_; }
-  const std::string& GetName() const { return name_; }
+  [[nodiscard]] bool IsOpen() const { return ring_buffer_ != nullptr; }
+  [[nodiscard]] int GetFileDescriptor() const { return file_descriptor_; }
+  [[nodiscard]] const std::string& GetName() const { return name_; }
 
   bool HasNewData();
   void ReadHeader(perf_event_header* header);

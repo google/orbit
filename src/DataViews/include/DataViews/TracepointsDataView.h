@@ -42,7 +42,7 @@ class TracepointsDataView : public DataView {
 
   enum ColumnIndex { kColumnSelected, kColumnCategory, kColumnName, kNumColumns };
 
-  const orbit_grpc_protos::TracepointInfo& GetTracepoint(uint32_t row) const;
+  [[nodiscard]] const orbit_grpc_protos::TracepointInfo& GetTracepoint(uint32_t row) const;
 };
 
 }  // namespace orbit_data_views

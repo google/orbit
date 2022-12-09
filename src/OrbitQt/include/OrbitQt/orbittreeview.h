@@ -47,7 +47,7 @@ class OrbitTreeView : public QTreeView {
   void selectionChanged(const QItemSelection& selected, const QItemSelection& deselected) override;
   OrbitTableModel* GetModel() { return model_.get(); }
   std::string GetLabel();
-  bool HasRefreshButton() const;
+  [[nodiscard]] bool HasRefreshButton() const;
   void OnRefreshButtonClicked();
   void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
   void SetIsMultiSelection(bool status) { is_multi_selection_ = status; }

@@ -63,7 +63,7 @@ class EventLoop : public QObject {
     result_ = outcome::success(return_code);
     return loop_.exit(return_code);
   }
-  bool isRunning() const { return loop_.isRunning(); }
+  [[nodiscard]] bool isRunning() const { return loop_.isRunning(); }
   void wakeUp() { return loop_.wakeUp(); }
 
   bool processEvents(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {

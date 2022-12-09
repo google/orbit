@@ -97,32 +97,32 @@ class AccessibilityAdapter : public QAccessibleInterface {
   AccessibilityAdapter& operator=(const AccessibilityAdapter& rhs) = delete;
   AccessibilityAdapter& operator=(AccessibilityAdapter&& rhs) = delete;
 
-  bool isValid() const override {
+  [[nodiscard]] bool isValid() const override {
     bool result = info_ != nullptr && object_ != nullptr;
     return result;
   }
 
-  QObject* object() const override { return object_; }
-  QAccessibleInterface* focusChild() const override { return nullptr; }
+  [[nodiscard]] QObject* object() const override { return object_; }
+  [[nodiscard]] QAccessibleInterface* focusChild() const override { return nullptr; }
 
-  QAccessibleInterface* parent() const override {
+  [[nodiscard]] QAccessibleInterface* parent() const override {
     return AdapterRegistry::Get().GetOrCreateAdapter(info_->AccessibleParent());
   }
-  QAccessibleInterface* child(int index) const override {
+  [[nodiscard]] QAccessibleInterface* child(int index) const override {
     return AdapterRegistry::Get().GetOrCreateAdapter(info_->AccessibleChild(index));
   }
-  int childCount() const override { return info_->AccessibleChildCount(); }
+  [[nodiscard]] int childCount() const override { return info_->AccessibleChildCount(); }
   int indexOfChild(const QAccessibleInterface* child) const override;
-  QAccessibleInterface* childAt(int x, int y) const override;
+  [[nodiscard]] QAccessibleInterface* childAt(int x, int y) const override;
 
-  QString text(QAccessible::Text /*t*/) const override {
+  [[nodiscard]] QString text(QAccessible::Text /*t*/) const override {
     return QString::fromStdString(info_->AccessibleName());
   }
   void setText(QAccessible::Text /*t*/, const QString& /*text*/) override{};
-  QRect rect() const override;
-  QAccessible::Role role() const override;
+  [[nodiscard]] QRect rect() const override;
+  [[nodiscard]] QAccessible::Role role() const override;
 
-  virtual QAccessible::State state() const override {
+  [[nodiscard]] virtual QAccessible::State state() const override {
     static_assert(sizeof(QAccessible::State) == sizeof(orbit_accessibility::AccessibilityState));
     return absl::bit_cast<QAccessible::State>(info_->AccessibleState());
   }

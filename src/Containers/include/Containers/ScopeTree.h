@@ -31,7 +31,7 @@ class ScopeNode {
   ScopeNode(ScopeT* scope) : scope_(scope) {}
 
   void Insert(ScopeNode* node);
-  std::string ToString() const {
+  [[nodiscard]] std::string ToString() const {
     std::string result;
     ToString(this, &result);
     return result;
@@ -76,7 +76,7 @@ class ScopeTree {
   ScopeTree();
   void Insert(ScopeT* scope);
   void Print() const { ORBIT_LOG("%s", ToString()); }
-  std::string ToString() const;
+  [[nodiscard]] std::string ToString() const;
 
   using ScopeNodeT = ScopeNode<ScopeT>;
 
