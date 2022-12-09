@@ -32,6 +32,9 @@ class SymbolErrorDialog : public QDialog {
   ~SymbolErrorDialog() override;
   [[nodiscard]] Result Exec();
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ public slots:  // NOLINT(readability-redundant-access-specifiers)
   void OnShowErrorButtonClicked();
   void OnAddSymbolLocationButtonClicked();
   void OnTryAgainButtonClicked();

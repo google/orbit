@@ -53,6 +53,9 @@ class SymbolLocationsDialog : public QDialog {
   // "module symbol file mapping" is saved and added to the list.
   ErrorMessageOr<void> TryAddSymbolFile(const std::filesystem::path& file_path);
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ public slots:  // NOLINT(readability-redundant-access-specifiers)
   void OnRemoveButtonClicked();
   void OnAddFolderButtonClicked();
   void OnAddFileButtonClicked();

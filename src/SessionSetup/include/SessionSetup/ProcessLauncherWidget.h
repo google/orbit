@@ -36,6 +36,9 @@ class ProcessLauncherWidget : public QWidget {
   void on_BrowseWorkingDirButton_clicked();
   void on_LaunchButton_clicked();
 
+  // TODO(https://github.com/google/orbit/issues/4589): Remove redundant "private" once slots is not
+  // needed anymore above.
+ private:  // NOLINT(readability-redundant-access-specifiers)
   std::unique_ptr<Ui::ProcessLauncherWidget> ui_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
 };

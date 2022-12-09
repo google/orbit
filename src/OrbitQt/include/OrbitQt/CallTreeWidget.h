@@ -67,7 +67,7 @@ class CallTreeWidget : public QWidget {
  protected:
   void resizeEvent(QResizeEvent* event) override;
 
- private slots:
+ private:
   void OnRowExpanded(const QModelIndex& index);
   void OnCopyKeySequencePressed();
   void OnAltKeyAndMousePressed(const QPoint& point);

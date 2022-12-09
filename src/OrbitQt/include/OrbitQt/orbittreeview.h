@@ -52,6 +52,9 @@ class OrbitTreeView : public QTreeView {
   void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
   void SetIsMultiSelection(bool status) { is_multi_selection_ = status; }
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ public slots:  // NOLINT(readability-redundant-access-specifiers)
   void columnResized(int column, int oldSize, int newSize);
 
  private slots:
@@ -63,6 +66,9 @@ class OrbitTreeView : public QTreeView {
   void OnDoubleClicked(QModelIndex index);
   void OnRowsSelected(std::vector<int>& rows);
 
+  // TODO(https://github.com/google/orbit/issues/4589): Remove redundant "private" once slots is not
+  // needed anymore above.
+ private:  // NOLINT(readability-redundant-access-specifiers)
   std::unique_ptr<OrbitTableModel> model_;
   std::unique_ptr<QTimer> timer_;
   std::vector<OrbitTreeView*> links_;

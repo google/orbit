@@ -148,11 +148,15 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void closeEvent(QCloseEvent* event) override;
   void resizeEvent(QResizeEvent* event) override;
 
- public slots:
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ public slots:  // NOLINT(readability-redundant-access-specifiers)
   void OnFilterFunctionsTextChanged(const QString& text);
   void OnFilterTracksTextChanged(const QString& text);
 
- private slots:
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ private slots:  // NOLINT(readability-redundant-access-specifiers)
   void on_actionOpenUserDataDirectory_triggered();
   void on_actionOpenAppDataDirectory_triggered();
   void on_actionAbout_triggered();
@@ -187,6 +191,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
 
+  // TODO(https://github.com/google/orbit/issues/4589): Remove redundant "private" once slots is not
+  // needed anymore above.
+ private:  // NOLINT(readability-redundant-access-specifiers)
   void UpdateFilePath(const std::filesystem::path& file_path);
   void StartMainTimer();
   void SetupCaptureToolbar();
