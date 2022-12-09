@@ -344,7 +344,7 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
 std::array<uint8_t, 16> PdbFileLlvm::GetGuid() const {
   constexpr int kGuidSize = 16;
   static_assert(kGuidSize == sizeof(llvm::codeview::GUID));
-  std::array<uint8_t, kGuidSize> result;
+  std::array<uint8_t, kGuidSize> result{};
   auto global_scope = session_->getGlobalScope();
   const llvm::codeview::GUID& guid = global_scope->getGuid();
   std::copy(std::begin(guid.Guid), std::end(guid.Guid), std::begin(result));

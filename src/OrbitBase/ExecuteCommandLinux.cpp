@@ -21,7 +21,7 @@ std::optional<std::string> ExecuteCommand(std::string_view cmd) {
     return std::optional<std::string>{};
   }
 
-  std::array<char, 128> buffer;
+  std::array<char, 128> buffer{};
   std::string result;
   while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
     result += buffer.data();

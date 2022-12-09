@@ -80,7 +80,7 @@ bool RegisterState::HasAvxDataStored() {
 ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   tid_ = tid;
 
-  iovec iov;
+  iovec iov{};
   iov.iov_base = &general_purpose_registers_;
   iov.iov_len = sizeof(GeneralPurposeRegisters);
   auto result = ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
@@ -123,7 +123,7 @@ ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   // BackupRegisters needs to be called before RestoreRegisters.
   ORBIT_CHECK(tid_ != -1);
 
-  iovec iov;
+  iovec iov{};
   iov.iov_base = &general_purpose_registers_;
   iov.iov_len = (bitness_ == Bitness::k32Bit) ? sizeof(GeneralPurposeRegisters32)
                                               : sizeof(GeneralPurposeRegisters64);

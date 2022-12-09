@@ -64,9 +64,9 @@ class OrbitEventIterator : public QFrame {
   std::function<void(void)> previous_button_callback_;
   std::function<void(void)> delete_button_callback_;
 
-  uint64_t min_time_;
-  uint64_t max_time_;
-  uint64_t current_time_;
+  uint64_t min_time_{};
+  uint64_t max_time_{};
+  uint64_t current_time_{};
 };
 
 #endif  // ORBIT_QT_ORBIT_EVENT_ITERATOR_H_

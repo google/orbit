@@ -113,7 +113,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   bool is_selecting_{false};
   Timer hover_timer_;
   int hover_delay_ms_{300};
-  bool can_hover_;
+  bool can_hover_{};
 
   PickingMode picking_mode_ = PickingMode::kNone;
 

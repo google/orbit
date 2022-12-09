@@ -65,8 +65,8 @@ class MockBatcher : public Batcher {
   Vec2 min_point_;
   Vec2 max_point_;
   std::set<float> z_layers_;
-  int num_vertical_lines_;
-  int num_horizontal_lines_;
+  int num_vertical_lines_{};
+  int num_horizontal_lines_{};
   absl::btree_map<Color, int> num_lines_by_color_;
   absl::btree_map<Color, int> num_triangles_by_color_;
   absl::btree_map<Color, int> num_boxes_by_color_;

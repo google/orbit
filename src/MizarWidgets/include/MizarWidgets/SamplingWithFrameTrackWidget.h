@@ -62,7 +62,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   void ProcessDataValidationOutcome(const ErrorMessageOr<void>& outcome) const;
   void SetFunctionNameToShow();
 
-  const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
+  const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_{};
   std::unique_ptr<Ui::SamplingWithFrameTrackWidget> ui_;
 
   static constexpr inline double kDefaultSignificanceLevel = 0.05;

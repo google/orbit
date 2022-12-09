@@ -286,7 +286,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
     // flat. To address this problem, we compute y positions from the normalized cumulative values.
-    std::array<float, Dimension> normalized_cumulative_values;
+    std::array<float, Dimension> normalized_cumulative_values{};
     std::transform(cumulative_values.begin(), cumulative_values.end(),
                    normalized_cumulative_values.begin(), [min, inverse_value_range](double value) {
                      return static_cast<float>((value - min) * inverse_value_range);

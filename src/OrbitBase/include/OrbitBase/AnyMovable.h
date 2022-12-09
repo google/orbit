@@ -59,7 +59,7 @@ class AnyMovable {
   };
 
   std::unique_ptr<Base> storage_;
-  const std::type_info* type_info_;
+  const std::type_info* type_info_{};
 
  public:
   explicit AnyMovable() = default;

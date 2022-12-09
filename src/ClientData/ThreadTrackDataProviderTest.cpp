@@ -119,7 +119,7 @@ TEST(ThreadTrackDataProvider, OnCaptureComplete) {
 
 // Insert 4 timers with the same thread_id and an extra with a different one.
 TimersInTest InsertTimersForTesting(ThreadTrackDataProvider& thread_track_data_provider) {
-  TimersInTest inserted_timers_ptr;
+  TimersInTest inserted_timers_ptr{};
   TimerInfo timer_info;
 
   // left

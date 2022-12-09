@@ -36,7 +36,7 @@ constexpr uint64_t kMinTimestamp = 2;
 constexpr uint64_t kMaxTimestamp = 11;
 
 TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
-  TimersInTest inserted_timers;
+  TimersInTest inserted_timers{};
   TimerInfo timer_info;
   timer_info.set_process_id(kProcessId);
 

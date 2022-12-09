@@ -256,10 +256,10 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   // };
   // Because of filename, the layout is not fixed.
 
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  perf_event_sample_id_tid_time_streamid_cpu sample_id{};
   ReadPerfSampleIdAll(ring_buffer, header, &sample_id);
 
-  perf_event_mmap_up_to_pgoff mmap_event;
+  perf_event_mmap_up_to_pgoff mmap_event{};
   ring_buffer->ReadValueAtOffset(&mmap_event, 0);
 
   // read filename
@@ -433,7 +433,7 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
+  sched_wakeup_tracepoint_fixed sched_wakeup{};
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
@@ -464,7 +464,7 @@ PerfEvent ConsumeSchedWakeupWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
+  sched_wakeup_tracepoint_fixed sched_wakeup{};
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
@@ -513,7 +513,7 @@ PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
+  sched_wakeup_tracepoint_fixed sched_wakeup{};
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
 
   ring_buffer->SkipRecord(header);
@@ -563,7 +563,7 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_switch_tracepoint sched_wakeup;
+  sched_switch_tracepoint sched_wakeup{};
   std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_switch_tracepoint));
 
   ring_buffer->SkipRecord(header);
@@ -622,7 +622,7 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_switch_tracepoint sched_switch;
+  sched_switch_tracepoint sched_switch{};
   std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));
 
   ring_buffer->SkipRecord(header);
@@ -668,7 +668,7 @@ template <typename EventType, typename StructType>
   uint32_t tracepoint_size;
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
 
-  perf_event_raw_sample_fixed ring_buffer_record;
+  perf_event_raw_sample_fixed ring_buffer_record{};
   ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
 
   std::unique_ptr<uint8_t[]> tracepoint_data =

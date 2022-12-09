@@ -33,7 +33,7 @@ void Child() {
   ORBIT_CHECK(ptrace(PTRACE_TRACEME, 0, nullptr, 0) != -1);
 
   uint64_t rax = 0xaabbccdd;
-  std::array<uint8_t, 32> avx_bytes;
+  std::array<uint8_t, 32> avx_bytes{};
   for (size_t i = 0; i < avx_bytes.size(); ++i) {
     avx_bytes[i] = i;
   }

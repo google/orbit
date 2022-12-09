@@ -48,7 +48,7 @@ class QtTextRenderer : public TextRenderer {
     StoredText(const QString& text, int x, int y, int w, int h, TextFormatting formatting)
         : text(text), x(x), y(y), w(w), h(h), formatting(formatting) {}
     QString text;
-    int x, y, w, h;
+    int x{}, y{}, w{}, h{};
     TextFormatting formatting;
   };
   absl::flat_hash_map<float, std::vector<StoredText>> stored_text_;

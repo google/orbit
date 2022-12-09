@@ -183,7 +183,7 @@ struct TargetProcessStateAfterCapture {
 
 TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
     pid_t pid, const absl::flat_hash_set<std::string>& old_core_files) {
-  TargetProcessStateAfterCapture result;
+  TargetProcessStateAfterCapture result{};
   result.process_state = CaptureFinished::kProcessStateInternalError;
   result.termination_signal = CaptureFinished::kTerminationSignalInternalError;
 
