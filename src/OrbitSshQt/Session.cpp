@@ -12,7 +12,9 @@
 #include <system_error>
 #include <utility>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Session.h"
 
 namespace orbit_ssh_qt {
@@ -117,7 +119,7 @@ void Session::HandleEagain() {
   }
 }
 
-void Session::ConnectToServer(orbit_ssh::Credentials creds) {
+orbit_base::Future<ErrorMessageOr<void>> Session::ConnectToServer(orbit_ssh::Credentials creds) {
   credentials_ = std::move(creds);
 
   notifiers_ = std::nullopt;
@@ -126,18 +128,16 @@ void Session::ConnectToServer(orbit_ssh::Credentials creds) {
   SetState(State::kDisconnected);
 
   OnEvent();
+  return GetStartedFuture();
 }
 
-Session::DisconnectResult Session::Disconnect() {
+orbit_base::Future<ErrorMessageOr<void>> Session::Disconnect() {
   if (CurrentState() == State::kConnected) {
     SetState(State::kAboutToDisconnect);
     OnEvent();
-    if (IsStopping()) {
-      return DisconnectResult::kDisconnectStarted;
-    }
   }
 
-  return DisconnectResult::kDisconnectedSuccessfully;
+  return GetStoppedFuture();
 }
 
 void Session::SetError(std::error_code e) {

@@ -7,11 +7,11 @@
 
 #include <gtest/gtest.h>
 
-#include <QSignalSpy>
 #include <optional>
 
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/Session.h"
+#include "QtTestUtils/WaitFor.h"
 #include "SshSessionTest.h"
 
 namespace orbit_ssh_qt {
@@ -33,20 +33,14 @@ class SshTestFixture : public SshSessionTest {
 
     session_.emplace(&context_.value());
 
-    session_->ConnectToServer(GetCredentials());
-
-    if (!session_->IsStarted()) {
-      QSignalSpy started_signal{&session_.value(), &orbit_ssh_qt::Session::started};
-      EXPECT_TRUE(started_signal.wait());
-    }
+    ASSERT_THAT(orbit_qt_test_utils::WaitFor(session_->ConnectToServer(GetCredentials())),
+                orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
   }
 
   void TearDown() override {
-    if (session_.has_value() &&
-        session_->Disconnect() !=
-            orbit_ssh_qt::Session::DisconnectResult::kDisconnectedSuccessfully) {
-      QSignalSpy stopped_signal{&session_.value(), &orbit_ssh_qt::Session::stopped};
-      EXPECT_TRUE(stopped_signal.wait());
+    if (session_.has_value()) {
+      EXPECT_THAT(orbit_qt_test_utils::WaitFor(session_->Disconnect()),
+                  orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
     }
 
     SshSessionTest::TearDown();

@@ -5,6 +5,7 @@
 #include <absl/algorithm/container.h>
 #include <gtest/gtest.h>
 
+#include <QSignalSpy>
 #include <QTest>
 #include <numeric>
 
