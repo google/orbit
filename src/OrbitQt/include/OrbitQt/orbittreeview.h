@@ -57,6 +57,8 @@ class OrbitTreeView : public QTreeView {
  public slots:  // NOLINT(readability-redundant-access-specifiers)
   void columnResized(int column, int oldSize, int newSize);
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
  private slots:
   void OnSort(int section, Qt::SortOrder order);
   void OnTimer();

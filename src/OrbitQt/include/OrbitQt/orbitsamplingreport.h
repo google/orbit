@@ -40,6 +40,8 @@ class OrbitSamplingReport : public QWidget {
  signals:
   void LeaveCallstackInspectionClicked();
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
  private slots:
   void on_NextCallstackButton_clicked();
   void on_PreviousCallstackButton_clicked();
