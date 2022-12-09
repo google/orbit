@@ -24,8 +24,8 @@ enum class Error {
 struct ErrorCategory : std::error_category {
   using std::error_category::error_category;
 
-  const char* name() const noexcept override { return "OrbitQt_Error"; }
-  std::string message(int condition) const override;
+  [[nodiscard]] const char* name() const noexcept override { return "OrbitQt_Error"; }
+  [[nodiscard]] std::string message(int condition) const override;
 };
 
 inline const ErrorCategory& GetErrorCategory() {

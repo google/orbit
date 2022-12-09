@@ -21,7 +21,8 @@ class TracepointServiceClient {
   static std::unique_ptr<TracepointServiceClient> Create(
       const std::shared_ptr<grpc::Channel>& channel);
 
-  ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> GetTracepointList() const;
+  [[nodiscard]] ErrorMessageOr<std::vector<orbit_grpc_protos::TracepointInfo>> GetTracepointList()
+      const;
 
  private:
   explicit TracepointServiceClient(const std::shared_ptr<grpc::Channel>& channel);

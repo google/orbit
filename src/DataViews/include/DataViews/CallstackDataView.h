@@ -74,8 +74,8 @@ class CallstackDataView : public DataView {
     const orbit_client_data::ModuleData* module;
   };
 
-  CallstackDataViewFrame GetFrameFromRow(int row) const;
-  CallstackDataViewFrame GetFrameFromIndex(size_t index_in_callstack) const;
+  [[nodiscard]] CallstackDataViewFrame GetFrameFromRow(int row) const;
+  [[nodiscard]] CallstackDataViewFrame GetFrameFromIndex(size_t index_in_callstack) const;
 
   enum ColumnIndex {
     kColumnSelected,

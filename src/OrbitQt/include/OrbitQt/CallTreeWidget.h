@@ -104,10 +104,10 @@ class CallTreeWidget : public QWidget {
 
     static const QColor kHighlightColor;
 
-    QVariant data(const QModelIndex& index, int role) const override;
+    [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
    private:
-    bool ItemMatchesFilter(const QModelIndex& index) const;
+    [[nodiscard]] bool ItemMatchesFilter(const QModelIndex& index) const;
 
     std::vector<std::string> lowercase_filter_tokens_;
   };
@@ -117,7 +117,7 @@ class CallTreeWidget : public QWidget {
     HookedIdentityProxyModel(OrbitApp* app, QObject* parent)
         : QIdentityProxyModel{parent}, app_{app} {}
 
-    QVariant data(const QModelIndex& index, int role) const override;
+    [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
    private:
     OrbitApp* app_;

@@ -32,17 +32,17 @@ class SymbolHelper : public SymbolCacheInterface {
   explicit SymbolHelper(std::filesystem::path cache_directory,
                         absl::Span<const std::filesystem::path> structured_debug_directories);
 
-  ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
+  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, std::string_view build_id,
       const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type,
       absl::Span<const std::filesystem::path> paths) const;
-  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(const std::filesystem::path& module_path,
-                                                           std::string_view build_id) const;
-  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(const std::filesystem::path& module_path,
-                                                           uint64_t expected_file_size) const;
-  ErrorMessageOr<std::filesystem::path> FindObjectInCache(const std::filesystem::path& module_path,
-                                                          std::string_view build_id,
-                                                          uint64_t expected_file_size) const;
+  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
+      const std::filesystem::path& module_path, std::string_view build_id) const;
+  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
+      const std::filesystem::path& module_path, uint64_t expected_file_size) const;
+  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindObjectInCache(
+      const std::filesystem::path& module_path, std::string_view build_id,
+      uint64_t expected_file_size) const;
   [[nodiscard]] std::filesystem::path GenerateCachedFilePath(
       const std::filesystem::path& file_path) const override;
 

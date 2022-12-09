@@ -43,7 +43,7 @@ class ThreadTrackDataProvider final {
   [[nodiscard]] std::vector<uint32_t> GetAllThreadIds() const;
 
   // For the following methods, we assume ScopeTreeTimerData is already been created for thread_id.
-  std::vector<const TimerChain*> GetChains(uint32_t thread_id) const {
+  [[nodiscard]] std::vector<const TimerChain*> GetChains(uint32_t thread_id) const {
     return GetScopeTreeTimerData(thread_id)->GetChains();
   }
 
