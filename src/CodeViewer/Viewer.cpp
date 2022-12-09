@@ -504,18 +504,18 @@ void Viewer::HighlightCurrentLine() {
 }
 
 int Viewer::WidthPercentageColumn() const {
-  const QString kWidestPercentage = "100.00 %";
-  return StringWidthInPixels(fontMetrics(), kWidestPercentage);
+  const QString widest_percentage = "100.00 %";
+  return StringWidthInPixels(fontMetrics(), widest_percentage);
 }
 
 int Viewer::WidthSampleCounterColumn() const {
-  const QString kSampleColumnTitle = "Samples";
-  return StringWidthInPixels(fontMetrics(), kSampleColumnTitle);
+  const QString sample_column_title = "Samples";
+  return StringWidthInPixels(fontMetrics(), sample_column_title);
 }
 
 int Viewer::WidthMarginBetweenColumns() const {
-  const QString kTwoSpaces = "  ";
-  return StringWidthInPixels(fontMetrics(), kTwoSpaces);
+  const QString two_spaces = "  ";
+  return StringWidthInPixels(fontMetrics(), two_spaces);
 }
 
 int Viewer::TopWidgetHeight() const { return fontMetrics().height(); }

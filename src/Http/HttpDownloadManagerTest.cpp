@@ -118,10 +118,10 @@ class HttpDownloadManagerTest : public ::testing::Test {
                        QString std_output = local_http_server_process_.readAllStandardOutput();
                        if (!std_output.contains(prefix)) return;
 
-                       QRegularExpression portRegex("port ([0-9]+)");
-                       QRegularExpressionMatch portMatch = portRegex.match(std_output);
-                       if (portMatch.hasMatch()) {
-                         port_ = portMatch.captured(1);
+                       QRegularExpression port_regex("port ([0-9]+)");
+                       QRegularExpressionMatch port_match = port_regex.match(std_output);
+                       if (port_match.hasMatch()) {
+                         port_ = port_match.captured(1);
                          loop.quit();
                        }
                      });
@@ -218,26 +218,26 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidSaveFilePath) {
 
 TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
   constexpr size_t kDownloadCounts = 3;
-  const std::array<std::string, kDownloadCounts> kURLs = {
+  const std::array<std::string, kDownloadCounts> urls = {
       GetUrl("dllmain.dll"), GetUrl("non_exist.dll"), GetUrl("hello_world_elf")};
-  std::array<TemporaryFile, kDownloadCounts> kTemporaryFiles{GetTemporaryFile(), GetTemporaryFile(),
+  std::array<TemporaryFile, kDownloadCounts> temporary_files{GetTemporaryFile(), GetTemporaryFile(),
                                                              GetTemporaryFile()};
   std::array<StopSource, kDownloadCounts> stop_sources{};
 
   std::vector<Future<DownloadResult>> futures;
   futures.reserve(kDownloadCounts);
   for (size_t i = 0; i < kDownloadCounts; ++i) {
-    kTemporaryFiles[i].CloseAndRemove();
-    auto future = manager_->Download(kURLs[i], kTemporaryFiles[i].file_path(),
-                                     stop_sources[i].GetStopToken());
+    temporary_files[i].CloseAndRemove();
+    auto future =
+        manager_->Download(urls[i], temporary_files[i].file_path(), stop_sources[i].GetStopToken());
     futures.emplace_back(std::move(future));
   }
 
   orbit_base::WhenAll(absl::MakeConstSpan(futures))
-      .Then(executor_.get(), [&kTemporaryFiles](std::vector<DownloadResult> results) {
-        VerifyDownloadSucceeded(results[0], kTemporaryFiles[0].file_path());
+      .Then(executor_.get(), [&temporary_files](std::vector<DownloadResult> results) {
+        VerifyDownloadSucceeded(results[0], temporary_files[0].file_path());
         VerifyDownloadNotFound(results[1]);
-        VerifyDownloadSucceeded(results[2], kTemporaryFiles[2].file_path());
+        VerifyDownloadSucceeded(results[2], temporary_files[2].file_path());
         QCoreApplication::exit();
       });
 

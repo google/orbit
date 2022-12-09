@@ -29,7 +29,7 @@ TEST(ModuleData, Constructor) {
   object_segment.set_size_in_file(0x2FFF);
   object_segment.set_address(0x1000);
   object_segment.set_size_in_memory(0x3000);
-  constexpr ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
+  constexpr ModuleInfo::ObjectFileType kObjectFileType = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(kName);
@@ -38,7 +38,7 @@ TEST(ModuleData, Constructor) {
   module_info.set_build_id(kBuildId);
   module_info.set_load_bias(kLoadBias);
   *module_info.add_object_segments() = object_segment;
-  module_info.set_object_file_type(object_file_type);
+  module_info.set_object_file_type(kObjectFileType);
 
   ModuleData module{module_info};
 
@@ -47,7 +47,7 @@ TEST(ModuleData, Constructor) {
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);
   EXPECT_EQ(module.load_bias(), kLoadBias);
-  EXPECT_EQ(module.object_file_type(), object_file_type);
+  EXPECT_EQ(module.object_file_type(), kObjectFileType);
   ASSERT_EQ(module.GetObjectSegments().size(), 1);
   EXPECT_EQ(module.GetObjectSegments()[0].offset_in_file(), object_segment.offset_in_file());
   EXPECT_EQ(module.GetObjectSegments()[0].size_in_file(), object_segment.size_in_file());
@@ -267,7 +267,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   constexpr uint64_t kFileSize = 1000;
   constexpr const char* kBuildId = "";
   constexpr uint64_t kLoadBias = 4000;
-  ModuleInfo::ObjectFileType kObjectFileType = ModuleInfo::kElfFile;
+  ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
   module_info.set_name(kName);
@@ -275,7 +275,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   module_info.set_file_size(kFileSize);
   module_info.set_build_id(kBuildId);
   module_info.set_load_bias(kLoadBias);
-  module_info.set_object_file_type(kObjectFileType);
+  module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
   EXPECT_EQ(module.name(), kName);
@@ -283,7 +283,7 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);
   EXPECT_EQ(module.load_bias(), kLoadBias);
-  EXPECT_EQ(module.object_file_type(), kObjectFileType);
+  EXPECT_EQ(module.object_file_type(), object_file_type);
   EXPECT_EQ(module.GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kNoSymbols);
   EXPECT_EQ(module.GetFunctions().size(), 0);
 

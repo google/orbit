@@ -117,7 +117,7 @@ void CaptureWindow::PreRender() {
     // the root element (time graph) of the tree.
     // During loading or capturing, only a single layouting loop is executed as we're
     // streaming in data from a seperate thread (for performance reasons)
-    const int kMaxLayoutLoops =
+    const int max_layout_loops =
         (app_ != nullptr && (app_->IsCapturing() || app_->IsLoadingCapture()))
             ? 1
             : time_graph_layout_->GetMaxLayoutingLoops();
@@ -125,7 +125,7 @@ void CaptureWindow::PreRender() {
     // TODO (b/229222095) Log when the max loop count is exceeded
     do {
       time_graph_->UpdateLayout();
-    } while (++layout_loops < kMaxLayoutLoops && time_graph_->HasLayoutChanged());
+    } while (++layout_loops < max_layout_loops && time_graph_->HasLayoutChanged());
   }
 }
 
@@ -358,9 +358,9 @@ void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ct
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
-  const float kPanRatioPerLeftAndRightArrowKeys = 0.1f;
-  const float kScrollingRatioPerUpAndDownArrowKeys = 0.05f;
-  const float kScrollingRatioPerPageUpAndDown = 0.9f;
+  constexpr float kPanRatioPerLeftAndRightArrowKeys = 0.1f;
+  constexpr float kScrollingRatioPerUpAndDownArrowKeys = 0.05f;
+  constexpr float kScrollingRatioPerPageUpAndDown = 0.9f;
 
   // TODO(b/234116147): Move this part to TimeGraph and manage events similarly to HandleMouseEvent.
   switch (key_code) {
@@ -695,11 +695,11 @@ void CaptureWindow::RenderHelpUi() {
       {time_graph_layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f /*max_size*/},
       &text_bounding_box_pos, &text_bounding_box_size);
 
-  const Color kBoxColor(50, 50, 50, 243);
-  const float kMargin = 15.f;
-  const float kRoundingRadius = 20.f;
+  const Color box_color(50, 50, 50, 243);
+  constexpr float kMargin = 15.f;
+  constexpr float kRoundingRadius = 20.f;
   primitive_assembler_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size,
-                                     GlCanvas::kZValueUi, kRoundingRadius, kBoxColor, kMargin);
+                                     GlCanvas::kZValueUi, kRoundingRadius, box_color, kMargin);
 }
 
 const char* CaptureWindow::GetHelpText() const {

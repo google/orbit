@@ -1718,10 +1718,10 @@ void OrbitMainWindow::SetTarget(const orbit_session_setup::FileTarget& target) {
 }
 
 void OrbitMainWindow::UpdateTargetLabelPosition() {
-  const int kMenuWidth = 300;
-  const int kMaxLabelWidth = width() - kMenuWidth;
+  constexpr int kMenuWidth = 300;
+  const int max_label_width = width() - kMenuWidth;
 
-  target_widget_->setMaximumWidth(kMaxLabelWidth);
+  target_widget_->setMaximumWidth(max_label_width);
   target_widget_->adjustSize();
 
   int target_widget_width = target_widget_->width();

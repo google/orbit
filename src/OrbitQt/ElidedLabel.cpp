@@ -14,12 +14,12 @@ void ElidedLabel::paintEvent(QPaintEvent* event) {
   QFontMetrics metrics = painter.fontMetrics();
 
   const QString content = text_;
-  QTextLayout textLayout(content, painter.font());
+  QTextLayout text_layout(content, painter.font());
 
-  textLayout.beginLayout();
+  text_layout.beginLayout();
   QString elided_text = metrics.elidedText(content, elision_mode_, width() - 10);
   painter.drawText(QPoint(0, metrics.ascent()), elided_text);
-  textLayout.endLayout();
+  text_layout.endLayout();
   QLabel::paintEvent(event);
 }
 

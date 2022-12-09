@@ -392,10 +392,10 @@ void LiveFunctionsDataView::OnJumpToRequested(std::string_view action,
 
   // Write header line
   constexpr size_t kNumColumns = 5;
-  const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
-                                                    "Duration (ns)"};
+  const std::array<std::string, kNumColumns> names{"Name", "Thread", "Start", "End",
+                                                   "Duration (ns)"};
 
-  OUTCOME_TRY(WriteLineToCsv(fd, kNames));
+  OUTCOME_TRY(WriteLineToCsv(fd, names));
 
   absl::flat_hash_set<ScopeId> selected_scope_ids;
   std::transform(std::begin(selection), std::end(selection),

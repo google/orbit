@@ -103,7 +103,7 @@ ErrorMessageOr<bool> AlreadyInjected(absl::Span<const ModuleInfo> modules) {
 // a situation where instrumenting the functions below would lead to a recursive call into the
 // instrumentation. We just skip these and leave instrumenting them to the kernel/uprobe fallback.
 bool IsBlocklisted(std::string_view function_name) {
-  static const absl::flat_hash_set<std::string> kBlocklist{
+  static const absl::flat_hash_set<std::string> blocklist{
       "__GI___libc_malloc",
       "__GI___libc_free",
       "get_free_list",
@@ -131,7 +131,7 @@ bool IsBlocklisted(std::string_view function_name) {
       // instruction.
       "__GI_memcpy",
   };
-  return kBlocklist.contains(function_name);
+  return blocklist.contains(function_name);
 }
 
 // MachineCodeForCloneCall creates the code to spawn a new thread inside the target process by using
@@ -196,9 +196,9 @@ ErrorMessageOr<void> WaitForThreadToExit(pid_t pid, pid_t tid) {
 // These are the names of the threads that will be spawned when
 // liborbituserspaceinstrumentation.so is injected into the target process.
 std::multiset<std::string> GetExpectedOrbitThreadNames() {
-  static const std::multiset<std::string> kThreadNames{
+  static const std::multiset<std::string> thread_names{
       "default-executo", "resolver-execut", "grpc_global_tim", "ConnectRcvCmds", "ForwarderThread"};
-  return kThreadNames;
+  return thread_names;
 }
 
 ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
@@ -211,7 +211,7 @@ ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
   // happened in the real target processes.
   // We choose a three second (300 x 10 ms) timeout and query the existing threads every 10 ms.
   constexpr int kNumberOfRetries = 300;
-  std::chrono::milliseconds kWaitingPeriod{10};
+  constexpr std::chrono::milliseconds kWaitingPeriod{10};
   std::vector<pid_t> orbit_threads;
   std::multiset<std::string> orbit_threads_names;
   int count = 0;

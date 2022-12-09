@@ -78,7 +78,7 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   constexpr uint32_t kNumBoxes = 3;
 
   // Lines
-  float kLineSize = 5.;
+  constexpr float kLineSize = 5.;
   primitive_assembler_tester.AddLine(kTopLeft, kBottomLeft, 0, kFakeColor);
   primitive_assembler_tester.AddLine(kTopLeft, kBottomLeft, 0, kFakeColor, pickable);
   primitive_assembler_tester.AddVerticalLine(kTopLeft, kLineSize, 0, kFakeColor);
@@ -86,16 +86,16 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), kNumLines);
 
   // Triangles
-  Triangle kFakeTriangle{kTopLeft, kTopRight, kBottomRight};
-  primitive_assembler_tester.AddTriangle(kFakeTriangle, 0, kFakeColor);
-  primitive_assembler_tester.AddTriangle(kFakeTriangle, 0, kFakeColor, pickable);
+  const Triangle fake_triangle{kTopLeft, kTopRight, kBottomRight};
+  primitive_assembler_tester.AddTriangle(fake_triangle, 0, kFakeColor);
+  primitive_assembler_tester.AddTriangle(fake_triangle, 0, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), kNumTriangles);
 
   // Boxes
-  Quad kFakeBox{std::array<Vec2, 4>{kTopLeft, kTopRight, kBottomRight, kBottomLeft}};
-  primitive_assembler_tester.AddBox(kFakeBox, 0, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
-  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor);
-  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor, pickable);
+  const Quad fake_box{std::array<Vec2, 4>{kTopLeft, kTopRight, kBottomRight, kBottomLeft}};
+  primitive_assembler_tester.AddBox(fake_box, 0, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
+  primitive_assembler_tester.AddBox(fake_box, 0, kFakeColor);
+  primitive_assembler_tester.AddBox(fake_box, 0, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), kNumBoxes);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), kNumLines + kNumTriangles + kNumBoxes);
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
@@ -135,9 +135,9 @@ TEST(PrimitiveAssembler, ComplexShapes) {
 
   // TODO(b/227744958) This should probably be removed and AddBox should be used instead
   // AddShadedTrapezium -> 2 Triangles
-  Vec2 kTopCentred = {(kTopLeft[0] + kTopRight[0]) / 2.f, kTopLeft[1]};
+  const Vec2 top_centred = {(kTopLeft[0] + kTopRight[0]) / 2.f, kTopLeft[1]};
   primitive_assembler_tester.AddShadedTrapezium(
-      Quad{{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}}, 0, kFakeColor,
+      Quad{{kTopLeft, top_centred, kBottomRight, kBottomLeft}}, 0, kFakeColor,
       std::make_unique<PickingUserData>());
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 2);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 2);

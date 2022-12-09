@@ -75,38 +75,38 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
     tab->setObjectName(QStringLiteral("samplingReportThreadTab"));
     tab->setAccessibleName(QStringLiteral("SamplingReportThreadTab"));
 
-    auto* gridLayout_2 = new QGridLayout(tab);
-    gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-    auto* treeView = new OrbitDataViewPanel(tab);
-    treeView->SetDataModel(&report_data_view);
+    auto* grid_layout_2 = new QGridLayout(tab);
+    grid_layout_2->setObjectName(QStringLiteral("gridLayout_2"));
+    auto* tree_view = new OrbitDataViewPanel(tab);
+    tree_view->SetDataModel(&report_data_view);
 
     if (!report_data_view.IsSortingAllowed()) {
-      treeView->GetTreeView()->setSortingEnabled(false);
+      tree_view->GetTreeView()->setSortingEnabled(false);
     } else {
       int column = report_data_view.GetDefaultSortingColumn();
       Qt::SortOrder order = report_data_view.GetColumns()[column].initial_order ==
                                     orbit_data_views::DataView::SortingOrder::kAscending
                                 ? Qt::AscendingOrder
                                 : Qt::DescendingOrder;
-      treeView->GetTreeView()->sortByColumn(column, order);
+      tree_view->GetTreeView()->sortByColumn(column, order);
     }
 
-    treeView->setObjectName(QStringLiteral("samplingReportDataView"));
-    treeView->setAccessibleName(QStringLiteral("SamplingReportDataView"));
-    gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
-    treeView->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
+    tree_view->setObjectName(QStringLiteral("samplingReportDataView"));
+    tree_view->setAccessibleName(QStringLiteral("SamplingReportDataView"));
+    grid_layout_2->addWidget(tree_view, 0, 0, 1, 1);
+    tree_view->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
     {
       ORBIT_SCOPE("resizeSections");
-      treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
+      tree_view->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
     }
-    treeView->GetTreeView()->SetIsMultiSelection(true);
+    tree_view->GetTreeView()->SetIsMultiSelection(true);
 
-    treeView->Link(ui_->CallstackTreeView);
+    tree_view->Link(ui_->CallstackTreeView);
 
     // This is hack - it is needed to update ui when data changes
     // TODO: Remove this once model is implemented properly and there
     //  is no need for manual updates.
-    orbit_data_views_.push_back(treeView);
+    orbit_data_views_.push_back(tree_view);
 
     uint32_t thread_id = report_data_view.GetThreadID();
     // Report any thread that contains more than 5% unwinding errors.
@@ -122,7 +122,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
       notice_box->Initialize(label, "Hide", kRed);
       QObject::connect(notice_box, &orbit_util_widgets::NoticeWidget::ButtonClicked, notice_box,
                        [notice_box]() { notice_box->hide(); });
-      gridLayout_2->addWidget(notice_box, 1, 0);
+      grid_layout_2->addWidget(notice_box, 1, 0);
     }
 
     ui_->tabWidget->addTab(tab, QString::fromStdString(report_data_view.GetName()));

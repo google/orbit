@@ -131,7 +131,8 @@ class MemoryTracingIntegrationTestFixture {
 
 void VerifyOrderAndContentOfEvents(absl::Span<const ProducerCaptureEvent> events,
                                    uint64_t sampling_period_ns) {
-  const auto kMemoryEventsTimeDifferenceTolerance = static_cast<uint64_t>(sampling_period_ns * 0.2);
+  const auto memory_events_time_difference_tolerance =
+      static_cast<uint64_t>(sampling_period_ns * 0.2);
   uint64_t previous_memory_usage_event_timestamp_ns = 0;
 
   for (const auto& event : events) {
@@ -183,7 +184,7 @@ void VerifyOrderAndContentOfEvents(absl::Span<const ProducerCaptureEvent> events
     // Verify that the memory events in the same memory_usage_event are sampled at very close time.
     uint64_t max_timestamp = *std::max_element(timestamps.begin(), timestamps.end());
     uint64_t min_timestamp = *std::min_element(timestamps.begin(), timestamps.end());
-    EXPECT_LE(max_timestamp - min_timestamp, kMemoryEventsTimeDifferenceTolerance);
+    EXPECT_LE(max_timestamp - min_timestamp, memory_events_time_difference_tolerance);
   }
 }
 
@@ -203,17 +204,17 @@ void VerifyEventCounts(absl::Span<const ProducerCaptureEvent> events, size_t exp
 }  // namespace
 
 TEST(MemoryTracingIntegrationTest, MemoryTracing) {
-  const uint64_t kMemorySamplingPeriodNs = absl::Milliseconds(100) / absl::Nanoseconds(1);
-  const size_t kPeriodCounts = 10;
+  const uint64_t memory_sampling_period_ns = absl::Milliseconds(100) / absl::Nanoseconds(1);
+  const size_t period_counts = 10;
 
-  MemoryTracingIntegrationTestFixture fixture(kMemorySamplingPeriodNs);
+  MemoryTracingIntegrationTestFixture fixture(memory_sampling_period_ns);
 
-  absl::Duration tracing_period = absl::Nanoseconds(kMemorySamplingPeriodNs * kPeriodCounts);
+  absl::Duration tracing_period = absl::Nanoseconds(memory_sampling_period_ns * period_counts);
   std::vector<ProducerCaptureEvent> events = TraceAndGetEvents(&fixture, tracing_period);
 
-  VerifyOrderAndContentOfEvents(events, kMemorySamplingPeriodNs);
+  VerifyOrderAndContentOfEvents(events, memory_sampling_period_ns);
 
-  VerifyEventCounts(events, kPeriodCounts);
+  VerifyEventCounts(events, period_counts);
 }
 
 }  // namespace orbit_memory_tracing

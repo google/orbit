@@ -99,7 +99,7 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
 };
 
 TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
-  const int kChildCount = 2;
+  constexpr int kChildCount = 2;
   CaptureViewElementTester tester;
   UnitTestCaptureViewContainerElement container_elem(nullptr, tester.GetViewport(),
                                                      tester.GetLayout(), kChildCount);
@@ -124,7 +124,7 @@ TEST(CaptureViewElement, ContainsPointRecursively) {
 }
 
 TEST(CaptureViewElement, ContainsPointRecursivelyForElementsOutsideOfTheParent) {
-  const int kChildCount = 2;
+  constexpr int kChildCount = 2;
   UnitTestCaptureViewContainerElement elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   CaptureViewElement* child0 = elem.GetAllChildren()[0];
@@ -136,33 +136,33 @@ TEST(CaptureViewElement, ContainsPointRecursivelyForElementsOutsideOfTheParent) 
 }
 
 TEST(CaptureViewElement, IsMouseOver) {
-  const int kChildCount = 2;
+  constexpr int kChildCount = 2;
   UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, kChildCount);
 
-  const Vec2 kPosOutside(-1, -1);
-  const Vec2 kPosBetweenChildren(10, kLeafElementHeight + 1);
-  const Vec2 kPosOnChild1(10, kLeafElementHeight + kMarginAfterChild);
+  const Vec2 pos_outside(-1, -1);
+  const Vec2 pos_between_children(10, kLeafElementHeight + 1);
+  const Vec2 pos_on_child1(10, kLeafElementHeight + kMarginAfterChild);
 
   CaptureViewElement* child0 = container_elem.GetAllChildren()[0];
   CaptureViewElement* child1 = container_elem.GetAllChildren()[1];
 
   // Mouse move and leave events should update IsMouseOver() flag.
   EXPECT_EQ(container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosOutside}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_outside}),
             CaptureViewElement::EventResult::kIgnored);
   EXPECT_FALSE(container_elem.IsMouseOver());
   EXPECT_FALSE(child0->IsMouseOver());
   EXPECT_FALSE(child1->IsMouseOver());
 
   EXPECT_EQ(container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosBetweenChildren}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_between_children}),
             CaptureViewElement::EventResult::kIgnored);
   EXPECT_TRUE(container_elem.IsMouseOver());
   EXPECT_FALSE(child0->IsMouseOver());
   EXPECT_FALSE(child1->IsMouseOver());
 
   EXPECT_EQ(container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosOnChild1}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_on_child1}),
             CaptureViewElement::EventResult::kIgnored);
   EXPECT_TRUE(container_elem.IsMouseOver());
   EXPECT_FALSE(child0->IsMouseOver());
@@ -179,7 +179,7 @@ TEST(CaptureViewElement, IsMouseOver) {
   // this flag to highlight some elements, but we only want to highlight them when we move the mouse
   // without clicking any button.
   EXPECT_EQ(container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseMove, kPosOnChild1, /*left=*/true}),
+                CaptureViewElement::MouseEventType::kMouseMove, pos_on_child1, /*left=*/true}),
             CaptureViewElement::EventResult::kIgnored);
   EXPECT_FALSE(container_elem.IsMouseOver());
   EXPECT_FALSE(child0->IsMouseOver());
@@ -191,18 +191,18 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   using ::testing::Exactly;
   using ::testing::Return;
 
-  const int kChildCount = 3;
+  constexpr int kChildCount = 3;
   UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   static_assert(kMarginAfterChild > 0);
 
-  const Vec2 kPosOutside(-1, -1);
-  const Vec2 kPosBetweenChildren(10, kLeafElementHeight + 1);
-  const Vec2 kPosOnChild0(10, kLeafElementHeight - 1);
-  const Vec2 kPosOnChild1(10, kLeafElementHeight + kMarginAfterChild);
-  const Vec2 kPosOnChild2(10, (kLeafElementHeight + kMarginAfterChild) * 2);
+  const Vec2 pos_outside(-1, -1);
+  const Vec2 pos_between_children(10, kLeafElementHeight + 1);
+  const Vec2 pos_on_child0(10, kLeafElementHeight - 1);
+  const Vec2 pos_on_child1(10, kLeafElementHeight + kMarginAfterChild);
+  const Vec2 pos_on_child2(10, (kLeafElementHeight + kMarginAfterChild) * 2);
 
-  const int kDelta = 1;
+  constexpr int kDelta = 1;
 
   CaptureViewElementMock* child0 =
       dynamic_cast<CaptureViewElementMock*>(container_elem.GetAllChildren()[0]);
@@ -229,19 +229,19 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
 
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseWheelUp, kPosOutside}));
+                CaptureViewElement::MouseEventType::kMouseWheelUp, pos_outside}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseWheelUp, kPosBetweenChildren}));
+                CaptureViewElement::MouseEventType::kMouseWheelUp, pos_between_children}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseWheelUp, kPosOnChild0}));
+                CaptureViewElement::MouseEventType::kMouseWheelUp, pos_on_child0}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseWheelUp, kPosOnChild1}));
+                CaptureViewElement::MouseEventType::kMouseWheelUp, pos_on_child1}));
   EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-                CaptureViewElement::MouseEventType::kMouseWheelUp, kPosOnChild2}));
+                CaptureViewElement::MouseEventType::kMouseWheelUp, pos_on_child2}));
 }
 
 TEST(CaptureViewElement, RequestUpdateBubblesUpAndIsClearedAfterDrawLoop) {

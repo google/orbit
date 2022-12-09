@@ -159,8 +159,8 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_EQ(widget_->MakeConfig().frame_track_id, frame_track_id);
   }
 
-  void ExpectRelativeStartNsIs(uint64_t start_relative_ns_) const {
-    EXPECT_EQ(*widget_->MakeConfig().start_relative, start_relative_ns_);
+  void ExpectRelativeStartNsIs(uint64_t start_relative_ns) const {
+    EXPECT_EQ(*widget_->MakeConfig().start_relative, start_relative_ns);
   }
 
   MockPairedData data_;

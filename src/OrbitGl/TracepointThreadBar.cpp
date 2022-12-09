@@ -65,9 +65,9 @@ void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assem
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const bool picking = picking_mode != PickingMode::kNone;
 
-  const Color kWhite(255, 255, 255, 255);
-  const Color kWhiteTransparent(255, 255, 255, 190);
-  const Color kGrey(128, 128, 128, 255);
+  const Color white(255, 255, 255, 255);
+  const Color white_transparent(255, 255, 255, 190);
+  const Color grey(128, 128, 128, 255);
 
   ORBIT_CHECK(capture_data_ != nullptr);
 
@@ -79,14 +79,14 @@ void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assem
           float radius = track_height / 4;
           const Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
           if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
-            const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
+            const Color color = tracepoint.pid() == capture_data_->process_id() ? grey : white;
             primitive_assembler.AddVerticalLine(pos, -track_height, z, color);
           } else {
-            primitive_assembler.AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+            primitive_assembler.AddVerticalLine(pos, -radius, z, white_transparent);
             primitive_assembler.AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
-                                                kWhiteTransparent);
+                                                white_transparent);
             primitive_assembler.AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
-                                          kWhiteTransparent);
+                                          white_transparent);
           }
         });
 
@@ -106,7 +106,7 @@ void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assem
                 return GetTracepointTooltip(primitive_assembler, id);
               });
           user_data->custom_data_ = &tracepoint;
-          primitive_assembler.AddShadedBox(pos, size, z, kWhite, std::move(user_data));
+          primitive_assembler.AddShadedBox(pos, size, z, white, std::move(user_data));
         });
   }
 }

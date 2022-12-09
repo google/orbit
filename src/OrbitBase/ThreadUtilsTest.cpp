@@ -33,7 +33,7 @@ TEST(ThreadUtils, GetCurrentThreadId) {
 
 TEST(ThreadUtils, GetSetCurrentThreadShortName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
-  static const char* kThreadName = "123456789012345";
+  constexpr const char* kThreadName = "123456789012345";
   orbit_base::SetCurrentThreadName(kThreadName);
   std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(kThreadName, thread_name);
@@ -45,7 +45,7 @@ TEST(ThreadUtils, GetSetCurrentThreadLongName) {
 
   // Set thread name longer than 15 characters. The Linux version will truncate the name to 15
   // characters.
-  static const char* kLongThreadName = "1234567890123456";
+  constexpr const char* kLongThreadName = "1234567890123456";
   EXPECT_GT(strlen(kLongThreadName), kMaxNonZeroCharactersLinux);
   orbit_base::SetCurrentThreadName(kLongThreadName);
   std::string long_thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
@@ -62,7 +62,7 @@ TEST(ThreadUtils, GetSetCurrentThreadLongName) {
 
 TEST(ThreadUtils, GetSetCurrentThreadEmptyName) {
   // Set thread name of exactly 15 characters. This should work on both Linux and Windows.
-  static const char* kEmptyThreadName = "";
+  constexpr const char* kEmptyThreadName = "";
   orbit_base::SetCurrentThreadName(kEmptyThreadName);
   std::string thread_name = orbit_base::GetThreadName(orbit_base::GetCurrentThreadId());
   EXPECT_EQ(kEmptyThreadName, thread_name);
@@ -72,7 +72,7 @@ TEST(ThreadUtils, GetThreadName) {
   absl::Mutex mutex;
   uint32_t other_tid = 0;
   bool other_name_read = false;
-  static const char* kThreadName = "OtherThread";
+  static constexpr const char* kThreadName = "OtherThread";
 
   std::thread other_thread{[&mutex, &other_tid, &other_name_read] {
     orbit_base::SetCurrentThreadName(kThreadName);

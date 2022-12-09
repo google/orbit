@@ -120,8 +120,8 @@ VKAPI_ATTR VkResult VKAPI_CALL OrbitResetCommandBuffer(VkCommandBuffer command_b
 }
 
 VKAPI_ATTR void VKAPI_CALL OrbitGetDeviceQueue(VkDevice device, uint32_t queue_family_index,
-                                               uint32_t queue_index, VkQueue* pQueue) {
-  controller.OnGetDeviceQueue(device, queue_family_index, queue_index, pQueue);
+                                               uint32_t queue_index, VkQueue* p_queue) {
+  controller.OnGetDeviceQueue(device, queue_family_index, queue_index, p_queue);
 }
 
 VKAPI_ATTR void VKAPI_CALL OrbitGetDeviceQueue2(VkDevice device,

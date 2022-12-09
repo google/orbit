@@ -71,18 +71,18 @@ TEST_F(TrackTypeItemModelTest, ReadAndWriteData) {
   EXPECT_TRUE(found_row >= 0);
   constexpr int kNameCol = static_cast<int>(TrackTypeItemModel::Column::kName);
   constexpr int kVisCol = static_cast<int>(TrackTypeItemModel::Column::kVisibility);
-  QModelIndex kNameIndex = model_.index(found_row, kNameCol);
-  QModelIndex kVisIndex = model_.index(found_row, kVisCol);
+  QModelIndex name_index = model_.index(found_row, kNameCol);
+  QModelIndex vis_index = model_.index(found_row, kVisCol);
 
   // Check the colum contents:
   // - Expect the "name" column to be non-empty
   // - Expect the "visibility" column to be checked depending on the visibility
-  EXPECT_NE("", model_.data(kNameIndex, Qt::DisplayRole).toString());
-  EXPECT_EQ(Qt::Checked, model_.data(kVisIndex, Qt::CheckStateRole).value<Qt::CheckState>());
+  EXPECT_NE("", model_.data(name_index, Qt::DisplayRole).toString());
+  EXPECT_EQ(Qt::Checked, model_.data(vis_index, Qt::CheckStateRole).value<Qt::CheckState>());
 
   // When track visibility changes, the check state changes as well
   track_manager_.SetTrackTypeVisibility(Track::Type::kThreadTrack, false);
-  EXPECT_EQ(Qt::Unchecked, model_.data(kVisIndex, Qt::CheckStateRole).value<Qt::CheckState>());
+  EXPECT_EQ(Qt::Unchecked, model_.data(vis_index, Qt::CheckStateRole).value<Qt::CheckState>());
 }
 
 TEST_F(TrackTypeItemModelTest, ViewInteraction) {

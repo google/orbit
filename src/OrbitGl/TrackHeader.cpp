@@ -101,10 +101,10 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
   font_size = (font_size * (10 - capped_indentation_level)) / 10;
   float label_offset_x = layout_->GetTrackLabelOffsetX();
 
-  const Color kColor =
+  const Color color =
       track_->IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
 
-  TextRenderer::TextFormatting formatting{font_size, kColor, label_width - label_offset_x};
+  TextRenderer::TextFormatting formatting{font_size, color, label_width - label_offset_x};
   formatting.valign = TextRenderer::VAlign::Middle;
 
   text_renderer.AddTextTrailingCharsPrioritized(

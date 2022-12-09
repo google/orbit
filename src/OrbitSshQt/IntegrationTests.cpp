@@ -84,10 +84,10 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   };
 
   uint32_t checkpoints = 0;
-  const auto CheckCheckpoint = [&checkpoints](Checkpoint cp) {
+  const auto check_checkpoint = [&checkpoints](Checkpoint cp) {
     checkpoints |= 1u << static_cast<int>(cp);
   };
-  const auto CheckIfAllCheckpointsAreChecked = [&checkpoints]() {
+  const auto check_if_all_checkpoints_are_checked = [&checkpoints]() {
     EXPECT_EQ((1u << static_cast<int>(Checkpoint::kLast)) - 1, checkpoints);
   };
 
@@ -101,7 +101,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   QObject::connect(&session, &orbit_ssh_qt::Session::started, &session, [&]() {
     ORBIT_LOG("Session connected. Starting task...");
     task.Start();
-    CheckCheckpoint(Checkpoint::kSessionStarted);
+    check_checkpoint(Checkpoint::kSessionStarted);
   });
 
   // Task
@@ -113,7 +113,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
     ORBIT_LOG("process started. Starting tunnel...");
     task.Write("Data in reverse direction!");
     tunnel.Start();
-    CheckCheckpoint(Checkpoint::kTaskStarted);
+    check_checkpoint(Checkpoint::kTaskStarted);
   });
 
   QObject::connect(&task, &orbit_ssh_qt::Task::finished, &loop, [&](int exit_code) {
@@ -121,7 +121,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
     EXPECT_EQ(data_sink, "Hello World! I'm here!");
     EXPECT_EQ(data_sink_reverse, "Data in reverse direction!");
     sftp_channel.Start();
-    CheckCheckpoint(Checkpoint::kTaskFinished);
+    check_checkpoint(Checkpoint::kTaskFinished);
   });
 
   // TCP Tunnel
@@ -153,13 +153,13 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   QObject::connect(&client, &QTcpSocket::connected, &loop, [&]() {
     ORBIT_LOG("TCP Socket connected. Writing data...");
     write_bytes(write_bytes);
-    CheckCheckpoint(Checkpoint::kSocketConnected);
+    check_checkpoint(Checkpoint::kSocketConnected);
   });
 
   QObject::connect(&tunnel, &orbit_ssh_qt::Tunnel::started, &loop, [&]() {
     ORBIT_LOG("Tunnel opened. Connecting tcp client...");
     client.connectToHost("127.0.0.1", tunnel.GetListenPort());
-    CheckCheckpoint(Checkpoint::kTunnelStarted);
+    check_checkpoint(Checkpoint::kTunnelStarted);
   });
 
   // SFTP Channel
@@ -175,7 +175,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
     ORBIT_LOG("Sftp channel opened! Starting file copy...");
     sftp_op.CopyFileToRemote(temp_file->fileName().toStdString(), "/tmp/temporary_file.txt",
                              orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode::kUserWritable);
-    CheckCheckpoint(Checkpoint::kSftpChannelStarted);
+    check_checkpoint(Checkpoint::kSftpChannelStarted);
   });
 
   QObject::connect(&sftp_channel, &orbit_ssh_qt::SftpChannel::errorOccurred, &loop,
@@ -187,7 +187,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   QObject::connect(&sftp_channel, &orbit_ssh_qt::SftpChannel::stopped, &loop, [&]() {
     ORBIT_LOG("Sftp channel closed!");
     loop.quit();
-    CheckCheckpoint(Checkpoint::kSftpChannelStopped);
+    check_checkpoint(Checkpoint::kSftpChannelStopped);
   });
 
   // SFTP Operation
@@ -201,7 +201,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   QObject::connect(&sftp_op, &orbit_ssh_qt::SftpCopyToRemoteOperation::stopped, &loop, [&]() {
     ORBIT_LOG("Sftp file copy finished!");
     sftp_channel.Stop();
-    CheckCheckpoint(Checkpoint::kSftpOperationStopped);
+    check_checkpoint(Checkpoint::kSftpOperationStopped);
   });
 
   session.ConnectToServer(creds);
@@ -214,7 +214,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   });
 
   loop.exec();
-  CheckIfAllCheckpointsAreChecked();
+  check_if_all_checkpoints_are_checked();
 }
 
 TEST(OrbitSshQtTests, CopyToLocalTest) {

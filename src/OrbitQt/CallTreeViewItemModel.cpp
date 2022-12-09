@@ -201,15 +201,15 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
 
   if ((unwind_errors_item != nullptr || unwind_error_type_item != nullptr) &&
       index.column() == kThreadOrFunction) {
-    static const QColor kUnwindErrorsColor{QColor::fromRgb(255, 128, 0)};
-    return kUnwindErrorsColor;
+    static const QColor unwind_errors_color{QColor::fromRgb(255, 128, 0)};
+    return unwind_errors_color;
   }
 
   const auto* parent_is_unwind_error_type_item =
       dynamic_cast<const CallTreeUnwindErrorType*>(item->parent());
   if (parent_is_unwind_error_type_item != nullptr && index.column() == kThreadOrFunction) {
-    static const QColor kUnwindErrorFunctionColor{Qt::lightGray};
-    return kUnwindErrorFunctionColor;
+    static const QColor unwind_error_function_color{Qt::lightGray};
+    return unwind_error_function_color;
   }
   return {};
 }

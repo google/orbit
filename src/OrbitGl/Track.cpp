@@ -124,12 +124,12 @@ Color Track::GetTrackBackgroundColor() const {
 
   if (GetProcessId() != orbit_base::kInvalidProcessId && GetProcessId() != capture_process_id &&
       GetType() != Type::kSchedulerTrack) {
-    const Color kExternalProcessColor(30, 30, 40, 255);
-    return kExternalProcessColor;
+    const Color external_process_color(30, 30, 40, 255);
+    return external_process_color;
   }
 
-  const Color kDarkGrey(50, 50, 50, 255);
-  return kDarkGrey;
+  const Color dark_grey(50, 50, 50, 255);
+  return dark_grey;
 }
 
 bool Track::ShouldBeRendered() const {

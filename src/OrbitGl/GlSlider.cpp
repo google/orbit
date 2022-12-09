@@ -19,8 +19,6 @@
 
 namespace orbit_gl {
 
-const float GlSlider::kGradientFactor = 0.25f;
-
 CaptureViewElement::EventResult GlSlider::OnMouseEnter() {
   EventResult event_result = CaptureViewElement::OnMouseEnter();
   if (QGuiApplication::instance() != nullptr) {
@@ -86,14 +84,14 @@ void GlSlider::SetNormalizedLength(float length_ratio)  // [0,1]
 }
 
 Color GlSlider::GetLighterColor(const Color& color) {
-  const float kLocalGradientFactor = 1.0f + kGradientFactor;
+  constexpr float kLocalGradientFactor = 1.0f + kGradientFactor;
   return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
           static_cast<unsigned char>(color[1] * kLocalGradientFactor),
           static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
 }
 
 Color GlSlider::GetDarkerColor(const Color& color) {
-  const float kLocalGradientFactor = 1.0f - kGradientFactor;
+  constexpr float kLocalGradientFactor = 1.0f - kGradientFactor;
   return {static_cast<unsigned char>(color[0] * kLocalGradientFactor),
           static_cast<unsigned char>(color[1] * kLocalGradientFactor),
           static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255};
@@ -166,7 +164,7 @@ void GlSlider::OnPick(int x, int y) {
 void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, float y,
                               float width, float height) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
-  const float kEpsilon = 0.0001f;
+  constexpr float kEpsilon = 0.0001f;
 
   Quad border_box = MakeBox(Vec2(x, y), Vec2(width, height));
   primitive_assembler.AddBox(border_box, GlCanvas::kZValueButtonBg - kEpsilon, dark_border_color,
@@ -183,7 +181,7 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   Color color = (IsMouseOver() && PosIsInSlider(mouse_pos_cur_)) ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
-  const float kEpsilon = 0.0001f;
+  constexpr float kEpsilon = 0.0001f;
 
   Quad dark_border_box = MakeBox(Vec2(x, y), Vec2(width, height));
 
@@ -196,7 +194,7 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
                              light_border_color, shared_from_this());
 
   // Slider itself
-  const float kSliderOffset = 2.f;
+  constexpr float kSliderOffset = 2.f;
   if (!is_picked) {
     primitive_assembler.AddShadedBox(
         Vec2(x + kSliderOffset, y + kSliderOffset),
@@ -299,17 +297,17 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
   DrawSlider(primitive_assembler, start, 0, slider_width, GetSliderWidth(), shading_direction);
 
-  const float kEpsilon = 0.0001f;
+  constexpr float kEpsilon = 0.0001f;
 
   // Left / right resize arrows and separator
-  const float kHeightFactor = 2.f;
+  constexpr float kHeightFactor = 2.f;
   // Triangle is 3 pixels smaller than the area - there is a 2 pixel border around the scrollbar,
   // and there is no margin between the border and the triangle to make it as big as possible.
   // On the other side, there is a 1 pixel margin between the triangle and the vertical line
   float tri_size = GetSliderResizeMargin() - 3.f;
   tri_size = std::min(tri_size, GetSliderWidth() - tri_size * kHeightFactor - 2.f);
   const float tri_y_offset = (GetSliderWidth() - tri_size * kHeightFactor) / 2.f;
-  const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
+  const Color white = GetLighterColor(GetLighterColor(bar_color_));
   const float z = GlCanvas::kZValueButton + 2 * kEpsilon;
   const float x = start;
   const float width = slider_width;
@@ -318,17 +316,17 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
       Triangle(Vec2(x + width - tri_size - 2.f, kHeightFactor * tri_size + tri_y_offset),
                Vec2(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size),
                Vec2(x + width - tri_size - 2.f, tri_y_offset)),
-      z, kWhite, shared_from_this());
+      z, white, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + width - GetSliderResizeMargin(), 2.f),
-                                      GetSliderWidth() - 4.f, z, kWhite, shared_from_this());
+                                      GetSliderWidth() - 4.f, z, white, shared_from_this());
 
   primitive_assembler.AddTriangle(
       Triangle(Vec2(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset),
                Vec2(x + tri_size + 2.f, tri_y_offset),
                Vec2(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size)),
-      z, kWhite, shared_from_this());
+      z, white, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + GetSliderResizeMargin() + 1, 2.f),
-                                      GetSliderWidth() - 4.f, z, kWhite, shared_from_this());
+                                      GetSliderWidth() - 4.f, z, white, shared_from_this());
 
   // Highlight the scale part of the slider
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);

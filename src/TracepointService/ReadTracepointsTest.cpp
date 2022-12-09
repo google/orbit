@@ -38,18 +38,18 @@ TEST(ServiceUtils, CategoriesTracepoints) {
                  [](const TracepointInfo& value) { return value.category(); });
 
   ASSERT_FALSE(categories.empty());
-  static const std::array<std::string, 10> kCategoriesAvailable = {
+  static const std::array<std::string, 10> categories_available = {
       "sched",    "task",    "module",       "signal",     "sock",
       "syscalls", "migrate", "raw_syscalls", "exceptions", "iomap"};
 
-  static const std::array<std::string, 3> kCategoriesUnavailable = {"orbit", "profiler",
+  static const std::array<std::string, 3> categories_unavailable = {"orbit", "profiler",
                                                                     "instrumentation"};
 
-  for (const std::string& category_available : kCategoriesAvailable) {
+  for (const std::string& category_available : categories_available) {
     ASSERT_TRUE(find(categories.begin(), categories.end(), category_available) != categories.end());
   }
 
-  for (const std::string& category_unavailable : kCategoriesUnavailable) {
+  for (const std::string& category_unavailable : categories_unavailable) {
     ASSERT_TRUE(find(categories.begin(), categories.end(), category_unavailable) ==
                 categories.end());
   }
@@ -69,18 +69,18 @@ TEST(ServiceUtils, NamesTracepoints) {
                  [](const TracepointInfo& value) { return value.name(); });
 
   ASSERT_FALSE(names.empty());
-  static const std::array<std::string, 10> kNamesAvailable = {
+  static const std::array<std::string, 10> names_available = {
       "sched_switch", "sched_wakeup",    "sched_process_fork", "sched_waking", "task_rename",
       "task_newtask", "signal_generate", "signal_deliver",     "timer_init",   "timer_start"};
 
-  static const std::array<std::string, 5> kNamesUnavailable = {
+  static const std::array<std::string, 5> names_unavailable = {
       "orbit", "profiler", "instrumentation", "enable", "filter"};
 
-  for (const std::string& name_available : kNamesAvailable) {
+  for (const std::string& name_available : names_available) {
     ASSERT_TRUE(find(names.begin(), names.end(), name_available) != names.end());
   }
 
-  for (const std::string& name_unavailable : kNamesUnavailable) {
+  for (const std::string& name_unavailable : names_unavailable) {
     ASSERT_TRUE(find(names.begin(), names.end(), name_unavailable) == names.end());
   }
 }

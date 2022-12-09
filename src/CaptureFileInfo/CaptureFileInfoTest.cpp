@@ -18,16 +18,16 @@
 namespace orbit_capture_file_info {
 
 TEST(CaptureFileInfo, PathConstructor) {
-  const QString kParentPath{"this/is/a/test/path/"};
-  const QString kFileName{"example file name.extension"};
-  const QString kFullPath{kParentPath + kFileName};
-  const absl::Duration kCaptureLength{absl::Seconds(10)};
+  const QString parent_path{"this/is/a/test/path/"};
+  const QString file_name{"example file name.extension"};
+  const QString full_path{parent_path + file_name};
+  const absl::Duration capture_length{absl::Seconds(10)};
 
-  CaptureFileInfo capture_file_info{kFullPath, kCaptureLength};
+  CaptureFileInfo capture_file_info{full_path, capture_length};
 
-  EXPECT_EQ(capture_file_info.FilePath(), kFullPath);
-  EXPECT_EQ(capture_file_info.FileName(), kFileName);
-  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
+  EXPECT_EQ(capture_file_info.FilePath(), full_path);
+  EXPECT_EQ(capture_file_info.FileName(), file_name);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), capture_length);
 
   // LastUsed() before or equal to now.
   EXPECT_LE(capture_file_info.LastUsed(), QDateTime::currentDateTime());
@@ -38,17 +38,17 @@ TEST(CaptureFileInfo, PathConstructor) {
 }
 
 TEST(CaptureFileInfo, PathLastUsedConstructor) {
-  const QString kParentPath{"this/is/a/test/path/"};
-  const QString kFileName{"example file name.extension"};
-  const QString kFullPath{kParentPath + kFileName};
+  const QString parent_path{"this/is/a/test/path/"};
+  const QString file_name{"example file name.extension"};
+  const QString full_path{parent_path + file_name};
   const QDateTime last_used = QDateTime::fromMSecsSinceEpoch(1600000000000);
-  const absl::Duration kCaptureLength{absl::Seconds(5)};
+  const absl::Duration capture_length{absl::Seconds(5)};
 
-  CaptureFileInfo capture_file_info{kFullPath, last_used, kCaptureLength};
+  CaptureFileInfo capture_file_info{full_path, last_used, capture_length};
 
-  EXPECT_EQ(capture_file_info.FilePath(), kFullPath);
-  EXPECT_EQ(capture_file_info.FileName(), kFileName);
-  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
+  EXPECT_EQ(capture_file_info.FilePath(), full_path);
+  EXPECT_EQ(capture_file_info.FileName(), file_name);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), capture_length);
 
   EXPECT_EQ(capture_file_info.LastUsed(), last_used);
 
@@ -56,22 +56,22 @@ TEST(CaptureFileInfo, PathLastUsedConstructor) {
 }
 
 TEST(CaptureFileInfo, FullInfoConstructorAndIsOutOfSync) {
-  const std::filesystem::path kTestFullPath = orbit_test::GetTestdataDir() / "test_file.orbit";
-  const QDateTime kLastUsed = QDateTime::fromMSecsSinceEpoch(1600000000000);
-  const QDateTime kLastModified = QDateTime::fromMSecsSinceEpoch(1500000000000);
-  const uint64_t kFileSize = 1234;
-  const absl::Duration kCaptureLength{absl::Seconds(5)};
+  const std::filesystem::path test_full_path = orbit_test::GetTestdataDir() / "test_file.orbit";
+  const QDateTime last_used = QDateTime::fromMSecsSinceEpoch(1600000000000);
+  const QDateTime last_modified = QDateTime::fromMSecsSinceEpoch(1500000000000);
+  const uint64_t file_size = 1234;
+  const absl::Duration capture_length{absl::Seconds(5)};
 
-  CaptureFileInfo capture_file_info{QString::fromStdString(kTestFullPath.string()), kLastUsed,
-                                    kLastModified, kFileSize, kCaptureLength};
+  CaptureFileInfo capture_file_info{QString::fromStdString(test_full_path.string()), last_used,
+                                    last_modified, file_size, capture_length};
 
-  EXPECT_EQ(capture_file_info.FilePath(), QString::fromStdString(kTestFullPath.string()));
+  EXPECT_EQ(capture_file_info.FilePath(), QString::fromStdString(test_full_path.string()));
   EXPECT_EQ(capture_file_info.FileName(),
-            QString::fromStdString(kTestFullPath.filename().string()));
-  EXPECT_EQ(capture_file_info.LastUsed(), kLastUsed);
-  EXPECT_EQ(capture_file_info.LastModified(), kLastModified);
-  EXPECT_EQ(capture_file_info.FileSize(), kFileSize);
-  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
+            QString::fromStdString(test_full_path.filename().string()));
+  EXPECT_EQ(capture_file_info.LastUsed(), last_used);
+  EXPECT_EQ(capture_file_info.LastModified(), last_modified);
+  EXPECT_EQ(capture_file_info.FileSize(), file_size);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), capture_length);
 
   // The file size and the last modified time we provided to construct the CaptureFileInfo do not
   // match with the information retrieved from the file system. Hence they are out of sync with the

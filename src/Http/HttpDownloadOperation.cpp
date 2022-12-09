@@ -22,21 +22,21 @@ void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> 
   ORBIT_CHECK((state == State::kError) == maybe_error_msg.has_value());
   state_ = state;
 
-  const std::string kDownloadDetails =
+  const std::string download_details =
       absl::StrFormat("from %s to %s", url_, save_file_path_.string());
 
   switch (state) {
     case State::kInitial:
       break;
     case State::kStarted:
-      ORBIT_LOG("Started downloading %s.\n", kDownloadDetails);
+      ORBIT_LOG("Started downloading %s.\n", download_details);
       break;
     case State::kCancelled:
-      ORBIT_LOG("Cancelled downloading %s.\n", kDownloadDetails);
+      ORBIT_LOG("Cancelled downloading %s.\n", download_details);
       emit finished(state, std::nullopt);
       break;
     case State::kDone:
-      ORBIT_LOG("Succeeded to download %s.\n", kDownloadDetails);
+      ORBIT_LOG("Succeeded to download %s.\n", download_details);
       emit finished(state, std::nullopt);
       break;
     case State::kNotFound:
@@ -44,7 +44,7 @@ void HttpDownloadOperation::UpdateState(State state, std::optional<std::string> 
       emit finished(state, std::nullopt);
       break;
     case State::kError:
-      ORBIT_LOG("Failed to download %s:\n%s", kDownloadDetails, maybe_error_msg.value());
+      ORBIT_LOG("Failed to download %s:\n%s", download_details, maybe_error_msg.value());
       emit finished(state, maybe_error_msg);
       break;
   }

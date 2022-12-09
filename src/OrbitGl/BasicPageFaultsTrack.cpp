@@ -101,13 +101,13 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
   if (!index_of_series_to_highlight_.has_value()) return;
   if (prev_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
 
-  const Color kHightlightingColor(231, 68, 53, 100);
+  const Color highlighting_color(231, 68, 53, 100);
   float x0 = timeline_info_->GetWorldFromTick(start_tick);
   float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   float content_height = GetGraphContentHeight();
   float y0 = GetGraphContentBottomY() - GetGraphContentHeight();
   primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z,
-                                   kHightlightingColor);
+                                   highlighting_color);
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {

@@ -112,9 +112,9 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
   const bool picking = picking_mode != PickingMode::kNone;
   uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
 
-  const Color kWhite(255, 255, 255, 255);
-  const Color kGreenSelection(0, 255, 0, 255);
-  const Color kGreyError(160, 160, 160, 255);
+  const Color white(255, 255, 255, 255);
+  const Color green_selection(0, 255, 0, 255);
+  const Color grey_error(160, 160, 160, 255);
   ORBIT_CHECK(capture_data_ != nullptr);
 
   if (!picking) {
@@ -123,10 +123,10 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
       const auto& [pos_x, unused_size_x] = timeline_info_->GetBoxPosXAndWidthFromTicks(time, time);
-      Color color = kWhite;
+      Color color = white;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackType::kComplete) {
-        color = kGreyError;
+        color = grey_error;
       }
       primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, color);
     };
@@ -144,7 +144,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
       const auto& [pos_x, unused_size_x] = timeline_info_->GetBoxPosXAndWidthFromTicks(time, time);
-      primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, kGreenSelection);
+      primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, green_selection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
         capture_data_->selection_callstack_data();
@@ -174,7 +174,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
             return GetSampleTooltip(primitive_assembler, id);
           });
       user_data->custom_data_ = &event;
-      primitive_assembler.AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+      primitive_assembler.AddShadedBox(pos, size, z, green_selection, std::move(user_data));
     };
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       capture_data_->GetCallstackData().ForEachCallstackEventInTimeRangeDiscretized(

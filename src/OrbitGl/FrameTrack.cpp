@@ -215,8 +215,8 @@ void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& t
                         const DrawContext& draw_context) {
   TimerTrack::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  const Color kWhiteColor(255, 255, 255, 255);
-  const Color kBlackColor(0, 0, 0, 255);
+  const Color white_color(255, 255, 255, 255);
+  const Color black_color(0, 0, 0, 255);
   const Vec2 pos = GetPos();
 
   const float x = pos[0];
@@ -233,11 +233,11 @@ void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& t
   Vec2 white_text_box_position(pos[0] + layout_->GetRightMargin(), y);
 
   primitive_assembler.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
-                              kWhiteColor);
+                              white_color);
   primitive_assembler.AddLine(Vec2(white_text_box_position[0] + string_width, y), to, text_z,
-                              kWhiteColor);
+                              white_color);
 
-  TextRenderer::TextFormatting formatting{font_size, kWhiteColor, string_width};
+  TextRenderer::TextFormatting formatting{font_size, white_color, string_width};
   formatting.valign = TextRenderer::VAlign::Middle;
 
   text_renderer.AddText(label.c_str(), white_text_box_position[0], white_text_box_position[1],

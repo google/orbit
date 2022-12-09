@@ -21,9 +21,9 @@ TEST_P(GetPixelNumberTest, FirstPixel) {
   const uint32_t resolution = GetParam();
   EXPECT_EQ(GetPixelNumber(kStartNs, resolution, kStartNs, kEndNs), 0);
 
-  const uint64_t kLastNsForFirstPixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
-  EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel, resolution, kStartNs, kEndNs), 0);
-  EXPECT_EQ(GetPixelNumber(kLastNsForFirstPixel + 1, resolution, kStartNs, kEndNs), 1);
+  const uint64_t last_ns_for_first_pixel = kStartNs + (kEndNs - kStartNs - 1) / resolution;
+  EXPECT_EQ(GetPixelNumber(last_ns_for_first_pixel, resolution, kStartNs, kEndNs), 0);
+  EXPECT_EQ(GetPixelNumber(last_ns_for_first_pixel + 1, resolution, kStartNs, kEndNs), 1);
 }
 
 TEST_P(GetPixelNumberTest, LastPixel) {
@@ -36,7 +36,7 @@ INSTANTIATE_TEST_SUITE_P(GetPixelNumberTests, GetPixelNumberTest, testing::Value
 
 TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampsAreInRange) {
   const uint32_t resolution = GetParam();
-  constexpr uint64_t visible_ns = kEndNs - kStartNs;  // 100
+  constexpr uint64_t kVisibleNs = kEndNs - kStartNs;  // 100
 
   // Calculates `ceil(dividend / divisor)` only using integers assuming dividend and divisor are not
   // 0.
@@ -47,7 +47,7 @@ TEST_P(GetNextPixelBoundaryTimeNsTest, TimestampsAreInRange) {
   constexpr uint32_t kNumberOfTestedTimestamps = 200;
   constexpr uint64_t kStep = (kEndNs - kStartNs - 1) / kNumberOfTestedTimestamps + 1;
   // The max number of nanoseconds per pixel can be calculated using a ceil function.
-  const uint64_t max_nanoseconds_per_pixel = rounding_up_division(visible_ns, resolution);
+  const uint64_t max_nanoseconds_per_pixel = rounding_up_division(kVisibleNs, resolution);
   for (uint64_t timestamp_ns = kStartNs; timestamp_ns < kEndNs; timestamp_ns += kStep) {
     const uint64_t next_pixel_ns =
         GetNextPixelBoundaryTimeNs(timestamp_ns, resolution, kStartNs, kEndNs);

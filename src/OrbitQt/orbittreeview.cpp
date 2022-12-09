@@ -356,7 +356,7 @@ void OrbitTreeView::OnRefreshButtonClicked() {
   }
 }
 
-void OrbitTreeView::columnResized(int column, int /*oldSize*/, int newSize) {
+void OrbitTreeView::columnResized(int column, int /*oldSize*/, int new_size) {
   // We'd need to run this only when a column is being resized directly, not when the entire table
   // is being resized and in turn triggers column resize events, otherwise the ratios can be set
   // to 0 when shrinking the table width to 0 which we can't recover from. For this reason,
@@ -365,6 +365,6 @@ void OrbitTreeView::columnResized(int column, int /*oldSize*/, int newSize) {
   // resizing.
   if (maintain_user_column_ratios_ && (column_ratios_.size() != 0u)) {
     ORBIT_CHECK(column < static_cast<int>(column_ratios_.size()));
-    column_ratios_[column] = static_cast<float>(newSize) / size().width();
+    column_ratios_[column] = static_cast<float>(new_size) / size().width();
   }
 }

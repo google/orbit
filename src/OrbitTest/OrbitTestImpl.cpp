@@ -32,8 +32,8 @@ OrbitTestImpl::OrbitTestImpl(uint32_t num_threads, uint32_t recurse_depth, uint3
 }
 
 void OrbitTestImpl::Init() {
-  const size_t kMinNumWorkers = 10;
-  const size_t kMaxNumWorkers = 100;
+  constexpr size_t kMinNumWorkers = 10;
+  constexpr size_t kMaxNumWorkers = 100;
   thread_pool_ =
       orbit_base::ThreadPool::Create(kMinNumWorkers, kMaxNumWorkers, absl::Milliseconds(500));
 }
