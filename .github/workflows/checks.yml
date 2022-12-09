@@ -66,3 +66,50 @@ jobs:
         path: missing_license_headers.txt
         retention-days: 1
 
+  check-clang-tidy:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+         sudo apt update &&                             \
+         sudo apt install --yes --no-install-recommends \
+         build-essential                                \
+         libboost-dev                                   \
+         libcapstone-dev                                \
+         libgrpc++-dev                                  \
+         libssh2-1-dev                                  \
+         vulkan-validationlayers-dev                    \
+         libz-dev                                       \
+         llvm-dev                                       \
+         protobuf-compiler-grpc                         \
+         pkg-config                                     \
+         libvulkan-volk-dev                             \
+         libvulkan-dev                                  \
+         libopengl-dev                                  \
+         libglx-dev                                     \
+         mesa-common-dev                                \
+         qtbase5-dev                                    \
+         libgtest-dev                                   \
+         libgmock-dev                                   \
+         libprotobuf-dev
+    - run: mkdir "build"
+    - name: CMake Configure
+      working-directory: ./build
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=Debug                                                               \
+         -DCMAKE_CXX_FLAGS="-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer" \
+         ${GITHUB_WORKSPACE}
+    - uses: ZedThree/clang-tidy-review@79d70e7c89de1bda6ad68610cde18d2783749852 # 0.10.1
+      with:
+        build_dir: ./build
+        config_file: '.clang-tidy'
+        clang_tidy_version: '14'
+        split_workflow: true
+    - uses: actions/upload-artifact@v3
+      with:
+        name: clang_tidy_review
+        path: |
+          clang-tidy-review-output.json
+          clang-tidy-review-metadata.json
