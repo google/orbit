@@ -162,7 +162,7 @@ jobs:
         if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
         working-directory: ./build
         run: |
-          CTEST_OUTPUT_FAILURE=1 \
+          CTEST_OUTPUT_ON_FAILURE=1 \
           ARGS="-E IntegrationTest" \
           ORBIT_TESTING_SSH_SERVER_SIMPLE_ADDRESS="127.0.0.1:${{ env.SSH_SERVER_SIMPLE_PORT }}" \
           cmake --build . --target test
