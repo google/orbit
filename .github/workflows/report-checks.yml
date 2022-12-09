@@ -35,6 +35,21 @@ jobs:
         COMMIT_SHA: ${{ github.event.workflow_run.head_commit.id }}
       shell: bash
 
+  report-clang-tidy-diff:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@e6e25ac3a2b93187502a8be1ef9e9603afc34925 # v2.24.2
+        with:
+          workflow: ${{ github.event.workflow_run.workflow_id }}
+          workflow_conclusion: ''
+          name: clang_tidy_review
+      - uses: ZedThree/clang-tidy-review/post@79d70e7c89de1bda6ad68610cde18d2783749852 # 0.10.1
+        with:
+          token: ${{ secrets.ORBITPROFILER_BOT_PAT }}
+
   report-clang-format-diff:
     permissions:
       pull-requests: write
@@ -79,7 +94,7 @@ jobs:
                 comment.side = 'RIGHT';
                 const suggestion = hunk.changes.filter(change => !change.isDelete).map(
                     change => escapeJSON(change.content)).join("\n");
-                comment.body = `\`\`\`suggestion\n${suggestion}\n\`\`\``;
+                comment.body = `clang-format:\n\`\`\`suggestion\n${suggestion}\n\`\`\``;
 
                 yield comment;
               }
@@ -95,7 +110,8 @@ jobs:
                   pull_number: pr_number
                 });
             const comment_ids = comments.filter(
-                comment => comment.user.login === 'orbitprofiler-bot').map(
+                comment => comment.user.login === 'orbitprofiler-bot'
+                    && comment.body.startsWith('clang-format:')).map(
                 comment => comment.id);
             await Promise.all(comment_ids.map(async (comment_id) => {
               console.log(`deleting comment: ${comment_id}`);
