@@ -70,18 +70,18 @@ class SshSessionTest : public testing::Test {
     orbit_ssh::Credentials credentials{};
     credentials.user = "loginuser";
 
-    std::vector<std::string_view> splitted_server_address = absl::StrSplit(ssh_server_address, ':');
+    std::vector<std::string_view> split_server_address = absl::StrSplit(ssh_server_address, ':');
 
-    if (splitted_server_address.size() != 2) {
+    if (split_server_address.size() != 2) {
       return ErrorMessage{"Expected hostname and port divided by :."};
     }
 
     int port{};
-    if (!absl::SimpleAtoi(splitted_server_address.back(), &port)) {
+    if (!absl::SimpleAtoi(split_server_address.back(), &port)) {
       return ErrorMessage{"Couldn't parse port number"};
     }
 
-    credentials.addr_and_port.addr = splitted_server_address.front();
+    credentials.addr_and_port.addr = split_server_address.front();
     credentials.addr_and_port.port = port;
 
     OUTCOME_TRY(credentials.known_hosts_path, CreateKnownHostsFile(credentials.addr_and_port.addr,

@@ -24,7 +24,7 @@
 
 namespace orbit_ssh_qt {
 
-// This test fixure is inhering all the functionality from SshTestFixture and on top ensures that
+// This test fixure inherits all the functionality from SshTestFixture and on top ensures that
 // there is an echo server running on TCP port 4444 on the SSH server's machine.
 class SshTunnelTest : public SshTestFixture {
  public:
@@ -113,7 +113,7 @@ class SshTunnelTest : public SshTestFixture {
   }
 };
 
-TEST_F(SshTunnelTest, Start) {
+TEST_F(SshTunnelTest, StartFails) {
   constexpr int kSomeDefinitelyUnusedPort{80};
   orbit_ssh_qt::Tunnel tunnel{GetSession(), "127.0.0.1", kSomeDefinitelyUnusedPort};
 
