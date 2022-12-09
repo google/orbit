@@ -140,9 +140,9 @@ void OrbitGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
 
 void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   if (gl_canvas_) {
-    gl_canvas_->MouseMoved(event->x(), event->y(), event->buttons() & Qt::LeftButton != 0u,
-                           event->buttons() & Qt::RightButton != 0u,
-                           event->buttons() & Qt::MiddleButton != 0u);
+    gl_canvas_->MouseMoved(event->x(), event->y(), (event->buttons() & Qt::LeftButton) != 0u,
+                           (event->buttons() & Qt::RightButton) != 0u,
+                           (event->buttons() & Qt::MiddleButton) != 0u);
   }
 
   update();
@@ -154,9 +154,9 @@ void OrbitGLWidget::leaveEvent(QEvent*) { gl_canvas_->SetIsMouseOver(false); }
 
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (gl_canvas_) {
-    bool ctrl = event->modifiers() & Qt::ControlModifier != 0u;
-    bool shift = event->modifiers() & Qt::ShiftModifier != 0u;
-    bool alt = event->modifiers() & Qt::AltModifier != 0u;
+    bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0u;
+    bool shift = (event->modifiers() & Qt::ShiftModifier) != 0u;
+    bool alt = (event->modifiers() & Qt::AltModifier) != 0u;
     gl_canvas_->KeyPressed(event->key() & 0x00FFFFFF, ctrl, shift, alt);
 
     QString text = event->text();
@@ -170,9 +170,9 @@ void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
 
 void OrbitGLWidget::keyReleaseEvent(QKeyEvent* event) {
   if (gl_canvas_) {
-    bool ctrl = event->modifiers() & Qt::ControlModifier != 0u;
-    bool shift = event->modifiers() & Qt::ShiftModifier != 0u;
-    bool alt = event->modifiers() & Qt::AltModifier != 0u;
+    bool ctrl = (event->modifiers() & Qt::ControlModifier) != 0u;
+    bool shift = (event->modifiers() & Qt::ShiftModifier) != 0u;
+    bool alt = (event->modifiers() & Qt::AltModifier) != 0u;
     gl_canvas_->KeyReleased(event->key() & 0x00FFFFFF, ctrl, shift, alt);
   }
 
@@ -183,10 +183,10 @@ void OrbitGLWidget::wheelEvent(QWheelEvent* event) {
   if (gl_canvas_) {
     if (event->orientation() == Qt::Vertical) {
       gl_canvas_->MouseWheelMoved(event->x(), event->y(), event->delta() / 8,
-                                  event->modifiers() & Qt::ControlModifier != 0u);
+                                  (event->modifiers() & Qt::ControlModifier) != 0u);
     } else {
       gl_canvas_->MouseWheelMovedHorizontally(event->x(), event->y(), event->delta() / 8,
-                                              event->modifiers() & Qt::ControlModifier != 0u);
+                                              (event->modifiers() & Qt::ControlModifier) != 0u);
     }
   }
 
