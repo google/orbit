@@ -33,8 +33,9 @@ static QString MakeObjectName(std::string_view input) {
   return output;
 }
 
-PropertyConfigWidget::PropertyConfigWidget(QWidget* parent) : QWidget(parent) {
-  layout_ = new QGridLayout(this);  // NOLINT(cppcoreguidelines-owning-memory)
+PropertyConfigWidget::PropertyConfigWidget(QWidget* parent)
+    : QWidget(parent), layout_(new QGridLayout(this)) {
+  // NOLINT(cppcoreguidelines-owning-memory)
 }
 
 void PropertyConfigWidget::AddWidgetForProperty(FloatProperty* property) {

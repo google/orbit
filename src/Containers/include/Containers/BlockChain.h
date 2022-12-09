@@ -61,9 +61,8 @@ class Block final {
 template <class T, uint32_t BlockSize>
 class BlockIterator final {
  public:
-  explicit BlockIterator(const Block<T, BlockSize>* block) : block_(block) {
-    index_ = (block_ != nullptr && block_->size() > 0) ? 0 : -1;
-  }
+  explicit BlockIterator(const Block<T, BlockSize>* block)
+      : block_(block), index_((block_ != nullptr && block_->size() > 0) ? 0 : -1) {}
 
   const T& operator*() const { return block_->Get(index_); }
 
