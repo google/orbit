@@ -282,28 +282,6 @@ class OrbitApp final : public DataViewFactory,
   using RefreshCallback = std::function<void(orbit_data_views::DataViewType type)>;
   void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
 
-  using SamplingReportCallback =
-      std::function<void(orbit_data_views::DataView*, const std::shared_ptr<SamplingReport>&)>;
-  void SetSamplingReportCallback(SamplingReportCallback callback) {
-    sampling_reports_callback_ = std::move(callback);
-  }
-  void SetSelectionReportCallback(SamplingReportCallback callback) {
-    selection_report_callback_ = std::move(callback);
-  }
-
-  using CallTreeViewCallback = std::function<void(std::unique_ptr<CallTreeView>)>;
-  void SetTopDownViewCallback(CallTreeViewCallback callback) {
-    top_down_view_callback_ = std::move(callback);
-  }
-  void SetSelectionTopDownViewCallback(CallTreeViewCallback callback) {
-    selection_top_down_view_callback_ = std::move(callback);
-  }
-  void SetBottomUpViewCallback(CallTreeViewCallback callback) {
-    bottom_up_view_callback_ = std::move(callback);
-  }
-  void SetSelectionBottomUpViewCallback(CallTreeViewCallback callback) {
-    selection_bottom_up_view_callback_ = std::move(callback);
-  }
   using TimerSelectedCallback = std::function<void(const orbit_client_protos::TimerInfo*)>;
   void SetTimerSelectedCallback(TimerSelectedCallback callback) {
     timer_selected_callback_ = std::move(callback);
@@ -613,12 +591,6 @@ class OrbitApp final : public DataViewFactory,
   WarningMessageCallback warning_message_callback_;
   InfoMessageCallback info_message_callback_;
   RefreshCallback refresh_callback_;
-  SamplingReportCallback sampling_reports_callback_;
-  SamplingReportCallback selection_report_callback_;
-  CallTreeViewCallback top_down_view_callback_;
-  CallTreeViewCallback selection_top_down_view_callback_;
-  CallTreeViewCallback bottom_up_view_callback_;
-  CallTreeViewCallback selection_bottom_up_view_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
   TimerSelectedCallback timer_selected_callback_;

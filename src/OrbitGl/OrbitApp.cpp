@@ -996,8 +996,7 @@ void OrbitApp::SetSamplingReport(
   auto report =
       std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
-  ORBIT_CHECK(sampling_reports_callback_);
-  sampling_reports_callback_(callstack_data_view, report);
+  main_window_->SetSamplingReport(callstack_data_view, report);
 
   sampling_report_ = report;
 }
@@ -1006,8 +1005,7 @@ void OrbitApp::ClearSamplingReport() {
   if (sampling_report_ == nullptr) return;
   sampling_report_->ClearReport();
   sampling_report_.reset();
-  ORBIT_CHECK(sampling_reports_callback_);
-  sampling_reports_callback_(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
+  main_window_->SetSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
 }
 
 void OrbitApp::SetSelectionReport(
@@ -1024,8 +1022,7 @@ void OrbitApp::SetSelectionReport(
   orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
-  ORBIT_CHECK(selection_report_callback_);
-  selection_report_callback_(callstack_data_view, report);
+  main_window_->SetSelectionSamplingReport(callstack_data_view, report);
   FireRefreshCallbacks();
 }
 
@@ -1033,66 +1030,57 @@ void OrbitApp::ClearSelectionReport() {
   if (selection_report_ == nullptr) return;
   selection_report_->ClearReport();
   selection_report_.reset();
-  ORBIT_CHECK(sampling_reports_callback_);
-  selection_report_callback_(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
+  main_window_->SetSelectionSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
 }
 
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  ORBIT_CHECK(top_down_view_callback_);
   std::unique_ptr<CallTreeView> top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
           capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
-  top_down_view_callback_(std::move(top_down_view));
+  main_window_->SetTopDownView(std::move(top_down_view));
 }
 
 void OrbitApp::ClearTopDownView() {
-  ORBIT_CHECK(top_down_view_callback_);
-  top_down_view_callback_(std::make_unique<CallTreeView>());
+  main_window_->SetTopDownView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionTopDownView(
     const PostProcessedSamplingData& selection_post_processed_data,
     const CaptureData& capture_data) {
-  ORBIT_CHECK(selection_top_down_view_callback_);
   std::unique_ptr<CallTreeView> selection_top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(selection_post_processed_data,
                                                                    *module_manager_, capture_data);
-  selection_top_down_view_callback_(std::move(selection_top_down_view));
+  main_window_->SetSelectionTopDownView(std::move(selection_top_down_view));
 }
 
 void OrbitApp::ClearSelectionTopDownView() {
-  ORBIT_CHECK(selection_top_down_view_callback_);
-  selection_top_down_view_callback_(std::make_unique<CallTreeView>());
+  main_window_->SetSelectionTopDownView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  ORBIT_CHECK(bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
           capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
-  bottom_up_view_callback_(std::move(bottom_up_view));
+  main_window_->SetBottomUpView(std::move(bottom_up_view));
 }
 
 void OrbitApp::ClearBottomUpView() {
-  ORBIT_CHECK(bottom_up_view_callback_);
-  bottom_up_view_callback_(std::make_unique<CallTreeView>());
+  main_window_->SetBottomUpView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionBottomUpView(
     const PostProcessedSamplingData& selection_post_processed_data,
     const CaptureData& capture_data) {
-  ORBIT_CHECK(selection_bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> selection_bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(selection_post_processed_data,
                                                                     *module_manager_, capture_data);
-  selection_bottom_up_view_callback_(std::move(selection_bottom_up_view));
+  main_window_->SetSelectionBottomUpView(std::move(selection_bottom_up_view));
 }
 
 void OrbitApp::ClearSelectionBottomUpView() {
-  ORBIT_CHECK(selection_bottom_up_view_callback_);
-  selection_bottom_up_view_callback_(std::make_unique<CallTreeView>());
+  main_window_->SetSelectionBottomUpView(std::make_unique<CallTreeView>());
 }
 
 absl::Duration OrbitApp::GetCaptureTime() const {
