@@ -33,7 +33,7 @@ void Touch(const fs::path& path) {
 
 }  // namespace
 
-TestProcess::TestProcess() : pid_(fork()) {
+TestProcess::TestProcess() {
   {
     auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
     ORBIT_CHECK(temporary_file_or_error.has_value());
@@ -49,6 +49,7 @@ TestProcess::TestProcess() : pid_(fork()) {
   Touch(flag_file_run_child_->file_path());
   flag_file_child_started_->CloseAndRemove();
 
+  pid_ = fork();
   ORBIT_CHECK(pid_ != -1);
   // Start the workload and have the parent wait for the startup to complete.
   if (pid_ == 0) {

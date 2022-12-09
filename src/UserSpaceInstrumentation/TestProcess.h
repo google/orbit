@@ -32,7 +32,7 @@ class TestProcess {
   // flag_file_run_child_ is deleted.
   void Workload();
 
-  pid_t pid_;
+  pid_t pid_ = 0;
   absl::Mutex joinable_threads_mutex_;
   std::set<std::thread::id> joinable_threads_;
   std::optional<orbit_test_utils::TemporaryFile> flag_file_run_child_;
