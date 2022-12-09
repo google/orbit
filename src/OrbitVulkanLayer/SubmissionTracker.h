@@ -87,7 +87,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
   // to a specific submission tracepoint.
   struct SubmittedMarker {
     SubmissionMetaInformation meta_information;
-    uint32_t slot_index{};
+    uint32_t slot_index = 0;
 
     // This is set when the timestamp was queried successfully. When this has a value, the
     // corresponding slot index for the timestamp query has been reset. Do not query again in
@@ -112,7 +112,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     SubmittedMarker end_info;
     std::string label_name;
     Color color;
-    size_t depth{};
+    size_t depth = 0;
   };
 
   // A single submission (VkQueueSubmit) can contain multiple `SubmitInfo`s. We keep this structure.
@@ -607,7 +607,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     std::optional<uint32_t> slot_index;
     std::optional<std::string> label_name;
     std::optional<Color> color;
-    bool cut_off{};
+    bool cut_off = false;
   };
 
   // We have a stack of all markers of a queue that gets updated upon a submission (VkQueueSubmit).
@@ -624,8 +624,8 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     std::optional<SubmittedMarker> begin_info;
     std::string label_name;
     Color color;
-    size_t depth{};
-    bool depth_exceeds_maximum{};
+    size_t depth = 0;
+    bool depth_exceeds_maximum = false;
   };
 
   struct QueueMarkerState {
@@ -637,7 +637,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     std::optional<uint32_t> command_buffer_end_slot_index;
     std::optional<uint64_t> pre_submission_cpu_timestamp;
     std::vector<Marker> markers;
-    uint32_t local_marker_stack_size{};
+    uint32_t local_marker_stack_size = 0;
   };
 
   bool RecordTimestamp(VkCommandBuffer command_buffer, VkPipelineStageFlagBits pipeline_stage_flags,

@@ -69,7 +69,7 @@ class ThreadStateSliceInfo {
   WakeupReason wakeup_reason_;
   uint32_t wakeup_tid_;
   uint32_t wakeup_pid_;
-  std::optional<uint64_t> switch_out_or_wakeup_callstack_id_{};
+  std::optional<uint64_t> switch_out_or_wakeup_callstack_id_;
 };
 
 }  // namespace orbit_client_data

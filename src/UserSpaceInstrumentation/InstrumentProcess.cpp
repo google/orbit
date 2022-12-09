@@ -340,8 +340,8 @@ class InstrumentedProcess {
 
   // Keep track of all trampolines we created for this process.
   struct TrampolineData {
-    uint64_t trampoline_address{};
-    uint64_t address_after_prologue{};
+    uint64_t trampoline_address = 0;
+    uint64_t address_after_prologue = 0;
     // The first few bytes of the function. Guaranteed to contain everything that was overwritten.
     std::vector<uint8_t> function_data;
   };

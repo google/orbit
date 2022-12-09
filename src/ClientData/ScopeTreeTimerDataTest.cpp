@@ -18,9 +18,9 @@ namespace orbit_client_data {
 namespace {
 
 struct TimersInTest {
-  const TimerInfo* left;
-  const TimerInfo* right;
-  const TimerInfo* down;
+  const TimerInfo* left = nullptr;
+  const TimerInfo* right = nullptr;
+  const TimerInfo* down = nullptr;
 };
 
 constexpr uint32_t kProcessId = 22;
@@ -36,7 +36,7 @@ constexpr uint64_t kMinTimestamp = 2;
 constexpr uint64_t kMaxTimestamp = 11;
 
 TimersInTest AddTimersInScopeTreeTimerDataTest(ScopeTreeTimerData& scope_tree_timer_data) {
-  TimersInTest inserted_timers{};
+  TimersInTest inserted_timers;
   TimerInfo timer_info;
   timer_info.set_process_id(kProcessId);
 

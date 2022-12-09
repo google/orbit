@@ -183,9 +183,9 @@ struct TargetProcessStateAfterCapture {
 
 TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
     pid_t pid, const absl::flat_hash_set<std::string>& old_core_files) {
-  TargetProcessStateAfterCapture result{};
-  result.process_state = CaptureFinished::kProcessStateInternalError;
-  result.termination_signal = CaptureFinished::kTerminationSignalInternalError;
+  TargetProcessStateAfterCapture result{
+      .process_state = CaptureFinished::kProcessStateInternalError,
+      .termination_signal = CaptureFinished::kTerminationSignalInternalError};
 
   const std::string pid_dir_name = absl::StrFormat("/proc/%i", pid);
   auto exists_or_error = orbit_base::FileOrDirectoryExists(pid_dir_name);
