@@ -55,6 +55,8 @@ using ::testing::NotNull;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAreArray;
 
+namespace orbit_mizar_widgets {
+
 namespace {
 
 class MockPairedData {
@@ -89,8 +91,6 @@ class MockFrameTrackListModel : public QAbstractListModel {
 };
 
 }  // namespace
-
-namespace orbit_mizar_widgets {
 
 constexpr TID kTid(0x3EAD1);
 constexpr TID kOtherTid(0x3EAD2);
