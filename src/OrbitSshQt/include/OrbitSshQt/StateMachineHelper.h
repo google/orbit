@@ -18,24 +18,26 @@ namespace orbit_ssh_qt {
   with the CRTP pattern.
 
   State_ refers to an enum class with at least the following states:
-  - kInitial
+  - kInitialized
+  - kStarting
   - kStarted
-  - kShutdown
+  - kStopping
+  - kStopped
   - kError
 
-  kInitial needs to be the first entry (the smallest value in terms of the
+  kInitialized needs to be the first entry (the smallest value in terms of the
   underlying scalar), kError needs to be the last entry (largest value in
   scalar world.). The state machine is always automatically initialized with
-  kInitial. Use SetState in the construction to immediately move into a
+  kInitialized. Use SetState in the construction to immediately move into a
   different state.
 
   The state machine is supposed to be traversed in a monotonic way. Skipping
-  states is allowed, but not going back! kStarted and kShutdown are considered
-  markers. They can be used as real states or just considered markers.
-  Everything before kStarted is considered the startup phase. Between
-  (including) kStarted and (excluding) kShutdown is considered the running
-  phase. After (including) kShutdown and before (excluding) kError it's the
-  shutdown phase.
+  states is allowed, but not going back! kStarting, kStarted, kStopping, and kStopped are considered
+  markers. They can be used as real states or just considered markers that are always skipped in
+  state transitions. Everything between (including) kStarting and (excluding) kStarted is considered
+  the startup phase. Between (including) kStarted and (excluding) kStopping is considered the
+  running phase. After (including) kStopping and before (excluding) kStopped it's the stopping
+  phase. Everything after (including) kStopped and before (excluding) kError is the stopped state.
 
   State changes are applied by calling SetState.
 
@@ -49,32 +51,33 @@ namespace orbit_ssh_qt {
   the kError state. Override the SetError(std::error_code) function to do some
   cleanup in this case.
 
-  You can override SetStateHook(State) to perform some generic task on a state
-  change like logging.
-
   The helper is supposed to be used with Qt's signal slot system. The user has
   to define the following signals in the derived class. These signals are
-  emitted whenever the corresponding phases are entered to left:
-  - void started(); // When leaving kInitial
-  - void stopped(); // When reaching a steady state after kShutdown
-  - void aboutToShutdown(); // When leaving a state before kShutdown and
-    // entering a state after (including) kShutdown
-  - void errorOccurred(std::error_code); // When an error occurred.
+  emitted whenever the corresponding phases are completed successfully:
+  - void started();     // When reaching kStarted - startup phase completed
+  - void aboutToStop(); // When reaching kStopping - running phase completed
+  - void stopped();     // When reaching kStopped - stopping phase completed
+  - void errorOccurred(std::error_code); // When reaching kError
 
   Example:
   enum class MyState {
-    kInitial,  // mandatory
-    kStarting,
-    kStarted,  // mandatory
-    kShutdown, // mandatory
-    kDone,
-    kError     // mandatory
+    kInitialzed,                 // mandatory
+    kAnyCustomInitState,
+    kStarting,                   // mandatory
+    kAnyTransitoryStartingState,
+    kStarted,                    // mandatory
+    kAnyCustomRunningState,
+    kStopping,                   // mandatory
+    kAnyTransitoryStoppingState,
+    kStopped,                    // mandatory
+    kAnyStoppedState,
+    kError                       // mandatory
   };
 
   class MyMachine : public StateMachineHelper<MyMachine, MyState> {
   public:
     void Start() {
-      if (CurrentState() == State::kInitial) {
+      if (CurrentState() == State::kInitialized) {
         SetState(State::Starting);
         OnEvent();
       }
@@ -82,14 +85,14 @@ namespace orbit_ssh_qt {
 
     void Stop() {
       if (CurrentState() == State::kStarted) {
-        SetState(State::kShutdown);
+        SetState(State::kStopping);
         OnEvent();
       }
     }
 
     outcome::result<void> startup() {
       switch(CurrentState()) {
-      case State::kInitial:
+      case State::kInitialized:
         ORBIT_FATAL("Should not happen!");
       case State::kStarting:
         ORBIT_LOG("About to start!");
@@ -97,8 +100,8 @@ namespace orbit_ssh_qt {
       case State::kStarted:
         ORBIT_LOG("started!")
         break;
-      case State::kShutdown:
-      case State::kDone:
+      case State::kStopping:
+      case State::kStopped:
       case State::kError:
         ORBIT_FATAL("Should not happen!");
       }
@@ -108,12 +111,12 @@ namespace orbit_ssh_qt {
 
     outcome::result<void> run() {
       switch(CurrentState()) {
-      case State::kInitial:
+      case State::kInitialized:
       case State::kStarting:
         ORBIT_FATAL("Should not happen!");
       case State::kStarted:
-      case State::kShutdown:
-      case State::kDone:
+      case State::kStopping:
+      case State::kStopped:
       case State::kError:
         ORBIT_FATAL("Should not happen!");
       }
@@ -123,15 +126,15 @@ namespace orbit_ssh_qt {
 
     outcome::result<void> shutdown() {
       switch(CurrentState()) {
-      case State::kInitial:
+      case State::kInitialized:
       case State::kStarting:
       case State::kStarted:
         ORBIT_FATAL("Should not happen!");
-      case State::kShutdown:
-        ORBIT_LOG("about to shut down!");
-        SetState(State::kDone);
-      case State::kDone:
-        ORBIT_LOG("shutted down!");
+      case State::kStopping:
+        ORBIT_LOG("about to stop!");
+        SetState(State::kStopped);
+      case State::kStopped:
+        ORBIT_LOG("Stopped!");
         break;
       case State::kError:
         ORBIT_FATAL("Should not happen!");
@@ -148,7 +151,7 @@ class StateMachineHelper : public QObject {
   using QObject::QObject;
 
   void OnEvent() {
-    if (self()->CurrentState() > State::kInitial && self()->CurrentState() < State::kStarted) {
+    if (self()->CurrentState() > State::kInitialized && self()->CurrentState() < State::kStarted) {
       const auto result = self()->startup();
 
       if (result) {
@@ -163,7 +166,7 @@ class StateMachineHelper : public QObject {
       }
     }
 
-    if (self()->CurrentState() >= State::kStarted && self()->CurrentState() < State::kShutdown) {
+    if (self()->CurrentState() >= State::kStarted && self()->CurrentState() < State::kStopping) {
       const auto result = self()->run();
 
       if (!result) {
@@ -176,7 +179,7 @@ class StateMachineHelper : public QObject {
       }
     }
 
-    if (self()->CurrentState() >= State::kShutdown && self()->CurrentState() < State::kError) {
+    if (self()->CurrentState() >= State::kStopping && self()->CurrentState() < State::kError) {
       const auto result = self()->shutdown();
 
       if (result) {
@@ -193,38 +196,35 @@ class StateMachineHelper : public QObject {
   }
 
   [[nodiscard]] bool IsStarting() const {
-    return state_ >= State::kInitial && state_ < State::kStarted;
+    return state_ >= State::kStarting && state_ < State::kStarted;
   }
 
   [[nodiscard]] bool IsStarted() const {
-    return state_ >= State::kStarted && state_ < State::kShutdown;
-  }
-
-  [[nodiscard]] static State PreviousState(State state) {
-    return static_cast<State>(static_cast<std::underlying_type_t<State>>(state) - 1);
+    return state_ >= State::kStarted && state_ < State::kStopping;
   }
 
   [[nodiscard]] bool IsStopping() const {
-    return state_ >= State::kShutdown && state_ < PreviousState(State::kError);
+    return state_ >= State::kStopping && state_ < State::kStopped;
   }
 
-  [[nodiscard]] bool IsStopped() const { return state_ == PreviousState(State::kError); }
+  [[nodiscard]] bool IsStopped() const {
+    return state_ >= State::kStopped && state_ < State::kError;
+  }
+
   [[nodiscard]] bool IsInErrorState() const { return state_ == State::kError; }
 
  private:
   friend Derived;
 
-  Derived* self() { return static_cast<Derived*>(this); }
-  const Derived* self() const { return static_cast<const Derived*>(this); }
+  [[nodiscard]] Derived* self() { return static_cast<Derived*>(this); }
+  [[nodiscard]] const Derived* self() const { return static_cast<const Derived*>(this); }
 
-  State state_ = State::kInitial;
+  State state_ = State::kInitialized;
 
-  State CurrentState() const { return state_; }
-  void SetStateHook(State) {}
+  [[nodiscard]] State CurrentState() const { return state_; }
   void SetState(State state) {
     if (state_ != state) {
-      self()->SetStateHook(state);
-      if (state != State::kError && state >= State::kShutdown && state_ < State::kShutdown) {
+      if (state != State::kError && state >= State::kStopping && state_ < State::kError) {
         self()->aboutToShutdown();
       }
       state_ = state;

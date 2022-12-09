@@ -26,7 +26,7 @@ Task::Task(Session* session, std::string command)
 }
 
 void Task::Start() {
-  if (state_ == State::kInitial) {
+  if (state_ == State::kInitialized) {
     SetState(State::kNoChannel);
     OnEvent();
   }
@@ -152,7 +152,7 @@ outcome::result<void> Task::startup() {
   }
 
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel: {
       auto* session = session_->GetRawSession();
       if (session == nullptr) {
@@ -171,11 +171,12 @@ outcome::result<void> Task::startup() {
     }
     case State::kStarted:
     case State::kCommandRunning:
-    case State::kShutdown:
+    case State::kStopping:
     case State::kSignalEOF:
     case State::kWaitRemoteEOF:
     case State::kSignalChannelClose:
     case State::kWaitChannelClosed:
+    case State::kStopped:
     case State::kChannelClosed:
     case State::kError:
       ORBIT_UNREACHABLE();
@@ -186,14 +187,14 @@ outcome::result<void> Task::startup() {
 
 outcome::result<void> Task::shutdown() {
   switch (state_) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel:
     case State::kChannelInitialized:
     case State::kStarted:
     case State::kCommandRunning:
       ORBIT_UNREACHABLE();
 
-    case State::kShutdown:
+    case State::kStopping:
     case State::kSignalEOF: {
       OUTCOME_TRY(channel_->SendEOF());
       SetState(State::kWaitRemoteEOF);
@@ -217,6 +218,7 @@ outcome::result<void> Task::shutdown() {
       emit finished(channel_->GetExitStatus());
       ABSL_FALLTHROUGH_INTENDED;
     }
+    case State::kStopped:
     case State::kChannelClosed:
       data_event_connection_ = std::nullopt;
       about_to_shutdown_connection_ = std::nullopt;

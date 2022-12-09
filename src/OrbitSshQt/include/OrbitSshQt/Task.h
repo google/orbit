@@ -25,16 +25,17 @@
 namespace orbit_ssh_qt {
 namespace details {
 enum class TaskState {
-  kInitial,
+  kInitialized,
   kNoChannel,
   kChannelInitialized,
   kStarted,
   kCommandRunning,
-  kShutdown,
+  kStopping,
   kSignalEOF,
   kWaitRemoteEOF,
   kSignalChannelClose,
   kWaitChannelClosed,
+  kStopped,
   kChannelClosed,
   kError
 };

@@ -20,13 +20,13 @@
 namespace orbit_ssh_qt {
 namespace details {
 enum class SftpChannelState {
-  kInitial,
+  kInitialized,
   kNoChannel,
   kStarted,
   kChannelInitialized,
-  kShutdown,
+  kStopping,
   kClosingChannel,
-  kDone,
+  kStopped,
   kError
 };
 }  // namespace details

@@ -26,18 +26,18 @@
 namespace orbit_ssh_qt {
 namespace details {
 enum class TunnelState {
-  kInitial,
+  kInitialized,
   kNoChannel,
   kChannelInitialized,
   kStarted,
   kServerListening,
-  kShutdown,
+  kStopping,
   kFlushing,
   kSendEOF,
   kWaitRemoteEOF,
   kClosingChannel,
   kWaitRemoteClosed,
-  kDone,
+  kStopped,
   kError
 };
 }  // namespace details

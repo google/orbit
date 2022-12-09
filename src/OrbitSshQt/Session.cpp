@@ -19,7 +19,7 @@ namespace orbit_ssh_qt {
 
 outcome::result<void> Session::startup() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kDisconnected: {
       OUTCOME_TRY(auto&& socket, orbit_ssh::Socket::Create());
       socket_ = std::move(socket);
@@ -59,9 +59,9 @@ outcome::result<void> Session::startup() {
     }
     case State::kStarted:
     case State::kConnected:
-    case State::kShutdown:
+    case State::kStopping:
     case State::kAboutToDisconnect:
-    case State::kDone:
+    case State::kStopped:
     case State::kError:
       ORBIT_UNREACHABLE();
   }
@@ -71,7 +71,7 @@ outcome::result<void> Session::startup() {
 
 outcome::result<void> Session::shutdown() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kDisconnected:
     case State::kSocketCreated:
     case State::kSocketConnected:
@@ -81,16 +81,16 @@ outcome::result<void> Session::shutdown() {
     case State::kStarted:
     case State::kConnected:
       ORBIT_UNREACHABLE();
-    case State::kShutdown:
+    case State::kStopping:
     case State::kAboutToDisconnect: {
       OUTCOME_TRY(session_->Disconnect());
       notifiers_ = std::nullopt;
       socket_ = std::nullopt;
       session_ = std::nullopt;
-      SetState(State::kDone);
+      SetState(State::kStopped);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kDone:
+    case State::kStopped:
       break;
     case State::kError:
       ORBIT_UNREACHABLE();

@@ -24,15 +24,15 @@
 namespace orbit_ssh_qt {
 namespace details {
 enum class SftpCopyToRemoteOperationState {
-  kInitial,
+  kInitialized,
   kNoOperation,
   kStarted,
   kLocalFileOpened,
   kRemoteFileOpened,
   kRemoteFileWritten,
   kRemoteFileClosed,
-  kShutdown,
-  kDone,
+  kStopping,
+  kStopped,
   kError
 };
 }  // namespace details

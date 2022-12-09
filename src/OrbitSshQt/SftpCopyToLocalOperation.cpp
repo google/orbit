@@ -41,7 +41,7 @@ void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
 
 void SftpCopyToLocalOperation::Stop() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kOpenRemoteFile: {
       SetState(State::kCloseEventConnections);
       break;
@@ -53,12 +53,12 @@ void SftpCopyToLocalOperation::Stop() {
     case State::kStarted:
       SetState(State::kCloseAndDeletePartialFile);
       break;
-    case State::kShutdown:
+    case State::kStopping:
     case State::kCloseAndDeletePartialFile:
     case State::kCloseLocalFile:
     case State::kCloseRemoteFile:
     case State::kCloseEventConnections:
-    case State::kDone:
+    case State::kStopped:
       break;
     case State::kError:
       ORBIT_UNREACHABLE();
@@ -69,12 +69,12 @@ void SftpCopyToLocalOperation::Stop() {
 
 outcome::result<void> SftpCopyToLocalOperation::shutdown() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kOpenRemoteFile:
     case State::kOpenLocalFile:
     case State::kStarted:
       ORBIT_UNREACHABLE();
-    case State::kShutdown:
+    case State::kStopping:
     case State::kCloseAndDeletePartialFile: {
       local_file_.close();
       bool remove_result = local_file_.remove();
@@ -99,10 +99,10 @@ outcome::result<void> SftpCopyToLocalOperation::shutdown() {
     case State::kCloseEventConnections: {
       about_to_shutdown_connection_ = std::nullopt;
       data_event_connection_ = std::nullopt;
-      SetState(State::kDone);
+      SetState(State::kStopped);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kDone:
+    case State::kStopped:
       break;
     case State::kError:
       ORBIT_UNREACHABLE();
@@ -142,7 +142,7 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
   }
 
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kOpenRemoteFile: {
       OUTCOME_TRY(auto&& sftp_file,
                   orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
@@ -162,12 +162,12 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
       break;
     }
     case State::kStarted:
-    case State::kShutdown:
+    case State::kStopping:
     case State::kCloseAndDeletePartialFile:
     case State::kCloseLocalFile:
     case State::kCloseRemoteFile:
     case State::kCloseEventConnections:
-    case State::kDone:
+    case State::kStopped:
     case State::kError:
       ORBIT_UNREACHABLE();
   };

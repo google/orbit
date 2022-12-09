@@ -23,7 +23,7 @@
 namespace orbit_ssh_qt {
 namespace details {
 enum class SessionState {
-  kInitial,
+  kInitialized,
   kDisconnected,
   kSocketCreated,
   kSocketConnected,
@@ -32,9 +32,9 @@ enum class SessionState {
   kMatchedKnownHosts,
   kStarted,
   kConnected,
-  kShutdown,
+  kStopping,
   kAboutToDisconnect,
-  kDone,
+  kStopped,
   kError
 };
 }  // namespace details
