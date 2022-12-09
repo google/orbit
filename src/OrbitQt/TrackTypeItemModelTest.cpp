@@ -29,7 +29,7 @@ class TrackTypeItemModelTest : public ::testing::Test {
     int found_row = -1;
 
     for (int i = 0; i < model_.rowCount(); ++i) {
-      Track::Type this_row_type =
+      auto this_row_type =
           model_.data(model_.index(i, 0), TrackTypeItemModel::kTrackTypeRole).value<Track::Type>();
       if (track_type == this_row_type) {
         found_row = i;

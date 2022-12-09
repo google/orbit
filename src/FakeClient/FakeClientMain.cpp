@@ -288,7 +288,7 @@ void WaitForFileModification(std::string_view file_path) {
     offset += bytes_read;
   }
 
-  inotify_event* event = reinterpret_cast<inotify_event*>(buffer);
+  auto* event = reinterpret_cast<inotify_event*>(buffer);
   ORBIT_CHECK(event->wd == wd);
 
   close(inotify_fd);

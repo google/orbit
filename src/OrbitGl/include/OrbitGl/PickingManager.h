@@ -81,7 +81,7 @@ struct PickingId {
   }
 
   [[nodiscard]] inline static PickingId FromPixelValue(uint32_t value) {
-    const Layout layout = absl::bit_cast<Layout, uint32_t>(value);
+    const auto layout = absl::bit_cast<Layout, uint32_t>(value);
     ORBIT_CHECK(layout.type < static_cast<uint32_t>(PickingType::kCount));
     ORBIT_CHECK(layout.batcher_id < static_cast<uint32_t>(BatcherId::kCount));
 

@@ -104,7 +104,7 @@ void OrbitLiveFunctions::OnDataChanged() {
 void OrbitLiveFunctions::AddIterator(size_t id, const FunctionInfo* function) {
   if (!live_functions_) return;
 
-  OrbitEventIterator* iterator_ui = new OrbitEventIterator(this);
+  auto* iterator_ui = new OrbitEventIterator(this);
 
   iterator_ui->SetNextButtonCallback([this, id]() {
     live_functions_->OnNextButton(id);

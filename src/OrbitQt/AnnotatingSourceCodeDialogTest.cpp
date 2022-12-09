@@ -108,15 +108,15 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
                      dialog.close();
                    });
 
-  QObject::connect(
-      &dialog, &orbit_qt::AnnotatingSourceCodeDialog::SourceCodeAvailable, &dialog, [&]() {
-        QPushButton* button = dialog.findChild<QPushButton*>("notification_action_button");
+  QObject::connect(&dialog, &orbit_qt::AnnotatingSourceCodeDialog::SourceCodeAvailable, &dialog,
+                   [&]() {
+                     auto* button = dialog.findChild<QPushButton*>("notification_action_button");
 
-        if (button == nullptr) return;
+                     if (button == nullptr) return;
 
-        // If available we will click on the "Load" button to load the source.
-        QTest::mouseClick(button, Qt::LeftButton);
-      });
+                     // If available we will click on the "Load" button to load the source.
+                     QTest::mouseClick(button, Qt::LeftButton);
+                   });
 
   QTimer::singleShot(std::chrono::seconds{2}, &dialog, [&]() { dialog.close(); });
 

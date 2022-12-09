@@ -213,7 +213,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
-  QObject* parent_object = new QObject{};
+  auto* parent_object = new QObject{};
 
   Future<ErrorMessageOr<QByteArray>> future =
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, parent_object);
@@ -243,7 +243,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
-  QObject* parent_object = new QObject{};
+  auto* parent_object = new QObject{};
 
   Future<ErrorMessageOr<QByteArray>> future =
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, parent_object);
@@ -310,7 +310,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
 
-  QObject* parent_object = new QObject{};
+  auto* parent_object = new QObject{};
 
   // Note the sleep for the process is 100ms and the parent is also deleted after 100ms. This means
   // the outcome can be either a success or a parent deleted error.
