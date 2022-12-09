@@ -6,6 +6,7 @@
 #define ORBIT_SSH_QT_BASE_H_
 
 #include <QObject>
+#include <type_traits>
 
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
@@ -190,6 +191,25 @@ class StateMachineHelper : public QObject {
       }
     }
   }
+
+  [[nodiscard]] bool IsStarting() const {
+    return state_ >= State::kInitial && state_ < State::kStarted;
+  }
+
+  [[nodiscard]] bool IsStarted() const {
+    return state_ >= State::kStarted && state_ < State::kShutdown;
+  }
+
+  [[nodiscard]] static State PreviousState(State state) {
+    return static_cast<State>(static_cast<std::underlying_type_t<State>>(state) - 1);
+  }
+
+  [[nodiscard]] bool IsStopping() const {
+    return state_ >= State::kShutdown && state_ < PreviousState(State::kError);
+  }
+
+  [[nodiscard]] bool IsStopped() const { return state_ == PreviousState(State::kError); }
+  [[nodiscard]] bool IsInErrorState() const { return state_ == State::kError; }
 
  private:
   friend Derived;

@@ -42,13 +42,12 @@ target_link_libraries(OrbitSshQt PUBLIC
         absl::str_format)
 set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 
-add_executable(OrbitSshQtIntegrationTests)
-target_sources(OrbitSshQtIntegrationTests PRIVATE IntegrationTests.cpp)
-target_link_libraries(OrbitSshQtIntegrationTests PUBLIC OrbitSshQt GTest::gtest)
-
-# tests
-#add_executable(OrbitSshQtTests)
-#target_sources(OrbitSshQtTests PRIVATE SocketTests.cpp ContextTests.cpp)
-#target_link_libraries(OrbitSshQtTests PRIVATE OrbitSshQt GTest::Main)
-
-#register_test(OrbitSshQtTests)
+add_executable(OrbitSshQtTests)
+target_sources(OrbitSshQtTests PRIVATE
+  SessionTest.cpp
+  SshSessionTest.h
+  SshTestFixture.h
+  TaskTest.cpp
+  TunnelTest.cpp)
+target_link_libraries(OrbitSshQtTests PUBLIC OrbitSshQt TestUtils GTest::QtCoreMain Qt::Test)
+register_test(OrbitSshQtTests)

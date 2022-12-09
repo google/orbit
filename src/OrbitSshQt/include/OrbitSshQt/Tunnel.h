@@ -68,7 +68,7 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   }
 
  signals:
-  void tunnelOpened(uint16_t listen_port);
+  void tunnelOpened(int listen_port);
   void started();
   void stopped();
   void errorOccurred(std::error_code);
