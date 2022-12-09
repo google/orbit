@@ -36,7 +36,6 @@ class ProcessLauncherWidget : public QWidget {
   void on_BrowseWorkingDirButton_clicked();
   void on_LaunchButton_clicked();
 
- private:
   std::unique_ptr<Ui::ProcessLauncherWidget> ui_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
 };

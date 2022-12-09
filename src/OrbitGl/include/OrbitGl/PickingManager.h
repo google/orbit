@@ -138,7 +138,6 @@ class PickingManager {
                                                 BatcherId batcher_id);
   [[nodiscard]] static Color ColorFromPickingID(PickingId id);
 
- private:
   uint32_t pickable_id_counter_ = 0;
   std::unordered_map<uint32_t, std::weak_ptr<Pickable>> pid_pickable_map_;
   std::unordered_map<Pickable*, uint32_t> pickable_pid_map_;

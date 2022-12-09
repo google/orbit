@@ -77,7 +77,6 @@ class CallTreeWidget : public QWidget {
   void OnSliderValueChanged(int value);
   void OnLeaveInspectionButtonClicked();
 
- private:
   static const QString kActionExpandRecursively;
   static const QString kActionCollapseRecursively;
   static const QString kActionCollapseChildrenRecursively;

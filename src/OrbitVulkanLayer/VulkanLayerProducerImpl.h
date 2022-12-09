@@ -95,7 +95,6 @@ class VulkanLayerProducerImpl : public VulkanLayerProducer {
     VulkanLayerProducerImpl* outer_;
   };
 
- private:
   static uint64_t ComputeStringKey(std::string_view str) {
     return std::hash<std::string_view>{}(str);
   }

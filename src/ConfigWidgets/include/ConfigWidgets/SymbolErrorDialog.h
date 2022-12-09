@@ -32,7 +32,6 @@ class SymbolErrorDialog : public QDialog {
   ~SymbolErrorDialog() override;
   [[nodiscard]] Result Exec();
 
- public slots:
   void OnShowErrorButtonClicked();
   void OnAddSymbolLocationButtonClicked();
   void OnTryAgainButtonClicked();

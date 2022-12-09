@@ -45,7 +45,6 @@ class OrbitSamplingReport : public QWidget {
   void on_PreviousCallstackButton_clicked();
   void OnCurrentThreadTabChanged(int current_tab_index);
 
- private:
   Ui::OrbitSamplingReport* ui_;
   std::shared_ptr<SamplingReport> sampling_report_;
   std::vector<OrbitDataViewPanel*> orbit_data_views_;

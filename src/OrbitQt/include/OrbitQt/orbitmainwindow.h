@@ -187,7 +187,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
 
- private:
   void UpdateFilePath(const std::filesystem::path& file_path);
   void StartMainTimer();
   void SetupCaptureToolbar();
@@ -258,7 +257,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path);
 
- private:
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;

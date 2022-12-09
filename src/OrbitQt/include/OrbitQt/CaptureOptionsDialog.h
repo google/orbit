@@ -120,7 +120,6 @@ class CaptureOptionsDialog : public QDialog {
   static constexpr uint16_t kMaxCopyRawStackSizeDefaultValue = 512;
   static constexpr uint16_t kThreadStateChangeMaxCopyRawStackSizeDefaultValue = 256;
 
- public slots:
   void ResetLocalMarkerDepthLineEdit();
   void ResetMemorySamplingPeriodMsLineEditWhenEmpty();
   void ResetMemoryWarningThresholdKbLineEditWhenEmpty();

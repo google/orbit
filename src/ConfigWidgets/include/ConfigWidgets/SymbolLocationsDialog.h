@@ -53,7 +53,6 @@ class SymbolLocationsDialog : public QDialog {
   // "module symbol file mapping" is saved and added to the list.
   ErrorMessageOr<void> TryAddSymbolFile(const std::filesystem::path& file_path);
 
- public slots:
   void OnRemoveButtonClicked();
   void OnAddFolderButtonClicked();
   void OnAddFileButtonClicked();

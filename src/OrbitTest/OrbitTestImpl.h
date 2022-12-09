@@ -30,7 +30,6 @@ class OrbitTestImpl {
   void ManualInstrumentationApiTest();
   void OutputOrbitApiState() const;
 
- private:
   bool exit_requested_ = false;
   std::vector<std::shared_ptr<std::thread>> threads_;
   uint32_t num_threads_ = 10;

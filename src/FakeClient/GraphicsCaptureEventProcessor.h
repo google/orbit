@@ -288,7 +288,6 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   // it as frame boundary to compute the average CPU frame time.
   static constexpr uint64_t kQueuePresentFunctionId = std::numeric_limits<uint64_t>::max();
 
- private:
   static constexpr uint64_t kMaxTimeMs = 1023;  // This is an arbitrary number
   static constexpr const char* kCpuFrameTimeFilename = "cpu_frame_times.txt";
   static constexpr const char* kGpuFrameTimeFilename = "gpu_frame_times.txt";

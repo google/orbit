@@ -175,7 +175,6 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
     }
   }
 
- private:
   moodycamel::ConcurrentQueue<IntermediateEventT> lock_free_queue_;
 
   std::thread forwarder_thread_;

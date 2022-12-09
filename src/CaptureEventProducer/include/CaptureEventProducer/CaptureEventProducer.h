@@ -63,7 +63,6 @@ class CaptureEventProducer {
  private:
   void ConnectAndReceiveCommandsThread();
 
- private:
   std::unique_ptr<orbit_grpc_protos::ProducerSideService::Stub> producer_side_service_stub_;
   std::thread connect_and_receive_commands_thread_;
 
