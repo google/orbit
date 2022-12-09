@@ -127,7 +127,7 @@ TEST_F(UnitTestTimeGraph, MouseWheel) {
   const Vec2 interactive_area_size = {timeline_ui->GetSize()[0], time_graph->GetSize()[1]};
   // Mouse position in the center of the interactive area.
   const Vec2 centered_mouse_position{interactive_area_pos[0] + interactive_area_size[0] / 2.f,
-                                    interactive_area_pos[1] + interactive_area_size[1] / 2.f};
+                                     interactive_area_pos[1] + interactive_area_size[1] / 2.f};
 
   MouseWheelUp(centered_mouse_position, /*ctrl=*/false);
 
