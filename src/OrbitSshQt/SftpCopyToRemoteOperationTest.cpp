@@ -13,12 +13,16 @@
 #include "OrbitSshQt/SftpCopyToLocalOperation.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
+#include "QtTestUtils/WaitFor.h"
 #include "SftpTestFixture.h"
 #include "Test/Path.h"
 #include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
+using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::YieldsResult;
+using orbit_test_utils::HasNoError;
 
 using SftpCopyToRemoteOperationTest = SftpTestFixture;
 
@@ -37,17 +41,8 @@ TEST_F(SftpCopyToRemoteOperationTest, Upload) {
 
   Task task{GetSession(), "cmp /home/loginuser/plain.txt /home/loginuser/upload.txt"};
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
-  task.Start();
-
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
-
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
 
   ASSERT_EQ(finished_signal.size(), 1);
   // Return value 0 means there was no difference in the two compared files. Hence the upload

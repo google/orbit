@@ -17,12 +17,21 @@
 #include <string_view>
 #include <thread>
 
+#include "OrbitSsh/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
+#include "QtTestUtils/WaitFor.h"
 #include "SshTestFixture.h"
+#include "TestUtils/TestUtils.h"
+
+Q_DECLARE_METATYPE(std::error_code);
 
 namespace orbit_ssh_qt {
+using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::YieldsResult;
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 
 // This test fixure inherits all the functionality from SshTestFixture and on top ensures that
 // there is an echo server running on TCP port 4444 on the SSH server's machine.
@@ -35,13 +44,6 @@ class SshTunnelTest : public SshTestFixture {
     // socat with these options implements an echo server. It listen on incoming connections at a
     // random TCP port and replies to all incoming messages just by returning the same bytes.
     task_.emplace(GetSession(), "socat -dd tcp-listen:0 exec:'/bin/cat'");
-    QSignalSpy finished_signal{&task_.value(), &orbit_ssh_qt::Task::finished};
-    task_->Start();
-
-    if (!task_->IsStarted()) {
-      QSignalSpy started_signal{&task_.value(), &orbit_ssh_qt::Task::started};
-      EXPECT_TRUE(started_signal.wait());
-    }
 
     // We have to wait for socat being ready to receive connections. There is no good way to detect
     // readiness other than parsing the debug output.
@@ -49,6 +51,9 @@ class SshTunnelTest : public SshTestFixture {
     ScopedConnection output_connection{
         QObject::connect(&task_.value(), &orbit_ssh_qt::Task::readyReadStdErr, &task_.value(),
                          [this, &socat_output]() { socat_output.append(task_->ReadStdErr()); })};
+
+    ASSERT_THAT(orbit_qt_test_utils::WaitFor(task_->Start()),
+                orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
 
     ASSERT_TRUE(QTest::qWaitFor([&socat_output]() {
       // We need to make sure the first line was printed fully to ensure we can parse the port
@@ -76,12 +81,8 @@ class SshTunnelTest : public SshTestFixture {
     if (task_.has_value()) {
       KillRunningEchoServer();
 
-      task_->Stop();
-
-      if (!task_->IsStopped()) {
-        QSignalSpy stopped_signal{&task_.value(), &orbit_ssh_qt::Task::stopped};
-        EXPECT_TRUE(stopped_signal.wait());
-      }
+      EXPECT_THAT(orbit_qt_test_utils::WaitFor(task_->Stop()),
+                  orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
     }
 
     SshTestFixture::TearDown();
@@ -99,17 +100,8 @@ class SshTunnelTest : public SshTestFixture {
 
     orbit_ssh_qt::Task kill_task{GetSession(),
                                  absl::StrFormat("kill $(fuser %d/tcp)", GetEchoServerPort())};
-    kill_task.Start();
-
-    if (!kill_task.IsStarted()) {
-      QSignalSpy started_signal{&kill_task, &orbit_ssh_qt::Task::started};
-      EXPECT_TRUE(started_signal.wait());
-    }
-
-    if (!kill_task.IsStopped()) {
-      QSignalSpy stopped_signal{&kill_task, &orbit_ssh_qt::Task::stopped};
-      EXPECT_TRUE(stopped_signal.wait());
-    }
+    EXPECT_THAT(WaitFor(kill_task.Start()), YieldsResult(HasNoError()));
+    EXPECT_THAT(WaitFor(kill_task.Stop()), YieldsResult(HasNoError()));
   }
 };
 
@@ -118,14 +110,11 @@ TEST_F(SshTunnelTest, StartFails) {
   orbit_ssh_qt::Tunnel tunnel{GetSession(), "127.0.0.1", kSomeDefinitelyUnusedPort};
 
   QSignalSpy tunnel_opened_signal{&tunnel, &orbit_ssh_qt::Tunnel::tunnelOpened};
-  tunnel.Start();
+  qRegisterMetaType<std::error_code>("std::error_code");
+  QSignalSpy error_signal{&tunnel, &orbit_ssh_qt::Tunnel::errorOccurred};
 
-  // Since nothing is listening on port 80, we expect the tunnel start to fail.
-  if (!tunnel.IsInErrorState()) {
-    qRegisterMetaType<std::error_code>("std::error_code");
-    QSignalSpy error_signal{&tunnel, &orbit_ssh_qt::Tunnel::errorOccurred};
-    EXPECT_TRUE(error_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(tunnel.Start()), YieldsResult(HasError("Channel failure")));
+  EXPECT_THAT(error_signal, testing::SizeIs(1));
 }
 
 TEST_F(SshTunnelTest, ReadAndWrite) {
@@ -133,7 +122,7 @@ TEST_F(SshTunnelTest, ReadAndWrite) {
   orbit_ssh_qt::Tunnel tunnel{GetSession(), "127.0.0.1", GetEchoServerPort()};
 
   QSignalSpy tunnel_opened_signal{&tunnel, &orbit_ssh_qt::Tunnel::tunnelOpened};
-  tunnel.Start();
+  std::ignore = tunnel.Start();
 
   if (!tunnel.IsStarted()) {
     QSignalSpy started_signal{&tunnel, &orbit_ssh_qt::Tunnel::started};
@@ -159,7 +148,7 @@ TEST_F(SshTunnelTest, ReadAndWrite) {
 
   EXPECT_EQ(socket.readAll(), QByteArray::fromRawData(kInputString.data(), kInputString.size()));
 
-  tunnel.Stop();
+  std::ignore = tunnel.Stop();
 
   if (!tunnel.IsStopped()) {
     QSignalSpy stopped_signal{&tunnel, &orbit_ssh_qt::Tunnel::stopped};
