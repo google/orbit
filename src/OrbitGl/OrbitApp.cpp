@@ -2300,6 +2300,13 @@ void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_
   FireRefreshCallbacks();
 }
 
+void OrbitApp::ClearAllSelections() {
+  ClearInspection();
+  ClearSelectionReport();
+  ClearSelectionTopDownView();
+  ClearSelectionBottomUpView();
+}
+
 void OrbitApp::ClearInspection() {
   SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
                                 /*origin_is_multiple_threads*/ false);
@@ -2809,7 +2816,8 @@ const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
 }
 
 void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
-  main_window_->ClearCallstackInspection();
+  ClearAllSelections();
+
   auto selected_callstack_events =
       GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(min, max);
   SetCaptureDataSelectionFields(selected_callstack_events, /*origin_is_multiple_threads=*/true);
@@ -2825,9 +2833,7 @@ void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
 }
 
 void OrbitApp::ClearTimeRangeSelection() {
-  main_window_->ClearCallstackInspection();
-  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
-                                /*origin_is_multiple_threads*/ false);
+  ClearAllSelections();
 
   main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
   SetTopDownView(GetCaptureData().post_processed_sampling_data());
