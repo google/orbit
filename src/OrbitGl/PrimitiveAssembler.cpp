@@ -342,7 +342,7 @@ void PrimitiveAssembler::StartNewFrame() { batcher_->ResetElements(); }
 const orbit_client_protos::TimerInfo* PrimitiveAssembler::GetTimerInfo(PickingId id) const {
   const PickingUserData* data = GetUserData(id);
 
-  if (data && data->timer_info_) {
+  if (data != nullptr && data->timer_info_ != nullptr) {
     return data->timer_info_;
   }
 

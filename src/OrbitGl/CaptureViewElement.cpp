@@ -110,7 +110,7 @@ void CaptureViewElement::SetWidth(float width) {
   if (width == width_) return;
 
   for (auto& child : GetAllChildren()) {
-    if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
+    if ((child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) != 0u) {
       child->SetWidth(width);
     }
   }

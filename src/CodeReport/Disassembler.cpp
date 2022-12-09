@@ -50,7 +50,7 @@ void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
 
   count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size, address, 0, &insn);
 
-  if (count) {
+  if (count != 0u) {
     size_t j;
 
     for (j = 0; j < count; j++) {

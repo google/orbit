@@ -36,10 +36,10 @@ namespace {
   uint32_t ebx = 0;
   uint32_t ecx = 0;
   uint32_t edx = 0;
-  if (!__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) || !(ecx & bit_XSAVE)) {
+  if ((__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) == 0) || ((ecx & bit_XSAVE) == 0u)) {
     return ErrorMessage("XSAVE is not supported by the Cpu.");
   }
-  if (!__get_cpuid_count(0x0d, 0x00, &eax, &ebx, &ecx, &edx)) {
+  if (__get_cpuid_count(0x0d, 0x00, &eax, &ebx, &ecx, &edx) == 0) {
     return ErrorMessage("XSAVE is not supported by the Cpu.");
   }
   return static_cast<size_t>(ecx);
@@ -51,10 +51,10 @@ namespace {
   uint32_t ebx = 0;
   uint32_t ecx = 0;
   uint32_t edx = 0;
-  if (!__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) || !(ecx & bit_AVX)) {
+  if ((__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) == 0) || ((ecx & bit_AVX) == 0u)) {
     return ErrorMessage("AVX is not supported by the Cpu.");
   }
-  if (!__get_cpuid_count(0x0d, 0x02, &eax, &ebx, &ecx, &edx)) {
+  if (__get_cpuid_count(0x0d, 0x02, &eax, &ebx, &ecx, &edx) == 0) {
     return ErrorMessage("AVX offset query failed.");
   }
   return static_cast<size_t>(ebx);

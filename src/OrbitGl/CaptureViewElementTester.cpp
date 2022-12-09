@@ -67,7 +67,8 @@ void orbit_gl::CaptureViewElementTester::TestWidthPropagationToChildren(
 
   element->SetWidth(kWidth);
   for (auto& child : element->GetAllChildren()) {
-    if (child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) {
+    if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
+        0u) {
       EXPECT_EQ(kWidth, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());
@@ -76,7 +77,8 @@ void orbit_gl::CaptureViewElementTester::TestWidthPropagationToChildren(
 
   element->SetWidth(kUpdatedWidth);
   for (auto& child : element->GetAllChildren()) {
-    if (child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) {
+    if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
+        0u) {
       EXPECT_EQ(kUpdatedWidth, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());

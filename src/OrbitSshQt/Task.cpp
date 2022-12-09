@@ -155,7 +155,7 @@ outcome::result<void> Task::startup() {
     case State::kInitial:
     case State::kNoChannel: {
       auto* session = session_->GetRawSession();
-      if (!session) {
+      if (session == nullptr) {
         return orbit_ssh::Error::kEagain;
       }
 
@@ -245,7 +245,7 @@ void Task::HandleSessionShutdown() {
 }
 
 void Task::HandleEagain() {
-  if (session_) {
+  if (session_ != nullptr) {
     session_->HandleEagain();
   }
 }

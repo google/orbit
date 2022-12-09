@@ -28,7 +28,7 @@ inline std::string ShortenStringWithEllipsis(std::string_view text, size_t max_l
   const size_t chars_to_cut = text.length() - max_len + kNumCharsEllipsis;
   size_t l = text.length() - chars_to_cut;
   // Integer division by two, rounded up
-  if (l & 0x1) {
+  if ((l & 0x1) != 0u) {
     l = (l + 1) >> 1;
   } else {
     l = l >> 1;

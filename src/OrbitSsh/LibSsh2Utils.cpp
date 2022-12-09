@@ -13,7 +13,7 @@ std::pair<int, std::string> LibSsh2SessionLastError(LIBSSH2_SESSION* session) {
   // there is no other way to do it really.
   char* error_msg = nullptr;
   int error_msg_len = 0;
-  int last_errno = libssh2_session_last_error(session, &error_msg, &error_msg_len, false);
+  int last_errno = libssh2_session_last_error(session, &error_msg, &error_msg_len, 0);
 
   if (error_msg == nullptr) {
     return {};

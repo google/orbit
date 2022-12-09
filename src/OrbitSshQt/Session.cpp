@@ -112,8 +112,8 @@ void Session::HandleEagain() {
     // should wait for the socket to have data available for reading or writing.
     // `libssh2_session_block_directions` tells which direction to listen on.
 
-    notifiers_->read.setEnabled(flags & LIBSSH2_SESSION_BLOCK_INBOUND);
-    notifiers_->write.setEnabled(flags & LIBSSH2_SESSION_BLOCK_OUTBOUND);
+    notifiers_->read.setEnabled((flags & LIBSSH2_SESSION_BLOCK_INBOUND) != 0);
+    notifiers_->write.setEnabled((flags & LIBSSH2_SESSION_BLOCK_OUTBOUND) != 0);
   }
 }
 

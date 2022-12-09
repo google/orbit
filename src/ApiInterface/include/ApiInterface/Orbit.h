@@ -392,9 +392,9 @@ static
 #endif
     inline bool
     orbit_api_active() {
-  bool initialized = g_orbit_api.initialized;
+  bool initialized = g_orbit_api.initialized != 0u;
   ORBIT_THREAD_FENCE_ACQUIRE();
-  return initialized && g_orbit_api.enabled;
+  return initialized && (g_orbit_api.enabled != 0u);
 }
 
 #define ORBIT_CALL(function_name, ...)                                                           \

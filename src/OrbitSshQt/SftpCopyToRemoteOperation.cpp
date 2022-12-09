@@ -132,7 +132,7 @@ void SftpCopyToRemoteOperation::HandleChannelShutdown() {
 }
 
 void SftpCopyToRemoteOperation::HandleEagain() {
-  if (session_) {
+  if (session_ != nullptr) {
     session_->HandleEagain();
   }
 }

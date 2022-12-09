@@ -74,7 +74,7 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 178;
   uint32_t ebx = 0;
   uint32_t ecx = 0;
   uint32_t edx = 0;
-  return __get_cpuid(0x01, &eax, &ebx, &ecx, &edx) && (ecx & bit_AVX);
+  return (__get_cpuid(0x01, &eax, &ebx, &ecx, &edx) != 0) && ((ecx & bit_AVX) != 0u);
 }
 
 [[nodiscard]] std::string BytesAsString(absl::Span<const uint8_t> code) {

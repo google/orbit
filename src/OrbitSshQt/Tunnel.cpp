@@ -106,7 +106,7 @@ outcome::result<void> Tunnel::startup() {
       }
 
       QObject::connect(&local_server_.value(), &QTcpServer::newConnection, this, [&]() {
-        if (!local_socket_) {
+        if (local_socket_ == nullptr) {
           local_socket_ = local_server_->nextPendingConnection();
           local_server_->pauseAccepting();
           QObject::connect(local_socket_, &QTcpSocket::readyRead, this,
@@ -204,7 +204,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     }
   }
 
-  if (local_socket_ && !read_buffer_.empty()) {
+  if ((local_socket_ != nullptr) && !read_buffer_.empty()) {
     const auto bytes_written = local_socket_->write(read_buffer_.data(), read_buffer_.size());
 
     if (bytes_written == -1) {
@@ -269,7 +269,7 @@ void Tunnel::HandleSessionShutdown() {
 }
 
 void Tunnel::HandleEagain() {
-  if (session_) {
+  if (session_ != nullptr) {
     session_->HandleEagain();
   }
 }
