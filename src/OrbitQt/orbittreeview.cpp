@@ -174,7 +174,7 @@ void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
 
 void OrbitTreeView::resizeEvent(QResizeEvent* event) {
   const bool width_resized = event->size().width() != event->oldSize().width();
-  if (width_resized && model_ != nullptr && (model_->GetDataView() != nullptr)) {
+  if (width_resized && model_ != nullptr && model_->GetDataView() != nullptr) {
     // Get initial column ratios once.
     if (column_ratios_.size() == 0) {
       for (const auto& column : model_->GetDataView()->GetColumns()) {
