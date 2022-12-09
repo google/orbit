@@ -41,11 +41,8 @@ uint64_t GetFakeTimeStamp() {
 }
 
 struct ScopeTimer {
-  ScopeTimer(std::vector<TestScope*>* scopes, size_t max_nodes) {
-    start = GetFakeTimeStamp();
-    max_num_nodes = max_nodes;
-    scope_buffer = scopes;
-  }
+  ScopeTimer(std::vector<TestScope*>* scopes, size_t max_nodes)
+      : start(GetFakeTimeStamp()), max_num_nodes(max_nodes), scope_buffer(scopes) {}
   ~ScopeTimer() {
     if (scope_buffer->size() < max_num_nodes) {
       scope_buffer->push_back(CreateScope(start, GetFakeTimeStamp()));

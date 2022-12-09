@@ -45,14 +45,8 @@ class QtTextRenderer : public TextRenderer {
 
   struct StoredText {
     StoredText() = default;
-    StoredText(const QString& text, int x, int y, int w, int h, TextFormatting formatting) {
-      this->text = text;
-      this->x = x;
-      this->y = y;
-      this->w = w;
-      this->h = h;
-      this->formatting = formatting;
-    }
+    StoredText(const QString& text, int x, int y, int w, int h, TextFormatting formatting)
+        : text(text), x(x), y(y), w(w), h(h), formatting(formatting) {}
     QString text;
     int x, y, w, h;
     TextFormatting formatting;

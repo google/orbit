@@ -113,9 +113,9 @@ class CoffFileImpl : public CoffFile {
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
                            llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary)
-    : file_path_(std::move(file_path)), owning_binary_(std::move(owning_binary)) {
-  object_file_ = llvm::dyn_cast<llvm::object::COFFObjectFile>(owning_binary_.getBinary());
-
+    : file_path_(std::move(file_path)),
+      owning_binary_(std::move(owning_binary)),
+      object_file_(llvm::dyn_cast<llvm::object::COFFObjectFile>(owning_binary_.getBinary())) {
   for (const llvm::object::SectionRef& section_ref : object_file_->sections()) {
     const llvm::object::coff_section* coff_section = object_file_->getCOFFSection(section_ref);
     ModuleInfo::ObjectSegment& object_segment = sections_.emplace_back();

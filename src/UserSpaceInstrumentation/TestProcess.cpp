@@ -48,6 +48,7 @@ TestProcess::TestProcess() {
 
   Touch(flag_file_run_child_->file_path());
   flag_file_child_started_->CloseAndRemove();
+
   pid_ = fork();
   ORBIT_CHECK(pid_ != -1);
   // Start the workload and have the parent wait for the startup to complete.

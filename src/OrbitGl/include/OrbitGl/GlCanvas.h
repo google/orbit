@@ -110,21 +110,21 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   Vec2 select_start_pos_world_ = Vec2(0, 0);
   Vec2 select_stop_pos_world_ = Vec2(0, 0);
 
-  bool is_selecting_;
+  bool is_selecting_{false};
   Timer hover_timer_;
-  int hover_delay_ms_;
+  int hover_delay_ms_{300};
   bool can_hover_;
 
   PickingMode picking_mode_ = PickingMode::kNone;
 
-  double ref_time_click_;
+  double ref_time_click_{0.0};
   float track_container_click_scrolling_offset_ = 0;
   orbit_gl::QtTextRenderer text_renderer_;
   PickingManager picking_manager_;
-  bool double_clicking_;
-  bool control_key_;
+  bool double_clicking_{false};
+  bool control_key_{false};
   bool is_mouse_over_ = false;
-  bool redraw_requested_;
+  bool redraw_requested_{true};
 
   orbit_gl::Viewport viewport_;
 

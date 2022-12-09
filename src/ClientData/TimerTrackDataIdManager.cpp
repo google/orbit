@@ -14,9 +14,8 @@ using orbit_client_protos::TimerInfo;
 
 namespace orbit_client_data {
 
-TimerTrackDataIdManager::TimerTrackDataIdManager() {
+TimerTrackDataIdManager::TimerTrackDataIdManager() : scheduler_track_id_(next_track_id_++) {
   // Since there always will be an only scheduler track, we can assign it now.
-  scheduler_track_id_ = next_track_id_++;
 }
 
 uint32_t TimerTrackDataIdManager::GenerateTrackIdFromTimerInfo(const TimerInfo& timer_info) {

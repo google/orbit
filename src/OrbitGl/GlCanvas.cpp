@@ -68,14 +68,6 @@ GlCanvas::GlCanvas()
   // handling for accessibility. Thus, we use `nullptr` here.
   text_renderer_.SetViewport(&viewport_);
 
-  is_selecting_ = false;
-  double_clicking_ = false;
-  control_key_ = false;
-  redraw_requested_ = true;
-
-  ref_time_click_ = 0.0;
-
-  hover_delay_ms_ = 300;
   ResetHoverTimer();
 }
 
