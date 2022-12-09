@@ -19,27 +19,6 @@
 #include "OrbitSsh/KnownHostsError.h"
 #include "OrbitSsh/Socket.h"
 
-namespace {
-
-void LogFileContents(const std::filesystem::path& file_path) {
-  if (!std::filesystem::exists(file_path)) {
-    ORBIT_ERROR("Unable to print contents of file \"%s\": File does not exist.",
-                file_path.string());
-    return;
-  }
-
-  ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(file_path);
-  if (file_content_or_error.has_error()) {
-    ORBIT_ERROR("Unable to print contents of file \"%s\": %s", file_path.string(),
-                file_content_or_error.error().message());
-    return;
-  }
-
-  ORBIT_LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content_or_error.value());
-}
-
-}  // namespace
-
 namespace orbit_ssh {
 
 Session::Session(LIBSSH2_SESSION* raw_session_ptr)
@@ -68,7 +47,6 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   LIBSSH2_KNOWNHOSTS* known_hosts = libssh2_knownhost_init(raw_session_ptr_.get());
 
   if (known_hosts == nullptr) {
-    LogFileContents(known_hosts_path);
     const auto [last_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ORBIT_ERROR("libssh2_knownhost_init call failed, last session error message: %s",
                 error_message);
@@ -80,7 +58,6 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
   const int amount_hosts = libssh2_knownhost_readfile(
       known_hosts, known_hosts_path.string().c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
   if (amount_hosts < 0) {
-    LogFileContents(known_hosts_path);
     const auto [unused_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ORBIT_ERROR(
         "libssh2_knownhost_readfile() call failed. Tried to to read \"%s\". returned error code "
@@ -96,7 +73,6 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
       libssh2_session_hostkey(raw_session_ptr_.get(), &fingerprint_length, &fingerprint_type);
 
   if (fingerprint == nullptr) {
-    LogFileContents(known_hosts_path);
     const auto [last_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ORBIT_ERROR("libssh2_session_hostkey() failed, last session error message: %s", error_message);
     libssh2_knownhost_free(known_hosts);
@@ -105,14 +81,11 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
 
   const int check_result = libssh2_knownhost_checkp(
       known_hosts, addr_and_port.addr.c_str(), addr_and_port.port, fingerprint, fingerprint_length,
-      LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW |
-          ((fingerprint_type + 1) << LIBSSH2_KNOWNHOST_KEY_SHIFT),
-      nullptr);
+      LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW, nullptr);
 
   libssh2_knownhost_free(known_hosts);
 
   if (check_result != LIBSSH2_KNOWNHOST_CHECK_MATCH) {
-    LogFileContents(known_hosts_path);
     const auto [unused_errno, error_message] = LibSsh2SessionLastError(raw_session_ptr_.get());
     ORBIT_ERROR(
         "libssh2_knownhost_checkp() call did not produce a match in list of known hosts. Match "
