@@ -102,6 +102,7 @@
 #include "OrbitBase/Typedef.h"
 #include "OrbitBase/UniqueResource.h"
 #include "OrbitBase/WhenAll.h"
+#include "OrbitGl/CallTreeView.h"
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/FrameTrackOnlineProcessor.h"
 #include "OrbitGl/MainWindowInterface.h"
