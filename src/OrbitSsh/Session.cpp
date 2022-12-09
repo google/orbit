@@ -12,7 +12,6 @@
 
 #include "LibSsh2Utils.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Error.h"
