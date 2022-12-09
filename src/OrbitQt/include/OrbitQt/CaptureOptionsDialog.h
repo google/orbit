@@ -120,7 +120,9 @@ class CaptureOptionsDialog : public QDialog {
   static constexpr uint16_t kMaxCopyRawStackSizeDefaultValue = 512;
   static constexpr uint16_t kThreadStateChangeMaxCopyRawStackSizeDefaultValue = 256;
 
- public slots:
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
+ public slots:  // NOLINT(readability-redundant-access-specifiers)
   void ResetLocalMarkerDepthLineEdit();
   void ResetMemorySamplingPeriodMsLineEditWhenEmpty();
   void ResetMemoryWarningThresholdKbLineEditWhenEmpty();

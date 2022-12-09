@@ -40,12 +40,16 @@ class OrbitSamplingReport : public QWidget {
  signals:
   void LeaveCallstackInspectionClicked();
 
+  // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
+  // and remove the "public slots" specifier
  private slots:
   void on_NextCallstackButton_clicked();
   void on_PreviousCallstackButton_clicked();
   void OnCurrentThreadTabChanged(int current_tab_index);
 
- private:
+  // TODO(https://github.com/google/orbit/issues/4589): Remove redundant "private" once slots is not
+  // needed anymore above.
+ private:  // NOLINT(readability-redundant-access-specifiers)
   Ui::OrbitSamplingReport* ui_;
   std::shared_ptr<SamplingReport> sampling_report_;
   std::vector<OrbitDataViewPanel*> orbit_data_views_;

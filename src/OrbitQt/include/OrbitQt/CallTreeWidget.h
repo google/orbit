@@ -67,7 +67,7 @@ class CallTreeWidget : public QWidget {
  protected:
   void resizeEvent(QResizeEvent* event) override;
 
- private slots:
+ private:
   void OnRowExpanded(const QModelIndex& index);
   void OnCopyKeySequencePressed();
   void OnAltKeyAndMousePressed(const QPoint& point);
@@ -77,7 +77,6 @@ class CallTreeWidget : public QWidget {
   void OnSliderValueChanged(int value);
   void OnLeaveInspectionButtonClicked();
 
- private:
   static const QString kActionExpandRecursively;
   static const QString kActionCollapseRecursively;
   static const QString kActionCollapseChildrenRecursively;

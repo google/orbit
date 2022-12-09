@@ -77,7 +77,6 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
                                orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream,
       uint64_t producer_id, bool* all_events_sent_received);
 
- private:
   absl::flat_hash_set<grpc::ServerContext*> server_contexts_
       ABSL_GUARDED_BY(server_contexts_mutex_);
   absl::Mutex server_contexts_mutex_;
