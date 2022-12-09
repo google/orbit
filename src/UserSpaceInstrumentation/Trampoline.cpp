@@ -1004,9 +1004,8 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> AllocateMemoryForTrampolines(
 }
 
 ErrorMessageOr<int32_t> AddressDifferenceAsInt32(uint64_t a, uint64_t b) {
-  constexpr uint64_t kAbsMaxInt32AsUint64 =
-      static_cast<uint64_t>(std::numeric_limits<int32_t>::max());
-  constexpr uint64_t kAbsMinInt32AsUint64 =
+  constexpr auto kAbsMaxInt32AsUint64 = static_cast<uint64_t>(std::numeric_limits<int32_t>::max());
+  constexpr auto kAbsMinInt32AsUint64 =
       static_cast<uint64_t>(-static_cast<int64_t>(std::numeric_limits<int32_t>::min()));
   if ((a > b) && (a - b > kAbsMaxInt32AsUint64)) {
     return ErrorMessage("Difference is larger than +2GB.");

@@ -297,7 +297,7 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   // events that would just draw over an already drawn line. When zoomed in
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
-  uint64_t time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
+  auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
   draw_data.ns_per_pixel =
       static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth(), 0})[0];
   draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
@@ -404,7 +404,7 @@ internal::DrawData TimerTrack::GetDrawData(
   draw_data.highlighted_group_id = highlighted_group_id;
   draw_data.histogram_selection_range = histogram_selection_range;
 
-  uint64_t time_window_ns = static_cast<uint64_t>(1000 * timeline_info->GetTimeWindowUs());
+  auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info->GetTimeWindowUs());
   draw_data.ns_per_pixel =
       static_cast<double>(time_window_ns) / viewport->WorldToScreen({track_width, 0})[0];
   draw_data.min_timegraph_tick = timeline_info->GetTickFromUs(timeline_info->GetMinTimeUs());

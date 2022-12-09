@@ -66,7 +66,7 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
     // Draw rounded corners.
     float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
     radius = std::min(radius, half_label_width);
-    uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
+    auto sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
     auto rounded_corner = GetRoundedCornerMask(radius, sides);
 
     // This only draw the tab-part of a track. It's expecting to sit on the top of the track.

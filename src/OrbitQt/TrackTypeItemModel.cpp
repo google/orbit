@@ -29,7 +29,7 @@ QVariant TrackTypeItemModel::data(const QModelIndex& idx, int role) const {
   ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   Track::Type track_type = known_track_types_.at(idx.row());
-  Column col = static_cast<Column>(idx.column());
+  auto col = static_cast<Column>(idx.column());
 
   switch (role) {
     case kTrackTypeRole:
@@ -56,7 +56,7 @@ bool TrackTypeItemModel::setData(const QModelIndex& idx, const QVariant& value, 
   ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   Track::Type track_type = known_track_types_.at(idx.row());
-  Column col = static_cast<Column>(idx.column());
+  auto col = static_cast<Column>(idx.column());
 
   switch (role) {
     case Qt::CheckStateRole:

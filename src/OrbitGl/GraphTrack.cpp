@@ -107,7 +107,7 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
 
   const bool picking = picking_mode != PickingMode::kNone;
   if (picking) return;
-  double time_range = static_cast<double>(max_tick - min_tick);
+  auto time_range = static_cast<double>(max_tick - min_tick);
   if (series_.GetTimeToSeriesValuesSize() < 2 || time_range == 0) return;
   DrawSeries(primitive_assembler, min_tick, max_tick, graph_z);
 }

@@ -110,7 +110,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   auto dlsym_or_error =
       DlsymInTracee(pid, modules, library_handle_or_error.value(), "TrivialFunction");
   ASSERT_TRUE(dlsym_or_error.has_value());
-  const uint64_t function_address = absl::bit_cast<uint64_t>(dlsym_or_error.value());
+  const auto function_address = absl::bit_cast<uint64_t>(dlsym_or_error.value());
 
   {
     // Write machine code to call "TrivialFunction" from the dynamic lib.

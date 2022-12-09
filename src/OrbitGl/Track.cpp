@@ -66,7 +66,7 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
 
   // Draw rounded corners.
   float radius = std::min(layout_->GetRoundingRadius(), layout_->GetTrackTabHeight() * 0.5f);
-  uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
+  auto sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
   auto rounded_corner = orbit_gl::GetRoundedCornerMask(radius, sides);
 
   // This draws the non-tab content of the track. The tab itself is a separate CaptureViewElement

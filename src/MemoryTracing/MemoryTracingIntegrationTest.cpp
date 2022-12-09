@@ -131,8 +131,7 @@ class MemoryTracingIntegrationTestFixture {
 
 void VerifyOrderAndContentOfEvents(absl::Span<const ProducerCaptureEvent> events,
                                    uint64_t sampling_period_ns) {
-  const uint64_t kMemoryEventsTimeDifferenceTolerance =
-      static_cast<uint64_t>(sampling_period_ns * 0.2);
+  const auto kMemoryEventsTimeDifferenceTolerance = static_cast<uint64_t>(sampling_period_ns * 0.2);
   uint64_t previous_memory_usage_event_timestamp_ns = 0;
 
   for (const auto& event : events) {

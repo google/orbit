@@ -679,8 +679,8 @@ template <typename EventType, typename StructType>
       tracepoint_size);
   const StructType& typed_tracepoint_data =
       *reinterpret_cast<const StructType*>(tracepoint_data.get());
-  const int16_t data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
-  const int16_t data_loc_offset = static_cast<int16_t>(typed_tracepoint_data.timeline & 0x00ff);
+  const auto data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
+  const auto data_loc_offset = static_cast<int16_t>(typed_tracepoint_data.timeline & 0x00ff);
   std::vector<char> data_loc_data(data_loc_size);
   std::memcpy(&data_loc_data[0],
               reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,

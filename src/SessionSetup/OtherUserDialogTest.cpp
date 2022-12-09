@@ -65,7 +65,7 @@ TEST(OtherUserDialog, Remember) {
     QMetaObject::invokeMethod(
         &dialog,
         [&]() {
-          QCheckBox* check_box = dialog.findChild<QCheckBox*>();
+          auto* check_box = dialog.findChild<QCheckBox*>();
           ASSERT_TRUE(check_box != nullptr);
           check_box->setChecked(true);
           dialog.accept();
