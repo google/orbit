@@ -99,10 +99,10 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
 };
 
 TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
-  const int child_count = 2;
+  constexpr int kChildCount = 2;
   CaptureViewElementTester tester;
   UnitTestCaptureViewContainerElement container_elem(nullptr, tester.GetViewport(),
-                                                     tester.GetLayout(), child_count);
+                                                     tester.GetLayout(), kChildCount);
   tester.RunTests(&container_elem);
 }
 
@@ -124,8 +124,8 @@ TEST(CaptureViewElement, ContainsPointRecursively) {
 }
 
 TEST(CaptureViewElement, ContainsPointRecursivelyForElementsOutsideOfTheParent) {
-  const int child_count = 2;
-  UnitTestCaptureViewContainerElement elem(nullptr, &kViewport, &kLayout, child_count);
+  constexpr int kChildCount = 2;
+  UnitTestCaptureViewContainerElement elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   CaptureViewElement* child0 = elem.GetAllChildren()[0];
 
@@ -136,8 +136,8 @@ TEST(CaptureViewElement, ContainsPointRecursivelyForElementsOutsideOfTheParent) 
 }
 
 TEST(CaptureViewElement, IsMouseOver) {
-  const int child_count = 2;
-  UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, child_count);
+  constexpr int kChildCount = 2;
+  UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   const Vec2 pos_outside(-1, -1);
   const Vec2 pos_between_children(10, kLeafElementHeight + 1);
@@ -191,8 +191,8 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   using ::testing::Exactly;
   using ::testing::Return;
 
-  const int child_count = 3;
-  UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, child_count);
+  constexpr int kChildCount = 3;
+  UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   static_assert(kMarginAfterChild > 0);
 
@@ -202,7 +202,7 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   const Vec2 pos_on_child1(10, kLeafElementHeight + kMarginAfterChild);
   const Vec2 pos_on_child2(10, (kLeafElementHeight + kMarginAfterChild) * 2);
 
-  const int delta = 1;
+  constexpr int kDelta = 1;
 
   CaptureViewElementMock* child0 =
       dynamic_cast<CaptureViewElementMock*>(container_elem.GetAllChildren()[0]);
@@ -213,17 +213,17 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
 
   // Expect the parent to catch all mouse wheel events of children 0 and 1, but not those of child 2
   // since child 2 actually handles the event
-  EXPECT_CALL(container_elem, OnMouseWheel(_, delta, _))
+  EXPECT_CALL(container_elem, OnMouseWheel(_, kDelta, _))
       .Times(Exactly(3))
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
 
-  EXPECT_CALL(*child0, OnMouseWheel(_, delta, _))
+  EXPECT_CALL(*child0, OnMouseWheel(_, kDelta, _))
       .Times(Exactly(1))
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
-  EXPECT_CALL(*child1, OnMouseWheel(_, delta, _))
+  EXPECT_CALL(*child1, OnMouseWheel(_, kDelta, _))
       .Times(Exactly(1))
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
-  EXPECT_CALL(*child2, OnMouseWheel(_, delta, _))
+  EXPECT_CALL(*child2, OnMouseWheel(_, kDelta, _))
       .Times(Exactly(1))
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kHandled));
 

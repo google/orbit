@@ -211,7 +211,7 @@ ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
   // happened in the real target processes.
   // We choose a three second (300 x 10 ms) timeout and query the existing threads every 10 ms.
   constexpr int kNumberOfRetries = 300;
-  std::chrono::milliseconds waiting_period{10};
+  constexpr std::chrono::milliseconds kWaitingPeriod{10};
   std::vector<pid_t> orbit_threads;
   std::multiset<std::string> orbit_threads_names;
   int count = 0;
@@ -220,7 +220,7 @@ ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
       return ErrorMessage(
           "Unable to find threads spawned by library injected for user space instrumentation.");
     }
-    std::this_thread::sleep_for(waiting_period);
+    std::this_thread::sleep_for(kWaitingPeriod);
     orbit_threads.clear();
     orbit_threads_names.clear();
     const auto tids = orbit_base::GetTidsOfProcess(pid);

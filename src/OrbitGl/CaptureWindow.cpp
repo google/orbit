@@ -358,9 +358,9 @@ void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ct
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
-  const float pan_ratio_per_left_and_right_arrow_keys = 0.1f;
-  const float scrolling_ratio_per_up_and_down_arrow_keys = 0.05f;
-  const float scrolling_ratio_per_page_up_and_down = 0.9f;
+  constexpr float kPanRatioPerLeftAndRightArrowKeys = 0.1f;
+  constexpr float kScrollingRatioPerUpAndDownArrowKeys = 0.05f;
+  constexpr float kScrollingRatioPerPageUpAndDown = 0.9f;
 
   // TODO(b/234116147): Move this part to TimeGraph and manage events similarly to HandleMouseEvent.
   switch (key_code) {
@@ -370,10 +370,10 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       }
       break;
     case 'A':
-      Pan(pan_ratio_per_left_and_right_arrow_keys);
+      Pan(kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'D':
-      Pan(-pan_ratio_per_left_and_right_arrow_keys);
+      Pan(-kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'W':
       ZoomHorizontally(1, mouse_move_pos_screen_[0]);
@@ -389,7 +389,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 18:  // Left
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        Pan(pan_ratio_per_left_and_right_arrow_keys);
+        Pan(kPanRatioPerLeftAndRightArrowKeys);
       } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(),
                                          TimeGraph::JumpDirection::kPrevious,
@@ -407,7 +407,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 20:  // Right
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        Pan(-pan_ratio_per_left_and_right_arrow_keys);
+        Pan(-kPanRatioPerLeftAndRightArrowKeys);
       } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
                                          TimeGraph::JumpScope::kSameFunction);
@@ -423,7 +423,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
         time_graph_->GetTrackContainer()->IncrementVerticalScroll(
-            /*ratio=*/scrolling_ratio_per_up_and_down_arrow_keys);
+            /*ratio=*/kScrollingRatioPerUpAndDownArrowKeys);
       } else {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kTop,
                                          TimeGraph::JumpScope::kSameThread);
@@ -433,7 +433,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
         time_graph_->GetTrackContainer()->IncrementVerticalScroll(
-            /*ratio=*/-scrolling_ratio_per_up_and_down_arrow_keys);
+            /*ratio=*/-kScrollingRatioPerUpAndDownArrowKeys);
       } else {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kDown,
                                          TimeGraph::JumpScope::kSameThread);
@@ -442,12 +442,12 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 22:  // Page Up
       if (time_graph_ == nullptr) return;
       time_graph_->GetTrackContainer()->IncrementVerticalScroll(
-          /*ratio=*/scrolling_ratio_per_page_up_and_down);
+          /*ratio=*/kScrollingRatioPerPageUpAndDown);
       break;
     case 23:  // Page Down
       if (time_graph_ == nullptr) return;
       time_graph_->GetTrackContainer()->IncrementVerticalScroll(
-          /*ratio=*/-scrolling_ratio_per_page_up_and_down);
+          /*ratio=*/-kScrollingRatioPerPageUpAndDown);
       break;
     // Adding ']' here such that with e.g. German keyboards the ctrl+"+" shortcut works.
     // The '=' is added such that on English keyboards the combination works without the shift key.
@@ -696,10 +696,10 @@ void CaptureWindow::RenderHelpUi() {
       &text_bounding_box_pos, &text_bounding_box_size);
 
   const Color box_color(50, 50, 50, 243);
-  const float margin = 15.f;
-  const float rounding_radius = 20.f;
+  constexpr float kMargin = 15.f;
+  constexpr float kRoundingRadius = 20.f;
   primitive_assembler_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size,
-                                     GlCanvas::kZValueUi, rounding_radius, box_color, margin);
+                                     GlCanvas::kZValueUi, kRoundingRadius, box_color, kMargin);
 }
 
 const char* CaptureWindow::GetHelpText() const {

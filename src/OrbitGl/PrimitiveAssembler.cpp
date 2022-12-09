@@ -304,8 +304,8 @@ void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& c
 
 void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                                               ShadingDirection shading_direction) {
-  const float gradient_coeff = 0.94f;
-  Vec3 dark = Vec3(color[0], color[1], color[2]) * gradient_coeff;
+  constexpr float kGradientCoeff = 0.94f;
+  Vec3 dark = Vec3(color[0], color[1], color[2]) * kGradientCoeff;
   Color dark_color = Color(static_cast<uint8_t>(dark[0]), static_cast<uint8_t>(dark[1]),
                            static_cast<uint8_t>(dark[2]), color[3]);
 

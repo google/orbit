@@ -59,27 +59,28 @@ void orbit_gl::CaptureViewElementTester::SimulateDrawLoopAndCheckFlags(CaptureVi
 
 void orbit_gl::CaptureViewElementTester::TestWidthPropagationToChildren(
     CaptureViewElement* element) {
-  const float width = 100, updated_width = 50;
+  constexpr float kWidth = 100;
+  constexpr float kUpdatedWidth = 50;
   std::unordered_map<CaptureViewElement*, float> old_widths;
   for (auto& child : element->GetAllChildren()) {
     old_widths[child] = child->GetWidth();
   }
 
-  element->SetWidth(width);
+  element->SetWidth(kWidth);
   for (auto& child : element->GetAllChildren()) {
     if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
         0u) {
-      EXPECT_EQ(width, child->GetWidth());
+      EXPECT_EQ(kWidth, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());
     }
   }
 
-  element->SetWidth(updated_width);
+  element->SetWidth(kUpdatedWidth);
   for (auto& child : element->GetAllChildren()) {
     if ((child->GetLayoutFlags() & CaptureViewElement::LayoutFlags::kScaleHorizontallyWithParent) !=
         0u) {
-      EXPECT_EQ(updated_width, child->GetWidth());
+      EXPECT_EQ(kUpdatedWidth, child->GetWidth());
     } else {
       EXPECT_EQ(old_widths[child], child->GetWidth());
     }
