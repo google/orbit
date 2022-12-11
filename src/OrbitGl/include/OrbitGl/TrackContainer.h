@@ -56,6 +56,7 @@ class TrackContainer final : public CaptureViewElement {
   void VerticallyMoveIntoView(const Track& track);
 
   void SetThreadFilter(std::string_view filter);
+  void SetHeaderWidth(float width) { header_width_ = width; }
 
   [[nodiscard]] int GetNumVisiblePrimitives() const;
 
@@ -112,6 +113,7 @@ class TrackContainer final : public CaptureViewElement {
 
   float vertical_scrolling_offset_ = 0;
   float height_ = 0;
+  float header_width_ = 100.f;
 
   std::unique_ptr<TrackManager> track_manager_;
 

@@ -48,9 +48,6 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
     return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
   }
   [[nodiscard]] float GetTimeBarHeight() const override { return kTimeBarHeight * scale_; }
-  [[nodiscard]] float GetTrackTabWidth() const override { return kTrackTabWidth; }
-  [[nodiscard]] float GetTrackTabHeight() const override { return kTrackTabHeight * scale_; }
-  [[nodiscard]] float GetTrackTabOffset() const override { return kTrackTabOffset; }
   [[nodiscard]] float GetTrackIndentOffset() const override { return kTrackIndentOffset; }
   [[nodiscard]] float GetCollapseButtonSize(int indentation_level) const override {
     float button_size_without_scaling =

@@ -36,7 +36,7 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
   [[nodiscard]] const TriangleToggle* GetCollapseToggle() const { return collapse_toggle_.get(); }
   [[nodiscard]] TriangleToggle* GetCollapseToggle() { return collapse_toggle_.get(); }
 
-  [[nodiscard]] float GetHeight() const override { return layout_->GetTrackTabHeight(); }
+  [[nodiscard]] float GetHeight() const override { return GetParent()->GetHeight(); }
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return 0; }
 
   void OnPick(int x, int y) override;

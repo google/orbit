@@ -53,11 +53,6 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] float GetTimeBarHeight() const override {
     return time_bar_height_.value() * scale_.value();
   }
-  [[nodiscard]] float GetTrackTabWidth() const override { return track_tab_width_.value(); }
-  [[nodiscard]] float GetTrackTabHeight() const override {
-    return track_tab_height_.value() * scale_.value();
-  }
-  [[nodiscard]] float GetTrackTabOffset() const override { return track_tab_offset_.value(); }
   [[nodiscard]] float GetTrackIndentOffset() const override { return track_indent_offset_.value(); }
   [[nodiscard]] float GetCollapseButtonSize(int indentation_level) const override;
   [[nodiscard]] float GetCollapseButtonOffset() const override {
@@ -167,7 +162,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Space between GPU depths:",
   }};
   FloatProperty space_between_tracks_{{
-      .initial_value = 10.f,
+      .initial_value = 2.f,
       .label = "Space between Tracks:",
   }};
   FloatProperty space_between_tracks_and_timeline_{{
@@ -234,7 +229,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Text Offset:",
   }};
   FloatProperty left_margin_{{
-      .initial_value = 0.f,
+      .initial_value = 350.f,
       .min = 0.f,
       .max = 1000.f,
       .label = "Left Margin:",

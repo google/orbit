@@ -95,7 +95,7 @@ void GpuTrack::UpdatePositionOfSubtracks() {
   submission_track_->SetHeadless(false);
   submission_track_->SetIndentationLevel(indentation_level_ + 1);
 
-  float current_y = pos[1] + layout_->GetTrackTabHeight();
+  float current_y = pos[1];
   if (submission_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }
@@ -111,7 +111,7 @@ float GpuTrack::GetHeight() const {
   if (IsCollapsed()) {
     return submission_track_->GetHeight();
   }
-  float height = layout_->GetTrackTabHeight();
+  float height = 0;
   if (submission_track_->ShouldBeRendered()) {
     height += submission_track_->GetHeight();
     height += layout_->GetSpaceBetweenSubtracks();

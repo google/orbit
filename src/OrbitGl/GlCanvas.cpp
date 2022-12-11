@@ -30,6 +30,7 @@ float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.06f;
 float GlCanvas::kZValueBoxBorder = 0.07f;
+float GlCanvas::kZValueTrackHeader = 0.075f;
 float GlCanvas::kZValueTrackText = 0.08f;
 float GlCanvas::kZValueTrackLabel = 0.09f;
 float GlCanvas::kZValueTimeBar = 0.31f;
