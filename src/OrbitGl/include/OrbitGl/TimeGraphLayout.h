@@ -20,9 +20,6 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetMinSliderLength() const = 0;
   [[nodiscard]] virtual float GetSliderResizeMargin() const = 0;
   [[nodiscard]] virtual float GetTimeBarHeight() const = 0;
-  [[nodiscard]] virtual float GetTrackTabWidth() const = 0;
-  [[nodiscard]] virtual float GetTrackTabHeight() const = 0;
-  [[nodiscard]] virtual float GetTrackTabOffset() const = 0;
   [[nodiscard]] virtual float GetTrackIndentOffset() const = 0;
   [[nodiscard]] virtual float GetCollapseButtonSize(int indentation_level) const = 0;
   [[nodiscard]] virtual float GetCollapseButtonOffset() const = 0;

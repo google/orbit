@@ -159,7 +159,8 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   // Update selection timestamps
   if (is_selecting_) {
-    select_stop_time_ = time_graph_->GetTickFromWorld(select_stop_pos_world_[0]);
+    select_stop_time_ = time_graph_->GetTickFromWorld(
+        time_graph_->ClampToTimelineUiElementWorldX(select_stop_pos_world_[0]));
   }
 }
 
@@ -260,7 +261,8 @@ void CaptureWindow::PostRender(QPainter* painter) {
 void CaptureWindow::RightDown(int x, int y) {
   GlCanvas::RightDown(x, y);
   if (time_graph_ != nullptr) {
-    select_start_time_ = time_graph_->GetTickFromWorld(select_start_pos_world_[0]);
+    select_start_time_ = time_graph_->GetTickFromWorld(
+        time_graph_->ClampToTimelineUiElementWorldX(select_start_pos_world_[0]));
   }
 }
 
@@ -725,8 +727,11 @@ void CaptureWindow::RenderSelectionOverlay() {
   uint64_t max_time = std::max(select_start_time_, select_stop_time_);
 
   float from_world = time_graph_->GetWorldFromTick(min_time);
+  from_world = time_graph_->ClampToTimelineUiElementWorldX(from_world);
   float to_world = time_graph_->GetWorldFromTick(max_time);
+  to_world = time_graph_->ClampToTimelineUiElementWorldX(to_world);
   float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
+  stop_pos_world = time_graph_->ClampToTimelineUiElementWorldX(stop_pos_world);
 
   float size_x = to_world - from_world;
   // TODO(http://b/226401787): Allow green selection overlay to be on top of the Timeline after

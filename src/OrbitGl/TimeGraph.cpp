@@ -479,6 +479,12 @@ std::pair<float, float> TimeGraph::GetBoxPosXAndWidthFromTicks(uint64_t start_ti
   return {extended_start_x, extended_end_x - extended_start_x};
 }
 
+float TimeGraph::ClampToTimelineUiElementWorldX(float x) const {
+  float min_x = timeline_ui_->GetPos()[0];
+  float max_x = min_x + timeline_ui_->GetWidth();
+  return std::clamp(x, min_x, max_x);
+}
+
 // Select a timer_info. Also move the view in order to assure that the timer_info and its track are
 // visible.
 void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
@@ -726,10 +732,10 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
                         timegraph_current_y + plus_button_->GetHeight());
 
-  float x_offset = layout_->GetLeftMargin();
   timegraph_current_y += timeline_ui_->GetHeight() + layout_->GetSpaceBetweenTracksAndTimeline();
-  track_container_->SetWidth(GetWidth() - total_right_margin - x_offset);
-  track_container_->SetPos(timegraph_current_x + x_offset, timegraph_current_y);
+  track_container_->SetWidth(GetWidth() - total_right_margin);
+  track_container_->SetPos(timegraph_current_x, timegraph_current_y);
+  track_container_->SetHeaderWidth(layout_->GetLeftMargin());
 
   vertical_slider_->SetWidth(layout_->GetSliderWidth());
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
@@ -888,7 +894,7 @@ void TimeGraph::DrawMarginsBetweenChildren(
   primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
                              GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
 
-  // Right margin mask for Timeline.
+  // Right margin mask for Timegraph.
   float right_margin_width = GetRightMargin();
   float right_margin_height = GetHeight() - timeline_ui_->GetHeight();
   Vec2 right_margin_pos{GetWidth() - right_margin_width, GetPos()[1]};
@@ -897,10 +903,19 @@ void TimeGraph::DrawMarginsBetweenChildren(
 
   // Left margin mask for Timeline.
   float left_margin_width = layout_->GetLeftMargin();
-  float left_margin_height = GetHeight();
+  float left_margin_height = timeline_ui_->GetHeight();
   Vec2 left_margin_pos = GetPos();
   Quad left_margin_box = MakeBox(left_margin_pos, Vec2(left_margin_width, left_margin_height));
   primitive_assembler.AddBox(left_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
+
+  // Left margin mask for horizontal slider.
+  float slider_height = layout_->GetSliderWidth();
+  Vec2 left_margin_slider_pos = GetPos();
+  left_margin_slider_pos[1] += (GetHeight() - slider_height);
+  Quad left_margin_box_slider =
+      MakeBox(left_margin_slider_pos, Vec2(left_margin_width, slider_height));
+  primitive_assembler.AddBox(left_margin_box_slider, GlCanvas::kZValueMargin,
+                             GlCanvas::kBackgroundColor);
 }
 
 void TimeGraph::DrawText(QPainter* painter, float layer) {

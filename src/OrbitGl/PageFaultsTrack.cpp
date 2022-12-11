@@ -45,7 +45,7 @@ float PageFaultsTrack::GetHeight() const {
     return major_page_faults_track_->GetHeight();
   }
 
-  float height = layout_->GetTrackTabHeight();
+  float height = 0;
   if (major_page_faults_track_->ShouldBeRendered()) {
     height += major_page_faults_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
   }
@@ -87,7 +87,7 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
   minor_page_faults_track_->SetVisible(true);
   minor_page_faults_track_->SetIndentationLevel(indentation_level_ + 1);
 
-  float current_y = pos[1] + layout_->GetTrackTabHeight();
+  float current_y = pos[1];
   if (major_page_faults_track_->ShouldBeRendered()) {
     current_y += layout_->GetSpaceBetweenSubtracks();
   }

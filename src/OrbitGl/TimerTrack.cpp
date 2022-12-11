@@ -30,7 +30,6 @@
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TimeGraphLayout.h"
-#include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_client_data::ScopeId;
@@ -378,9 +377,7 @@ std::string TimerTrack::GetBoxTooltip(const PrimitiveAssembler& /*primitive_asse
   return "";
 }
 
-float TimerTrack::GetHeightAboveTimers() const {
-  return header_->GetHeight() + layout_->GetTrackContentTopMargin();
-}
+float TimerTrack::GetHeightAboveTimers() const { return layout_->GetTrackContentTopMargin(); }
 
 internal::DrawData TimerTrack::GetDrawData(
     uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,

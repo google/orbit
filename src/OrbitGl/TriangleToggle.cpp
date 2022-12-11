@@ -28,7 +28,7 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  const float z = GlCanvas::kZValueTrack;
+  const float z = GlCanvas::kZValueTrackText;
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   const Color white(255, 255, 255, 255);

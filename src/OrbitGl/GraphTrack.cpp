@@ -61,8 +61,7 @@ float GraphTrack<Dimension>::GetHeight() const {
   float height_above_content =
       GetLegendHeight() + (HasLegend() ? 2.f : 1.f) * layout_->GetTrackContentTopMargin();
 
-  return layout_->GetTrackTabHeight() + height_above_content + GetGraphContentHeight() +
-         layout_->GetTrackContentBottomMargin();
+  return height_above_content + GetGraphContentHeight() + layout_->GetTrackContentBottomMargin();
 }
 
 template <size_t Dimension>
@@ -101,7 +100,6 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
 
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
-  content_pos[1] += layout_->GetTrackTabHeight();
   Quad box = MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()));
   primitive_assembler.AddBox(box, track_z, GetTrackBackgroundColor(), shared_from_this());
 
@@ -194,7 +192,8 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   float arrow_width = text_box_size[1] / 2.f;
   Vec2 arrow_box_size(text_box_size[0] + text_left_margin + text_right_margin,
                       text_box_size[1] + text_top_margin + text_bottom_margin);
-  bool arrow_is_left_directed = target_point_pos[0] < arrow_box_size[0] + arrow_width;
+  bool arrow_is_left_directed =
+      target_point_pos[0] < (header_->GetWidth() + arrow_box_size[0] + arrow_width);
   Vec2 text_box_position(
       target_point_pos[0] + (arrow_is_left_directed
                                  ? arrow_width + text_left_margin

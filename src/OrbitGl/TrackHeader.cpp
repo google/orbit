@@ -42,53 +42,21 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
 
   const float x0 = GetPos()[0];
   const float y0 = GetPos()[1];
-  const float track_z = GlCanvas::kZValueTrack;
+  const float track_z = GlCanvas::kZValueTrackHeader;
   const float text_z = GlCanvas::kZValueTrackText;
 
   // Draw tab background
-  const float label_height = GetHeight();
-  const float half_label_height = 0.5f * label_height;
+  const float label_height = GetParent()->GetHeight();
   const float label_width = GetWidth();
-  const float half_label_width = 0.5f * label_width;
 
   const float indentation_x0 =
       x0 + (track_->GetIndentationLevel() * layout_->GetTrackIndentOffset());
   Quad box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height));
   primitive_assembler.AddBox(box, track_z, track_->GetTrackBackgroundColor(), shared_from_this());
 
-  // Early-out: In picking mode, don't draw the text and rounded corners.
+  // Early-out: In picking mode, don't draw the text.
   if (picking) {
     return;
-  }
-
-  // Don't draw rounded corners when this track is a child of another track
-  if (track_->GetIndentationLevel() == 0) {
-    // Draw rounded corners.
-    float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
-    radius = std::min(radius, half_label_width);
-    auto sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
-    auto rounded_corner = GetRoundedCornerMask(radius, sides);
-
-    // This only draw the tab-part of a track. It's expecting to sit on the top of the track.
-    // See comments in Track::DoDraw for a full picture.
-    //
-    // top_left       tab_top_right
-    //  __________________
-    // /                   `
-    // |___________________(
-    // [ Track content below]
-
-    Vec2 top_left(indentation_x0, y0);
-    Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
-    Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] + label_height);
-
-    auto shared_this = shared_from_this();
-    DrawTriangleFan(primitive_assembler, rounded_corner, top_left, GlCanvas::kBackgroundColor, 90.f,
-                    track_z, shared_this);
-    DrawTriangleFan(primitive_assembler, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor,
-                    180.f, track_z, shared_this);
-    DrawTriangleFan(primitive_assembler, rounded_corner, tab_bottom_right,
-                    track_->GetTrackBackgroundColor(), 0, track_z, shared_this);
   }
 
   // Draw label.
@@ -108,8 +76,9 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
   formatting.valign = TextRenderer::VAlign::Middle;
 
   text_renderer.AddTextTrailingCharsPrioritized(
-      track_->GetLabel().c_str(), indentation_x0 + label_offset_x, y0 + half_label_height, text_z,
-      formatting, track_->GetNumberOfPrioritizedTrailingCharacters());
+      track_->GetLabel().c_str(), indentation_x0 + label_offset_x,
+      y0 + layout_->GetTextBoxHeight() * 0.5f, text_z, formatting,
+      track_->GetNumberOfPrioritizedTrailingCharacters());
 }
 
 void orbit_gl::TrackHeader::DoUpdateLayout() {
@@ -119,13 +88,10 @@ void orbit_gl::TrackHeader::DoUpdateLayout() {
 }
 
 void TrackHeader::UpdateCollapseToggle() {
-  const float label_height = layout_->GetTrackTabHeight();
-  const float half_label_height = 0.5f * label_height;
-  const float x0 = GetPos()[0] + layout_->GetTrackTabOffset() +
-                   layout_->GetTrackIndentOffset() * track_->GetIndentationLevel();
+  const float x0 = GetPos()[0] + layout_->GetTrackIndentOffset() * track_->GetIndentationLevel();
   const float button_offset = layout_->GetCollapseButtonOffset();
   const float size = layout_->GetCollapseButtonSize(track_->GetIndentationLevel());
-  const float toggle_y_pos = GetPos()[1] + half_label_height - size / 2;
+  const float toggle_y_pos = GetPos()[1] + layout_->GetTextBoxHeight() * 0.5f;
   Vec2 toggle_pos = Vec2(x0 + button_offset, toggle_y_pos);
 
   collapse_toggle_->SetWidth(size);
