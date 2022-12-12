@@ -12,12 +12,17 @@ target_link_libraries(SshQtTestUtils PUBLIC
   OrbitBase
   OrbitSsh
   OrbitSshQt
-  absl::strings)
+  QtTestUtils
+  TestUtils
+  absl::strings
+  Qt5::Test)
 
 target_sources(SshQtTestUtils PRIVATE
+  KillProcessListeningOnTcpPort.cpp
   ParsePortNumberFromSocatOutput.cpp)
 
 target_sources(SshQtTestUtils PUBLIC
+  include/SshQtTestUtils/KillProcessListeningOnTcpPort.h
   include/SshQtTestUtils/ParsePortNumberFromSocatOutput.h
   include/SshQtTestUtils/SshSessionTest.h
   include/SshQtTestUtils/SshTestFixture.h)

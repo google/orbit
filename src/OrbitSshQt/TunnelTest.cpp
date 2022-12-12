@@ -26,6 +26,7 @@
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 #include "QtTestUtils/WaitFor.h"
+#include "SshQtTestUtils/KillProcessListeningOnTcpPort.h"
 #include "SshQtTestUtils/ParsePortNumberFromSocatOutput.h"
 #include "SshQtTestUtils/SshTestFixture.h"
 #include "TestUtils/TestUtils.h"
@@ -48,7 +49,7 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
 
     // socat with these options implements an echo server. It listen on incoming connections at a
     // random TCP port and replies to all incoming messages just by returning the same bytes.
-    task_.emplace(GetSession(), "socat -dd tcp-listen:0 exec:'/bin/cat'");
+    task_.emplace(GetSession(), "socat -dd tcp-listen:0,fork exec:'/bin/cat'");
 
     // We have to wait for socat being ready to receive connections. There is no good way to detect
     // readiness other than parsing the debug output.
@@ -75,7 +76,12 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
 
   void TearDown() override {
     if (task_.has_value()) {
-      KillRunningEchoServer();
+      // Since our Task implementation doesn't allocate a PTY, we can't just send a Ctrl+C to the
+      // running socat process. Instead we call `kill` through another task running in the same
+      // session.
+      ASSERT_THAT(
+          orbit_ssh_qt_test_utils::KillProcessListeningOnTcpPort(GetSession(), GetEchoServerPort()),
+          HasNoError());
 
       EXPECT_THAT(orbit_qt_test_utils::WaitFor(task_->Stop()),
                   orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
@@ -89,16 +95,6 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
  private:
   std::optional<Task> task_;
   int port_{};
-
-  void KillRunningEchoServer() {
-    // Since we don't have PTY support implemented in `Task`, we can't just send Ctrl+C to the
-    // running process. So instead we execute a kill command in a different task.
-
-    orbit_ssh_qt::Task kill_task{GetSession(),
-                                 absl::StrFormat("kill $(fuser %d/tcp)", GetEchoServerPort())};
-    EXPECT_THAT(WaitFor(kill_task.Start()), YieldsResult(HasNoError()));
-    EXPECT_THAT(WaitFor(kill_task.Stop()), YieldsResult(HasNoError()));
-  }
 };
 
 TEST_F(SshTunnelTest, StartFails) {
