@@ -54,7 +54,7 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
   }
 
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoOperation: {
       local_file_.setFileName(QString::fromStdString(source_.string()));
       const auto open_result = local_file_.open(QIODevice::ReadOnly);
@@ -103,11 +103,11 @@ outcome::result<void> SftpCopyToRemoteOperation::startup() {
     case State::kRemoteFileClosed: {
       local_file_.close();
       about_to_shutdown_connection_ = std::nullopt;
-      SetState(State::kDone);
+      SetState(State::kStopped);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kShutdown:
-    case State::kDone:
+    case State::kStopping:
+    case State::kStopped:
       break;
     case State::kError:
       ORBIT_UNREACHABLE();

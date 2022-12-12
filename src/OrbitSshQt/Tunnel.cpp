@@ -49,7 +49,7 @@ Tunnel::Tunnel(Session* session, std::string remote_host, uint16_t remote_port, 
 }
 
 void Tunnel::Start() {
-  if (CurrentState() == State::kInitial) {
+  if (CurrentState() == State::kInitialized) {
     SetState(State::kNoChannel);
     OnEvent();
   }
@@ -61,14 +61,14 @@ void Tunnel::Stop() {
   // ShutdownTunnel will wait forever for a stopped signal. This is here solved by emitting
   // stopped() when the Tunnel is already stopped.
 
-  if (CurrentState() == State::kError || CurrentState() == State::kDone) {
+  if (CurrentState() == State::kError || CurrentState() == State::kStopped) {
     // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
     emit stopped();
     return;
   }
 
   if (CurrentState() < State::kStarted) {
-    SetState(State::kDone);
+    SetState(State::kStopped);
     deleteByEventLoop(this, &local_server_);
     channel_ = std::nullopt;
     // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
@@ -89,7 +89,7 @@ outcome::result<void> Tunnel::startup() {
   }
 
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel: {
       OUTCOME_TRY(auto&& channel, orbit_ssh::Channel::OpenTcpIpTunnel(session_->GetRawSession(),
                                                                       remote_host_, remote_port_));
@@ -121,13 +121,13 @@ outcome::result<void> Tunnel::startup() {
     }
     case State::kStarted:
     case State::kServerListening:
-    case State::kShutdown:
+    case State::kStopping:
     case State::kFlushing:
     case State::kSendEOF:
     case State::kWaitRemoteEOF:
     case State::kClosingChannel:
     case State::kWaitRemoteClosed:
-    case State::kDone:
+    case State::kStopped:
     case State::kError:
       ORBIT_UNREACHABLE();
   }
@@ -136,13 +136,13 @@ outcome::result<void> Tunnel::startup() {
 
 outcome::result<void> Tunnel::shutdown() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel:
     case State::kChannelInitialized:
     case State::kStarted:
     case State::kServerListening:
       ORBIT_UNREACHABLE();
-    case State::kShutdown:
+    case State::kStopping:
     case State::kFlushing: {
       OUTCOME_TRY(writeToChannel());
       SetState(State::kSendEOF);
@@ -168,13 +168,13 @@ outcome::result<void> Tunnel::shutdown() {
     }
     case State::kWaitRemoteClosed: {
       OUTCOME_TRY(channel_->WaitClosed());
-      SetState(State::kDone);
+      SetState(State::kStopped);
       data_event_connection_ = std::nullopt;
       about_to_shutdown_connection_ = std::nullopt;
       channel_ = std::nullopt;
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kDone:
+    case State::kStopped:
       break;
     case State::kError:
       ORBIT_UNREACHABLE();
@@ -263,7 +263,7 @@ void Tunnel::HandleIncomingDataLocalSocket() {
 }
 
 void Tunnel::HandleSessionShutdown() {
-  if (CurrentState() >= State::kChannelInitialized && CurrentState() < State::kDone) {
+  if (CurrentState() >= State::kChannelInitialized && CurrentState() < State::kStopped) {
     SetError(Error::kUncleanSessionShutdown);
   }
 }

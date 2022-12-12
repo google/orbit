@@ -20,14 +20,14 @@ SftpChannel::SftpChannel(Session* session) : session_(session) {
 }
 
 void SftpChannel::Start() {
-  if (CurrentState() == State::kInitial) {
+  if (CurrentState() == State::kInitialized) {
     SetState(State::kNoChannel);
     OnEvent();
   }
 }
 
 void SftpChannel::Stop() {
-  if (CurrentState() > State::kInitial && CurrentState() < State::kShutdown) {
+  if (CurrentState() > State::kInitialized && CurrentState() < State::kStopping) {
     SetState(State::kClosingChannel);
     OnEvent();
   }
@@ -40,7 +40,7 @@ outcome::result<void> SftpChannel::startup() {
   }
 
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel: {
       OUTCOME_TRY(auto&& sftp, orbit_ssh::Sftp::Init(session_->GetRawSession()));
       sftp_ = std::move(sftp);
@@ -50,9 +50,9 @@ outcome::result<void> SftpChannel::startup() {
     case State::kStarted:
     case State::kChannelInitialized:
       break;
-    case State::kShutdown:
+    case State::kStopping:
     case State::kClosingChannel:
-    case State::kDone:
+    case State::kStopped:
     case State::kError:
       Q_UNREACHABLE();
       break;
@@ -63,20 +63,20 @@ outcome::result<void> SftpChannel::startup() {
 
 outcome::result<void> SftpChannel::shutdown() {
   switch (CurrentState()) {
-    case State::kInitial:
+    case State::kInitialized:
     case State::kNoChannel:
     case State::kStarted:
     case State::kChannelInitialized:
       ORBIT_UNREACHABLE();
-    case State::kShutdown:
+    case State::kStopping:
     case State::kClosingChannel:
       if (sftp_) {
         OUTCOME_TRY(sftp_->Shutdown());
         sftp_ = std::nullopt;
-        SetState(State::kDone);
+        SetState(State::kStopped);
       }
       ABSL_FALLTHROUGH_INTENDED;
-    case State::kDone:
+    case State::kStopped:
       data_event_connection_ = std::nullopt;
       about_to_shutdown_connection_ = std::nullopt;
       break;
