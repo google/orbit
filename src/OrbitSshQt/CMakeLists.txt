@@ -45,9 +45,14 @@ set_target_properties(OrbitSshQt PROPERTIES AUTOMOC ON)
 add_executable(OrbitSshQtTests)
 target_sources(OrbitSshQtTests PRIVATE
   SessionTest.cpp
+  SftpChannelTest.cpp
+  SftpCopyToLocalOperationTest.cpp
+  SftpCopyToRemoteOperationTest.cpp
+  SftpTestFixture.h
   SshSessionTest.h
   SshTestFixture.h
   TaskTest.cpp
   TunnelTest.cpp)
+
 target_link_libraries(OrbitSshQtTests PUBLIC OrbitSshQt TestUtils GTest::QtCoreMain Qt::Test)
 register_test(OrbitSshQtTests)
