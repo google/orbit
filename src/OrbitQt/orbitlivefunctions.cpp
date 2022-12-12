@@ -176,5 +176,6 @@ void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data, std::s
 
 void OrbitLiveFunctions::SetScopeStatsCollection(
     std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) {
+  ui_->data_view_panel_->GetTreeView()->selectionModel()->clearSelection();
   live_functions_->SetScopeStatsCollection(std::move(scope_collection));
 }
