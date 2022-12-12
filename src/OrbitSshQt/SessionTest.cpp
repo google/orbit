@@ -12,7 +12,7 @@
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/Session.h"
 #include "QtTestUtils/WaitFor.h"
-#include "SshSessionTest.h"
+#include "SshQtTestUtils/SshSessionTest.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
@@ -21,6 +21,8 @@ using orbit_qt_test_utils::YieldsResult;
 using orbit_test_utils::HasNoError;
 using testing::IsEmpty;
 using testing::Not;
+
+using SshSessionTest = orbit_ssh_qt_test_utils::SshSessionTest;
 
 TEST_F(SshSessionTest, Connect) {
   auto context = orbit_ssh::Context::Create();

@@ -27,7 +27,7 @@
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 #include "QtTestUtils/WaitFor.h"
-#include "SshTestFixture.h"
+#include "SshQtTestUtils/SshTestFixture.h"
 #include "TestUtils/TestUtils.h"
 
 Q_DECLARE_METATYPE(std::error_code);
@@ -40,7 +40,7 @@ using orbit_test_utils::HasNoError;
 
 // This test fixure inherits all the functionality from SshTestFixture and on top ensures that
 // there is an echo server running on TCP port 4444 on the SSH server's machine.
-class SshTunnelTest : public SshTestFixture {
+class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
  public:
   void SetUp() override {
     ASSERT_NO_FATAL_FAILURE(SshTestFixture::SetUp());  // NOLINT(cppcoreguidelines-avoid-goto)

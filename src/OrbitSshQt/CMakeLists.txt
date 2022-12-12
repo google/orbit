@@ -49,8 +49,6 @@ target_sources(OrbitSshQtTests PRIVATE
   SftpCopyToLocalOperationTest.cpp
   SftpCopyToRemoteOperationTest.cpp
   SftpTestFixture.h
-  SshSessionTest.h
-  SshTestFixture.h
   TaskTest.cpp
   TunnelTest.cpp)
 
@@ -58,6 +56,7 @@ target_link_libraries(OrbitSshQtTests PUBLIC
   OrbitSshQt
   TestUtils
   QtTestUtils
+  SshQtTestUtils
   GTest::QtCoreMain
   Qt::Test)
 

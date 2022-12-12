@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SSH_QT_SSH_SESSION_TEST_H_
-#define ORBIT_SSH_QT_SSH_SESSION_TEST_H_
+#ifndef ORBIT_SSH_QT_TEST_UTILS_SSH_SESSION_TEST_H_
+#define ORBIT_SSH_QT_TEST_UTILS_SSH_SESSION_TEST_H_
 
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_replace.h>
@@ -23,7 +23,7 @@
 #include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
-namespace orbit_ssh_qt {
+namespace orbit_ssh_qt_test_utils {
 
 // A test fixture for SSH tests that does the following:
 // - Skips tests if no SSH server has been advertised
@@ -97,6 +97,6 @@ class SshSessionTest : public testing::Test {
   std::optional<orbit_test_utils::TemporaryDirectory> temp_dir_;
   orbit_ssh::Credentials credentials_;
 };
-}  // namespace orbit_ssh_qt
+}  // namespace orbit_ssh_qt_test_utils
 
-#endif  // ORBIT_SSH_QT_SSH_SESSION_TEST_H_
+#endif  // ORBIT_SSH_QT_TEST_UTILS_SSH_SESSION_TEST_H_

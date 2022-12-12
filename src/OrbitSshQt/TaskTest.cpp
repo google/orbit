@@ -18,7 +18,7 @@
 #include "OrbitBase/WhenAll.h"
 #include "OrbitSshQt/Task.h"
 #include "QtTestUtils/WaitFor.h"
-#include "SshTestFixture.h"
+#include "SshQtTestUtils/SshTestFixture.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
@@ -26,7 +26,7 @@ using orbit_qt_test_utils::WaitFor;
 using orbit_qt_test_utils::YieldsResult;
 using orbit_test_utils::HasNoError;
 
-using SshTaskTest = SshTestFixture;
+using SshTaskTest = orbit_ssh_qt_test_utils::SshTestFixture;
 
 TEST_F(SshTaskTest, ReturnCode) {
   orbit_ssh_qt::Task task{GetSession(), "exit 42"};
