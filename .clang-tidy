@@ -17,7 +17,6 @@ Checks: >
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-avoid-non-const-global-variables,
   -cppcoreguidelines-owning-memory,
-  -cppcoreguidelines-init-variables,
   misc-*,
   -misc-non-private-member-variables-in-classes,
   -misc-use-anonymous-namespace,
