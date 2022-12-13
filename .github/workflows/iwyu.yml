@@ -131,7 +131,7 @@ jobs:
           echo "IWYU_CLEANUP_BRANCH=${IWYU_CLEANUP_BRANCH}" >> $GITHUB_ENV
       - run: cat orbit/build/include-what-you-use.log
       - run: cat orbit/build/iwyu_unformatted.diff
-      - run: cat build/iwyu.diff
+      - run: cat orbit/build/iwyu.diff
       - name: Try to apply changes
         if: steps.check_has_open_iwyu_pr.outputs.has_open_iwyu_pr == 'false'
         working-directory: ./orbit
