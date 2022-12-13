@@ -197,10 +197,8 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
     return app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
                ? ActionStatus::kVisibleButDisabled
                : ActionStatus::kVisibleAndEnabled;
-
-  } else {
-    return DataView::GetActionStatus(action, clicked_index, selected_indices);
   }
+  return DataView::GetActionStatus(action, clicked_index, selected_indices);
 }
 
 void PresetsDataView::OnLoadPresetRequested(absl::Span<const int> selection) {

@@ -108,10 +108,9 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
   }
   if (state_machine_.configuration().contains(&state_file_)) {
     return FileTarget(selected_file_path_);
-  } else {
-    ORBIT_UNREACHABLE();
-    return std::nullopt;
   }
+  ORBIT_UNREACHABLE();
+  return std::nullopt;
 }
 
 void SessionSetupDialog::SetupLocalStates() {

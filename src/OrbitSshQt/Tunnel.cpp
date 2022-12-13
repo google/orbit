@@ -196,13 +196,13 @@ outcome::result<void> Tunnel::readFromChannel() {
       // That's the EAGAIN case
       HandleEagain();
       break;
-    } else if (result && result.value().empty()) {
+    }
+    if (result.value().empty()) {
       // Empty result means remote socket was closed.
       return Error::kRemoteSocketClosed;
-    } else if (result) {
-      ORBIT_UINT64("readFromChannel bytes read", result.value().size());
-      read_buffer_.append(result.value());
     }
+    ORBIT_UINT64("readFromChannel bytes read", result.value().size());
+    read_buffer_.append(result.value());
   }
 
   if ((local_socket_ != nullptr) && !read_buffer_.empty()) {

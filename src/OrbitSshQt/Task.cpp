@@ -82,17 +82,18 @@ outcome::result<void> Task::run() {
           emit readyReadStdOut();
         }
         break;
-      } else if (result && result.value().empty()) {
+      }
+      if (result.value().empty()) {
         // Channel closed
         if (added_new_data_to_read_buffer) {
           emit readyReadStdOut();
         }
         SetState(State::kWaitChannelClosed);
         break;
-      } else if (result) {
-        read_std_out_buffer_.append(std::move(result).value());
-        added_new_data_to_read_buffer = true;
       }
+
+      read_std_out_buffer_.append(std::move(result).value());
+      added_new_data_to_read_buffer = true;
     }
 
     // read stderr
@@ -112,17 +113,17 @@ outcome::result<void> Task::run() {
           emit readyReadStdErr();
         }
         break;
-      } else if (result && result.value().empty()) {
+      }
+      if (result.value().empty()) {
         // Channel closed
         if (added_new_data_to_read_buffer) {
           emit readyReadStdErr();
         }
         SetState(State::kWaitChannelClosed);
         break;
-      } else if (result) {
-        read_std_err_buffer_.append(std::move(result).value());
-        added_new_data_to_read_buffer = true;
       }
+      read_std_err_buffer_.append(std::move(result).value());
+      added_new_data_to_read_buffer = true;
     }
 
     // If the state here is kWaitChannelClosed, that means a close from the remote side was
