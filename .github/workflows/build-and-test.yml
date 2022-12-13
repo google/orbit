@@ -75,15 +75,29 @@ jobs:
       CCACHE_COMPRESSLEVEL: "6"
       CCACHE_MAXSIZE: "600M"
     steps:
+      - run: |
+           mkdir pr_metadata
+           echo "${{ github.event.number }}" > pr_metadata/pr_number.txt
+           echo "${{ github.event.pull_request.head.repo.full_name }}" > pr_metadata/pr_head_repo.txt
+           echo "${{ github.event.pull_request.head.ref }}" > pr_metadata/pr_head_ref.txt
+        if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
+      - name: 'Upload PR metadata'
+        if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
+        uses: actions/upload-artifact@v3
+        with:
+          name: pr_metadata
+          path: pr_metadata
+          retention-days: 1
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
       - name: Install dependencies (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         run: |
            sudo apt update &&                             \
            sudo apt install --yes --no-install-recommends \
            build-essential                                \
+           clang-tidy-14                                  \
            cmake                                          \
            ccache                                         \
            libboost-dev                                   \
@@ -106,7 +120,7 @@ jobs:
            git                                            \
            libprotobuf-dev
       - name: Install dependencies (Windows)
-        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        if: startsWith(matrix.config.os, 'windows')
         run: |
           py -3 -m pip install aqtinstall
           py -3 -m aqt install-qt  --outputdir C:\Qt windows desktop 5.15 win64_msvc2019_64
@@ -131,9 +145,9 @@ jobs:
       - run: ccache -p
       - run: ccache -z
       - run: mkdir "build"
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
       - name: CMake Configure (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         working-directory: ./build
         env:
           CXX: ${{ matrix.config.cxx }}
@@ -145,11 +159,23 @@ jobs:
            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                        \
            ${GITHUB_WORKSPACE}
       - name: CMake Build (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         working-directory: ./build
         run: cmake --build .
+      - name: Run clang-tidy (Clang Debug)
+        if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
+        run: |
+          # Use origin/main as reference branch, if not specified by Github
+          REFERENCE="origin/${GITHUB_BASE_REF:-main}"
+          MERGE_BASE="$(git merge-base $REFERENCE HEAD)" # Merge base is the commit on main this PR was branched from.
+          git diff -U0 --no-color --diff-filter=r $MERGE_BASE -- 'src/**' | clang-tidy-diff-14.py -p1 -path build -export-fixes clang-tidy-fixes.yml
+      - uses: actions/upload-artifact@v3
+        if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
+        with:
+          name: clang_tidy_fixes
+          path: clang-tidy-fixes.yml
       - name: Set up simple SSH server (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         working-directory: ./contrib/docker/ssh_server_simple
         run: |
           podman build . -t ssh_server_simple
@@ -159,7 +185,7 @@ jobs:
           echo "Determined SSH port of Simple SSH Server: ${SSH_SERVER_SIMPLE_PORT}"
           echo "SSH_SERVER_SIMPLE_PORT=${SSH_SERVER_SIMPLE_PORT}" >> $GITHUB_ENV
       - name: CMake Test (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         working-directory: ./build
         run: |
           CTEST_OUTPUT_ON_FAILURE=1 \
@@ -167,15 +193,15 @@ jobs:
           ORBIT_TESTING_SSH_SERVER_SIMPLE_ADDRESS="127.0.0.1:${{ env.SSH_SERVER_SIMPLE_PORT }}" \
           cmake --build . --target test
       - name: Shut down simple SSH server (Ubuntu)
-        if: ${{ startsWith(matrix.config.os, 'ubuntu') }}
+        if: startsWith(matrix.config.os, 'ubuntu')
         run: podman stop ssh_server_simple
       - name: Install conan config (Windows)
-        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        if: startsWith(matrix.config.os, 'windows')
         run: |
           py -3 -m conans.conan config install .\third_party\conan\configs\windows\
           py -3 -m conans.conan config install .\third_party\conan\configs\windows_ci\
       - name: Build & Test (Windows)
-        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        if: startsWith(matrix.config.os, 'windows')
         env:
           Qt5_DIR: "C:\\Qt\\5.15.2\\msvc2019_64"
           CMAKE_CXX_COMPILER_LAUNCHER: "ccache"
@@ -185,7 +211,7 @@ jobs:
           py -3 -m conans.conan build -bf build/ .
       - name: Clean up conan cache (Windows)
         run: py -3 -m conans.conan remove --src --builds --force *
-        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        if: startsWith(matrix.config.os, 'windows')
       - name: CCache Stats
         run: ccache -s -v
       - name: Upload test artifacts

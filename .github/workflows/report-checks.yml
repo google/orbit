@@ -35,21 +35,6 @@ jobs:
         COMMIT_SHA: ${{ github.event.workflow_run.head_commit.id }}
       shell: bash
 
-  report-clang-tidy-diff:
-    permissions:
-      pull-requests: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact
-        uses: dawidd6/action-download-artifact@e6e25ac3a2b93187502a8be1ef9e9603afc34925 # v2.24.2
-        with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
-          workflow_conclusion: ''
-          name: clang_tidy_review
-      - uses: ZedThree/clang-tidy-review/post@79d70e7c89de1bda6ad68610cde18d2783749852 # 0.10.1
-        with:
-          token: ${{ secrets.ORBITPROFILER_BOT_PAT }}
-
   report-clang-format-diff:
     permissions:
       pull-requests: write
