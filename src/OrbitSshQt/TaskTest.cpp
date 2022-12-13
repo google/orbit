@@ -32,7 +32,7 @@ TEST_F(SshTaskTest, ReturnCode) {
   EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
   EXPECT_EQ(started_signal.size(), 1);
 
-  // ServiceDeployManager relies on the fact that Task::Stop triggers a `stopped()` signal even when
+  // `ServiceDeployManager` relies on the fact that `Task::Stop` triggers a `stopped()` signal even when
   // the task has already been stopped through other means. So we test that the signal has been
   // emitted at least one more time after calling `Stop`.
   const int number_of_stopped_signals_before_calling_stop = stopped_signal.size();
