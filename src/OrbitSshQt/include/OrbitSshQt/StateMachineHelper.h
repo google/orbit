@@ -8,6 +8,9 @@
 #include <QObject>
 #include <type_traits>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
@@ -156,6 +159,7 @@ class StateMachineHelper : public QObject {
 
       if (result) {
         self()->started();
+        started_promise_.SetResult(outcome::success());
       } else {
         if (orbit_ssh::ShouldITryAgain(result)) {
           self()->HandleEagain();
@@ -184,6 +188,7 @@ class StateMachineHelper : public QObject {
 
       if (result) {
         self()->stopped();
+        stopped_promise_.SetResult(outcome::success());
       } else {
         if (orbit_ssh::ShouldITryAgain(result)) {
           self()->HandleEagain();
@@ -213,9 +218,7 @@ class StateMachineHelper : public QObject {
 
   [[nodiscard]] bool IsInErrorState() const { return state_ == State::kError; }
 
- private:
-  friend Derived;
-
+ protected:
   [[nodiscard]] Derived* self() { return static_cast<Derived*>(this); }
   [[nodiscard]] const Derived* self() const { return static_cast<const Derived*>(this); }
 
@@ -233,8 +236,32 @@ class StateMachineHelper : public QObject {
   void SetError(std::error_code e) {
     self()->SetState(State::kError);
     self()->errorOccurred(e);
+
+    if (!started_promise_.HasResult()) {
+      started_promise_.SetResult(ErrorMessage{e.message()});
+    }
+
+    if (stopped_promise_.HasResult()) {
+      stopped_promise_.SetResult(ErrorMessage{e.message()});
+    }
   }
   void SetError(Error e) { self()->SetError(make_error_code(e)); }
+
+  // The started future completes when either the kStarted state is reached or when an error
+  // occured.
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> GetStartedFuture() const {
+    return started_promise_.GetFuture();
+  }
+
+  // The stopped future completes when either the kStopped state is reached or when an error
+  // occured.
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> GetStoppedFuture() const {
+    return stopped_promise_.GetFuture();
+  }
+
+ private:
+  orbit_base::Promise<ErrorMessageOr<void>> started_promise_;
+  orbit_base::Promise<ErrorMessageOr<void>> stopped_promise_;
 };
 
 }  // namespace orbit_ssh_qt
