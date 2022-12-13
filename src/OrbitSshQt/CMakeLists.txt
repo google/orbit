@@ -54,5 +54,11 @@ target_sources(OrbitSshQtTests PRIVATE
   TaskTest.cpp
   TunnelTest.cpp)
 
-target_link_libraries(OrbitSshQtTests PUBLIC OrbitSshQt TestUtils GTest::QtCoreMain Qt::Test)
+target_link_libraries(OrbitSshQtTests PUBLIC
+  OrbitSshQt
+  TestUtils
+  QtTestUtils
+  GTest::QtCoreMain
+  Qt::Test)
+
 register_test(OrbitSshQtTests)

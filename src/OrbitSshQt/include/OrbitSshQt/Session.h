@@ -13,6 +13,7 @@
 #include <system_error>
 #include <utility>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
@@ -57,9 +58,8 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   explicit Session(const orbit_ssh::Context* context, QObject* parent = nullptr)
       : StateMachineHelper(parent), context_(context) {}
 
-  void ConnectToServer(orbit_ssh::Credentials creds);
-  enum class DisconnectResult { kDisconnectedSuccessfully, kDisconnectStarted };
-  [[nodiscard]] DisconnectResult Disconnect();
+  orbit_base::Future<ErrorMessageOr<void>> ConnectToServer(orbit_ssh::Credentials creds);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<void>> Disconnect();
 
   orbit_ssh::Session* GetRawSession() { return session_ ? &session_.value() : nullptr; }
 

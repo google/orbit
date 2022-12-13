@@ -654,7 +654,7 @@ ErrorMessageOr<void> ServiceDeployManager::ConnectToServer() {
   auto error_handler = ConnectErrorHandler(&loop, &session_.value(), &Session::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  session_->ConnectToServer(credentials_);
+  std::ignore = session_->ConnectToServer(credentials_);
 
   OUTCOME_TRY(MapError(loop.exec(), Error::kCouldNotConnectToServer));
 
@@ -796,9 +796,9 @@ ErrorMessageOr<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session
   auto error_handler = ConnectQuitHandler(&loop, session, &orbit_ssh_qt::Session::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  orbit_ssh_qt::Session::DisconnectResult disconnect_result = session->Disconnect();
+  orbit_base::Future<ErrorMessageOr<void>> disconnect_future = session->Disconnect();
 
-  if (disconnect_result == orbit_ssh_qt::Session::DisconnectResult::kDisconnectStarted) {
+  if (!disconnect_future.IsFinished()) {
     OUTCOME_TRY(loop.exec());
   }
 
