@@ -193,7 +193,7 @@ constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
                                                                const ProcessData* process) {
   if (process == nullptr) {
-    return orbit_data_views::PresetLoadState::kNotLoadable;
+    return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kNotLoadable);
   }
 
   size_t modules_not_found_count = 0;
@@ -207,14 +207,14 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
 
   // Empty preset is also loadable
   if (modules_not_found_count == 0) {
-    return orbit_data_views::PresetLoadState::kLoadable;
+    return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kLoadable);
   }
 
   if (modules_not_found_count == module_paths.size()) {
-    return orbit_data_views::PresetLoadState::kNotLoadable;
+    return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kNotLoadable);
   }
 
-  return orbit_data_views::PresetLoadState::kPartiallyLoadable;
+  return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kPartiallyLoadable);
 }
 
 // Searches through an inout modules list for a module which paths contains path_substring. If one
