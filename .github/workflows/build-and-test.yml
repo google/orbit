@@ -174,27 +174,14 @@ jobs:
         with:
           name: clang_tidy_fixes
           path: clang-tidy-fixes.yml
-      - name: Set up simple SSH server (Ubuntu)
-        if: startsWith(matrix.config.os, 'ubuntu')
-        working-directory: ./contrib/docker/ssh_server
-        run: |
-          podman build . -f Dockerfile.simple -t ssh_server_simple
-          echo "Starting Simple SSH Server"
-          podman run -dP --rm --name ssh_server_simple ssh_server_simple
-          SSH_SERVER_SIMPLE_PORT=$(podman port ssh_server_simple 22 | grep 0.0.0.0 | cut -f2 -d:)
-          echo "Determined SSH port of Simple SSH Server: ${SSH_SERVER_SIMPLE_PORT}"
-          echo "SSH_SERVER_SIMPLE_PORT=${SSH_SERVER_SIMPLE_PORT}" >> $GITHUB_ENV
       - name: CMake Test (Ubuntu)
         if: startsWith(matrix.config.os, 'ubuntu')
         working-directory: ./build
         run: |
           CTEST_OUTPUT_ON_FAILURE=1 \
           ARGS="-E IntegrationTest" \
-          ORBIT_TESTING_SSH_SERVER_SIMPLE_ADDRESS="127.0.0.1:${{ env.SSH_SERVER_SIMPLE_PORT }}" \
+          ../contrib/scripts/run_ssh_containers.sh \
           cmake --build . --target test
-      - name: Shut down simple SSH server (Ubuntu)
-        if: startsWith(matrix.config.os, 'ubuntu')
-        run: podman stop ssh_server_simple
       - name: Install conan config (Windows)
         if: startsWith(matrix.config.os, 'windows')
         run: |
