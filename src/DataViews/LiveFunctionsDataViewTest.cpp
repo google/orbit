@@ -248,7 +248,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_min_ns(kMinNs[i]);
     stats.set_max_ns(kMaxNs[i]);
     stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
-    capture_data->AddScopeStats(kScopeIds[i], std::move(stats));
+    capture_data->AddScopeStats(kScopeIds[i], stats);
   }
 
   capture_data->OnCaptureComplete();

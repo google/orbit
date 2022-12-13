@@ -30,8 +30,7 @@ TEST(ContainerHelpersTest, MakeMapIsCorrect) {
   {
     auto keys = kKeys;
     auto values = kValues;
-    EXPECT_THAT(MakeMap(std::move(keys), std::move(values)),
-                UnorderedElementsAreArray(kExpectedMap));
+    EXPECT_THAT(MakeMap(keys, values), UnorderedElementsAreArray(kExpectedMap));
   }
 
   {

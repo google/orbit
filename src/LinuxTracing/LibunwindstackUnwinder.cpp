@@ -95,7 +95,7 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
                 unwinder.LastErrorAddress());
   }
 #endif
-  return LibunwindstackResult{unwinder.ConsumeFrames(), std::move(regs), unwinder.LastErrorCode()};
+  return LibunwindstackResult{unwinder.ConsumeFrames(), regs, unwinder.LastErrorCode()};
 }
 
 // This functions detects if a frame pointer register was set in the given program counter using

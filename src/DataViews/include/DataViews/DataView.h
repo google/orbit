@@ -101,7 +101,7 @@ class DataView {
   };
 
   struct Action {
-    Action(std::string_view name, bool enabled) : name{std::move(name)}, enabled{enabled} {}
+    Action(std::string_view name, bool enabled) : name{name}, enabled{enabled} {}
     std::string name;
     bool enabled;
   };

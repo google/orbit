@@ -35,7 +35,7 @@ TEST(FutureWatcher, WaitFor) {
   completion_timer.start(std::chrono::milliseconds{0});
 
   FutureWatcher watcher{};
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
+  EXPECT_EQ(watcher.WaitFor(future, std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kFutureCompleted);
 }
 
@@ -48,7 +48,7 @@ TEST(FutureWatcher, WaitForWithTimeout) {
   completion_timer.start(std::chrono::milliseconds{80});
 
   FutureWatcher watcher{};
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
+  EXPECT_EQ(watcher.WaitFor(future, std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kTimeout);
 }
 
@@ -66,7 +66,7 @@ TEST(FutureWatcher, WaitForWithAbort) {
   QObject::connect(&abort_timer, &QTimer::timeout, &watcher, &FutureWatcher::Abort);
   abort_timer.start(std::chrono::milliseconds{10});
 
-  EXPECT_EQ(watcher.WaitFor(std::move(future), std::chrono::milliseconds{40}),
+  EXPECT_EQ(watcher.WaitFor(future, std::chrono::milliseconds{40}),
             FutureWatcher::Reason::kAbortRequested);
 }
 
@@ -92,7 +92,7 @@ TEST(FutureWatcher, WaitForWithThreadPool) ABSL_NO_THREAD_SAFETY_ANALYSIS {
                      [&]() ABSL_NO_THREAD_SAFETY_ANALYSIS { mutex.Unlock(); });
 
   FutureWatcher watcher{};
-  const auto reason = watcher.WaitFor(std::move(future), std::nullopt);
+  const auto reason = watcher.WaitFor(future, std::nullopt);
 
   EXPECT_EQ(reason, FutureWatcher::Reason::kFutureCompleted);
 

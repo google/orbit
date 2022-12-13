@@ -580,7 +580,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 
-  capture_listener_->OnThreadStateSlice(std::move(slice_info));
+  capture_listener_->OnThreadStateSlice(slice_info);
 }
 
 void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& address_info) {

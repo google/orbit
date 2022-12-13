@@ -175,7 +175,7 @@ class CallstackDataViewTest : public testing::Test {
   void SetCallstackFromFrames(std::vector<uint64_t> callstack_frames) {
     orbit_client_data::CallstackInfo callstack_info{std::move(callstack_frames),
                                                     CallstackType::kComplete};
-    view_.SetCallstack(std::move(callstack_info));
+    view_.SetCallstack(callstack_info);
   }
 
   std::string GetModulePathByAddressFromCaptureData(uint64_t frame_address) {

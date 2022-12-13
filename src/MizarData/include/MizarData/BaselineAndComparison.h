@@ -80,8 +80,8 @@ class BaselineAndComparisonTmpl {
         MakeComparisons(comparator);
 
     return SamplingWithFrameTrackComparisonReport(
-        std::move(baseline_sampling_counts), std::move(baseline_frame_stats),
-        std::move(comparison_sampling_counts), std::move(comparison_frame_stats),
+        std::move(baseline_sampling_counts), baseline_frame_stats,
+        std::move(comparison_sampling_counts), comparison_frame_stats,
         std::move(sfid_to_corrected_comparison_result), &sfid_to_symbols_);
   }
 
