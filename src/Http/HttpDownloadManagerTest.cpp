@@ -39,7 +39,7 @@
 #include "OrbitBase/WhenAll.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "Test/Path.h"
-#include "TestUtils/TemporaryFile.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_http {
@@ -51,7 +51,6 @@ using orbit_base::IsNotFound;
 using orbit_base::StopSource;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
-using orbit_test_utils::TemporaryFile;
 using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>;
 
 namespace {
@@ -82,10 +81,10 @@ static void VerifyDownloadSucceeded(const DownloadResult& result,
   EXPECT_TRUE(exists_or_error.value());
 }
 
-[[nodiscard]] static TemporaryFile GetTemporaryFile() {
-  auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
-  EXPECT_THAT(temporary_file_or_error, HasNoError());
-  return std::move(temporary_file_or_error.value());
+[[nodiscard]] orbit_test_utils::TemporaryDirectory GetTemporaryDirectory() {
+  auto temporary_dir_or_error = orbit_test_utils::TemporaryDirectory::Create();
+  EXPECT_THAT(temporary_dir_or_error, HasNoError());
+  return std::move(temporary_dir_or_error.value());
 }
 
 class HttpDownloadManagerTest : public ::testing::Test {
@@ -154,9 +153,8 @@ class HttpDownloadManagerTest : public ::testing::Test {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
   std::string valid_url = GetUrl("dllmain.dll");
-  TemporaryFile temporary_file = GetTemporaryFile();
-  std::filesystem::path local_path = temporary_file.file_path();
-  temporary_file.CloseAndRemove();
+  orbit_test_utils::TemporaryDirectory temporary_dir = GetTemporaryDirectory();
+  const std::filesystem::path local_path = temporary_dir.GetDirectoryPath() / "download.bin";
   StopSource stop_source{};
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
@@ -170,9 +168,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
   std::string valid_url = GetUrl("dllmain.dll");
-  TemporaryFile temporary_file = GetTemporaryFile();
-  std::filesystem::path local_path = temporary_file.file_path();
-  temporary_file.CloseAndRemove();
+  orbit_test_utils::TemporaryDirectory temporary_dir = GetTemporaryDirectory();
+  const std::filesystem::path local_path = temporary_dir.GetDirectoryPath() / "download.bin";
   StopSource stop_source{};
 
   stop_source.RequestStop();
@@ -188,9 +185,8 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidUrl) {
   std::string invalid_url = GetUrl("non_exist.dll");
-  TemporaryFile temporary_file = GetTemporaryFile();
-  std::filesystem::path local_path = temporary_file.file_path();
-  temporary_file.CloseAndRemove();
+  orbit_test_utils::TemporaryDirectory temporary_dir = GetTemporaryDirectory();
+  const std::filesystem::path local_path = temporary_dir.GetDirectoryPath() / "download.bin";
   StopSource stop_source{};
 
   auto future = manager_->Download(invalid_url, local_path, stop_source.GetStopToken());
@@ -220,24 +216,24 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
   constexpr size_t kDownloadCounts = 3;
   const std::array<std::string, kDownloadCounts> urls = {
       GetUrl("dllmain.dll"), GetUrl("non_exist.dll"), GetUrl("hello_world_elf")};
-  std::array<TemporaryFile, kDownloadCounts> temporary_files{GetTemporaryFile(), GetTemporaryFile(),
-                                                             GetTemporaryFile()};
+  orbit_test_utils::TemporaryDirectory temp_dir = GetTemporaryDirectory();
+  std::array temporary_files{temp_dir.GetDirectoryPath() / "download0.bin",
+                             temp_dir.GetDirectoryPath() / "download1.bin",
+                             temp_dir.GetDirectoryPath() / "download2.bin"};
   std::array<StopSource, kDownloadCounts> stop_sources{};
 
   std::vector<Future<DownloadResult>> futures;
   futures.reserve(kDownloadCounts);
   for (size_t i = 0; i < kDownloadCounts; ++i) {
-    temporary_files[i].CloseAndRemove();
-    auto future =
-        manager_->Download(urls[i], temporary_files[i].file_path(), stop_sources[i].GetStopToken());
+    auto future = manager_->Download(urls[i], temporary_files[i], stop_sources[i].GetStopToken());
     futures.emplace_back(std::move(future));
   }
 
   orbit_base::WhenAll(absl::MakeConstSpan(futures))
       .Then(executor_.get(), [&temporary_files](std::vector<DownloadResult> results) {
-        VerifyDownloadSucceeded(results[0], temporary_files[0].file_path());
+        VerifyDownloadSucceeded(results[0], temporary_files[0]);
         VerifyDownloadNotFound(results[1]);
-        VerifyDownloadSucceeded(results[2], temporary_files[2].file_path());
+        VerifyDownloadSucceeded(results[2], temporary_files[2]);
         QCoreApplication::exit();
       });
 
@@ -246,14 +242,13 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
 
 TEST_F(HttpDownloadManagerTest, DownloadSingleDestroyManagerEarly) {
   std::string valid_url = GetUrl("dllmain.dll");
-  TemporaryFile temporary_file = GetTemporaryFile();
-  std::filesystem::path local_path = temporary_file.file_path();
-  temporary_file.CloseAndRemove();
+  orbit_test_utils::TemporaryDirectory temporary_dir = GetTemporaryDirectory();
+  std::filesystem::path local_path = temporary_dir.GetDirectoryPath() / "dllmain.dll";
   StopSource stop_source{};
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
   manager_ = std::nullopt;
-  future.Then(executor_.get(), [](DownloadResult result) {
+  future.Then(executor_.get(), [](const DownloadResult& result) {
     VerifyDownloadCanceled(result);
     QCoreApplication::exit();
   });

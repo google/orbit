@@ -18,6 +18,7 @@
 #include "DataViews/DataView.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
@@ -51,7 +52,8 @@ TEST(DataView, FormatValueForCsvEscapesQuotesInString) {
 }
 
 TEST(DataView, WriteLineToCsvIsCorrect) {
-  orbit_test_utils::TemporaryFile temporary_file = orbit_data_views::GetTemporaryFilePath();
+  orbit_test_utils::TemporaryFile temporary_file = orbit_data_views::GetTemporaryFile();
+
   EXPECT_THAT(orbit_data_views::WriteLineToCsv(temporary_file.fd(), kValues),
               orbit_test_utils::HasNoError());
 

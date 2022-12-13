@@ -20,6 +20,7 @@
 #include "ClientProtos/user_defined_capture_info.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
@@ -44,12 +45,11 @@ static ClientCaptureEvent CreateInternedStringCaptureEvent(uint64_t key, std::st
 }
 
 TEST(CaptureFileHelpers, CreateCaptureFileAndWriteUserData) {
-  auto temporary_file_or_error = orbit_test_utils::TemporaryFile::Create();
-  ASSERT_THAT(temporary_file_or_error, HasNoError());
-  orbit_test_utils::TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
+  auto temporary_dir_or_error = orbit_test_utils::TemporaryDirectory::Create();
+  ASSERT_THAT(temporary_dir_or_error, HasNoError());
+  orbit_test_utils::TemporaryDirectory temporary_dir = std::move(temporary_dir_or_error.value());
 
-  const std::filesystem::path& file_path = temporary_file.file_path();
-  temporary_file.CloseAndRemove();
+  const std::filesystem::path file_path = temporary_dir.GetDirectoryPath() / "capture.orbit";
 
   auto output_stream_or_error = CaptureFileOutputStream::Create(file_path);
   ASSERT_THAT(output_stream_or_error, HasNoError());

@@ -26,20 +26,10 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "PresetFile/PresetFile.h"
-#include "TestUtils/TemporaryFile.h"
+#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
 
-using orbit_data_views::CheckCopySelectionIsInvoked;
-using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
-using orbit_data_views::GetActionIndexOnMenu;
-using orbit_data_views::kInvalidActionIndex;
-using orbit_data_views::kMenuActionCopySelection;
-using orbit_data_views::kMenuActionDeletePreset;
-using orbit_data_views::kMenuActionExportToCsv;
-using orbit_data_views::kMenuActionLoadPreset;
-using orbit_data_views::kMenuActionShowInExplorer;
 
 namespace {
 // This is just a helper type to handle colors. Note that Color from `OrbitGl/CoreMath.h` is not
@@ -265,11 +255,11 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(PresetLoadState::kLoadable));
 
-  auto temporary_preset_file = orbit_test_utils::TemporaryFile::Create();
-  ASSERT_THAT(temporary_preset_file, orbit_test_utils::HasNoError());
-  temporary_preset_file.value().CloseAndRemove();
+  auto temporary_dir = orbit_test_utils::TemporaryDirectory::Create();
+  ASSERT_THAT(temporary_dir, orbit_test_utils::HasNoError());
 
-  const std::filesystem::path preset_filename0 = temporary_preset_file.value().file_path();
+  const std::filesystem::path preset_filename0 =
+      temporary_dir.value().GetDirectoryPath() / "preset0.orbit";
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
   ASSERT_THAT(preset_file0.SaveToFile(), orbit_test_utils::HasNoError());
   auto date_modified = orbit_base::GetFileDateModified(preset_filename0);
