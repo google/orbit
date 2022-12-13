@@ -17,6 +17,7 @@
 #include <string>
 #include <system_error>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -60,8 +61,8 @@ class Tunnel : public StateMachineHelper<Tunnel, details::TunnelState> {
   explicit Tunnel(Session* session, std::string remote_host, uint16_t remote_port,
                   QObject* parent = nullptr);
 
-  void Start();
-  void Stop();
+  orbit_base::Future<ErrorMessageOr<void>> Start();
+  orbit_base::Future<ErrorMessageOr<void>> Stop();
 
   [[nodiscard]] uint16_t GetListenPort() const {
     return local_server_ ? local_server_->serverPort() : 0;

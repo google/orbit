@@ -11,11 +11,14 @@
 #include <QObject>
 #include <QPointer>
 #include <QString>
+#include <deque>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -65,12 +68,12 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
 
  public:
   explicit Task(Session* session, std::string command);
-  void Start();
-  void Stop();
+  orbit_base::Future<ErrorMessageOr<void>> Start();
+  orbit_base::Future<ErrorMessageOr<void>> Stop();
 
   std::string ReadStdOut();
   std::string ReadStdErr();
-  void Write(std::string_view data);
+  orbit_base::Future<ErrorMessageOr<void>> Write(std::string_view data);
 
  signals:
   void started();
@@ -102,6 +105,16 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   std::string read_std_out_buffer_;
   std::string read_std_err_buffer_;
   std::string write_buffer_;
+
+  struct WritePromise {
+    uint64_t completes_when_bytes_written;
+    orbit_base::Promise<ErrorMessageOr<void>> promise;
+
+    explicit WritePromise(uint64_t completes_when_bytes_written)
+        : completes_when_bytes_written(completes_when_bytes_written) {}
+  };
+  std::deque<WritePromise> write_promises_;
+  uint64_t bytes_written_counter_ = 0;
 };
 
 }  // namespace orbit_ssh_qt

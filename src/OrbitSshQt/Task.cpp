@@ -8,9 +8,13 @@
 
 #include <QTimer>
 #include <chrono>
+#include <limits>
 #include <utility>
 
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
@@ -25,14 +29,16 @@ Task::Task(Session* session, std::string command)
       QObject::connect(session_, &Session::aboutToShutdown, this, &Task::HandleSessionShutdown));
 }
 
-void Task::Start() {
+orbit_base::Future<ErrorMessageOr<void>> Task::Start() {
   if (state_ == State::kInitialized) {
     SetState(State::kNoChannel);
     OnEvent();
   }
+
+  return GetStartedFuture();
 }
 
-void Task::Stop() {
+orbit_base::Future<ErrorMessageOr<void>> Task::Stop() {
   QTimer::singleShot(kShutdownTimeoutMs, this, [this]() {
     if (state_ < State::kChannelClosed) {
       ORBIT_ERROR("Task shutdown timed out");
@@ -44,6 +50,8 @@ void Task::Stop() {
     SetState(State::kSignalEOF);
   }
   OnEvent();
+
+  return GetStoppedFuture();
 }
 
 std::string Task::ReadStdOut() {
@@ -58,9 +66,14 @@ std::string Task::ReadStdErr() {
   return tmp;
 }
 
-void Task::Write(std::string_view data) {
+orbit_base::Future<ErrorMessageOr<void>> Task::Write(std::string_view data) {
   write_buffer_.append(data);
+  WritePromise& new_entry =
+      write_promises_.emplace_back(bytes_written_counter_ + write_buffer_.size());
+  orbit_base::Future<ErrorMessageOr<void>> future = new_entry.promise.GetFuture();
+
   OnEvent();
+  return future;
 }
 
 outcome::result<void> Task::run() {
@@ -134,6 +147,20 @@ outcome::result<void> Task::run() {
       OUTCOME_TRY(auto&& result, channel_->Write(write_buffer_));
       write_buffer_ = write_buffer_.substr(result);
       emit bytesWritten(result);
+      bytes_written_counter_ += result;
+      while (!write_promises_.empty() &&
+             write_promises_.front().completes_when_bytes_written <= bytes_written_counter_) {
+        write_promises_.front().promise.SetResult(outcome::success());
+        write_promises_.pop_front();
+      }
+
+      // We set the counter to 0 and adjust the thresholds to avoid overflows once in a while.
+      if (bytes_written_counter_ > std::numeric_limits<uint64_t>::max() / 2) {
+        for (auto& write_promise : write_promises_) {
+          write_promise.completes_when_bytes_written -= bytes_written_counter_;
+        }
+        bytes_written_counter_ = 0;
+      }
     }
 
     // Channel::ReadStdout, Channel::ReadStderr, and Channel::Write all potentially process packets
@@ -236,6 +263,11 @@ void Task::SetError(std::error_code e) {
   about_to_shutdown_connection_ = std::nullopt;
   StateMachineHelper::SetError(e);
   channel_ = std::nullopt;
+
+  while (!write_promises_.empty()) {
+    write_promises_.front().promise.SetResult(ErrorMessage{e.message()});
+    write_promises_.pop_front();
+  }
 }
 
 void Task::HandleSessionShutdown() {

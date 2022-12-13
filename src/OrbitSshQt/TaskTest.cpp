@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/algorithm/container.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 
@@ -14,47 +15,45 @@
 #include <string>
 #include <string_view>
 
+#include "OrbitBase/WhenAll.h"
 #include "OrbitSshQt/Task.h"
+#include "QtTestUtils/WaitFor.h"
 #include "SshTestFixture.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
+using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::YieldsResult;
+using orbit_test_utils::HasNoError;
 
 using SshTaskTest = SshTestFixture;
 
 TEST_F(SshTaskTest, ReturnCode) {
   orbit_ssh_qt::Task task{GetSession(), "exit 42"};
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
-  task.Start();
+  QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
+  QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
 
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
+  EXPECT_EQ(started_signal.size(), 1);
 
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
+  // `ServiceDeployManager` relies on the fact that `Task::Stop` triggers a `stopped()` signal even
+  // when the task has already been stopped through other means. So we test that the signal has been
+  // emitted at least one more time after calling `Stop`.
+  const int number_of_stopped_signals_before_calling_stop = stopped_signal.size();
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
+  EXPECT_GT(stopped_signal.size(), number_of_stopped_signals_before_calling_stop);
 
-  ASSERT_EQ(finished_signal.size(), 1);
-  EXPECT_EQ(finished_signal[0][0].toInt(), 42);
+  EXPECT_THAT(finished_signal, testing::ElementsAre(testing::ElementsAre(QVariant{42})));
 }
 
 TEST_F(SshTaskTest, Stdout) {
   orbit_ssh_qt::Task task{GetSession(), "echo 'Hello World'"};
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
   QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdOut};
-  task.Start();
 
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
-
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
 
   EXPECT_FALSE(ready_read_signal.empty());
   EXPECT_EQ(task.ReadStdOut(), "Hello World\n");
@@ -64,76 +63,75 @@ TEST_F(SshTaskTest, Stderr) {
   orbit_ssh_qt::Task task{GetSession(), "echo 'Hello World' >&2"};
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
   QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdErr};
-  task.Start();
 
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
 
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
-
-  EXPECT_FALSE(ready_read_signal.empty());
+  EXPECT_GE(ready_read_signal.size(), 1);
   EXPECT_EQ(task.ReadStdErr(), "Hello World\n");
 }
 
 TEST_F(SshTaskTest, Stdin) {
   orbit_ssh_qt::Task task{GetSession(), "read; echo ${REPLY}"};
   QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdOut};
-  task.Start();
 
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
 
   qRegisterMetaType<size_t>("size_t");
   QSignalSpy bytes_written_signal{&task, &orbit_ssh_qt::Task::bytesWritten};
   constexpr std::string_view kInputString{"Hello World\n"};
-  task.Write(kInputString);
+  ASSERT_THAT(WaitFor(task.Write(kInputString)), YieldsResult(HasNoError()));
 
-  // Here we wait until all the bytes are written. Note that there is no guarantee on how many
-  // separate internal writes that takes.
-  ASSERT_TRUE(QTest::qWaitFor([&bytes_written_signal, kInputString]() {
-    const auto add_bytes_written_per_signal = [](size_t sum,
-                                                 const QList<QVariant>& signal_arguments) {
-      return sum + static_cast<size_t>(signal_arguments.first().toInt());
-    };
-    const size_t bytes_written =
-        absl::c_accumulate(bytes_written_signal, size_t{0}, add_bytes_written_per_signal);
-    return bytes_written == kInputString.size();
-  }));
+  EXPECT_EQ(
+      absl::c_accumulate(bytes_written_signal, uint64_t{0},
+                         [](uint64_t lhs, const auto& signal) { return lhs + signal[0].toInt(); }),
+      kInputString.size());
 
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
+  std::string std_out{};
+  QObject::connect(&task, &Task::readyReadStdOut, &task,
+                   [&std_out, &task]() { std_out.append(task.ReadStdOut()); });
 
-  EXPECT_FALSE(ready_read_signal.empty());
-  EXPECT_EQ(task.ReadStdOut(), kInputString);
+  EXPECT_TRUE(QTest::qWaitFor([&std_out, kInputString]() { return std_out == kInputString; }));
+
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
+}
+
+TEST_F(SshTaskTest, StdinMultipleWrites) {
+  orbit_ssh_qt::Task task{GetSession(), "read"};
+  QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdOut};
+
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
+
+  qRegisterMetaType<size_t>("size_t");
+  QSignalSpy bytes_written_signal{&task, &orbit_ssh_qt::Task::bytesWritten};
+  constexpr std::string_view kInputString{"Hello World\n"};
+
+  // A line breaks make the read command return, so we will only send a line break in the very last
+  // Write call
+  constexpr std::string_view kInputStringNoLineBreak = kInputString.substr(kInputString.size() - 1);
+
+  // We make a few writes here that will be executed asynchronously.
+  std::array futures = {task.Write(kInputStringNoLineBreak), task.Write(kInputStringNoLineBreak),
+                        task.Write(kInputStringNoLineBreak), task.Write(kInputStringNoLineBreak),
+                        task.Write(kInputString)};
+
+  // And here we expect all the writes to complete with no error.
+  EXPECT_THAT(WaitFor(orbit_base::WhenAll<ErrorMessageOr<void>>(futures)),
+              YieldsResult(testing::Each(HasNoError())));
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
+
+  const uint64_t total_bytes_written =
+      absl::c_accumulate(bytes_written_signal, uint64_t{0},
+                         [](uint64_t lhs, const auto& signal) { return lhs + signal[0].toInt(); });
+  EXPECT_EQ(total_bytes_written, 4 * kInputStringNoLineBreak.size() + kInputString.size());
 }
 
 TEST_F(SshTaskTest, Kill) {
   orbit_ssh_qt::Task task{GetSession(), "read"};
-  task.Start();
-
-  if (!task.IsStarted()) {
-    QSignalSpy started_signal{&task, &orbit_ssh_qt::Task::started};
-    EXPECT_TRUE(started_signal.wait());
-  }
+  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
 
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
-  task.Stop();
-
-  if (!task.IsStopped()) {
-    QSignalSpy stopped_signal{&task, &orbit_ssh_qt::Task::stopped};
-    EXPECT_TRUE(stopped_signal.wait());
-  }
-
-  EXPECT_FALSE(finished_signal.empty());
-  EXPECT_EQ(finished_signal[0][0].toInt(), 1);
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
+  EXPECT_THAT(finished_signal, testing::ElementsAre(testing::ElementsAre(QVariant{1})));
 }
 }  // namespace orbit_ssh_qt

@@ -15,7 +15,9 @@
 
 #include "ApiInterface/Orbit.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/Error.h"
 #include "OrbitSshQt/Error.h"
 
@@ -48,38 +50,40 @@ Tunnel::Tunnel(Session* session, std::string remote_host, uint16_t remote_port, 
       QObject::connect(session_, &Session::aboutToShutdown, this, &Tunnel::HandleSessionShutdown));
 }
 
-void Tunnel::Start() {
+orbit_base::Future<ErrorMessageOr<void>> Tunnel::Start() {
   if (CurrentState() == State::kInitialized) {
     SetState(State::kNoChannel);
     OnEvent();
   }
+
+  return GetStartedFuture();
 }
 
-void Tunnel::Stop() {
+orbit_base::Future<ErrorMessageOr<void>> Tunnel::Stop() {
   // Tunnel::Stop is currently called from 2 different locations. 1. When the local_socket_ signals
   // a disconnect and 2. from ServiceDeployManager::ShutdownTunnel. If 1. happens before 2.,
   // ShutdownTunnel will wait forever for a stopped signal. This is here solved by emitting
   // stopped() when the Tunnel is already stopped.
 
   if (CurrentState() == State::kError || CurrentState() == State::kStopped) {
-    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
     emit stopped();
-    return;
+    return GetStoppedFuture();
   }
 
   if (CurrentState() < State::kStarted) {
     SetState(State::kStopped);
     deleteByEventLoop(this, &local_server_);
     channel_ = std::nullopt;
-    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
     emit stopped();
-    return;
+    return GetStoppedFuture();
   }
 
   if (CurrentState() == State::kServerListening) {
     SetState(State::kFlushing);
     OnEvent();
   }
+
+  return GetStoppedFuture();
 }
 
 outcome::result<void> Tunnel::startup() {
@@ -111,7 +115,8 @@ outcome::result<void> Tunnel::startup() {
           local_server_->pauseAccepting();
           QObject::connect(local_socket_, &QTcpSocket::readyRead, this,
                            &Tunnel::HandleIncomingDataLocalSocket);
-          QObject::connect(local_socket_, &QTcpSocket::disconnected, this, [&]() { Stop(); });
+          QObject::connect(local_socket_, &QTcpSocket::disconnected, this,
+                           [&]() { std::ignore = Stop(); });
         }
       });
 
