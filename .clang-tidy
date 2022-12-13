@@ -8,6 +8,7 @@ Checks: >
   bugprone-*,
   cert-*,
   -cert-err58-cpp,
+  -cert-dcl16-c
   cppcoreguidelines-*,
   -cppcoreguidelines-special-member-functions,
   -cppcoreguidelines-avoid-magic-numbers,
@@ -15,8 +16,10 @@ Checks: >
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-owning-memory,
   misc-*,
   -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
   google-*,
   -google-default-arguments,
   -google-runtime-references,
@@ -51,8 +54,9 @@ CheckOptions:
     value:           'CamelCase'
   - key:             readability-identifier-naming.EnumConstantPrefix
     value:           'k'
-  - key:             readability-identifier-naming.FunctionCase
-    value:           'CamelCase'
+# Let's enable this once we got rid of the snake_case data functions.
+#  - key:             readability-identifier-naming.FunctionCase
+#    value:           'CamelCase'
   - key:             readability-identifier-naming.LocalVariableCase
     value:           'lower_case'
   - key:             readability-identifier-naming.ParameterCase
