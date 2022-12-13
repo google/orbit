@@ -4,19 +4,16 @@
 
 #include <gtest/gtest.h>
 
+#include <QList>
 #include <QSignalSpy>
-#include <numeric>
+#include <QVariant>
+#include <filesystem>
+#include <string>
 
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/Result.h"
-#include "OrbitBase/StopSource.h"
-#include "OrbitSshQt/SftpCopyToLocalOperation.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "SftpTestFixture.h"
 #include "Test/Path.h"
-#include "TestUtils/TemporaryDirectory.h"
-#include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
 

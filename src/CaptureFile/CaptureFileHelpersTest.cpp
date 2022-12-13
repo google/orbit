@@ -21,7 +21,6 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 #include "TestUtils/TemporaryDirectory.h"
-#include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_capture_file {
