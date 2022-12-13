@@ -20,6 +20,10 @@ namespace orbit_ssh_qt_test_utils {
 // up the session which can be accessed via `GetSession`.
 class SshTestFixture : public SshSessionTest {
  public:
+  explicit SshTestFixture(
+      std::string environment_variable = std::string{kSimpleSshServerEnvironmentVariableName})
+      : SshSessionTest(std::move(environment_variable)) {}
+
   // We can't use the constructor here because neither GTEST_SKIP, nor ASSERT_THAT are supported in
   // constructors.
   void SetUp() override {
