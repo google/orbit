@@ -18,7 +18,7 @@ namespace orbit_data_views {
 struct SymbolLoadingState {
   // TODO(b/202140068) remove unknown when not needed anymore
   enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded, kFallback } state;
-  SymbolLoadingState(State initial_state) : state(initial_state) {}
+  explicit SymbolLoadingState(State initial_state) : state(initial_state) {}
 
   [[nodiscard]] std::string GetName() const {
     switch (state) {

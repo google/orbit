@@ -28,7 +28,7 @@ class unique_resource {
   using Deleter = Deleter_;
 
   constexpr unique_resource() = default;
-  constexpr unique_resource(Resource resource, Deleter deleter = Deleter{})
+  constexpr explicit unique_resource(Resource resource, Deleter deleter = Deleter{})
       : resource_(std::move(resource)), deleter_(std::move(deleter)) {}
 
   unique_resource(const unique_resource&) = delete;

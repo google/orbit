@@ -109,13 +109,13 @@ template <typename T, typename Derived>
 class InternalFuture : public orbit_base_internal::InternalFutureBase<T, Derived> {
  public:
   // Constructs a completed future
-  /* explicit(false) */ InternalFuture(const T& val)
+  /* explicit(false) */ explicit InternalFuture(const T& val)
       : InternalFutureBase<T, Derived>{std::make_shared<SharedState<T>>()} {
     this->shared_state_->result.emplace(val);
   }
 
   // Constructs a completed future
-  /* explicit(false) */ InternalFuture(T&& val)
+  /* explicit(false) */ explicit InternalFuture(T&& val)
       : InternalFutureBase<T, Derived>{std::make_shared<SharedState<T>>()} {
     this->shared_state_->result.emplace(std::move(val));
   }
@@ -244,7 +244,7 @@ class [[nodiscard]] Future<ErrorMessageOr<T>>
  public:
   using orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>::InternalFuture;
 
-  /* explicit(false) */ Future(ErrorMessage error_message)
+  /* explicit(false) */ explicit Future(ErrorMessage error_message)
       : orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>{
             ErrorMessageOr<T>{std::move(error_message)}} {}
 

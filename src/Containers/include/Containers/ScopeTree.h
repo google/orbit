@@ -28,7 +28,7 @@ template <typename ScopeT>
 class ScopeNode {
  public:
   ScopeNode() = default;
-  ScopeNode(ScopeT* scope) : scope_(scope) {}
+  explicit ScopeNode(ScopeT* scope) : scope_(scope) {}
 
   void Insert(ScopeNode* node);
   [[nodiscard]] std::string ToString() const {
