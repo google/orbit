@@ -32,7 +32,7 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&rounding_radius_);
   AddWidgetForProperty(&rounding_num_sides_);
   AddWidgetForProperty(&text_offset_);
-  AddWidgetForProperty(&left_margin_);
+  AddWidgetForProperty(&track_header_width_);
   AddWidgetForProperty(&right_margin_);
   AddWidgetForProperty(&min_button_size_);
   AddWidgetForProperty(&button_width_);

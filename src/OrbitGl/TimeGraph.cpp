@@ -426,7 +426,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us;
     float pos =
-        layout_->GetLeftMargin() + static_cast<float>(normalized_start * GetTimelineWidth());
+        layout_->GetTrackHeaderWidth() + static_cast<float>(normalized_start * GetTimelineWidth());
     return pos;
   }
 
@@ -722,8 +722,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   float timegraph_current_y = GetPos()[1];
   const float total_right_margin = layout_->GetRightMargin() + vertical_slider_->GetWidth();
 
-  timeline_ui_->SetWidth(GetWidth() - total_right_margin - layout_->GetLeftMargin());
-  timeline_ui_->SetPos(timegraph_current_x + layout_->GetLeftMargin(), timegraph_current_y);
+  timeline_ui_->SetWidth(GetWidth() - total_right_margin - layout_->GetTrackHeaderWidth());
+  timeline_ui_->SetPos(timegraph_current_x + layout_->GetTrackHeaderWidth(), timegraph_current_y);
 
   plus_button_->SetWidth(layout_->GetButtonWidth());
   plus_button_->SetHeight(layout_->GetButtonHeight());
@@ -737,17 +737,16 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   timegraph_current_y += timeline_ui_->GetHeight() + layout_->GetSpaceBetweenTracksAndTimeline();
   track_container_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetPos(timegraph_current_x, timegraph_current_y);
-  track_container_->SetHeaderWidth(layout_->GetLeftMargin());
 
   vertical_slider_->SetWidth(layout_->GetSliderWidth());
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
 
   timegraph_current_y += track_container_->GetHeight();
-  float slider_width = GetWidth() - vertical_slider_->GetWidth() - layout_->GetLeftMargin();
+  float slider_width = GetWidth() - vertical_slider_->GetWidth() - layout_->GetTrackHeaderWidth();
   horizontal_slider_->SetWidth(slider_width);
   // The horizontal slider should be at the bottom of the TimeGraph. Because how OpenGl renders, the
   // way to assure that there is no pixels below the scrollbar is by making a ceiling.
-  horizontal_slider_->SetPos(timegraph_current_x + layout_->GetLeftMargin(),
+  horizontal_slider_->SetPos(timegraph_current_x + layout_->GetTrackHeaderWidth(),
                              std::ceil(GetHeight() - horizontal_slider_->GetHeight()));
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
@@ -904,7 +903,7 @@ void TimeGraph::DrawMarginsBetweenChildren(
   primitive_assembler.AddBox(right_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
 
   // Left margin mask for Timeline.
-  float left_margin_width = layout_->GetLeftMargin();
+  float left_margin_width = layout_->GetTrackHeaderWidth();
   float left_margin_height = timeline_ui_->GetHeight();
   Vec2 left_margin_pos = GetPos();
   Quad left_margin_box = MakeBox(left_margin_pos, Vec2(left_margin_width, left_margin_height));

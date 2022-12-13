@@ -88,7 +88,7 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
 void Track::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
-  header_->SetWidth(layout_->GetLeftMargin());
+  header_->SetWidth(layout_->GetTrackHeaderWidth());
   header_->SetPos(GetPos()[0], GetPos()[1]);
   UpdatePositionOfSubtracks();
 }
