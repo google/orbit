@@ -11,6 +11,7 @@
 #include <QHostAddress>
 #include <QTimer>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

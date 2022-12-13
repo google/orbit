@@ -16,7 +16,6 @@
 #include <memory>
 #include <optional>
 #include <thread>
-#include <utility>
 #include <vector>
 
 #include "OrbitBase/Future.h"

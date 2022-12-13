@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QList>
@@ -15,6 +16,7 @@
 #include "QtTestUtils/WaitFor.h"
 #include "SftpTestFixture.h"
 #include "Test/Path.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
 using orbit_qt_test_utils::WaitFor;

@@ -6,6 +6,7 @@
 #define ORBIT_SSH_QT_TASK_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <QMetaType>
 #include <QObject>

@@ -7,9 +7,11 @@
 #include <absl/base/attributes.h>
 
 #include <QTimer>
+#include <algorithm>
 #include <chrono>
 #include <limits>
 #include <utility>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
