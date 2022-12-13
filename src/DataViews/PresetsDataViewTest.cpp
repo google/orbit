@@ -69,9 +69,9 @@ TEST_F(PresetsDataViewTest, Empty) {
 TEST_F(PresetsDataViewTest, CheckLabelAndColorForLoadStates) {
   // GetPresetLoadState is called once per `GetValue`, `GetToolTip` and `GetDisplayColor` call.
   auto load_state = PresetLoadState::kLoadable;
-  EXPECT_CALL(app_, GetPresetLoadState)
-      .Times(13)
-      .WillRepeatedly(testing::Return(PresetLoadState(load_state)));
+  EXPECT_CALL(app_, GetPresetLoadState).Times(13).WillRepeatedly(testing::Invoke([&load_state]() {
+    return PresetLoadState(load_state);
+  }));
 
   orbit_client_protos::PresetInfo preset_info0{};
   orbit_preset_file::PresetFile preset_file0{std::filesystem::path{}, preset_info0};
