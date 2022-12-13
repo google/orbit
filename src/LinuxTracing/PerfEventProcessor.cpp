@@ -21,7 +21,7 @@ void PerfEventProcessor::AddEvent(PerfEvent&& event) {
 
     std::optional<DiscardedPerfEvent> discarded_perf_event = HandleOutOfOrderEvent(timestamp);
     if (discarded_perf_event.has_value()) {
-      event_queue_.PushEvent(std::move(discarded_perf_event.value()));
+      event_queue_.PushEvent(discarded_perf_event.value());
     }
     return;
   }

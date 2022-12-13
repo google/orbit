@@ -27,7 +27,7 @@ void TracepointData::EmplaceTracepointEvent(uint64_t timestamp_ns, uint64_t trac
   auto [event_map_iterator, unused_inserted] =
       thread_id_to_time_to_tracepoint_.try_emplace(insertion_thread_id);
   auto [unused_iterator, event_inserted] =
-      event_map_iterator->second.try_emplace(timestamp_ns, std::move(event));
+      event_map_iterator->second.try_emplace(timestamp_ns, event);
   if (!event_inserted) {
     ORBIT_ERROR(
         "Tracepoint event was not inserted as there was already an event on this timestamp_ns and "

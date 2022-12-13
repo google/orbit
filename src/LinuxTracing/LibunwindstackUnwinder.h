@@ -34,7 +34,7 @@ class LibunwindstackResult {
   explicit LibunwindstackResult(
       std::vector<unwindstack::FrameData> frames, const unwindstack::RegsX86_64& regs,
       unwindstack::ErrorCode error_code = unwindstack::ErrorCode::ERROR_NONE)
-      : frames_{std::move(frames)}, regs_{std::move(regs)}, error_code_{error_code} {}
+      : frames_{std::move(frames)}, regs_{regs}, error_code_{error_code} {}
 
   [[nodiscard]] const std::vector<unwindstack::FrameData>& frames() const { return frames_; }
 

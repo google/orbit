@@ -208,7 +208,7 @@ void ModulesDataView::DoFilter() {
 
 void ModulesDataView::AddModule(uint64_t start_address, ModuleData* module,
                                 ModuleInMemory module_in_memory) {
-  start_address_to_module_.insert_or_assign(start_address, std::move(module));
+  start_address_to_module_.insert_or_assign(start_address, module);
   start_address_to_module_in_memory_.insert_or_assign(start_address, std::move(module_in_memory));
   indices_.push_back(start_address);
 }

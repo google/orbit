@@ -127,7 +127,7 @@ class CaptureData {
 
   void AddThreadStateSlice(ThreadStateSliceInfo state_slice) {
     absl::MutexLock lock{&thread_state_slices_mutex_};
-    thread_state_slices_[state_slice.tid()].emplace_back(std::move(state_slice));
+    thread_state_slices_[state_slice.tid()].emplace_back(state_slice);
   }
 
   // Allows the caller to iterate `action` over all the thread state slices of the specified thread
@@ -172,7 +172,7 @@ class CaptureData {
   }
 
   void AddCallstackEvent(orbit_client_data::CallstackEvent callstack_event) {
-    callstack_data_.AddCallstackEvent(std::move(callstack_event));
+    callstack_data_.AddCallstackEvent(callstack_event);
   }
 
   void FilterBrokenCallstacks();

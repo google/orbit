@@ -39,7 +39,7 @@ struct C {
 
 struct D {
   int value{};
-  explicit D(A&& a) : value(std::move(a.value)) {}
+  explicit D(A&& a) : value(a.value) {}
   D(const A& a) = delete;
 };
 
@@ -150,7 +150,7 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
       value_called_on = a->value;
     };
 
-    take_rvalue_ref(std::move(wrapped_b));
+    take_rvalue_ref(wrapped_b);
     EXPECT_TRUE(is_called);
     EXPECT_EQ(value_called_on, kValue);
   }
@@ -181,7 +181,7 @@ TEST(TypedefTest, AssignmentIsCorrect) {
   {
     MyType<A> wrapped_a(A{kValue});
     MyType<A> wrapped_a_other(A{kValueOther});
-    wrapped_a_other = std::move(wrapped_a);
+    wrapped_a_other = wrapped_a;
     EXPECT_EQ(wrapped_a_other->value, kValue);
   }
 
@@ -195,7 +195,7 @@ TEST(TypedefTest, AssignmentIsCorrect) {
   {
     MyType<B> wrapped_b(B{{kValue}});
     MyType<A> wrapped_a_other(A{kValueOther});
-    wrapped_a_other = std::move(wrapped_b);
+    wrapped_a_other = wrapped_b;
     EXPECT_EQ(wrapped_a_other->value, kValue);
   }
 
@@ -263,7 +263,7 @@ TEST(TypedefTest, CallIsCorrect) {
     auto add = [](const int& i, int&& j) { return i + j; };
 
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = LiftAndApply(add, first_wrapped, std::move(second));
+    const MyType<int> sum_wrapped = LiftAndApply(add, std::move(first_wrapped), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 

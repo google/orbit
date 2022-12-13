@@ -1851,7 +1851,7 @@ void OrbitMainWindow::ShowSourceCode(
   code_viewer_dialog->setWindowTitle(QString::fromStdString(file_path.filename().string()));
 
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
-  code_viewer_dialog->SetMainContent(std::move(source_code.value()), std::move(syntax_highlighter));
+  code_viewer_dialog->SetMainContent(source_code.value(), std::move(syntax_highlighter));
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {
