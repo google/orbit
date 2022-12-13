@@ -191,16 +191,14 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 
   if (action == kMenuActionDeletePreset || action == kMenuActionShowInExplorer) {
     return ActionStatus::kVisibleAndEnabled;
-
-  } else if (action == kMenuActionLoadPreset) {
+  }
+  if (action == kMenuActionLoadPreset) {
     const PresetFile& preset = GetPreset(selected_indices[0]);
     return app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
                ? ActionStatus::kVisibleButDisabled
                : ActionStatus::kVisibleAndEnabled;
-
-  } else {
-    return DataView::GetActionStatus(action, clicked_index, selected_indices);
   }
+  return DataView::GetActionStatus(action, clicked_index, selected_indices);
 }
 
 void PresetsDataView::OnLoadPresetRequested(absl::Span<const int> selection) {

@@ -34,11 +34,11 @@ QVariant OrbitTableModel::headerData(int section, Qt::Orientation orientation, i
           section < static_cast<int>(data_view_->GetColumns().size())) {
         std::string header = data_view_->GetColumns()[section].header;
         return QString::fromStdString(header);
-      } else if (orientation == Qt::Vertical) {
-        return section;
-      } else {
-        return {};
       }
+      if (orientation == Qt::Vertical) {
+        return section;
+      }
+      return {};
 
     case Qt::InitialSortOrderRole:
       return data_view_->GetColumns()[section].initial_order ==
@@ -57,17 +57,20 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     std::string value = data_view_->GetValue(index.row(), index.column());
     return QVariant(QString::fromStdString(value));
-  } else if (role == Qt::ForegroundRole) {
+  }
+  if (role == Qt::ForegroundRole) {
     if (data_view_->WantsDisplayColor()) {
       unsigned char r, g, b;
       if (data_view_->GetDisplayColor(index.row(), index.column(), r, g, b)) {
         return QColor(r, g, b);
       }
     }
-  } else if (role == Qt::ToolTipRole) {
+  }
+  if (role == Qt::ToolTipRole) {
     std::string tooltip = data_view_->GetToolTip(index.row(), index.column());
     return QString::fromStdString(tooltip);
-  } else if (role == Qt::TextAlignmentRole) {
+  }
+  if (role == Qt::TextAlignmentRole) {
     return static_cast<Qt::Alignment::Int>(text_alignment_);
   }
 

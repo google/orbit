@@ -72,7 +72,8 @@ std::string ThreadTrack::GetName() const {
   auto thread_id = GetThreadId();
   if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
     return "All tracepoint events";
-  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
+  }
+  if (thread_id == orbit_base::kAllProcessThreadsTid) {
     return "All Threads";
   }
   return capture_data_->GetThreadName(thread_id);
@@ -84,7 +85,8 @@ std::string ThreadTrack::GetLabel() const {
   auto name = GetName();
   if (thread_id == orbit_base::kAllThreadsOfAllProcessesTid) {
     return name;
-  } else if (thread_id == orbit_base::kAllProcessThreadsTid) {
+  }
+  if (thread_id == orbit_base::kAllProcessThreadsTid) {
     std::string process_name = capture_data_->process_name();
     return process_name.append(kAllThreads);
   }
@@ -96,7 +98,8 @@ int ThreadTrack::GetNumberOfPrioritizedTrailingCharacters() const {
   auto thread_id = GetThreadId();
   if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     return 0;
-  } else if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
+  }
+  if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
     // Example: proc... all_threads)
     return kAllThreads.size() - 1;
   }

@@ -289,10 +289,9 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryLimitInBytes(
   if (absl::SimpleAtoi(memory_limit_in_bytes_content, &memory_limit_in_bytes)) {
     cgroup_memory_usage->set_limit_bytes(memory_limit_in_bytes);
     return outcome::success();
-  } else {
-    return ErrorMessage(
-        absl::StrFormat("Fail to extract limit value from: %s", memory_limit_in_bytes_content));
   }
+  return ErrorMessage(
+      absl::StrFormat("Fail to extract limit value from: %s", memory_limit_in_bytes_content));
 }
 
 ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memory_stat_content,

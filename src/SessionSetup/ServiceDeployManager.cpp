@@ -215,10 +215,9 @@ ErrorMessageOr<bool> ServiceDeployManager::CheckIfInstalled() {
     // Already installed
     emit statusMessage("The correct version of OrbitService is already installed.");
     return outcome::success(true);
-  } else {
-    emit statusMessage("The correct version of OrbitService is not yet installed.");
-    return outcome::success(false);
   }
+  emit statusMessage("The correct version of OrbitService is not yet installed.");
+  return outcome::success(false);
 }
 
 ErrorMessageOr<uint16_t> ServiceDeployManager::StartTunnel(

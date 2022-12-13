@@ -103,9 +103,8 @@ std::string CallstackDataView::GetToolTip(int row, int column) {
     return absl::StrFormat(
         "%s\n\nFunctions marked with %s are part of the selection in the sampling report above",
         function_name, CallstackDataView::kHighlightedFunctionString);
-  } else {
-    return function_name;
   }
+  return function_name;
 }
 
 const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
