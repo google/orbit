@@ -2,12 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/algorithm/container.h>
 #include <gtest/gtest.h>
 
 #include <QSignalSpy>
-#include <QTest>
-#include <numeric>
+#include <memory>
 
 #include "OrbitSshQt/SftpChannel.h"
 #include "SshTestFixture.h"

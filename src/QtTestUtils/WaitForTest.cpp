@@ -2,14 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
 #include <QMetaObject>
+#include <Qt>
 #include <chrono>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/VoidToMonostate.h"
 #include "QtTestUtils/WaitFor.h"
 
 namespace orbit_qt_test_utils {

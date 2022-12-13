@@ -18,7 +18,6 @@
 #include "DataViews/DataView.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
-#include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 

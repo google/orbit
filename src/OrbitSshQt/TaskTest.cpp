@@ -4,10 +4,15 @@
 
 #include <absl/algorithm/container.h>
 #include <gtest/gtest.h>
+#include <stddef.h>
 
+#include <QList>
 #include <QSignalSpy>
 #include <QTest>
-#include <numeric>
+#include <QVariant>
+#include <QtCore>
+#include <string>
+#include <string_view>
 
 #include "OrbitSshQt/Task.h"
 #include "SshTestFixture.h"

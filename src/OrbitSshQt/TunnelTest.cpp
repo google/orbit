@@ -2,20 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/algorithm/container.h>
 #include <absl/strings/match.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <QByteArray>
+#include <QList>
+#include <QMetaType>
+#include <QObject>
 #include <QSignalSpy>
 #include <QTcpSocket>
 #include <QTest>
-#include <chrono>
-#include <numeric>
+#include <QVariant>
+#include <optional>
+#include <string>
 #include <string_view>
-#include <thread>
+#include <system_error>
 
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Task.h"

@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <utility>
