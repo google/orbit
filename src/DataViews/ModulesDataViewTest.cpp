@@ -117,7 +117,7 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
   AddModulesByIndices({0});
 
   EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
-      .WillOnce(testing::Return(SymbolLoadingState::kUnknown));
+      .WillOnce(testing::Return(SymbolLoadingState(SymbolLoadingState::kUnknown)));
 
   EXPECT_EQ(view_.GetValue(0, kColumnName), kNames[0]);
   EXPECT_EQ(view_.GetValue(0, kColumnPath), kFilePaths[0]);
@@ -177,7 +177,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
-        .WillOnce(testing::Return(SymbolLoadingState::kLoaded));
+        .WillOnce(testing::Return(SymbolLoadingState(SymbolLoadingState::kLoaded)));
     std::string expected_clipboard = absl::StrFormat(
         "Symbols\tName\tPath\tAddress Range\tFile Size\n"
         "Loaded\t%s\t%s\t%s\t%s\n",
@@ -189,7 +189,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
-        .WillOnce(testing::Return(SymbolLoadingState::kLoaded));
+        .WillOnce(testing::Return(SymbolLoadingState(SymbolLoadingState::kLoaded)));
     std::string expected_contents =
         absl::StrFormat(R"("Symbols","Name","Path","Address Range","File Size")"
                         "\r\n"
@@ -329,12 +329,13 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
     return view_.GetValue(0, kColumnSymbols);
   };
 
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kUnknown), "");
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kDisabled), "Disabled");
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kDownloading), "Downloading...");
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kError), "Error");
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kLoading), "Loading...");
-  EXPECT_EQ(get_content_for(SymbolLoadingState::kLoaded), "Loaded");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kUnknown)), "");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kDisabled)), "Disabled");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kDownloading)),
+            "Downloading...");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kError)), "Error");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kLoading)), "Loading...");
+  EXPECT_EQ(get_content_for(SymbolLoadingState(SymbolLoadingState::kLoaded)), "Loaded");
 }
 
 TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
@@ -361,12 +362,12 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
     EXPECT_EQ(blue, view_blue);
   };
 
-  check_color_correct_for(SymbolLoadingState::kUnknown);
-  check_color_correct_for(SymbolLoadingState::kDisabled);
-  check_color_correct_for(SymbolLoadingState::kDownloading);
-  check_color_correct_for(SymbolLoadingState::kError);
-  check_color_correct_for(SymbolLoadingState::kLoading);
-  check_color_correct_for(SymbolLoadingState::kLoaded);
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kUnknown));
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kDisabled));
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kDownloading));
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kError));
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kLoading));
+  check_color_correct_for(SymbolLoadingState(SymbolLoadingState::kLoaded));
 }
 
 }  // namespace orbit_data_views

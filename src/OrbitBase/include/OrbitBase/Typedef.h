@@ -70,10 +70,12 @@ class Typedef {
   constexpr Typedef(Typedef&& other) = default;
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
-  constexpr explicit Typedef(const Typedef<Tag_, U>& other) : value_(*other) {}
+  constexpr Typedef(const Typedef<Tag_, U>& other)  // NOLINT(google-explicit-constructor)
+      : value_(*other) {}
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
-  constexpr explicit Typedef(Typedef<Tag_, U>&& other) : value_(std::move(*other)) {}
+  constexpr Typedef(Typedef<Tag_, U>&& other)  // NOLINT(google-explicit-constructor)
+      : value_(std::move(*other)) {}
 
   template <typename U, typename = orbit_base_internal::EnableIfUNotConvertibleToT<T, U>,
             typename = void>
