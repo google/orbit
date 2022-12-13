@@ -105,7 +105,8 @@ std::optional<TargetConfiguration> SessionSetupDialog::Exec() {
     std::optional<ProcessInfo> process_info_opt = ui_->processListWidget->GetSelectedProcess();
     return LocalTarget(ui_->localProfilingWidget->TakeConnection(),
                        std::make_unique<orbit_client_data::ProcessData>(process_info_opt.value()));
-  } else if (state_machine_.configuration().contains(&state_file_)) {
+  }
+  if (state_machine_.configuration().contains(&state_file_)) {
     return FileTarget(selected_file_path_);
   } else {
     ORBIT_UNREACHABLE();

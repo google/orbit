@@ -191,7 +191,8 @@ outcome::result<void> Tunnel::readFromChannel() {
 
     if (!result && !orbit_ssh::ShouldITryAgain(result)) {
       return outcome::failure(result.error());
-    } else if (!result) {
+    }
+    if (!result) {
       // That's the EAGAIN case
       HandleEagain();
       break;
@@ -257,7 +258,8 @@ void Tunnel::HandleIncomingDataLocalSocket() {
   if (!result && !orbit_ssh::ShouldITryAgain(result)) {
     SetError(result.error());
     return;
-  } else if (!result) {
+  }
+  if (!result) {
     HandleEagain();
   }
 }

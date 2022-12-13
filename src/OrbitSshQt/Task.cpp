@@ -76,7 +76,8 @@ outcome::result<void> Task::run() {
           emit readyReadStdOut();
         }
         return result.error();
-      } else if (!result) {
+      }
+      if (!result) {
         if (added_new_data_to_read_buffer) {
           emit readyReadStdOut();
         }
@@ -105,7 +106,8 @@ outcome::result<void> Task::run() {
           emit readyReadStdErr();
         }
         return result.error();
-      } else if (!result) {
+      }
+      if (!result) {
         if (added_new_data_to_read_buffer) {
           emit readyReadStdErr();
         }

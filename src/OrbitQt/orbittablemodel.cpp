@@ -57,7 +57,8 @@ QVariant OrbitTableModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole) {
     std::string value = data_view_->GetValue(index.row(), index.column());
     return QVariant(QString::fromStdString(value));
-  } else if (role == Qt::ForegroundRole) {
+  }
+  if (role == Qt::ForegroundRole) {
     if (data_view_->WantsDisplayColor()) {
       unsigned char r, g, b;
       if (data_view_->GetDisplayColor(index.row(), index.column(), r, g, b)) {

@@ -138,14 +138,13 @@ std::string TracepointThreadBar::GetTracepointTooltip(PrimitiveAssembler& primit
         tracepoint_info->category(), tracepoint_info->name(), tracepoint_event_info->cpu(),
         capture_data_->GetThreadName(tracepoint_event_info->pid()), tracepoint_event_info->pid(),
         capture_data_->GetThreadName(tracepoint_event_info->tid()), tracepoint_event_info->tid());
-  } else {
-    return absl::StrFormat(
-        "<b>%s : %s</b><br/>"
-        "<i>Tracepoint event</i><br/>"
-        "<br/>"
-        "<b>Core:</b> %d<br/>",
-        tracepoint_info->category(), tracepoint_info->name(), tracepoint_event_info->cpu());
   }
+  return absl::StrFormat(
+      "<b>%s : %s</b><br/>"
+      "<i>Tracepoint event</i><br/>"
+      "<br/>"
+      "<b>Core:</b> %d<br/>",
+      tracepoint_info->category(), tracepoint_info->name(), tracepoint_event_info->cpu());
 }
 
 bool TracepointThreadBar::IsEmpty() const {
