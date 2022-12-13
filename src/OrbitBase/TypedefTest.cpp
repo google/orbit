@@ -163,7 +163,7 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
 
   {
     MyType<A> wrapped_a(A{kValue});
-    MyType<D> wrapped_c(wrapped_a);
+    MyType<D> wrapped_c(std::move(wrapped_a));
     EXPECT_EQ(wrapped_c->value, kValue);
   }
 }
@@ -255,7 +255,7 @@ TEST(TypedefTest, CallIsCorrect) {
 
     MyType<int> first(kFirst);
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = LiftAndApply(add, first, second);
+    const MyType<int> sum_wrapped = LiftAndApply(add, std::move(first), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -263,7 +263,7 @@ TEST(TypedefTest, CallIsCorrect) {
     auto add = [](const int& i, int&& j) { return i + j; };
 
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = LiftAndApply(add, first_wrapped, second);
+    const MyType<int> sum_wrapped = LiftAndApply(add, std::move(first_wrapped), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
