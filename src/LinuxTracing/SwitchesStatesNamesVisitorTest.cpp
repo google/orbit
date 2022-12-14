@@ -272,7 +272,7 @@ ThreadName MakeThreadName(uint32_t pid, uint32_t tid, std::string name, uint64_t
   ThreadName thread_name;
   thread_name.set_pid(pid);
   thread_name.set_tid(tid);
-  thread_name.set_name(name);
+  thread_name.set_name(std::move(name));
   thread_name.set_timestamp_ns(timestamp_ns);
   return thread_name;
 }

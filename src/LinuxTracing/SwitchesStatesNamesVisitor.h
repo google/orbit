@@ -51,7 +51,7 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void SetProduceSchedulingSlices(bool produce_scheduling_slices) {
     produce_scheduling_slices_ = produce_scheduling_slices;
   }
-  void SetThreadStatePidFilters(std::set<pid_t> pids) {
+  void SetThreadStatePidFilters(absl::Span<pid_t> pids) {
     thread_state_pid_filters_ = {pids.begin(), pids.end()};
   }
 
