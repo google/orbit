@@ -89,10 +89,10 @@ class AnyMovable {
   [[nodiscard]] const std::type_info& type() const { return *type_info_; }
 
   template <typename T>
-  friend T* any_movable_cast(AnyMovable* /*movable*/);
+  friend T* any_movable_cast(AnyMovable* /*unused*/);
 
   template <typename T>
-  friend const T* any_movable_cast(const AnyMovable* /*movable*/);
+  friend const T* any_movable_cast(const AnyMovable* /*unused*/);
 };
 
 // This is deviating from Google's naming style to be in line with `static_cast` and others.

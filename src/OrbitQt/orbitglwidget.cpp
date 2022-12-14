@@ -38,7 +38,7 @@ OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   });
 }
 
-bool OrbitGLWidget::eventFilter(QObject* /*object*/, QEvent* event) {
+bool OrbitGLWidget::eventFilter(QObject* /*unused*/, QEvent* event) {
   if (event->type() == QEvent::Paint) {
     if (gl_canvas_) {
       gl_canvas_->PreRender();
@@ -148,9 +148,9 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
-void OrbitGLWidget::enterEvent(QEvent* /*event*/) { gl_canvas_->SetIsMouseOver(true); }
+void OrbitGLWidget::enterEvent(QEvent* /*unused*/) { gl_canvas_->SetIsMouseOver(true); }
 
-void OrbitGLWidget::leaveEvent(QEvent* /*event*/) { gl_canvas_->SetIsMouseOver(false); }
+void OrbitGLWidget::leaveEvent(QEvent* /*unused*/) { gl_canvas_->SetIsMouseOver(false); }
 
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (gl_canvas_) {

@@ -40,7 +40,7 @@ TEST(DeviceManager, DevicePropertiesCannotBeQueriedForUntrackedDevices) {
 
 VkPhysicalDeviceProperties physical_device_properties = {
     .apiVersion = 1, .driverVersion = 2, .limits = {.timestampPeriod = 3.14f}};
-static void MockGetPhysicalDeviceProperties(VkPhysicalDevice /*physical_device*/,
+static void MockGetPhysicalDeviceProperties(VkPhysicalDevice /*unused*/,
                                             VkPhysicalDeviceProperties* out_properties) {
   *out_properties = physical_device_properties;
 }
