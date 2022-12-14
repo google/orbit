@@ -121,10 +121,10 @@ static ErrorMessageOr<std::filesystem::path> SearchSymbolsPathInOrbitSearchPaths
     const orbit_symbols::SymbolHelper& symbol_helper,
     const orbit_client_data::ModuleData& module_data) {
   // These are the constants used by Orbit Client. This way we read its configs.
-  static const QString orbit_organization = QStringLiteral("The Orbit Authors");
-  static const QString orbit_app_name = QStringLiteral("orbitprofiler");
-  orbit_client_symbols::QSettingsBasedStorageManager storage_manager(orbit_organization,
-                                                                     orbit_app_name);
+  static const QString kOrbitOrganization = QStringLiteral("The Orbit Authors");
+  static const QString kOrbitAppName = QStringLiteral("orbitprofiler");
+  orbit_client_symbols::QSettingsBasedStorageManager storage_manager(kOrbitOrganization,
+                                                                     kOrbitAppName);
   return symbol_helper.FindSymbolsFileLocally(module_data.file_path(), module_data.build_id(),
                                               module_data.object_file_type(),
                                               storage_manager.LoadPaths());

@@ -508,7 +508,7 @@ void OrbitMainWindow::SetupStatusBarLogButton() {
   capture_log_layout->setContentsMargins(0, 0, 9, 0);
   capture_log_widget->setLayout(capture_log_layout);
 
-  static const QIcon icon = [] {
+  static const QIcon kIcon = [] {
     QIcon icon;
     QPixmap expand_up_pixmap = QPixmap{":/actions/expand_up"};
     QPixmap expand_down_pixmap = QPixmap{":/actions/expand_down"};
@@ -531,7 +531,7 @@ void OrbitMainWindow::SetupStatusBarLogButton() {
   capture_log_button_->setAccessibleName("CaptureLogButton");
   capture_log_button_->setEnabled(false);
   capture_log_button_->setCheckable(true);
-  capture_log_button_->setIcon(icon);
+  capture_log_button_->setIcon(kIcon);
   capture_log_button_->setStyleSheet(
       "padding-left: 11; padding-right: 11; padding-top: 2; padding-bottom: 2;");
   capture_log_layout->addWidget(capture_log_button_);

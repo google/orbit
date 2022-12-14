@@ -339,8 +339,8 @@ void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_a
       });
     }
 
-    static const Color incomplete_data_interval_orange{255, 128, 0, 32};
-    primitive_assembler.AddBox(MakeBox(pos, size), z_value, incomplete_data_interval_orange,
+    static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
+    primitive_assembler.AddBox(MakeBox(pos, size), z_value, kIncompleteDataIntervalOrange,
                                std::move(user_data));
   }
 }

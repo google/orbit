@@ -67,7 +67,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(LiveFunctionsInterface* live_functi
 }
 
 const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> kColumns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnType] = {"Type", .0f, SortingOrder::kDescending};
@@ -82,7 +82,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     columns[kColumnAddress] = {"Address", .1f, SortingOrder::kAscending};
     return columns;
   }();
-  return columns;
+  return kColumns;
 }
 
 [[nodiscard]] static std::string BuildTypePartOfTypeColumnString(

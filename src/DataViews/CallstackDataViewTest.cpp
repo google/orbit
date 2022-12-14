@@ -328,8 +328,8 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       0x5250,  //                                module 3 (loaded)        nullptr
       0x2200,  //                                module 4 (not loaded)    nullptr
   };
-  const std::vector<bool> kFrameModuleNotNull{true, true, false, true, true};
-  const std::vector<bool> frame_function_not_null{true, true, false, false, false};
+  static const std::vector<bool> kFrameModuleNotNull{true, true, false, true, true};
+  static const std::vector<bool> kFrameFunctionNotNull{true, true, false, false, false};
 
   bool capture_connected = false;
   std::vector<bool> functions_selected{true, false, true, true, false};
@@ -364,7 +364,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     ContextMenuEntry select = ContextMenuEntry::kDisabled;
     ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     for (int selected_index : selected_indices) {
-      if (frame_function_not_null[selected_index] && capture_connected) {
+      if (kFrameFunctionNotNull[selected_index] && capture_connected) {
         // Source code and disassembly actions are available if and only if: 1) capture is connected
         // and 2) there exists a function that is not null.
         source_code_or_disassembly = ContextMenuEntry::kEnabled;

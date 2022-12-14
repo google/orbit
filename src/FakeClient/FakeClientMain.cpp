@@ -421,27 +421,27 @@ int main(int argc, char* argv[]) {
     // Instrument vkQueuePresentKHR, if possible.
     // Some application don't call libVulkan library directly; instead, they just query the
     // function addresses and use those. So let's just instrument the `ggpvlk QueuePresentKHR`
-    static const std::string ggpvlk_module_name = "ggpvlk.so";
-    static const std::string queue_present_function_name{
+    static const std::string kGgpvlkModuleName = "ggpvlk.so";
+    static const std::string kQueuePresentFunctionName{
         "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, "
         "VkPresentInfoKHR const*)"};
 
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
-      if (module.soname() == ggpvlk_module_name) {
+      if (module.soname() == kGgpvlkModuleName) {
         libvulkan_file_path = module.file_path();
         break;
       }
     }
     if (!libvulkan_file_path.empty()) {
-      ORBIT_LOG("%s found: instrumenting %s", ggpvlk_module_name, queue_present_function_name);
+      ORBIT_LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
       ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
           &module_manager, &options.selected_functions, libvulkan_file_path,
-          queue_present_function_name,
+          kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
-      ORBIT_LOG("%s instrumented", queue_present_function_name);
+      ORBIT_LOG("%s instrumented", kQueuePresentFunctionName);
     } else {
-      ORBIT_LOG("%s not found", ggpvlk_module_name);
+      ORBIT_LOG("%s not found", kGgpvlkModuleName);
     }
   }
 

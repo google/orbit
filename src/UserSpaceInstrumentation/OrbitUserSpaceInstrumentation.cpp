@@ -169,10 +169,10 @@ bool& GetIsInPayload() {
   }
   is_in_payload = true;
 
-  thread_local const pid_t tid = orbit_base::GetCurrentThreadIdNative();
+  thread_local const pid_t kTid = orbit_base::GetCurrentThreadIdNative();
 
-  if (tid == orbit_threads[0] || tid == orbit_threads[1] || tid == orbit_threads[2] ||
-      tid == orbit_threads[3] || tid == orbit_threads[4] || tid == orbit_threads[5]) {
+  if (kTid == orbit_threads[0] || kTid == orbit_threads[1] || kTid == orbit_threads[2] ||
+      kTid == orbit_threads[3] || kTid == orbit_threads[4] || kTid == orbit_threads[5]) {
     is_in_payload = false;
     return;
   }
@@ -183,9 +183,9 @@ bool& GetIsInPayload() {
   open_function_call_stack.emplace(return_address, timestamp_on_entry_ns);
 
   if (GetCaptureEventProducer().IsCapturing()) {
-    static const uint32_t pid = orbit_base::GetCurrentProcessId();
+    static const uint32_t kPid = orbit_base::GetCurrentProcessId();
     GetCaptureEventProducer().EnqueueIntermediateEvent(
-        FunctionEntry{pid, orbit_base::FromNativeThreadId(tid), function_id, stack_pointer,
+        FunctionEntry{kPid, orbit_base::FromNativeThreadId(kTid), function_id, stack_pointer,
                       return_address, timestamp_on_entry_ns});
   }
 

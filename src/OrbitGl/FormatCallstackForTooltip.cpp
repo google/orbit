@@ -39,16 +39,15 @@ struct UnformattedModuleAndFunctionName {
     const orbit_client_data::CaptureData& capture_data,
     const orbit_client_data::ModuleManager& module_manager) {
   if (frame_index >= callstack.frames().size()) {
-    static const UnformattedModuleAndFunctionName frame_index_too_large_module_and_function_name =
-        [] {
-          UnformattedModuleAndFunctionName module_and_function_name;
-          module_and_function_name.module_name = orbit_client_data::kUnknownFunctionOrModuleName;
-          module_and_function_name.module_is_unknown = true;
-          module_and_function_name.function_name = orbit_client_data::kUnknownFunctionOrModuleName;
-          module_and_function_name.function_is_unknown = true;
-          return module_and_function_name;
-        }();
-    return frame_index_too_large_module_and_function_name;
+    static const UnformattedModuleAndFunctionName kFrameIndexTooLargeModuleAndFunctionName = [] {
+      UnformattedModuleAndFunctionName module_and_function_name;
+      module_and_function_name.module_name = orbit_client_data::kUnknownFunctionOrModuleName;
+      module_and_function_name.module_is_unknown = true;
+      module_and_function_name.function_name = orbit_client_data::kUnknownFunctionOrModuleName;
+      module_and_function_name.function_is_unknown = true;
+      return module_and_function_name;
+    }();
+    return kFrameIndexTooLargeModuleAndFunctionName;
   }
 
   const uint64_t address = callstack.frames()[frame_index];
@@ -136,15 +135,15 @@ std::string FormatCallstackForTooltip(const orbit_client_data::CallstackInfo& ca
       continue;
     }
 
-    static const std::string module_function_separator{" | "};
+    static const std::string kModuleFunctionSeparator{" | "};
     const UnformattedModuleAndFunctionName module_and_function_name =
         SafeGetModuleAndFunctionName(callstack, frame_index, capture_data, module_manager);
     const std::string formatted_module_name = FormatModuleName(module_and_function_name);
     const std::string formatted_function_name = FormatFunctionName(
         module_and_function_name, max_line_length - module_and_function_name.module_name.size() -
-                                      module_function_separator.size());
+                                      kModuleFunctionSeparator.size());
     const std::string formatted_module_and_function_name =
-        absl::StrCat(formatted_module_name, module_function_separator, formatted_function_name);
+        absl::StrCat(formatted_module_name, kModuleFunctionSeparator, formatted_function_name);
     // The first frame is always correct.
     if (callstack.IsUnwindingError() && frame_index > 0) {
       result += absl::StrFormat("<span style=\"color:%s;\">%s</span><br/>", kUnwindErrorColorString,

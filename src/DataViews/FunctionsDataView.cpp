@@ -42,7 +42,7 @@ const std::string FunctionsDataView::kApiScopeAsyncTypeString = "MA";
 const std::string FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString = "D";
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> kColumns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
@@ -52,7 +52,7 @@ const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
     columns[kColumnAddressInModule] = {"Address in module", .0f, SortingOrder::kAscending};
     return columns;
   }();
-  return columns;
+  return kColumns;
 }
 
 bool FunctionsDataView::ShouldShowSelectedFunctionIcon(AppInterface* app,

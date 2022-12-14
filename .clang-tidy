@@ -48,6 +48,10 @@ CheckOptions:
     value:           'CamelCase'
   - key:             readability-identifier-naming.ConstexprVariablePrefix
     value:           'k'
+  - key:             readability-identifier-naming.StaticConstantCase
+    value:           'CamelCase'
+  - key:             readability-identifier-naming.StaticConstantPrefix
+    value:           'k'
   - key:             readability-identifier-naming.EnumCase
     value:           'CamelCase'
   - key:             readability-identifier-naming.EnumConstantCase

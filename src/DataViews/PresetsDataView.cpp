@@ -101,7 +101,7 @@ std::string PresetsDataView::GetModuleAndFunctionCountList(absl::Span<const Modu
 }
 
 const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> kColumns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnLoadState] = {kLoadableColumnName, kLoadableColumnWidth,
@@ -114,7 +114,7 @@ const std::vector<DataView::Column>& PresetsDataView::GetColumns() {
                                     SortingOrder::kDescending};
     return columns;
   }();
-  return columns;
+  return kColumns;
 }
 
 std::string PresetsDataView::GetValue(int row, int column) {
