@@ -61,8 +61,7 @@ std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetAll
 
   uint64_t first_tick = ((start_ns + minor_scale - 1) / minor_scale) * minor_scale;
   for (uint64_t tick = first_tick; tick <= end_ns; tick += minor_scale) {
-    ticks.push_back(std::make_pair(
-        tick % major_scale == 0 ? TickType::kMajorTick : TickType::kMinorTick, tick));
+    ticks.emplace_back(tick % major_scale == 0 ? TickType::kMajorTick : TickType::kMinorTick, tick);
   }
   return ticks;
 }
