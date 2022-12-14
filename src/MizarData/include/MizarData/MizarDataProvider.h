@@ -30,7 +30,7 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
   MizarDataProvider(MizarDataProvider&&) = default;
   MizarDataProvider& operator=(MizarDataProvider&& other) = default;
 
-  virtual ~MizarDataProvider() = default;
+  ~MizarDataProvider() override = default;
 
   [[nodiscard]] virtual const absl::flat_hash_map<orbit_grpc_protos::PresentEvent::Source,
                                                   std::vector<orbit_grpc_protos::PresentEvent>>&

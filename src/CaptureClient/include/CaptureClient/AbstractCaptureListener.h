@@ -25,7 +25,7 @@ class AbstractCaptureListener : public CaptureListener {
   AbstractCaptureListener(AbstractCaptureListener&&) = default;
   AbstractCaptureListener& operator=(AbstractCaptureListener&& other) = default;
 
-  virtual ~AbstractCaptureListener() = default;
+  ~AbstractCaptureListener() override = default;
 
   void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override {
     GetMutableCaptureDataFromDerived().InsertAddressInfo(std::move(address_info));

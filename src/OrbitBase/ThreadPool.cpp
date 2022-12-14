@@ -34,7 +34,7 @@ class ThreadPoolImpl : public ThreadPool {
   explicit ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
                           absl::Duration thread_ttl,
                           std::function<void(const std::unique_ptr<Action>&)> run_action);
-  ~ThreadPoolImpl() {
+  ~ThreadPoolImpl() override {
     ShutdownInternal();
     WaitInternal();
   }

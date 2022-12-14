@@ -34,7 +34,7 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
 
  public:
   AppInterface() = default;
-  virtual ~AppInterface() = default;
+  ~AppInterface() override = default;
 
   // Functions needed by DataView
   virtual void SetClipboard(std::string_view contents) = 0;

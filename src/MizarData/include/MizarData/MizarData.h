@@ -60,7 +60,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   MizarData(MizarData&& other) = default;
   MizarData& operator=(MizarData&& other) = delete;
 
-  virtual ~MizarData() = default;
+  ~MizarData() override = default;
 
   [[nodiscard]] const absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>>&
   source_to_present_events() const override {

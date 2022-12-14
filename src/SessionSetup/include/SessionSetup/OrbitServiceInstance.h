@@ -20,7 +20,7 @@ class OrbitServiceInstance : public QObject {
   Q_OBJECT;
 
  public:
-  virtual ~OrbitServiceInstance() = default;
+  ~OrbitServiceInstance() override = default;
   [[nodiscard]] virtual bool IsRunning() const = 0;
   // Sends EOF to OrbitService and blocks until OrbitService ended.
   [[nodiscard]] virtual ErrorMessageOr<void> Shutdown() = 0;

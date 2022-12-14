@@ -122,7 +122,7 @@ class AccessibilityAdapter : public QAccessibleInterface {
   [[nodiscard]] QRect rect() const override;
   [[nodiscard]] QAccessible::Role role() const override;
 
-  [[nodiscard]] virtual QAccessible::State state() const override {
+  [[nodiscard]] QAccessible::State state() const override {
     static_assert(sizeof(QAccessible::State) == sizeof(orbit_accessibility::AccessibilityState));
     return absl::bit_cast<QAccessible::State>(info_->AccessibleState());
   }

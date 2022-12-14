@@ -26,16 +26,16 @@
 namespace orbit_gl {
 
 class CaptureClientAppInterfaceFake : public orbit_capture_client::CaptureControlInterface {
-  [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const {
+  [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const override {
     return orbit_capture_client::CaptureClient::State::kStopped;
   }
 
-  [[nodiscard]] bool IsCapturing() const { return false; }
+  [[nodiscard]] bool IsCapturing() const override { return false; }
 
-  void StartCapture() {}
-  void StopCapture() {}
-  void AbortCapture() {}
-  void ToggleCapture() {}
+  void StartCapture() override {}
+  void StopCapture() override {}
+  void AbortCapture() override {}
+  void ToggleCapture() override {}
 };
 
 constexpr int kBottomSafetyMargin = 5;
