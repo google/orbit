@@ -64,13 +64,7 @@ bool SwitchesStatesNamesVisitor::TidMatchesPidFilter(pid_t tid) {
     return false;
   }
 
-  for (const pid_t thread_state_pid_filter : thread_state_pid_filters_) {
-    if (tid_to_pid_it->second == thread_state_pid_filter) {
-      return true;
-    }
-  }
-
-  return false;
+  return thread_state_pid_filters_.contains(tid_to_pid_it->second);
 }
 
 std::optional<pid_t> SwitchesStatesNamesVisitor::GetPidOfTid(pid_t tid) {
