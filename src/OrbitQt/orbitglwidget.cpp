@@ -148,9 +148,9 @@ void OrbitGLWidget::mouseMoveEvent(QMouseEvent* event) {
   update();
 }
 
-void OrbitGLWidget::enterEvent(QEvent*) { gl_canvas_->SetIsMouseOver(true); }
+void OrbitGLWidget::enterEvent(QEvent* /*event*/) { gl_canvas_->SetIsMouseOver(true); }
 
-void OrbitGLWidget::leaveEvent(QEvent*) { gl_canvas_->SetIsMouseOver(false); }
+void OrbitGLWidget::leaveEvent(QEvent* /*event*/) { gl_canvas_->SetIsMouseOver(false); }
 
 void OrbitGLWidget::keyPressEvent(QKeyEvent* event) {
   if (gl_canvas_) {

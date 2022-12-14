@@ -49,7 +49,7 @@ class AnyMovable {
     using Base::Base;
 
     template <typename... Args>
-    constexpr explicit Storage(std::in_place_t, Args&&... args)
+    constexpr explicit Storage(std::in_place_t /*unused*/, Args&&... args)
         : value_{std::forward<Args>(args)...} {}
 
     constexpr explicit Storage(const T& value) : value_(value) {}
@@ -70,7 +70,7 @@ class AnyMovable {
         type_info_{&typeid(value)} {}
 
   template <typename T, typename... Args>
-  explicit AnyMovable(std::in_place_type_t<T>, Args&&... args)
+  explicit AnyMovable(std::in_place_type_t<T> /*unused*/, Args&&... args)
       : storage_{std::make_unique<Storage<std::decay_t<T>>>(std::in_place,
                                                             std::forward<Args>(args)...)},
         type_info_{&typeid(std::decay_t<T>)} {}
@@ -89,10 +89,10 @@ class AnyMovable {
   [[nodiscard]] const std::type_info& type() const { return *type_info_; }
 
   template <typename T>
-  friend T* any_movable_cast(AnyMovable*);
+  friend T* any_movable_cast(AnyMovable* /*movable*/);
 
   template <typename T>
-  friend const T* any_movable_cast(const AnyMovable*);
+  friend const T* any_movable_cast(const AnyMovable* /*movable*/);
 };
 
 // This is deviating from Google's naming style to be in line with `static_cast` and others.

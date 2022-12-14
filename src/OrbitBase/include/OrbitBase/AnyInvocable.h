@@ -46,7 +46,7 @@ class AnyInvocable<R(Args...)> {
     using Base::Base;
 
     template <typename... Urgs>
-    constexpr explicit Storage(std::in_place_t, Urgs... args)
+    constexpr explicit Storage(std::in_place_t /*unused*/, Urgs... args)
         : value_{std::forward<Urgs>(args)...} {}
 
     constexpr explicit Storage(const T& value) : value_(value) {}

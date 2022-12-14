@@ -39,8 +39,8 @@ struct WhenAllTest<void> : testing::Test {
   using ValueType = void;
   using FutureValueType = void;
 
-  static void FinishPromise(Promise<void>* promise, int) { promise->MarkFinished(); }
-  static void VerifyResult(Future<void>*, size_t) {
+  static void FinishPromise(Promise<void>* promise, int /*unused*/) { promise->MarkFinished(); }
+  static void VerifyResult(Future<void>* /*unused*/, size_t /*unused*/) {
     // Nothing to verify when the result type is void
   }
 };
