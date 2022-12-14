@@ -28,6 +28,7 @@
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
 #include "QtTestUtils/WaitFor.h"
+#include "SshQtTestUtils/ParsePortNumberFromSocatOutput.h"
 #include "SshQtTestUtils/SshTestFixture.h"
 #include "TestUtils/TestUtils.h"
 
@@ -61,26 +62,17 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
     ASSERT_THAT(orbit_qt_test_utils::WaitFor(task_->Start()),
                 orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
 
-    ASSERT_TRUE(QTest::qWaitFor([&socat_output]() {
-      // We need to make sure the first line was printed fully to ensure we can parse the port
-      // number in the next step.
-      return absl::StrContains(socat_output, "listening on AF=2 0.0.0.0:") &&
-             absl::StrContains(socat_output, '\n');
-    })) << "Socat didn't start in time. The debug output was: "
-        << socat_output;
+    std::optional<ErrorMessageOr<int>> port_or_error{};
+    std::ignore = QTest::qWaitFor([&socat_output, &port_or_error]() {
+      port_or_error = orbit_ssh_qt_test_utils::ParsePortNumberFromSocatOutput(socat_output);
+      return port_or_error.has_value();
+    });
+    ASSERT_TRUE(port_or_error.has_value()) << "Parsing port number from socat output timed out.";
+    ASSERT_THAT(*port_or_error, HasNoError())
+        << "Error occurred while parsing the port number from the socat output: "
+        << port_or_error->error().message();
 
-    auto lines = absl::StrSplit(socat_output, '\n');
-    ASSERT_NE(lines.begin(), lines.end());
-    std::string_view first_line = *lines.begin();
-
-    constexpr std::string_view kIpAddress{"0.0.0.0:"};
-    auto ip_location = first_line.find(kIpAddress);
-    ASSERT_NE(ip_location, std::string_view::npos)
-        << "Couldn't find the IP address in the first line: " << first_line;
-
-    std::string_view port_as_string = first_line.substr(ip_location + kIpAddress.size());
-    ASSERT_TRUE(absl::SimpleAtoi(port_as_string, &port_))
-        << "Couldn't parse port number. Input was: " << port_as_string;
+    port_ = port_or_error->value();
   }
 
   void TearDown() override {

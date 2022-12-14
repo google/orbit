@@ -5,15 +5,25 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(SshQtTestUtils)
-add_library(SshQtTestUtils INTERFACE)
+add_library(SshQtTestUtils STATIC)
 
-target_include_directories(SshQtTestUtils INTERFACE include/)
-target_link_libraries(SshQtTestUtils INTERFACE
+target_include_directories(SshQtTestUtils PUBLIC include/)
+target_link_libraries(SshQtTestUtils PUBLIC
   OrbitBase
   OrbitSsh
-  OrbitSshQt)
+  OrbitSshQt
+  absl::strings)
+
+target_sources(SshQtTestUtils PRIVATE
+  ParsePortNumberFromSocatOutput.cpp)
 
 target_sources(SshQtTestUtils PUBLIC
+  include/SshQtTestUtils/ParsePortNumberFromSocatOutput.h
   include/SshQtTestUtils/SshSessionTest.h
-  include/SshQtTestUtils/SshTestFixture.h
-  )
+  include/SshQtTestUtils/SshTestFixture.h)
+
+add_executable(SshQtTestUtilsTests
+  ParsePortNumberFromSocatOutputTest.cpp)
+
+target_link_libraries(SshQtTestUtilsTests PRIVATE SshQtTestUtils TestUtils GTest::Main)
+register_test(SshQtTestUtilsTests)
