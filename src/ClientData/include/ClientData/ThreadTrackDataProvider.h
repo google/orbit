@@ -49,8 +49,8 @@ class ThreadTrackDataProvider final {
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint32_t thread_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const {
-    return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick);
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), bool exclusive = false) const {
+    return GetScopeTreeTimerData(thread_id)->GetTimers(min_tick, max_tick, exclusive);
   }
 
   // This method avoids returning two timers that map to the same pixel, so is especially useful

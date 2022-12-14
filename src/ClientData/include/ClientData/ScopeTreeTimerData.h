@@ -41,8 +41,12 @@ class ScopeTreeTimerData final : public TimerDataInterface {
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t start_ns = std::numeric_limits<uint64_t>::min(),
-      uint64_t end_ns = std::numeric_limits<uint64_t>::max()) const override;
+      uint64_t end_ns = std::numeric_limits<uint64_t>::max(),
+      bool exclusive = false) const override;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepth(
+      uint32_t depth, uint64_t start_ns = std::numeric_limits<uint64_t>::min(),
+      uint64_t end_ns = std::numeric_limits<uint64_t>::max()) const;
+  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthExclusive(
       uint32_t depth, uint64_t start_ns = std::numeric_limits<uint64_t>::min(),
       uint64_t end_ns = std::numeric_limits<uint64_t>::max()) const;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimersAtDepthDiscretized(

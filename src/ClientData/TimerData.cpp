@@ -51,7 +51,8 @@ const TimerChain* TimerData::GetChain(uint64_t depth) const {
 }
 
 std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimers(uint64_t min_tick,
-                                                                        uint64_t max_tick) const {
+                                                                        uint64_t max_tick,
+                                                                        bool exclusive) const {
   ORBIT_SCOPE_WITH_COLOR("GetTimersAtDepthDiscretized", kOrbitColorBlueGrey);
   // TODO(b/204173236): use it in TimerTracks.
   absl::MutexLock lock(&mutex_);
@@ -62,7 +63,11 @@ std::vector<const orbit_client_protos::TimerInfo*> TimerData::GetTimers(uint64_t
       if (!block.Intersects(min_tick, max_tick)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
         const orbit_client_protos::TimerInfo* timer = &block[i];
-        if (timer->start() <= max_tick && timer->end() >= min_tick) timers.push_back(timer);
+        if (exclusive) {
+          if (timer->end() <= max_tick && timer->start() >= min_tick) timers.push_back(timer);
+        } else {
+          if (timer->start() <= max_tick && timer->end() >= min_tick) timers.push_back(timer);
+        }
       }
     }
   }

@@ -39,7 +39,8 @@ class TimerData final : public TimerDataInterface {
   // sortedness is not made use of.
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override;
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(),
+      bool exclusive = false) const override;
   // Returns timers in a particular depth avoiding completely overlapped timers that map to the
   // same pixels in the screen. It assures to return at least one timer in each occupied pixel. The
   // overall complexity is faster than GetTimers since it doesn't require going through all timers.
