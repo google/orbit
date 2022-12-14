@@ -230,7 +230,7 @@ TEST_F(CaptureFileTest, CreateCaptureFileWriteAdditionalSectionAndReadMainSectio
 TEST_F(CaptureFileTest, CreateCaptureFileAndAddUserDataSection) {
   EXPECT_EQ(capture_file_->GetSectionList().size(), 0);
 
-  uint64_t buf_size;
+  uint64_t buf_size{};
   {
     ClientCaptureEvent event;
     event.mutable_capture_finished()->set_status(orbit_grpc_protos::CaptureFinished::kFailed);

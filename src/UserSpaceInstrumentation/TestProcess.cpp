@@ -64,7 +64,7 @@ TestProcess::TestProcess() {
 
 TestProcess::~TestProcess() {
   flag_file_run_child_->CloseAndRemove();
-  int status;
+  int status{};
   waitpid(pid_, &status, 0);
   ORBIT_CHECK(WIFEXITED(status));
 }

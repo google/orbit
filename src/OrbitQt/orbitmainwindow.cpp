@@ -596,8 +596,8 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
   QMenu context_menu(this);
   context_menu.setAccessibleName("TabBarContextMenu");
   QAction move_action;
-  QTabWidget* other_widget;
 
+  QTabWidget* other_widget{};
   if (tab_widget == ui->MainTabWidget) {
     move_action.setIcon(icon_keyboard_arrow_right_);
     move_action.setText(QString("Move \"") + tab_widget->tabText(tab_index) + "\" to right pane");

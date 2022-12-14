@@ -174,7 +174,7 @@ class OrbitServiceIntegrationTestFixture {
     ORBIT_LOG("Receiving events");
     while (true) {
       orbit_grpc_protos::CaptureResponse capture_response;
-      bool read_capture_response_result;
+      bool read_capture_response_result{};
       {
         absl::ReaderMutexLock lock{&capture_reader_writer_mutex_};
         read_capture_response_result = capture_reader_writer_->Read(&capture_response);

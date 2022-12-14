@@ -124,8 +124,8 @@ void DumpDisassembly(absl::Span<const uint8_t> code, uint64_t start_address) {
   cs_insn* instruction = nullptr;
   const size_t count = cs_disasm(capstone_handle, static_cast<const uint8_t*>(code.data()),
                                  code.size(), start_address, 0, &instruction);
-  size_t i;
-  for (i = 0; i < count; i++) {
+  size_t i = 0;
+  for (; i < count; i++) {
     std::string machine_code;
     for (int j = 0; j < instruction[i].size; j++) {
       machine_code =

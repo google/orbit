@@ -131,7 +131,7 @@ constexpr uint64_t kBaselineFrameTime = 15'000'000;
 constexpr uint64_t kComparisonFrameTime = 25'000'000;
 
 static double ExpectDoubleAndParse(const QString& str) {
-  bool ok;
+  bool ok{};
   double result = str.toDouble(&ok);
   EXPECT_TRUE(ok);
   return result;

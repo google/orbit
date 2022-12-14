@@ -321,7 +321,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
 
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
-      CallTreeNode* last_node;
+      CallTreeNode* last_node{};
       if (resolved_callstack.type() == CallstackType::kComplete) {
         last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
             bottom_up_view.get(), resolved_callstack, sample_count, module_manager, capture_data);

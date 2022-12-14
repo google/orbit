@@ -249,7 +249,7 @@ bool TracerImpl::OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& func
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
-    int fd;
+    int fd{};
     if (function.record_arguments()) {
       fd = uprobes_retaddr_args_event_open(module, offset, /*pid=*/-1, cpu);
     } else {
@@ -272,7 +272,7 @@ bool TracerImpl::OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& f
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
-    int fd;
+    int fd{};
     if (function.record_return_value()) {
       fd = uretprobes_retval_event_open(module, offset, /*pid=*/-1, cpu);
     } else {
@@ -437,7 +437,7 @@ bool TracerImpl::OpenSampling(absl::Span<const int32_t> cpus) {
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
-    int sampling_fd;
+    int sampling_fd{};
     switch (unwinding_method_) {
       case CaptureOptions::kFramePointers:
         sampling_fd =
@@ -630,7 +630,7 @@ bool TracerImpl::OpenContextSwitchAndThreadStateTracepoints(absl::Span<const int
   }
 
   absl::flat_hash_map<int32_t, int> thread_state_tracepoint_ring_buffer_fds_per_cpu;
-  uint64_t ring_buffer_size;
+  uint64_t ring_buffer_size{};
   if (thread_state_change_callstack_collection_ ==
       CaptureOptions::kThreadStateChangeCallStackCollection) {
     ring_buffer_size = CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_STACKS_RING_BUFFER_SIZE_KB;

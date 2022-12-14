@@ -54,7 +54,7 @@ inline void perf_event_redirect(int from_fd, int to_fd) {
 }
 
 inline uint64_t perf_event_get_id(int file_descriptor) {
-  uint64_t id;
+  uint64_t id{};
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ID, &id);
   if (ret != 0) {
     ORBIT_ERROR("PERF_EVENT_IOC_ID: %s", SafeStrerror(errno));

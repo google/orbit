@@ -8,6 +8,7 @@
 #include <absl/strings/string_view.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <math.h>
 
 #include <algorithm>
 #include <array>
@@ -231,7 +232,7 @@ const auto [kScimitarVariance, kScimitarTimers] = [] {
   const std::string& file_content = file_content_or_error.value();
   const std::vector<std::string_view> tokens = absl::StrSplit(file_content, '\n');
 
-  double expected_variance;
+  double expected_variance{};
   EXPECT_TRUE(absl::SimpleAtod(*tokens.begin(), &expected_variance));
 
   std::vector<TimerInfo> timers;

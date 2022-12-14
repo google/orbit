@@ -40,7 +40,7 @@ std::optional<uint64_t> ExtractRssInPagesFromProcPidStat(std::string_view proc_p
     }
   }
 
-  uint64_t rss_pages;
+  uint64_t rss_pages{};
   if (!absl::SimpleAtoi(rss_string, &rss_pages)) {
     ORBIT_ERROR_ONCE("Parsing rss \"%s\"", rss_string);
     return std::nullopt;

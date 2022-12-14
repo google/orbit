@@ -197,7 +197,7 @@ class VulkanLayerControllerTest : public ::testing::Test {
 // Layer enumeration functions
 // ----------------------------------------------------------------------------
 TEST_F(VulkanLayerControllerTest, CanEnumerateTheLayersInstanceLayerProperties) {
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
   VkResult result = controller_.OnEnumerateInstanceLayerProperties(&actual_property_count, nullptr);
   ASSERT_EQ(result, VK_SUCCESS);
   ASSERT_EQ(actual_property_count, 1);
@@ -228,14 +228,14 @@ TEST_F(VulkanLayerControllerTest, CanEnumerateInstanceExtensionPropertiesForThis
 }
 
 TEST_F(VulkanLayerControllerTest, ErrorOnEnumerateInstanceExtensionPropertiesForDifferentLayer) {
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
   VkResult result = controller_.OnEnumerateInstanceExtensionProperties(
       "some layer name", &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_ERROR_LAYER_NOT_PRESENT);
 }
 
 TEST_F(VulkanLayerControllerTest, ErrorOnEnumerateInstanceExtensionPropertiesOnNullString) {
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
   VkResult result =
       controller_.OnEnumerateInstanceExtensionProperties(nullptr, &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_ERROR_LAYER_NOT_PRESENT);
@@ -243,7 +243,7 @@ TEST_F(VulkanLayerControllerTest, ErrorOnEnumerateInstanceExtensionPropertiesOnN
 
 TEST_F(VulkanLayerControllerTest, CanEnumerateTheLayersExclusiveDeviceExtensionProperties) {
   VkPhysicalDevice physical_device = {};
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, VulkanLayerControllerImpl::kLayerName, &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_SUCCESS);
@@ -275,7 +275,7 @@ TEST_F(VulkanLayerControllerTest, WillForwardCallOnEnumerateOtherLayersDeviceExt
       .Times(2)
       .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
 
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, "other layer", &actual_property_count, nullptr);
@@ -304,7 +304,7 @@ TEST_F(VulkanLayerControllerTest,
       .Times(1)
       .WillRepeatedly(Return(fake_enumerate_device_extension_properties_function));
   VkPhysicalDevice physical_device = {};
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, nullptr, &actual_property_count, nullptr);
   EXPECT_EQ(result, VK_INCOMPLETE);
@@ -316,7 +316,7 @@ TEST_F(VulkanLayerControllerTest,
   EXPECT_CALL(*dispatch_table, EnumerateDeviceExtensionProperties)
       .WillRepeatedly(Return(kFakeEnumerateDeviceExtensionPropertiesFunction));
   VkPhysicalDevice physical_device = {};
-  uint32_t actual_property_count;
+  uint32_t actual_property_count{};
 
   VkResult result = controller_.OnEnumerateDeviceExtensionProperties(
       physical_device, nullptr, &actual_property_count, nullptr);
@@ -358,9 +358,9 @@ TEST_F(VulkanLayerControllerTest,
 // ----------------------------------------------------------------------------
 
 TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateInstanceWithNoInfo) {
-  VkInstance created_instance;
   VkInstanceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
                                    .pNext = nullptr};
+  VkInstance created_instance{};
   VkResult result = controller_.OnCreateInstance(&create_info, nullptr, &created_instance);
   EXPECT_EQ(result, VK_ERROR_INITIALIZATION_FAILED);
 }
@@ -433,7 +433,7 @@ TEST_F(
                                    .enabledExtensionCount = 0,
                                    .ppEnabledExtensionNames = nullptr};
 
-  VkInstance created_instance;
+  VkInstance created_instance{};
   VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
   EXPECT_EQ(result, VK_SUCCESS);
   EXPECT_EQ(layer_create_info.u.pLayerInfo, &layer_link_1);
@@ -513,7 +513,7 @@ TEST_F(
                                    .enabledExtensionCount = 1,
                                    .ppEnabledExtensionNames = requested_extensions.data()};
 
-  VkInstance created_instance;
+  VkInstance created_instance{};
   VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
   EXPECT_EQ(result, VK_SUCCESS);
   ::testing::Mock::VerifyAndClearExpectations(absl::bit_cast<void*>(submission_tracker));
@@ -566,7 +566,7 @@ TEST_F(VulkanLayerControllerTest, WillDumpPidOnCreateInstance) {
                                    .enabledExtensionCount = 0,
                                    .ppEnabledExtensionNames = nullptr};
 
-  VkInstance created_instance;
+  VkInstance created_instance{};
   constexpr const char* kFilename = "pid.txt";
   setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
   VkResult result = controller->OnCreateInstance(&create_info, nullptr, &created_instance);
@@ -619,9 +619,9 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByNonExisten
                                    .enabledExtensionCount = 0,
                                    .ppEnabledExtensionNames = nullptr};
 
-  VkInstance created_instance;
   constexpr const char* kFilename = "i_dont_exists_dir/pid.txt";
   setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
+  VkInstance created_instance{};
   [[maybe_unused]] VkResult result = VK_SUCCESS;
   EXPECT_DEATH(result = controller->OnCreateInstance(&create_info, nullptr, &created_instance),
                "Opening \"i_dont_exists_dir/pid.txt\": Unable to open file "
@@ -668,7 +668,7 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByInvalidFil
                                    .enabledExtensionCount = 0,
                                    .ppEnabledExtensionNames = nullptr};
 
-  VkInstance created_instance;
+  VkInstance created_instance{};
   constexpr const char* kFilename = "tmpdir/";
   setenv("ORBIT_VULKAN_LAYER_PID_FILE", kFilename, /*overwrite*/ 1);
   [[maybe_unused]] VkResult result = VK_SUCCESS;
@@ -677,9 +677,9 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByInvalidFil
 }
 
 TEST_F(VulkanLayerControllerTest, InitializationFailsOnCreateDeviceWithNoInfo) {
-  VkDevice created_device;
   VkPhysicalDevice physical_device = {};
   VkDeviceCreateInfo create_info{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO, .pNext = nullptr};
+  VkDevice created_device{};
   VkResult result =
       controller_.OnCreateDevice(physical_device, &create_info, nullptr, &created_device);
   EXPECT_EQ(result, VK_ERROR_INITIALIZATION_FAILED);
@@ -774,8 +774,8 @@ TEST_F(
                                  .pNext = &layer_create_info,
                                  .enabledExtensionCount = 0,
                                  .ppEnabledExtensionNames = nullptr};
-  VkDevice created_device;
   VkPhysicalDevice physical_device = {};
+  VkDevice created_device{};
   VkResult result =
       controller_.OnCreateDevice(physical_device, &create_info, nullptr, &created_device);
   EXPECT_EQ(result, VK_SUCCESS);
@@ -849,8 +849,8 @@ TEST_F(VulkanLayerControllerTest,
                                  .pNext = &layer_create_info,
                                  .enabledExtensionCount = 1,
                                  .ppEnabledExtensionNames = requested_extensions.data()};
-  VkDevice created_device;
   VkPhysicalDevice physical_device = {};
+  VkDevice created_device{};
   VkResult result =
       controller_.OnCreateDevice(physical_device, &create_info, nullptr, &created_device);
   EXPECT_EQ(result, VK_SUCCESS);
@@ -931,13 +931,13 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnAllocateCommandBuffersToSubmissionTr
   EXPECT_CALL(*submission_tracker, TrackCommandBuffers).Times(1);
   VkDevice device = {};
   VkCommandPool command_pool = {};
-  VkCommandBuffer command_buffer;
 
   VkCommandBufferAllocateInfo allocate_info{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                                             .pNext = nullptr,
                                             .commandPool = command_pool,
                                             .commandBufferCount = 1};
 
+  VkCommandBuffer command_buffer{};
   VkResult result = controller_.OnAllocateCommandBuffers(device, &allocate_info, &command_buffer);
   EXPECT_EQ(result, VK_SUCCESS);
 }
@@ -955,8 +955,8 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnFreeCommandBuffersToSubmissionTracke
   EXPECT_CALL(*submission_tracker, UntrackCommandBuffers).Times(1);
   VkDevice device = {};
   VkCommandPool command_pool = {};
-  VkCommandBuffer command_buffer;
 
+  VkCommandBuffer command_buffer{};
   controller_.OnFreeCommandBuffers(device, command_pool, 1, &command_buffer);
 }
 
@@ -1017,7 +1017,7 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnGetDeviceQueueToQueueManager) {
   const MockQueueManager* queue_manager = controller_.queue_manager();
   EXPECT_CALL(*queue_manager, TrackQueue).Times(1);
   VkDevice device = {};
-  VkQueue queue;
+  VkQueue queue{};
   controller_.OnGetDeviceQueue(device, 1, 2, &queue);
 }
 
@@ -1031,9 +1031,9 @@ TEST_F(VulkanLayerControllerTest, ForwardsOnGetDeviceQueue2ToQueueManager) {
   EXPECT_CALL(*queue_manager, TrackQueue).Times(1);
 
   VkDevice device = {};
-  VkQueue queue;
   VkDeviceQueueInfo2 queue_info{
       .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2, .queueFamilyIndex = 1, .queueIndex = 2};
+  VkQueue queue{};
   controller_.OnGetDeviceQueue2(device, &queue_info, &queue);
 }
 

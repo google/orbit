@@ -288,7 +288,7 @@ TEST_F(CallstackDataViewTest, ColumnValuesAreCorrect) {
 }
 
 TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
-  bool function_selected;
+  bool function_selected = false;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
@@ -331,7 +331,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   const std::vector<bool> kFrameModuleNotNull{true, true, false, true, true};
   const std::vector<bool> frame_function_not_null{true, true, false, false, false};
 
-  bool capture_connected;
+  bool capture_connected = false;
   std::vector<bool> functions_selected{true, false, true, true, false};
 
   auto get_index_from_function_info = [&](const FunctionInfo& function) -> std::optional<size_t> {

@@ -47,7 +47,7 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
   // in such case, use the pid from the OpenSwitchIn, if available.
   // If this is not available either, the pid will then just incorrectly be -1
   // (we prefer this to discarding the SchedulingSlice altogether).
-  pid_t pid_to_set;
+  pid_t pid_to_set{};
   if (pid != -1) {
     pid_to_set = pid;
   } else if (open_pid.has_value()) {

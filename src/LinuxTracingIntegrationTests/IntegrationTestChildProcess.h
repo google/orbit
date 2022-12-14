@@ -81,7 +81,7 @@ class ChildProcess {
   [[nodiscard]] std::string ReadLine() {
     std::string str;
     while (true) {
-      char c;
+      char c{};
       ORBIT_CHECK(read(reading_fd_, &c, sizeof(c)) == sizeof(c));
       if (c == '\n' || c == '\0') break;
       str.push_back(c);

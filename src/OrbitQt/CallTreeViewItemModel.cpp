@@ -362,7 +362,7 @@ QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex&
     return {};
   }
 
-  CallTreeNode* parent_item;
+  CallTreeNode* parent_item = nullptr;
   if (!parent.isValid()) {
     parent_item = call_tree_view_.get();
   } else {
