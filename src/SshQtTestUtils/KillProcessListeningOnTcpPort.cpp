@@ -4,7 +4,13 @@
 
 #include "SshQtTestUtils/KillProcessListeningOnTcpPort.h"
 
+#include <absl/strings/str_format.h>
+
+#include <QList>
 #include <QSignalSpy>
+#include <QVariant>
+#include <optional>
+#include <string>
 
 #include "OrbitBase/Result.h"
 #include "OrbitSshQt/Session.h"
