@@ -20,7 +20,7 @@ namespace orbit_client_data {
 // Creates and stores data from Thread Tracks in a thread-safe way, using thread_id as the key.
 class ThreadTrackDataManager final {
  public:
-  ThreadTrackDataManager(bool is_data_from_saved_capture = false)
+  explicit ThreadTrackDataManager(bool is_data_from_saved_capture = false)
       : scope_tree_update_type_(is_data_from_saved_capture
                                     ? ScopeTreeTimerData::ScopeTreeUpdateType::kOnCaptureComplete
                                     : ScopeTreeTimerData::ScopeTreeUpdateType::kAlways){};

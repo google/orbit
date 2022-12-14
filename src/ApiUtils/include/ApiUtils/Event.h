@@ -30,7 +30,7 @@ struct ApiEventMetaData {
 };
 
 struct ApiEncodedString {
-  ApiEncodedString(const char* name) { EncodeString(name, this); }
+  explicit ApiEncodedString(const char* name) { EncodeString(name, this); }
   void set_encoded_name_1(uint64_t value) { encoded_name_1 = value; }
   void set_encoded_name_2(uint64_t value) { encoded_name_2 = value; }
   void set_encoded_name_3(uint64_t value) { encoded_name_3 = value; }

@@ -35,7 +35,7 @@ namespace {
 
 class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  public:
-  LibunwindstackUnwinderImpl(
+  explicit LibunwindstackUnwinderImpl(
       const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at)
       : absolute_address_to_size_of_functions_to_stop_at_{
             absolute_address_to_size_of_functions_to_stop_at} {}

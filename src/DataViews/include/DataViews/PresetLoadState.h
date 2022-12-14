@@ -11,7 +11,7 @@ namespace orbit_data_views {
 
 struct PresetLoadState {
   enum State { kLoadable, kPartiallyLoadable, kNotLoadable } state;
-  PresetLoadState(State initial_state) : state(initial_state){};
+  explicit PresetLoadState(State initial_state) : state(initial_state){};
 
   [[nodiscard]] inline std::string GetName() const {
     switch (state) {

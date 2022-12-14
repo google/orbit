@@ -781,31 +781,32 @@ orbit_data_views::SymbolLoadingState SymbolLoader::GetSymbolLoadingStateForModul
   ORBIT_CHECK(module != nullptr);
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
-  if (IsModuleDownloading(module->file_path())) return SymbolLoadingState::kDownloading;
+  if (IsModuleDownloading(module->file_path()))
+    return SymbolLoadingState(SymbolLoadingState::kDownloading);
 
   ModuleIdentifier module_id = module->module_id();
   if (symbols_currently_loading_.contains(module_id)) {
-    return SymbolLoadingState::kLoading;
+    return SymbolLoadingState(SymbolLoadingState::kLoading);
   }
 
   switch (module->GetLoadedSymbolsCompleteness()) {
     case ModuleData::SymbolCompleteness::kNoSymbols:
       break;
     case ModuleData::SymbolCompleteness::kDynamicLinkingAndUnwindInfo:
-      return SymbolLoadingState::kFallback;
+      return SymbolLoadingState(SymbolLoadingState::kFallback);
     case ModuleData::SymbolCompleteness::kDebugSymbols:
-      return SymbolLoadingState::kLoaded;
+      return SymbolLoadingState(SymbolLoadingState::kLoaded);
   }
 
   if (download_disabled_modules_.contains(module->file_path())) {
-    return SymbolLoadingState::kDisabled;
+    return SymbolLoadingState(SymbolLoadingState::kDisabled);
   }
 
   if (modules_with_symbol_loading_error_.contains(module_id)) {
-    return SymbolLoadingState::kError;
+    return SymbolLoadingState(SymbolLoadingState::kError);
   }
 
-  return SymbolLoadingState::kUnknown;
+  return SymbolLoadingState(SymbolLoadingState::kUnknown);
 }
 
 bool SymbolLoader::IsSymbolLoadingInProgressForModule(
