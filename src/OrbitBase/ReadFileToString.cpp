@@ -45,7 +45,7 @@ ErrorMessageOr<std::string> ReadFileToString(const std::filesystem::path& file_n
   }
 
   std::array<char, BUFSIZ> buf{};
-  int64_t number_of_bytes;
+  int64_t number_of_bytes{};
   while ((number_of_bytes = TEMP_FAILURE_RETRY(read(fd.get(), buf.data(), buf.size()))) > 0) {
     result.append(buf.data(), number_of_bytes);
   }

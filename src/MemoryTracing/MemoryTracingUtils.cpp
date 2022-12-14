@@ -61,7 +61,7 @@ ErrorMessageOr<void> UpdateSystemMemoryUsageFromMemInfo(std::string_view meminfo
       continue;
     }
 
-    int64_t memory_size_value;
+    int64_t memory_size_value{};
     if (!absl::SimpleAtoi(splits[1], &memory_size_value)) {
       absl::StrAppend(&error_message, "Fail to extract value in line: ", line, "\n");
       continue;
@@ -99,7 +99,7 @@ ErrorMessageOr<void> UpdateSystemMemoryUsageFromVmStat(std::string_view vmstat_c
       continue;
     }
 
-    int64_t value;
+    int64_t value{};
     if (!absl::SimpleAtoi(splits[1], &value)) {
       absl::StrAppend(&error_message, "Fail to extract value in line: ", line, "\n");
       continue;
@@ -173,8 +173,8 @@ ErrorMessageOr<void> UpdateProcessMemoryUsageFromProcessStat(
     return ErrorMessage(absl::StrFormat("Wrong format: only %d fields", splits.size()));
   }
 
-  int64_t value;
-  std::string error_message;
+  int64_t value{};
+  std::string error_message{};
   if (absl::SimpleAtoi(splits[9], &value)) {
     process_memory_usage->set_minflt(value);
   } else {
@@ -203,7 +203,7 @@ ErrorMessageOr<int64_t> ExtractRssAnonFromProcessStatus(std::string_view status_
         return ErrorMessage(absl::StrFormat("Wrong format in line: %s\n", line));
       }
 
-      int64_t value;
+      int64_t value{};
       if (!absl::SimpleAtoi(splits[1], &value)) {
         return ErrorMessage(absl::StrFormat("Fail to extract value in line: %s\n", line));
       }
@@ -285,7 +285,7 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryLimitInBytes(
   if (memory_limit_in_bytes_content.empty()) return ErrorMessage("Empty file content.");
 
   // The memory.limit_in_bytes file use "bytes" as the size unit.
-  int64_t memory_limit_in_bytes;
+  int64_t memory_limit_in_bytes{};
   if (absl::SimpleAtoi(memory_limit_in_bytes_content, &memory_limit_in_bytes)) {
     cgroup_memory_usage->set_limit_bytes(memory_limit_in_bytes);
     return outcome::success();
@@ -310,7 +310,7 @@ ErrorMessageOr<void> UpdateCGroupMemoryUsageFromMemoryStat(std::string_view memo
       continue;
     }
 
-    int64_t value;
+    int64_t value{};
     if (!absl::SimpleAtoi(splits[1], &value)) {
       absl::StrAppend(&error_message, "Fail to extract value in line: ", line, "\n");
       continue;

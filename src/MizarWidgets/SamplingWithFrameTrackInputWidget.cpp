@@ -81,7 +81,7 @@ static uint64_t ParseStartNs(const QString& time_ms) {
     return 0;
   }
 
-  bool ok;
+  bool ok{};
   int result = time_ms.toInt(&ok);
   if (!ok) {
     return std::numeric_limits<uint64_t>::max();

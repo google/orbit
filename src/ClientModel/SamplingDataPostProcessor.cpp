@@ -265,7 +265,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
     CallstackType resolved_callstack_type = callstack.type();
 
     // Check if we already have this resolved callstack, and if not, create one.
-    uint64_t resolved_callstack_id;
+    uint64_t resolved_callstack_id{};
     auto it = resolved_callstack_to_id_.find(CallstackInfoAsPairWithLvalueRefToFrames{
         resolved_callstack_frames, resolved_callstack_type});
     if (it == resolved_callstack_to_id_.end()) {

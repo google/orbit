@@ -329,7 +329,7 @@ TEST(DispatchTable, CanCallEnumerateDeviceExtensionProperties) {
   dispatch_table.CreateInstanceDispatchTable(instance, next_get_instance_proc_addr_function);
 
   VkPhysicalDevice device = {};
-  uint32_t property_count;
+  uint32_t property_count{};
 
   VkResult result = dispatch_table.EnumerateDeviceExtensionProperties(instance)(
       device, nullptr, &property_count, nullptr);

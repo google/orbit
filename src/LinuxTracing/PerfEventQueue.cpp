@@ -97,9 +97,8 @@ void PerfEventQueue::MoveDownFrontOfHeapOfQueues() {
   }
 
   size_t current_index = 0;
-  size_t new_index;
   while (true) {
-    new_index = current_index;
+    size_t new_index = current_index;
     size_t left_index = current_index * 2 + 1;
     size_t right_index = current_index * 2 + 2;
     if (left_index < heap_of_queues_of_events_ordered_in_stream_.size() &&

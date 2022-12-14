@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
   constexpr const int kShutdownServiceCommand = 4;
   bool exit = false;
   while (!exit) {
-    int i;
     std::cout << "\n";
     std::cout << "List of available commands:\n";
     std::cout << "------------------------------\n";
@@ -48,6 +47,7 @@ int main(int argc, char** argv) {
     std::cout << "Introduce your choice (" << kStartCaptureCommand << "-" << kShutdownServiceCommand
               << "): ";
 
+    int i{};
     std::cin >> i;
     switch (i) {
       case kStartCaptureCommand:

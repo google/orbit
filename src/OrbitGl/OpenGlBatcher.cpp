@@ -126,10 +126,8 @@ void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
   const orbit_containers::Block<Quad, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
       box_block = box_buffer.boxes_.root();
-  const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * 4>*
-      color_block;
-
-  color_block = !picking ? box_buffer.colors_.root() : box_buffer.picking_colors_.root();
+  const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK* 4>*
+      color_block = !picking ? box_buffer.colors_.root() : box_buffer.picking_colors_.root();
 
   while (box_block != nullptr) {
     if (auto num_elems = box_block->size()) {
@@ -147,10 +145,8 @@ void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) {
   auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
   const orbit_containers::Block<Line, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK>*
       line_block = line_buffer.lines_.root();
-  const orbit_containers::Block<Color, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * 2>*
-      color_block;
-
-  color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
+  const orbit_containers::Block<Color, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK* 2>*
+      color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
   while (line_block != nullptr) {
     if (auto num_elems = line_block->size()) {
       glVertexPointer(2, GL_FLOAT, sizeof(Vec2), line_block->data());
@@ -168,10 +164,9 @@ void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) {
   const orbit_containers::Block<
       Triangle, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
       triangle_buffer.triangles_.root();
-  const orbit_containers::Block<Color, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK *
-                                           3>* color_block;
-
-  color_block = !picking ? triangle_buffer.colors_.root() : triangle_buffer.picking_colors_.root();
+  const orbit_containers::Block<
+      Color, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK* 3>* color_block =
+      !picking ? triangle_buffer.colors_.root() : triangle_buffer.picking_colors_.root();
 
   while (triangle_block != nullptr) {
     if (int num_elems = triangle_block->size()) {

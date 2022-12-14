@@ -503,9 +503,9 @@ TEST(CaptureEventProcessor, CanHandleGpuJobs) {
   ClientCaptureEvent event;
   GpuJob* gpu_job = CreateGpuJob(&event, kTimelineKey, 10, 20, 30, 40);
 
-  uint64_t actual_sw_queue_key;
-  uint64_t actual_hw_queue_key;
-  uint64_t actual_hw_execution_key;
+  uint64_t actual_sw_queue_key{};
+  uint64_t actual_hw_queue_key{};
+  uint64_t actual_hw_execution_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "sw queue"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_sw_queue_key));
@@ -588,7 +588,7 @@ TEST(CaptureEventProcessor, CanHandleMemoryUsageEvent) {
   // `MemoryUsageEvent`.
   memory_usage_event->set_timestamp_ns(110);
 
-  uint64_t actual_cgroup_name_key;
+  uint64_t actual_cgroup_name_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, cgroup_memory_usage->cgroup_name()))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_cgroup_name_key));
@@ -751,12 +751,12 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionAfterGpuJob) {
   testing::Mock::VerifyAndClearExpectations(&listener);
 
   EXPECT_CALL(listener, OnKeyAndString(_, "timeline")).Times(0);
-  uint64_t actual_marker_key;
+  uint64_t actual_marker_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "marker"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_marker_key));
 
-  uint64_t actual_command_buffer_key;
+  uint64_t actual_command_buffer_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
@@ -820,7 +820,7 @@ TEST(CaptureEventProcessor, CanHandleGpuSubmissionReceivedBeforeGpuJob) {
 
   EXPECT_CALL(listener, OnKeyAndString(_, "timeline")).Times(0);
 
-  uint64_t actual_command_buffer_key;
+  uint64_t actual_command_buffer_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
@@ -898,7 +898,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersSpreadAcrossSubmissions) {
 
   testing::Mock::VerifyAndClearExpectations(&listener);
 
-  uint64_t actual_command_buffer_key;
+  uint64_t actual_command_buffer_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
@@ -983,7 +983,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginRecorded) {
       .WillOnce(SaveArg<0>(&command_buffer_timer_3))
       .WillOnce(SaveArg<0>(&debug_marker_timer));
 
-  uint64_t actual_command_buffer_key;
+  uint64_t actual_command_buffer_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));
@@ -1048,7 +1048,7 @@ TEST(CaptureEventProcessor, CanHandleGpuDebugMarkersWithNoBeginJobRecorded) {
 
   event_processor->ProcessEvent(queue_submission_event_1);
 
-  uint64_t actual_command_buffer_key;
+  uint64_t actual_command_buffer_key{};
   EXPECT_CALL(listener, OnKeyAndString(_, "command buffer"))
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_command_buffer_key));

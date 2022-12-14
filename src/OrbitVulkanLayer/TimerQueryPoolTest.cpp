@@ -160,7 +160,7 @@ TEST(TimerQueryPool, CanRetrieveNumSlotsUniqueSlots) {
   absl::flat_hash_set<uint32_t> slots;
 
   for (uint32_t i = 0; i < kNumSlots; ++i) {
-    uint32_t slot;
+    uint32_t slot = 0;
     bool found_slot = query_pool.NextReadyQuerySlot(device, &slot);
     ASSERT_TRUE(found_slot);
     slots.insert(slot);
@@ -183,10 +183,10 @@ TEST(TimerQueryPool, CannotRetrieveMoreThanNumSlotsSlots) {
   query_pool.InitializeTimerQueryPool(device);
 
   for (uint32_t i = 0; i < kNumSlots; ++i) {
-    uint32_t slot;
+    uint32_t slot = 0;
     (void)query_pool.NextReadyQuerySlot(device, &slot);
   }
-  uint32_t slot;
+  uint32_t slot = 0;
   bool found_slot = query_pool.NextReadyQuerySlot(device, &slot);
   ASSERT_FALSE(found_slot);
 }
@@ -202,7 +202,7 @@ TEST(TimerQueryPool, RollingBackSlotsMakesSlotsReady) {
       .WillRepeatedly(Return(dummy_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
-  uint32_t slot;
+  uint32_t slot = 0;
   (void)query_pool.NextReadyQuerySlot(device, &slot);
 
   std::vector<uint32_t> reset_slots;
@@ -225,7 +225,7 @@ TEST(TimerQueryPool, MarkResetSlotsAloneDoesNotMakeSlotsReady) {
       .WillRepeatedly(Return(dummy_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
-  uint32_t slot;
+  uint32_t slot = 0;
   (void)query_pool.NextReadyQuerySlot(device, &slot);
 
   std::vector<uint32_t> reset_slots;
@@ -248,7 +248,7 @@ TEST(TimerQueryPool, MarkSlotsDoneReadingAloneDoesNotMakeSlotsReady) {
       .WillRepeatedly(Return(dummy_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
-  uint32_t slot;
+  uint32_t slot = 0;
   (void)query_pool.NextReadyQuerySlot(device, &slot);
 
   std::vector<uint32_t> reset_slots;
@@ -271,7 +271,7 @@ TEST(TimerQueryPool, MarkSlotsDoneReadingAndReadForResetMakesThemReady) {
       .WillRepeatedly(Return(dummy_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
-  uint32_t slot;
+  uint32_t slot = 0;
   (void)query_pool.NextReadyQuerySlot(device, &slot);
 
   std::vector<uint32_t> reset_slots;
@@ -298,7 +298,7 @@ TEST(TimerQueryPool, RollingBackSlotsDoesNotResetOnVulkan) {
       .WillRepeatedly(Return(dummy_reset_query_pool_function));
 
   query_pool.InitializeTimerQueryPool(device);
-  uint32_t slot;
+  uint32_t slot = 0;
   (void)query_pool.NextReadyQuerySlot(device, &slot);
 
   std::vector<uint32_t> reset_slots;
@@ -409,7 +409,7 @@ TEST(TimerQueryPool, CanRepeatadlyRetrieveAndResetSlots) {
   query_pool.InitializeTimerQueryPool(device);
 
   for (int i = 0; i < 2000; ++i) {
-    uint32_t slot_index;
+    uint32_t slot_index = 0;
     bool found_slot = query_pool.NextReadyQuerySlot(device, &slot_index);
     EXPECT_TRUE(found_slot);
 

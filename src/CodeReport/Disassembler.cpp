@@ -51,9 +51,9 @@ void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
   count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size, address, 0, &insn);
 
   if (count != 0u) {
-    size_t j;
+    size_t j = 0;
 
-    for (j = 0; j < count; j++) {
+    for (; j < count; j++) {
       cs_insn* current_instruction = &insn[j];
       if (IsCallInstruction(insn[j])) {
         const orbit_client_data::FunctionInfo* callee = nullptr;

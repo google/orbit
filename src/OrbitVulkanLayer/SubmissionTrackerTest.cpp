@@ -372,7 +372,7 @@ TEST(SubmissionTracker, SetVulkanLayerProducerWillCallSetListener) {
   SubmissionTracker<MockDispatchTable, MockDeviceManager, MockTimerQueryPool> tracker(
       &dispatch_table, &timer_query_pool, &device_manager, std::numeric_limits<uint32_t>::max());
 
-  VulkanLayerProducer::CaptureStatusListener* actual_listener;
+  VulkanLayerProducer::CaptureStatusListener* actual_listener{};
   EXPECT_CALL(*producer, SetCaptureStatusListener).Times(1).WillOnce(SaveArg<0>(&actual_listener));
   tracker.SetVulkanLayerProducer(producer.get());
   EXPECT_EQ(actual_listener, &tracker);

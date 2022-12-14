@@ -489,7 +489,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         return module_manager_.GetMutableModuleByModuleIdentifier(module_id);
       });
 
-  bool capture_connected;
+  bool capture_connected{};
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
 
   std::array<bool, kNumFunctions> functions_selected{true, false, false, true};

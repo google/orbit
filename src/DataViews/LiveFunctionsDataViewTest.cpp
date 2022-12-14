@@ -384,8 +384,6 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   AddFunctionsByIndices({0, 1, 2});
-  bool capture_connected;
-  bool is_capturing;
   std::array<bool, kNumFunctions> functions_selected{false, true, true};
   std::array<bool, kNumFunctions> frame_track_enabled{false, false, true};
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -400,7 +398,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
     return std::nullopt;
   };
+  bool capture_connected{};
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
+  bool is_capturing{};
   EXPECT_CALL(app_, IsCapturing).WillRepeatedly(testing::ReturnPointee(&is_capturing));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly([&](const FunctionInfo& function) -> bool {

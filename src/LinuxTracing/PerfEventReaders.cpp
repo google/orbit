@@ -200,7 +200,7 @@ void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_head
 }
 
 uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
-  uint64_t time;
+  uint64_t time{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
   //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
@@ -211,7 +211,7 @@ uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
 }
 
 uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
-  uint64_t stream_id;
+  uint64_t stream_id{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
   //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
@@ -222,7 +222,7 @@ uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
 }
 
 pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
-  pid_t pid;
+  pid_t pid{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
   //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
@@ -235,7 +235,7 @@ uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
   // Note that perf_event_throttle_unthrottle::time and
   // perf_event_sample_id_tid_time_streamid_cpu::time differ a bit. Use the latter as we use that
   // for all other events.
-  uint64_t time;
+  uint64_t time{};
   ring_buffer->ReadValueAtOffset(&time,
                                  offsetof(perf_event_throttle_unthrottle, sample_id) +
                                      offsetof(perf_event_sample_id_tid_time_streamid_cpu, time));
@@ -665,7 +665,7 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
 template <typename EventType, typename StructType>
 [[nodiscard]] EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer,
                                         const perf_event_header& header) {
-  uint32_t tracepoint_size;
+  uint32_t tracepoint_size{};
   ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
 
   perf_event_raw_sample_fixed ring_buffer_record;

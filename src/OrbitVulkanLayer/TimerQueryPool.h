@@ -62,8 +62,6 @@ class TimerQueryPool {
 
   // Creates and resets a vulkan `VkQueryPool`, ready to use for timestamp queries.
   void InitializeTimerQueryPool(VkDevice device) {
-    VkQueryPool query_pool;
-
     VkQueryPoolCreateInfo create_info = {.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
                                          .pNext = nullptr,
                                          .flags = 0,
@@ -71,6 +69,7 @@ class TimerQueryPool {
                                          .queryCount = num_timer_query_slots_,
                                          .pipelineStatistics = 0};
 
+    VkQueryPool query_pool{};
     VkResult result =
         dispatch_table_->CreateQueryPool(device)(device, &create_info, nullptr, &query_pool);
     ORBIT_CHECK(result == VK_SUCCESS);

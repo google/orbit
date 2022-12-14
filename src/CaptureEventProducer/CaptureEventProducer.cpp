@@ -66,7 +66,7 @@ bool CaptureEventProducer::SendCaptureEvents(
     ORBIT_CHECK(!shutdown_requested_);
   }
 
-  bool write_succeeded;
+  bool write_succeeded{};
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
@@ -90,7 +90,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
 
   orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest all_events_sent_request;
   all_events_sent_request.mutable_all_events_sent();
-  bool write_succeeded;
+  bool write_succeeded{};
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
@@ -144,7 +144,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
 
     while (true) {
       ReceiveCommandsAndSendEventsResponse response;
-      bool read_succeeded;
+      bool read_succeeded{};
       {
         absl::ReaderMutexLock lock{&context_and_stream_mutex_};
         read_succeeded = stream_->Read(&response);

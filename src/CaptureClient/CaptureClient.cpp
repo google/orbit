@@ -221,7 +221,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureRequest request;
   *request.mutable_capture_options() = std::move(capture_options);
 
-  bool request_write_succeeded;
+  bool request_write_succeeded{};
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     request_write_succeeded = reader_writer_->Write(request);
@@ -241,7 +241,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;
-    bool read_succeeded;
+    bool read_succeeded{};
     {
       absl::ReaderMutexLock lock{&context_and_stream_mutex_};
       read_succeeded = reader_writer_->Read(&response);
@@ -294,7 +294,7 @@ bool CaptureClient::StopCapture() {
     ORBIT_LOG("State is now kStopping");
   }
 
-  bool writes_done_succeeded;
+  bool writes_done_succeeded = false;
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     ORBIT_CHECK(reader_writer_ != nullptr);

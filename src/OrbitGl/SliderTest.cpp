@@ -4,6 +4,7 @@
 
 #include <GteVector.h>
 #include <gtest/gtest.h>
+#include <math.h>
 
 #include <cmath>
 #include <memory>
@@ -188,7 +189,7 @@ static void TestScroll(float slider_length = 0.25) {
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
-  float pos;
+  float pos = 0.f;
   constexpr int kOffset = 2;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
@@ -213,7 +214,7 @@ static void TestDrag(float slider_length = 0.25) {
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
-  float pos;
+  float pos = 0.f;
 
   slider->SetDragCallback([&](float ratio) { pos = ratio; });
   slider->SetNormalizedLength(slider_length);
@@ -325,16 +326,14 @@ static void TestBreakScaling() {
     return;
   }
 
-  float pos;
-  float len;
   constexpr int kOffset = 2;
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(std::pow(10, dim));
 
   // Pick on the right, then drag across the end of the slider
-  pos = slider->GetSliderPixelPos();
-  len = slider->GetSliderPixelLength();
+  float pos = slider->GetSliderPixelPos();
+  float len = slider->GetSliderPixelLength();
   PickDragRelease<dim>(*slider, 75 * scale - kOffset, 0);
   EXPECT_NEAR(slider->GetSliderPixelPos(), pos, kEpsilon);
   EXPECT_NEAR(slider->GetSliderPixelLength(), slider->GetMinSliderPixelLength(), kEpsilon);
