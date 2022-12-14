@@ -23,7 +23,7 @@ namespace orbit_capture_file_internal {
 // This class is used to read proto messages from a section of capture file.
 class ProtoSectionInputStreamImpl : public orbit_capture_file::ProtoSectionInputStream {
  public:
-  explicit ProtoSectionInputStreamImpl(orbit_base::unique_fd& fd, uint64_t capture_section_offset,
+  explicit ProtoSectionInputStreamImpl(orbit_base::UniqueFd& fd, uint64_t capture_section_offset,
                                        uint64_t capture_section_size)
       : fd_{fd},
         file_fragment_input_stream_{fd_, capture_section_offset, capture_section_size},
@@ -38,7 +38,7 @@ class ProtoSectionInputStreamImpl : public orbit_capture_file::ProtoSectionInput
   static constexpr int kCodedInputStreamReinitializationThreshold =
       kCodedInputStreamTotalBytesLimit / 2;
 
-  orbit_base::unique_fd& fd_;
+  orbit_base::UniqueFd& fd_;
   FileFragmentInputStream file_fragment_input_stream_;
   std::optional<google::protobuf::io::CodedInputStream> coded_input_stream_;
 };

@@ -25,7 +25,7 @@ perf_event_attr generic_event_attr() {
   pe.clockid = orbit_base::kOrbitCaptureClock;
   pe.sample_id_all = 1;  // Also include timestamps for lost events.
   pe.disabled = 1;
-  pe.sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU;
+  pe.sample_type = kSampleTypeTidTimeStreamidCpu;
 
   return pe;
 }
@@ -78,7 +78,7 @@ int stack_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu, uint16_t
   pe.config = PERF_COUNT_SW_CPU_CLOCK;
   pe.sample_period = period_ns;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_regs_user = kSampleRegsUserAll;
 
   pe.sample_stack_user = stack_dump_size;
 
@@ -99,7 +99,7 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
   // Also capture a small part of the stack and the registers to allow patching the callers of
   // leaf functions. This is done by unwinding the first two frame using DWARF.
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_regs_user = kSampleRegsUserAll;
   pe.sample_stack_user = stack_dump_size;
 
   return generic_event_open(&pe, pid, cpu);
@@ -110,11 +110,11 @@ int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config &= ~1ULL;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP;
+  pe.sample_regs_user = kSampleRegsUserSpIp;
 
   // Only get the very top of the stack, where the return address has been pushed.
   // We record it as it is about to be hijacked by the installation of the uretprobe.
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_8BYTES;
+  pe.sample_stack_user = kSampleStackUserSize8Bytes;
 
   return generic_event_open(&pe, pid, cpu);
 }
@@ -124,7 +124,7 @@ int uprobes_with_stack_and_sp_event_open(const char* module, uint64_t function_o
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config &= ~1ULL;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_SP;
+  pe.sample_regs_user = kSampleRegsUserSp;
 
   pe.sample_stack_user = stack_dump_size;
 
@@ -136,8 +136,8 @@ int uprobes_retaddr_args_event_open(const char* module, uint64_t function_offset
   perf_event_attr pe = uprobe_event_attr(module, function_offset);
   pe.config &= ~1ULL;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_SP_IP_ARGUMENTS;
-  pe.sample_stack_user = SAMPLE_STACK_USER_SIZE_8BYTES;
+  pe.sample_regs_user = kSampleRegsUserSpIpArguments;
+  pe.sample_stack_user = kSampleStackUserSize8Bytes;
 
   return generic_event_open(&pe, pid, cpu);
 }
@@ -155,7 +155,7 @@ int uretprobes_retval_event_open(const char* module, uint64_t function_offset, p
   pe.config |= 1;  // Set bit 0 of config for uretprobe.
 
   pe.sample_type |= PERF_SAMPLE_REGS_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_AX;
+  pe.sample_regs_user = kSampleRegsUserAx;
 
   return generic_event_open(&pe, pid, cpu);
 }
@@ -210,7 +210,7 @@ int tracepoint_with_callchain_event_open(const char* tracepoint_category,
   // Also capture a small part of the stack and the registers to allow patching the callers of
   // leaf functions. This is done by unwinding the first two frame using DWARF.
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_regs_user = kSampleRegsUserAll;
   pe.sample_stack_user = stack_dump_size;
 
   return generic_event_open(&pe, pid, cpu);
@@ -226,7 +226,7 @@ int tracepoint_with_stack_event_open(const char* tracepoint_category, const char
   pe.type = PERF_TYPE_TRACEPOINT;
   pe.config = tp_id;
   pe.sample_type |= PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_RAW;
-  pe.sample_regs_user = SAMPLE_REGS_USER_ALL;
+  pe.sample_regs_user = kSampleRegsUserAll;
 
   pe.sample_stack_user = stack_dump_size;
 

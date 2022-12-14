@@ -143,7 +143,7 @@ static std::pair<std::vector<ScopeInfo>, std::vector<PresentEvent::Source>> Deco
   std::vector<PresentEvent::Source> etw_sources;
 
   for (const auto& [unused_id, info] : id_to_infos) {
-    std::visit(orbit_base::overloaded{
+    std::visit(orbit_base::Overloaded{
                    [&scope_id_infos](const ScopeInfo& info) { scope_id_infos.push_back(info); },
                    [&etw_sources](PresentEvent::Source source) { etw_sources.push_back(source); }},
                *info);
@@ -177,7 +177,7 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
                                                                  TimestampNs max_start) {
     for (const auto& [id, info] : frame_track_manager_.GetFrameTracks()) {
       std::vector<TimestampNs> expected_frame_starts = std::visit(
-          orbit_base::overloaded{
+          orbit_base::Overloaded{
               [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
               [min_start, max_start](PresentEvent::Source source) {
                 std::vector<TimestampNs> filtered_time_list;

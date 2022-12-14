@@ -109,8 +109,8 @@ class ScopeTree {
 
 template <typename ScopeT>
 ScopeTree<ScopeT>::ScopeTree() {
-  static ScopeT kDefaultScope;
-  root_ = CreateNode(&kDefaultScope);
+  static ScopeT default_scope;
+  root_ = CreateNode(&default_scope);
   ordered_nodes_by_depth_[0].emplace(0, root_);
 }
 

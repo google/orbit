@@ -132,8 +132,7 @@ class UprobesUnwindingVisitorCallchainTest : public ::testing::Test {
 };
 
 CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(absl::Span<const uint64_t> callchain) {
-  constexpr uint64_t kTotalNumOfRegisters =
-      sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+  constexpr uint64_t kTotalNumOfRegisters = sizeof(PerfEventSampleRegsUserAll) / sizeof(uint64_t);
 
   constexpr uint64_t kStackSize = 13;
   CallchainSamplePerfEvent event{

@@ -38,7 +38,7 @@ namespace orbit_capture_file {
 
 namespace {
 
-using orbit_base::unique_fd;
+using orbit_base::UniqueFd;
 
 constexpr uint64_t kMaxNumberOfSections = std::numeric_limits<uint16_t>::max();
 
@@ -107,7 +107,7 @@ class CaptureFileImpl : public CaptureFile {
   ErrorMessageOr<bool> ContainsValidUserDataSection() const;
 
   std::filesystem::path file_path_;
-  unique_fd fd_;
+  UniqueFd fd_;
   CaptureFileHeader header_{};
 
   // This is used for boundary checks so that we do not end up
@@ -123,7 +123,7 @@ class CaptureFileImpl : public CaptureFile {
   std::vector<CaptureFileSection> section_list_;
 };
 
-ErrorMessageOr<uint64_t> GetEndOfFileOffset(const unique_fd& fd) {
+ErrorMessageOr<uint64_t> GetEndOfFileOffset(const UniqueFd& fd) {
 #if defined(_WIN32)
   int64_t end_of_file = _lseeki64(fd.get(), 0, SEEK_END);
 #else

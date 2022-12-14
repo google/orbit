@@ -36,18 +36,18 @@ namespace orbit_base {
 using ::testing::HasSubstr;
 
 TEST(File, DefaultUniqueFdIsInvalidDescriptor) {
-  unique_fd fd;
+  UniqueFd fd;
   EXPECT_FALSE(fd.valid());
 }
 
 TEST(File, EmptyUnuqueFdCanBeReleased) {
-  unique_fd fd;
+  UniqueFd fd;
   fd.release();
   EXPECT_FALSE(fd.valid());
 }
 
 TEST(File, MoveAssingToExisingUniqueFd) {
-  unique_fd fd;
+  UniqueFd fd;
 
   auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
 
@@ -64,7 +64,7 @@ TEST(File, MoveAssingToExisingUniqueFd) {
 TEST(File, UniqueFdSelfMove) {
   auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
   ASSERT_TRUE(fd_or_error.has_value()) << fd_or_error.error().message();
-  unique_fd valid_fd{std::move(fd_or_error.value())};
+  UniqueFd valid_fd{std::move(fd_or_error.value())};
 
   valid_fd = std::move(valid_fd);
 
@@ -75,7 +75,7 @@ TEST(File, UniqueFdSelfMove) {
 #endif  // __GNUC__
 
 TEST(File, AcccessInvalidUniqueFd) {
-  unique_fd fd;
+  UniqueFd fd;
   EXPECT_FALSE(fd.valid());
   EXPECT_DEATH((void)fd.get(), "");
 
@@ -131,7 +131,7 @@ TEST(File, WriteFullySmoke) {
   ASSERT_FALSE(write_result_or_error.has_error()) << write_result_or_error.error().message();
 
   // Read back and compare content.
-  ErrorMessageOr<unique_fd> fd_or_error = OpenFileForReading(temporary_file.file_path().string());
+  ErrorMessageOr<UniqueFd> fd_or_error = OpenFileForReading(temporary_file.file_path().string());
   ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
   std::array<char, 64> read_back = {};
   ErrorMessageOr<size_t> result_or_error =
@@ -154,7 +154,7 @@ TEST(File, WriteFullyAtOffsetSmoke) {
 
   // Read back and compare content.
   std::array<char, 64> read_back = {};
-  ErrorMessageOr<unique_fd> fd_or_error = OpenFileForReading(temporary_file.file_path().string());
+  ErrorMessageOr<UniqueFd> fd_or_error = OpenFileForReading(temporary_file.file_path().string());
   ASSERT_FALSE(fd_or_error.has_error()) << fd_or_error.error().message();
   ErrorMessageOr<size_t> result_or_error = ReadFully(fd_or_error.value(), read_back.data(), 64);
   ASSERT_FALSE(result_or_error.has_error()) << result_or_error.error().message();

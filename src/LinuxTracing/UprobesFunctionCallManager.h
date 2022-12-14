@@ -29,7 +29,7 @@ class UprobesFunctionCallManager {
   UprobesFunctionCallManager& operator=(UprobesFunctionCallManager&&) = default;
 
   void ProcessFunctionEntry(pid_t tid, uint64_t function_id, uint64_t begin_timestamp,
-                            std::optional<perf_event_sample_regs_user_sp_ip_arguments> regs) {
+                            std::optional<PerfEventSampleRegsUserSpIpArguments> regs) {
     std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_[tid];
     stack_of_open_functions.emplace_back(function_id, begin_timestamp, regs);
   }
@@ -75,11 +75,11 @@ class UprobesFunctionCallManager {
  private:
   struct OpenFunction {
     OpenFunction(uint64_t function_id, uint64_t begin_timestamp,
-                 std::optional<perf_event_sample_regs_user_sp_ip_arguments> regs)
+                 std::optional<PerfEventSampleRegsUserSpIpArguments> regs)
         : function_id{function_id}, begin_timestamp{begin_timestamp}, registers{regs} {}
     uint64_t function_id;
     uint64_t begin_timestamp;
-    std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers;
+    std::optional<PerfEventSampleRegsUserSpIpArguments> registers;
   };
 
   // This map keeps the stack of the dynamically-instrumented functions entered.

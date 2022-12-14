@@ -238,8 +238,8 @@ TEST(TimerData, GetTimersAtDepthDiscretized) {
   // Left, right and down timers
   std::unique_ptr<TimerData> timer_data = GetTimersDifferentDepths();
 
-  uint32_t kOnePixel = 1;
-  uint32_t kNormalResolution = 1000;
+  constexpr uint32_t kOnePixel = 1;
+  constexpr uint32_t kNormalResolution = 1000;
 
   auto verify_size = [&timer_data](uint32_t depth, uint32_t resolution, uint64_t start_ns,
                                    uint64_t end_ns, size_t expected_size) {

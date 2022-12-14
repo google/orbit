@@ -24,27 +24,27 @@ namespace orbit_qt_utils {
 class AssertNoQtLogWarnings {
   static void MessageHandlerTest(QtMsgType type, const QMessageLogContext& context,
                                  const QString& msg) {
-    static bool NO_WARNING_MSG = true;
-    QByteArray localMsg = msg.toLocal8Bit();
+    static bool no_warning_msg = true;
+    QByteArray local_msg = msg.toLocal8Bit();
     const char* file = context.file != nullptr ? context.file : "";
     const char* function = context.function != nullptr ? context.function : "";
     switch (type) {
       case QtDebugMsg:
-        ORBIT_LOG("Qt debug message: %s (%s:%u, %s)", localMsg.constData(), file, context.line,
+        ORBIT_LOG("Qt debug message: %s (%s:%u, %s)", local_msg.constData(), file, context.line,
                   function);
         break;
       case QtInfoMsg:
-        ORBIT_LOG("Qt info message: %s (%s:%u, %s)", localMsg.constData(), file, context.line,
+        ORBIT_LOG("Qt info message: %s (%s:%u, %s)", local_msg.constData(), file, context.line,
                   function);
         break;
       case QtWarningMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
+        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
         break;
       case QtCriticalMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
+        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
         break;
       case QtFatalMsg:
-        EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();
+        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
         break;
     }
   }

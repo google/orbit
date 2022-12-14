@@ -95,7 +95,7 @@ class LockFreeUserSpaceInstrumentationEventProducer
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
 
     std::visit(
-        orbit_base::overloaded{[capture_event](const FunctionEntry& raw_event) -> void {
+        orbit_base::Overloaded{[capture_event](const FunctionEntry& raw_event) -> void {
                                  orbit_grpc_protos::FunctionEntry* function_entry =
                                      capture_event->mutable_function_entry();
                                  function_entry->set_pid(raw_event.pid);

@@ -13,23 +13,23 @@ namespace orbit_linux_tracing {
 
 // This struct must be in sync with the SAMPLE_TYPE_TID_TIME_STREAMID_CPU in PerfEventOpen.h, as the
 // bits set in perf_event_attr::sample_type determine the fields this struct should have.
-struct __attribute__((__packed__)) perf_event_sample_id_tid_time_streamid_cpu {
+struct __attribute__((__packed__)) PerfEventSampleIdTidTimeStreamidCpu {
   uint32_t pid, tid;  /* if PERF_SAMPLE_TID */
   uint64_t time;      /* if PERF_SAMPLE_TIME */
   uint64_t stream_id; /* if PERF_SAMPLE_STREAM_ID */
   uint32_t cpu, res;  /* if PERF_SAMPLE_CPU */
 };
 
-struct __attribute__((__packed__)) perf_event_fork_exit {
+struct __attribute__((__packed__)) PerfEventForkExit {
   perf_event_header header;
   uint32_t pid, ppid;
   uint32_t tid, ptid;
   uint64_t time;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_ALL in PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
+struct __attribute__((__packed__)) PerfEventSampleRegsUserAll {
   uint64_t ax;
   uint64_t bx;
   uint64_t cx;
@@ -53,25 +53,25 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_all {
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_AX in PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_ax {
+struct __attribute__((__packed__)) PerfEventSampleRegsUserAx {
   uint64_t abi;
   uint64_t ax;
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_SP_IP in PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip {
+struct __attribute__((__packed__)) PerfEventSampleRegsUserSpIp {
   uint64_t abi;
   uint64_t sp;
   uint64_t ip;
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_SP in PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_sp {
+struct __attribute__((__packed__)) PerfEventSampleRegsUserSp {
   uint64_t sp;
 };
 
 // This struct must be in sync with the SAMPLE_REGS_USER_SP_IP_ARGUMENTS in PerfEventOpen.h.
-struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
+struct __attribute__((__packed__)) PerfEventSampleRegsUserSpIpArguments {
   uint64_t abi;
   uint64_t cx;
   uint64_t dx;
@@ -83,75 +83,75 @@ struct __attribute__((__packed__)) perf_event_sample_regs_user_sp_ip_arguments {
   uint64_t r9;
 };
 
-struct __attribute__((__packed__)) perf_event_sample_stack_user_8bytes {
+struct __attribute__((__packed__)) PerfEventSampleStackUser8bytes {
   uint64_t size;
   uint64_t top8bytes;
   uint64_t dyn_size;
 };
 
-struct __attribute__((__packed__)) perf_event_stack_sample_fixed {
+struct __attribute__((__packed__)) PerfEventStackSampleFixed {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
   uint64_t abi;
-  perf_event_sample_regs_user_all regs;
+  PerfEventSampleRegsUserAll regs;
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   // char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
   // uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
-struct __attribute__((__packed__)) perf_event_sp_ip_arguments_8bytes_sample {
+struct __attribute__((__packed__)) PerfEventSpIpArguments8bytesSample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_sp_ip_arguments regs;
-  perf_event_sample_stack_user_8bytes stack;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
+  PerfEventSampleRegsUserSpIpArguments regs;
+  PerfEventSampleStackUser8bytes stack;
 };
 
-struct __attribute__((__packed__)) perf_event_sp_ip_8bytes_sample {
+struct __attribute__((__packed__)) PerfEventSpIp8bytesSample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_sp_ip regs;
-  perf_event_sample_stack_user_8bytes stack;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
+  PerfEventSampleRegsUserSpIp regs;
+  PerfEventSampleStackUser8bytes stack;
 };
 
-struct __attribute__((__packed__)) perf_event_sp_stack_user_sample_fixed {
+struct __attribute__((__packed__)) PerfEventSpStackUserSampleFixed {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
   uint64_t abi;
-  perf_event_sample_regs_user_sp regs;
+  PerfEventSampleRegsUserSp regs;
   // Following this field there are the following fields, which we read dynamically:
   // uint64_t size;                     /* if PERF_SAMPLE_STACK_USER */
   // char data[SAMPLE_STACK_USER_SIZE]; /* if PERF_SAMPLE_STACK_USER */
   // uint64_t dyn_size;                 /* if PERF_SAMPLE_STACK_USER && size != 0 */
 };
 
-struct __attribute__((__packed__)) perf_event_empty_sample {
+struct __attribute__((__packed__)) PerfEventEmptySample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
 };
 
-struct __attribute__((__packed__)) perf_event_ax_sample {
+struct __attribute__((__packed__)) PerfEventAxSample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
-  perf_event_sample_regs_user_ax regs;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
+  PerfEventSampleRegsUserAx regs;
 };
 
 template <typename TracepointT>
-struct __attribute__((__packed__)) perf_event_raw_sample {
+struct __attribute__((__packed__)) PerfEventRawSample {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
   uint32_t size;
   TracepointT data;
 };
 
-struct __attribute__((__packed__)) perf_event_raw_sample_fixed {
+struct __attribute__((__packed__)) PerfEventRawSampleFixed {
   perf_event_header header;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
   uint32_t size;
   // The rest of the sample is a char[size] that we read dynamically.
 };
 
-struct __attribute__((__packed__)) perf_event_mmap_up_to_pgoff {
+struct __attribute__((__packed__)) PerfEventMmapUpToPgoff {
   perf_event_header header;
   uint32_t pid;
   uint32_t tid;
@@ -162,19 +162,19 @@ struct __attribute__((__packed__)) perf_event_mmap_up_to_pgoff {
   // OMITTED: perf_event_sample_id_tid_time_streamid_cpu sample_id;
 };
 
-struct __attribute__((__packed__)) perf_event_lost {
+struct __attribute__((__packed__)) PerfEventLost {
   perf_event_header header;
   uint64_t id;
   uint64_t lost;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
 };
 
-struct __attribute__((__packed__)) perf_event_throttle_unthrottle {
+struct __attribute__((__packed__)) PerfEventThrottleUnthrottle {
   perf_event_header header;
   uint64_t time;
   uint64_t id;
   uint64_t lost;
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  PerfEventSampleIdTidTimeStreamidCpu sample_id;
 };
 
 }  // namespace orbit_linux_tracing

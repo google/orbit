@@ -49,17 +49,17 @@ std::time_t to_time_t(TimePoint time_point) {
 
 namespace orbit_base {
 
-static ErrorMessageOr<unique_fd> OpenFile(const std::filesystem::path& path, int flags, int mode) {
+static ErrorMessageOr<UniqueFd> OpenFile(const std::filesystem::path& path, int flags, int mode) {
   int fd = TEMP_FAILURE_RETRY(open(path.string().c_str(), flags, mode));
   if (fd == kInvalidFd) {
     return ErrorMessage(
         absl::StrFormat("Unable to open file \"%s\": %s", path.string(), SafeStrerror(errno)));
   }
 
-  return unique_fd{fd};
+  return UniqueFd{fd};
 }
 
-ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path) {
+ErrorMessageOr<UniqueFd> OpenFileForReading(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_RDONLY | O_CLOEXEC;
 #elif defined(_WIN32)
@@ -68,7 +68,7 @@ ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path) 
   return OpenFile(path, kOpenFlags, 0);
 }
 
-ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) {
+ErrorMessageOr<UniqueFd> OpenFileForWriting(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC;
   constexpr int kOpenMode = 0600;
@@ -79,7 +79,7 @@ ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path) 
   return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
-ErrorMessageOr<unique_fd> OpenNewFileForWriting(const std::filesystem::path& path) {
+ErrorMessageOr<UniqueFd> OpenNewFileForWriting(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC;
   constexpr int kOpenMode = 0600;
@@ -90,7 +90,7 @@ ErrorMessageOr<unique_fd> OpenNewFileForWriting(const std::filesystem::path& pat
   return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
-ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path) {
+ErrorMessageOr<UniqueFd> OpenNewFileForReadWrite(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC;
   constexpr int kOpenMode = 0600;
@@ -101,7 +101,7 @@ ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& p
   return OpenFile(path, kOpenFlags, kOpenMode);
 }
 
-ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::path& path) {
+ErrorMessageOr<UniqueFd> OpenExistingFileForReadWrite(const std::filesystem::path& path) {
 #if defined(__linux)
   constexpr int kOpenFlags = O_RDWR | O_CLOEXEC;
 #elif defined(_WIN32)
@@ -110,7 +110,7 @@ ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::pa
   return OpenFile(path, kOpenFlags, 0);
 }
 
-ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t size) {
+ErrorMessageOr<void> WriteFully(const UniqueFd& fd, const void* data, size_t size) {
   int64_t bytes_left = size;
   const char* current_position = static_cast<const char*>(data);
   while (bytes_left > 0) {
@@ -126,11 +126,11 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t si
   return outcome::success();
 }
 
-ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content) {
+ErrorMessageOr<void> WriteFully(const UniqueFd& fd, std::string_view content) {
   return WriteFully(fd, content.data(), content.size());
 }
 
-ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
+ErrorMessageOr<void> WriteFullyAtOffset(const UniqueFd& fd, const void* buffer, size_t size,
                                         int64_t offset) {
   int64_t seek_result = lseek64(fd.get(), offset, SEEK_SET);
 
@@ -141,7 +141,7 @@ ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer,
   return WriteFully(fd, buffer, size);
 }
 
-ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size) {
+ErrorMessageOr<size_t> ReadFully(const UniqueFd& fd, void* buffer, size_t size) {
   size_t bytes_left = size;
   auto* current_position = static_cast<uint8_t*>(buffer);
 
@@ -159,7 +159,7 @@ ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size)
   return size - bytes_left;
 }
 
-ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
+ErrorMessageOr<size_t> ReadFullyAtOffset(const UniqueFd& fd, void* buffer, size_t size,
                                          int64_t offset) {
   int64_t seek_result = lseek64(fd.get(), offset, SEEK_SET);
 

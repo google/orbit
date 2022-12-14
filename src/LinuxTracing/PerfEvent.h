@@ -28,7 +28,7 @@ namespace orbit_linux_tracing {
 class PerfEventVisitor;
 
 [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX>
-perf_event_sample_regs_user_all_to_register_array(const perf_event_sample_regs_user_all& regs);
+perf_event_sample_regs_user_all_to_register_array(const PerfEventSampleRegsUserAll& regs);
 
 // This template class holds data from a specific perf_event_open event, based on the type argument.
 // The top-level fields (`timestamp` and `ordered_in_file_descriptor`) are common to all events,
@@ -65,8 +65,8 @@ struct DiscardedPerfEventData {
 using DiscardedPerfEvent = TypedPerfEvent<DiscardedPerfEventData>;
 
 struct StackSamplePerfEventData {
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
@@ -91,8 +91,8 @@ using StackSamplePerfEvent = TypedPerfEvent<StackSamplePerfEventData>;
 struct CallchainSamplePerfEventData {
   [[nodiscard]] const uint64_t* GetCallchain() const { return ips.get(); }
   [[nodiscard]] uint64_t GetCallchainSize() const { return ips_size; }
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
@@ -137,13 +137,13 @@ struct UprobesWithArgumentsPerfEventData {
   uint32_t cpu;
   uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
   uint64_t return_address;
-  perf_event_sample_regs_user_sp_ip_arguments regs;
+  PerfEventSampleRegsUserSpIpArguments regs;
 };
 using UprobesWithArgumentsPerfEvent = TypedPerfEvent<UprobesWithArgumentsPerfEventData>;
 
 struct UprobesWithStackPerfEventData {
-  [[nodiscard]] const perf_event_sample_regs_user_sp& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_sp*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserSp& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserSp*>(regs.get());
   }
   uint64_t stream_id;
   pid_t pid;
@@ -270,8 +270,8 @@ struct SchedWakeupWithCallchainPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   void SetIps(absl::Span<const uint64_t> new_ips) const {
@@ -303,8 +303,8 @@ struct SchedSwitchWithCallchainPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   void SetIps(absl::Span<const uint64_t> new_ips) const {
@@ -336,8 +336,8 @@ struct SchedWakeupWithStackPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the
@@ -361,8 +361,8 @@ struct SchedSwitchWithStackPerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegistersAsArray() const {
     return perf_event_sample_regs_user_all_to_register_array(GetRegisters());
   }
-  [[nodiscard]] const perf_event_sample_regs_user_all& GetRegisters() const {
-    return *absl::bit_cast<const perf_event_sample_regs_user_all*>(regs.get());
+  [[nodiscard]] const PerfEventSampleRegsUserAll& GetRegisters() const {
+    return *absl::bit_cast<const PerfEventSampleRegsUserAll*>(regs.get());
   }
   [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the

@@ -12,7 +12,7 @@
 
 // In particular, these are the versions older than the current one.
 
-struct orbit_api_v0 {
+struct orbit_api_v0 {  // NOLINT(readability-identifier-naming)
   uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color);
@@ -28,7 +28,7 @@ struct orbit_api_v0 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-struct orbit_api_v1 {
+struct orbit_api_v1 {  // NOLINT(readability-identifier-naming)
   uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color, uint64_t group_id,
@@ -52,7 +52,7 @@ struct orbit_api_v1 {
 // version, because we want the Windows layout to be available to us in liborbit.so when dealing
 // with a Windows binary running on Wine.
 
-struct orbit_api_win_v2 {
+struct orbit_api_win_v2 {  // NOLINT(readability-identifier-naming)
   uint32_t enabled;
   uint32_t initialized;
   __attribute__((ms_abi)) void (*start)(const char* name, orbit_api_color color, uint64_t group_id,

@@ -894,7 +894,7 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
 
 ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
     const std::filesystem::path& file_path) {
-  ErrorMessageOr<orbit_base::unique_fd> fd_or_error = orbit_base::OpenFileForReading(file_path);
+  ErrorMessageOr<orbit_base::UniqueFd> fd_or_error = orbit_base::OpenFileForReading(file_path);
 
   if (fd_or_error.has_error()) {
     return fd_or_error.error();

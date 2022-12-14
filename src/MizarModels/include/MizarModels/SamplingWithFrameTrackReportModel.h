@@ -109,7 +109,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
                                     int role = Qt::DisplayRole) const override {
-    static const absl::flat_hash_map<Column, QString> kColumnNames = {
+    static const absl::flat_hash_map<Column, QString> column_names = {
         {Column::kFunctionName, "Function"},
         {Column::kBaselineExclusivePercent, "Baseline, %"},
         {Column::kBaselineExclusiveTimePerFrame, "Baseline (per frame), us"},
@@ -124,7 +124,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       return {};
     }
 
-    return kColumnNames.at(static_cast<Column>(section));
+    return column_names.at(static_cast<Column>(section));
   }
 
  private:
