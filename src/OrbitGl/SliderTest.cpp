@@ -4,7 +4,6 @@
 
 #include <GteVector.h>
 #include <gtest/gtest.h>
-#include <math.h>
 
 #include <cmath>
 #include <memory>
