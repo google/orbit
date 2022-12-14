@@ -54,7 +54,7 @@ void ForEachCentile(uint32_t num_centiles, const Distribution& distribution,
 // keeping track of the calls to the frame boundary function and GPU queue submissions.
 class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventProcessor {
  public:
-  ~GraphicsCaptureEventProcessor() {
+  ~GraphicsCaptureEventProcessor() override {
     CalculateCpuStats();
     CalculateGpuStats();
     std::filesystem::path file_path(absl::GetFlag(FLAGS_output_path));

@@ -33,7 +33,7 @@ class WindowsProcessLauncherClientImpl : public WindowsProcessLauncherClient {
   explicit WindowsProcessLauncherClientImpl(const std::shared_ptr<grpc::Channel>& channel)
       : windows_process_launcher_service_(
             orbit_grpc_protos::WindowsProcessLauncherService::NewStub(channel)) {}
-  virtual ~WindowsProcessLauncherClientImpl() = default;
+  ~WindowsProcessLauncherClientImpl() override = default;
 
   ErrorMessageOr<orbit_grpc_protos::ProcessInfo> LaunchProcess(
       const orbit_grpc_protos::ProcessToLaunch& process_to_launch) override;

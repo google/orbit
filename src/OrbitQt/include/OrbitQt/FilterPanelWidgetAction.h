@@ -26,7 +26,7 @@ class FilterPanelWidgetAction : public QWidgetAction {
 
  public:
   explicit FilterPanelWidgetAction(QWidget* parent);
-  QWidget* createWidget(QWidget* parent);
+  QWidget* createWidget(QWidget* parent) override;
 
  signals:
   void FilterFunctionsTextChanged(const QString& text);

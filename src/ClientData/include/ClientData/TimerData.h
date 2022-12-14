@@ -86,7 +86,7 @@ class TimerData final : public TimerDataInterface {
 
   // Unused methods needed in TimerDataInterface
   [[nodiscard]] int64_t GetThreadId() const override { return -1; }
-  virtual void OnCaptureComplete() override {}
+  void OnCaptureComplete() override {}
 
  private:
   void UpdateMinTime(uint64_t min_time);

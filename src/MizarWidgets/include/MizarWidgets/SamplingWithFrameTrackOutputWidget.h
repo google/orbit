@@ -36,7 +36,7 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
 
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
-  ~SamplingWithFrameTrackOutputWidget();
+  ~SamplingWithFrameTrackOutputWidget() override;
   void UpdateReport(Report report);
 
  public slots:
