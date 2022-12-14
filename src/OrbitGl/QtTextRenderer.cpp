@@ -91,11 +91,13 @@ std::vector<float> QtTextRenderer::GetLayers() const {
 
 void QtTextRenderer::AddText(const char* text, float x, float y, float z,
                              TextFormatting formatting) {
+  ORBIT_SCOPE_FUNCTION;
   AddText(text, x, y, z, formatting, nullptr, nullptr);
 }
 
 void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                              Vec2* out_text_pos, Vec2* out_text_size) {
+  ORBIT_SCOPE_FUNCTION;
   if (out_text_pos != nullptr) {
     (*out_text_pos)[0] = (*out_text_pos)[1] = 0.f;
   }
@@ -159,6 +161,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
 float QtTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                       TextFormatting formatting,
                                                       size_t trailing_chars_length) {
+  ORBIT_SCOPE_FUNCTION;
   QString text_as_qstring(text);
   const size_t text_length = text_as_qstring.length();
   if (text_length == 0) {
