@@ -11,13 +11,13 @@
 #include <optional>
 
 #include "OrbitSshQt/SftpChannel.h"
-#include "SshTestFixture.h"
+#include "SshQtTestUtils/SshTestFixture.h"
 
 namespace orbit_ssh_qt {
 
 // A generic SSH test fixture that skips the tests if an SSH server is not available. It also sets
 // up the session which can be accessed via `GetSession`.
-class SftpTestFixture : public SshTestFixture {
+class SftpTestFixture : public orbit_ssh_qt_test_utils::SshTestFixture {
  public:
   // We can't use the constructor here because neither GTEST_SKIP, nor ASSERT_THAT are supported in
   // constructors.

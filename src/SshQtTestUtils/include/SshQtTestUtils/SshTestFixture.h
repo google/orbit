@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SSH_QT_SSH_TEST_FIXTURE_H_
-#define ORBIT_SSH_QT_SSH_TEST_FIXTURE_H_
+#ifndef ORBIT_SSH_QT_TEST_UTILS_SSH_TEST_FIXTURE_H_
+#define ORBIT_SSH_QT_TEST_UTILS_SSH_TEST_FIXTURE_H_
 
 #include <gtest/gtest.h>
 
@@ -12,9 +12,9 @@
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/Session.h"
 #include "QtTestUtils/WaitFor.h"
-#include "SshSessionTest.h"
+#include "SshQtTestUtils/SshSessionTest.h"
 
-namespace orbit_ssh_qt {
+namespace orbit_ssh_qt_test_utils {
 
 // A generic SSH test fixture that skips the tests if an SSH server is not available. It also sets
 // up the session which can be accessed via `GetSession`.
@@ -46,13 +46,13 @@ class SshTestFixture : public SshSessionTest {
     SshSessionTest::TearDown();
   }
 
-  [[nodiscard]] Session* GetSession() { return &session_.value(); }
-  [[nodiscard]] const Session* GetSession() const { return &session_.value(); }
+  [[nodiscard]] orbit_ssh_qt::Session* GetSession() { return &session_.value(); }
+  [[nodiscard]] const orbit_ssh_qt::Session* GetSession() const { return &session_.value(); }
 
  private:
   std::optional<orbit_ssh::Context> context_;
-  std::optional<Session> session_;
+  std::optional<orbit_ssh_qt::Session> session_;
 };
-}  // namespace orbit_ssh_qt
+}  // namespace orbit_ssh_qt_test_utils
 
-#endif  // ORBIT_SSH_QT_SSH_TEST_FIXTURE_H_
+#endif  // ORBIT_SSH_QT_TEST_UTILS_SSH_TEST_FIXTURE_H_

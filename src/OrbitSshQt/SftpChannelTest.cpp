@@ -8,11 +8,11 @@
 #include <memory>
 
 #include "OrbitSshQt/SftpChannel.h"
-#include "SshTestFixture.h"
+#include "SshQtTestUtils/SshTestFixture.h"
 
 namespace orbit_ssh_qt {
 
-using SftpChannelTest = SshTestFixture;
+using SftpChannelTest = orbit_ssh_qt_test_utils::SshTestFixture;
 
 TEST_F(SftpChannelTest, Open) {
   orbit_ssh_qt::SftpChannel channel{GetSession()};
