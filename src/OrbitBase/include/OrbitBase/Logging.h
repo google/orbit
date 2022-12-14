@@ -130,7 +130,7 @@ struct FuzzingException {};
 #elif defined(_WIN32)
 #define ORBIT_INTERNAL_PLATFORM_LOG(message)        \
   do {                                              \
-    fprintf(stderr, "%s", message);                 \
+    (void)std::fputs(message, stderr);              \
     orbit_base_internal::OutputToDebugger(message); \
     orbit_base_internal::LogToFile(message);        \
   } while (0)
@@ -142,7 +142,7 @@ struct FuzzingException {};
 #else
 #define ORBIT_INTERNAL_PLATFORM_LOG(message) \
   do {                                       \
-    fprintf(stderr, "%s", message);          \
+    (void)std::fputs(message, stderr);       \
     orbit_base_internal::LogToFile(message); \
   } while (0)
 #define ORBIT_INTERNAL_PLATFORM_ABORT() abort()

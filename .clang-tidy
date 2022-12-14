@@ -65,4 +65,6 @@ CheckOptions:
     value:           'CamelCase'
   - key:             readability-braces-around-statements.ShortStatementLines
     value:           '1'
+  - key:             cppcoreguidelines-avoid-do-while.IgnoreMacros
+    value:           'true'
 ...
