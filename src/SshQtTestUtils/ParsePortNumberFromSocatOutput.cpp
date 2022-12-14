@@ -22,14 +22,14 @@ std::optional<ErrorMessageOr<int>> ParsePortNumberFromSocatOutput(std::string_vi
   auto lines = absl::StrSplit(socat_output, '\n');
   std::string_view first_line = *lines.begin();
 
-  constexpr std::string_view kIpAddress{"0.0.0.0:"};
-  auto ip_location = first_line.find(kIpAddress);
+  constexpr std::string_view kIpAddressAndColon{"0.0.0.0:"};
+  auto ip_location = first_line.find(kIpAddressAndColon);
   if (ip_location == std::string_view::npos) {
     return ErrorMessage{
         absl::StrCat("Couldn't find the IP address in the first line: ", first_line)};
   }
 
-  std::string_view port_as_string = first_line.substr(ip_location + kIpAddress.size());
+  std::string_view port_as_string = first_line.substr(ip_location + kIpAddressAndColon.size());
   int port{};
   if (!absl::SimpleAtoi(port_as_string, &port)) {
     return ErrorMessage{absl::StrCat("Couldn't parse port number. Input was: ", port_as_string)};
