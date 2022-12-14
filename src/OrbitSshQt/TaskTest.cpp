@@ -6,15 +6,21 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
+#include <stdint.h>
 
-#include <QList>
+#include <QObject>
 #include <QSignalSpy>
 #include <QTest>
 #include <QVariant>
 #include <QtCore>
+#include <algorithm>
+#include <array>
 #include <string>
 #include <string_view>
+#include <vector>
 
+#include "OrbitBase/Future.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/WhenAll.h"
 #include "OrbitSshQt/Task.h"
 #include "QtTestUtils/WaitFor.h"

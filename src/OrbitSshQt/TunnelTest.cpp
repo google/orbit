@@ -6,6 +6,7 @@
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
@@ -21,8 +22,8 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <tuple>
 
-#include "OrbitSsh/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
