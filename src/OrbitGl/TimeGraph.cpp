@@ -895,7 +895,7 @@ void TimeGraph::DrawMarginsBetweenChildren(
 
   // Right margin mask for Timegraph.
   float right_margin_width = GetRightMargin();
-  float right_margin_height = GetHeight() - timeline_ui_->GetHeight();
+  float right_margin_height = GetHeight();
   Vec2 right_margin_pos{GetWidth() - right_margin_width, GetPos()[1]};
   Quad right_margin_box = MakeBox(right_margin_pos, Vec2(right_margin_width, right_margin_height));
   primitive_assembler.AddBox(right_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
