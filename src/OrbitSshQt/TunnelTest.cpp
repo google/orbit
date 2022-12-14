@@ -2,10 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/strings/match.h>
-#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_split.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
@@ -24,6 +21,7 @@
 #include <system_error>
 #include <tuple>
 
+#include "OrbitBase/Result.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
