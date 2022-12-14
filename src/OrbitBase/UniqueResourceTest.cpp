@@ -11,7 +11,7 @@
 
 #include "OrbitBase/UniqueResource.h"
 
-void my_delete(size_t) {}
+void my_delete(size_t /*unused*/) {}
 
 TEST(UniqueResource, Construct) {
   orbit_base::unique_resource<size_t, void (*)(size_t)> ur1(123, my_delete);

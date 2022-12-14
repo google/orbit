@@ -199,8 +199,9 @@ class MockFrameTrackManager {
 
   explicit MockFrameTrackManager(const MockMizarData* data) { passed_data_ = data; }
 
-  [[nodiscard]] static std::vector<TimestampNs> GetFrameStarts(FrameTrackId, TimestampNs,
-                                                               TimestampNs) {
+  [[nodiscard]] static std::vector<TimestampNs> GetFrameStarts(FrameTrackId /*unused*/,
+                                                               TimestampNs /*unused*/,
+                                                               TimestampNs /*unused*/) {
     return kStarts;
   }
 };

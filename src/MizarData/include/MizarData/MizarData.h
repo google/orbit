@@ -120,7 +120,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*unused*/) override {}
-  void OnApiTrackValue(const orbit_client_data::ApiTrackValue&) override {}
+  void OnApiTrackValue(const orbit_client_data::ApiTrackValue& /*unused*/) override {}
   void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {}
   void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/) override {}
