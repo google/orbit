@@ -11,8 +11,10 @@
 #include <gtest/gtest.h>
 
 #include <optional>
+#include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -25,16 +27,23 @@
 
 namespace orbit_ssh_qt_test_utils {
 
+constexpr std::string_view kSimpleSshServerEnvironmentVariableName =
+    "ORBIT_TESTING_SSH_SERVER_SIMPLE_ADDRESS";
+
 // A test fixture for SSH tests that does the following:
 // - Skips tests if no SSH server has been advertised
 // - Offers the GetCredentials() member function which returns all the information needed to make an
 // SSH connection to the test server.
 class SshSessionTest : public testing::Test {
  public:
+  explicit SshSessionTest(
+      std::string environment_variable = std::string{kSimpleSshServerEnvironmentVariableName})
+      : environment_variable_{std::move(environment_variable)} {}
+
   // We can't use the constructor here because neither GTEST_SKIP, nor ASSERT_THAT are supported in
   // constructors.
   void SetUp() override {
-    char* orbit_testing_ssh_server = std::getenv("ORBIT_TESTING_SSH_SERVER_SIMPLE_ADDRESS");
+    char* orbit_testing_ssh_server = std::getenv(environment_variable_.c_str());
     if (orbit_testing_ssh_server == nullptr) {
       GTEST_SKIP() << "No SSH server provided. Skipping test.";
     }
@@ -96,6 +105,7 @@ class SshSessionTest : public testing::Test {
 
   std::optional<orbit_test_utils::TemporaryDirectory> temp_dir_;
   orbit_ssh::Credentials credentials_;
+  std::string environment_variable_;
 };
 }  // namespace orbit_ssh_qt_test_utils
 
