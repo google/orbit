@@ -592,11 +592,11 @@ void TracerImpl::InitSwitchesStatesNamesVisitor() {
   if (trace_thread_state_) {
     // Filter thread states using target process id. We also send OrbitService's thread states when
     // introspection is enabled for more context on what our own threads are doing when capturing.
-    std::set<pid_t> pids = {target_pid_};
+    absl::flat_hash_set<pid_t> pids = {target_pid_};
     if (introspection_enabled_) {
       pids.insert(orbit_base::GetCurrentProcessIdNative());
     }
-    switches_states_names_visitor_->SetThreadStatePidFilters(pids);
+    switches_states_names_visitor_->SetThreadStatePidFilters(std::move(pids));
   }
   switches_states_names_visitor_->SetThreadStateCounter(&stats_.thread_state_count);
   event_processor_.AddVisitor(switches_states_names_visitor_.get());

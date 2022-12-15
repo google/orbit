@@ -6,6 +6,7 @@
 #define LINUX_TRACING_THREAD_STATE_VISITOR_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
 #include <sys/types.h>
 
@@ -51,8 +52,8 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void SetProduceSchedulingSlices(bool produce_scheduling_slices) {
     produce_scheduling_slices_ = produce_scheduling_slices;
   }
-  void SetThreadStatePidFilters(std::set<pid_t> pids) {
-    thread_state_pid_filters_ = {pids.begin(), pids.end()};
+  void SetThreadStatePidFilters(absl::flat_hash_set<pid_t> pids) {
+    thread_state_pid_filters_ = std::move(pids);
   }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
@@ -90,7 +91,7 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
 
   bool TidMatchesPidFilter(pid_t tid);
   std::optional<pid_t> GetPidOfTid(pid_t tid);
-  std::vector<pid_t> thread_state_pid_filters_;
+  absl::flat_hash_set<pid_t> thread_state_pid_filters_;
   absl::flat_hash_map<pid_t, pid_t> tid_to_pid_association_;
 
   ContextSwitchManager switch_manager_;
