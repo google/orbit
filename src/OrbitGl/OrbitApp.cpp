@@ -1471,8 +1471,7 @@ void OrbitApp::ClearCapture() {
 
   UpdateAfterCaptureCleared();
 
-  ORBIT_CHECK(capture_cleared_callback_);
-  capture_cleared_callback_();
+  main_window_->OnCaptureCleared();
 
   FireRefreshCallbacks();
 }

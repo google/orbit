@@ -62,6 +62,7 @@ class MainWindowInterface {
   virtual orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) = 0;
+  virtual void OnCaptureCleared() = 0;
 
   // Returns orbit_base::Canceled if the user chooses cancel in the dialog, void otherwise
   virtual orbit_base::CanceledOr<void> DisplayStopDownloadDialog(

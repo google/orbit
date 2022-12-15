@@ -327,7 +327,6 @@ void OrbitMainWindow::SetupMainWindow() {
   };
   app_->SetCaptureStoppedCallback(capture_finished_callback);
   app_->SetCaptureFailedCallback(capture_finished_callback);
-  app_->SetCaptureClearedCallback([this] { OnCaptureCleared(); });
 
   app_->SetRefreshCallback([this](DataViewType type) {
     if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
