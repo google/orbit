@@ -24,7 +24,6 @@ namespace orbit_qt_utils {
 class AssertNoQtLogWarnings {
   static void MessageHandlerTest(QtMsgType type, const QMessageLogContext& context,
                                  const QString& msg) {
-    static bool no_warning_msg = true;
     QByteArray local_msg = msg.toLocal8Bit();
     const char* file = context.file != nullptr ? context.file : "";
     const char* function = context.function != nullptr ? context.function : "";
@@ -38,13 +37,13 @@ class AssertNoQtLogWarnings {
                   function);
         break;
       case QtWarningMsg:
-        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
+        FAIL() << msg.toStdString();
         break;
       case QtCriticalMsg:
-        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
+        FAIL() << msg.toStdString();
         break;
       case QtFatalMsg:
-        EXPECT_EQ(false, no_warning_msg) << msg.toStdString();
+        FAIL() << msg.toStdString();
         break;
     }
   }

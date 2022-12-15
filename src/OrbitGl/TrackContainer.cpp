@@ -499,7 +499,7 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface>
 TrackContainer::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureViewElement>(
       this, "TrackContainer", orbit_accessibility::AccessibilityRole::Pane,
-      orbit_accessibility::AccessibilityState::Focusable);
+      orbit_accessibility::AccessibilityState::kFocusable);
 }
 
 }  // namespace orbit_gl

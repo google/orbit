@@ -29,7 +29,7 @@ class AccessibleWidgetBridge : public AccessibleInterface {
   }
   [[nodiscard]] AccessibilityRect AccessibleRect() const override { return {}; }
   [[nodiscard]] AccessibilityState AccessibleState() const override {
-    return AccessibilityState::Normal;
+    return AccessibilityState::kNormal;
   }
 };
 

@@ -20,7 +20,7 @@ using ::testing::ElementsAre;
 
 namespace orbit_linux_tracing {
 
-static constexpr PerfEventSampleRegsUserSpIpArguments kRegisters{
+static constexpr RingBufferSampleRegsUserSpIpArguments kRegisters{
     .abi = PERF_SAMPLE_REGS_ABI_64,
     .cx = 4,
     .dx = 3,

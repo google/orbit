@@ -336,11 +336,11 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
 
   // Result of the difference is positive; in the first case it just fits, the second case
   // overflows.
-  const uint64_t addr2_smaller = kAddr1 - std::numeric_limits<int32_t>::max();
-  result = AddressDifferenceAsInt32(kAddr1, addr2_smaller);
+  constexpr uint64_t kAddr2Smaller = kAddr1 - std::numeric_limits<int32_t>::max();
+  result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller);
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::max(), result.value());
-  result = AddressDifferenceAsInt32(kAddr1, addr2_smaller - 1);
+  result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller - 1);
   EXPECT_THAT(result, HasError("Difference is larger than +2GB"));
 
   // Result of the difference does not even fit into a int64. We handle that gracefully as well.

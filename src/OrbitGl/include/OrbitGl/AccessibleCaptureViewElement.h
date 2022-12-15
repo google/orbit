@@ -20,7 +20,7 @@ class AccessibleCaptureViewElement : public orbit_accessibility::AccessibleInter
                                         orbit_accessibility::AccessibilityRole accessible_role =
                                             orbit_accessibility::AccessibilityRole::Pane,
                                         orbit_accessibility::AccessibilityState accessible_state =
-                                            orbit_accessibility::AccessibilityState::Normal)
+                                            orbit_accessibility::AccessibilityState::kNormal)
       : accessible_name_(std::move(accessible_name)),
         accessible_role_(accessible_role),
         accessible_state_(accessible_state),

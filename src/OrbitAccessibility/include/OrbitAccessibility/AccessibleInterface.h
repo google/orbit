@@ -50,15 +50,15 @@ enum class AccessibilityRole {
  * QT-definitions
  */
 enum class AccessibilityState : uint64_t {
-  Normal = 0,            // NOLINT(readability-identifier-naming)
-  Disabled = 1,          // NOLINT(readability-identifier-naming)
-  Focusable = 1 << 2,    // NOLINT(readability-identifier-naming)
-  Focused = 1 << 3,      // NOLINT(readability-identifier-naming)
-  Expanded = 1 << 11,    // NOLINT(readability-identifier-naming)
-  Collapsed = 1 << 12,   // NOLINT(readability-identifier-naming)
-  Expandable = 1 << 14,  // NOLINT(readability-identifier-naming)
-  Offscreen = 1 << 18,   // NOLINT(readability-identifier-naming)
-  Movable = 1 << 20      // NOLINT(readability-identifier-naming)
+  kNormal = 0,
+  kDisabled = 1,
+  kFocusable = 1 << 2,
+  kFocused = 1 << 3,
+  kExpanded = 1 << 11,
+  kCollapsed = 1 << 12,
+  kExpandable = 1 << 14,
+  kOffscreen = 1 << 18,
+  kMovable = 1 << 20
 };
 
 inline AccessibilityState operator|(AccessibilityState lhs, AccessibilityState rhs) {

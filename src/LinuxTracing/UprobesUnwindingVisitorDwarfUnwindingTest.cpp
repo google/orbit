@@ -190,7 +190,7 @@ class UprobesUnwindingVisitorDwarfUnwindingTestBase : public ::testing::Test {
       kNonExecutableMapsStart, kNonExecutableMapsEnd, 0, PROT_EXEC | PROT_READ, kNonExecutableName);
 
   static constexpr uint64_t kNumOfSpRegisters =
-      sizeof(PerfEventSampleRegsUserSp) / sizeof(uint64_t);
+      sizeof(RingBufferSampleRegsUserSp) / sizeof(uint64_t);
 };
 
 template <typename>
@@ -199,7 +199,7 @@ class UprobesUnwindingVisitorDwarfUnwindingTest
 
 template <typename PerfEventType>
 PerfEventType BuildFakePerfEventWithStack() {
-  constexpr uint64_t kTotalNumOfRegisters = sizeof(PerfEventSampleRegsUserAll) / sizeof(uint64_t);
+  constexpr uint64_t kTotalNumOfRegisters = sizeof(RingBufferSampleRegsUserAll) / sizeof(uint64_t);
 
   constexpr uint64_t kStackSize = 13;
   PerfEventType result{
@@ -1316,7 +1316,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest, VisitStackSampleUsesUser
               .data = std::make_unique<uint8_t[]>(kUserStackSize),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs{};
+  RingBufferSampleRegsUserSp sp_regs{};
   sp_regs.sp = kUserStackPointer;
   std::memcpy(user_stack_event.data.regs.get(), &sp_regs, sizeof(sp_regs));
   uint8_t* user_stack_data = user_stack_event.data.data.get();
@@ -1433,7 +1433,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeOld),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs1{};
+  RingBufferSampleRegsUserSp sp_regs1{};
   sp_regs1.sp = kUserStackPointerOld;
   std::memcpy(user_stack_event_old.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   PerfEvent{std::move(user_stack_event_old)}.Accept(&this->visitor_);
@@ -1452,7 +1452,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeNew),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs2{};
+  RingBufferSampleRegsUserSp sp_regs2{};
   sp_regs2.sp = kUserStackPointerNew;
   std::memcpy(user_stack_event_new.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   uint8_t* user_stack_data = user_stack_event_new.data.data.get();
@@ -1570,7 +1570,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeSameThread),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs1{};
+  RingBufferSampleRegsUserSp sp_regs1{};
   sp_regs1.sp = kUserStackPointerSameThread;
   std::memcpy(user_stack_event_same_thread.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   uint8_t* user_stack_data = user_stack_event_same_thread.data.data.get();
@@ -1590,7 +1590,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSizeOtherThread),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs2{};
+  RingBufferSampleRegsUserSp sp_regs2{};
   sp_regs2.sp = kUserStackPointerOtherThread;
   std::memcpy(user_stack_event_other_thread.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   PerfEvent{std::move(user_stack_event_other_thread)}.Accept(&this->visitor_);
@@ -1707,7 +1707,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSize1),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs1{};
+  RingBufferSampleRegsUserSp sp_regs1{};
   sp_regs1.sp = kUserStackPointer1;
   std::memcpy(user_stack_event1.data.regs.get(), &sp_regs1, sizeof(sp_regs1));
   uint8_t* user_stack_data1 = user_stack_event1.data.data.get();
@@ -1727,7 +1727,7 @@ TYPED_TEST_P(UprobesUnwindingVisitorDwarfUnwindingTest,
               .data = std::make_unique<uint8_t[]>(kUserStackSize2),
           },
   };
-  PerfEventSampleRegsUserSp sp_regs2{};
+  RingBufferSampleRegsUserSp sp_regs2{};
   sp_regs2.sp = kUserStackPointer2;
   std::memcpy(user_stack_event2.data.regs.get(), &sp_regs2, sizeof(sp_regs2));
   uint8_t* user_stack_data2 = user_stack_event2.data.data.get();

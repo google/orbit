@@ -1041,7 +1041,7 @@ void TracerImpl::Run() {
 
 uint64_t TracerImpl::ProcessForkEventAndReturnTimestamp(const perf_event_header& header,
                                                         PerfEventRingBuffer* ring_buffer) {
-  PerfEventForkExit ring_buffer_record;
+  RingBufferForkExit ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   ForkPerfEvent event{
       .timestamp = ring_buffer_record.time,
@@ -1063,7 +1063,7 @@ uint64_t TracerImpl::ProcessForkEventAndReturnTimestamp(const perf_event_header&
 
 uint64_t TracerImpl::ProcessExitEventAndReturnTimestamp(const perf_event_header& header,
                                                         PerfEventRingBuffer* ring_buffer) {
-  PerfEventForkExit ring_buffer_record;
+  RingBufferForkExit ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   ExitPerfEvent event{
       .timestamp = ring_buffer_record.time,
@@ -1145,8 +1145,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventSpIp8bytesSample));
-    PerfEventSpIp8bytesSample ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferSpIp8bytesSample));
+    RingBufferSpIp8bytesSample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     if (static_cast<pid_t>(ring_buffer_record.sample_id.pid) != target_pid_) {
@@ -1174,7 +1174,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
   } else if (is_uprobe_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
-    const size_t size_of_uprobe_sample = sizeof(PerfEventSpStackUserSampleFixed) +
+    const size_t size_of_uprobe_sample = sizeof(RingBufferSpStackUserSampleFixed) +
                                          2 * sizeof(uint64_t) /*size and dyn_size*/ +
                                          stack_dump_size_ /*data*/;
     if (header.size != size_of_uprobe_sample) {
@@ -1190,8 +1190,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(std::move(event));
     ++stats_.uprobes_with_stack_count;
   } else if (is_uprobe_with_args) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventSpIpArguments8bytesSample));
-    PerfEventSpIpArguments8bytesSample ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferSpIpArguments8bytesSample));
+    RingBufferSpIpArguments8bytesSample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     if (static_cast<pid_t>(ring_buffer_record.sample_id.pid) != target_pid_) {
@@ -1217,8 +1217,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventEmptySample));
-    PerfEventEmptySample ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferEmptySample));
+    RingBufferEmptySample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     if (static_cast<pid_t>(ring_buffer_record.sample_id.pid) != target_pid_) {
@@ -1239,8 +1239,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe_with_retval) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventAxSample));
-    PerfEventAxSample ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferAxSample));
+    RingBufferAxSample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     if (static_cast<pid_t>(ring_buffer_record.sample_id.pid) != target_pid_) {
@@ -1263,7 +1263,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   } else if (is_stack_sample) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
 
-    const size_t size_of_stack_sample = sizeof(PerfEventStackSampleFixed) +
+    const size_t size_of_stack_sample = sizeof(RingBufferStackSampleFixed) +
                                         2 * sizeof(uint64_t) /*size and dyn_size*/ +
                                         stack_dump_size_ /*data*/;
 
@@ -1302,8 +1302,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventRawSample<TaskNewtaskTracepoint>));
-    PerfEventRawSample<TaskNewtaskTracepoint> ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferRawSample<TaskNewtaskTracepointData>));
+    RingBufferRawSample<TaskNewtaskTracepointData> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
     TaskNewtaskPerfEvent event{
         .timestamp = ring_buffer_record.sample_id.time,
@@ -1324,8 +1324,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_task_rename) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventRawSample<TaskRenameTracepoint>));
-    PerfEventRawSample<TaskRenameTracepoint> ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferRawSample<TaskRenameTracepointData>));
+    RingBufferRawSample<TaskRenameTracepointData> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     TaskRenamePerfEvent event{
@@ -1343,8 +1343,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch) {
-    ORBIT_CHECK(header.size == sizeof(PerfEventRawSample<SchedSwitchTracepoint>));
-    PerfEventRawSample<SchedSwitchTracepoint> ring_buffer_record;
+    ORBIT_CHECK(header.size == sizeof(RingBufferRawSample<SchedSwitchTracepointData>));
+    RingBufferRawSample<SchedSwitchTracepointData> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
     SchedSwitchPerfEvent event{
@@ -1447,7 +1447,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
 uint64_t TracerImpl::ProcessLostEventAndReturnTimestamp(const perf_event_header& header,
                                                         PerfEventRingBuffer* ring_buffer) {
-  PerfEventLost ring_buffer_record;
+  RingBufferLost ring_buffer_record;
   ring_buffer->ConsumeRecord(header, &ring_buffer_record);
   uint64_t timestamp = ring_buffer_record.sample_id.time;
 
