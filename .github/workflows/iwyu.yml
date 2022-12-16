@@ -138,7 +138,7 @@ jobs:
         run: |
           git checkout -b ${{ env.IWYU_CLEANUP_BRANCH }}
           git update-index --refresh
-          git apply --index build/iwyu.diff
+          git apply --index --allow-empty build/iwyu.diff
       - name: Check for changes
         if: steps.check_has_open_iwyu_pr.outputs.has_open_iwyu_pr == 'false'
         working-directory: ./orbit
