@@ -10,15 +10,15 @@
 // Format is based on the content of the event's format file:
 // /sys/kernel/debug/tracing/events/<category>/<name>/format
 
-struct __attribute__((__packed__)) tracepoint_common {
+struct __attribute__((__packed__)) CommonTracepointData {
   uint16_t common_type;
   uint8_t common_flags;
   uint8_t common_preempt_count;
   int32_t common_pid;
 };
 
-struct __attribute__((__packed__)) task_newtask_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) TaskNewtaskTracepointData {
+  CommonTracepointData common;
   int32_t pid;
   char comm[16];
   uint64_t clone_flags;
@@ -26,10 +26,10 @@ struct __attribute__((__packed__)) task_newtask_tracepoint {
   char reserved[14];  // These bytes are not documented in the format file.
 };
 
-static_assert(sizeof(task_newtask_tracepoint) == 52);
+static_assert(sizeof(TaskNewtaskTracepointData) == 52);
 
-struct __attribute__((__packed__)) task_rename_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) TaskRenameTracepointData {
+  CommonTracepointData common;
   int32_t pid;
   char oldcomm[16];
   char newcomm[16];
@@ -37,10 +37,10 @@ struct __attribute__((__packed__)) task_rename_tracepoint {
   char reserved[6];  // These bytes are not documented in the format file.
 };
 
-static_assert(sizeof(task_rename_tracepoint) == 52);
+static_assert(sizeof(TaskRenameTracepointData) == 52);
 
-struct __attribute__((__packed__)) sched_switch_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) SchedSwitchTracepointData {
+  CommonTracepointData common;
   char prev_comm[16];
   int32_t prev_pid;
   int32_t prev_prio;
@@ -51,10 +51,10 @@ struct __attribute__((__packed__)) sched_switch_tracepoint {
   char reserved[4];  // These bytes are not documented in the format file.
 };
 
-static_assert(sizeof(sched_switch_tracepoint) == 68);
+static_assert(sizeof(SchedSwitchTracepointData) == 68);
 
-struct __attribute__((__packed__)) sched_wakeup_tracepoint_fixed {
-  tracepoint_common common;
+struct __attribute__((__packed__)) SchedWakeupTracepointDataFixed {
+  CommonTracepointData common;
   char comm[16];
   int32_t pid;
   int32_t prio;
@@ -74,10 +74,10 @@ struct __attribute__((__packed__)) sched_wakeup_tracepoint_fixed {
   // not assume a fixed size.
 };
 
-static_assert(sizeof(sched_wakeup_tracepoint_fixed) == 32);
+static_assert(sizeof(SchedWakeupTracepointDataFixed) == 32);
 
-struct __attribute__((__packed__)) amdgpu_cs_ioctl_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) AmdgpuCsIoctlTracepointData {
+  CommonTracepointData common;
   uint64_t sched_job_id;
   int32_t timeline;
   uint32_t context;
@@ -87,8 +87,8 @@ struct __attribute__((__packed__)) amdgpu_cs_ioctl_tracepoint {
   uint32_t num_ibs;
 };
 
-struct __attribute__((__packed__)) amdgpu_sched_run_job_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) AmdgpuSchedRunJobTracepointData {
+  CommonTracepointData common;
   uint64_t sched_job_id;
   int32_t timeline;
   uint32_t context;
@@ -97,8 +97,8 @@ struct __attribute__((__packed__)) amdgpu_sched_run_job_tracepoint {
   uint32_t num_ibs;
 };
 
-struct __attribute__((__packed__)) dma_fence_signaled_tracepoint {
-  tracepoint_common common;
+struct __attribute__((__packed__)) DmaFenceSignaledTracepointData {
+  CommonTracepointData common;
   int32_t driver;
   int32_t timeline;
   uint32_t context;

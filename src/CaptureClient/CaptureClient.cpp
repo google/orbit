@@ -58,7 +58,7 @@ namespace {
 std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager& module_manager,
                                           const orbit_client_data::ProcessData& process_data) {
   // We have a different function name for each supported platform.
-  static const std::vector<std::string> orbit_api_get_function_table_address_prefixes{
+  static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
       orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
       orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
   std::vector<ApiFunction> api_functions;
@@ -71,7 +71,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
       continue;
     }
     for (const std::string& orbit_api_get_function_table_address_prefix :
-         orbit_api_get_function_table_address_prefixes) {
+         kOrbitApiGetFunctionTableAddressPrefixes) {
       for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
         std::string function_name =
             absl::StrFormat("%s%u", orbit_api_get_function_table_address_prefix, i);

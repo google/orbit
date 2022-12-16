@@ -69,7 +69,9 @@ class EventLoop : public QObject {
   bool processEvents(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
     return loop_.processEvents(flags);
   }
-  void processEvents(ProcessEventsFlags flags, int maxTime) { loop_.processEvents(flags, maxTime); }
+  void processEvents(ProcessEventsFlags flags, int max_time) {
+    loop_.processEvents(flags, max_time);
+  }
 
  private:
   std::optional<ErrorMessageOr<int>> result_;

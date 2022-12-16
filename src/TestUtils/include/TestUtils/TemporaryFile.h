@@ -40,7 +40,7 @@ class TemporaryFile final {
 
   void CloseAndRemove();
 
-  [[nodiscard]] const orbit_base::unique_fd& fd() const { return fd_; }
+  [[nodiscard]] const orbit_base::UniqueFd& fd() const { return fd_; }
   [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }
 
   // Call this function to create a new temporary file. The `prefix` is a component that is
@@ -52,7 +52,7 @@ class TemporaryFile final {
   TemporaryFile() = default;
   ErrorMessageOr<void> Init(std::string_view prefix);
 
-  orbit_base::unique_fd fd_;
+  orbit_base::UniqueFd fd_;
   std::filesystem::path file_path_;
 };
 

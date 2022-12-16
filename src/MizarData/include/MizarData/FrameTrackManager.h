@@ -45,7 +45,7 @@ class FrameTrackManagerTmpl {
   [[nodiscard]] std::vector<TimestampNs> GetFrameStarts(FrameTrackId id, TimestampNs min_start,
                                                         TimestampNs max_start) const {
     std::vector<TimestampNs> result = std::visit(
-        orbit_base::overloaded{
+        orbit_base::Overloaded{
             absl::bind_front(&FrameTrackManagerTmpl::GetScopeFrameStarts, this, min_start,
                              max_start),
             absl::bind_front(&FrameTrackManagerTmpl::GetEtwFrameStarts, this, min_start, max_start),

@@ -76,7 +76,7 @@ static constexpr std::string_view kLineSeparator = "\r\n";
 std::string FormatValueForCsv(std::string_view value);
 
 template <typename Range>
-ErrorMessageOr<void> WriteLineToCsv(const orbit_base::unique_fd& fd, const Range& cells) {
+ErrorMessageOr<void> WriteLineToCsv(const orbit_base::UniqueFd& fd, const Range& cells) {
   std::string header_line = absl::StrJoin(
       cells, kFieldSeparator,
       [](std::string* out, std::string_view name) { out->append(FormatValueForCsv(name)); });

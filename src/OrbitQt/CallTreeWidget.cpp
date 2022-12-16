@@ -671,14 +671,14 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
-  static const QString alt_click_shortcut = QStringLiteral("\tALT+Click");
+  static const QString kAltClickShortcut = QStringLiteral("\tALT+Click");
   bool is_expanded = ui_->callTreeTreeView->isExpanded(index);
   QString action_expand_recursively = (!is_expanded && enable_expand_recursively)
-                                          ? kActionExpandRecursively + alt_click_shortcut
+                                          ? kActionExpandRecursively + kAltClickShortcut
                                           : kActionExpandRecursively;
   menu.addAction(action_expand_recursively)->setEnabled(enable_expand_recursively);
   QString action_collapse_recursively = (is_expanded && enable_collapse_recursively)
-                                            ? kActionCollapseRecursively + alt_click_shortcut
+                                            ? kActionCollapseRecursively + kAltClickShortcut
                                             : kActionCollapseRecursively;
   menu.addAction(action_collapse_recursively)->setEnabled(enable_collapse_recursively);
   menu.addAction(kActionCollapseChildrenRecursively)->setEnabled(enable_collapse_recursively);
@@ -899,14 +899,14 @@ QVariant CallTreeWidget::HookedIdentityProxyModel::data(const QModelIndex& index
   }
 
   if (role == Qt::ToolTipRole) {
-    static const QString tooltip_hooked_prefix = QStringLiteral("[HOOKED] ");
-    return tooltip_hooked_prefix + data.toString();
+    static const QString kTooltipHookedPrefix = QStringLiteral("[HOOKED] ");
+    return kTooltipHookedPrefix + data.toString();
   }
-  static const QString display_hooked_prefix =
+  static const QString kDisplayHookedPrefix =
       QStringLiteral("[") +
       QString::fromStdString(orbit_data_views::FunctionsDataView::kSelectedFunctionString) +
       QStringLiteral("] ");
-  return display_hooked_prefix + data.toString();
+  return kDisplayHookedPrefix + data.toString();
 }
 
 void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,

@@ -37,7 +37,7 @@ namespace orbit_data_views {
 ModulesDataView::ModulesDataView(AppInterface* app) : DataView(DataViewType::kModules, app) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> kColumns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnSymbols] = {"Symbols", .175f, SortingOrder::kDescending};
@@ -47,7 +47,7 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
     columns[kColumnFileSize] = {"File Size", .1f, SortingOrder::kDescending};
     return columns;
   }();
-  return columns;
+  return kColumns;
 }
 
 std::string ModulesDataView::GetValue(int row, int col) {

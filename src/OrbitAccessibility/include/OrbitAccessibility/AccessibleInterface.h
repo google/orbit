@@ -50,15 +50,15 @@ enum class AccessibilityRole {
  * QT-definitions
  */
 enum class AccessibilityState : uint64_t {
-  Normal = 0,
-  Disabled = 1,
-  Focusable = 1 << 2,
-  Focused = 1 << 3,
-  Expanded = 1 << 11,
-  Collapsed = 1 << 12,
-  Expandable = 1 << 14,
-  Offscreen = 1 << 18,
-  Movable = 1 << 20
+  kNormal = 0,
+  kDisabled = 1,
+  kFocusable = 1 << 2,
+  kFocused = 1 << 3,
+  kExpanded = 1 << 11,
+  kCollapsed = 1 << 12,
+  kExpandable = 1 << 14,
+  kOffscreen = 1 << 18,
+  kMovable = 1 << 20
 };
 
 inline AccessibilityState operator|(AccessibilityState lhs, AccessibilityState rhs) {

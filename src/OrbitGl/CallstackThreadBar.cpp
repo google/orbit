@@ -233,11 +233,11 @@ bool CallstackThreadBar::IsEmpty() const {
 
 std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primitive_assembler,
                                                  PickingId id) const {
-  static const std::string unknown_return_text = "Function call information missing";
+  static const std::string kUnknownReturnText = "Function call information missing";
 
   const PickingUserData* user_data = primitive_assembler.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
-    return unknown_return_text;
+    return kUnknownReturnText;
   }
 
   ORBIT_CHECK(capture_data_ != nullptr);
@@ -247,7 +247,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   uint64_t callstack_id = callstack_event->callstack_id();
   const CallstackInfo* callstack = callstack_data.GetCallstack(callstack_id);
   if (callstack == nullptr) {
-    return unknown_return_text;
+    return kUnknownReturnText;
   }
 
   FormattedModuleAndFunctionName innermost_module_and_function_name =

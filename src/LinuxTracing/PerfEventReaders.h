@@ -21,7 +21,7 @@ namespace orbit_linux_tracing {
 // This function reads sample_id, which is always the last field
 // in the perf event record unless it is PERF_RECORD_SAMPLE.
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
-                         perf_event_sample_id_tid_time_streamid_cpu* sample_id);
+                         RingBufferSampleIdTidTimeStreamidCpu* sample_id);
 
 [[nodiscard]] uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer);
 

@@ -68,41 +68,41 @@ void ThreadStateBar::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
 
   // Draw a transparent track just for clicking.
   Quad box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
-  static const Color transparent{0, 0, 0, 0};
-  primitive_assembler.AddBox(box, thread_state_bar_z, transparent, shared_from_this());
+  static const Color kTransparent{0, 0, 0, 0};
+  primitive_assembler.AddBox(box, thread_state_bar_z, kTransparent, shared_from_this());
 }
 
 static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
-  static const Color green500{76, 175, 80, 255};
-  static const Color blue500{33, 150, 243, 255};
-  static const Color gray600{117, 117, 117, 255};
-  static const Color orange500{255, 152, 0, 255};
-  static const Color red500{244, 67, 54, 255};
-  static const Color purple500{156, 39, 176, 255};
-  static const Color black{0, 0, 0, 255};
-  static const Color brown500{121, 85, 72, 255};
+  static const Color kGreen500{76, 175, 80, 255};
+  static const Color kBlue500{33, 150, 243, 255};
+  static const Color kGray600{117, 117, 117, 255};
+  static const Color kOrange500{255, 152, 0, 255};
+  static const Color kRed500{244, 67, 54, 255};
+  static const Color kPurple500{156, 39, 176, 255};
+  static const Color kBlack{0, 0, 0, 255};
+  static const Color kBrown500{121, 85, 72, 255};
 
   switch (state) {
     case ThreadStateSlice::kRunning:
-      return green500;
+      return kGreen500;
     case ThreadStateSlice::kRunnable:
-      return blue500;
+      return kBlue500;
     case ThreadStateSlice::kInterruptibleSleep:
-      return gray600;
+      return kGray600;
     case ThreadStateSlice::kUninterruptibleSleep:
-      return orange500;
+      return kOrange500;
     case ThreadStateSlice::kStopped:
-      return red500;
+      return kRed500;
     case ThreadStateSlice::kTraced:
-      return purple500;
+      return kPurple500;
     case ThreadStateSlice::kDead:
       [[fallthrough]];
     case ThreadStateSlice::kZombie:
-      return black;
+      return kBlack;
     case ThreadStateSlice::kParked:
       [[fallthrough]];
     case ThreadStateSlice::kIdle:
-      return brown500;
+      return kBrown500;
     default:
       ORBIT_UNREACHABLE();
   }

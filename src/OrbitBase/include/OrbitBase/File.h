@@ -27,18 +27,18 @@ namespace orbit_base {
 
 constexpr int kInvalidFd = -1;
 
-class unique_fd {
+class UniqueFd {
  public:
-  constexpr unique_fd() = default;
-  constexpr explicit unique_fd(int fd) : fd_{fd} {}
-  ~unique_fd() { release(); }
+  constexpr UniqueFd() = default;
+  constexpr explicit UniqueFd(int fd) : fd_{fd} {}
+  ~UniqueFd() { release(); }
 
-  unique_fd(const unique_fd&) = delete;
-  unique_fd& operator=(const unique_fd&) = delete;
+  UniqueFd(const UniqueFd&) = delete;
+  UniqueFd& operator=(const UniqueFd&) = delete;
 
-  constexpr unique_fd(unique_fd&& other) : fd_{other.fd_} { other.fd_ = kInvalidFd; }
+  constexpr UniqueFd(UniqueFd&& other) : fd_{other.fd_} { other.fd_ = kInvalidFd; }
 
-  unique_fd& operator=(unique_fd&& other) {
+  UniqueFd& operator=(UniqueFd&& other) {
     if (&other == this) return *this;
 
     reset(other.fd_);
@@ -73,21 +73,21 @@ class unique_fd {
 // different subroutines for Windows/Linux. They also translate errors to
 // ErrorMessageOr<T>.
 
-ErrorMessageOr<unique_fd> OpenFileForReading(const std::filesystem::path& path);
+ErrorMessageOr<UniqueFd> OpenFileForReading(const std::filesystem::path& path);
 
-ErrorMessageOr<unique_fd> OpenFileForWriting(const std::filesystem::path& path);
+ErrorMessageOr<UniqueFd> OpenFileForWriting(const std::filesystem::path& path);
 
-ErrorMessageOr<unique_fd> OpenNewFileForWriting(const std::filesystem::path& path);
+ErrorMessageOr<UniqueFd> OpenNewFileForWriting(const std::filesystem::path& path);
 
-ErrorMessageOr<unique_fd> OpenNewFileForReadWrite(const std::filesystem::path& path);
+ErrorMessageOr<UniqueFd> OpenNewFileForReadWrite(const std::filesystem::path& path);
 
-ErrorMessageOr<unique_fd> OpenExistingFileForReadWrite(const std::filesystem::path& path);
+ErrorMessageOr<UniqueFd> OpenExistingFileForReadWrite(const std::filesystem::path& path);
 
-ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t size);
+ErrorMessageOr<void> WriteFully(const UniqueFd& fd, const void* data, size_t size);
 
-ErrorMessageOr<void> WriteFully(const unique_fd& fd, std::string_view content);
+ErrorMessageOr<void> WriteFully(const UniqueFd& fd, std::string_view content);
 
-ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer, size_t size,
+ErrorMessageOr<void> WriteFullyAtOffset(const UniqueFd& fd, const void* buffer, size_t size,
                                         int64_t offset);
 
 // Tries to read 'size' bytes from the file to the buffer, returns actual
@@ -96,15 +96,15 @@ ErrorMessageOr<void> WriteFullyAtOffset(const unique_fd& fd, const void* buffer,
 //
 // Use this function only for reading from files. This function is not supposed to be
 // used for non-blocking reads from sockets/pipes - it does not handle EAGAIN.
-ErrorMessageOr<size_t> ReadFully(const unique_fd& fd, void* buffer, size_t size);
+ErrorMessageOr<size_t> ReadFully(const UniqueFd& fd, void* buffer, size_t size);
 
 // Same as above but tries to read from an offset. The file referenced by fd must be capable of
 // seeking. The same limitation for non-blocking reads as above applies here.
-ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size_t size,
+ErrorMessageOr<size_t> ReadFullyAtOffset(const UniqueFd& fd, void* buffer, size_t size,
                                          int64_t offset);
 
 template <typename T>
-ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, int64_t offset) {
+ErrorMessageOr<T> ReadFullyAtOffset(const UniqueFd& fd, int64_t offset) {
   T value;
   auto size_or_error = ReadFullyAtOffset(fd, &value, sizeof(value), offset);
   if (size_or_error.has_error()) {

@@ -9,7 +9,7 @@
 namespace orbit_linux_tracing {
 
 std::array<uint64_t, PERF_REG_X86_64_MAX> perf_event_sample_regs_user_all_to_register_array(
-    const perf_event_sample_regs_user_all& regs) {
+    const RingBufferSampleRegsUserAll& regs) {
   std::array<uint64_t, PERF_REG_X86_64_MAX> registers{};
   registers[PERF_REG_X86_AX] = regs.ax;
   registers[PERF_REG_X86_BX] = regs.bx;

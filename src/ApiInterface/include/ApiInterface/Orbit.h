@@ -314,7 +314,7 @@ extern "C" {
 #endif
 
 // Material Design Colors #500
-typedef enum {
+typedef enum {  // NOLINT(modernize-use-using): This is C code.
   kOrbitColorAuto = 0x00000000,
   kOrbitColorRed = 0xf44336ff,
   kOrbitColorPink = 0xe91e63ff,
@@ -342,7 +342,7 @@ enum { kOrbitCallerAddressAuto = 0ULL };
 
 enum { kOrbitApiVersion = 2 };
 
-struct orbit_api_v2 {
+struct orbit_api_v2 {  // NOLINT(readability-identifier-naming)
   uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color, uint64_t group_id,

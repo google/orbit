@@ -1150,7 +1150,7 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
 
 uint64_t GetMaxTrampolineSize() {
   // The maximum size of a trampoline is constant. So the calculation can be cached on first call.
-  static const uint64_t trampoline_size = []() -> uint64_t {
+  static const uint64_t kTrampolineSize = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
     AppendCallToEntryPayload(/*entry_payload_function_address=*/0,
@@ -1166,7 +1166,7 @@ uint64_t GetMaxTrampolineSize() {
     return static_cast<uint64_t>(((unused_code.GetResultAsVector().size() + 31) / 32) * 32);
   }();
 
-  return trampoline_size;
+  return kTrampolineSize;
 }
 
 ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
@@ -1209,13 +1209,13 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
 
 uint64_t GetReturnTrampolineSize() {
   // The size is constant. So the calculation can be cached on first call.
-  static const uint64_t return_trampoline_size = []() -> uint64_t {
+  static const uint64_t kReturnTrampolineSize = []() -> uint64_t {
     MachineCode unused_code;
     AppendCallToExitPayloadAndJumpToReturnAddress(/*exit_payload_function_address=*/0, unused_code);
     return static_cast<uint64_t>(((unused_code.GetResultAsVector().size() + 31) / 32) * 32);
   }();
 
-  return return_trampoline_size;
+  return kReturnTrampolineSize;
 }
 
 ErrorMessageOr<void> CreateReturnTrampoline(pid_t pid, uint64_t exit_payload_function_address,

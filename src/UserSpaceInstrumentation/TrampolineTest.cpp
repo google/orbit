@@ -336,7 +336,7 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
 
   // Result of the difference is positive; in the first case it just fits, the second case
   // overflows.
-  const uint64_t kAddr2Smaller = kAddr1 - std::numeric_limits<int32_t>::max();
+  constexpr uint64_t kAddr2Smaller = kAddr1 - std::numeric_limits<int32_t>::max();
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller);
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::max(), result.value());

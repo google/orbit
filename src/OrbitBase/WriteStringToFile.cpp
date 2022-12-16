@@ -15,12 +15,12 @@ namespace orbit_base {
 
 ErrorMessageOr<void> WriteStringToFile(const std::filesystem::path& file_name,
                                        std::string_view content) {
-  ErrorMessageOr<unique_fd> fd_or_error = OpenFileForWriting(file_name);
+  ErrorMessageOr<UniqueFd> fd_or_error = OpenFileForWriting(file_name);
   if (fd_or_error.has_error()) {
     return fd_or_error.error();
   }
 
-  const unique_fd& fd = fd_or_error.value();
+  const UniqueFd& fd = fd_or_error.value();
 
   ErrorMessageOr<void> result = WriteFully(fd, content);
   if (result.has_error()) {

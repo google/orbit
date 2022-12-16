@@ -110,9 +110,9 @@ static void ORBIT_NOINLINE SleepFor2Ms() {
 }
 
 static void ExecuteTask(uint32_t id) {
-  static const std::vector<uint32_t> sleep_times_ms = {10, 200, 20,  300, 60,  100, 150,
-                                                       20, 30,  320, 380, 400, 450, 500};
-  uint32_t sleep_time = sleep_times_ms[id % sleep_times_ms.size()];
+  static const std::vector<uint32_t> kSleepTimesMs = {10, 200, 20,  300, 60,  100, 150,
+                                                      20, 30,  320, 380, 400, 450, 500};
+  uint32_t sleep_time = kSleepTimesMs[id % kSleepTimesMs.size()];
   std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
   std::string str = absl::StrFormat(
       "This is a very long dynamic string: The quick brown fox jumps over the lazy dog. This "

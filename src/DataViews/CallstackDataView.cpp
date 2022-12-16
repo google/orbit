@@ -37,7 +37,7 @@ namespace orbit_data_views {
 CallstackDataView::CallstackDataView(AppInterface* app) : DataView(DataViewType::kCallstack, app) {}
 
 const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> kColumns = [] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
@@ -47,7 +47,7 @@ const std::vector<DataView::Column>& CallstackDataView::GetColumns() {
     columns[kColumnAddress] = {"Sampled Address", .0f, SortingOrder::kAscending};
     return columns;
   }();
-  return columns;
+  return kColumns;
 }
 
 std::string CallstackDataView::GetValue(int row, int column) {

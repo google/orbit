@@ -109,21 +109,21 @@ AccessibilityState AccessibleTrack::AccessibleState() const {
 
   using State = AccessibilityState;
 
-  State result = State::Normal | State::Focusable | State::Movable;
+  State result = State::kNormal | State::kFocusable | State::kMovable;
   if (track_->IsTrackSelected()) {
-    result |= State::Focused;
+    result |= State::kFocused;
   }
   if (track_->IsCollapsible()) {
-    result |= State::Expandable;
+    result |= State::kExpandable;
     if (track_->IsCollapsed()) {
-      result |= State::Collapsed;
+      result |= State::kCollapsed;
     } else {
-      result |= State::Expanded;
+      result |= State::kExpanded;
     }
   }
 
   if (AccessibleRect().height == 0) {
-    result |= State::Offscreen;
+    result |= State::kOffscreen;
   }
   return result;
 }

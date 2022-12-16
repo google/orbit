@@ -73,7 +73,7 @@ struct PerfRecordSample {
                                                           perf_event_attr flags,
                                                           bool copy_stack_related_data = true) {
   ORBIT_CHECK(header.size >
-              sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+              sizeof(perf_event_header) + sizeof(RingBufferSampleIdTidTimeStreamidCpu));
 
   PerfRecordSample event{};
   int current_offset = 0;
@@ -190,12 +190,12 @@ struct PerfRecordSample {
 }
 
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
-                         perf_event_sample_id_tid_time_streamid_cpu* sample_id) {
+                         RingBufferSampleIdTidTimeStreamidCpu* sample_id) {
   ORBIT_CHECK(sample_id != nullptr);
   ORBIT_CHECK(header.size >
-              sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+              sizeof(perf_event_header) + sizeof(RingBufferSampleIdTidTimeStreamidCpu));
   // sample_id_all is always the last field in the event
-  uint64_t offset = header.size - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
+  uint64_t offset = header.size - sizeof(RingBufferSampleIdTidTimeStreamidCpu);
   ring_buffer->ReadValueAtOffset(sample_id, offset);
 }
 
@@ -203,10 +203,9 @@ uint64_t ReadSampleRecordTime(PerfEventRingBuffer* ring_buffer) {
   uint64_t time{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
-  //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  //   PerfEventSampleIdTidTimeStreamidCpu sample_id;
   ring_buffer->ReadValueAtOffset(
-      &time,
-      sizeof(perf_event_header) + offsetof(perf_event_sample_id_tid_time_streamid_cpu, time));
+      &time, sizeof(perf_event_header) + offsetof(RingBufferSampleIdTidTimeStreamidCpu, time));
   return time;
 }
 
@@ -214,10 +213,10 @@ uint64_t ReadSampleRecordStreamId(PerfEventRingBuffer* ring_buffer) {
   uint64_t stream_id{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
-  //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  //   PerfEventSampleIdTidTimeStreamidCpu sample_id;
   ring_buffer->ReadValueAtOffset(
       &stream_id,
-      sizeof(perf_event_header) + offsetof(perf_event_sample_id_tid_time_streamid_cpu, stream_id));
+      sizeof(perf_event_header) + offsetof(RingBufferSampleIdTidTimeStreamidCpu, stream_id));
   return stream_id;
 }
 
@@ -225,20 +224,19 @@ pid_t ReadSampleRecordPid(PerfEventRingBuffer* ring_buffer) {
   pid_t pid{};
   // All PERF_RECORD_SAMPLEs start with
   //   perf_event_header header;
-  //   perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  //   PerfEventSampleIdTidTimeStreamidCpu sample_id;
   ring_buffer->ReadValueAtOffset(
-      &pid, sizeof(perf_event_header) + offsetof(perf_event_sample_id_tid_time_streamid_cpu, pid));
+      &pid, sizeof(perf_event_header) + offsetof(RingBufferSampleIdTidTimeStreamidCpu, pid));
   return pid;
 }
 
 uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer) {
-  // Note that perf_event_throttle_unthrottle::time and
-  // perf_event_sample_id_tid_time_streamid_cpu::time differ a bit. Use the latter as we use that
+  // Note that PerfEventThrottleUnthrottle::time and
+  // PerfEventSampleIdTidTimeStreamidCpu::time differ a bit. Use the latter as we use that
   // for all other events.
   uint64_t time{};
-  ring_buffer->ReadValueAtOffset(&time,
-                                 offsetof(perf_event_throttle_unthrottle, sample_id) +
-                                     offsetof(perf_event_sample_id_tid_time_streamid_cpu, time));
+  ring_buffer->ReadValueAtOffset(&time, offsetof(RingBufferThrottleUnthrottle, sample_id) +
+                                            offsetof(RingBufferSampleIdTidTimeStreamidCpu, time));
   return time;
 }
 
@@ -256,18 +254,18 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   // };
   // Because of filename, the layout is not fixed.
 
-  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  RingBufferSampleIdTidTimeStreamidCpu sample_id;
   ReadPerfSampleIdAll(ring_buffer, header, &sample_id);
 
-  perf_event_mmap_up_to_pgoff mmap_event;
+  RingBufferMmapUpToPgoff mmap_event;
   ring_buffer->ReadValueAtOffset(&mmap_event, 0);
 
   // read filename
-  size_t filename_offset = sizeof(perf_event_mmap_up_to_pgoff);
+  size_t filename_offset = sizeof(RingBufferMmapUpToPgoff);
   // strictly > because filename is null-terminated string
-  ORBIT_CHECK(header.size > (filename_offset + sizeof(perf_event_sample_id_tid_time_streamid_cpu)));
+  ORBIT_CHECK(header.size > (filename_offset + sizeof(RingBufferSampleIdTidTimeStreamidCpu)));
   size_t filename_size =
-      header.size - filename_offset - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
+      header.size - filename_offset - sizeof(RingBufferSampleIdTidTimeStreamidCpu);
   std::vector<char> filename_vector(filename_size);
   ring_buffer->ReadRawAtOffset(&filename_vector[0], filename_offset, filename_size);
   // This is a bit paranoid but you never know
@@ -313,9 +311,8 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   // The flags here are in sync with stack_sample_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from stack_sample_event_open
   const perf_event_attr flags{
-      .sample_type =
-          PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
-      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+      .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | kSampleTypeTidTimeStreamidCpu,
+      .sample_regs_user = kSampleRegsUserAll,
   };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
@@ -343,8 +340,8 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   // TODO(b/242020362): use the same perf_event_attr object from callchain_sample_event_open
   const perf_event_attr flags{
       .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | PERF_SAMPLE_CALLCHAIN |
-                     SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
-      .sample_regs_user = SAMPLE_REGS_USER_ALL,
+                     kSampleTypeTidTimeStreamidCpu,
+      .sample_regs_user = kSampleRegsUserAll,
   };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
@@ -373,9 +370,8 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
   // TODO(b/242020362): use the same perf_event_attr object from
   // uprobes_with_stack_and_sp_event_open
   const perf_event_attr flags{
-      .sample_type =
-          PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
-      .sample_regs_user = SAMPLE_REGS_USER_SP,
+      .sample_type = PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER | kSampleTypeTidTimeStreamidCpu,
+      .sample_regs_user = kSampleRegsUserSp,
   };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
@@ -403,7 +399,7 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
   // The flags here are in sync with generic_event_attr in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from generic_event_attr
   const perf_event_attr flags{
-      .sample_type = SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_type = kSampleTypeTidTimeStreamidCpu,
   };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
@@ -428,13 +424,13 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
   // The flags here are in sync with tracepoint_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from tracepoint_event_open
   const perf_event_attr flags{
-      .sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU,
+      .sample_type = PERF_SAMPLE_RAW | kSampleTypeTidTimeStreamidCpu,
   };
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
-  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+  SchedWakeupTracepointDataFixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(SchedWakeupTracepointDataFixed));
 
   ring_buffer->SkipRecord(header);
   return SchedWakeupPerfEvent{
@@ -458,14 +454,14 @@ PerfEvent ConsumeSchedWakeupWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_callchain_event_open
   const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
-                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+                                             kSampleTypeTidTimeStreamidCpu | PERF_SAMPLE_REGS_USER |
+                                             PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = kSampleRegsUserAll};
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
-  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+  SchedWakeupTracepointDataFixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(SchedWakeupTracepointDataFixed));
 
   ring_buffer->SkipRecord(header);
 
@@ -507,14 +503,14 @@ PerfEvent ConsumeSchedWakeupWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | kSampleTypeTidTimeStreamidCpu |
                                              PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+                              .sample_regs_user = kSampleRegsUserAll};
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_wakeup_tracepoint_fixed sched_wakeup;
-  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(sched_wakeup_tracepoint_fixed));
+  SchedWakeupTracepointDataFixed sched_wakeup;
+  std::memcpy(&sched_wakeup, res.raw_data.get(), sizeof(SchedWakeupTracepointDataFixed));
 
   ring_buffer->SkipRecord(header);
 
@@ -557,14 +553,14 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutStackPerfEvent(PerfEventRingBuffer* rin
   // The flags here are in sync with tracepoint_with_stack_event_open in PerfEventOpen.
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_stack_event_open
-  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
+  const perf_event_attr flags{.sample_type = PERF_SAMPLE_RAW | kSampleTypeTidTimeStreamidCpu |
                                              PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+                              .sample_regs_user = kSampleRegsUserAll};
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_switch_tracepoint sched_switch;
-  std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+  SchedSwitchTracepointData sched_switch;
+  std::memcpy(&sched_switch, res.raw_data.get(), sizeof(SchedSwitchTracepointData));
 
   ring_buffer->SkipRecord(header);
 
@@ -616,14 +612,14 @@ PerfEvent ConsumeSchedSwitchWithOrWithoutCallchainPerfEvent(PerfEventRingBuffer*
   // TODO(b/242020362): use the same perf_event_attr object from
   // tracepoint_with_callchain_event_open
   const perf_event_attr flags{.sample_type = PERF_SAMPLE_CALLCHAIN | PERF_SAMPLE_RAW |
-                                             SAMPLE_TYPE_TID_TIME_STREAMID_CPU |
-                                             PERF_SAMPLE_REGS_USER | PERF_SAMPLE_STACK_USER,
-                              .sample_regs_user = SAMPLE_REGS_USER_ALL};
+                                             kSampleTypeTidTimeStreamidCpu | PERF_SAMPLE_REGS_USER |
+                                             PERF_SAMPLE_STACK_USER,
+                              .sample_regs_user = kSampleRegsUserAll};
 
   PerfRecordSample res = ConsumeRecordSample(ring_buffer, header, flags, copy_stack_related_data);
 
-  sched_switch_tracepoint sched_switch;
-  std::memcpy(&sched_switch, res.raw_data.get(), sizeof(sched_switch_tracepoint));
+  SchedSwitchTracepointData sched_switch;
+  std::memcpy(&sched_switch, res.raw_data.get(), sizeof(SchedSwitchTracepointData));
 
   ring_buffer->SkipRecord(header);
 
@@ -666,16 +662,16 @@ template <typename EventType, typename StructType>
 [[nodiscard]] EventType ConsumeGpuEvent(PerfEventRingBuffer* ring_buffer,
                                         const perf_event_header& header) {
   uint32_t tracepoint_size{};
-  ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(perf_event_raw_sample_fixed, size));
+  ring_buffer->ReadValueAtOffset(&tracepoint_size, offsetof(RingBufferRawSampleFixed, size));
 
-  perf_event_raw_sample_fixed ring_buffer_record;
-  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
+  RingBufferRawSampleFixed ring_buffer_record;
+  ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(RingBufferRawSampleFixed));
 
   std::unique_ptr<uint8_t[]> tracepoint_data =
       make_unique_for_overwrite<uint8_t[]>(tracepoint_size);
   ring_buffer->ReadRawAtOffset(
       tracepoint_data.get(),
-      offsetof(perf_event_raw_sample_fixed, size) + sizeof(perf_event_raw_sample_fixed::size),
+      offsetof(RingBufferRawSampleFixed, size) + sizeof(RingBufferRawSampleFixed::size),
       tracepoint_size);
   const StructType& typed_tracepoint_data =
       *reinterpret_cast<const StructType*>(tracepoint_data.get());
@@ -708,19 +704,19 @@ template <typename EventType, typename StructType>
 
 AmdgpuCsIoctlPerfEvent ConsumeAmdgpuCsIoctlPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                      const perf_event_header& header) {
-  return ConsumeGpuEvent<AmdgpuCsIoctlPerfEvent, amdgpu_cs_ioctl_tracepoint>(ring_buffer, header);
+  return ConsumeGpuEvent<AmdgpuCsIoctlPerfEvent, AmdgpuCsIoctlTracepointData>(ring_buffer, header);
 }
 
 AmdgpuSchedRunJobPerfEvent ConsumeAmdgpuSchedRunJobPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                              const perf_event_header& header) {
-  return ConsumeGpuEvent<AmdgpuSchedRunJobPerfEvent, amdgpu_sched_run_job_tracepoint>(ring_buffer,
+  return ConsumeGpuEvent<AmdgpuSchedRunJobPerfEvent, AmdgpuSchedRunJobTracepointData>(ring_buffer,
                                                                                       header);
 }
 
 DmaFenceSignaledPerfEvent ConsumeDmaFenceSignaledPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                            const perf_event_header& header) {
-  return ConsumeGpuEvent<DmaFenceSignaledPerfEvent, dma_fence_signaled_tracepoint>(ring_buffer,
-                                                                                   header);
+  return ConsumeGpuEvent<DmaFenceSignaledPerfEvent, DmaFenceSignaledTracepointData>(ring_buffer,
+                                                                                    header);
 }
 
 }  // namespace orbit_linux_tracing

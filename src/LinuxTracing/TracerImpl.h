@@ -124,24 +124,23 @@ class TracerImpl : public Tracer {
 
   // Number of records to read consecutively from a perf_event_open ring buffer
   // before switching to another one.
-  static constexpr int32_t ROUND_ROBIN_POLLING_BATCH_SIZE = 5;
+  static constexpr int32_t kRoundRobinPollingBatchSize = 5;
 
   // These values are supposed to be large enough to accommodate enough events
   // in case TracerThread::Run's thread is not scheduled for a few tens of
   // milliseconds.
-  static constexpr uint64_t UPROBES_RING_BUFFER_SIZE_KB = 8 * 1024;
-  static constexpr uint64_t MMAP_TASK_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t SAMPLING_RING_BUFFER_SIZE_KB = 16 * 1024;
-  static constexpr uint64_t THREAD_NAMES_RING_BUFFER_SIZE_KB = 64;
-  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
-  static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_WITH_STACKS_RING_BUFFER_SIZE_KB =
-      64 * 1024;
-  static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
-  static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
-  static constexpr uint64_t UPROBES_WITH_STACK_RING_BUFFER_SIZE_KB = 64 * 1024;
+  static constexpr uint64_t kUprobesRingBufferSizeKb = 8 * 1024;
+  static constexpr uint64_t kMmapTaskRingBufferSizeKb = 64;
+  static constexpr uint64_t kSamplingRingBufferSizeKb = 16 * 1024;
+  static constexpr uint64_t kThreadNamesRingBufferSizeKb = 64;
+  static constexpr uint64_t kContextSwitchesAndThreadStateRingBufferSizeKb = 2 * 1024;
+  static constexpr uint64_t kContextSwitchesAndThreadStateWithStacksRingBufferSizeKb = 64 * 1024;
+  static constexpr uint64_t kGpuTracingRingBufferSizeKb = 256;
+  static constexpr uint64_t kInstrumentedTracepointsRingBufferSizeKb = 8 * 1024;
+  static constexpr uint64_t kUprobesWithStackRingBufferSizeKb = 64 * 1024;
 
-  static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 5000;
-  static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 5000;
+  static constexpr uint32_t kIdleTimeOnEmptyRingBuffersUs = 5000;
+  static constexpr uint32_t kIdleTimeOnEmptyDeferredEventsUs = 5000;
 
   bool trace_context_switches_;
   bool introspection_enabled_;
@@ -243,10 +242,10 @@ class TracerImpl : public Tracer {
     std::atomic<uint64_t> thread_state_count = 0;
   };
 
-  static constexpr uint64_t EVENT_STATS_WINDOW_S = 5;
+  static constexpr uint64_t kEventStatsWindowS = 5;
   EventStats stats_{};
 
-  static constexpr uint64_t NS_PER_SECOND = 1'000'000'000;
+  static constexpr uint64_t kNsPerSecond = 1'000'000'000;
 };
 
 }  // namespace orbit_linux_tracing

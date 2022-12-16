@@ -65,14 +65,14 @@ inline uint64_t perf_event_get_id(int file_descriptor) {
 
 // This must be in sync with struct perf_event_sample_id_tid_time_streamid_cpu
 // in PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_TYPE_TID_TIME_STREAMID_CPU =
+static constexpr uint64_t kSampleTypeTidTimeStreamidCpu =
     PERF_SAMPLE_TID | PERF_SAMPLE_TIME | PERF_SAMPLE_STREAM_ID | PERF_SAMPLE_CPU;
 
 // Sample all registers: they might all be necessary for DWARF-based stack
 // unwinding.
 // This must be in sync with struct perf_event_sample_regs_user_all in
 // PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_ALL =
+static constexpr uint64_t kSampleRegsUserAll =
     (1lu << PERF_REG_X86_AX) | (1lu << PERF_REG_X86_BX) | (1lu << PERF_REG_X86_CX) |
     (1lu << PERF_REG_X86_DX) | (1lu << PERF_REG_X86_SI) | (1lu << PERF_REG_X86_DI) |
     (1lu << PERF_REG_X86_BP) | (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
@@ -83,26 +83,25 @@ static constexpr uint64_t SAMPLE_REGS_USER_ALL =
 
 // This must be in sync with struct perf_event_ax_sample in
 // PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
+static constexpr uint64_t kSampleRegsUserAx = (1lu << PERF_REG_X86_AX);
 
 // This must be in sync with struct perf_event_sample_regs_user_sp_ip
 // in PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
-    (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
+static constexpr uint64_t kSampleRegsUserSpIp = (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
 
 // This must be in sync with struct perf_event_sample_regs_user_sp
 // in PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_SP = (1lu << PERF_REG_X86_SP);
+static constexpr uint64_t kSampleRegsUserSp = (1lu << PERF_REG_X86_SP);
 
 // This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
 // in PerfEventRecords.h.
-static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
+static constexpr uint64_t kSampleRegsUserSpIpArguments =
     (1lu << PERF_REG_X86_CX) | (1lu << PERF_REG_X86_DX) | (1lu << PERF_REG_X86_SI) |
     (1lu << PERF_REG_X86_DI) | (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP) |
     (1lu << PERF_REG_X86_R8) | (1lu << PERF_REG_X86_R9);
 
 static_assert(sizeof(void*) == 8);
-static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
+static constexpr uint16_t kSampleStackUserSize8Bytes = 8;
 
 // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
 // because the kernel stores this in a short and because of alignment reasons.

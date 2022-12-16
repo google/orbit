@@ -103,7 +103,7 @@ class FrameTrackListModelTmpl : public QAbstractListModel {
   }
 
   [[nodiscard]] static std::string MakeDisplayedName(const FrameTrackInfo& info) {
-    return std::visit(orbit_base::overloaded{&MakeFrameTrackString, &PresentEventSourceName},
+    return std::visit(orbit_base::Overloaded{&MakeFrameTrackString, &PresentEventSourceName},
                       *info);
   }
 

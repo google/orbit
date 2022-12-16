@@ -48,7 +48,7 @@ ErrorMessageOr<void> TemporaryFile::Init(std::string_view prefix) {
         absl::StrFormat("Unable to create a temporary file: %s", SafeStrerror(errno))};
   }
 
-  fd_ = orbit_base::unique_fd(fd);
+  fd_ = orbit_base::UniqueFd(fd);
 #elif defined(_WIN32)
   // _mktemp_s expects the `size` to include the NULL character at the end.
   errno_t errnum = _mktemp_s(file_path.data(), file_path.size() + 1);

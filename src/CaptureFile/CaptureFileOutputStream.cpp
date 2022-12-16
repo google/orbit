@@ -57,7 +57,7 @@ class CaptureFileOutputStreamImpl final : public CaptureFileOutputStream {
   OutputType output_type_;
 
   std::filesystem::path path_;
-  orbit_base::unique_fd fd_;
+  orbit_base::UniqueFd fd_;
   BufferOutputStream* output_buffer_ = nullptr;
   std::unique_ptr<google::protobuf::io::ZeroCopyOutputStream> zero_copy_output_stream_;
   std::optional<google::protobuf::io::CodedOutputStream> coded_output_;

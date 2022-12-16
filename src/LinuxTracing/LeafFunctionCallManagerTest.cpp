@@ -56,8 +56,7 @@ namespace orbit_linux_tracing {
 
 namespace {
 
-constexpr uint64_t kTotalNumOfRegisters =
-    sizeof(perf_event_sample_regs_user_all) / sizeof(uint64_t);
+constexpr uint64_t kTotalNumOfRegisters = sizeof(RingBufferSampleRegsUserAll) / sizeof(uint64_t);
 
 class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
@@ -171,7 +170,7 @@ CallchainSamplePerfEventData BuildFakeCallchainSamplePerfEventData(
 
   if (callchain.size() > 1) {
     // Set the first non-kernel address as IP.
-    perf_event_sample_regs_user_all regs{};
+    RingBufferSampleRegsUserAll regs{};
     regs.ip = callchain[1];
     std::memcpy(event_data.regs.get(), &regs, sizeof(regs));
   }
@@ -189,7 +188,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = 2 * kStackDumpSize;
   regs.sp = 0;
   regs.ip = kTargetAddress1;
@@ -239,7 +238,7 @@ TEST_F(
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = 2 * kStackDumpSize;
   regs.sp = 0;
   regs.ip = kTargetAddress1;
@@ -293,7 +292,7 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = 2 * kStackDumpSize;
   regs.sp = 0;
   regs.ip = kTargetAddress1;
@@ -321,7 +320,7 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = 2 * kStackDumpSize;
   regs.sp = 0;
   regs.ip = kTargetAddress1;
@@ -348,7 +347,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = kStackDumpSize / 2;
   regs.sp = 10;
   regs.ip = kTargetAddress1;
@@ -435,7 +434,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   // bp < sp indicates that bp was used as general purpose register
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = 1;
   regs.sp = 10;
   regs.ip = kTargetAddress1;
@@ -500,7 +499,7 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = kStackDumpSize / 2;
   regs.sp = 10;
   regs.ip = kTargetAddress1;
@@ -550,7 +549,7 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  perf_event_sample_regs_user_all regs{};
+  RingBufferSampleRegsUserAll regs{};
   regs.bp = kStackDumpSize / 2;
   regs.sp = 10;
   regs.ip = kTargetAddress1;

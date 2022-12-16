@@ -277,10 +277,10 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         }
       }};
 
-  static const uint64_t mem_total_bytes = GetPhysicalMemoryInBytes();
-  static const uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
+  static const uint64_t kMemTotalBytes = GetPhysicalMemoryInBytes();
+  static const uint64_t kWatchdogThresholdBytes = kMemTotalBytes / 2;
   ORBIT_LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
-            watchdog_threshold_bytes, mem_total_bytes);
+            kWatchdogThresholdBytes, kMemTotalBytes);
   while (true) {
     {
       absl::MutexLock lock{stop_capture_mutex.get()};
@@ -298,7 +298,7 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       ORBIT_ERROR_ONCE("Reading resident set size of OrbitService");
       continue;
     }
-    if (rss_bytes.value() > watchdog_threshold_bytes) {
+    if (rss_bytes.value() > kWatchdogThresholdBytes) {
       ORBIT_LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
       absl::MutexLock lock{stop_capture_mutex.get()};
       *stop_capture = true;

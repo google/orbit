@@ -17,7 +17,7 @@ class AccessibleTimeGraph : public AccessibleCaptureViewElement {
   explicit AccessibleTimeGraph(TimeGraph* time_graph)
       : AccessibleCaptureViewElement(time_graph, "TimeGraph",
                                      orbit_accessibility::AccessibilityRole::Graphic,
-                                     orbit_accessibility::AccessibilityState::Focusable),
+                                     orbit_accessibility::AccessibilityState::kFocusable),
         time_graph_(time_graph) {}
   [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleParent() const override {
     return time_graph_->GetAccessibleParent()->GetOrCreateAccessibleInterface();
