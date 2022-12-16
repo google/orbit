@@ -89,6 +89,7 @@ target_sources(
           OtherUserDialogTest.cpp
           ProcessItemModelTest.cpp
           ProcessListWidgetTest.cpp
+          ServiceDeployManagerTest.cpp
           SessionSetupDialogTest.cpp
           SessionSetupUtilsTest.cpp
           TargetLabelTest.cpp)
@@ -96,7 +97,9 @@ target_sources(
 
 target_link_libraries(
   SessionSetupTests
-  PRIVATE SessionSetup
+  PRIVATE QtTestUtils
+          SessionSetup
+          SshQtTestUtils
           TestUtils
           GTest::QtGuiMain
           Qt5::Test)
