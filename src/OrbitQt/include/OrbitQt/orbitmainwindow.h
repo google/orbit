@@ -97,7 +97,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::string OnGetSaveFileName(std::string_view extension);
   static void OnSetClipboard(std::string_view text);
   void OpenCapture(std::string_view filepath);
-  void OnCaptureCleared();
+  void OnCaptureCleared() override;
 
   bool eventFilter(QObject* watched, QEvent* event) override;
 
