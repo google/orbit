@@ -94,10 +94,15 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) override;
   void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view) override;
 
-  std::string OnGetSaveFileName(std::string_view extension);
-  static void OnSetClipboard(std::string_view text);
   void OpenCapture(std::string_view filepath);
   void OnCaptureCleared() override;
+  void OnSetClipboard(std::string_view text) override;
+  void RefreshDataView(orbit_data_views::DataViewType type) override;
+  void SelectLiveTab() override;
+  std::string OnGetSaveFileName(std::string_view extension) override;
+
+  void SetErrorMessage(std::string_view title, std::string_view text) override;
+  void SetWarningMessage(std::string_view title, std::string_view text) override;
 
   bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -190,7 +195,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void on_actionSymbolLocationsDialog_triggered();
 
-  void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
+  void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) override;
 
   // TODO(https://github.com/google/orbit/issues/4589): Remove redundant "private" once slots is not
   // needed anymore above.

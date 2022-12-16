@@ -258,42 +258,11 @@ class OrbitApp final : public DataViewFactory,
     capture_failed_callback_ = std::move(callback);
   }
 
-  using SelectLiveTabCallback = std::function<void()>;
-  void SetSelectLiveTabCallback(SelectLiveTabCallback callback) {
-    select_live_tab_callback_ = std::move(callback);
-  }
-  using ErrorMessageCallback = std::function<void(std::string_view, std::string_view)>;
-  void SetErrorMessageCallback(ErrorMessageCallback callback) {
-    error_message_callback_ = std::move(callback);
-  }
-  using WarningMessageCallback = std::function<void(std::string_view, std::string_view)>;
-  void SetWarningMessageCallback(WarningMessageCallback callback) {
-    warning_message_callback_ = std::move(callback);
-  }
-  using InfoMessageCallback = std::function<void(std::string_view, std::string_view)>;
-  void SetInfoMessageCallback(InfoMessageCallback callback) {
-    info_message_callback_ = std::move(callback);
-  }
-  using RefreshCallback = std::function<void(orbit_data_views::DataViewType type)>;
-  void SetRefreshCallback(RefreshCallback callback) { refresh_callback_ = std::move(callback); }
-
-  using TimerSelectedCallback = std::function<void(const orbit_client_protos::TimerInfo*)>;
-  void SetTimerSelectedCallback(TimerSelectedCallback callback) {
-    timer_selected_callback_ = std::move(callback);
-  }
-
-  using SaveFileCallback = std::function<std::string(std::string_view extension)>;
-  void SetSaveFileCallback(SaveFileCallback callback) { save_file_callback_ = std::move(callback); }
   void FireRefreshCallbacks(
       orbit_data_views::DataViewType type = orbit_data_views::DataViewType::kAll);
   void OnModuleListUpdated() override {
     FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   }
-  using ClipboardCallback = std::function<void(std::string_view)>;
-  void SetClipboardCallback(ClipboardCallback callback) {
-    clipboard_callback_ = std::move(callback);
-  }
-
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(std::string tooltip);
@@ -581,14 +550,6 @@ class OrbitApp final : public DataViewFactory,
   CaptureStopRequestedCallback capture_stop_requested_callback_;
   CaptureStoppedCallback capture_stopped_callback_;
   CaptureFailedCallback capture_failed_callback_;
-  SelectLiveTabCallback select_live_tab_callback_;
-  ErrorMessageCallback error_message_callback_;
-  WarningMessageCallback warning_message_callback_;
-  InfoMessageCallback info_message_callback_;
-  RefreshCallback refresh_callback_;
-  SaveFileCallback save_file_callback_;
-  ClipboardCallback clipboard_callback_;
-  TimerSelectedCallback timer_selected_callback_;
 
   std::vector<orbit_data_views::DataView*> panels_;
 
