@@ -385,8 +385,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     capture_started_callback_(file_path);
 
     if (!GetCaptureData().GetAllProvidedScopeIds().empty()) {
-      ORBIT_CHECK(select_live_tab_callback_);
-      select_live_tab_callback_();
+      main_window_->SelectLiveTab();
       main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
     }
 
@@ -1104,14 +1103,10 @@ absl::Duration OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
 }
 
 std::string OrbitApp::GetSaveFile(std::string_view extension) const {
-  ORBIT_CHECK(save_file_callback_);
-  return save_file_callback_(extension);
+  return main_window_->OnGetSaveFileName(extension);
 }
 
-void OrbitApp::SetClipboard(std::string_view text) {
-  ORBIT_CHECK(clipboard_callback_);
-  clipboard_callback_(text);
-}
+void OrbitApp::SetClipboard(std::string_view text) { main_window_->OnSetClipboard(text); }
 
 ErrorMessageOr<void> OrbitApp::OnSavePreset(std::string_view file_name) {
   OUTCOME_TRY(SavePreset(file_name));
@@ -1224,8 +1219,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
     }
   }
 
-  ORBIT_CHECK(refresh_callback_);
-  refresh_callback_(type);
+  main_window_->RefreshDataView(type);
 }
 
 static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
@@ -1524,15 +1518,13 @@ void OrbitApp::SendTooltipToUi(std::string tooltip) {
 
 void OrbitApp::SendWarningToUi(std::string title, std::string text) {
   main_thread_executor_->Schedule([this, title = std::move(title), text = std::move(text)] {
-    ORBIT_CHECK(warning_message_callback_);
-    warning_message_callback_(title, text);
+    main_window_->SetWarningMessage(title, text);
   });
 }
 
 void OrbitApp::SendErrorToUi(std::string title, std::string text) {
   main_thread_executor_->Schedule([this, title = std::move(title), text = std::move(text)] {
-    ORBIT_CHECK(error_message_callback_);
-    error_message_callback_(title, text);
+    main_window_->SetErrorMessage(title, text);
   });
 }
 
@@ -2224,8 +2216,7 @@ void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   const uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
   data_manager_->set_highlighted_group_id(group_id);
 
-  ORBIT_CHECK(timer_selected_callback_);
-  timer_selected_callback_(timer_info);
+  main_window_->OnTimerSelectionChanged(timer_info);
   RequestUpdatePrimitives();
 }
 

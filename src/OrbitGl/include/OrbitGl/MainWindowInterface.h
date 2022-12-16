@@ -63,6 +63,14 @@ class MainWindowInterface {
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) = 0;
   virtual void OnCaptureCleared() = 0;
+  virtual void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) = 0;
+  virtual void OnSetClipboard(std::string_view text) = 0;
+  virtual void RefreshDataView(orbit_data_views::DataViewType type) = 0;
+  virtual void SelectLiveTab() = 0;
+  virtual std::string OnGetSaveFileName(std::string_view extension) = 0;
+
+  virtual void SetErrorMessage(std::string_view title, std::string_view text) = 0;
+  virtual void SetWarningMessage(std::string_view title, std::string_view text) = 0;
 
   // Returns orbit_base::Canceled if the user chooses cancel in the dialog, void otherwise
   virtual orbit_base::CanceledOr<void> DisplayStopDownloadDialog(

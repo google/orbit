@@ -328,30 +328,6 @@ void OrbitMainWindow::SetupMainWindow() {
   app_->SetCaptureStoppedCallback(capture_finished_callback);
   app_->SetCaptureFailedCallback(capture_finished_callback);
 
-  app_->SetRefreshCallback([this](DataViewType type) {
-    if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
-      this->ui->liveFunctions->OnDataChanged();
-    }
-    this->OnRefreshDataViewPanels(type);
-  });
-
-  app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
-  app_->SetErrorMessageCallback([this](std::string_view title, std::string_view text) {
-    QMessageBox::critical(this, QString::fromUtf8(title.data(), title.size()),
-                          QString::fromUtf8(text.data(), text.size()));
-  });
-  app_->SetWarningMessageCallback([this](std::string_view title, std::string_view text) {
-    QMessageBox::warning(this, QString::fromUtf8(title.data(), title.size()),
-                         QString::fromUtf8(text.data(), text.size()));
-  });
-  app_->SetInfoMessageCallback([this](std::string_view title, std::string_view text) {
-    QMessageBox::information(this, QString::fromUtf8(title.data(), title.size()),
-                             QString::fromUtf8(text.data(), text.size()));
-  });
-  app_->SetSaveFileCallback(
-      [this](std::string_view extension) { return this->OnGetSaveFileName(extension); });
-  app_->SetClipboardCallback([this](std::string_view text) { this->OnSetClipboard(text); });
-
   auto capture_window = std::make_unique<CaptureWindow>(
       app_.get(), app_.get(), ui->debugTabWidget->GetCaptureWindowTimeGraphLayout());
   auto* capture_window_ptr = capture_window.get();
@@ -360,10 +336,6 @@ void OrbitMainWindow::SetupMainWindow() {
                    ui->CaptureGLWidget,
                    [capture_window_ptr]() { capture_window_ptr->RequestUpdatePrimitives(); });
   ui->CaptureGLWidget->Initialize(std::move(capture_window));
-
-  app_->SetTimerSelectedCallback([this](const orbit_client_protos::TimerInfo* timer_info) {
-    OnTimerSelectionChanged(timer_info);
-  });
 
   if (absl::GetFlag(FLAGS_devmode)) {
     ui->debugTabWidget->SetCaptureWindowDebugInterface(capture_window_ptr);
@@ -2010,3 +1982,22 @@ void OrbitMainWindow::SetLiveTabScopeStatsCollection(
     std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) {
   ui->liveFunctions->SetScopeStatsCollection(std::move(scope_collection));
 }
+
+void OrbitMainWindow::SetErrorMessage(std::string_view title, std::string_view text) {
+  QMessageBox::critical(this, QString::fromUtf8(title.data(), title.size()),
+                        QString::fromUtf8(text.data(), text.size()));
+}
+
+void OrbitMainWindow::SetWarningMessage(std::string_view title, std::string_view text) {
+  QMessageBox::warning(this, QString::fromUtf8(title.data(), title.size()),
+                       QString::fromUtf8(text.data(), text.size()));
+}
+
+void OrbitMainWindow::RefreshDataView(DataViewType type) {
+  if (type == DataViewType::kAll || type == DataViewType::kLiveFunctions) {
+    ui->liveFunctions->OnDataChanged();
+  }
+  OnRefreshDataViewPanels(type);
+}
+
+void OrbitMainWindow::SelectLiveTab() { ui->RightTabWidget->setCurrentWidget(ui->liveTab); }
