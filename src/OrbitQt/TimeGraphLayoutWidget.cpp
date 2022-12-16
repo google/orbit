@@ -37,6 +37,13 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&min_button_size_);
   AddWidgetForProperty(&button_width_);
   AddWidgetForProperty(&button_height_);
+  AddWidgetForProperty(&space_between_tracks_);
+  AddWidgetForProperty(&space_between_tracks_and_timeline_);
+  AddWidgetForProperty(&space_between_cores_);
+  AddWidgetForProperty(&space_between_gpu_depths_);
+  AddWidgetForProperty(&space_between_thread_panes_);
+  AddWidgetForProperty(&space_between_subtracks_);
+  AddWidgetForProperty(&generic_fixed_spacer_width_);
   AddWidgetForProperty(&thread_dependency_arrow_head_width_);
   AddWidgetForProperty(&thread_dependency_arrow_head_height_);
   AddWidgetForProperty(&thread_dependency_arrow_body_width_);
