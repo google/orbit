@@ -263,7 +263,7 @@ class CaptureData {
   [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
       absl::flat_hash_set<ScopeType> types,
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
-      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), bool exclusive = false) const;
 
   [[nodiscard]] std::vector<const TimerInfo*> GetTimersForScope(
       ScopeId scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),

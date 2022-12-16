@@ -121,6 +121,24 @@ TEST(ScopeTreeTimerData, GetTimers) {
   EXPECT_EQ(scope_tree_timer_data.GetTimers().size(), 3);
 }
 
+TEST(ScopeTreeTimerData, GetTimersExclusive) {
+  ScopeTreeTimerData scope_tree_timer_data;
+  AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
+  // All timers.
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart - 1, kRightTimerEnd + 1, true).size(),
+            3);
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart, kRightTimerEnd, true).size(), 3);
+  // Cuts off the beginning of the left timer (should not include left timer).
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart + 1, kRightTimerEnd, true).size(), 2);
+  // Cuts off the end of the right timer (should not include right timer).
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart, kRightTimerEnd - 1, true).size(), 1);
+  // Starts and ends within the left timer (includes no timers).
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kLeftTimerStart + 1, kLeftTimerStart + 2, true).size(),
+            0);
+  // Fully encompasses down timer but not right timer.
+  EXPECT_EQ(scope_tree_timer_data.GetTimers(kDownTimerStart, kDownTimerEnd, true).size(), 1);
+}
+
 TEST(ScopeTreeTimerData, GetTimersAtDepth) {
   ScopeTreeTimerData scope_tree_timer_data;
   AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
@@ -206,6 +224,32 @@ TEST(ScopeTreeTimerData, GetTimersAtDepthOptimized) {
     // No timers with `depth = 2` in TimerData.
     verify_size(2, kNormalResolution, kMinTimestamp, kMaxTimestamp, 0);
   }
+}
+
+TEST(ScopeTreeTimerData, GetTimersAtDepthExclusive) {
+  ScopeTreeTimerData scope_tree_timer_data;
+  AddTimersInScopeTreeTimerDataTest(scope_tree_timer_data);
+  // All timers at depth 0.
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthExclusive(0, kLeftTimerStart, kRightTimerEnd + 1)
+                .size(),
+            2);
+  // All timers at depth 1.
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthExclusive(1, kLeftTimerStart, kRightTimerEnd + 1)
+                .size(),
+            1);
+  // Cut off beginning of left timer.
+  EXPECT_EQ(
+      scope_tree_timer_data.GetTimersAtDepthExclusive(0, kLeftTimerStart + 1, kRightTimerEnd + 1)
+          .size(),
+      1);
+  // Cut off right timer from the right.
+  EXPECT_EQ(
+      scope_tree_timer_data.GetTimersAtDepthExclusive(0, kLeftTimerStart, kRightTimerEnd).size(),
+      1);
+  // Cut through both timers.
+  EXPECT_EQ(scope_tree_timer_data.GetTimersAtDepthExclusive(0, kLeftTimerStart + 1, kRightTimerEnd)
+                .size(),
+            0);
 }
 
 TEST(ScopeTreeTimerData, GetLeftRightUpDown) {

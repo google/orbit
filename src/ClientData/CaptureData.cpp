@@ -278,12 +278,13 @@ std::shared_ptr<const ScopeStatsCollection> CaptureData::GetAllScopeStatsCollect
 std::unique_ptr<const ScopeStatsCollection> CaptureData::CreateScopeStatsCollection(
     uint64_t min_tick, uint64_t max_tick) const {
   ORBIT_CHECK(scope_id_provider_);
-  auto timers = GetAllScopeTimers(kAllValidScopeTypes, min_tick, max_tick);
+  auto timers = GetAllScopeTimers(kAllValidScopeTypes, min_tick, max_tick, /*exclusive=*/true);
   return std::make_unique<ScopeStatsCollection>(*scope_id_provider_, timers);
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(
-    const absl::flat_hash_set<ScopeType> types, uint64_t min_tick, uint64_t max_tick) const {
+    const absl::flat_hash_set<ScopeType> types, uint64_t min_tick, uint64_t max_tick,
+    bool exclusive) const {
   std::vector<const TimerInfo*> result;
 
   // The timers corresponding to dynamically instrumented functions and manual instrumentation
@@ -293,7 +294,7 @@ std::unique_ptr<const ScopeStatsCollection> CaptureData::CreateScopeStatsCollect
       types.contains(ScopeType::kDynamicallyInstrumentedFunction)) {
     for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
       const std::vector<const TimerInfo*> thread_track_timers =
-          GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick);
+          GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick, exclusive);
       std::copy_if(std::begin(thread_track_timers), std::end(thread_track_timers),
                    std::back_inserter(result), [this, &types](const TimerInfo* timer) {
                      return types.contains(GetScopeInfo(ProvideScopeId(*timer).value()).GetType());
@@ -303,7 +304,7 @@ std::unique_ptr<const ScopeStatsCollection> CaptureData::CreateScopeStatsCollect
 
   if (types.contains(ScopeType::kApiScopeAsync)) {
     std::vector<const TimerInfo*> async_timer_infos = timer_data_manager_.GetTimers(
-        orbit_client_protos::TimerInfo::kApiScopeAsync, min_tick, max_tick);
+        orbit_client_protos::TimerInfo::kApiScopeAsync, min_tick, max_tick, exclusive);
 
     result.insert(std::end(result), std::begin(async_timer_infos), std::end(async_timer_infos));
   }
