@@ -314,7 +314,7 @@ extern "C" {
 #endif
 
 // Material Design Colors #500
-typedef enum {  // NOLINT(modernize-use-using)
+typedef enum {  // NOLINT(modernize-use-using): This is C code.
   kOrbitColorAuto = 0x00000000,
   kOrbitColorRed = 0xf44336ff,
   kOrbitColorPink = 0xe91e63ff,
