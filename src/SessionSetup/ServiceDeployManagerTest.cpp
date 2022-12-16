@@ -4,13 +4,22 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
+#include <QMetaType>
+#include <QObject>
 #include <QSignalSpy>
 #include <QTest>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <system_error>
+#include <tuple>
 
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
-#include "OrbitSsh/Credentials.h"
+#include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/Task.h"
 #include "QtTestUtils/WaitFor.h"
