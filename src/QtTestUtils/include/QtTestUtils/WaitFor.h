@@ -14,6 +14,7 @@
 #include <variant>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/VoidToMonostate.h"
 
 namespace orbit_qt_test_utils_internal {
@@ -86,7 +87,7 @@ template <typename T>
   static_assert(!std::is_same_v<T, std::monostate>,
                 "Calling GetValue on a WaitForResult of a Future<void> makes no sense. You can use "
                 "'HasValue' to see if it succeeded.");
-  if (std::holds_alternative<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(result)) {
+  if (result.index() == orbit_qt_test_utils_internal::kWaitForResultValueIndex) {
     return std::get<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(std::move(result));
   }
 
@@ -113,6 +114,29 @@ MATCHER_P(YieldsResult, value_matcher, "") {
   return testing::ExplainMatchResult(
       value_matcher, std::get<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(arg),
       result_listener);
+}
+
+// This helper function simplifies interaction with OUTCOME_TRY. It allows to convert a
+// WaitForResult that timed out into a generic error message. That's useful if you don't need to
+// distinguish between a time out and any other error.
+template <typename T>
+ErrorMessageOr<T> ConsiderTimeoutAnError(WaitForResult<T> result) {
+  if (HasTimedOut(result)) {
+    return ErrorMessage{"The future didn't complete in time (Timeout occured)!"};
+  }
+
+  return GetValue(std::move(result)).value();
+}
+
+// This overload avoids ErrorMessageOr<ErrorMessageOr<T>> double wrapping. Unfortunately there is no
+// good way to avoid the code deduplication that doesn't make it a lot more complex.
+template <typename T>
+ErrorMessageOr<T> ConsiderTimeoutAnError(WaitForResult<ErrorMessageOr<T>> result) {
+  if (HasTimedOut(result)) {
+    return ErrorMessage{"The future didn't complete in time (Timeout occured)!"};
+  }
+
+  return GetValue(std::move(result)).value();
 }
 
 }  // namespace orbit_qt_test_utils

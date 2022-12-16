@@ -51,12 +51,15 @@ TEST(WaitFor, FinishesSuccessfullyWithReturnValue) {
       [promise = std::move(promise)]() mutable { promise.SetResult(42); }, Qt::QueuedConnection);
 
   EXPECT_FALSE(future.IsFinished());
-  const auto result = WaitFor(future);
+  auto result = WaitFor(future);
   EXPECT_FALSE(HasTimedOut(result));
   EXPECT_TRUE(HasValue(result));
   EXPECT_TRUE(GetValue(result).has_value());
   EXPECT_EQ(GetValue(result).value(), 42);
   EXPECT_THAT(result, YieldsResult(42));
+
+  // We also need to check whether the r-value overload works.
+  EXPECT_EQ(GetValue(std::move(result)).value(), 42);  // NOLINT(performance-move-const-arg)
 }
 
 TEST(WaitFor, TimesOut) {
