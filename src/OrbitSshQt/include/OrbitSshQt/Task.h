@@ -21,6 +21,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Typedef.h"
 #include "OrbitSsh/Channel.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
@@ -70,10 +71,17 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
  public:
   explicit Task(Session* session, std::string command);
   orbit_base::Future<ErrorMessageOr<void>> Start();
-  orbit_base::Future<ErrorMessageOr<void>> Stop();
 
-  std::string ReadStdOut();
-  std::string ReadStdErr();
+  struct ExitCodeTag {};
+  using ExitCode = orbit_base::Typedef<ExitCodeTag, int>;
+  orbit_base::Future<ErrorMessageOr<ExitCode>> Stop();
+
+  // This is an alternative to Start() and Stop(). Prefer this function over Start/Stop if you don't
+  // need to read from or write to stdin/stdout/stderr.
+  orbit_base::Future<ErrorMessageOr<ExitCode>> Execute();
+
+  [[nodiscard]] std::string ReadStdOut();
+  [[nodiscard]] std::string ReadStdErr();
   orbit_base::Future<ErrorMessageOr<void>> Write(std::string_view data);
 
  signals:
@@ -116,6 +124,8 @@ class Task : public StateMachineHelper<Task, details::TaskState> {
   };
   std::deque<WritePromise> write_promises_;
   uint64_t bytes_written_counter_ = 0;
+
+  std::optional<ExitCode> exit_code_;
 };
 
 }  // namespace orbit_ssh_qt

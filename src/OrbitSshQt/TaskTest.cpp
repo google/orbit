@@ -31,6 +31,7 @@ namespace orbit_ssh_qt {
 using orbit_qt_test_utils::WaitFor;
 using orbit_qt_test_utils::YieldsResult;
 using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 using SshTaskTest = orbit_ssh_qt_test_utils::SshTestFixture;
 
@@ -47,10 +48,12 @@ TEST_F(SshTaskTest, ReturnCode) {
   // when the task has already been stopped through other means. So we test that the signal has been
   // emitted at least one more time after calling `Stop`.
   const int number_of_stopped_signals_before_calling_stop = stopped_signal.size();
-  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
+  constexpr Task::ExitCode kExpectedExitCode{42};
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(orbit_test_utils::HasValue(kExpectedExitCode)));
   EXPECT_GT(stopped_signal.size(), number_of_stopped_signals_before_calling_stop);
 
-  EXPECT_THAT(finished_signal, testing::ElementsAre(testing::ElementsAre(QVariant{42})));
+  EXPECT_THAT(finished_signal,
+              testing::ElementsAre(testing::ElementsAre(QVariant{*kExpectedExitCode})));
 }
 
 TEST_F(SshTaskTest, Stdout) {
@@ -137,7 +140,14 @@ TEST_F(SshTaskTest, Kill) {
   EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
 
   QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
-  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
-  EXPECT_THAT(finished_signal, testing::ElementsAre(testing::ElementsAre(QVariant{1})));
+  constexpr Task::ExitCode kExpectedExitCode{1};
+  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasValue(kExpectedExitCode)));
+  EXPECT_THAT(finished_signal,
+              testing::ElementsAre(testing::ElementsAre(QVariant{*kExpectedExitCode})));
+}
+
+TEST_F(SshTaskTest, Execute) {
+  orbit_ssh_qt::Task task{GetSession(), "echo 'Hello World'"};
+  EXPECT_THAT(WaitFor(task.Execute()), YieldsResult(HasValue(Task::ExitCode{0})));
 }
 }  // namespace orbit_ssh_qt

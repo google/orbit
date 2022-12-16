@@ -21,7 +21,7 @@
 namespace orbit_ssh_qt {
 using orbit_qt_test_utils::WaitFor;
 using orbit_qt_test_utils::YieldsResult;
-using orbit_test_utils::HasNoError;
+using orbit_test_utils::HasValue;
 
 using SftpCopyToRemoteOperationTest = SftpTestFixture;
 
@@ -39,13 +39,6 @@ TEST_F(SftpCopyToRemoteOperationTest, Upload) {
   }
 
   Task task{GetSession(), "cmp /home/loginuser/plain.txt /home/loginuser/upload.txt"};
-  QSignalSpy finished_signal{&task, &orbit_ssh_qt::Task::finished};
-  EXPECT_THAT(WaitFor(task.Start()), YieldsResult(HasNoError()));
-  EXPECT_THAT(WaitFor(task.Stop()), YieldsResult(HasNoError()));
-
-  ASSERT_EQ(finished_signal.size(), 1);
-  // Return value 0 means there was no difference in the two compared files. Hence the upload
-  // succeeded.
-  EXPECT_EQ(finished_signal[0][0].toInt(), 0);
+  EXPECT_THAT(WaitFor(task.Execute()), YieldsResult(HasValue(Task::ExitCode{0})));
 }
 }  // namespace orbit_ssh_qt
