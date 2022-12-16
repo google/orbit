@@ -10,6 +10,9 @@
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 
+#include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Result.h"
+
 namespace orbit_test_utils {
 
 MATCHER(HasValue, absl::StrCat(negation ? "Has no" : "Has a", " value.")) {
@@ -40,6 +43,14 @@ MATCHER_P(HasError, value,
     *result_listener << "Error: " << arg.error().message();
   }
   return arg.has_error() && absl::StrContains(arg.error().message(), value);
+}
+
+MATCHER(HasBeenCanceled, absl::StrCat("Has", negation ? " not" : "", " been cancelled.")) {
+  return orbit_base::IsCanceled(arg);
+}
+
+MATCHER(HasNotBeenCanceled, absl::StrCat("Has", negation ? "" : " not", " been cancelled.")) {
+  return !orbit_base::IsCanceled(arg);
 }
 
 }  // namespace orbit_test_utils
