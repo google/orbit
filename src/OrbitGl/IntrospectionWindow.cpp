@@ -261,6 +261,8 @@ IntrospectionWindow::IntrospectionWindow(
   capture_data_ = std::make_unique<CaptureData>(capture_started, std::nullopt,
                                                 std::move(frame_track_function_ids),
                                                 CaptureData::DataSource::kLiveCapture);
+  // Start recording on window creation.
+  ToggleRecording();
 }
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
@@ -276,6 +278,7 @@ const char* IntrospectionWindow::GetHelpText() const {
 bool IntrospectionWindow::IsIntrospecting() const { return introspection_listener_ != nullptr; }
 
 void IntrospectionWindow::StartIntrospection() {
+  ORBIT_LOG("Starting introspection");
   ORBIT_CHECK(!IsIntrospecting());
   set_draw_help(false);
   CreateTimeGraph(capture_data_.get());
@@ -286,7 +289,10 @@ void IntrospectionWindow::StartIntrospection() {
             api_event_variant);
       });
 }
-void IntrospectionWindow::StopIntrospection() { introspection_listener_ = nullptr; }
+void IntrospectionWindow::StopIntrospection() {
+  ORBIT_LOG("Stopping introspection");
+  introspection_listener_ = nullptr;
+}
 
 void IntrospectionWindow::Draw(QPainter* painter) {
   ORBIT_SCOPE_FUNCTION;

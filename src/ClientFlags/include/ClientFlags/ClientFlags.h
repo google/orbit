@@ -73,4 +73,7 @@ ABSL_DECLARE_FLAG(std::string, ssh_known_host_path);
 ABSL_DECLARE_FLAG(std::string, ssh_key_path);
 ABSL_DECLARE_FLAG(std::string, ssh_target_process);
 
+// Introspection on entry.
+ABSL_DECLARE_FLAG(bool, introspect);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_
