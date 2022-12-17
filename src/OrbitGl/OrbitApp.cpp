@@ -2210,7 +2210,7 @@ const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
 void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   data_manager_->set_selected_timer(timer_info);
   const std::optional<ScopeId> scope_id =
-      timer_info != nullptr ? GetCaptureData().ProvideScopeId(*timer_info) : std::nullopt;
+      timer_info != nullptr ? ProvideScopeId(*timer_info) : std::nullopt;
   data_manager_->set_highlighted_scope_id(scope_id);
 
   const uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
@@ -2229,7 +2229,7 @@ std::optional<ScopeId> OrbitApp::GetScopeIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
   if (timer_info == nullptr) return GetHighlightedScopeId();
-  return GetCaptureData().ProvideScopeId(*timer_info);
+  return ProvideScopeId(*timer_info);
 }
 
 uint64_t OrbitApp::GetGroupIdToHighlight() const {

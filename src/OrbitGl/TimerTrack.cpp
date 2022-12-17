@@ -193,7 +193,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     }
   }
 
-  std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
+  std::optional<ScopeId> scope_id = app_->ProvideScopeId(*current_timer_info);
   uint64_t group_id = current_timer_info->group_id();
 
   bool is_selected = current_timer_info == draw_data.selected_timer;
@@ -421,7 +421,7 @@ bool TimerTrack::ShouldHaveBorder(
     const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
     float width) const {
   if ((!range.has_value() || width < kMinimalWidthToHaveBorder || !app_->HasCaptureData()) ||
-      (app_->GetCaptureData().ProvideScopeId(*timer) != app_->GetHighlightedScopeId())) {
+      (app_->ProvideScopeId(*timer) != app_->GetHighlightedScopeId())) {
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();
