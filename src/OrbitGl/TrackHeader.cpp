@@ -91,7 +91,10 @@ void TrackHeader::UpdateCollapseToggle() {
   const float x0 = GetPos()[0] + layout_->GetTrackIndentOffset() * track_->GetIndentationLevel();
   const float button_offset = layout_->GetCollapseButtonOffset();
   const float size = layout_->GetCollapseButtonSize(track_->GetIndentationLevel());
-  const float toggle_y_pos = GetPos()[1] + layout_->GetTextBoxHeight() * 0.5f;
+  
+  constexpr float kOffsetY = 1.f;
+  const float toggle_y_pos = GetPos()[1] + layout_->GetTextBoxHeight()*0.5f - size*0.5f + kOffsetY;
+  
   Vec2 toggle_pos = Vec2(x0 + button_offset, toggle_y_pos);
 
   collapse_toggle_->SetWidth(size);
