@@ -35,31 +35,30 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   const Color grey(100, 100, 100, 255);
   Color color = is_collapsible_ ? white : grey;
 
-  // Draw triangle.
-  const Vec2 midpoint = GetPos() + Vec2(GetWidth() / 2, GetHeight() / 2);
-  const float triangle_side_length = std::min(GetWidth(), GetHeight());
-  const float cos30 = std::sqrt(3.f) / 2;
-  const float triangle_height = triangle_side_length * cos30;
-
-  const float half_triangle_height = std::ceil(triangle_height / 2);
-  const float half_triangle_side_length = triangle_side_length / 2;
-
   if (!picking) {
-    Triangle triangle;
-    if (is_collapsed_) {
-      triangle = Triangle(midpoint + Vec2(-half_triangle_height, half_triangle_side_length),
-                          midpoint + Vec2(-half_triangle_height, -half_triangle_side_length),
-                          midpoint + Vec2(half_triangle_height, 0.f));
-    } else {
-      triangle = Triangle(midpoint + Vec2(half_triangle_side_length, -half_triangle_height),
-                          midpoint + Vec2(-half_triangle_side_length, -half_triangle_height),
-                          midpoint + Vec2(0.f, half_triangle_height));
+    const float half_width = GetWidth() / 2.f;
+    const float half_height = GetHeight() / 2.f;
+    const Vec2 midpoint = GetPos() + Vec2(half_width, half_height);
+
+    // Down arrow vertices.
+    std::array<Vec2, 6> v = {Vec2{0, 0}, {-1, -1}, {-1, 0}, {0, 1}, {1, 0}, {1, -1}};
+    
+    // Scale and translate vertices, flipping the y direction based on collapse state.
+    Vec2 scale{half_width, is_collapsed_ ? half_height : -half_height};
+    for (Vec2& vertex : v) {
+      vertex = vertex*scale + midpoint;
     }
-    primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
+
+    // Arrow triangles.
+    std::array<Triangle, 4> triangles = {
+        Triangle{v[0], v[1], v[2]}, {v[0], v[2], v[3]}, {v[0], v[3], v[4]}, {v[0], v[4], v[5]}};
+    
+    for (const auto& triangle : triangles) {
+      primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
+    }
   } else {
     // When picking, draw a big square for easier picking.
-    Quad box = MakeBox(midpoint - Vec2(half_triangle_side_length, half_triangle_side_length),
-                       Vec2(triangle_side_length, triangle_side_length));
+    Quad box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
     primitive_assembler.AddBox(box, z, color, shared_from_this());
   }
 }

@@ -208,7 +208,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Track Indent Offset:",
   }};
   FloatProperty collapse_button_offset_{{
-      .initial_value = 15.f,
+      .initial_value = 10.f,
       .label = "Collapse Button Offset:",
   }};
   FloatProperty collapse_button_size_{{
