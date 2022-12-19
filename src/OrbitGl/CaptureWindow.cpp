@@ -495,6 +495,13 @@ void CaptureWindow::Draw(QPainter* painter) {
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
   bool time_graph_was_redrawn = time_graph_ != nullptr && time_graph_->IsRedrawNeeded();
 
+  if (time_graph_layout_->GetDrawAsIfPicking()) {
+    debug_picking_mode_ = PickingMode::kClick;
+    picking_mode_ = PickingMode::kClick;
+  } else {
+    debug_picking_mode_ = PickingMode::kNone;
+  }
+    
   text_renderer_.Init();
 
   if (ShouldSkipRendering()) {

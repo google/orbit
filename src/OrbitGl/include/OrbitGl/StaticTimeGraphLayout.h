@@ -101,6 +101,9 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
 
   [[nodiscard]] int GetMaxLayoutingLoops() const override { return kMaxLayoutingLoops; }
 
+  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override { return false; }
+  [[nodiscard]] bool GetDrawAsIfPicking() const override { return false; }
+
  private:
   constexpr static float kTextBoxHeight = 20.f;
   constexpr static float kCoreHeight = 10.f;

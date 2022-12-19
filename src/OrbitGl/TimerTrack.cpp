@@ -280,8 +280,8 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   draw_data.primitive_assembler = &primitive_assembler;
   draw_data.viewport = viewport_;
 
-  draw_data.track_start_x = GetPos()[0];
-  draw_data.track_width = GetWidth();
+  draw_data.track_start_x = GetPos()[0] + header_->GetWidth();
+  draw_data.track_width = GetWidth() - header_->GetWidth();
   draw_data.inv_time_window = 1.0 / timeline_info_->GetTimeWindowUs();
   draw_data.is_collapsed = IsCollapsed();
 
@@ -298,7 +298,7 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   // out, many events will be discarded quickly.
   auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
   draw_data.ns_per_pixel =
-      static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth(), 0})[0];
+      static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth() - header_->GetWidth(), 0})[0];
   draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
   draw_data.histogram_selection_range = app_->GetHistogramSelectionRange();
 

@@ -236,7 +236,9 @@ void GlCanvas::PostRender(QPainter* painter) {
     can_hover_ = false;
   }
 
-  if (prev_picking_mode != PickingMode::kNone) {
+  bool is_debug_rendering = debug_picking_mode_ != PickingMode::kNone;
+
+  if (!is_debug_rendering && prev_picking_mode != PickingMode::kNone) {
     Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
     GlCanvas::Render(painter, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   }
