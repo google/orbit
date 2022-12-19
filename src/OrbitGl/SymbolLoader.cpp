@@ -108,7 +108,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
       RetrieveModuleSymbolsAndLoadSymbols(module_id);
 
   Future<ErrorMessageOr<CanceledOr<void>>> retrieve_module_itself_and_load_fallback_symbols_future =
-      orbit_base::UnwrapFuture(retrieve_module_symbols_and_load_symbols_future.Then(
+      retrieve_module_symbols_and_load_symbols_future.Then(
           main_thread_executor_,
           [this, module_id](const ErrorMessageOr<CanceledOr<void>>&
                                 retrieve_module_symbols_and_load_symbols_result)
@@ -147,7 +147,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
                             retrieve_module_itself_and_load_fallback_symbols_result.error()
                                 .message())};
                       });
-          }));
+          });
 
   retrieve_module_itself_and_load_fallback_symbols_future.Then(
       main_thread_executor_,
@@ -171,7 +171,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleSymbolsAndL
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_module_symbols_future =
       RetrieveModuleSymbols(module_id);
 
-  return orbit_base::UnwrapFuture(retrieve_module_symbols_future.Then(
+  return retrieve_module_symbols_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& retrieve_result)
           -> Future<ErrorMessageOr<CanceledOr<void>>> {
@@ -189,7 +189,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleSymbolsAndL
         orbit_base::ImmediateExecutor executor;
         return LoadSymbols(local_file_path, module_id)
             .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
-      }));
+      });
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleSymbols(
@@ -216,7 +216,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
                 });
 
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_remote_future =
-      orbit_base::UnwrapFuture(retrieve_from_local_future.Then(
+      retrieve_from_local_future.Then(
           main_thread_executor_,
           [this, module_id](
               const ErrorMessageOr<CanceledOr<std::filesystem::path>>& previous_result) mutable
@@ -236,7 +236,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
                   current_message.append(retrieve_result.error().message());
                   return ErrorMessage{current_message};
                 });
-          }));
+          });
 
   return retrieve_from_remote_future;
 }
@@ -381,10 +381,9 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
   orbit_base::StopSource stop_source;
 
   using SymbolRetrieveResult = ErrorMessageOr<CanceledOr<std::filesystem::path>>;
-  Future<SymbolRetrieveResult> retrieve_from_instance_future = orbit_base::UnwrapFuture(
-      main_thread_executor_->Schedule([this, module_id,
-                                       stop_token = stop_source.GetStopToken()]() mutable
-                                      -> Future<SymbolRetrieveResult> {
+  Future<SymbolRetrieveResult> retrieve_from_instance_future = main_thread_executor_->Schedule(
+      [this, module_id,
+       stop_token = stop_source.GetStopToken()]() mutable -> Future<SymbolRetrieveResult> {
         // If Orbit is in local profiling mode, it cannot download files from the instance, because
         // no ssh channel exists. We still return an ErrorMessage to enable continuing searching for
         // symbols from other symbol sources.
@@ -402,26 +401,24 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
                         absl::StrFormat("\n- Did not find symbols on the instance: %s",
                                         retrieve_result.error().message())};
                   });
-      }));
+      });
 
-  Future<SymbolRetrieveResult> retrieve_from_microsoft_future =
-      orbit_base::UnwrapFuture(retrieve_from_instance_future.Then(
-          main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken()](
-              const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
-            if (orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
-                microsoft_symbol_provider_ == std::nullopt ||
-                !storage_manager.LoadEnableMicrosoftSymbolServer()) {
-              return {previous_result};
-            }
+  Future<SymbolRetrieveResult> retrieve_from_microsoft_future = retrieve_from_instance_future.Then(
+      main_thread_executor_,
+      [this, module_id, stop_token = stop_source.GetStopToken()](
+          const SymbolRetrieveResult& previous_result) mutable -> Future<SymbolRetrieveResult> {
+        if (orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+            microsoft_symbol_provider_ == std::nullopt ||
+            !storage_manager.LoadEnableMicrosoftSymbolServer()) {
+          return {previous_result};
+        }
 
-            if (previous_result.has_value()) return {previous_result.value()};
+        if (previous_result.has_value()) return {previous_result.value()};
 
-            return ConvertSymbolProviderRetrieveFuture(
-                microsoft_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token)),
-                main_thread_executor_, "Microsoft symbol server",
-                previous_result.error().message());
-          }));
+        return ConvertSymbolProviderRetrieveFuture(
+            microsoft_symbol_provider_->RetrieveSymbols(module_id, std::move(stop_token)),
+            main_thread_executor_, "Microsoft symbol server", previous_result.error().message());
+      });
 
   symbol_files_currently_downloading_.emplace(
       module_id.file_path,
@@ -497,10 +494,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
                             });
   };
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> chained_result_future = UnwrapFuture(
-      check_file_on_remote.ThenIfSuccess(main_thread_executor_, std::move(download_file)));
-
-  return chained_result_future;
+  return check_file_on_remote.ThenIfSuccess(main_thread_executor_, std::move(download_file));
 }
 
 Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLoadFallbackSymbols(
@@ -508,7 +502,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLo
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_module_itself_future =
       RetrieveModuleItself(module_id, module_file_size);
 
-  return orbit_base::UnwrapFuture(retrieve_module_itself_future.Then(
+  return retrieve_module_itself_future.Then(
       main_thread_executor_,
       [this, module_id](const ErrorMessageOr<CanceledOr<std::filesystem::path>>& retrieve_result)
           -> Future<ErrorMessageOr<CanceledOr<void>>> {
@@ -526,7 +520,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLo
         orbit_base::ImmediateExecutor executor;
         return LoadFallbackSymbols(local_file_path, module_id)
             .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
-      }));
+      });
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleItself(
@@ -597,11 +591,8 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
         });
   };
 
-  Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_from_instance_future =
-      orbit_base::UnwrapFuture(find_in_cache_or_locally_future.Then(
-          main_thread_executor_, std::move(retrieve_from_instance)));
-
-  return retrieve_from_instance_future;
+  return find_in_cache_or_locally_future.Then(main_thread_executor_,
+                                              std::move(retrieve_from_instance));
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
@@ -646,7 +637,7 @@ SymbolLoader::RetrieveModuleItselfFromInstance(const ModuleIdentifier& module_id
   };
 
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> download_future =
-      UnwrapFuture(thread_pool_->Schedule(std::move(download)));
+      thread_pool_->Schedule(std::move(download));
 
   symbol_files_currently_downloading_.emplace(
       module_id.file_path, ModuleDownloadOperation{std::move(stop_source), download_future});

@@ -34,7 +34,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
   // Note: The function object is only executed if `*this` is still alive when the event loop picks
   // up the scheduled task.
   template <typename F>
-  auto Schedule(F&& functor) -> orbit_base::Future<std::decay_t<decltype(functor())>> {
+  auto Schedule(F&& functor) {
     using ReturnType = std::decay_t<decltype(functor())>;
 
     orbit_base::Promise<ReturnType> promise;
@@ -47,7 +47,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
     };
     ScheduleImpl(CreateAction(std::move(function_wrapper)));
 
-    return future;
+    return UnwrapFuture(future);
   }
 
   // ScheduleAfter schedules the continuation `functor` to be executed on `*this` after `future` has
@@ -98,7 +98,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
       helper.Call(continuation);
     }
 
-    return resulting_future;
+    return UnwrapFuture(resulting_future);
   }
 
   // ScheduleAfterIfSuccess schedules the continuation `functor` to be executed on `*this` after
@@ -150,7 +150,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
     };
 
     orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
-    return resulting_future;
+    return UnwrapFuture(resulting_future);
   }
 
   [[nodiscard]] size_t GetNumberOfWaitingContinuations() const {

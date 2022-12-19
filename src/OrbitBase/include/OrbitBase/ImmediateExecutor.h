@@ -36,7 +36,11 @@ class ImmediateExecutor {
     if constexpr (std::is_same_v<ReturnType, void>) {
       invocable();
       return Future<void>{};
+    } else if constexpr (orbit_base::kIsFutureV<ReturnType>) {
+      // If the `invocable` returns a future we can just return that.
+      return invocable();
     } else {
+      // Otherwise we wrap the result into a future.
       return Future<ReturnType>{invocable()};
     }
   }
@@ -56,7 +60,7 @@ class ImmediateExecutor {
     };
 
     orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
-    return resulting_future;
+    return UnwrapFuture(resulting_future);
   }
 
   template <typename T, typename F>
@@ -75,7 +79,7 @@ class ImmediateExecutor {
     };
 
     orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
-    return resulting_future;
+    return UnwrapFuture(resulting_future);
   }
 };
 }  // namespace orbit_base
