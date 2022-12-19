@@ -39,6 +39,12 @@ class CaptureDataHolder {
     return *capture_data_;
   }
 
+  [[nodiscard]] std::optional<ScopeId> ProvideScopeId(
+      const orbit_client_protos::TimerInfo& timer_info) const {
+    if (capture_data_ == nullptr) return std::nullopt;
+    return capture_data_->ProvideScopeId(timer_info);
+  }
+
   [[nodiscard]] virtual bool HasCaptureData() const { return static_cast<bool>(capture_data_); }
 
  protected:

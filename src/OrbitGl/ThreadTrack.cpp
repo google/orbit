@@ -181,7 +181,7 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   if (!app_->HasCaptureData()) return TimerTrack::IsTimerActive(timer_info);
-  const std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(timer_info);
+  const std::optional<ScopeId> scope_id = app_->ProvideScopeId(timer_info);
   return scope_id.has_value() ? app_->IsScopeVisible(scope_id.value()) : false;
 }
 
@@ -217,8 +217,7 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
-  const std::optional<ScopeId> scope_id =
-      app_->HasCaptureData() ? app_->GetCaptureData().ProvideScopeId(timer_info) : std::nullopt;
+  const std::optional<ScopeId> scope_id = app_->ProvideScopeId(timer_info);
   const uint64_t group_id = timer_info.group_id();
   const bool is_selected = &timer_info == draw_data.selected_timer;
   const bool is_scope_id_highlighted =
