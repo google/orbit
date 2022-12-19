@@ -100,6 +100,7 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
 
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
+  content_pos[0] += header_->GetWidth();
   Quad box = MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()));
   primitive_assembler.AddBox(box, track_z, GetTrackBackgroundColor(), shared_from_this());
 

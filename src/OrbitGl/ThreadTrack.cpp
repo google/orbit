@@ -273,17 +273,17 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   float current_y = GetPos()[1] + layout_->GetTrackContentTopMargin();
 
-  thread_state_bar_->SetPos(pos[0], current_y);
+  thread_state_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
   if (thread_state_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + thread_state_track_height);
   }
 
-  event_bar_->SetPos(pos[0], current_y);
+  event_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
   if (event_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + event_track_height);
   }
 
-  tracepoint_bar_->SetPos(pos[0], current_y);
+  tracepoint_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
 }
 
 void ThreadTrack::SelectTrack() { app_->set_selected_thread_id(GetThreadId()); }
@@ -387,8 +387,9 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_,
-                  viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
+      GetDrawData(min_tick, max_tick, GetPos()[0] + header_->GetWidth(),
+                  GetWidth() - header_->GetWidth(), &primitive_assembler, timeline_info_, viewport_,
+                  IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
                   app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];

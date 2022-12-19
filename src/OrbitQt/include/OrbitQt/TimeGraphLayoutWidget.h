@@ -119,6 +119,9 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
 
   [[nodiscard]] int GetMaxLayoutingLoops() const override { return max_layouting_loops_.value(); }
 
+  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override { return draw_track_header_background_.value(); }
+  [[nodiscard]] bool GetDrawAsIfPicking() const override { return draw_as_if_picking_.value(); }
+
  private:
   FloatProperty text_box_height_{{
       .initial_value = 20.f,
@@ -289,6 +292,10 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Thread Dependency Arrow Head Width:",
   }};
   BoolProperty draw_track_background_{{.initial_value = true, .label = "Draw Track Background"}};
+  BoolProperty draw_track_header_background_{
+      {.initial_value = true, .label = "Draw Track Header Background"}};
+  BoolProperty draw_as_if_picking_{{.initial_value = false, .label = "Draw as if picking"}};
+
   IntProperty max_layouting_loops_{
       {.initial_value = 10, .min = 1, .max = 100, .label = "Max layouting loops:"}};
 };

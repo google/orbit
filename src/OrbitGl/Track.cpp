@@ -55,7 +55,7 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
   // Same for picking - the track background is not pickable
   if (picking || !draw_background) return;
 
-  const float x0 = GetPos()[0];
+  const float x0 = GetPos()[0] + header_->GetWidth();
   const float y0 = GetPos()[1];
   const float track_z = GlCanvas::kZValueTrack;
 

@@ -47,6 +47,9 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&thread_dependency_arrow_head_width_);
   AddWidgetForProperty(&thread_dependency_arrow_head_height_);
   AddWidgetForProperty(&thread_dependency_arrow_body_width_);
+  AddWidgetForProperty(&draw_track_background_);
+  AddWidgetForProperty(&draw_track_header_background_);
+  AddWidgetForProperty(&draw_as_if_picking_);
   AddWidgetForProperty(&scale_);
 }
 

@@ -117,6 +117,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   bool can_hover_ = false;
 
   PickingMode picking_mode_ = PickingMode::kNone;
+  PickingMode debug_picking_mode_ = PickingMode::kNone;
 
   double ref_time_click_{0.0};
   float track_container_click_scrolling_offset_ = 0;
