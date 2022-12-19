@@ -113,13 +113,18 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] bool GetDrawTrackBackground() const override {
     return draw_track_background_.value();
   }
+  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override {
+    return draw_track_header_background_.value();
+  }
+  [[nodiscard]] bool GetDrawTimeGraphMasks() const override {
+    return draw_timegraph_masks_.value();
+  }
   [[nodiscard]] uint32_t GetFontSize() const override {
     return std::lround(static_cast<float>(font_size_.value()) * scale_.value());
   }
 
   [[nodiscard]] int GetMaxLayoutingLoops() const override { return max_layouting_loops_.value(); }
 
-  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override { return draw_track_header_background_.value(); }
   [[nodiscard]] bool GetDrawAsIfPicking() const override { return draw_as_if_picking_.value(); }
 
  private:
@@ -294,7 +299,9 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   BoolProperty draw_track_background_{{.initial_value = true, .label = "Draw Track Background"}};
   BoolProperty draw_track_header_background_{
       {.initial_value = true, .label = "Draw Track Header Background"}};
-  BoolProperty draw_as_if_picking_{{.initial_value = false, .label = "Draw as if picking"}};
+  BoolProperty draw_timegraph_masks_{
+      {.initial_value = true, .label = "Draw TimeGraph Masks"}};
+  BoolProperty draw_as_if_picking_{{.initial_value = false, .label = "Draw as if Picking"}};
 
   IntProperty max_layouting_loops_{
       {.initial_value = 10, .min = 1, .max = 100, .label = "Max layouting loops:"}};

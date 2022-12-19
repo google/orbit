@@ -103,6 +103,8 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
 
   [[nodiscard]] bool GetDrawTrackHeaderBackground() const override { return false; }
   [[nodiscard]] bool GetDrawAsIfPicking() const override { return false; }
+  [[nodiscard]] bool GetDrawTimeGraphMasks() const override { return false; }
+
 
  private:
   constexpr static float kTextBoxHeight = 20.f;

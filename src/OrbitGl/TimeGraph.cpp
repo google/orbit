@@ -882,7 +882,9 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   // TODO(http://b/217719000): We are drawing boxes in margin positions because some elements are
   // being drawn partially outside the TrackContainer space. This hack is needed until we assure
   // that no element is drawn outside of its parent's area.
-  DrawMarginsBetweenChildren(primitive_assembler);
+  if (layout_->GetDrawTimeGraphMasks()) {
+    DrawMarginsBetweenChildren(primitive_assembler);
+  }
 }
 
 void TimeGraph::DrawMarginsBetweenChildren(

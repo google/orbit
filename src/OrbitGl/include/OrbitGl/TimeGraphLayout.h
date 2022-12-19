@@ -43,10 +43,11 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetThreadDependencyArrowBodyWidth() const = 0;
   [[nodiscard]] virtual float GetScale() const = 0;
   [[nodiscard]] virtual bool GetDrawTrackBackground() const = 0;
+  [[nodiscard]] virtual bool GetDrawTrackHeaderBackground() const = 0;
   [[nodiscard]] virtual uint32_t GetFontSize() const = 0;
   [[nodiscard]] virtual int GetMaxLayoutingLoops() const = 0;
-  [[nodiscard]] virtual bool GetDrawTrackHeaderBackground() const = 0;
   [[nodiscard]] virtual bool GetDrawAsIfPicking() const = 0;
+  [[nodiscard]] virtual bool GetDrawTimeGraphMasks() const = 0;
   virtual void SetScale(float value) = 0;
 
   ~TimeGraphLayout() = default;
