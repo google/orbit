@@ -60,6 +60,7 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
   void DoUpdateLayout() override;
 
   void UpdateCollapseToggle();
+  float GetVerticalLabelOffset() const;
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
