@@ -80,3 +80,6 @@ ABSL_FLAG(std::string, ssh_target_process, "",
           "a SSH connection. This means --ssh_hostname, --ssh_user, --ssh_known_host_path and "
           "--ssh_key_path also need to be specified (--ssh_port will default to 22). If multiple "
           "instances of the same process exist, the one with the highest PID will be chosen.");
+
+// Introspection from entry point.
+ABSL_FLAG(bool, introspect, false, "Introspect from entry point");

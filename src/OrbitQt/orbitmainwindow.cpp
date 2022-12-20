@@ -186,6 +186,11 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
       target_configuration_(std::move(target_configuration)) {
   SetupMainWindow();
 
+  // Start introspection from entry.
+  if (absl::GetFlag(FLAGS_introspect)) {
+    on_actionIntrospection_triggered();
+  }
+
   SetupStatusBarLogButton();
   SetupHintFrame();
 
@@ -386,7 +391,7 @@ void OrbitMainWindow::SetupMainWindow() {
   std::filesystem::path icon_file_name = (orbit_base::GetExecutableDir() / "orbit.ico");
   this->setWindowIcon(QIcon(QString::fromStdString(icon_file_name.string())));
 
-  if (!absl::GetFlag(FLAGS_devmode)) {
+  if (!absl::GetFlag(FLAGS_devmode) && !absl::GetFlag(FLAGS_introspect)) {
     ui->actionIntrospection->setVisible(false);
   }
 }
