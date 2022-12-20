@@ -113,8 +113,8 @@ void TrackHeader::UpdateCollapseToggle() {
 }
 
 float TrackHeader::GetVerticalLabelOffset() const {
-  // This offset only affect subtracks, which are a very special case that need refactoring. 
-  // Subtracks are only used for the memory track. The following offset is to avoid overlap between 
+  // This offset only affect subtracks, which are a very special case that need refactoring.
+  // Subtracks are only used for the memory track. The following offset is to avoid overlap between
   // the labels of the track and it's subtrack. Subtracks should have their own header altogether.
   return track_->GetIndentationLevel() > 0 ? layout_->GetTextBoxHeight() : 0.f;
 }
