@@ -14,6 +14,8 @@
 #include <vector>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/FutureHelpers.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
@@ -40,7 +42,7 @@ orbit_base::Future<ErrorMessageOr<void>> Task::Start() {
   return GetStartedFuture();
 }
 
-orbit_base::Future<ErrorMessageOr<void>> Task::Stop() {
+orbit_base::Future<ErrorMessageOr<Task::ExitCode>> Task::Stop() {
   QTimer::singleShot(kShutdownTimeoutMs, this, [this]() {
     if (state_ < State::kChannelClosed) {
       ORBIT_ERROR("Task shutdown timed out");
@@ -53,13 +55,25 @@ orbit_base::Future<ErrorMessageOr<void>> Task::Stop() {
   }
   OnEvent();
 
-  return GetStoppedFuture();
+  // Since we control on which thread the stopped_future completes, we know we won't have a race
+  // condition and can use the ImmediateExecutor.
+  orbit_base::ImmediateExecutor executor{};
+  return GetStoppedFuture().ThenIfSuccess(&executor, [this]() { return exit_code_.value(); });
 }
 
 std::string Task::ReadStdOut() {
   auto tmp = std::move(read_std_out_buffer_);
   read_std_out_buffer_ = std::string{};
   return tmp;
+}
+
+orbit_base::Future<ErrorMessageOr<Task::ExitCode>> Task::Execute() {
+  // This first calls Start(). When that succeeded it calls Stop().
+
+  // Since we control on which thread the started_futures completes, it's fine to use the
+  // ImmediateExecutor here. No race condition can occur.
+  orbit_base::ImmediateExecutor executor{};
+  return orbit_base::UnwrapFuture(Start().ThenIfSuccess(&executor, [this]() { return Stop(); }));
 }
 
 std::string Task::ReadStdErr() {
@@ -247,7 +261,8 @@ outcome::result<void> Task::shutdown() {
       SetState(State::kChannelClosed);
       // The exit status is only guaranteed to be available after the channel is really closed on
       // both sides
-      emit finished(channel_->GetExitStatus());
+      exit_code_ = ExitCode{channel_->GetExitStatus()};
+      emit finished(*exit_code_.value());
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kStopped:
