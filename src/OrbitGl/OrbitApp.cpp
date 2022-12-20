@@ -2163,8 +2163,14 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids
   RequestUpdatePrimitives();
 }
 
-bool OrbitApp::IsScopeVisible(ScopeId scope_id) const {
-  return data_manager_->IsScopeVisible(scope_id);
+bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
+  const std::optional<ScopeId> scope_id = GetCaptureData().ProvideScopeId(timer);
+  if (!scope_id.has_value()) {
+    return false;
+  }
+  return data_manager_->IsScopeVisible(scope_id.value()) &&
+         timer.start() >= data_manager_->GetTimeRangeSelectionStart() &&
+         timer.end() <= data_manager_->GetTimeRangeSelectionEnd();
 }
 
 std::optional<ScopeId> OrbitApp::GetHighlightedScopeId() const {
@@ -2818,6 +2824,7 @@ void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
   SetBottomUpView(GetCaptureData().selection_post_processed_sampling_data());
   SetSamplingReport(&GetCaptureData().selection_callstack_data(),
                     &GetCaptureData().selection_post_processed_sampling_data());
+  data_manager_->SetTimeRangeSelection(min, max);
 
   FireRefreshCallbacks();
 }
@@ -2830,6 +2837,7 @@ void OrbitApp::ClearTimeRangeSelection() {
   SetBottomUpView(GetCaptureData().post_processed_sampling_data());
   SetSamplingReport(&GetCaptureData().GetCallstackData(),
                     &GetCaptureData().post_processed_sampling_data());
+  data_manager_->ClearTimeRangeSelection();
 
   FireRefreshCallbacks();
 }

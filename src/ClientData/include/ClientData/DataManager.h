@@ -70,6 +70,11 @@ class DataManager final {
   [[nodiscard]] bool IsFrameTrackEnabled(const FunctionInfo& function) const;
   void ClearUserDefinedCaptureData();
 
+  void SetTimeRangeSelection(uint64_t start, uint64_t end);
+  void ClearTimeRangeSelection();
+  [[nodiscard]] uint64_t GetTimeRangeSelectionStart() const;
+  [[nodiscard]] uint64_t GetTimeRangeSelectionEnd() const;
+
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const;
 
   void set_collect_scheduler_info(bool collect_scheduler_info);
@@ -166,6 +171,9 @@ class DataManager final {
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 8ULL * 1024 * 1024;
+
+  uint64_t time_range_selection_start_ = std::numeric_limits<uint64_t>::min();
+  uint64_t time_range_selection_end_ = std::numeric_limits<uint64_t>::max();
 };
 
 }  // namespace orbit_client_data

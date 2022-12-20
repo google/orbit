@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <exception>
+#include <limits>
 #include <optional>
 #include <string>
 #include <thread>
@@ -115,6 +116,25 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
                                             WineSyscallHandlingMethod::kNoSpecialHandling);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager,
                                             &DataManager::wine_syscall_handling_method);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::GetTimeRangeSelectionStart);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::GetTimeRangeSelectionEnd);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::ClearTimeRangeSelection);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SetTimeRangeSelection, 0,
+                                            5);
+}
+
+TEST(DataManager, TimeRangeSelection) {
+  DataManager data_manager;
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), std::numeric_limits<uint64_t>::min());
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), std::numeric_limits<uint64_t>::max());
+
+  data_manager.SetTimeRangeSelection(5, 10);
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), 5);
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), 10);
+
+  data_manager.ClearTimeRangeSelection();
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), std::numeric_limits<uint64_t>::min());
+  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), std::numeric_limits<uint64_t>::max());
 }
 
 }  // namespace orbit_client_data

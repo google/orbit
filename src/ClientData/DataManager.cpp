@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_set.h>
 
+#include <limits>
 #include <utility>
 
 #include "ClientProtos/capture_data.pb.h"
@@ -335,6 +336,28 @@ void DataManager::set_thread_state_change_callstack_collection(
 orbit_grpc_protos::CaptureOptions::ThreadStateChangeCallStackCollection
 DataManager::thread_state_change_callstack_collection() const {
   return thread_state_change_callstack_collection_;
+}
+
+void DataManager::SetTimeRangeSelection(uint64_t start, uint64_t end) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  time_range_selection_start_ = start;
+  time_range_selection_end_ = end;
+}
+
+void DataManager::ClearTimeRangeSelection() {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  time_range_selection_start_ = std::numeric_limits<uint64_t>::min();
+  time_range_selection_end_ = std::numeric_limits<uint64_t>::max();
+}
+
+uint64_t DataManager::GetTimeRangeSelectionStart() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return time_range_selection_start_;
+}
+
+uint64_t DataManager::GetTimeRangeSelectionEnd() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return time_range_selection_end_;
 }
 
 }  // namespace orbit_client_data
