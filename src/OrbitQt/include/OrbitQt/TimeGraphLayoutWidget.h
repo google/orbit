@@ -299,8 +299,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   BoolProperty draw_track_background_{{.initial_value = true, .label = "Draw Track Background"}};
   BoolProperty draw_track_header_background_{
       {.initial_value = true, .label = "Draw Track Header Background"}};
-  BoolProperty draw_timegraph_masks_{
-      {.initial_value = true, .label = "Draw TimeGraph Masks"}};
+  BoolProperty draw_timegraph_masks_{{.initial_value = true, .label = "Draw TimeGraph Masks"}};
   BoolProperty draw_as_if_picking_{{.initial_value = false, .label = "Draw as if Picking"}};
 
   IntProperty max_layouting_loops_{
