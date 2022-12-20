@@ -297,8 +297,8 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
   auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
-  draw_data.ns_per_pixel =
-      static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth() - header_->GetWidth(), 0})[0];
+  draw_data.ns_per_pixel = static_cast<double>(time_window_ns) /
+                           viewport_->WorldToScreen({GetWidth() - header_->GetWidth(), 0})[0];
   draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
   draw_data.histogram_selection_range = app_->GetHistogramSelectionRange();
 

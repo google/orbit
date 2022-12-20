@@ -501,7 +501,7 @@ void CaptureWindow::Draw(QPainter* painter) {
   } else {
     debug_picking_mode_ = PickingMode::kNone;
   }
-    
+
   text_renderer_.Init();
 
   if (ShouldSkipRendering()) {

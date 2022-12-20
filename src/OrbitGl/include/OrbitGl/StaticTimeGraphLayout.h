@@ -105,7 +105,6 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   [[nodiscard]] bool GetDrawAsIfPicking() const override { return false; }
   [[nodiscard]] bool GetDrawTimeGraphMasks() const override { return false; }
 
-
  private:
   constexpr static float kTextBoxHeight = 20.f;
   constexpr static float kCoreHeight = 10.f;

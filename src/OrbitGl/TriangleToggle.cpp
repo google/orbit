@@ -42,17 +42,17 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
 
     // Down arrow vertices.
     std::array<Vec2, 6> v = {Vec2{0, 0}, {-1, -1}, {-1, 0}, {0, 1}, {1, 0}, {1, -1}};
-    
+
     // Scale and translate vertices, flipping the y direction based on collapse state.
     Vec2 scale{half_width, is_collapsed_ ? half_height : -half_height};
     for (Vec2& vertex : v) {
-      vertex = vertex*scale + midpoint;
+      vertex = vertex * scale + midpoint;
     }
 
     // Arrow triangles.
     std::array<Triangle, 4> triangles = {
         Triangle{v[0], v[1], v[2]}, {v[0], v[2], v[3]}, {v[0], v[3], v[4]}, {v[0], v[4], v[5]}};
-    
+
     for (const auto& triangle : triangles) {
       primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
     }
