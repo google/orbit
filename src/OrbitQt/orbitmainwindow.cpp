@@ -76,7 +76,6 @@
 #include "ApiInterface/Orbit.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/WineSyscallHandlingMethod.h"
