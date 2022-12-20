@@ -5,12 +5,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QList>
 #include <QSignalSpy>
-#include <QVariant>
 #include <filesystem>
 #include <string>
 
+#include "OrbitBase/Typedef.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "QtTestUtils/WaitFor.h"

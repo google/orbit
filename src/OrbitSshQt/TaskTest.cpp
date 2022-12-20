@@ -21,6 +21,7 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/Typedef.h"
 #include "OrbitBase/WhenAll.h"
 #include "OrbitSshQt/Task.h"
 #include "QtTestUtils/WaitFor.h"
