@@ -52,7 +52,7 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
   const float indentation_x0 =
       x0 + (track_->GetIndentationLevel() * layout_->GetTrackIndentOffset());
 
-  if (layout_->GetDrawTrackHeaderBackground()) {
+  if (track_->GetIndentationLevel() == 0 && layout_->GetDrawTrackHeaderBackground()) {
     Quad box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height));
     primitive_assembler.AddBox(box, track_z, track_->GetTrackBackgroundColor(), shared_from_this());
   }
@@ -80,7 +80,7 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
 
   text_renderer.AddTextTrailingCharsPrioritized(
       track_->GetLabel().c_str(), indentation_x0 + label_offset_x,
-      y0 + layout_->GetTextBoxHeight() * 0.5f, text_z, formatting,
+      y0 + layout_->GetTextBoxHeight() * 0.5f + GetVerticalLabelOffset(), text_z, formatting,
       track_->GetNumberOfPrioritizedTrailingCharacters());
 }
 
@@ -104,12 +104,19 @@ void TrackHeader::UpdateCollapseToggle() {
 
   collapse_toggle_->SetWidth(size);
   collapse_toggle_->SetHeight(size);
-  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
+  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1] + GetVerticalLabelOffset());
 
   // Update the "collapsible" property of the triangle toggle to match the same property in the
   // parent track. This makes sure that changes to the track "collapsible" property are correctly
   // disabling the triangle toggle, even if they change during runtime.
   collapse_toggle_->SetIsCollapsible(track_->IsCollapsible());
+}
+
+float TrackHeader::GetVerticalLabelOffset() const {
+  // This offset only affect subtracks, which are a very special case that need refactoring. 
+  // Subtracks are only used for the memory track. The following offset is to avoid overlap between 
+  // the labels of the track and it's subtrack. Subtracks should have their own header altogether.
+  return track_->GetIndentationLevel() > 0 ? layout_->GetTextBoxHeight() : 0.f;
 }
 
 void TrackHeader::OnDrag(int x, int y) {
