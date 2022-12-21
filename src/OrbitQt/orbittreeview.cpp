@@ -176,7 +176,7 @@ void OrbitTreeView::resizeEvent(QResizeEvent* event) {
   const bool width_resized = event->size().width() != event->oldSize().width();
   if (width_resized && model_ != nullptr && model_->GetDataView() != nullptr) {
     // Get initial column ratios once.
-    if (column_ratios_.size() == 0) {
+    if (column_ratios_.empty()) {
       for (const auto& column : model_->GetDataView()->GetColumns()) {
         column_ratios_.emplace_back(column.ratio);
       }
@@ -363,7 +363,7 @@ void OrbitTreeView::columnResized(int column, int /*oldSize*/, int new_size) {
   // maintain_user_column_ratios_ defaults to "false", the code can be enabled once we find the
   // proper event filtering magic that will let us differentiate between direct and indirect column
   // resizing.
-  if (maintain_user_column_ratios_ && (column_ratios_.size() != 0u)) {
+  if (maintain_user_column_ratios_ && (!column_ratios_.empty())) {
     ORBIT_CHECK(column < static_cast<int>(column_ratios_.size()));
     column_ratios_[column] = static_cast<float>(new_size) / size().width();
   }

@@ -350,7 +350,7 @@ int main(int argc, char* argv[]) {
                                                    std::move(credentials));
   }
 
-  if (capture_file_paths.size() > 0 && target.has_value()) {
+  if (!capture_file_paths.empty() && target.has_value()) {
     ORBIT_LOG(
         "Aborting startup: User specified a process and instance to connect to, and one or "
         "multiple capture files at the same time.");

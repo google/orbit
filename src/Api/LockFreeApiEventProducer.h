@@ -26,7 +26,7 @@ class LockFreeApiEventProducer
     BuildAndStart(orbit_producer_side_channel::CreateProducerSideChannel());
   }
 
-  ~LockFreeApiEventProducer() { ShutdownAndWait(); }
+  ~LockFreeApiEventProducer() override { ShutdownAndWait(); }
 
  protected:
   [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent* TranslateIntermediateEvent(
