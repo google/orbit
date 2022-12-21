@@ -120,6 +120,7 @@ float GpuTrack::GetHeight() const {
     height += marker_track_->GetHeight();
     height += layout_->GetSpaceBetweenSubtracks();
   }
+  height = std::max(height, 2.f * layout_->GetThreadTrackMinimumHeight());
   return height;
 }
 
