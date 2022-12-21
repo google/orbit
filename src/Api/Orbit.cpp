@@ -47,7 +47,7 @@ void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_
 }
 
 [[deprecated]] void orbit_api_start(const char* name, orbit_api_color color) {
-  auto return_address = ORBIT_GET_CALLER_PC();
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
   EnqueueApiEvent<orbit_api::ApiScopeStart>(
       name, color, static_cast<uint64_t>(kOrbitDefaultGroupId), return_address);
 }
@@ -63,7 +63,7 @@ void orbit_api_start_async_v1(const char* name, uint64_t id, orbit_api_color col
 }
 
 [[deprecated]] void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
-  auto return_address = ORBIT_GET_CALLER_PC();
+  uint64_t return_address = ORBIT_GET_CALLER_PC();
   EnqueueApiEvent<orbit_api::ApiScopeStartAsync>(name, id, color, return_address);
 }
 
