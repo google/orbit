@@ -484,7 +484,7 @@ class OrbitApp final : public DataViewFactory,
   // list of auto-loadable presets.
   void AddDefaultFrameTrackOrLogError();
 
-  void OnTimeRangeSelection(uint64_t min, uint64_t max);
+  void OnTimeRangeSelection(orbit_client_data::TimeRange time_range);
   void ClearTimeRangeSelection();
 
  private:

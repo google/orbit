@@ -17,8 +17,27 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/WineSyscallHandlingMethod.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
+
+using orbit_client_protos::TimerInfo;
+
+namespace {
+const uint64_t kBeforeStart = 2;
+const uint64_t kStart = 5;
+const uint64_t kInbetween = 7;
+const uint64_t kStillInbetween = 8;
+const uint64_t kEnd = 10;
+const uint64_t kAfterEnd = 15;
+
+TimerInfo CreateTimer(uint64_t start, uint64_t end) {
+  TimerInfo timer_info;
+  timer_info.set_start(start);
+  timer_info.set_end(end);
+  return timer_info;
+}
+}  // namespace
 
 namespace orbit_client_data {
 
@@ -116,25 +135,56 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
                                             WineSyscallHandlingMethod::kNoSpecialHandling);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager,
                                             &DataManager::wine_syscall_handling_method);
-  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::GetTimeRangeSelectionStart);
-  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::GetTimeRangeSelectionEnd);
-  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::ClearTimeRangeSelection);
-  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SetTimeRangeSelection, 0,
-                                            5);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::GetSelectionTimeRange);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::ClearSelectionTimeRange);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SetSelectionTimeRange,
+                                            TimeRange(kStart, kEnd));
 }
 
-TEST(DataManager, TimeRangeSelection) {
+TEST(DataManager, SelectionTimeRangeDefaultValue) {
   DataManager data_manager;
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), std::numeric_limits<uint64_t>::min());
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), std::numeric_limits<uint64_t>::max());
+  EXPECT_EQ(data_manager.GetSelectionTimeRange().has_value(), false);
+}
 
-  data_manager.SetTimeRangeSelection(5, 10);
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), 5);
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), 10);
+TEST(DataManager, SetSelectionTimeRange) {
+  DataManager data_manager;
+  data_manager.SetSelectionTimeRange(TimeRange(kStart, kEnd));
+  EXPECT_EQ(data_manager.GetSelectionTimeRange().has_value(), true);
+  EXPECT_EQ(data_manager.GetSelectionTimeRange().value().start, kStart);
+  EXPECT_EQ(data_manager.GetSelectionTimeRange().value().end, kEnd);
+}
 
-  data_manager.ClearTimeRangeSelection();
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionStart(), std::numeric_limits<uint64_t>::min());
-  EXPECT_EQ(data_manager.GetTimeRangeSelectionEnd(), std::numeric_limits<uint64_t>::max());
+TEST(DataManager, ClearSelectionTimeRange) {
+  DataManager data_manager;
+  data_manager.SetSelectionTimeRange(TimeRange(kStart, kEnd));
+  data_manager.ClearSelectionTimeRange();
+  EXPECT_EQ(data_manager.GetSelectionTimeRange().has_value(), false);
+}
+
+TEST(TimeRange, ConstructTimeRange) {
+  TimeRange time_range(kStart, kEnd);
+  EXPECT_EQ(time_range.start, kStart);
+  EXPECT_EQ(time_range.end, kEnd);
+}
+
+TEST(TimeRange, ConstructTimeRangeBackward) {
+  TimeRange time_range(kEnd, kStart);
+  EXPECT_EQ(time_range.start, kStart);
+  EXPECT_EQ(time_range.end, kEnd);
+}
+
+TEST(TimeRange, IsTimerInRange) {
+  TimeRange time_range(kStart, kEnd);
+  EXPECT_TRUE(time_range.IsTimerInRange(CreateTimer(kStart, kEnd)));
+  EXPECT_TRUE(time_range.IsTimerInRange(CreateTimer(kStart, kInbetween)));
+  EXPECT_TRUE(time_range.IsTimerInRange(CreateTimer(kInbetween, kEnd)));
+  EXPECT_TRUE(time_range.IsTimerInRange(CreateTimer(kInbetween, kStillInbetween)));
+
+  EXPECT_FALSE(time_range.IsTimerInRange(CreateTimer(kBeforeStart, kAfterEnd)));
+  EXPECT_FALSE(time_range.IsTimerInRange(CreateTimer(kBeforeStart, kInbetween)));
+  EXPECT_FALSE(time_range.IsTimerInRange(CreateTimer(kInbetween, kAfterEnd)));
+  EXPECT_FALSE(time_range.IsTimerInRange(CreateTimer(kStart, kAfterEnd)));
+  EXPECT_FALSE(time_range.IsTimerInRange(CreateTimer(kBeforeStart, kEnd)));
 }
 
 }  // namespace orbit_client_data

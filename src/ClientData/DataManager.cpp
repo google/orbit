@@ -338,26 +338,19 @@ DataManager::thread_state_change_callstack_collection() const {
   return thread_state_change_callstack_collection_;
 }
 
-void DataManager::SetTimeRangeSelection(uint64_t start, uint64_t end) {
+void DataManager::SetSelectionTimeRange(const TimeRange& time_range) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  time_range_selection_start_ = start;
-  time_range_selection_end_ = end;
+  selection_time_range_ = time_range;
 }
 
-void DataManager::ClearTimeRangeSelection() {
+void DataManager::ClearSelectionTimeRange() {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  time_range_selection_start_ = std::numeric_limits<uint64_t>::min();
-  time_range_selection_end_ = std::numeric_limits<uint64_t>::max();
+  selection_time_range_.reset();
 }
 
-uint64_t DataManager::GetTimeRangeSelectionStart() const {
+std::optional<TimeRange> DataManager::GetSelectionTimeRange() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return time_range_selection_start_;
-}
-
-uint64_t DataManager::GetTimeRangeSelectionEnd() const {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return time_range_selection_end_;
+  return selection_time_range_;
 }
 
 }  // namespace orbit_client_data

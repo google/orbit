@@ -29,6 +29,18 @@
 
 namespace orbit_client_data {
 
+// TimeRange represents an inclusive time range. A timer is only considered within the time range if
+// it is fully enclosed in it.
+struct TimeRange {
+  TimeRange(uint64_t start, uint64_t end)
+      : start(std::min(start, end)), end(std::max(start, end)) {}
+  [[nodiscard]] bool IsTimerInRange(const orbit_client_protos::TimerInfo& timer) const {
+    return timer.start() >= start && timer.end() <= end;
+  }
+  uint64_t start;
+  uint64_t end;
+};
+
 // This class is responsible for storing and navigating data on the client side.
 // Note that every method of this class should be called on the main thread.
 class DataManager final {
@@ -70,10 +82,9 @@ class DataManager final {
   [[nodiscard]] bool IsFrameTrackEnabled(const FunctionInfo& function) const;
   void ClearUserDefinedCaptureData();
 
-  void SetTimeRangeSelection(uint64_t start, uint64_t end);
-  void ClearTimeRangeSelection();
-  [[nodiscard]] uint64_t GetTimeRangeSelectionStart() const;
-  [[nodiscard]] uint64_t GetTimeRangeSelectionEnd() const;
+  void SetSelectionTimeRange(const TimeRange& time_range);
+  void ClearSelectionTimeRange();
+  [[nodiscard]] std::optional<TimeRange> GetSelectionTimeRange() const;
 
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const;
 
@@ -172,8 +183,7 @@ class DataManager final {
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 8ULL * 1024 * 1024;
 
-  uint64_t time_range_selection_start_ = std::numeric_limits<uint64_t>::min();
-  uint64_t time_range_selection_end_ = std::numeric_limits<uint64_t>::max();
+  std::optional<TimeRange> selection_time_range_;
 };
 
 }  // namespace orbit_client_data
