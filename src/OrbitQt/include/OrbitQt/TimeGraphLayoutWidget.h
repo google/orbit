@@ -68,6 +68,9 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] float GetTrackHeaderWidth() const override {
     return track_header_width_.value() * scale_.value();
   }
+  [[nodiscard]] float GetThreadTrackMinimumHeight() const override {
+    return thread_track_minimum_height_.value() * scale_.value();
+  }
   [[nodiscard]] float GetRightMargin() const override {
     return right_margin_.value() * scale_.value();
   }
@@ -237,10 +240,16 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Text Offset:",
   }};
   FloatProperty track_header_width_{{
-      .initial_value = 350.f,
+      .initial_value = 250.f,
       .min = 0.f,
       .max = 1000.f,
       .label = "Track Header Width:",
+  }};
+  FloatProperty thread_track_minimum_height_{{
+      .initial_value = 24.f,
+      .min = 0.f,
+      .max = 100.f,
+      .label = "Minimum Thread Track Height:",
   }};
   FloatProperty right_margin_{{
       .initial_value = 10.f,

@@ -27,6 +27,7 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetRoundingNumSides() const = 0;
   [[nodiscard]] virtual float GetTextOffset() const = 0;
   [[nodiscard]] virtual float GetTrackHeaderWidth() const = 0;
+  [[nodiscard]] virtual float GetThreadTrackMinimumHeight() const = 0;
   [[nodiscard]] virtual float GetRightMargin() const = 0;
   [[nodiscard]] virtual float GetMinButtonSize() const = 0;
   [[nodiscard]] virtual float GetButtonWidth() const = 0;
