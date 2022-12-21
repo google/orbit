@@ -328,9 +328,10 @@ float ThreadTrack::GetHeight() const {
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
       (depth > 0);
-  return GetHeightAboveTimers() +
+  float height = GetHeightAboveTimers() +
          (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenThreadPanes() : 0) +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
+  return std::max(height, layout_->GetThreadTrackMinimumHeight());
 }
 
 float ThreadTrack::GetHeightAboveTimers() const {
