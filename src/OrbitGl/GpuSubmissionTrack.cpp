@@ -183,9 +183,8 @@ float GpuSubmissionTrack::GetHeight() const {
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
   }
-  return layout_->GetTrackContentTopMargin() +
-         layout_->GetTextBoxHeight() * depth + (num_gaps * layout_->GetSpaceBetweenGpuDepths()) +
-         layout_->GetTrackContentBottomMargin();
+  return layout_->GetTrackContentTopMargin() + layout_->GetTextBoxHeight() * depth +
+         (num_gaps * layout_->GetSpaceBetweenGpuDepths()) + layout_->GetTrackContentBottomMargin();
 }
 
 const TimerInfo* GpuSubmissionTrack::GetLeft(const TimerInfo& timer_info) const {
