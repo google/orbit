@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
+#include <absl/flags/internal/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_cat.h>
@@ -117,6 +118,7 @@
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;
+using orbit_base::kAllProcessThreadsTid;
 using orbit_base::NotFoundOr;
 
 using orbit_capture_client::CaptureClient;
@@ -183,6 +185,8 @@ namespace {
 constexpr const char* kNtdllSoFileName = "ntdll.so";
 constexpr const char* kWineSyscallDispatcherFunctionName = "__wine_syscall_dispatcher";
 constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
+const TimeRange kDefaultTimeRange =
+    TimeRange(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
                                                                const ProcessData* process) {
@@ -2156,9 +2160,15 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids
 }
 
 bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
-  const std::optional<TimeRange>& time_range = data_manager_->GetSelectionTimeRange();
-  if (time_range.has_value() && !time_range.value().IsTimerInRange(timer)) {
-    return false;
+  if (absl::GetFlag(FLAGS_time_range_selection)) {
+    const std::optional<TimeRange>& time_range = data_manager_->GetSelectionTimeRange();
+    if (time_range.has_value() && !time_range.value().IsTimerInRange(timer)) {
+      return false;
+    }
+    const uint32_t thread_id = data_manager_->selected_thread_id();
+    if (thread_id != kAllProcessThreadsTid && thread_id != timer.thread_id()) {
+      return false;
+    }
   }
   const std::optional<ScopeId> scope_id = GetCaptureData().ProvideScopeId(timer);
   if (!scope_id.has_value()) {
@@ -2180,7 +2190,8 @@ ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_t
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   RequestUpdatePrimitives();
-  return data_manager_->set_selected_thread_id(thread_id);
+  data_manager_->set_selected_thread_id(thread_id);
+  OnThreadOrTimeRangeSelectionChange();
 }
 
 std::optional<ThreadStateSliceInfo> OrbitApp::selected_thread_state_slice() const {
@@ -2290,8 +2301,7 @@ void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_
   FireRefreshCallbacks();
 }
 
-void OrbitApp::ClearAllSelections() {
-  ClearInspection();
+void OrbitApp::ClearSelectionTabs() {
   ClearSelectionReport();
   ClearSelectionTopDownView();
   ClearSelectionBottomUpView();
@@ -2806,33 +2816,57 @@ const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
 }
 
 void OrbitApp::OnTimeRangeSelection(TimeRange time_range) {
-  ClearAllSelections();
-
-  auto selected_callstack_events =
-      GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(time_range.start,
-                                                                        time_range.end);
-  SetCaptureDataSelectionFields(selected_callstack_events, /*origin_is_multiple_threads=*/true);
-
-  main_window_->SetLiveTabScopeStatsCollection(
-      GetCaptureData().CreateScopeStatsCollection(time_range.start, time_range.end));
-  SetTopDownView(GetCaptureData().selection_post_processed_sampling_data());
-  SetBottomUpView(GetCaptureData().selection_post_processed_sampling_data());
-  SetSamplingReport(&GetCaptureData().selection_callstack_data(),
-                    &GetCaptureData().selection_post_processed_sampling_data());
   data_manager_->SetSelectionTimeRange(time_range);
-
-  FireRefreshCallbacks();
+  OnThreadOrTimeRangeSelectionChange();
 }
 
 void OrbitApp::ClearTimeRangeSelection() {
-  ClearAllSelections();
+  data_manager_->ClearSelectionTimeRange();
+  OnThreadOrTimeRangeSelectionChange();
+}
 
+void OrbitApp::ClearThreadAndTimeRangeSelection() {
   main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
   SetTopDownView(GetCaptureData().post_processed_sampling_data());
   SetBottomUpView(GetCaptureData().post_processed_sampling_data());
   SetSamplingReport(&GetCaptureData().GetCallstackData(),
                     &GetCaptureData().post_processed_sampling_data());
-  data_manager_->ClearSelectionTimeRange();
+
+  FireRefreshCallbacks();
+}
+
+void OrbitApp::OnThreadOrTimeRangeSelectionChange() {
+  if (!HasCaptureData() || !absl::GetFlag(FLAGS_time_range_selection)) return;
+
+  ClearSelectionTabs();
+  ClearInspection();
+
+  uint32_t thread_id = data_manager_->selected_thread_id();
+  bool has_time_range = data_manager_->GetSelectionTimeRange().has_value();
+  if (thread_id == kAllProcessThreadsTid && !has_time_range) {
+    ClearThreadAndTimeRangeSelection();
+    return;
+  }
+
+  TimeRange time_range =
+      has_time_range ? data_manager_->GetSelectionTimeRange().value() : kDefaultTimeRange;
+  if (thread_id == kAllProcessThreadsTid) {
+    SetCaptureDataSelectionFields(GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(
+                                      time_range.start, time_range.end),
+                                  /*origin_is_multiple_threads=*/true);
+  } else {
+    SetCaptureDataSelectionFields(
+        GetCaptureData().GetCallstackData().GetCallstackEventsOfTidInTimeRange(
+            thread_id, time_range.start, time_range.end),
+        /*origin_is_multiple_threads=*/false);
+  }
+
+  main_window_->SetLiveTabScopeStatsCollection(
+      GetCaptureData().CreateScopeStatsCollection(thread_id, time_range.start, time_range.end));
+  SetTopDownView(GetCaptureData().selection_post_processed_sampling_data());
+  SetBottomUpView(GetCaptureData().selection_post_processed_sampling_data());
+  SetSamplingReport(&GetCaptureData().selection_callstack_data(),
+                    &GetCaptureData().selection_post_processed_sampling_data());
 
   FireRefreshCallbacks();
 }
