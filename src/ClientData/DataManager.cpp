@@ -6,7 +6,6 @@
 
 #include <absl/container/flat_hash_set.h>
 
-#include <limits>
 #include <utility>
 
 #include "ClientProtos/capture_data.pb.h"
