@@ -293,7 +293,8 @@ void CaptureWindow::RightUp() {
     if (select_start_pos_world_[0] == select_stop_pos_world_[0]) {
       app_->ClearTimeRangeSelection();
     } else {
-      app_->OnTimeRangeSelection(TimeRange(select_start_time_, select_stop_time_));
+      app_->OnTimeRangeSelection(TimeRange(std::min(select_start_time_, select_stop_time_),
+                                           std::max(select_start_time_, select_stop_time_)));
     }
   }
 

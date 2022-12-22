@@ -2159,7 +2159,7 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids
 }
 
 bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
-  const std::optional<TimeRange> time_range = data_manager_->GetSelectionTimeRange();
+  const std::optional<TimeRange>& time_range = data_manager_->GetSelectionTimeRange();
   if (time_range.has_value() && !time_range.value().IsTimerInRange(timer)) {
     return false;
   }

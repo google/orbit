@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <exception>
@@ -22,22 +23,23 @@
 #include "GrpcProtos/tracepoint.pb.h"
 
 using orbit_client_protos::TimerInfo;
+using testing::Optional;
 
-namespace {
-const uint64_t kBeforeStart = 2;
-const uint64_t kStart = 5;
-const uint64_t kInbetween = 7;
-const uint64_t kStillInbetween = 8;
-const uint64_t kEnd = 10;
-const uint64_t kAfterEnd = 15;
+constexpr uint64_t kBeforeStart = 2;
+constexpr uint64_t kStart = 5;
+constexpr uint64_t kInbetween = 7;
+constexpr uint64_t kStillInbetween = 8;
+constexpr uint64_t kEnd = 10;
+constexpr uint64_t kAfterEnd = 15;
 
-TimerInfo CreateTimer(uint64_t start, uint64_t end) {
+[[nodiscard]] static TimerInfo CreateTimer(uint64_t start, uint64_t end) {
   TimerInfo timer_info;
   timer_info.set_start(start);
   timer_info.set_end(end);
   return timer_info;
 }
-}  // namespace
+
+MATCHER_P2(TimeRangeEq, start, end, "") { return arg.start == start && arg.end == end; }
 
 namespace orbit_client_data {
 
@@ -149,9 +151,7 @@ TEST(DataManager, SelectionTimeRangeDefaultValue) {
 TEST(DataManager, SetSelectionTimeRange) {
   DataManager data_manager;
   data_manager.SetSelectionTimeRange(TimeRange(kStart, kEnd));
-  EXPECT_EQ(data_manager.GetSelectionTimeRange().has_value(), true);
-  EXPECT_EQ(data_manager.GetSelectionTimeRange().value().start, kStart);
-  EXPECT_EQ(data_manager.GetSelectionTimeRange().value().end, kEnd);
+  EXPECT_THAT(data_manager.GetSelectionTimeRange(), Optional(TimeRangeEq(kStart, kEnd)));
 }
 
 TEST(DataManager, ClearSelectionTimeRange) {
@@ -168,9 +168,7 @@ TEST(TimeRange, ConstructTimeRange) {
 }
 
 TEST(TimeRange, ConstructTimeRangeBackward) {
-  TimeRange time_range(kEnd, kStart);
-  EXPECT_EQ(time_range.start, kStart);
-  EXPECT_EQ(time_range.end, kEnd);
+  EXPECT_DEATH(TimeRange(kEnd, kStart), "Check failed");
 }
 
 TEST(TimeRange, IsTimerInRange) {

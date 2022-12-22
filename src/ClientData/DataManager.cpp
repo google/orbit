@@ -348,7 +348,7 @@ void DataManager::ClearSelectionTimeRange() {
   selection_time_range_.reset();
 }
 
-std::optional<TimeRange> DataManager::GetSelectionTimeRange() const {
+const std::optional<TimeRange>& DataManager::GetSelectionTimeRange() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return selection_time_range_;
 }

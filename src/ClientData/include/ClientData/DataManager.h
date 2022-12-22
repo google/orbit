@@ -25,6 +25,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_client_data {
@@ -32,10 +33,9 @@ namespace orbit_client_data {
 // TimeRange represents an inclusive time range. A timer is only considered within the time range if
 // it is fully enclosed in it.
 struct TimeRange {
-  TimeRange(uint64_t start, uint64_t end)
-      : start(std::min(start, end)), end(std::max(start, end)) {}
+  TimeRange(uint64_t start, uint64_t end) : start(start), end(end) { ORBIT_CHECK(start <= end); }
   [[nodiscard]] bool IsTimerInRange(const orbit_client_protos::TimerInfo& timer) const {
-    return timer.start() >= start && timer.end() <= end;
+    return start <= timer.start() && timer.end() <= end;
   }
   uint64_t start;
   uint64_t end;
@@ -84,7 +84,7 @@ class DataManager final {
 
   void SetSelectionTimeRange(const TimeRange& time_range);
   void ClearSelectionTimeRange();
-  [[nodiscard]] std::optional<TimeRange> GetSelectionTimeRange() const;
+  [[nodiscard]] const std::optional<TimeRange>& GetSelectionTimeRange() const;
 
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const;
 
