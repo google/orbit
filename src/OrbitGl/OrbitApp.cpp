@@ -49,7 +49,6 @@
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
-#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -120,7 +119,6 @@
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::NotFoundOr;
-using orbit_base::StopToken;
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
@@ -134,7 +132,6 @@ using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
-using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
@@ -143,6 +140,7 @@ using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadStateSliceInfo;
+using orbit_client_data::TimeRange;
 using orbit_client_data::TimerBlock;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
@@ -168,10 +166,7 @@ using orbit_gl::MainWindowInterface;
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::ClientCaptureEvent;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
-using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
@@ -2163,8 +2158,16 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids
   RequestUpdatePrimitives();
 }
 
-bool OrbitApp::IsScopeVisible(ScopeId scope_id) const {
-  return data_manager_->IsScopeVisible(scope_id);
+bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
+  const std::optional<TimeRange>& time_range = data_manager_->GetSelectionTimeRange();
+  if (time_range.has_value() && !time_range.value().IsTimerInRange(timer)) {
+    return false;
+  }
+  const std::optional<ScopeId> scope_id = GetCaptureData().ProvideScopeId(timer);
+  if (!scope_id.has_value()) {
+    return false;
+  }
+  return data_manager_->IsScopeVisible(scope_id.value());
 }
 
 std::optional<ScopeId> OrbitApp::GetHighlightedScopeId() const {
@@ -2805,19 +2808,21 @@ const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
   return *process_ptr;
 }
 
-void OrbitApp::OnTimeRangeSelection(uint64_t min, uint64_t max) {
+void OrbitApp::OnTimeRangeSelection(TimeRange time_range) {
   ClearAllSelections();
 
   auto selected_callstack_events =
-      GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(min, max);
+      GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(time_range.start,
+                                                                        time_range.end);
   SetCaptureDataSelectionFields(selected_callstack_events, /*origin_is_multiple_threads=*/true);
 
   main_window_->SetLiveTabScopeStatsCollection(
-      GetCaptureData().CreateScopeStatsCollection(min, max));
+      GetCaptureData().CreateScopeStatsCollection(time_range.start, time_range.end));
   SetTopDownView(GetCaptureData().selection_post_processed_sampling_data());
   SetBottomUpView(GetCaptureData().selection_post_processed_sampling_data());
   SetSamplingReport(&GetCaptureData().selection_callstack_data(),
                     &GetCaptureData().selection_post_processed_sampling_data());
+  data_manager_->SetSelectionTimeRange(time_range);
 
   FireRefreshCallbacks();
 }
@@ -2830,6 +2835,7 @@ void OrbitApp::ClearTimeRangeSelection() {
   SetBottomUpView(GetCaptureData().post_processed_sampling_data());
   SetSamplingReport(&GetCaptureData().GetCallstackData(),
                     &GetCaptureData().post_processed_sampling_data());
+  data_manager_->ClearSelectionTimeRange();
 
   FireRefreshCallbacks();
 }

@@ -181,8 +181,7 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   if (!app_->HasCaptureData()) return TimerTrack::IsTimerActive(timer_info);
-  const std::optional<ScopeId> scope_id = app_->ProvideScopeId(timer_info);
-  return scope_id.has_value() ? app_->IsScopeVisible(scope_id.value()) : false;
+  return app_->IsTimerActive(timer_info);
 }
 
 bool ThreadTrack::IsTrackSelected() const {

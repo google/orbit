@@ -374,7 +374,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
 
   void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) override;
-  [[nodiscard]] bool IsScopeVisible(ScopeId scope_id) const;
+  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const;
 
   [[nodiscard]] std::optional<ScopeId> GetHighlightedScopeId() const override;
   void SetHighlightedScopeId(std::optional<ScopeId> highlighted_scope_id) override;
@@ -484,7 +484,7 @@ class OrbitApp final : public DataViewFactory,
   // list of auto-loadable presets.
   void AddDefaultFrameTrackOrLogError();
 
-  void OnTimeRangeSelection(uint64_t min, uint64_t max);
+  void OnTimeRangeSelection(orbit_client_data::TimeRange time_range);
   void ClearTimeRangeSelection();
 
  private:
