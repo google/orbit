@@ -24,7 +24,6 @@
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/File.h"
-#include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
