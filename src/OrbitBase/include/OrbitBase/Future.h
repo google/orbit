@@ -260,6 +260,16 @@ class [[nodiscard]] Future<ErrorMessageOr<T>>
     return executor->ScheduleAfterIfSuccess(*this, std::forward<Invocable>(invocable));
   }
 };
+
+template <typename T>
+struct IsFuture : std::false_type {};
+
+template <typename T>
+struct IsFuture<Future<T>> : std::true_type {};
+
+template <typename T>
+constexpr bool kIsFutureV = IsFuture<T>::value;
+
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_FUTURE_H_

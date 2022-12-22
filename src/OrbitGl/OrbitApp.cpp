@@ -1552,7 +1552,7 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
   Future<ErrorMessageOr<CanceledOr<void>>> load_future =
       symbol_loader_->RetrieveModuleAndLoadSymbols(module);
 
-  Future<Future<SymbolLoadingAndErrorHandlingResult>> chained_load_future = load_future.Then(
+  return load_future.Then(
       main_thread_executor_,
       [module, this](ErrorMessageOr<CanceledOr<void>> load_result)
           -> Future<SymbolLoadingAndErrorHandlingResult> {
@@ -1576,8 +1576,6 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
         }
         ORBIT_UNREACHABLE();
       });
-
-  return orbit_base::UnwrapFuture(chained_load_future);
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
@@ -1859,7 +1857,7 @@ Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
       });
 
   // `all_modules_reloaded` is a future in a future. So we have to unwrap here.
-  return orbit_base::UnwrapFuture(all_reloaded_modules)
+  return all_reloaded_modules
       .ThenIfSuccess(main_thread_executor_,
                      [this](absl::Span<const ErrorMessageOr<void>> reload_results) {
                        // We ignore whether reloading a particular module failed to preserve the
