@@ -23,6 +23,7 @@
 #include "CaptureClient/AppInterface.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/DataManager.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"

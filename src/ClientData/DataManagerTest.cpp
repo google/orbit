@@ -6,9 +6,9 @@
 #include <absl/hash/hash.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <stdint.h>
 
 #include <exception>
-#include <limits>
 #include <optional>
 #include <string>
 #include <thread>
