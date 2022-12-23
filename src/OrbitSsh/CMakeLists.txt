@@ -27,7 +27,9 @@ target_sources(
   OrbitSsh
   PRIVATE Channel.cpp
           Context.cpp
+          Credentials.cpp
           Error.cpp
+          HomeEnvironmentVariable.h
           KnownHostsError.cpp
           LibSsh2Utils.cpp
           Session.cpp
@@ -50,13 +52,22 @@ if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC WIN32_LEAN_AND_MEAN)
   target_compile_definitions(OrbitSsh PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitSsh PUBLIC -DNTDDI_VERSION=0x06030000)
+
+  # This is needed for the designated initializers. We don't enable this
+  # in general to not break the build for old GCC and clang compilers for
+  # no reason.
+  target_compile_features(OrbitSsh PUBLIC cxx_std_20)
 endif()
 
-# tests
 add_executable(OrbitSshTests)
-target_sources(OrbitSshTests PRIVATE SocketTests.cpp ContextTests.cpp)
+target_sources(OrbitSshTests PRIVATE
+  ContextTests.cpp
+  CredentialsTest.cpp
+  SocketTests.cpp)
 
-target_link_libraries(OrbitSshTests PRIVATE OrbitSsh Libssh2::libssh2
-                                            GTest::Main)
+target_link_libraries(OrbitSshTests PRIVATE
+  OrbitSsh
+  TestUtils
+  GTest::Main)
 
 register_test(OrbitSshTests PROPERTIES TIMEOUT 10)
