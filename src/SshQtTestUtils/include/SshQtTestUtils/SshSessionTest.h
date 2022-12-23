@@ -96,8 +96,8 @@ class SshSessionTest : public testing::Test {
     OUTCOME_TRY(credentials.known_hosts_path, CreateKnownHostsFile(credentials.addr_and_port.addr,
                                                                    credentials.addr_and_port.port));
 
-    credentials.key_path = orbit_test::GetTestdataDir() / "id_ed25519";
-    EXPECT_THAT(orbit_base::FileOrDirectoryExists(credentials.key_path),
+    credentials.key_paths.emplace_back(orbit_test::GetTestdataDir() / "id_ed25519");
+    EXPECT_THAT(orbit_base::FileOrDirectoryExists(credentials.key_paths.front()),
                 orbit_test_utils::HasValue(true));
 
     return credentials;

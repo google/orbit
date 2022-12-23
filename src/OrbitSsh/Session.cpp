@@ -99,12 +99,9 @@ outcome::result<void> Session::MatchKnownHosts(const AddrAndPort& addr_and_port,
 outcome::result<void> Session::Authenticate(std::string_view username,
                                             const std::filesystem::path& key_path,
                                             std::string_view pass_phrase) {
-  std::filesystem::path public_key_path = key_path;
-  public_key_path.replace_filename(key_path.filename().string() + ".pub");
-
   const int rc = libssh2_userauth_publickey_fromfile(
-      raw_session_ptr_.get(), std::string{username}.c_str(), public_key_path.string().c_str(),
-      key_path.string().c_str(), std::string{pass_phrase}.c_str());
+      raw_session_ptr_.get(), std::string{username}.c_str(), nullptr, key_path.string().c_str(),
+      std::string{pass_phrase}.c_str());
 
   if (rc < 0) return static_cast<Error>(rc);
 

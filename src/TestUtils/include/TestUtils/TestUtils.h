@@ -36,6 +36,10 @@ MATCHER(HasNoError, absl::StrCat(negation ? "Has an" : "Has no", " error.")) {
   return !arg.has_error();
 }
 
+MATCHER(HasError, absl::StrCat(negation ? "Has no" : "Has an", " error.")) {
+  return arg.has_error();
+}
+
 MATCHER_P(HasError, value,
           absl::StrCat(negation ? "Has no" : "Has an",
                        absl::StrFormat(" error containing \"%s\".", value))) {

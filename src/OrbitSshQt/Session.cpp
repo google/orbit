@@ -15,7 +15,9 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitSsh/Error.h"
 #include "OrbitSsh/Session.h"
+#include "OrbitSshQt/StateMachineHelper.h"
 
 namespace orbit_ssh_qt {
 
@@ -55,7 +57,13 @@ outcome::result<void> Session::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kMatchedKnownHosts: {
-      OUTCOME_TRY(session_->Authenticate(credentials_.user, credentials_.key_path));
+      while (true) {
+        outcome::result<void> result = session_->Authenticate(
+            credentials_.user, credentials_.key_paths.at(next_credential_key_index_));
+        if (!result.has_error()) break;
+        if (result.has_error() && orbit_ssh::ShouldITryAgain(result)) return result;
+        if (++next_credential_key_index_ == credentials_.key_paths.size()) return result;
+      }
       SetState(State::kConnected);
       break;
     }
@@ -120,6 +128,9 @@ void Session::HandleEagain() {
 }
 
 orbit_base::Future<ErrorMessageOr<void>> Session::ConnectToServer(orbit_ssh::Credentials creds) {
+  if (creds.key_paths.empty()) {
+    return ErrorMessage{"No private key path was provided."};
+  }
   credentials_ = std::move(creds);
 
   notifiers_ = std::nullopt;
@@ -146,6 +157,14 @@ void Session::SetError(std::error_code e) {
   notifiers_ = std::nullopt;
   session_ = std::nullopt;
   socket_ = std::nullopt;
+}
+
+void Session::SetState(details::SessionState state) {
+  auto previous_state = CurrentState();
+  StateMachineHelper::SetState(state);
+  if (previous_state != state && state == State::kMatchedKnownHosts) {
+    next_credential_key_index_ = 0;
+  }
 }
 
 }  // namespace orbit_ssh_qt

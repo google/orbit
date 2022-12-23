@@ -96,6 +96,9 @@ class Session : public StateMachineHelper<Session, details::SessionState> {
   outcome::result<void> run();
 
   void SetError(std::error_code);
+  void SetState(details::SessionState state);
+
+  size_t next_credential_key_index_ = 0;
 };
 
 }  // namespace orbit_ssh_qt

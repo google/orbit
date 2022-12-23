@@ -16,7 +16,7 @@ struct Credentials {
   AddrAndPort addr_and_port;
   std::string user;
   std::filesystem::path known_hosts_path;
-  std::filesystem::path key_path;
+  std::vector<std::filesystem::path> key_paths;
 };
 
 }  // namespace orbit_ssh
