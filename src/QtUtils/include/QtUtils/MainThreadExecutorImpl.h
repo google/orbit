@@ -23,8 +23,6 @@ class MainThreadExecutorImpl : public QObject, public orbit_base::MainThreadExec
   Q_OBJECT
   explicit MainThreadExecutorImpl(QObject* parent = nullptr) : QObject(parent) {}
 
-  void ScheduleImpl(std::unique_ptr<Action> action) override;
-
  public:
   [[nodiscard]] static std::shared_ptr<MainThreadExecutorImpl> Create() {
     return std::shared_ptr<MainThreadExecutorImpl>{new MainThreadExecutorImpl{}};
@@ -41,8 +39,16 @@ class MainThreadExecutorImpl : public QObject, public orbit_base::MainThreadExec
   WaitResult WaitForAll(absl::Span<orbit_base::Future<void>> futures) override;
 
   void AbortWaitingJobs() override;
+
+  [[nodiscard]] Handle GetExecutorHandle() const override { return executor_handle_.Get(); }
+
  signals:
   void AbortRequested();
+
+ private:
+  void ScheduleImpl(std::unique_ptr<Action> action) override;
+
+  ScopedHandle executor_handle_{this};
 };
 
 }  // namespace orbit_qt_utils

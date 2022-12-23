@@ -5,8 +5,12 @@
 #ifndef ORBIT_BASE_EXECUTOR_H_
 #define ORBIT_BASE_EXECUTOR_H_
 
+#include <absl/base/thread_annotations.h>
+#include <absl/synchronization/mutex.h>
+
 #include <list>
 #include <memory>
+#include <optional>
 
 #include "OrbitBase/Action.h"
 #include "OrbitBase/AnyMovable.h"
@@ -20,12 +24,59 @@ namespace orbit_base {
 // Executor is a common base class for ThreadPool and MainThreadExecutor.
 // Check out these two for details.
 class Executor : public std::enable_shared_from_this<Executor> {
-  // Schedules the action to be performed on the executor.
-  // Note for implementers: `ScheduleImpl` needs to be thread-safe!
-  virtual void ScheduleImpl(std::unique_ptr<Action> action) = 0;
+ public:
+  // Handles are used by thread-safe asynchronous scheduling mechanims like `ScheduleAfter` or
+  // `TrySchedule`. `Executor` assumes there is only one distinct instance of `Handle` (and an
+  // arbitrary number of copies) per executor. `ScopedHandle` ensures that and simplifies handling
+  // the executor implementation.
+  class Handle final {
+    struct HandleData {
+      absl::Mutex mutex_;
+      Executor* executor_ ABSL_GUARDED_BY(mutex_);
+
+      explicit HandleData(Executor* executor) : executor_{executor} {}
+
+      void InvalidateHandle() {
+        absl::WriterMutexLock lock{&mutex_};
+        executor_ = nullptr;
+      }
+    };
+
+    explicit Handle(Executor* executor) : data_{std::make_shared<HandleData>(executor)} {}
+
+    friend class Executor;
+
+    template <typename F>
+    friend auto TrySchedule(const Handle& handle, F&& function_object);
+
+    std::shared_ptr<HandleData> data_;
+  };
+
+ protected:
+  // `ScopedHandle` is a helper for implementations of `Executor`. It can and should be used to
+  // manage an instance of `Handle` that can be returned by `GetExecutorHandle`.
+  class ScopedHandle final {
+   public:
+    explicit ScopedHandle(Executor* executor) : handle_{executor} {}
+    ~ScopedHandle() { InvalidateHandle(); }
+
+    [[nodiscard]] Handle Get() const { return handle_; }
+    void InvalidateHandle() { handle_.data_->InvalidateHandle(); }
+
+   private:
+    Handle handle_;
+  };
 
  public:
   virtual ~Executor() = default;
+
+  // Asynchronous scheduling mechanims like `ScheduleAfter` and `TrySchedule` require a stable
+  // pointer of the executor. So we disable moving. And copying makes no sense either.
+  Executor() = default;
+  Executor(const Executor&) = delete;
+  Executor& operator=(const Executor&) = delete;
+  Executor(Executor&&) = delete;
+  Executor& operator=(Executor&&) = delete;
 
   // Schedule schedules the function object `functor` to be executed on `*this`. The execution
   // occures asynchronously, meaning this function call will only push the function object to a
@@ -66,10 +117,10 @@ class Executor : public std::enable_shared_from_this<Executor> {
     waiting_continuations_.emplace_front(std::forward<F>(functor));
     auto function_reference = waiting_continuations_.begin();
 
-    auto continuation = [this, function_reference, executor_weak_ptr = weak_from_this(),
+    auto continuation = [this, function_reference, executor_handle = GetExecutorHandle(),
                          promise = std::move(promise)](auto&&... argument) mutable {
-      auto executor = executor_weak_ptr.lock();
-      if (executor == nullptr) return;
+      absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
+      if (executor_handle.data_->executor_ == nullptr) return;
 
       auto function_wrapper =
           [this, function_reference, promise = std::move(promise),
@@ -84,7 +135,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
             std::apply([&](auto... args) { helper.Call(*functor, args...); }, std::move(argument));
             waiting_continuations_.erase(function_reference);
           };
-      executor->ScheduleImpl(CreateAction(std::move(function_wrapper)));
+      executor_handle.data_->executor_->ScheduleImpl(CreateAction(std::move(function_wrapper)));
     };
 
     const orbit_base::FutureRegisterContinuationResult result =
@@ -119,10 +170,10 @@ class Executor : public std::enable_shared_from_this<Executor> {
     waiting_continuations_.emplace_front(std::forward<F>(functor));
     auto function_reference = waiting_continuations_.begin();
 
-    auto continuation = [this, function_reference, executor_weak_ptr = weak_from_this(),
+    auto continuation = [this, function_reference, executor_handle = GetExecutorHandle(),
                          promise = std::move(promise)](const ErrorMessageOr<T>& argument) mutable {
-      auto executor = executor_weak_ptr.lock();
-      if (executor == nullptr) return;
+      absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
+      if (executor_handle.data_->executor_ == nullptr) return;
 
       // If the future returns a non-success ErrorMessageOr-type, we will short-circuit and won't
       // call the continuation. But we still have to schedule an action, that destroys the
@@ -131,7 +182,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
       // thread pool), i.e. when the continuation owns a ScopedStatus.
       if (argument.has_error()) {
         promise.SetResult(outcome::failure(argument.error()));
-        executor->ScheduleImpl(CreateAction(
+        executor_handle.data_->executor_->ScheduleImpl(CreateAction(
             [this, function_reference]() { waiting_continuations_.erase(function_reference); }));
         return;
       }
@@ -146,7 +197,8 @@ class Executor : public std::enable_shared_from_this<Executor> {
 
         waiting_continuations_.erase(function_reference);
       };
-      executor->ScheduleImpl(CreateAction(std::move(success_function_wrapper)));
+      executor_handle.data_->executor_->ScheduleImpl(
+          CreateAction(std::move(success_function_wrapper)));
     };
 
     orbit_base::RegisterContinuationOrCallDirectly(future, std::move(continuation));
@@ -157,17 +209,30 @@ class Executor : public std::enable_shared_from_this<Executor> {
     return waiting_continuations_.size();
   }
 
+  // Executor implementations have to implement this getter using `ScopedHandle` from above. An
+  // instance of `ScopedHandle` is supposed to be a member field of the executor implementation
+  // (derived class). It is supposed to be destructed before the executor looses its ability to
+  // schedule jobs. In most cases it should be enough to make the `ScopedHandle` the last member
+  // field such that it will be destructed first. But it's also possible to call
+  // `scoped_handle_.InvalidateHandle();` in the destructor or elsewhere explicitly.
+  [[nodiscard]] virtual Handle GetExecutorHandle() const = 0;
+
  private:
   std::list<orbit_base::AnyMovable> waiting_continuations_;
+
+  // Schedules the action to be performed on the executor.
+  // Note for implementers: `ScheduleImpl` needs to be thread-safe!
+  virtual void ScheduleImpl(std::unique_ptr<Action> action) = 0;
 };
 
 template <typename F>
-auto TrySchedule(const std::weak_ptr<Executor>& executor, F&& function_object)
-    -> std::optional<decltype(std::declval<Executor>().Schedule(function_object))> {
-  auto executor_ptr = executor.lock();
-  if (executor_ptr == nullptr) return std::nullopt;
+auto TrySchedule(const Executor::Handle& handle, F&& function_object) {
+  absl::ReaderMutexLock lock{&handle.data_->mutex_};
+  if (handle.data_->executor_ == nullptr) {
+    return std::optional<decltype(std::declval<Executor>().Schedule(function_object))>{};
+  }
 
-  return std::make_optional(executor_ptr->Schedule(std::forward<F>(function_object)));
+  return std::make_optional(handle.data_->executor_->Schedule(std::forward<F>(function_object)));
 }
 
 }  // namespace orbit_base
