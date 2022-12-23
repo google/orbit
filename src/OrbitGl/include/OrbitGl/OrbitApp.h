@@ -408,7 +408,7 @@ class OrbitApp final : public DataViewFactory,
       absl::Span<const orbit_client_data::CallstackEvent> selected_callstack_events,
       bool origin_is_multiple_threads);
   void ClearInspection();
-  void ClearAllSelections();
+  void ClearSelectionTabs();
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
@@ -486,6 +486,8 @@ class OrbitApp final : public DataViewFactory,
 
   void OnTimeRangeSelection(orbit_client_data::TimeRange time_range);
   void ClearTimeRangeSelection();
+  void OnThreadOrTimeRangeSelectionChange();
+  void ClearThreadAndTimeRangeSelection();
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

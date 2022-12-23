@@ -265,6 +265,11 @@ class CaptureData {
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max(), bool exclusive = false) const;
 
+  [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimersByTids(
+      const std::vector<uint32_t>& thread_ids, absl::flat_hash_set<ScopeType> types,
+      uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max(), bool exclusive = false) const;
+
   [[nodiscard]] std::vector<const TimerInfo*> GetTimersForScope(
       ScopeId scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
@@ -277,7 +282,7 @@ class CaptureData {
       int64_t thread_id, uint64_t timestamp) const;
 
   [[nodiscard]] std::unique_ptr<const ScopeStatsCollection> CreateScopeStatsCollection(
-      uint64_t min_tick, uint64_t max_tick) const;
+      uint32_t thread_id, uint64_t min_tick, uint64_t max_tick) const;
   [[nodiscard]] std::shared_ptr<const ScopeStatsCollection> GetAllScopeStatsCollection() const;
 
  private:

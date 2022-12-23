@@ -21,6 +21,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStatsCollection.h"
 #include "GrpcProtos/process.pb.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Typedef.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 
@@ -276,15 +277,26 @@ std::shared_ptr<const ScopeStatsCollection> CaptureData::GetAllScopeStatsCollect
 }
 
 std::unique_ptr<const ScopeStatsCollection> CaptureData::CreateScopeStatsCollection(
-    uint64_t min_tick, uint64_t max_tick) const {
+    uint32_t thread_id, uint64_t min_tick, uint64_t max_tick) const {
   ORBIT_CHECK(scope_id_provider_);
-  auto timers = GetAllScopeTimers(kAllValidScopeTypes, min_tick, max_tick, /*exclusive=*/true);
+  std::vector<uint32_t> thread_ids = thread_id == orbit_base::kAllProcessThreadsTid
+                                         ? GetThreadTrackDataProvider()->GetAllThreadIds()
+                                         : std::vector<uint32_t>{thread_id};
+  auto timers = GetAllScopeTimersByTids(thread_ids, kAllValidScopeTypes, min_tick, max_tick,
+                                        /*exclusive=*/true);
   return std::make_unique<ScopeStatsCollection>(*scope_id_provider_, timers);
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(
     const absl::flat_hash_set<ScopeType> types, uint64_t min_tick, uint64_t max_tick,
     bool exclusive) const {
+  std::vector<uint32_t> thread_ids = GetThreadTrackDataProvider()->GetAllThreadIds();
+  return GetAllScopeTimersByTids(thread_ids, types, min_tick, max_tick, exclusive);
+}
+
+[[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimersByTids(
+    const std::vector<uint32_t>& thread_ids, const absl::flat_hash_set<ScopeType> types,
+    uint64_t min_tick, uint64_t max_tick, bool exclusive) const {
   std::vector<const TimerInfo*> result;
 
   // The timers corresponding to dynamically instrumented functions and manual instrumentation
@@ -292,7 +304,7 @@ std::unique_ptr<const ScopeStatsCollection> CaptureData::CreateScopeStatsCollect
   // async (kApiScope).
   if (types.contains(ScopeType::kApiScope) ||
       types.contains(ScopeType::kDynamicallyInstrumentedFunction)) {
-    for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
+    for (const uint32_t thread_id : thread_ids) {
       const std::vector<const TimerInfo*> thread_track_timers =
           GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick, exclusive);
       std::copy_if(std::begin(thread_track_timers), std::end(thread_track_timers),
