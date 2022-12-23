@@ -132,6 +132,7 @@ ErrorMessageOr<std::vector<std::filesystem::path>> ListFilesInDirectory(
     const std::filesystem::path& directory);
 ErrorMessageOr<absl::Time> GetFileDateModified(const std::filesystem::path& path);
 ErrorMessageOr<bool> IsDirectory(const std::filesystem::path& path);
+ErrorMessageOr<bool> IsRegularFile(const std::filesystem::path& path);
 
 }  // namespace orbit_base
 
