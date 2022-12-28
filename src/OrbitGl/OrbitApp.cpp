@@ -7,7 +7,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
-#include <absl/flags/internal/flag.h>
 #include <absl/hash/hash.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_cat.h>
@@ -115,6 +114,7 @@
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
+#include "absl/flags/internal/flag.h"
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;

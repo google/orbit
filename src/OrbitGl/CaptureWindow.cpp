@@ -6,7 +6,6 @@
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
-#include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
@@ -25,7 +24,6 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/DataManager.h"
 #include "ClientData/ThreadStateSliceInfo.h"
-#include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
