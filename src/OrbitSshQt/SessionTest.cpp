@@ -8,16 +8,19 @@
 #include <QSignalSpy>
 #include <memory>
 
+#include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/Session.h"
 #include "QtTestUtils/WaitFor.h"
 #include "SshQtTestUtils/SshSessionTest.h"
+#include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
 using orbit_qt_test_utils::WaitFor;
 using orbit_qt_test_utils::YieldsResult;
+using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using testing::IsEmpty;
 using testing::Not;
@@ -40,5 +43,60 @@ TEST_F(SshSessionTest, Connect) {
   EXPECT_THAT(WaitFor(session.Disconnect()), YieldsResult(HasNoError()));
   EXPECT_THAT(started_signal, IsEmpty());
   EXPECT_THAT(stopped_signal, Not(IsEmpty()));
+}
+
+TEST_F(SshSessionTest, ConnectFailsWithNonExistingKeyFile) {
+  auto context = orbit_ssh::Context::Create();
+  ASSERT_TRUE(context);
+
+  orbit_ssh_qt::Session session{&context.value()};
+  QSignalSpy started_signal{&session, &Session::started};
+  QSignalSpy stopped_signal{&session, &Session::stopped};
+
+  orbit_ssh::Credentials credentials = GetCredentials();
+  credentials.key_paths.front() = "/does/not/exist";
+  EXPECT_THAT(WaitFor(session.ConnectToServer(credentials)), YieldsResult(HasError()));
+}
+
+TEST_F(SshSessionTest, ConnectFailsWithValidButWrongKeyFile) {
+  auto context = orbit_ssh::Context::Create();
+  ASSERT_TRUE(context);
+
+  orbit_ssh_qt::Session session{&context.value()};
+
+  orbit_ssh::Credentials credentials = GetCredentials();
+  credentials.key_paths.front() = orbit_test::GetTestdataDir() / "random_identity";
+  EXPECT_THAT(orbit_base::FileOrDirectoryExists(credentials.key_paths.front()),
+              orbit_test_utils::HasValue(true));
+
+  EXPECT_THAT(WaitFor(session.ConnectToServer(credentials)), YieldsResult(HasError()));
+}
+
+TEST_F(SshSessionTest, ConnectSucceedsOnSecondKeyFile) {
+  auto context = orbit_ssh::Context::Create();
+  ASSERT_TRUE(context);
+
+  orbit_ssh_qt::Session session{&context.value()};
+
+  orbit_ssh::Credentials credentials = GetCredentials();
+  credentials.key_paths.insert(credentials.key_paths.begin(),
+                               orbit_test::GetTestdataDir() / "random_identity");
+  EXPECT_THAT(orbit_base::FileOrDirectoryExists(credentials.key_paths.front()),
+              orbit_test_utils::HasValue(true));
+
+  EXPECT_THAT(WaitFor(session.ConnectToServer(credentials)), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitFor(session.Disconnect()), YieldsResult(HasNoError()));
+}
+
+TEST_F(SshSessionTest, ConnectSuceedsOnSecondKeyFileFirstInvalid) {
+  auto context = orbit_ssh::Context::Create();
+  ASSERT_TRUE(context);
+
+  orbit_ssh_qt::Session session{&context.value()};
+
+  orbit_ssh::Credentials credentials = GetCredentials();
+  credentials.key_paths.insert(credentials.key_paths.begin(), "/does/not/exist");
+  EXPECT_THAT(WaitFor(session.ConnectToServer(credentials)), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitFor(session.Disconnect()), YieldsResult(HasNoError()));
 }
 }  // namespace orbit_ssh_qt

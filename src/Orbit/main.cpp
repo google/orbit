@@ -344,8 +344,10 @@ int main(int argc, char* argv[]) {
       return -1;
     }
 
-    orbit_ssh::Credentials credentials{orbit_ssh::AddrAndPort{ssh_hostname, ssh_port}, ssh_user,
-                                       ssh_known_host_path, ssh_key_path};
+    orbit_ssh::Credentials credentials{orbit_ssh::AddrAndPort{ssh_hostname, ssh_port},
+                                       ssh_user,
+                                       ssh_known_host_path,
+                                       {ssh_key_path}};
     target = orbit_session_setup::ConnectionTarget(QString::fromStdString(ssh_target_process),
                                                    std::move(credentials));
   }
