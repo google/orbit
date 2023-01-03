@@ -17,7 +17,6 @@
 #include <system_error>
 #include <tuple>
 
-#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitSsh/Context.h"
