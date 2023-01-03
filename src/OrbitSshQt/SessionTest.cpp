@@ -6,11 +6,14 @@
 #include <gtest/gtest.h>
 
 #include <QSignalSpy>
-#include <memory>
+#include <algorithm>
+#include <filesystem>
+#include <vector>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
+#include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "QtTestUtils/WaitFor.h"
 #include "SshQtTestUtils/SshSessionTest.h"

@@ -11,6 +11,7 @@
 #include <string>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"

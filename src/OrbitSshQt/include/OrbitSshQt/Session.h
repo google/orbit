@@ -5,6 +5,8 @@
 #ifndef ORBIT_SSH_QT_SESSION_H_
 #define ORBIT_SSH_QT_SESSION_H_
 
+#include <stddef.h>
+
 #include <QNonConstOverload>
 #include <QObject>
 #include <QSocketNotifier>
