@@ -4,15 +4,11 @@
 
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 
-#include <variant>
-
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
 
 namespace orbit_symbol_provider {
-
-using orbit_base::NotFoundOr;
 
 bool IsCanceled(const SymbolLoadingOutcome& outcome) {
   return outcome.has_value() && orbit_base::IsCanceled(outcome.value());
@@ -30,8 +26,7 @@ std::string GetNotFoundMessage(const SymbolLoadingOutcome& outcome) {
 
 bool IsSuccessResult(const SymbolLoadingOutcome& outcome) {
   return outcome.has_value() && !IsCanceled(outcome) && !IsNotFound(outcome) &&
-         std::holds_alternative<SymbolLoadingSuccessResult>(
-             orbit_base::GetNotCanceled(outcome.value()));
+         outcome.value().GetValue().HasValue();
 }
 
 SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome) {

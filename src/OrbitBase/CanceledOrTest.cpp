@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -12,6 +13,34 @@
 #include "OrbitBase/CanceledOr.h"
 
 namespace orbit_base {
+
+TEST(CanceledOr, Construct) {
+  CanceledOr<void> void_or_canceled{};
+  EXPECT_TRUE(void_or_canceled.HasValue());
+  EXPECT_FALSE(void_or_canceled.IsCanceled());
+
+  void_or_canceled = Canceled{};
+  EXPECT_FALSE(void_or_canceled.HasValue());
+  EXPECT_TRUE(void_or_canceled.IsCanceled());
+
+  CanceledOr<int> int_or_canceled{42};
+  EXPECT_TRUE(int_or_canceled.HasValue());
+  EXPECT_FALSE(int_or_canceled.IsCanceled());
+  EXPECT_EQ(int_or_canceled.GetValue(), 42);
+
+  int_or_canceled = Canceled{};
+  EXPECT_FALSE(int_or_canceled.HasValue());
+  EXPECT_TRUE(int_or_canceled.IsCanceled());
+
+  CanceledOr<std::unique_ptr<int>> unique_int_or_canceled{std::make_unique<int>(42)};
+  EXPECT_TRUE(unique_int_or_canceled.HasValue());
+  EXPECT_FALSE(unique_int_or_canceled.IsCanceled());
+  EXPECT_THAT(unique_int_or_canceled.GetValue(), testing::Pointee(42));
+
+  unique_int_or_canceled = Canceled{};
+  EXPECT_FALSE(unique_int_or_canceled.HasValue());
+  EXPECT_TRUE(unique_int_or_canceled.IsCanceled());
+}
 
 TEST(CanceledOr, IsCanceled) {
   // Default constructed is NOT canceled

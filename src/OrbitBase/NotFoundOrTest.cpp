@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -13,6 +14,34 @@
 #include "OrbitBase/NotFoundOr.h"
 
 namespace orbit_base {
+
+TEST(NotFoundOr, Construct) {
+  NotFoundOr<void> void_or_not_found{};
+  EXPECT_TRUE(void_or_not_found.HasValue());
+  EXPECT_FALSE(void_or_not_found.IsNotFound());
+
+  void_or_not_found = NotFound{"Message"};
+  EXPECT_FALSE(void_or_not_found.HasValue());
+  EXPECT_TRUE(void_or_not_found.IsNotFound());
+
+  NotFoundOr<int> int_or_not_found{42};
+  EXPECT_TRUE(int_or_not_found.HasValue());
+  EXPECT_FALSE(int_or_not_found.IsNotFound());
+  EXPECT_EQ(int_or_not_found.GetValue(), 42);
+
+  int_or_not_found = NotFound{"Message"};
+  EXPECT_FALSE(int_or_not_found.HasValue());
+  EXPECT_TRUE(int_or_not_found.IsNotFound());
+
+  NotFoundOr<std::unique_ptr<int>> unique_int_or_not_found{std::make_unique<int>(42)};
+  EXPECT_TRUE(unique_int_or_not_found.HasValue());
+  EXPECT_FALSE(unique_int_or_not_found.IsNotFound());
+  EXPECT_THAT(unique_int_or_not_found.GetValue(), testing::Pointee(42));
+
+  unique_int_or_not_found = NotFound{"Message"};
+  EXPECT_FALSE(unique_int_or_not_found.HasValue());
+  EXPECT_TRUE(unique_int_or_not_found.IsNotFound());
+}
 
 TEST(NotFoundOr, IsNotFound) {
   // Default constructor is found
