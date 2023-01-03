@@ -47,7 +47,7 @@ const std::array<TimerInfo, kNumTimers> kTimersScopeId1 = [] {
 }();
 const ScopeStats kScope1Stats = [] {
   ScopeStats stats;
-  for (TimerInfo timer : kTimersScopeId1) {
+  for (const TimerInfo& timer : kTimersScopeId1) {
     stats.UpdateStats(timer.end() - timer.start());
   }
   return stats;
@@ -78,7 +78,7 @@ TEST(ScopeStatsCollectionTest, CreateEmpty) {
 
 TEST(ScopeStatsCollectionTest, AddTimersWithUpdateStats) {
   ScopeStatsCollection collection = ScopeStatsCollection();
-  for (TimerInfo timer : kTimersScopeId1) {
+  for (const TimerInfo& timer : kTimersScopeId1) {
     collection.UpdateScopeStats(kScopeId1, timer);
   }
   EXPECT_EQ(collection.GetAllProvidedScopeIds().size(), 1);

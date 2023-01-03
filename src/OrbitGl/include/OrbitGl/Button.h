@@ -49,7 +49,7 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
 
  private:
   void DrawSymbol(PrimitiveAssembler& primitive_assembler);
-  [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
+  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
 
   float height_ = 0.f;

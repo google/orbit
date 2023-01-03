@@ -627,7 +627,7 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
                                                  absl::bit_cast<VkCommandBuffer>(2L)};
   ORBIT_CHECK(command_buffers[0] != command_buffers[1]);
 
-  tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffers[0], 2);
+  tracker_.TrackCommandBuffers(device_, command_pool_, command_buffers.data(), 2);
   tracker_.MarkCommandBufferBegin(command_buffers[0]);
   tracker_.MarkCommandBufferEnd(command_buffers[0]);
   tracker_.MarkCommandBufferBegin(command_buffers[1]);
@@ -636,7 +636,7 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
   std::array<VkSubmitInfo, 2> submit_infos{VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                                         .pNext = nullptr,
                                                         .commandBufferCount = 1,
-                                                        .pCommandBuffers = &command_buffers[0]},
+                                                        .pCommandBuffers = command_buffers.data()},
                                            VkSubmitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                                         .pNext = nullptr,
                                                         .commandBufferCount = 1,
@@ -649,8 +649,8 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
 
   pre_submit_times[0] = orbit_base::CaptureTimestampNs();
   std::optional<QueueSubmission> queue_submission_optional =
-      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, &submit_infos[0]);
-  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, &submit_infos[0], queue_submission_optional);
+      tracker_.PersistCommandBuffersOnSubmit(queue_, 1, submit_infos.data());
+  tracker_.PersistDebugMarkersOnSubmit(queue_, 1, submit_infos.data(), queue_submission_optional);
   post_submit_times[0] = orbit_base::CaptureTimestampNs();
 
   pre_submit_times[1] = orbit_base::CaptureTimestampNs();

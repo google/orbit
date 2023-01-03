@@ -28,7 +28,7 @@
 class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGLFunctions {
  public:
   explicit GlCanvas();
-  virtual ~GlCanvas() = default;
+  ~GlCanvas() override = default;
 
   void Resize(int width, int height);
   void Render(QPainter* painter, int width, int height);

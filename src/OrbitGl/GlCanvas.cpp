@@ -256,9 +256,9 @@ void GlCanvas::SetPickingMode(PickingMode mode) { picking_mode_ = mode; }
 void GlCanvas::Pick(PickingMode picking_mode, int x, int y) {
   // 4 bytes per pixel (RGBA), 1x1 bitmap
   std::array<uint8_t, 4 * 1 * 1> pixels{};
-  glReadPixels(x, viewport_.GetScreenHeight() - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+  glReadPixels(x, viewport_.GetScreenHeight() - y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
   uint32_t value;
-  std::memcpy(&value, &pixels[0], sizeof(uint32_t));
+  std::memcpy(&value, pixels.data(), sizeof(uint32_t));
   PickingId pick_id = PickingId::FromPixelValue(value);
 
   HandlePickedElement(picking_mode, pick_id, x, y);

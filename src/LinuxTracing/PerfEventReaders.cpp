@@ -267,7 +267,7 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   size_t filename_size =
       header.size - filename_offset - sizeof(RingBufferSampleIdTidTimeStreamidCpu);
   std::vector<char> filename_vector(filename_size);
-  ring_buffer->ReadRawAtOffset(&filename_vector[0], filename_offset, filename_size);
+  ring_buffer->ReadRawAtOffset(filename_vector.data(), filename_offset, filename_size);
   // This is a bit paranoid but you never know
   filename_vector.back() = '\0';
   std::string filename(filename_vector.data());
@@ -276,7 +276,7 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
 
   // Workaround for gcc's "cannot bind packed field ... to ‘long unsigned int&’"
   uint64_t timestamp = sample_id.time;
-  int32_t pid = static_cast<int32_t>(sample_id.pid);
+  auto pid = static_cast<int32_t>(sample_id.pid);
 
   const bool executable = (header.misc & PERF_RECORD_MISC_MMAP_DATA) == 0;
 
@@ -678,7 +678,7 @@ template <typename EventType, typename StructType>
   const auto data_loc_size = static_cast<int16_t>(typed_tracepoint_data.timeline >> 16);
   const auto data_loc_offset = static_cast<int16_t>(typed_tracepoint_data.timeline & 0x00ff);
   std::vector<char> data_loc_data(data_loc_size);
-  std::memcpy(&data_loc_data[0],
+  std::memcpy(data_loc_data.data(),
               reinterpret_cast<const char*>(tracepoint_data.get()) + data_loc_offset,
               data_loc_size);
   data_loc_data[data_loc_data.size() - 1] = 0;
@@ -694,7 +694,7 @@ template <typename EventType, typename StructType>
               .tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
               .context = typed_tracepoint_data.context,
               .seqno = typed_tracepoint_data.seqno,
-              .timeline_string = std::string(&data_loc_data[0]),
+              .timeline_string = std::string(data_loc_data.data()),
           },
   };
 
