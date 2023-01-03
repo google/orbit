@@ -269,7 +269,7 @@ static ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFil
 }
 
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
-    const orbit_symbols::SymbolHelper& symbol_helper, const ModuleData& module_data) {
+    orbit_symbols::SymbolHelper& symbol_helper, const ModuleData& module_data) {
   ORBIT_SCOPE_FUNCTION;
   if (absl::GetFlag(FLAGS_enable_unsafe_symbols)) {
     // First checkout if a symbol file override exists and if it does, use it

@@ -30,9 +30,7 @@ namespace orbit_remote_symbol_provider {
 MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
     const orbit_symbols::SymbolCacheInterface* symbol_cache,
     orbit_http::DownloadManager* download_manager)
-    : symbol_cache_(symbol_cache),
-      download_manager_(download_manager),
-      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
+    : symbol_cache_(symbol_cache), download_manager_(download_manager) {
   ORBIT_CHECK(symbol_cache != nullptr);
   ORBIT_CHECK(download_manager != nullptr);
 }
@@ -48,14 +46,13 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
 }
 
 Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
-    const orbit_symbol_provider::ModuleIdentifier& module_id,
-    orbit_base::StopToken stop_token) const {
+    const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
   std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFilePath(module_id.file_path);
   std::string url = GetDownloadUrl(module_id);
 
   return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
       .ThenIfSuccess(
-          main_thread_executor_.get(),
+          &main_thread_executor_,
           [save_file_path = std::move(save_file_path)](
               const CanceledOr<NotFoundOr<void>>& download_result) -> SymbolLoadingOutcome {
             if (orbit_base::IsCanceled(download_result)) return {orbit_base::Canceled{}};

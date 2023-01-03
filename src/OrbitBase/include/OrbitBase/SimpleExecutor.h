@@ -23,15 +23,12 @@ namespace orbit_base {
 // until they call `ExecuteScheduledTasks` which will synchronously
 // execute waiting tasks.
 class SimpleExecutor : public Executor {
-  explicit SimpleExecutor() = default;
-
   void ScheduleImpl(std::unique_ptr<Action> action) override;
   [[nodiscard]] Handle GetExecutorHandle() const override { return executor_handle_.Get(); }
 
  public:
+  explicit SimpleExecutor() = default;
   void ExecuteScheduledTasks();
-
-  [[nodiscard]] static std::shared_ptr<SimpleExecutor> Create();
 
  private:
   absl::Mutex mutex_;

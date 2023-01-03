@@ -179,8 +179,7 @@ constexpr int kHintFrameHeight = 45;
 OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
                                  const QStringList& command_line_flags)
     : QMainWindow(nullptr),
-      main_thread_executor_{orbit_qt_utils::MainThreadExecutorImpl::Create()},
-      app_{OrbitApp::Create(this, main_thread_executor_.get())},
+      app_{OrbitApp::Create(this, &main_thread_executor_)},
       ui(new Ui::OrbitMainWindow),
       command_line_flags_(command_line_flags),
       target_configuration_(std::move(target_configuration)) {
@@ -764,11 +763,6 @@ OrbitMainWindow::~OrbitMainWindow() {
   ui->ModulesList->Deinitialize();
 
   delete ui;
-
-  // This explicitly destructs the main_thread_executor_ before all other members.
-  // That ensures that all scheduled main thread tasks will be destructed before
-  // we destruct all the resources these tasks might rely on.
-  main_thread_executor_.reset();
 }
 
 void OrbitMainWindow::OnRefreshDataViewPanels(DataViewType type) {
@@ -1414,8 +1408,8 @@ void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
   orbit_base::Future<ErrorMessageOr<void>> rename_future =
       app_->MoveCaptureFile(current_file_path, new_file_path);
 
-  rename_future.Then(main_thread_executor_.get(), [this, progress_dialog, current_file_path,
-                                                   new_file_path](ErrorMessageOr<void> result) {
+  rename_future.Then(&main_thread_executor_, [this, progress_dialog, current_file_path,
+                                              new_file_path](ErrorMessageOr<void> result) {
     progress_dialog->close();
     if (result.has_error()) {
       QMessageBox::critical(
@@ -1448,7 +1442,7 @@ void OrbitMainWindow::OpenCapture(std::string_view filepath) {
   loading_capture_dialog->show();
 
   app_->LoadCaptureFromFile(filepath).Then(
-      main_thread_executor_.get(),
+      &main_thread_executor_,
       [this, loading_capture_dialog](ErrorMessageOr<CaptureListener::CaptureOutcome> result) {
         loading_capture_dialog->close();
         if (!result.has_value()) {
@@ -1569,9 +1563,8 @@ void OrbitMainWindow::Exit(int return_code) {
     app_->AbortCapture();
   }
 
-  if (main_thread_executor_ != nullptr) {
-    main_thread_executor_->AbortWaitingJobs();
-  }
+  main_thread_executor_.AbortWaitingJobs();
+
   if (introspection_widget_ != nullptr) {
     introspection_widget_->close();
   }

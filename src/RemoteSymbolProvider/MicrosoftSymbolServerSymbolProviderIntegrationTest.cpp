@@ -55,8 +55,7 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
   orbit_http::HttpDownloadManager download_manager{};
   MicrosoftSymbolServerSymbolProvider symbol_provider{&symbol_cache, &download_manager};
 
-  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor{
-      orbit_qt_utils::MainThreadExecutorImpl::Create()};
+  orbit_qt_utils::MainThreadExecutorImpl executor{};
 
   const std::string valid_module_name{"d3d11.pdb"};
   const std::string valid_module_build_id{"FF5440275BFED43A86CC2B1F287A72151"};
@@ -65,7 +64,7 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
   orbit_base::StopSource stop_source{};
 
   symbol_provider.RetrieveSymbols(valid_module_id, stop_source.GetStopToken())
-      .Then(executor.get(), [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
+      .Then(&executor, [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         orbit_symbol_provider::SymbolLoadingSuccessResult success_result =
             orbit_symbol_provider::GetSuccessResult(result);

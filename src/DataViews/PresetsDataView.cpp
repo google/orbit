@@ -78,9 +78,7 @@ std::string GetDateModifiedString(const PresetFile& preset) {
 
 namespace orbit_data_views {
 
-PresetsDataView::PresetsDataView(AppInterface* app)
-    : DataView(DataViewType::kPresets, app),
-      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
+PresetsDataView::PresetsDataView(AppInterface* app) : DataView(DataViewType::kPresets, app) {}
 
 std::string PresetsDataView::GetModulesList(absl::Span<const ModuleView> modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -203,7 +201,7 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 
 void PresetsDataView::OnLoadPresetRequested(absl::Span<const int> selection) {
   PresetFile& preset = GetMutablePreset(selection[0]);
-  (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+  (void)app_->LoadPreset(preset).ThenIfSuccess(&main_thread_executor_,
                                                [this, preset_file_path = preset.file_path()]() {
                                                  OnLoadPresetSuccessful(preset_file_path);
                                                });
@@ -232,7 +230,7 @@ void PresetsDataView::OnShowInExplorerRequested(absl::Span<const int> selection)
 void PresetsDataView::OnDoubleClicked(int index) {
   PresetFile& preset = GetMutablePreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+    (void)app_->LoadPreset(preset).ThenIfSuccess(&main_thread_executor_,
                                                  [this, preset_file_path = preset.file_path()]() {
                                                    OnLoadPresetSuccessful(preset_file_path);
                                                  });

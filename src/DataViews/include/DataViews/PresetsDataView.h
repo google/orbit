@@ -19,8 +19,8 @@
 #include "ClientProtos/preset.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "PresetFile/PresetFile.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 namespace orbit_data_views {
 class PresetsDataView : public DataView {
@@ -86,7 +86,7 @@ class PresetsDataView : public DataView {
  private:
   [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
 
-  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
+  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_;
 };
 
 }  // namespace orbit_data_views

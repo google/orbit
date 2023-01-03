@@ -35,7 +35,7 @@ class SymbolHelper : public SymbolCacheInterface {
   [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, std::string_view build_id,
       const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type,
-      absl::Span<const std::filesystem::path> paths) const;
+      absl::Span<const std::filesystem::path> paths);
   [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
       const std::filesystem::path& module_path, std::string_view build_id) const;
   [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(

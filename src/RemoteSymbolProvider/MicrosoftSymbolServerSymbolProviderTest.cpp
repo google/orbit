@@ -55,9 +55,7 @@ const std::string kValidModuleDownloadUrl{
 
 class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
  public:
-  MicrosoftSymbolServerSymbolProviderTest()
-      : symbol_provider_{&symbol_cache_, &download_manager_},
-        executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
+  MicrosoftSymbolServerSymbolProviderTest() : symbol_provider_{&symbol_cache_, &download_manager_} {
     EXPECT_CALL(symbol_cache_, GenerateCachedFilePath)
         .WillRepeatedly([](const std::filesystem::path& module_file_path) {
           auto file_name = absl::StrReplaceAll(module_file_path.string(), {{"/", "_"}});
@@ -95,7 +93,7 @@ class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
  protected:
   const orbit_symbols::MockSymbolCache symbol_cache_;
   MicrosoftSymbolServerSymbolProvider symbol_provider_;
-  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
+  orbit_qt_utils::MainThreadExecutorImpl executor_;
 
  private:
   orbit_http::MockDownloadManager download_manager_;
@@ -107,7 +105,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [this](const SymbolLoadingOutcome& result) {
+      .Then(&executor_, [this](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         SymbolLoadingSuccessResult success_result = orbit_symbol_provider::GetSuccessResult(result);
         EXPECT_EQ(success_result.path,
@@ -130,7 +128,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
-      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
+      .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));
         EXPECT_EQ(orbit_symbol_provider::GetNotFoundMessage(result),
                   "Symbols not found in Microsoft symbol server");
@@ -148,7 +146,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
   // case.
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [](const SymbolLoadingOutcome& result) {
+      .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         EXPECT_TRUE(orbit_symbol_provider::IsCanceled(result));
 
         QCoreApplication::exit();
@@ -163,7 +161,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleError) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
-      .Then(executor_.get(), [error_msg](const SymbolLoadingOutcome& result) {
+      .Then(&executor_, [error_msg](const SymbolLoadingOutcome& result) {
         EXPECT_THAT(result, HasError(error_msg));
 
         QCoreApplication::exit();

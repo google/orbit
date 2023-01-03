@@ -118,8 +118,7 @@ void MizarData::LoadSymbolsForAllModules() {
 }
 
 static ErrorMessageOr<std::filesystem::path> SearchSymbolsPathInOrbitSearchPaths(
-    const orbit_symbols::SymbolHelper& symbol_helper,
-    const orbit_client_data::ModuleData& module_data) {
+    orbit_symbols::SymbolHelper& symbol_helper, const orbit_client_data::ModuleData& module_data) {
   // These are the constants used by Orbit Client. This way we read its configs.
   static const QString kOrbitOrganization = QStringLiteral("The Orbit Authors");
   static const QString kOrbitAppName = QStringLiteral("orbitprofiler");
@@ -136,8 +135,7 @@ static void LogSymbolsFound(std::string_view module_path, std::string_view symbo
 }
 
 static ErrorMessageOr<std::filesystem::path> FindSymbolsPath(
-    const orbit_symbols::SymbolHelper& symbol_helper,
-    const orbit_client_data::ModuleData& module_data) {
+    orbit_symbols::SymbolHelper& symbol_helper, const orbit_client_data::ModuleData& module_data) {
   if (auto symbols_paths_or_error = SearchSymbolsPathInOrbitSearchPaths(symbol_helper, module_data);
       symbols_paths_or_error.has_value()) {
     LogSymbolsFound(module_data.file_path(), symbols_paths_or_error.value().string());

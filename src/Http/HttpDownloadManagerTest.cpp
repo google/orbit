@@ -56,23 +56,23 @@ using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoun
 
 namespace {
 
-static void VerifyDownloadError(const DownloadResult& result, std::string_view expected_error) {
+void VerifyDownloadError(const DownloadResult& result, std::string_view expected_error) {
   EXPECT_THAT(result, HasError(expected_error));
 }
 
-static void VerifyDownloadCanceled(const DownloadResult& result) {
+void VerifyDownloadCanceled(const DownloadResult& result) {
   EXPECT_THAT(result, HasNoError());
   EXPECT_TRUE(IsCanceled(result.value()));
 }
 
-static void VerifyDownloadNotFound(const DownloadResult& result) {
+void VerifyDownloadNotFound(const DownloadResult& result) {
   EXPECT_THAT(result, HasNoError());
   EXPECT_FALSE(IsCanceled(result.value()));
   EXPECT_TRUE(IsNotFound(GetNotCanceled(result.value())));
 }
 
-static void VerifyDownloadSucceeded(const DownloadResult& result,
-                                    const std::filesystem::path& local_path) {
+void VerifyDownloadSucceeded(const DownloadResult& result,
+                             const std::filesystem::path& local_path) {
   EXPECT_THAT(result, HasNoError());
   EXPECT_FALSE(IsCanceled(result.value()));
   EXPECT_FALSE(IsNotFound(GetNotCanceled(result.value())));
@@ -90,8 +90,7 @@ static void VerifyDownloadSucceeded(const DownloadResult& result,
 
 class HttpDownloadManagerTest : public ::testing::Test {
  protected:
-  HttpDownloadManagerTest()
-      : executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()), manager_(std::in_place) {
+  HttpDownloadManagerTest() {
 #ifdef _WIN32
     local_http_server_process_.setProgram("py");
     local_http_server_process_.setArguments(
@@ -139,12 +138,12 @@ class HttpDownloadManagerTest : public ::testing::Test {
     loop.exec();
   }
 
-  [[nodiscard]] std::string GetUrl(std::string filename) const {
+  [[nodiscard]] std::string GetUrl(std::string_view filename) const {
     return absl::StrFormat("http://localhost:%s/%s", port_.toStdString(), filename);
   }
 
-  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor_;
-  std::optional<HttpDownloadManager> manager_;
+  std::optional<HttpDownloadManager> manager_{std::in_place};
+  orbit_qt_utils::MainThreadExecutorImpl executor_;
 
  private:
   QProcess local_http_server_process_;
@@ -159,7 +158,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleSucceeded) {
   StopSource stop_source{};
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [&local_path](DownloadResult result) {
+  future.Then(&executor_, [&local_path](const DownloadResult& result) {
     VerifyDownloadSucceeded(result, local_path);
     QCoreApplication::exit();
   });
@@ -176,7 +175,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleCanceled) {
   stop_source.RequestStop();
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](DownloadResult result) {
+  future.Then(&executor_, [](const DownloadResult& result) {
     VerifyDownloadCanceled(result);
     QCoreApplication::exit();
   });
@@ -191,7 +190,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidUrl) {
   StopSource stop_source{};
 
   auto future = manager_->Download(invalid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](DownloadResult result) {
+  future.Then(&executor_, [](const DownloadResult& result) {
     VerifyDownloadNotFound(result);
     QCoreApplication::exit();
   });
@@ -205,7 +204,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleInvalidSaveFilePath) {
   StopSource stop_source{};
 
   auto future = manager_->Download(invalid_url, local_path, stop_source.GetStopToken());
-  future.Then(executor_.get(), [](DownloadResult result) {
+  future.Then(&executor_, [](const DownloadResult& result) {
     VerifyDownloadError(result, "Failed to open save file");
     QCoreApplication::exit();
   });
@@ -231,7 +230,7 @@ TEST_F(HttpDownloadManagerTest, DownloadMultipleSucceeded) {
   }
 
   orbit_base::WhenAll(absl::MakeConstSpan(futures))
-      .Then(executor_.get(), [&temporary_files](std::vector<DownloadResult> results) {
+      .Then(&executor_, [&temporary_files](std::vector<DownloadResult> results) {
         VerifyDownloadSucceeded(results[0], temporary_files[0]);
         VerifyDownloadNotFound(results[1]);
         VerifyDownloadSucceeded(results[2], temporary_files[2]);
@@ -249,7 +248,7 @@ TEST_F(HttpDownloadManagerTest, DownloadSingleDestroyManagerEarly) {
 
   auto future = manager_->Download(valid_url, local_path, stop_source.GetStopToken());
   manager_ = std::nullopt;
-  future.Then(executor_.get(), [](const DownloadResult& result) {
+  future.Then(&executor_, [](const DownloadResult& result) {
     VerifyDownloadCanceled(result);
     QCoreApplication::exit();
   });

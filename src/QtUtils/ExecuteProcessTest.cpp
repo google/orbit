@@ -20,7 +20,6 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "QtUtils/ExecuteProcess.h"
@@ -30,19 +29,18 @@
 namespace orbit_qt_utils {
 
 using orbit_base::Future;
-using orbit_base::MainThreadExecutor;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
 TEST(QtUtilsExecuteProcess, ProgramNotFound) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   Future<ErrorMessageOr<QByteArray>> future =
       ExecuteProcess("non_existing_process", QStringList{}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     EXPECT_THAT(result, HasError("Error occurred while executing process"));
@@ -58,7 +56,7 @@ TEST(QtUtilsExecuteProcess, ProgramNotFound) {
 
 TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -67,7 +65,7 @@ TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
       ExecuteProcess(program, QStringList{"--exit_code", "240"}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     EXPECT_THAT(result, HasError("failed with exit code: 240"));
@@ -81,7 +79,7 @@ TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
 
 TEST(QtUtilsExecuteProcess, Succeeds) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -90,7 +88,7 @@ TEST(QtUtilsExecuteProcess, Succeeds) {
       ExecuteProcess(program, QStringList{}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     ASSERT_THAT(result, HasValue());
@@ -105,7 +103,7 @@ TEST(QtUtilsExecuteProcess, Succeeds) {
 
 TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -114,7 +112,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
   Future<ErrorMessageOr<QByteArray>> future = ExecuteProcess(program, QStringList{});
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     ASSERT_THAT(result, HasValue());
@@ -129,7 +127,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
 
 TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -138,7 +136,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, QCoreApplication::instance());
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     ASSERT_THAT(result, HasValue());
@@ -154,7 +152,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
 
 TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -164,7 +162,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
                      absl::Milliseconds(100));
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     EXPECT_THAT(result, HasError("timed out after 100ms"));
@@ -181,7 +179,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
 
 TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -191,7 +189,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
                      absl::ZeroDuration());
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
     EXPECT_THAT(result, HasError("timed out after 0ms"));
@@ -208,7 +206,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
 
 TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -219,7 +217,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, parent_object);
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
@@ -238,7 +236,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
 
 TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -249,7 +247,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "200"}, parent_object);
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
@@ -269,7 +267,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
 
 TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -281,7 +279,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
                      absl::Milliseconds(100));
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
@@ -305,7 +303,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
 
 TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -318,7 +316,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
       ExecuteProcess(program, QStringList{"--sleep_for_ms", "100"}, parent_object);
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
@@ -344,7 +342,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
 
 TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
   AssertNoQtLogWarnings message_handler{};
-  std::shared_ptr<MainThreadExecutor> mte = MainThreadExecutorImpl::Create();
+  MainThreadExecutorImpl mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -357,7 +355,7 @@ TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
       program, QStringList{"--sleep_for_ms", "500"}, parent_object.get(), absl::Milliseconds(100));
 
   bool lambda_was_called = false;
-  future.Then(mte.get(), [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
+  future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
