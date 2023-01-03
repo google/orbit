@@ -2190,8 +2190,10 @@ ThreadID OrbitApp::selected_thread_id() const { return data_manager_->selected_t
 
 void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   RequestUpdatePrimitives();
-  data_manager_->set_selected_thread_id(thread_id);
-  OnThreadOrTimeRangeSelectionChange();
+  if (data_manager_->selected_thread_id() != thread_id) {
+    data_manager_->set_selected_thread_id(thread_id);
+    OnThreadOrTimeRangeSelectionChange();
+  }
 }
 
 std::optional<ThreadStateSliceInfo> OrbitApp::selected_thread_state_slice() const {
