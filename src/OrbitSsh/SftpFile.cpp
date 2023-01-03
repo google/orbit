@@ -50,13 +50,15 @@ outcome::result<std::string> SftpFile::Read(size_t max_length_in_bytes) {
 }
 
 outcome::result<void> SftpFile::Close() {
+  // There is a bug in libssh2 which lets libssh2_sftp_close_handle sometimes not complete when in
+  // non-blocking mode. As a workaround we quickly switch to blocking and back.
+  libssh2_session_set_blocking(session_->GetRawSessionPtr(), 1);
   const auto result = libssh2_sftp_close_handle(file_ptr_.get());
+  libssh2_session_set_blocking(session_->GetRawSessionPtr(), 0);
 
   if (result < 0) {
-    if (result != LIBSSH2_ERROR_EAGAIN) {
-      ORBIT_ERROR("Unable to close sftp file \"%s\": %s", filepath_,
-                  LibSsh2SessionLastError(session_->GetRawSessionPtr()).second);
-    }
+    ORBIT_ERROR("Unable to close sftp file \"%s\": %s", filepath_,
+                LibSsh2SessionLastError(session_->GetRawSessionPtr()).second);
     return static_cast<Error>(result);
   }
 

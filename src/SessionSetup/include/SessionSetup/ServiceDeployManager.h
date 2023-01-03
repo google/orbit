@@ -61,7 +61,6 @@ class ServiceDeployManager : public QObject {
       std::filesystem::path source, std::filesystem::path destination,
       orbit_base::StopToken stop_token);
 
-  void Shutdown();
   void Cancel();
 
  signals:
@@ -82,6 +81,7 @@ class ServiceDeployManager : public QObject {
 
   QThread background_thread_;
 
+  void Shutdown();
   ErrorMessageOr<void> ConnectToServer();
   ErrorMessageOr<bool> CheckIfInstalled();
   ErrorMessageOr<void> CopyOrbitServicePackage();
