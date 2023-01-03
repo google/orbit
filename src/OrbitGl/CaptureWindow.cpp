@@ -240,8 +240,8 @@ void CaptureWindow::SelectTimer(const TimerInfo* timer_info) {
   ORBIT_CHECK(time_graph_ != nullptr);
   if (timer_info == nullptr) return;
 
-  app_->SelectTimer(timer_info);
   app_->set_selected_thread_id(timer_info->thread_id());
+  app_->SelectTimer(timer_info);
 
   if (double_clicking_) {
     // Zoom and center the text_box into the screen.
