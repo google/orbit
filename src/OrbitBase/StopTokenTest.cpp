@@ -8,8 +8,10 @@
 #include <utility>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_base {
 
@@ -66,5 +68,61 @@ TEST_F(StopTokenTest, GetFuture) {
 
   RequestStop();
   EXPECT_TRUE(future.IsFinished());
+}
+
+TEST(WhenValueOrCanceledOfVoid, CancelationRequestedFirst) {
+  orbit_base::Promise<void> promise{};
+  StopSource stop_source{};
+
+  Future<CanceledOr<void>> future =
+      WhenValueOrCanceled(promise.GetFuture(), stop_source.GetStopToken());
+
+  EXPECT_FALSE(future.IsFinished());
+  stop_source.RequestStop();
+
+  EXPECT_TRUE(future.IsFinished());
+  EXPECT_THAT(future.Get(), orbit_test_utils::HasError());
+}
+
+TEST(WhenValueOrCanceledOfVoid, FutureCompletesFirst) {
+  orbit_base::Promise<void> promise{};
+  StopSource stop_source{};
+
+  Future<CanceledOr<void>> future =
+      WhenValueOrCanceled(promise.GetFuture(), stop_source.GetStopToken());
+
+  EXPECT_FALSE(future.IsFinished());
+  promise.MarkFinished();
+
+  EXPECT_TRUE(future.IsFinished());
+  EXPECT_THAT(future.Get(), orbit_test_utils::HasValue());
+}
+
+TEST(WhenValueOrCanceledOfInt, CancelationRequestedFirst) {
+  orbit_base::Promise<int> promise{};
+  StopSource stop_source{};
+
+  Future<CanceledOr<int>> future =
+      WhenValueOrCanceled(promise.GetFuture(), stop_source.GetStopToken());
+
+  EXPECT_FALSE(future.IsFinished());
+  stop_source.RequestStop();
+
+  EXPECT_TRUE(future.IsFinished());
+  EXPECT_THAT(future.Get(), orbit_test_utils::HasError());
+}
+
+TEST(WhenValueOrCanceledOfInt, FutureCompletesFirst) {
+  orbit_base::Promise<int> promise{};
+  StopSource stop_source{};
+
+  Future<CanceledOr<int>> future =
+      WhenValueOrCanceled(promise.GetFuture(), stop_source.GetStopToken());
+
+  EXPECT_FALSE(future.IsFinished());
+  promise.SetResult(42);
+
+  EXPECT_TRUE(future.IsFinished());
+  EXPECT_THAT(future.Get(), orbit_test_utils::HasValue(42));
 }
 }  // namespace orbit_base
