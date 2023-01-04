@@ -35,11 +35,11 @@ class NotFoundOr : private std::variant<VoidToMonostate_t<T>, NotFound> {
   [[nodiscard]] bool IsNotFound() const { return !HasValue(); }
 
   [[nodiscard]] const Value& GetValue() const& { return std::get<0>(*this); }
-  [[nodiscard]] const Value& GetValue() const&& { return std::get<0>(*this); }
+  [[nodiscard]] const Value&& GetValue() const&& { return std::get<0>(*this); }
   [[nodiscard]] Value&& GetValue() && { return std::get<0>(std::move(*this)); }
 
   [[nodiscard]] const NotFound& GetNotFound() const& { return std::get<1>(*this); }
-  [[nodiscard]] const NotFound& GetNotFound() const&& { return std::get<1>(*this); }
+  [[nodiscard]] const NotFound&& GetNotFound() const&& { return std::get<1>(*this); }
   [[nodiscard]] NotFound&& GetNotFound() && { return std::get<1>(std::move(*this)); }
 
   using std::variant<Value, NotFound>::variant;
