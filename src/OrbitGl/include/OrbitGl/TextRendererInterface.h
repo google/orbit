@@ -36,10 +36,17 @@ class TextRendererInterface {
   virtual void RenderLayer(QPainter* painter, float layer) = 0;
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
 
+  // Add a - potentially multiline - text at the given position and z-layer and with the specifier
+  // formatting. If formatting.max_size is set all lines are elided to fit into this width.
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting) = 0;
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                        Vec2* out_text_pos, Vec2* out_text_size) = 0;
 
+  // Add a single line of text at the given position and z-layer and with the specifier formatting.
+  // The renderer will shorten the text if the width exceeds formatting.max_size. The shortening
+  // will happen in a way that tries to preserve the given numnber of trailing characters.
+  // This is mainly used to preserve the duration in the text of time intervals. E.g. something like
+  // "MyVeryLongButNotSoImportantMethodName 2.35 ms" will render as "MyVery...2.35 ms".
   virtual float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                 TextFormatting formatting,
                                                 size_t trailing_chars_length) = 0;

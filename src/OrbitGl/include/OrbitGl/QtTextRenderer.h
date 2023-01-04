@@ -42,6 +42,9 @@ class QtTextRenderer : public TextRenderer {
 
  private:
   [[nodiscard]] float GetStringWidth(const QString& text, uint32_t font_size);
+  [[nodiscard]] float GetMinimumTextWidth(uint32_t font_size);
+  [[nodiscard]] float AddFittingSingleLineText(const QString& text, float x, float y, float z,
+                                               TextFormatting formatting);
 
   struct StoredText {
     StoredText() = default;
