@@ -36,11 +36,11 @@ class NotFoundOr : private std::variant<VoidToMonostate_t<T>, NotFound> {
 
   [[nodiscard]] const Value& GetValue() const& { return std::get<0>(*this); }
   [[nodiscard]] const Value& GetValue() const&& { return std::get<0>(*this); }
-  [[nodiscard]] Value GetValue() && { return std::get<0>(std::move(*this)); }
+  [[nodiscard]] Value&& GetValue() && { return std::get<0>(std::move(*this)); }
 
   [[nodiscard]] const NotFound& GetNotFound() const& { return std::get<1>(*this); }
   [[nodiscard]] const NotFound& GetNotFound() const&& { return std::get<1>(*this); }
-  [[nodiscard]] NotFound GetNotFound() && { return std::get<1>(std::move(*this)); }
+  [[nodiscard]] NotFound&& GetNotFound() && { return std::get<1>(std::move(*this)); }
 
   using std::variant<Value, NotFound>::variant;
   using std::variant<Value, NotFound>::operator=;
@@ -75,7 +75,7 @@ template <typename T>
 
 // Free function with move semantics to get the "found" content of a NotFoundOr object.
 template <typename T>
-[[nodiscard]] T GetFound(NotFoundOr<T>&& not_found_or) {
+[[nodiscard]] T&& GetFound(NotFoundOr<T>&& not_found_or) {
   ORBIT_CHECK(!IsNotFound(not_found_or));
   return std::move(not_found_or).GetValue();
 }

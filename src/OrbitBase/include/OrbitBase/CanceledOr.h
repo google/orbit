@@ -32,8 +32,8 @@ class CanceledOr : private std::variant<VoidToMonostate_t<T>, Canceled> {
   [[nodiscard]] bool IsCanceled() const { return !HasValue(); }
 
   [[nodiscard]] const Value& GetValue() const& { return std::get<0>(*this); }
-  [[nodiscard]] const Value& GetValue() const&& { return std::get<0>(*this); }
-  [[nodiscard]] Value GetValue() && { return std::get<0>(std::move(*this)); }
+  [[nodiscard]] const Value&& GetValue() const&& { return std::get<0>(*this); }
+  [[nodiscard]] Value&& GetValue() && { return std::get<0>(std::move(*this)); }
 
   using std::variant<Value, Canceled>::variant;
   using std::variant<Value, Canceled>::operator=;
@@ -54,7 +54,7 @@ template <typename T>
 
 // Free function with move semantics to get the "Not canceled" content of a CanceledOr object.
 template <typename T>
-[[nodiscard]] T GetNotCanceled(CanceledOr<T>&& canceled_or) {
+[[nodiscard]] T&& GetNotCanceled(CanceledOr<T>&& canceled_or) {
   ORBIT_CHECK(!IsCanceled(canceled_or));
   return std::move(canceled_or).GetValue();
 }

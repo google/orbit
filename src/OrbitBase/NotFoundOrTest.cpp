@@ -15,32 +15,55 @@
 
 namespace orbit_base {
 
-TEST(NotFoundOr, Construct) {
-  NotFoundOr<void> void_or_not_found{};
-  EXPECT_TRUE(void_or_not_found.HasValue());
-  EXPECT_FALSE(void_or_not_found.IsNotFound());
+static constexpr std::string_view kArbitraryErrorMessage{"Something went wrong"};
 
-  void_or_not_found = NotFound{"Message"};
-  EXPECT_FALSE(void_or_not_found.HasValue());
-  EXPECT_TRUE(void_or_not_found.IsNotFound());
+TEST(NotFoundOrVoid, Found) {
+  NotFoundOr<void> void_or_canceled{};
+  EXPECT_TRUE(void_or_canceled.HasValue());
+  EXPECT_FALSE(void_or_canceled.IsNotFound());
+}
 
-  NotFoundOr<int> int_or_not_found{42};
-  EXPECT_TRUE(int_or_not_found.HasValue());
-  EXPECT_FALSE(int_or_not_found.IsNotFound());
-  EXPECT_EQ(int_or_not_found.GetValue(), 42);
+TEST(NotFoundOrVoid, NotFound) {
+  NotFoundOr<void> void_or_canceled{NotFound{std::string{kArbitraryErrorMessage}}};
+  EXPECT_FALSE(void_or_canceled.HasValue());
+  EXPECT_TRUE(void_or_canceled.IsNotFound());
+  EXPECT_THAT(void_or_canceled.GetNotFound().message, kArbitraryErrorMessage);
+}
 
-  int_or_not_found = NotFound{"Message"};
-  EXPECT_FALSE(int_or_not_found.HasValue());
-  EXPECT_TRUE(int_or_not_found.IsNotFound());
+TEST(NotFoundOrInt, Found) {
+  NotFoundOr<int> int_or_canceled{42};
+  EXPECT_TRUE(int_or_canceled.HasValue());
+  EXPECT_FALSE(int_or_canceled.IsNotFound());
+  EXPECT_EQ(int_or_canceled.GetValue(), 42);
+  EXPECT_EQ(static_cast<const NotFoundOr<int>&>(int_or_canceled).GetValue(), 42);
+  // NOLINTNEXTLINE(performance-move-const-arg)
+  EXPECT_EQ(std::move(int_or_canceled).GetValue(), 42);
+}
 
-  NotFoundOr<std::unique_ptr<int>> unique_int_or_not_found{std::make_unique<int>(42)};
-  EXPECT_TRUE(unique_int_or_not_found.HasValue());
-  EXPECT_FALSE(unique_int_or_not_found.IsNotFound());
-  EXPECT_THAT(unique_int_or_not_found.GetValue(), testing::Pointee(42));
+TEST(NotFoundOrInt, NotFound) {
+  NotFoundOr<int> int_or_canceled{NotFound{std::string{kArbitraryErrorMessage}}};
+  EXPECT_FALSE(int_or_canceled.HasValue());
+  EXPECT_TRUE(int_or_canceled.IsNotFound());
+  EXPECT_THAT(int_or_canceled.GetNotFound().message, kArbitraryErrorMessage);
+}
 
-  unique_int_or_not_found = NotFound{"Message"};
-  EXPECT_FALSE(unique_int_or_not_found.HasValue());
-  EXPECT_TRUE(unique_int_or_not_found.IsNotFound());
+TEST(NotFoundOrUniqueInt, Found) {
+  NotFoundOr<std::unique_ptr<int>> unique_int_or_canceled{std::make_unique<int>(42)};
+  EXPECT_TRUE(unique_int_or_canceled.HasValue());
+  EXPECT_FALSE(unique_int_or_canceled.IsNotFound());
+  EXPECT_EQ(*unique_int_or_canceled.GetValue(), 42);
+  EXPECT_EQ(
+      *static_cast<const NotFoundOr<std::unique_ptr<int>>&>(unique_int_or_canceled).GetValue(), 42);
+  EXPECT_EQ(*std::move(unique_int_or_canceled).GetValue(), 42);
+}
+
+TEST(NotFoundOrUniqueInt, NotFound) {
+  NotFoundOr<std::unique_ptr<int>> unique_int_or_canceled{
+      NotFound{std::string{kArbitraryErrorMessage}}};
+  unique_int_or_canceled = NotFound{std::string{kArbitraryErrorMessage}};
+  EXPECT_FALSE(unique_int_or_canceled.HasValue());
+  EXPECT_TRUE(unique_int_or_canceled.IsNotFound());
+  EXPECT_THAT(unique_int_or_canceled.GetNotFound().message, kArbitraryErrorMessage);
 }
 
 TEST(NotFoundOr, IsNotFound) {
