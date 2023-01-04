@@ -32,8 +32,6 @@ TEST(CanceledOrInt, NotCanceled) {
   EXPECT_FALSE(int_or_canceled.IsCanceled());
   EXPECT_EQ(int_or_canceled.GetValue(), 42);
   EXPECT_EQ(static_cast<const CanceledOr<int>&>(int_or_canceled).GetValue(), 42);
-  // NOLINTNEXTLINE(performance-move-const-arg)
-  EXPECT_EQ(std::move(int_or_canceled).GetValue(), 42);
 }
 
 TEST(CanceledOrInt, Canceled) {
@@ -49,7 +47,8 @@ TEST(CanceledOrUniqueInt, NotCanceled) {
   EXPECT_EQ(*unique_int_or_canceled.GetValue(), 42);
   EXPECT_EQ(
       *static_cast<const CanceledOr<std::unique_ptr<int>>&>(unique_int_or_canceled).GetValue(), 42);
-  EXPECT_EQ(*std::move(unique_int_or_canceled).GetValue(), 42);
+  std::unique_ptr<int> value = std::move(unique_int_or_canceled).GetValue();
+  EXPECT_THAT(value, testing::Pointee(42));
 }
 
 TEST(CanceledOrUniqueInt, Canceled) {

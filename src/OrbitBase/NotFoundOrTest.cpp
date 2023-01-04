@@ -36,8 +36,6 @@ TEST(NotFoundOrInt, Found) {
   EXPECT_FALSE(int_or_canceled.IsNotFound());
   EXPECT_EQ(int_or_canceled.GetValue(), 42);
   EXPECT_EQ(static_cast<const NotFoundOr<int>&>(int_or_canceled).GetValue(), 42);
-  // NOLINTNEXTLINE(performance-move-const-arg)
-  EXPECT_EQ(std::move(int_or_canceled).GetValue(), 42);
 }
 
 TEST(NotFoundOrInt, NotFound) {
@@ -54,7 +52,8 @@ TEST(NotFoundOrUniqueInt, Found) {
   EXPECT_EQ(*unique_int_or_canceled.GetValue(), 42);
   EXPECT_EQ(
       *static_cast<const NotFoundOr<std::unique_ptr<int>>&>(unique_int_or_canceled).GetValue(), 42);
-  EXPECT_EQ(*std::move(unique_int_or_canceled).GetValue(), 42);
+  std::unique_ptr<int> value = std::move(unique_int_or_canceled).GetValue();
+  EXPECT_THAT(value, testing::Pointee(42));
 }
 
 TEST(NotFoundOrUniqueInt, NotFound) {
