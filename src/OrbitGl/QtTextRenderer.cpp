@@ -109,7 +109,6 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   if (text_length == 0) {
     return;
   }
-  float max_line_width = 0.f;
   const float height_entire_text = GetStringHeight(text, formatting.font_size);
   Vec2i pen_pos = viewport_->WorldToScreen(Vec2(x, y));
   LayeredVec2 transformed = translations_.TranslateXYZAndFloorXY(
@@ -121,6 +120,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
   float y_offset = GetYOffsetFromAlignment(formatting.valign, height_entire_text);
   const float single_line_height = GetStringHeight(".", formatting.font_size);
   QStringList lines = text_as_qstring.split("\n");
+  float max_line_width = 0.f;
   for (const auto& line : lines) {
     QString elided_line =
         formatting.max_size == -1.f ? line : metrics.elidedText(line, Qt::ElideRight, max_width);
@@ -222,16 +222,15 @@ float QtTextRenderer::GetStringWidth(const QString& text, uint32_t font_size) {
 }
 
 float QtTextRenderer::GetMinimumTextWidth(uint32_t font_size) {
-  static absl::flat_hash_map<uint32_t, float> minimum_string_width_cache;
-  auto minimum_string_width_it = minimum_string_width_cache.find(font_size);
-  if (minimum_string_width_it != minimum_string_width_cache.end()) {
+  auto minimum_string_width_it = minimum_string_width_cache_.find(font_size);
+  if (minimum_string_width_it != minimum_string_width_cache_.end()) {
     return minimum_string_width_it->second;
   }
   // Only if we can fit one wide (hence the "W") character plus the ellipsis dots we start rendering
   // text. Otherwise we leave the space empty.
   constexpr char const* kMinimumString = "W...";
   const float width = GetStringWidth(kMinimumString, font_size);
-  minimum_string_width_cache[font_size] = width;
+  minimum_string_width_cache_[font_size] = width;
   return width;
 }
 

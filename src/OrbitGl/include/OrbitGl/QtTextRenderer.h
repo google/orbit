@@ -58,6 +58,7 @@ class QtTextRenderer : public TextRenderer {
     TextFormatting formatting;
   };
   absl::flat_hash_map<float, std::vector<StoredText>> stored_text_;
+  absl::flat_hash_map<uint32_t, float> minimum_string_width_cache_;
 };
 
 }  // namespace orbit_gl
