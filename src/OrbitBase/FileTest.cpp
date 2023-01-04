@@ -466,4 +466,10 @@ TEST(File, IsDirectory) {
   }
 }
 
+TEST(File, IsRegularFile) {
+  EXPECT_THAT(IsRegularFile(orbit_test::GetTestdataDir()), false);
+  EXPECT_THAT(IsRegularFile(orbit_test::GetTestdataDir() / "textfile.bin"), true);
+  EXPECT_THAT(IsRegularFile("/does/not/exist"), HasError());
+}
+
 }  // namespace orbit_base

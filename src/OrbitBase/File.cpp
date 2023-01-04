@@ -282,4 +282,14 @@ ErrorMessageOr<bool> IsDirectory(const std::filesystem::path& path) {
   return result;
 }
 
+ErrorMessageOr<bool> IsRegularFile(const std::filesystem::path& path) {
+  std::error_code error;
+  const bool result = std::filesystem::is_regular_file(path, error);
+  if (error) {
+    return ErrorMessage{error.message()};
+  }
+
+  return result;
+}
+
 }  // namespace orbit_base
