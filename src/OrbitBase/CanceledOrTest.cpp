@@ -47,7 +47,8 @@ TEST(CanceledOrUniqueInt, NotCanceled) {
   EXPECT_TRUE(unique_int_or_canceled.HasValue());
   EXPECT_FALSE(unique_int_or_canceled.IsCanceled());
   EXPECT_EQ(*unique_int_or_canceled.GetValue(), 42);
-  EXPECT_EQ(*static_cast<const CanceledOr<std::unique_ptr<int>>&>(unique_int_or_canceled).GetValue(), 42);
+  EXPECT_EQ(
+      *static_cast<const CanceledOr<std::unique_ptr<int>>&>(unique_int_or_canceled).GetValue(), 42);
   EXPECT_EQ(*std::move(unique_int_or_canceled).GetValue(), 42);
 }
 
