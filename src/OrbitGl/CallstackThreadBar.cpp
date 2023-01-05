@@ -6,6 +6,8 @@
 
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/flags/flag.h>
+#include <absl/flags/internal/flag.h>
 #include <absl/strings/str_format.h>
 
 #include <memory>
@@ -18,6 +20,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitGl/BatcherInterface.h"
@@ -85,7 +88,7 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
   primitive_assembler.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   primitive_assembler.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
-  if (picked_) {
+  if (picked_ && !absl::GetFlag(FLAGS_time_range_selection)) {
     Vec2& from = mouse_pos_last_click_;
     Vec2& to = mouse_pos_cur_;
 
@@ -188,7 +191,9 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
 
 void CallstackThreadBar::OnRelease() {
   CaptureViewElement::OnRelease();
-  SelectCallstacks();
+  if (!absl::GetFlag(FLAGS_time_range_selection)) {
+    SelectCallstacks();
+  }
 }
 
 void CallstackThreadBar::OnPick(int x, int y) {
