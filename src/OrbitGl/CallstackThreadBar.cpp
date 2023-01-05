@@ -88,19 +88,20 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
   primitive_assembler.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   primitive_assembler.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
-  if (picked_ && !absl::GetFlag(FLAGS_time_range_selection)) {
-    Vec2& from = mouse_pos_last_click_;
-    Vec2& to = mouse_pos_cur_;
+  // This is being replaced by time range selection and the two should not be active together.
+  if (!picked_ || absl::GetFlag(FLAGS_time_range_selection)) return;
 
-    x0 = from[0];
-    y0 = pos[1];
-    x1 = to[0];
-    y1 = y0 + GetHeight();
+  Vec2& from = mouse_pos_last_click_;
+  Vec2& to = mouse_pos_cur_;
 
-    Color picked_color(0, 128, 255, 128);
-    Quad picked_box = MakeBox(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()));
-    primitive_assembler.AddBox(picked_box, GlCanvas::kZValueUi, picked_color, shared_from_this());
-  }
+  x0 = from[0];
+  y0 = pos[1];
+  x1 = to[0];
+  y1 = y0 + GetHeight();
+
+  Color picked_color(0, 128, 255, 128);
+  Quad picked_box = MakeBox(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()));
+  primitive_assembler.AddBox(picked_box, GlCanvas::kZValueUi, picked_color, shared_from_this());
 }
 
 void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
@@ -191,6 +192,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
 
 void CallstackThreadBar::OnRelease() {
   CaptureViewElement::OnRelease();
+  // This is being replaced by time range selection and the two should not be active together.
   if (!absl::GetFlag(FLAGS_time_range_selection)) {
     SelectCallstacks();
   }
