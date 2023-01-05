@@ -865,7 +865,7 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   ORBIT_SCOPE("TimeGraph::DoDraw");
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  // Vertical green line at mouse x position.
+  // Vertical white line at mouse x position.
   if (draw_context.picking_mode == PickingMode::kNone &&
       draw_context.current_mouse_tick.has_value()) {
     const Color white_line_color{255, 255, 255, 127};

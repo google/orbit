@@ -730,19 +730,31 @@ void CaptureWindow::RenderSelectionOverlay() {
   float initial_y_position = time_graph_layout_->GetTimeBarHeight();
   float bar_height = viewport_.GetWorldHeight() - initial_y_position;
 
-  const Color overlay_color(0, 0, 0, 128);
-  Quad box = MakeBox(Vec2(start_world, initial_y_position),
-                     Vec2(select_start_world - start_world, bar_height));
-  primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
-  Quad box2 = MakeBox(Vec2(select_end_world, initial_y_position),
-                      Vec2(end_world - select_end_world, bar_height));
-  primitive_assembler_.AddBox(box2, GlCanvas::kZValueOverlay, overlay_color);
+  // We are entirely within the selection and do not have to draw any overlay.
+  if (select_start_world < start_world && end_world < select_end_world) return;
 
+  const Color overlay_color(0, 0, 0, 128);
   const Color border_lines_color(255, 255, 255, 255);
-  primitive_assembler_.AddVerticalLine(Vec2(select_start_world, initial_y_position), bar_height,
-                                       GlCanvas::kZValueOverlay, border_lines_color);
-  primitive_assembler_.AddVerticalLine(Vec2(select_end_world, initial_y_position), bar_height,
-                                       GlCanvas::kZValueOverlay, border_lines_color);
+
+  if (start_world < select_start_world) {
+    Quad box = MakeBox(Vec2(start_world, initial_y_position),
+                      Vec2(select_start_world - start_world, bar_height));
+    primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
+    if (select_start_world < end_world) {
+      primitive_assembler_.AddVerticalLine(Vec2(select_start_world, initial_y_position), bar_height,
+                                        GlCanvas::kZValueOverlay, border_lines_color);
+    }
+  }
+  if (select_end_world < end_world) {
+    Quad box = MakeBox(Vec2(select_end_world, initial_y_position),
+                        Vec2(end_world - select_end_world, bar_height));
+    primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
+    if (start_world < select_end_world) {
+      primitive_assembler_.AddVerticalLine(Vec2(select_end_world, initial_y_position), bar_height,
+                                        GlCanvas::kZValueOverlay, border_lines_color);
+    }
+  }
+
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
