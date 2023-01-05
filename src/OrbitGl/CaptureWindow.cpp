@@ -738,23 +738,22 @@ void CaptureWindow::RenderSelectionOverlay() {
 
   if (start_world < select_start_world) {
     Quad box = MakeBox(Vec2(start_world, initial_y_position),
-                      Vec2(select_start_world - start_world, bar_height));
+                       Vec2(select_start_world - start_world, bar_height));
     primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
     if (select_start_world < end_world) {
       primitive_assembler_.AddVerticalLine(Vec2(select_start_world, initial_y_position), bar_height,
-                                        GlCanvas::kZValueOverlay, border_lines_color);
+                                           GlCanvas::kZValueOverlay, border_lines_color);
     }
   }
   if (select_end_world < end_world) {
     Quad box = MakeBox(Vec2(select_end_world, initial_y_position),
-                        Vec2(end_world - select_end_world, bar_height));
+                       Vec2(end_world - select_end_world, bar_height));
     primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
     if (start_world < select_end_world) {
       primitive_assembler_.AddVerticalLine(Vec2(select_end_world, initial_y_position), bar_height,
-                                        GlCanvas::kZValueOverlay, border_lines_color);
+                                           GlCanvas::kZValueOverlay, border_lines_color);
     }
   }
-
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
