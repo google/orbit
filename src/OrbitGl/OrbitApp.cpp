@@ -2840,6 +2840,7 @@ void OrbitApp::ClearThreadAndTimeRangeSelection() {
 }
 
 void OrbitApp::OnThreadOrTimeRangeSelectionChange() {
+  ORBIT_SCOPE_WITH_COLOR("OrbitApp::OnThreadOrTimeRangeSelectionChange", kOrbitColorLime);
   if (!HasCaptureData() || !absl::GetFlag(FLAGS_time_range_selection)) return;
 
   ClearSelectionTabs();
