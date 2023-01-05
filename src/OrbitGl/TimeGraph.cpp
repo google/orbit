@@ -483,9 +483,11 @@ std::pair<float, float> TimeGraph::GetBoxPosXAndWidthFromTicks(uint64_t start_ti
 // visible.
 void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
   ORBIT_CHECK(timer_info != nullptr);
-  app_->SelectTimer(timer_info);
-  HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, *timer_info);
-  track_container_->VerticallyMoveIntoView(*timer_info);
+  if (app_->IsTimerActive(*timer_info)) {
+    app_->SelectTimer(timer_info);
+    HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, *timer_info);
+    track_container_->VerticallyMoveIntoView(*timer_info);
+  }
 }
 
 static bool ThreadMatches(const std::optional<uint32_t>& target_thread_id, const TimerInfo* timer) {
