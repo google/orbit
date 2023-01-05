@@ -231,14 +231,14 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
                                  const internal::DrawData& /*draw_data*/) const {
   const Color inactive_color(100, 100, 100, 255);
   const Color selection_color(0, 128, 255, 255);
+  if (!IsTimerActive(timer_info)) {
+    return inactive_color;
+  }
   if (is_highlighted) {
     return TimerTrack::kHighlightColor;
   }
   if (is_selected) {
     return selection_color;
-  }
-  if (!IsTimerActive(timer_info)) {
-    return inactive_color;
   }
 
   std::optional<Color> user_color = GetUserColor(timer_info);
