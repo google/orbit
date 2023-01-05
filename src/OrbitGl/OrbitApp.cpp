@@ -2221,6 +2221,8 @@ const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
 }
 
 void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
+  if (timer_info != nullptr && !IsTimerActive(*timer_info)) return;
+
   data_manager_->set_selected_timer(timer_info);
   const std::optional<ScopeId> scope_id =
       timer_info != nullptr ? ProvideScopeId(*timer_info) : std::nullopt;
