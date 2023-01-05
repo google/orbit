@@ -7,7 +7,6 @@
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
-#include <absl/flags/internal/flag.h>
 #include <absl/strings/str_format.h>
 
 #include <memory>
@@ -34,6 +33,7 @@
 #include "OrbitGl/ThreadColor.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/Viewport.h"
+#include "absl/flags/internal/flag.h"
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
