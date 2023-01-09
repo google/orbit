@@ -1,9 +1,10 @@
-// Copyright (c) 2022 The Orbit Authors. All rights reserved.
+// Copyright (c) 2023 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "OrbitSsh/Credentials.h"
 
+#include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 
 #include <filesystem>
@@ -17,9 +18,10 @@ namespace orbit_ssh {
 ErrorMessageOr<std::filesystem::path> GetUsersSshConfigDirectory() {
   const char* const home_directory_env_var = std::getenv(kHomeEnvironmentVariable);
   if (home_directory_env_var == nullptr) {
-    return ErrorMessage{
-        "Could not determine the user's home directory location. Environment variable 'HOME' "
-        "doesn't exist."};
+    return ErrorMessage{absl::StrFormat(
+        "Could not determine the user's home directory location. Environment variable '%s' "
+        "doesn't exist.",
+        kHomeEnvironmentVariable)};
   }
 
   std::filesystem::path home_directory{home_directory_env_var};
@@ -27,9 +29,9 @@ ErrorMessageOr<std::filesystem::path> GetUsersSshConfigDirectory() {
 
   if (!home_dir_exists) {
     return ErrorMessage{absl::StrFormat(
-        "The user's home directory given by then 'HOME' environment variable does either not exist "
+        "The user's home directory given by the '%s' environment variable does not exist "
         "or is not a directory. Tried the following directory: %s",
-        home_directory.string())};
+        kHomeEnvironmentVariable, home_directory.string())};
   }
 
   std::filesystem::path ssh_config_directory = home_directory / ".ssh";
