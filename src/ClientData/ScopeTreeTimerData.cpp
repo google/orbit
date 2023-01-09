@@ -63,6 +63,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
 
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthExclusive(
     uint32_t depth, uint64_t start_ns, uint64_t end_ns) const {
+  ORBIT_SCOPE_WITH_COLOR("GetTimersAtDepthExclusive", kOrbitColorGreen);
   std::vector<const orbit_client_protos::TimerInfo*> all_timers_at_depth;
   absl::MutexLock lock(&scope_tree_mutex_);
 
