@@ -60,7 +60,11 @@ TrackManager::TrackManager(TrackContainer* track_container, TimelineInfoInterfac
 }
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
+  return GetAllTracksNoLock();
+}
+
+std::vector<Track*> TrackManager::GetAllTracksNoLock() const {
   std::vector<Track*> tracks;
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
@@ -73,7 +77,7 @@ std::vector<Track*> TrackManager::GetAllTracks() const {
 }
 
 std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   std::vector<FrameTrack*> tracks;
   for (const auto& [unused_id, track] : frame_tracks_) {
     tracks.push_back(track.get());
@@ -82,7 +86,7 @@ std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
 }
 
 void TrackManager::SortTracks() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   // Gather all tracks regardless of the process in sorted order
   std::vector<Track*> all_processes_sorted_tracks;
 
@@ -123,7 +127,7 @@ void TrackManager::SortTracks() {
   if (absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     if (app_ != nullptr && app_->HasCaptureData()) {
       ThreadTrack* tracepoints_track =
-          GetOrCreateThreadTrack(orbit_base::kAllThreadsOfAllProcessesTid);
+          GetOrCreateThreadTrackNoLock(orbit_base::kAllThreadsOfAllProcessesTid);
       if (!tracepoints_track->IsEmpty()) {
         all_processes_sorted_tracks.push_back(tracepoints_track);
       }
@@ -132,7 +136,7 @@ void TrackManager::SortTracks() {
 
   // Process track.
   if (app_ != nullptr && app_->HasCaptureData()) {
-    ThreadTrack* process_track = GetOrCreateThreadTrack(orbit_base::kAllProcessThreadsTid);
+    ThreadTrack* process_track = GetOrCreateThreadTrackNoLock(orbit_base::kAllProcessThreadsTid);
     if (!process_track->IsEmpty()) {
       all_processes_sorted_tracks.push_back(process_track);
     }
@@ -357,7 +361,7 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
 }
 
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   deleted_tracks_.push_back(frame_tracks_[function_id]);
   frame_tracks_.erase(function_id);
 
@@ -436,7 +440,7 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
 }
 
 SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (scheduler_track_ == nullptr) {
     auto [unused, timer_data] = capture_data_->CreateTimerData();
     scheduler_track_ =
@@ -448,7 +452,11 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
 }
 
 ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
+  return GetOrCreateThreadTrackNoLock(tid);
+}
+
+ThreadTrack* TrackManager::GetOrCreateThreadTrackNoLock(uint32_t tid) {
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
     auto* thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
@@ -463,7 +471,7 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
 }
 
 std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (!thread_tracks_.contains(tid)) {
     return std::nullopt;
   }
@@ -472,7 +480,7 @@ std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) const {
 }
 
 GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   std::string timeline =
       app_->GetStringManager()->Get(timeline_hash).value_or(std::to_string(timeline_hash));
   std::shared_ptr<GpuTrack> track = gpu_tracks_[timeline];
@@ -489,7 +497,7 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
 }
 
 VariableTrack* TrackManager::GetOrCreateVariableTrack(std::string_view name) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
 
   auto existing_track = variable_tracks_.find(name);
   if (existing_track != variable_tracks_.end()) return existing_track->second.get();
@@ -502,7 +510,7 @@ VariableTrack* TrackManager::GetOrCreateVariableTrack(std::string_view name) {
 }
 
 AsyncTrack* TrackManager::GetOrCreateAsyncTrack(std::string_view name) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
 
   auto existing_track = async_tracks_.find(name);
   if (existing_track != async_tracks_.end()) return existing_track->second.get();
@@ -517,7 +525,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(std::string_view name) {
 }
 
 FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (auto track_it = frame_tracks_.find(function_id); track_it != frame_tracks_.end()) {
     return track_it->second.get();
   }
@@ -538,20 +546,35 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id) {
   return track.get();
 }
 
+SystemMemoryTrack* TrackManager::GetSystemMemoryTrack() const {
+  absl::MutexLock lock(&mutex_);
+  return system_memory_track_.get();
+}
+
+CGroupAndProcessMemoryTrack* TrackManager::GetCGroupAndProcessMemoryTrack() const {
+  absl::MutexLock lock(&mutex_);
+  return cgroup_and_process_memory_track_.get();
+}
+
+PageFaultsTrack* TrackManager::GetPageFaultsTrack() const {
+  absl::MutexLock lock(&mutex_);
+  return page_faults_track_.get();
+}
+
 SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (system_memory_track_ == nullptr) {
     system_memory_track_ = std::make_shared<SystemMemoryTrack>(
         track_container_, timeline_info_, viewport_, layout_, module_manager_, capture_data_);
     AddTrack(system_memory_track_);
   }
 
-  return GetSystemMemoryTrack();
+  return system_memory_track_.get();
 }
 
 CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTrack(
     std::string_view cgroup_name) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (cgroup_and_process_memory_track_ == nullptr) {
     cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
         track_container_, timeline_info_, viewport_, layout_, std::string{cgroup_name},
@@ -559,19 +582,19 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
     AddTrack(cgroup_and_process_memory_track_);
   }
 
-  return GetCGroupAndProcessMemoryTrack();
+  return cgroup_and_process_memory_track_.get();
 }
 
 PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(std::string_view cgroup_name,
                                                            uint64_t memory_sampling_period_ms) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  absl::MutexLock lock(&mutex_);
   if (page_faults_track_ == nullptr) {
     page_faults_track_ = std::make_shared<PageFaultsTrack>(
         track_container_, timeline_info_, viewport_, layout_, std::string{cgroup_name},
         memory_sampling_period_ms, module_manager_, capture_data_);
     AddTrack(page_faults_track_);
   }
-  return GetPageFaultsTrack();
+  return page_faults_track_.get();
 }
 
 // TODO(b/177200020): Move to TrackContainer after assuring to have only one thread in the UI.
@@ -579,8 +602,8 @@ std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
 
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (auto& track : GetAllTracks()) {
+  absl::MutexLock lock(&mutex_);
+  for (auto& track : GetAllTracksNoLock()) {
     if (!track->IsEmpty()) {
       min_time = std::min(min_time, track->GetMinTime());
       max_time = std::max(max_time, track->GetMaxTime());
