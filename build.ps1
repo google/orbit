@@ -1,19 +1,21 @@
-$py = Get-Command py -ErrorAction Stop
+function conan {
+  & py -3 -m conans.conan $args
+}
 
 function conan_profile_exists($profile) {
-  $process = Start-Process $py.Path -windowstyle Hidden -ArgumentList "-3","-m","conans.conan","profile","show",$profile -PassThru -Wait
-  return ($process.ExitCode -eq 0)
+  conan profile show $profile >null 2>&1
+  return ($LastExitCode -eq 0)
 }
 
 function conan_create_profile($profile) {
-  if (! (& $py.Path -3 -m conans.conan profile show default)) {
-    if (! (& $py.Path -3 -m conans.conan profile new --detect default)) {
+  if (! (conan profile show default)) {
+    if (! (conan profile new --detect default)) {
       exit $?
     }
   }
 
-  $compiler = & $py.Path -3 -m conans.conan profile show default | Select-String -Pattern "compiler=" | ForEach-Object { ([string] $_).split("=")[1] }
-  $compiler_version = & $py.Path -3 -m conans.conan profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
+  $compiler = conan profile show default | Select-String -Pattern "compiler=" | ForEach-Object { ([string] $_).split("=")[1] }
+  $compiler_version = conan profile show default | Select-String -Pattern "compiler.version=" | ForEach-Object { ([string] $_).split("=")[1] }
 
   if ($compiler -ne "Visual Studio") {
     Throw "It seems conan couldn't detect your Visual Studio installation. Do you have Visual Studio installed? At least Visual Studio 2019 is required!"
@@ -25,11 +27,11 @@ function conan_create_profile($profile) {
 
   $compiler_version = if ($compiler_version -eq 16) { "msvc2019" } else { "msvc2022" }
 
-  $conan_dir = if ($env:CONAN_USER_HOME) { $env:CONAN_USER_HOME } else { $env:USERPROFILE }
-  $conan_dir += "/.conan"
+  $conan_dir = if ($env:CONAN_USER_HOME) { $Env:CONAN_USER_HOME } else { $Env:USERPROFILE }
+  $conan_dir += "\.conan"
 
   $build_type = $profile -replace "default_"
-  $profile_path = "$conan_dir/profiles/$profile"
+  $profile_path = "$conan_dir\profiles\$profile"
 
   if (!$Env:Qt5_DIR) {
     Write-Host ""
@@ -55,7 +57,7 @@ function conan_create_profile($profile) {
 # That's the profile that is used for tools that run on the build machine (Nasm, CMake, Ninja, etc.)
 $build_profile = "default_release"
 if (-not (conan_profile_exists $build_profile)) {
-  Write-Host "Creating conan profile $profile"
+  Write-Host "Creating conan profile $build_profile"
   conan_create_profile $build_profile
 }
 
@@ -71,16 +73,18 @@ foreach ($profile in $profiles) {
  
   Write-Host "Building Orbit in build_$profile/ with conan profile $profile"
 
-  & $py.Path -3 -m conans.conan install -if build_$profile\ --build outdated -pr:b $build_profile -pr:h $profile -u "$PSScriptRoot"
+  conan install -if build_$profile\ --build outdated "-pr:b" $build_profile "-pr:h" $profile -u "$PSScriptRoot"
 
   if ($LastExitCode -ne 0) {
     Throw "Error while running conan install."
   }
-
-  $process = Start-Process $py.Path -NoNewWindow -ErrorAction Stop -PassThru -ArgumentList "-3","-m","conans.conan","build","-bf","build_$profile/",$PSScriptRoot
-  $handle = $process.Handle # caching handle needed due to bug in .Net
-  $process.WaitForExit()
-  if ($process.ExitCode -ne 0) {
+  
+  conan build -bf "build_$profile/" $PSScriptRoot
+  if ($LastExitCode -ne 0) {
     Throw "Error while running conan build."
+  }
+
+  if ($profile.StartsWith("default_")) {
+    Write-Host "The build finished successfully. Start Orbit with .\build_$profile\bin\Orbit!"
   }
 }
