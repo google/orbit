@@ -50,10 +50,11 @@ float GetYOffsetFromAlignment(QtTextRenderer::VAlign alignment, float height) {
 float GetXOffsetFromAlignment(QtTextRenderer::HAlign alignment, float width) {
   // kOffset is a hack to compensate for subtle differences in the placement of the rendered text
   // under Linux and Windows. Setting kOffset == 0 under Windows results in texts starting left of
-  // the interval border for unknown reason.
-  constexpr float kOffset = 0.f;
+  // the interval border for unknown reasons (also see https://github.com/google/orbit/issues/4627).
 #ifdef _WIN32
-  kOffset = 2.f;
+  constexpr float kOffset = 2.f;
+#else
+  constexpr float kOffset = 0.f;
 #endif
   switch (alignment) {
     case QtTextRenderer::HAlign::Left:
