@@ -2,15 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <stdlib.h>
 
-#include <memory>
-#include <utility>
+#include <cstdlib>
+#include <filesystem>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "HomeEnvironmentVariable.h"
-#include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSsh/Credentials.h"
 #include "Test/Path.h"

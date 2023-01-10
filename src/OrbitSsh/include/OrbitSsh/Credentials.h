@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
