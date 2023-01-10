@@ -41,6 +41,7 @@ using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ThreadID;
+using orbit_client_data::TimeRange;
 
 namespace orbit_gl {
 
@@ -72,19 +73,49 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
   Color color = orbit_gl::GetThreadColor(GetThreadId());
-  const Vec2 pos = GetPos();
-  Quad box = MakeBox(pos, Vec2(GetWidth(), GetHeight()));
-  primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
-
-  if (primitive_assembler.GetPickingManager()->IsThisElementPicked(this)) {
-    color = Color(255, 255, 255, 255);
-  }
-
+  Color inactive_color = Color(128, 128, 128, 255);
+  Vec2 pos = GetPos();
   float x0 = pos[0];
   float y0 = pos[1];
   float x1 = x0 + GetWidth();
   float y1 = y0 + GetHeight();
 
+  std::optional<TimeRange> time_range = app_->GetActiveTimeRangeForTid(GetThreadId());
+  if (!time_range.has_value()) {
+    Quad box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
+    primitive_assembler.AddBox(box, event_bar_z, inactive_color, shared_from_this());
+  } else {
+    const auto& [active_x0, active_width] = timeline_info_->GetBoxPosXAndWidthFromTicks(
+        time_range.value().start, time_range.value().end);
+    float active_x1 = active_x0 + active_width;
+
+    // If at least the beginning is grayed out.
+    if (active_x0 > x0) {
+      Vec2 size = Vec2(std::max(GetWidth(), active_x0 - x0), GetHeight());
+      Quad box = MakeBox(GetPos(), size);
+      primitive_assembler.AddBox(box, event_bar_z, inactive_color, shared_from_this());
+    }
+
+    // If there is some active portion on the screen.
+    if (active_x0 < x1 || active_x1 > x0) {
+      Vec2 box_pos = Vec2(std::max(active_x0, x0), y0);
+      Vec2 size = Vec2(std::min(active_width, x1 - box_pos[0]), GetHeight());
+      Quad box = MakeBox(box_pos, size);
+      primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
+    }
+
+    // If at least some of the end is grayed out.
+    if (active_x1 < x1) {
+      Vec2 box_pos = Vec2(std::max(active_x1, x0), y0);
+      Vec2 size = Vec2(x1 - box_pos[0], GetHeight());
+      Quad box = MakeBox(box_pos, size);
+      primitive_assembler.AddBox(box, event_bar_z, inactive_color, shared_from_this());
+    }
+  }
+
+  if (primitive_assembler.GetPickingManager()->IsThisElementPicked(this)) {
+    color = Color(255, 255, 255, 255);
+  }
   primitive_assembler.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
   primitive_assembler.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 

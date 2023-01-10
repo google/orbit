@@ -49,6 +49,7 @@
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -2154,6 +2155,16 @@ bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
     return false;
   }
   return data_manager_->IsScopeVisible(scope_id.value());
+}
+
+std::optional<TimeRange> OrbitApp::GetActiveTimeRangeForTid(ThreadID thread_id) const {
+  ThreadID selected_tid = data_manager_->selected_thread_id();
+  if (selected_tid != kAllProcessThreadsTid && selected_tid != thread_id) {
+    return std::nullopt;
+  }
+  std::optional<TimeRange> time_range_selection = data_manager_->GetSelectionTimeRange();
+  // If no selection is active, then the entire thread should be active.
+  return time_range_selection.has_value() ? time_range_selection.value() : kDefaultTimeRange;
 }
 
 std::optional<ScopeId> OrbitApp::GetHighlightedScopeId() const {

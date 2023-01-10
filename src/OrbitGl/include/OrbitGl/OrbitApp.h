@@ -367,6 +367,10 @@ class OrbitApp final : public DataViewFactory,
 
   void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) override;
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const;
+  // Returns the time range for which thread_id is active. If the entire thread is inactive, it will
+  // return nullopt.
+  std::optional<orbit_client_data::TimeRange> GetActiveTimeRangeForTid(
+      orbit_client_data::ThreadID thread_id) const;
 
   [[nodiscard]] std::optional<ScopeId> GetHighlightedScopeId() const override;
   void SetHighlightedScopeId(std::optional<ScopeId> highlighted_scope_id) override;
