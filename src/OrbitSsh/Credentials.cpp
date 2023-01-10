@@ -7,7 +7,11 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
 
+#include <array>
+#include <cstdlib>
 #include <filesystem>
+#include <string_view>
+#include <utility>
 
 #include "HomeEnvironmentVariable.h"
 #include "OrbitBase/File.h"
