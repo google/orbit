@@ -84,6 +84,8 @@ class ModuleData final {
   SymbolCompleteness loaded_symbols_completeness_ ABSL_GUARDED_BY(mutex_) =
       SymbolCompleteness::kNoSymbols;
   std::map<uint64_t, std::unique_ptr<FunctionInfo>> functions_ ABSL_GUARDED_BY(mutex_);
+  mutable absl::flat_hash_map<uint64_t, FunctionInfo*> absolute_address_to_function_info_cache_
+      ABSL_GUARDED_BY(mutex_);
   absl::flat_hash_map<std::string_view, FunctionInfo*> name_to_function_info_map_
       ABSL_GUARDED_BY(mutex_);
 

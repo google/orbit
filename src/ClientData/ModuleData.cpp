@@ -137,6 +137,7 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo new_module_info) {
   ORBIT_LOG("Module %s contained symbols. Because the module changed, those are now removed.",
             module_info_.file_path());
   functions_.clear();
+  absolute_address_to_function_info_cache_.clear();
   hash_to_function_map_.clear();
   name_to_function_info_map_.clear();
   loaded_symbols_completeness_ = SymbolCompleteness::kNoSymbols;
@@ -167,20 +168,34 @@ const FunctionInfo* ModuleData::FindFunctionByVirtualAddress(uint64_t virtual_ad
   absl::MutexLock lock(&mutex_);
   if (functions_.empty()) return nullptr;
 
+  auto cache_it = absolute_address_to_function_info_cache_.find(virtual_address);
+  if (cache_it != absolute_address_to_function_info_cache_.end()) {
+    return cache_it->second;
+  }
+
   if (is_exact) {
     auto it = functions_.find(virtual_address);
-    return (it != functions_.end()) ? it->second.get() : nullptr;
+    FunctionInfo* result = (it != functions_.end()) ? it->second.get() : nullptr;
+    absolute_address_to_function_info_cache_.emplace(virtual_address, result);
+    return result;
   }
 
   auto it = functions_.upper_bound(virtual_address);
-  if (it == functions_.begin()) return nullptr;
+  if (it == functions_.begin()) {
+    absolute_address_to_function_info_cache_.emplace(virtual_address, nullptr);
+    return nullptr;
+  }
 
   --it;
   FunctionInfo* function = it->second.get();
   ORBIT_CHECK(function->address() <= virtual_address);
 
-  if (function->address() + function->size() < virtual_address) return nullptr;
+  if (function->address() + function->size() < virtual_address) {
+    absolute_address_to_function_info_cache_.emplace(virtual_address, nullptr);
+    return nullptr;
+  }
 
+  absolute_address_to_function_info_cache_.emplace(virtual_address, function);
   return function;
 }
 
@@ -235,6 +250,7 @@ void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& modu
   mutex_.AssertHeld();
   ORBIT_CHECK(loaded_symbols_completeness_ < completeness);
   functions_.clear();
+  absolute_address_to_function_info_cache_.clear();
   hash_to_function_map_.clear();
   name_to_function_info_map_.clear();
 
