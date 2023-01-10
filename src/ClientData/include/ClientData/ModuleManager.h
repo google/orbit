@@ -60,7 +60,10 @@ class ModuleManager final {
   mutable absl::Mutex mutex_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
   // Map of ModuleIdentifier -> ModuleData (ModuleIdentifier is file_path and build_id)
-  absl::node_hash_map<orbit_symbol_provider::ModuleIdentifier, ModuleData> module_map_;
+  absl::flat_hash_map<orbit_symbol_provider::ModuleIdentifier, std::unique_ptr<ModuleData>>
+      module_map_ ABSL_GUARDED_BY(mutex_);
+  mutable absl::flat_hash_map<uint64_t, ModuleData*> absolute_address_to_module_data_cache_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_client_data
