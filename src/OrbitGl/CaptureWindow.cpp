@@ -722,22 +722,38 @@ void CaptureWindow::RenderSelectionOverlay() {
   uint64_t min_time = std::min(select_start_time_, select_stop_time_);
   uint64_t max_time = std::max(select_start_time_, select_stop_time_);
 
-  float from_world = time_graph_->GetWorldFromTick(min_time);
-  float to_world = time_graph_->GetWorldFromTick(max_time);
+  float start_world = time_graph_->GetWorldFromUs(time_graph_->GetMinTimeUs());
+  float end_world = time_graph_->GetWorldFromUs(time_graph_->GetMaxTimeUs());
+  float select_start_world = time_graph_->GetWorldFromTick(min_time);
+  float select_end_world = time_graph_->GetWorldFromTick(max_time);
   float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
-
-  float size_x = to_world - from_world;
-  // TODO(http://b/226401787): Allow green selection overlay to be on top of the Timeline after
-  // modifying its design and how the overlay is drawn
   float initial_y_position = time_graph_layout_->GetTimeBarHeight();
-  Vec2 pos(from_world, initial_y_position);
-  Vec2 size(size_x, viewport_.GetWorldHeight() - initial_y_position);
+  float bar_height = viewport_.GetWorldHeight() - initial_y_position;
 
-  std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
-  const Color color(0, 128, 0, 128);
+  // We are entirely within the selection and do not have to draw any overlay.
+  if (select_start_world < start_world && end_world < select_end_world) return;
 
-  Quad box = MakeBox(pos, size);
-  primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, color);
+  const Color overlay_color(0, 0, 0, 128);
+  const Color border_lines_color(255, 255, 255, 255);
+
+  if (start_world < select_start_world) {
+    Quad box = MakeBox(Vec2(start_world, initial_y_position),
+                       Vec2(select_start_world - start_world, bar_height));
+    primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
+    if (select_start_world < end_world) {
+      primitive_assembler_.AddVerticalLine(Vec2(select_start_world, initial_y_position), bar_height,
+                                           GlCanvas::kZValueOverlay, border_lines_color);
+    }
+  }
+  if (select_end_world < end_world) {
+    Quad box = MakeBox(Vec2(select_end_world, initial_y_position),
+                       Vec2(end_world - select_end_world, bar_height));
+    primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, overlay_color);
+    if (start_world < select_end_world) {
+      primitive_assembler_.AddVerticalLine(Vec2(select_end_world, initial_y_position), bar_height,
+                                           GlCanvas::kZValueOverlay, border_lines_color);
+    }
+  }
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
@@ -746,11 +762,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   formatting.font_size = time_graph_layout_->GetFontSize();
   formatting.color = Color(255, 255, 255, 255);
   formatting.halign = alignment;
-
+  std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
                          GlCanvas::kZValueOverlay, formatting);
-
-  const unsigned char g = 100;
-  Color grey(g, g, g, 255);
-  primitive_assembler_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
 }
