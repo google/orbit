@@ -60,11 +60,11 @@ TrackManager::TrackManager(TrackContainer* track_container, TimelineInfoInterfac
 }
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
-  absl::MutexLock lock(&mutex_);
-  return GetAllTracksNoLock();
+  absl::ReaderMutexLock lock(&mutex_);
+  return GetAllTracksInternal();
 }
 
-std::vector<Track*> TrackManager::GetAllTracksNoLock() const {
+std::vector<Track*> TrackManager::GetAllTracksInternal() const {
   std::vector<Track*> tracks;
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
@@ -77,7 +77,7 @@ std::vector<Track*> TrackManager::GetAllTracksNoLock() const {
 }
 
 std::vector<FrameTrack*> TrackManager::GetFrameTracks() const {
-  absl::MutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(&mutex_);
   std::vector<FrameTrack*> tracks;
   for (const auto& [unused_id, track] : frame_tracks_) {
     tracks.push_back(track.get());
@@ -127,7 +127,7 @@ void TrackManager::SortTracks() {
   if (absl::GetFlag(FLAGS_enable_tracepoint_feature)) {
     if (app_ != nullptr && app_->HasCaptureData()) {
       ThreadTrack* tracepoints_track =
-          GetOrCreateThreadTrackNoLock(orbit_base::kAllThreadsOfAllProcessesTid);
+          GetOrCreateThreadTrackInternal(orbit_base::kAllThreadsOfAllProcessesTid);
       if (!tracepoints_track->IsEmpty()) {
         all_processes_sorted_tracks.push_back(tracepoints_track);
       }
@@ -136,7 +136,7 @@ void TrackManager::SortTracks() {
 
   // Process track.
   if (app_ != nullptr && app_->HasCaptureData()) {
-    ThreadTrack* process_track = GetOrCreateThreadTrackNoLock(orbit_base::kAllProcessThreadsTid);
+    ThreadTrack* process_track = GetOrCreateThreadTrackInternal(orbit_base::kAllProcessThreadsTid);
     if (!process_track->IsEmpty()) {
       all_processes_sorted_tracks.push_back(process_track);
     }
@@ -453,10 +453,10 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
 
 ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   absl::MutexLock lock(&mutex_);
-  return GetOrCreateThreadTrackNoLock(tid);
+  return GetOrCreateThreadTrackInternal(tid);
 }
 
-ThreadTrack* TrackManager::GetOrCreateThreadTrackNoLock(uint32_t tid) {
+ThreadTrack* TrackManager::GetOrCreateThreadTrackInternal(uint32_t tid) {
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
     auto* thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
@@ -471,7 +471,7 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrackNoLock(uint32_t tid) {
 }
 
 std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) const {
-  absl::MutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(&mutex_);
   if (!thread_tracks_.contains(tid)) {
     return std::nullopt;
   }
@@ -547,17 +547,17 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(uint64_t function_id) {
 }
 
 SystemMemoryTrack* TrackManager::GetSystemMemoryTrack() const {
-  absl::MutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(&mutex_);
   return system_memory_track_.get();
 }
 
 CGroupAndProcessMemoryTrack* TrackManager::GetCGroupAndProcessMemoryTrack() const {
-  absl::MutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(&mutex_);
   return cgroup_and_process_memory_track_.get();
 }
 
 PageFaultsTrack* TrackManager::GetPageFaultsTrack() const {
-  absl::MutexLock lock(&mutex_);
+  absl::ReaderMutexLock lock(&mutex_);
   return page_faults_track_.get();
 }
 
@@ -602,8 +602,8 @@ std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
 
-  absl::MutexLock lock(&mutex_);
-  for (auto& track : GetAllTracksNoLock()) {
+  absl::ReaderMutexLock lock(&mutex_);
+  for (auto& track : GetAllTracksInternal()) {
     if (!track->IsEmpty()) {
       min_time = std::min(min_time, track->GetMinTime());
       max_time = std::max(max_time, track->GetMaxTime());

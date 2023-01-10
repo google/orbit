@@ -99,14 +99,15 @@ class TrackManager {
   [[nodiscard]] int FindMovingTrackIndex();
   void UpdateMovingTrackPositionInVisibleTracks();
   void SortTracks();
-  [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks() ABSL_NO_THREAD_SAFETY_ANALYSIS;
-  [[nodiscard]] std::vector<Track*> GetAllTracksNoLock() const ABSL_NO_THREAD_SAFETY_ANALYSIS;
-  ThreadTrack* GetOrCreateThreadTrackNoLock(uint32_t tid) ABSL_NO_THREAD_SAFETY_ANALYSIS;
+  [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks()
+      ABSL_SHARED_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] std::vector<Track*> GetAllTracksInternal() const ABSL_SHARED_LOCKS_REQUIRED(mutex_);
+  ThreadTrack* GetOrCreateThreadTrackInternal(uint32_t tid) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Filter tracks that are already sorted in sorted_tracks_.
   void UpdateVisibleTrackList();
   void DeletePendingTracks();
 
-  void AddTrack(const std::shared_ptr<Track>& track) ABSL_NO_THREAD_SAFETY_ANALYSIS;
+  void AddTrack(const std::shared_ptr<Track>& track) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
 
   // This mutex is needed because two different threads will access the following containers. The
