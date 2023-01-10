@@ -112,6 +112,8 @@ class ProcessData final {
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ProcessInfo process_info_ ABSL_GUARDED_BY(mutex_);
   std::map<uint64_t, ModuleInMemory> start_address_to_module_in_memory_ ABSL_GUARDED_BY(mutex_);
+  mutable absl::flat_hash_map<uint64_t, ModuleInMemory> absolute_address_to_module_in_memory_cache_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_client_data

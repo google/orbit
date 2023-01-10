@@ -77,6 +77,7 @@ const std::string& ProcessData::build_id() const {
 void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
   start_address_to_module_in_memory_.clear();
+  absolute_address_to_module_in_memory_cache_.clear();
 
   for (const auto& module_info : module_infos) {
     const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
@@ -137,6 +138,11 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
                         absolute_address, process_info_.name()));
   }
 
+  auto cache_it = absolute_address_to_module_in_memory_cache_.find(absolute_address);
+  if (cache_it != absolute_address_to_module_in_memory_cache_.end()) {
+    return cache_it->second;
+  }
+
   static constexpr const char* kNotFoundErrorFormat{
       "Unable to find module for address %016x: No module loaded at this address by process %s"};
 
@@ -154,6 +160,7 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
         absl::StrFormat(kNotFoundErrorFormat, absolute_address, process_info_.name())};
   }
 
+  absolute_address_to_module_in_memory_cache_.emplace(absolute_address, module_in_memory);
   return module_in_memory;
 }
 
