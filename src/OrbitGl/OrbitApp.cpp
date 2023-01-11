@@ -2830,6 +2830,8 @@ void OrbitApp::ClearTimeRangeSelection() {
 }
 
 void OrbitApp::ClearThreadAndTimeRangeSelection() {
+  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
+                                /*origin_is_multiple_threads*/ false);
   main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
   SetTopDownView(GetCaptureData().post_processed_sampling_data());
   SetBottomUpView(GetCaptureData().post_processed_sampling_data());
@@ -2843,8 +2845,7 @@ void OrbitApp::OnThreadOrTimeRangeSelectionChange() {
   ORBIT_SCOPE_WITH_COLOR("OrbitApp::OnThreadOrTimeRangeSelectionChange", kOrbitColorLime);
   if (!HasCaptureData() || !absl::GetFlag(FLAGS_time_range_selection)) return;
 
-  ClearSelectionTabs();
-  ClearInspection();
+  main_window_->ClearCallstackInspection();
 
   uint32_t thread_id = data_manager_->selected_thread_id();
   bool has_time_range = data_manager_->GetSelectionTimeRange().has_value();
