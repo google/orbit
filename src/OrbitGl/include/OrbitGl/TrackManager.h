@@ -76,16 +76,12 @@ class TrackManager {
   VariableTrack* GetOrCreateVariableTrack(std::string_view name);
   AsyncTrack* GetOrCreateAsyncTrack(std::string_view name);
   FrameTrack* GetOrCreateFrameTrack(uint64_t function_id);
-  [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const {
-    return system_memory_track_.get();
-  }
+  [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const;
   [[nodiscard]] SystemMemoryTrack* CreateAndGetSystemMemoryTrack();
-  [[nodiscard]] CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
-    return cgroup_and_process_memory_track_.get();
-  }
+  [[nodiscard]] CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const;
   [[nodiscard]] CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
       std::string_view cgroup_name);
-  PageFaultsTrack* GetPageFaultsTrack() const { return page_faults_track_.get(); }
+  PageFaultsTrack* GetPageFaultsTrack() const;
   PageFaultsTrack* CreateAndGetPageFaultsTrack(std::string_view cgroup_name,
                                                uint64_t memory_sampling_period_ms);
 
@@ -103,31 +99,40 @@ class TrackManager {
   [[nodiscard]] int FindMovingTrackIndex();
   void UpdateMovingTrackPositionInVisibleTracks();
   void SortTracks();
-  [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
+  [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks()
+      ABSL_SHARED_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] std::vector<Track*> GetAllTracksInternal() const ABSL_SHARED_LOCKS_REQUIRED(mutex_);
+  ThreadTrack* GetOrCreateThreadTrackInternal(uint32_t tid) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Filter tracks that are already sorted in sorted_tracks_.
   void UpdateVisibleTrackList();
   void DeletePendingTracks();
 
-  void AddTrack(const std::shared_ptr<Track>& track);
+  void AddTrack(const std::shared_ptr<Track>& track) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
 
-  // TODO(b/174655559): Use absl's mutex here.
-  mutable std::recursive_mutex mutex_;
+  // This mutex is needed because two different threads will access the following containers. The
+  // capture thread will insert tracks and the main thread will read the tracks from the containers
+  // to generate the sorted list of visible tracks.
+  mutable absl::Mutex mutex_;
 
-  std::vector<std::shared_ptr<Track>> all_tracks_;
-  absl::flat_hash_map<uint32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
-  std::map<std::string, std::shared_ptr<AsyncTrack>, std::less<>> async_tracks_;
-  std::map<std::string, std::shared_ptr<VariableTrack>, std::less<>> variable_tracks_;
+  std::vector<std::shared_ptr<Track>> all_tracks_ ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<uint32_t, std::shared_ptr<ThreadTrack>> thread_tracks_
+      ABSL_GUARDED_BY(mutex_);
+  std::map<std::string, std::shared_ptr<AsyncTrack>, std::less<>> async_tracks_
+      ABSL_GUARDED_BY(mutex_);
+  std::map<std::string, std::shared_ptr<VariableTrack>, std::less<>> variable_tracks_
+      ABSL_GUARDED_BY(mutex_);
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.
-  std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
+  std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_ ABSL_GUARDED_BY(mutex_);
   // Mapping from function id to frame tracks.
-  std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
-  std::shared_ptr<SchedulerTrack> scheduler_track_;
-  std::shared_ptr<SystemMemoryTrack> system_memory_track_;
-  std::shared_ptr<CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
-  std::shared_ptr<PageFaultsTrack> page_faults_track_;
+  std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_ ABSL_GUARDED_BY(mutex_);
+  std::shared_ptr<SchedulerTrack> scheduler_track_ ABSL_GUARDED_BY(mutex_);
+  std::shared_ptr<SystemMemoryTrack> system_memory_track_ ABSL_GUARDED_BY(mutex_);
+  std::shared_ptr<CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_
+      ABSL_GUARDED_BY(mutex_);
+  std::shared_ptr<PageFaultsTrack> page_faults_track_ ABSL_GUARDED_BY(mutex_);
 
   // This intermediatly stores tracks that have been deleted from one of the track vectors above
   // so they can safely be removed from the list of sorted and visible tracks.
