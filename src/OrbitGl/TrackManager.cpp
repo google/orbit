@@ -32,6 +32,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitGl/ThreadTrack.h"
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TrackContainer.h"
 #include "OrbitGl/Viewport.h"
@@ -227,7 +228,8 @@ void TrackManager::DeletePendingTracks() {
 
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   std::vector<ThreadTrack*> sorted_tracks;
-  absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
+  absl::flat_hash_map<ThreadTrack*, std::tuple<size_t, uint32_t>>
+      num_timers_and_num_events_by_track;
   const CallstackData& callstack_data = capture_data_->GetCallstackData();
 
   for (auto& [tid, track] : thread_tracks_) {
@@ -235,15 +237,16 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
       continue;  // "kAllProcessThreadsTid" is handled separately.
     }
     sorted_tracks.push_back(track.get());
-    num_events_by_track[track.get()] = callstack_data.GetCallstackEventsOfTidCount(tid);
+    num_timers_and_num_events_by_track[track.get()] = std::make_tuple(
+        track->GetNumberOfTimers(), callstack_data.GetCallstackEventsOfTidCount(tid));
   }
 
   // Tracks with instrumented timers appear first, ordered by descending order of timers.
   // The remaining tracks appear after, ordered by descending order of callstack events.
   orbit_base::sort(
       sorted_tracks.begin(), sorted_tracks.end(),
-      [&num_events_by_track](ThreadTrack* track) {
-        return std::make_tuple(track->GetNumberOfTimers(), num_events_by_track[track]);
+      [&num_timers_and_num_events_by_track](ThreadTrack* track) {
+        return num_timers_and_num_events_by_track.at(track);
       },
       std::greater<>{});
 
