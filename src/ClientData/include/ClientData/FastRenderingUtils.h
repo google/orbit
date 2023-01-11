@@ -29,16 +29,11 @@ namespace orbit_client_data {
   uint64_t current_pixel = GetPixelNumber(current_timestamp_ns, resolution, start_ns, end_ns);
   uint64_t next_pixel = current_pixel + 1;
 
-  // Calculates `ceil(dividend / divisor)` only using integers assuming dividend and divisor are not
-  // 0.
-  const auto rounding_up_division = [](uint64_t dividend, uint64_t divisor) -> uint64_t {
-    return 1 + (dividend - 1) / divisor;
-  };
-
   uint64_t total_ns = end_ns - start_ns;
   // To calculate the timestamp of a pixel boundary, we make a cross-multiplication rounding_up to
-  // be consistent to how we calculate current_pixel.
-  uint64_t next_pixel_ns_from_min = rounding_up_division(total_ns * next_pixel, resolution);
+  // be consistent to how we calculate current_pixel. We use that `ceil(a/b) = 1 + (a - 1) / b`,
+  // assuming a, b are integers greater than 0.
+  uint64_t next_pixel_ns_from_min = 1 + (total_ns * next_pixel - 1) / resolution;
 
   return start_ns + next_pixel_ns_from_min;
 }
