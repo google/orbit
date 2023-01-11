@@ -17,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -52,7 +53,8 @@ class TrackManager {
   explicit TrackManager(TrackContainer* track_container, TimelineInfoInterface* timeline_info,
                         Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                         const orbit_client_data::ModuleManager* module_manager,
-                        orbit_client_data::CaptureData* capture_data);
+                        orbit_client_data::CaptureData* capture_data,
+                        std::thread::id thread_id = std::this_thread::get_id());
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] const std::vector<Track*>& GetVisibleTracks() const { return visible_tracks_; }
@@ -106,9 +108,13 @@ class TrackManager {
   // Filter tracks that are already sorted in sorted_tracks_.
   void UpdateVisibleTrackList();
   void DeletePendingTracks();
+  void InsertPendingFrameTracks();
 
   void AddTrack(const std::shared_ptr<Track>& track) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
+  void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  const std::thread::id main_thread_id_;
 
   // This mutex is needed because two different threads will access the following containers. The
   // capture thread will insert tracks and the main thread will read the tracks from the containers
@@ -134,22 +140,33 @@ class TrackManager {
       ABSL_GUARDED_BY(mutex_);
   std::shared_ptr<PageFaultsTrack> page_faults_track_ ABSL_GUARDED_BY(mutex_);
 
+  // This intermediatly stores inserted frame tracks. We want to make sure that frame tracks are
+  // inserted into the visible tracks during UpdateLayout() but as they could be added later by a
+  // user, we don't want to invalidate the sorting of the remaining tracks.
+  std::vector<std::shared_ptr<FrameTrack>> pending_frame_tracks_ ABSL_GUARDED_BY(mutex_);
+
   // This intermediatly stores tracks that have been deleted from one of the track vectors above
   // so they can safely be removed from the list of sorted and visible tracks.
   // This makes sure tracks are always removed during UpdateLayout(), so no elements retain
-  // stale pointers returned in GetAllChildren() or GetNonHiddenChildren().
+  // stale pointers returned in GetAllChildren() or GetNonHiddenChildren(). It should only be
+  // accessed by the main_thread.
   std::vector<std::shared_ptr<Track>> deleted_tracks_;
 
   Viewport* viewport_;
   TimeGraphLayout* layout_;
 
+  // While capturing, tracks are sorted internally into sorted_tracks_ using the function
+  // SortTracks(). After the capture is finished, addition and deletion of tracks won't trigger a
+  // reordering of the remaining tracks. visible_tracks_ is a subsequence of sorted_tracks_ filtered
+  // by the word in filter_ and the visibility of each track individually and its type_visibility.
+  // Both arrays should only be accessed by the main_thread_.
   std::vector<Track*> sorted_tracks_;
-  bool sorting_invalidated_ = false;
-  bool visible_track_list_needs_update_ = false;
   Timer last_thread_reorder_;
-
-  std::string filter_;
+  bool sorting_invalidated_ = false;
   std::vector<Track*> visible_tracks_;
+  std::string filter_;
+  bool visible_track_list_needs_update_ = false;
+  absl::flat_hash_map<Track::Type, bool> track_type_visibility_;
 
   const orbit_client_data::ModuleManager* module_manager_;
   orbit_client_data::CaptureData* capture_data_ = nullptr;
@@ -159,7 +176,6 @@ class TrackManager {
   TimelineInfoInterface* timeline_info_ = nullptr;
 
   bool data_from_saved_capture_ = false;
-  absl::flat_hash_map<Track::Type, bool> track_type_visibility_;
 };
 
 }  // namespace orbit_gl
