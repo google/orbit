@@ -4,7 +4,6 @@
 
 #include "ClientData/ModuleManager.h"
 
-#include <absl/container/node_hash_map.h>
 #include <absl/meta/type_traits.h>
 
 #include <algorithm>
