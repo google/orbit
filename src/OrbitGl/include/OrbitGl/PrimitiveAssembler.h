@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
 #define ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <algorithm>
