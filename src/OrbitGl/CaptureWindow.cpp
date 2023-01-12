@@ -489,7 +489,9 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 void CaptureWindow::Draw(QPainter* painter) {
   ORBIT_SCOPE("CaptureWindow::Draw");
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
-  bool time_graph_was_redrawn = time_graph_ != nullptr && time_graph_->IsRedrawNeeded();
+  bool update_primitives_was_needed =
+      time_graph_ != nullptr &&
+      time_graph_->GetRedrawTypeRequired() == TimeGraph::RedrawType::kUpdatePrimitives;
 
   text_renderer_.Init();
 
@@ -515,7 +517,7 @@ void CaptureWindow::Draw(QPainter* painter) {
 
   if (picking_mode_ == PickingMode::kNone) {
     double update_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
-    if (time_graph_was_redrawn) {
+    if (update_primitives_was_needed) {
       scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(update_duration_in_ms);
     } else {
       scoped_frame_times_[kTimingDraw]->PushTimeMs(update_duration_in_ms);
@@ -615,7 +617,9 @@ void CaptureWindow::RequestUpdatePrimitives() {
 }
 
 [[nodiscard]] bool CaptureWindow::IsRedrawNeeded() const {
-  return GlCanvas::IsRedrawNeeded() || (time_graph_ != nullptr && time_graph_->IsRedrawNeeded());
+  return GlCanvas::IsRedrawNeeded() ||
+         (time_graph_ != nullptr &&
+          time_graph_->GetRedrawTypeRequired() != TimeGraph::RedrawType::kNone);
 }
 
 std::string CaptureWindow::GetCaptureInfo() const {
