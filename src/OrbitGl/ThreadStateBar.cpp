@@ -328,18 +328,21 @@ void ThreadStateBar::OnPick(int x, int y) {
   Vec2 world_coords = viewport_->ScreenToWorld(Vec2i(x, y));
   std::optional<ThreadStateSliceInfo> clicked_slice = FindSliceFromWorldCoords(world_coords);
   app_->set_selected_thread_state_slice(clicked_slice);
+  RequestUpdate(RequestUpdateScope::kDrawAndUpdatePrimitives);
 }
 
 EventResult ThreadStateBar::OnMouseMove(const Vec2& mouse_pos) {
   EventResult event_result = CaptureViewElement::OnMouseMove(mouse_pos);
   std::optional<ThreadStateSliceInfo> hovered_slice = FindSliceFromWorldCoords(mouse_pos);
   app_->set_hovered_thread_state_slice(hovered_slice);
+  RequestUpdate(RequestUpdateScope::kDrawAndUpdatePrimitives);
   return event_result;
 }
 
 EventResult ThreadStateBar::OnMouseLeave() {
   EventResult event_result = CaptureViewElement::OnMouseLeave();
   app_->set_hovered_thread_state_slice(std::nullopt);
+  RequestUpdate(RequestUpdateScope::kDrawAndUpdatePrimitives);
   return event_result;
 }
 
