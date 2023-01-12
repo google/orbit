@@ -5,7 +5,9 @@
 #ifndef ORBIT_GL_TRACK_MANAGER_H_
 #define ORBIT_GL_TRACK_MANAGER_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/synchronization/mutex.h>
 #include <stdint.h>
 #include <stdlib.h>
 
