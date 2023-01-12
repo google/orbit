@@ -61,7 +61,6 @@ target_sources(ClientData PRIVATE
         CallstackType.cpp
         CaptureData.cpp
         DataManager.cpp
-        FastRenderingUtils.cpp
         FunctionInfo.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
