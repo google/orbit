@@ -62,7 +62,7 @@ if (-not (conan_profile_exists $build_profile)) {
 }
 
 
-$profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
+$profiles = if ($args.Count) { $args } else { @("default_release") }
 
 foreach ($profile in $profiles) {
 

@@ -15,7 +15,7 @@ fi
 
 readonly CONAN
 
-default_profiles=( default_relwithdebinfo )
+default_profiles=( default_release )
 
 if [ "$#" -eq 0 ]; then
   profiles=( "${default_profiles[@]}" )
