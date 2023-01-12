@@ -25,6 +25,11 @@ class MockExecutor : public orbit_base::Executor {
   [[nodiscard]] static std::shared_ptr<MockExecutor> Create() {
     return std::make_shared<MockExecutor>();
   }
+
+  [[nodiscard]] Handle GetExecutorHandle() const override { return handle_.Get(); }
+
+ private:
+  ScopedHandle handle_{this};
 };
 
 // Since testing::SaveArg can't deal with move-only arguments we define our own helper here.
@@ -178,11 +183,13 @@ TEST(Executor, ScheduleAfterIfSuccessCallOnSuccessInt) {
 }
 
 TEST(Executor, TryScheduleFailing) {
-  std::weak_ptr<Executor> executor{};
+  // The executor constructed by `MockExecutor::Create()` is a temporary, so it will go out of scope
+  // after this line and the handle will become invalid - just what we want for this test.
+  Executor::Handle handle = MockExecutor::Create()->GetExecutorHandle();
 
   bool called = false;
   std::optional<orbit_base::Future<void>> result =
-      TrySchedule(executor, [&called]() { called = true; });
+      TrySchedule(handle, [&called]() { called = true; });
 
   EXPECT_FALSE(result.has_value());
   EXPECT_FALSE(called);
@@ -194,7 +201,8 @@ TEST(Executor, TrySchedule) {
   EXPECT_CALL(*executor, ScheduleImpl(testing::_)).Times(1).WillOnce(SaveUniquePtr(&action));
 
   bool called = false;
-  auto future_or_nullopt = TrySchedule(executor->weak_from_this(), [&called]() { called = true; });
+  auto future_or_nullopt =
+      TrySchedule(executor->GetExecutorHandle(), [&called]() { called = true; });
   ASSERT_TRUE(future_or_nullopt.has_value());
   EXPECT_FALSE(future_or_nullopt->IsFinished());
 

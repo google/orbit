@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_base {
@@ -46,6 +47,7 @@ class ThreadPoolImpl : public ThreadPool {
 
  private:
   void ScheduleImpl(std::unique_ptr<Action> action) override;
+  [[nodiscard]] Handle GetExecutorHandle() const override { return executor_handle_.Get(); }
   bool ActionsAvailableOrShutdownInitiated();
   // Blocking call - returns nullptr if the worker thread needs to exit.
   std::unique_ptr<Action> TakeAction();
@@ -67,6 +69,8 @@ class ThreadPoolImpl : public ThreadPool {
   size_t idle_threads_;
   bool shutdown_initiated_;
   std::function<void(const std::unique_ptr<Action>&)> run_action_ = nullptr;
+
+  Executor::ScopedHandle executor_handle_{this};
 };
 
 ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,

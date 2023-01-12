@@ -26,6 +26,7 @@ class SimpleExecutor : public Executor {
   explicit SimpleExecutor() = default;
 
   void ScheduleImpl(std::unique_ptr<Action> action) override;
+  [[nodiscard]] Handle GetExecutorHandle() const override { return executor_handle_.Get(); }
 
  public:
   void ExecuteScheduledTasks();
@@ -35,6 +36,7 @@ class SimpleExecutor : public Executor {
  private:
   absl::Mutex mutex_;
   std::deque<std::unique_ptr<Action>> scheduled_tasks_ ABSL_GUARDED_BY(mutex_);
+  Executor::ScopedHandle executor_handle_{this};
 };
 
 }  // namespace orbit_base

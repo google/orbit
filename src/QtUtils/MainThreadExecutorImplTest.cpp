@@ -153,14 +153,16 @@ TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
 
 TEST(MainThreadExecutorImpl, TrySchedule) {
   auto executor = MainThreadExecutorImpl::Create();
-  const auto result = TrySchedule(executor, []() { QCoreApplication::exit(42); });
+  const auto result =
+      TrySchedule(executor->GetExecutorHandle(), []() { QCoreApplication::exit(42); });
 
   EXPECT_TRUE(result.has_value());
   EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
-TEST(MainThreadExecutorImpl, TryScheduleWithInvalidWeakPtr) {
-  const auto result = TrySchedule(std::weak_ptr<MainThreadExecutor>{}, []() {});
+TEST(MainThreadExecutorImpl, TryScheduleFailing) {
+  MainThreadExecutorImpl::Handle handle = MainThreadExecutorImpl::Create()->GetExecutorHandle();
+  const auto result = TrySchedule(handle, []() {});
   EXPECT_FALSE(result.has_value());
 }
 
