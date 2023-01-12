@@ -275,4 +275,47 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   ASSERT_DEATH(batcher.PopTranslation(), "Check failed");
 }
 
+// Verifies the correctness of the required memory reported by the batcher
+// This test depends a lot on internal knowledge of the batcher and blockchain
+// structure - it may be fine to deactivate it at some point in the future
+// when we change the Batcher, but for now it helps to assure we're tracking
+// and reporting memory allocations correctly.
+TEST(OpenGlBatcher, ReservedMemoryIsReportedCorrectly) {
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
+
+  const size_t kExpectedBoxBlockSize =
+      orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * (sizeof(Quad) + 8 * sizeof(Color));
+  const size_t kExpectedLineBlockSize =
+      orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * (sizeof(Line) + 4 * sizeof(Color));
+  const size_t kExpectedTriangleBlockSize =
+      orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK *
+      (sizeof(Triangle) + 6 * sizeof(Color));
+
+  EXPECT_EQ(batcher.GetReservedMemorySize(), 0);
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255));
+
+  size_t total_size = kExpectedBoxBlockSize + kExpectedLineBlockSize + kExpectedTriangleBlockSize;
+  // This should have added a block in the box blockchain for the box geometry, picking color, and
+  // regular color However, the block chain directly allocates the first block for all types of
+  // geometry, so we also expect the lines and triangle blocks to exist.
+  EXPECT_EQ(batcher.GetReservedMemorySize(), total_size);
+
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
+  batcher.AddTriangleHelper(Triangle(Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)), 0, Color(0, 255, 0, 255));
+
+  // Adding a line and a triangle should only use the already existing blocks
+  EXPECT_EQ(batcher.GetReservedMemorySize(), total_size);
+
+  // Adding more boxes should eventually require a second block
+  for (int i = 0; i < orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK; ++i) {
+    batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255));
+  }
+  total_size += kExpectedBoxBlockSize;
+  EXPECT_EQ(batcher.GetReservedMemorySize(), total_size);
+
+  // Reset does actually not clear the memory
+  batcher.ResetElements();
+  EXPECT_EQ(batcher.GetReservedMemorySize(), total_size);
+}
+
 }  // namespace orbit_gl

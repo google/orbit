@@ -201,4 +201,36 @@ const PickingUserData* OpenGlBatcher::GetUserData(PickingId id) const {
   ORBIT_UNREACHABLE();
 }
 
+namespace {
+template <class T, uint32_t size>
+size_t CalculateBlockChainMemory(const orbit_containers::BlockChain<T, size>& chain) {
+  size_t result = 0;
+
+  auto block = chain.root();
+  while (block != nullptr) {
+    result += size * sizeof(T);
+    block = block->next();
+  }
+
+  return result;
+}
+}  // namespace
+
+[[nodiscard]] size_t OpenGlBatcher::GetReservedMemorySize() const {
+  size_t result = 0;
+  for (auto& layer : primitive_buffers_by_layer_) {
+    result += CalculateBlockChainMemory(layer.second.box_buffer.boxes_);
+    result += CalculateBlockChainMemory(layer.second.box_buffer.picking_colors_);
+    result += CalculateBlockChainMemory(layer.second.box_buffer.colors_);
+    result += CalculateBlockChainMemory(layer.second.line_buffer.lines_);
+    result += CalculateBlockChainMemory(layer.second.line_buffer.picking_colors_);
+    result += CalculateBlockChainMemory(layer.second.line_buffer.colors_);
+    result += CalculateBlockChainMemory(layer.second.triangle_buffer.triangles_);
+    result += CalculateBlockChainMemory(layer.second.triangle_buffer.picking_colors_);
+    result += CalculateBlockChainMemory(layer.second.triangle_buffer.colors_);
+  }
+
+  return result;
+}
+
 }  // namespace orbit_gl
