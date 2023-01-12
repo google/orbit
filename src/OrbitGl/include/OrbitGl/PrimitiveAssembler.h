@@ -61,11 +61,9 @@ class PrimitiveAssembler {
   void PushTranslation(float x, float y, float z = 0.f) { batcher_->PushTranslation(x, y, z); }
   void PopTranslation() { batcher_->PopTranslation(); }
 
-  void AddLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-  [[nodiscard]] size_t GetReservedMemorySize() const {
-    return batcher_->GetReservedMemorySize(); };
+  [[nodiscard]] size_t GetReservedMemorySize() const { return batcher_->GetReservedMemorySize(); };
 
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
+  void AddLine(const Vec2& from, const Vec2& to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddVerticalLine(const Vec2& pos, float size, float z, const Color& color,
                        std::unique_ptr<PickingUserData> user_data = nullptr);
