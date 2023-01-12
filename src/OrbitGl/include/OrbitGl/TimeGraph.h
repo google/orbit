@@ -142,9 +142,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
 
-  enum class RedrawType {
-    kNone, kDraw, kUpdatePrimitives
-  };
+  enum class RedrawType { kNone, kDraw, kUpdatePrimitives };
 
   [[nodiscard]] RedrawType GetRedrawTypeRequired() const {
     if (update_primitives_requested_) return RedrawType::kUpdatePrimitives;
