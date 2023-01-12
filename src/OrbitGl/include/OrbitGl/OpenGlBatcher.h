@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <QOpenGLFunctions>
