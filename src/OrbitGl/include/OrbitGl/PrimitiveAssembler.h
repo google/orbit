@@ -62,7 +62,8 @@ class PrimitiveAssembler {
   void PopTranslation() { batcher_->PopTranslation(); }
 
   void AddLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-  [[nodiscard]] size_t GetReservedMemorySize() const { return batcher_->GetReservedMemorySize(); };
+  [[nodiscard]] size_t GetReservedMemorySize() const {
+    return batcher_->GetReservedMemorySize(); };
 
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -126,7 +127,8 @@ class PrimitiveAssembler {
 
   void StartNewFrame();
 
-  [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
+  [[nodiscard]] PickingManager* GetPickingManager() const {
+    return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
     return batcher_->GetUserData(id);
   }
@@ -135,7 +137,8 @@ class PrimitiveAssembler {
   static constexpr uint32_t kNumArcSides = 16;
 
  private:
-  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
+  [[nodiscard]] BatcherId GetBatcherId() const {
+    return batcher_->GetBatcherId(); }
 
   void AddBottomLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
   void AddTopLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);

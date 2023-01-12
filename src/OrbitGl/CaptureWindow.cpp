@@ -670,8 +670,9 @@ std::string CaptureWindow::GetPerformanceInfo() const {
                           item.second->GetMaxTimeMs());
   }
   if (time_graph_ != nullptr) {
-    absl::StrAppendFormat(&performance_info, "TimeGraph Batcher Memory: %.2f MB\n", 
-      static_cast<float>(time_graph_->GetBatcher().GetReservedMemorySize()) / 1024 / 1024);
+    absl::StrAppendFormat(
+        &performance_info, "TimeGraph Batcher Memory: %.2f MB\n",
+        static_cast<float>(time_graph_->GetBatcher().GetReservedMemorySize()) / 1024 / 1024);
   }
   return performance_info;
 }

@@ -283,17 +283,21 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
 TEST(OpenGlBatcher, ReservedMemoryIsReportedCorrectly) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
 
-  const size_t kExpectedBoxBlockSize = orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * (sizeof(Quad) + 8 * sizeof(Color));
-  const size_t kExpectedLineBlockSize = orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * (sizeof(Line) + 4 * sizeof(Color));
-  const size_t kExpectedTriangleBlockSize = orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * (sizeof(Triangle) + 6 * sizeof(Color));
+  const size_t kExpectedBoxBlockSize =
+      orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * (sizeof(Quad) + 8 * sizeof(Color));
+  const size_t kExpectedLineBlockSize =
+      orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * (sizeof(Line) + 4 * sizeof(Color));
+  const size_t kExpectedTriangleBlockSize =
+      orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK *
+      (sizeof(Triangle) + 6 * sizeof(Color));
 
   EXPECT_EQ(batcher.GetReservedMemorySize(), 0);
   batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255));
 
   size_t total_size = kExpectedBoxBlockSize + kExpectedLineBlockSize + kExpectedTriangleBlockSize;
-  // This should have added a block in the box blockchain for the box geometry, picking color, and regular color
-  // However, the block chain directly allocates the first block for all types of geometry,
-  // so we also expect the lines and triangle blocks to exist.
+  // This should have added a block in the box blockchain for the box geometry, picking color, and
+  // regular color However, the block chain directly allocates the first block for all types of
+  // geometry, so we also expect the lines and triangle blocks to exist.
   EXPECT_EQ(batcher.GetReservedMemorySize(), total_size);
 
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
