@@ -125,8 +125,7 @@ class PrimitiveAssembler {
 
   void StartNewFrame();
 
-  [[nodiscard]] PickingManager* GetPickingManager() const {
-    return picking_manager_; }
+  [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
     return batcher_->GetUserData(id);
   }
@@ -135,8 +134,7 @@ class PrimitiveAssembler {
   static constexpr uint32_t kNumArcSides = 16;
 
  private:
-  [[nodiscard]] BatcherId GetBatcherId() const {
-    return batcher_->GetBatcherId(); }
+  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
 
   void AddBottomLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
   void AddTopLeftRoundedCorner(const Vec2& pos, float radius, float z, const Color& color);
