@@ -46,8 +46,9 @@ namespace orbit_gl {
 TrackManager::TrackManager(TrackContainer* track_container, TimelineInfoInterface* timeline_info,
                            Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                            const orbit_client_data::ModuleManager* module_manager,
-                           orbit_client_data::CaptureData* capture_data, std::thread::id thread_id)
-    : main_thread_id_(thread_id),
+                           orbit_client_data::CaptureData* capture_data,
+                           std::thread::id main_thread_id)
+    : main_thread_id_(main_thread_id),
       viewport_(viewport),
       layout_(layout),
       module_manager_(module_manager),

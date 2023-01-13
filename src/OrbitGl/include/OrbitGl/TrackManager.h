@@ -54,7 +54,7 @@ class TrackManager {
                         Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                         const orbit_client_data::ModuleManager* module_manager,
                         orbit_client_data::CaptureData* capture_data,
-                        std::thread::id thread_id = std::this_thread::get_id());
+                        std::thread::id main_thread_id = std::this_thread::get_id());
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] const std::vector<Track*>& GetVisibleTracks() const { return visible_tracks_; }
