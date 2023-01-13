@@ -32,8 +32,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
  public:
   explicit SamplingReport(
       OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
-      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
-      bool has_summary = true);
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
   void UpdateReport(
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
@@ -54,7 +53,6 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
   [[nodiscard]] bool HasSamples() const { return !thread_data_views_.empty(); }
   [[nodiscard]] double ComputeUnwindErrorRatio(uint32_t thread_id) const;
-  [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
   [[nodiscard]] const orbit_client_data::CallstackData& GetCallstackData() const override;
   [[nodiscard]] std::optional<absl::flat_hash_set<uint64_t>> GetSelectedCallstackIds()
@@ -78,7 +76,6 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
       nullptr;
   size_t selected_callstack_index_ = 0;
   std::function<void()> ui_refresh_func_;
-  bool has_summary_;
 };
 
 #endif  // ORBIT_GL_SAMPLING_REPORT_H_

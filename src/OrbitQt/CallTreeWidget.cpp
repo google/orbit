@@ -754,34 +754,20 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
         GetCallstackEventsUnderSelection(selected_tree_indices);
     ORBIT_CHECK(!selected_callstack_events.empty());
-    bool origin_is_multiple_threads =
-        std::any_of(selected_callstack_events.begin(), selected_callstack_events.end(),
-                    [first_callstack_event = *selected_callstack_events.begin()](
-                        const orbit_client_data::CallstackEvent& callstack_event) -> bool {
-                      return callstack_event.thread_id() != first_callstack_event.thread_id();
-                    });
     app_->InspectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::InspectCallstackEvents as simple as it is now.
         std::vector<orbit_client_data::CallstackEvent>{selected_callstack_events.begin(),
-                                                       selected_callstack_events.end()},
-        origin_is_multiple_threads);
+                                                       selected_callstack_events.end()});
   } else if (action->text() == kActionSelectCallstacks) {
     absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
         GetCallstackEventsUnderSelection(selected_tree_indices);
     ORBIT_CHECK(!selected_callstack_events.empty());
-    bool origin_is_multiple_threads =
-        std::any_of(selected_callstack_events.begin(), selected_callstack_events.end(),
-                    [first_callstack_event = *selected_callstack_events.begin()](
-                        const orbit_client_data::CallstackEvent& callstack_event) -> bool {
-                      return callstack_event.thread_id() != first_callstack_event.thread_id();
-                    });
     app_->SelectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::SelectCallstackEvents as simple as it is now.
         std::vector<orbit_client_data::CallstackEvent>{selected_callstack_events.begin(),
-                                                       selected_callstack_events.end()},
-        origin_is_multiple_threads);
+                                                       selected_callstack_events.end()});
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(BuildStringFromIndices(
         ui_->callTreeTreeView, ui_->callTreeTreeView->selectionModel()->selectedIndexes()));
