@@ -38,8 +38,7 @@ ConnectToTargetDialog::ConnectToTargetDialog(SshConnectionArtifacts* ssh_connect
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::ConnectToTargetDialog>()),
       ssh_connection_artifacts_(ssh_connection_artifacts),
-      target_(target),
-      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
+      target_(target) {
   ORBIT_CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
@@ -51,7 +50,7 @@ ConnectToTargetDialog::ConnectToTargetDialog(SshConnectionArtifacts* ssh_connect
   setFixedSize(window()->sizeHint());
 }
 
-ConnectToTargetDialog::~ConnectToTargetDialog() {}
+ConnectToTargetDialog::~ConnectToTargetDialog() = default;
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   const std::string status_message =
@@ -64,7 +63,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   // The call to `DeployOrbitServiceAndSetupProcessManager` is scheduled on the
   // main thread, so it happens after the dialog is shown (via call to `Exec`).
-  main_thread_executor_->Schedule([this]() {
+  main_thread_executor_.Schedule([this]() {
     ErrorMessageOr<void> deploy_result = DeployOrbitServiceAndSetupProcessManager();
     if (deploy_result.has_error()) {
       LogAndDisplayError(deploy_result.error());

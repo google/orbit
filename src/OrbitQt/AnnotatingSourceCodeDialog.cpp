@@ -33,7 +33,7 @@ void AnnotatingSourceCodeDialog::AddAnnotatingSourceCode(
 
   ORBIT_CHECK(function_info_.has_value());
   retrieve_module_with_debug_info_(function_info_->module_id())
-      .Then(main_thread_executor_.get(),
+      .Then(&main_thread_executor_,
             [this](const ErrorMessageOr<std::filesystem::path>& local_file_path_or_error) {
               HandleDebugInfo(local_file_path_or_error);
             });

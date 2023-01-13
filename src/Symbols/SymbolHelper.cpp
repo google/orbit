@@ -186,7 +186,7 @@ SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
 
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, std::string_view build_id,
-    const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) const {
+    const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) {
   ORBIT_SCOPE_FUNCTION;
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
@@ -196,7 +196,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
   // structured debug directories is only supported for elf files
   if (object_file_type == ModuleInfo::kElfFile) {
-    for (const auto& provider : structured_debug_directory_providers_) {
+    for (auto& provider : structured_debug_directory_providers_) {
       const ModuleIdentifier module_id{module_path.string(), std::string{build_id}};
       const orbit_base::StopSource stop_source;
       orbit_base::Future<SymbolLoadingOutcome> future =

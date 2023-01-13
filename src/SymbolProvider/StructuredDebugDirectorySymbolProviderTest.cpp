@@ -32,8 +32,8 @@ class StructuredDebugDirectorySymbolProviderTest : public ::testing::Test {
       : symbol_provider_(orbit_test::GetTestdataDir() / "debugstore", kSymbolSource) {}
 
  protected:
-  const StructuredDebugDirectorySymbolProvider symbol_provider_;
-  const orbit_base::StopSource stop_source_;
+  StructuredDebugDirectorySymbolProvider symbol_provider_;
+  orbit_base::StopSource stop_source_;
 };
 
 TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsSuccessfully) {

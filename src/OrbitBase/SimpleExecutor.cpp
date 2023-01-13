@@ -30,9 +30,4 @@ void SimpleExecutor::ExecuteScheduledTasks() {
     scheduled_tasks_.pop_front();
   }
 }
-
-std::shared_ptr<SimpleExecutor> SimpleExecutor::Create() {
-  // NOLINTNEXTLINE
-  return std::shared_ptr<SimpleExecutor>{new SimpleExecutor{}};
-}
 }  // namespace orbit_base

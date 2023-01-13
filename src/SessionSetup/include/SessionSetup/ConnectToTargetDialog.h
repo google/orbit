@@ -46,10 +46,11 @@ class ConnectToTargetDialog : public QDialog {
   SshConnectionArtifacts* ssh_connection_artifacts_;
   ConnectionTarget target_;
 
-  std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
-
   std::optional<orbit_session_setup::SshConnection> ssh_connection_;
   std::optional<TargetConfiguration> target_configuration_;
+
+  // Keep the executor at the bottom of the members, so that it's destructed first!
+  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_;
 
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
 

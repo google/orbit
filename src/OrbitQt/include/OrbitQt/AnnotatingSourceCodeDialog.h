@@ -91,8 +91,6 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   RetrieveModuleWithDebugInfoCallback retrieve_module_with_debug_info_;
 
   std::chrono::steady_clock::time_point starting_time_ = std::chrono::steady_clock::now();
-  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_ =
-      orbit_qt_utils::MainThreadExecutorImpl::Create();
 
   enum class ButtonAction { kNone, kChooseFile, kAddAnnotations, kHide };
   ButtonAction awaited_button_action_ = ButtonAction::kNone;
@@ -101,6 +99,9 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   std::unique_ptr<orbit_object_utils::ElfFile> elf_file_;
   orbit_grpc_protos::LineInfo location_info_;
   std::vector<orbit_code_report::AnnotatingLine> annotations_;
+
+  // Keep the executor at the bottom of the list of members, so that it's destroyed first.
+  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_{};
 };
 
 // This function opens the given dialog and ensures it is deleted when closed.
