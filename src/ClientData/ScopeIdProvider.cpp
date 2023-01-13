@@ -67,23 +67,8 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::FunctionIdToScopeId(
   return ScopeId(function_id);
 }
 
-[[nodiscard]] static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
-  switch (timer.type()) {
-    case TimerInfo::kNone:
-      return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
-                 ? ScopeType::kDynamicallyInstrumentedFunction
-                 : ScopeType::kInvalid;
-    case TimerInfo::kApiScope:
-      return ScopeType::kApiScope;
-    case TimerInfo::kApiScopeAsync:
-      return ScopeType::kApiScopeAsync;
-    default:
-      return ScopeType::kInvalid;
-  }
-}
-
 std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
-  const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
+  const ScopeType scope_type = kScopeTypeFromTimerInfo(timer_info);
 
   if (scope_type == ScopeType::kInvalid) return std::nullopt;
 
