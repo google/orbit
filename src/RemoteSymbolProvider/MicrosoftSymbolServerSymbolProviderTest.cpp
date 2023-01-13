@@ -22,7 +22,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
@@ -92,7 +92,7 @@ class MicrosoftSymbolServerSymbolProviderTest : public testing::Test {
  protected:
   const orbit_symbols::MockSymbolCache symbol_cache_;
   MicrosoftSymbolServerSymbolProvider symbol_provider_;
-  orbit_qt_utils::MainThreadExecutorImpl executor_;
+  orbit_qt_utils::MainThreadExecutor executor_;
 
  private:
   orbit_http::MockDownloadManager download_manager_;

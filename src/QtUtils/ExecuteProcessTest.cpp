@@ -23,7 +23,7 @@
 #include "OrbitBase/Result.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "QtUtils/ExecuteProcess.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_qt_utils {
@@ -34,7 +34,7 @@ using orbit_test_utils::HasValue;
 
 TEST(QtUtilsExecuteProcess, ProgramNotFound) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   Future<ErrorMessageOr<QByteArray>> future =
       ExecuteProcess("non_existing_process", QStringList{}, QCoreApplication::instance());
@@ -56,7 +56,7 @@ TEST(QtUtilsExecuteProcess, ProgramNotFound) {
 
 TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -79,7 +79,7 @@ TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
 
 TEST(QtUtilsExecuteProcess, Succeeds) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -103,7 +103,7 @@ TEST(QtUtilsExecuteProcess, Succeeds) {
 
 TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -127,7 +127,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithoutParent) {
 
 TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -152,7 +152,7 @@ TEST(QtUtilsExecuteProcess, SucceedsWithSleep) {
 
 TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -179,7 +179,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
 
 TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -206,7 +206,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
 
 TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -236,7 +236,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
 
 TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -267,7 +267,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
 
 TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -303,7 +303,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
 
 TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());
@@ -342,7 +342,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
 
 TEST(QtUtilsExecuteProcess, TimeoutAndParentGetsDeletedRace) {
   AssertNoQtLogWarnings message_handler{};
-  MainThreadExecutorImpl mte{};
+  MainThreadExecutor mte{};
 
   QString program =
       QString::fromStdString((orbit_base::GetExecutableDir() / "FakeCliProgram").string());

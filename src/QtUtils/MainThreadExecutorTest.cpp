@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2023 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,25 +19,22 @@
 
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
-
-using orbit_base::MainThreadExecutor;
+#include "QtUtils/MainThreadExecutor.h"
 
 namespace orbit_qt_utils {
 
-TEST(MainThreadExecutorImpl, Schedule) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, Schedule) {
+  MainThreadExecutor executor{};
   executor.Schedule([]() { QCoreApplication::exit(42); });
 
   EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
+TEST(MainThreadExecutor, ScheduleAfterAllVoid) {
   bool called = false;
-  MainThreadExecutorImpl executor{};
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([&called]() { called = true; });
   executor.ScheduleAfter(future, []() { QCoreApplication::exit(42); });
 
@@ -45,9 +42,9 @@ TEST(MainThreadExecutorImpl, ScheduleAfterAllVoid) {
   EXPECT_TRUE(called);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterCleansUpWaitingContinuations) {
+TEST(MainThreadExecutor, ScheduleAfterCleansUpWaitingContinuations) {
   bool called = false;
-  MainThreadExecutorImpl executor{};
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([&called]() { called = true; });
   executor.ScheduleAfter(future, []() { QCoreApplication::exit(42); });
 
@@ -55,16 +52,16 @@ TEST(MainThreadExecutorImpl, ScheduleAfterCleansUpWaitingContinuations) {
   EXPECT_EQ(executor.GetNumberOfWaitingContinuations(), 0);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerBetweenJobs) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterWithIntegerBetweenJobs) {
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([]() { return 42; });
   executor.ScheduleAfter(future, [](int val) { QCoreApplication::exit(val); });
 
   EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs) {
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([]() { return 42; });
   auto future2 = executor.ScheduleAfter(future, [](int val) {
     QCoreApplication::exit(val);
@@ -76,9 +73,9 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerAsFinalResultAndBetweenJobs
   EXPECT_EQ(future2.Get(), 42 + 42);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerOnlyAsFinalResult) {
+TEST(MainThreadExecutor, ScheduleAfterWithIntegerOnlyAsFinalResult) {
   bool called = false;
-  MainThreadExecutorImpl executor{};
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([&called]() { called = true; });
   auto future2 = executor.ScheduleAfter(future, []() {
     QCoreApplication::exit(42);
@@ -91,8 +88,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithIntegerOnlyAsFinalResult) {
   EXPECT_TRUE(called);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterMultipleContinuations) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterMultipleContinuations) {
+  MainThreadExecutor executor{};
   auto future = executor.Schedule([]() { return 42; });
   auto future2 = executor.ScheduleAfter(future, [](int val) {
     EXPECT_EQ(val, 42);
@@ -110,14 +107,14 @@ TEST(MainThreadExecutorImpl, ScheduleAfterMultipleContinuations) {
   EXPECT_EQ(QCoreApplication::exec(), 4 * 42);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
+TEST(MainThreadExecutor, ScheduleAfterWithExecutorOutOfScope) {
   orbit_base::Promise<void> promise;
   orbit_base::Future<void> future = promise.GetFuture();
 
   bool destructor_called = false;
   bool called = false;
   {
-    MainThreadExecutorImpl executor{};
+    MainThreadExecutor executor{};
 
     const auto deleter = [&destructor_called](const int* ptr) {
       destructor_called = true;
@@ -139,8 +136,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterWithExecutorOutOfScope) {
   EXPECT_FALSE(called);
 }
 
-TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ChainFuturesWithThen) {
+  MainThreadExecutor executor{};
   const auto future = executor.Schedule([]() { return 42; });
   const auto future2 = future.Then(&executor, [](int val) {
     QCoreApplication::exit(val);
@@ -152,8 +149,8 @@ TEST(MainThreadExecutorImpl, ChainFuturesWithThen) {
   EXPECT_EQ(future2.Get(), 42 + 42);
 }
 
-TEST(MainThreadExecutorImpl, TrySchedule) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, TrySchedule) {
+  MainThreadExecutor executor{};
   const auto result =
       TrySchedule(executor.GetExecutorHandle(), []() { QCoreApplication::exit(42); });
 
@@ -161,14 +158,14 @@ TEST(MainThreadExecutorImpl, TrySchedule) {
   EXPECT_EQ(QCoreApplication::exec(), 42);
 }
 
-TEST(MainThreadExecutorImpl, TryScheduleFailing) {
-  orbit_base::Executor::Handle handle = MainThreadExecutorImpl{}.GetExecutorHandle();
+TEST(MainThreadExecutor, TryScheduleFailing) {
+  orbit_base::Executor::Handle handle = MainThreadExecutor{}.GetExecutorHandle();
   const auto result = TrySchedule(handle, []() {});
   EXPECT_FALSE(result.has_value());
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorVoid) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterIfSuccessShortCircuitOnErrorVoid) {
+  MainThreadExecutor executor{};
   bool called = false;
   orbit_base::Promise<ErrorMessageOr<void>> promise{};
   auto future = promise.GetFuture();
@@ -185,8 +182,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorVoid) {
   EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
+  MainThreadExecutor executor{};
   bool called = false;
   orbit_base::Promise<ErrorMessageOr<int>> promise{};
   auto future = promise.GetFuture();
@@ -207,8 +204,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
   EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessVoid) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterIfSuccessCallOnSuccessVoid) {
+  MainThreadExecutor executor{};
   bool called = false;
   orbit_base::Promise<ErrorMessageOr<void>> promise{};
   auto future = promise.GetFuture();
@@ -223,8 +220,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessVoid) {
   EXPECT_FALSE(chained_future.Get().has_error());
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessInt) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterIfSuccessCallOnSuccessInt) {
+  MainThreadExecutor executor{};
   bool called = false;
   orbit_base::Promise<ErrorMessageOr<int>> promise{};
   auto future = promise.GetFuture();
@@ -244,8 +241,8 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessCallOnSuccessInt) {
   EXPECT_EQ(chained_future.Get().value(), 43);
 }
 
-TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessTwice) {
-  MainThreadExecutorImpl executor{};
+TEST(MainThreadExecutor, ScheduleAfterIfSuccessTwice) {
+  MainThreadExecutor executor{};
 
   bool first_called = false;
   orbit_base::Promise<ErrorMessageOr<int>> promise{};
@@ -275,100 +272,6 @@ TEST(MainThreadExecutorImpl, ScheduleAfterIfSuccessTwice) {
   EXPECT_TRUE(second_chained_future.IsFinished());
   EXPECT_FALSE(second_chained_future.Get().has_error());
   EXPECT_EQ(second_chained_future.Get().value(), "The number is 42");
-}
-
-TEST(MainThreadExecutorImpl, WaitForNoTimeout) {
-  MainThreadExecutorImpl executor{};
-  orbit_base::Future<void> future = executor.Schedule([]() {});
-  EXPECT_EQ(executor.WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForWithTimeout) {
-  MainThreadExecutorImpl executor{};
-  orbit_base::Future<void> future = executor.Schedule([]() {});
-  EXPECT_EQ(executor.WaitFor(future, std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForNoTimeoutCompletedFutures) {
-  MainThreadExecutorImpl executor{};
-  orbit_base::Future<void> future{};  // Constructs completed future
-  EXPECT_EQ(executor.WaitFor(future), MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForWithTimeoutCompletedFutures) {
-  MainThreadExecutorImpl executor{};
-  orbit_base::Future<void> future{};  // Constructs completed future
-  EXPECT_EQ(executor.WaitFor(future, std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForWithExceedingTimeout) {
-  MainThreadExecutorImpl executor{};
-  // We will never mark that promise as finished, so we would wait forever if waiting didn't time
-  // out.
-  orbit_base::Promise<void> promise{};
-  EXPECT_EQ(executor.WaitFor(promise.GetFuture(), std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kTimedOut);
-}
-
-TEST(MainThreadExecutorImpl, WaitForWithAbort) {
-  MainThreadExecutorImpl executor{};
-  // We will never mark that promise as finished, so we would wait forever if waiting wasn't
-  // aborted.
-  orbit_base::Promise<void> promise{};
-  executor.Schedule([&]() { executor.AbortWaitingJobs(); });
-  EXPECT_EQ(executor.WaitFor(promise.GetFuture()), MainThreadExecutor::WaitResult::kAborted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllNoTimeout) {
-  MainThreadExecutorImpl executor{};
-  std::array futures = {executor.Schedule([]() {}), executor.Schedule([]() {})};
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures)),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllWithTimeout) {
-  MainThreadExecutorImpl executor{};
-  std::array futures = {executor.Schedule([]() {}), executor.Schedule([]() {})};
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllNoTimeoutCompletedFutures) {
-  MainThreadExecutorImpl executor{};
-  std::array futures = {orbit_base::Future<void>{}, orbit_base::Future<void>{}};
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures)),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllWithTimeoutCompletedFutures) {
-  MainThreadExecutorImpl executor{};
-
-  // Create completed futures
-  std::array futures = {orbit_base::Future<void>{}, orbit_base::Future<void>{}};
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kCompleted);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllWithExceedingTimeout) {
-  MainThreadExecutorImpl executor{};
-
-  // We won't mark these promises as finished, so we would wait forever if there wasn't a time out.
-  std::array promises{orbit_base::Promise<void>{}, orbit_base::Promise<void>{}};
-  std::array futures = {promises[0].GetFuture(), promises[1].GetFuture()};
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures), std::chrono::milliseconds{10}),
-            MainThreadExecutor::WaitResult::kTimedOut);
-}
-
-TEST(MainThreadExecutorImpl, WaitForAllWithAbort) {
-  MainThreadExecutorImpl executor{};
-
-  // We won't mark these promises as finished, so we would wait forever if we didn't abort.
-  std::array promises{orbit_base::Promise<void>{}, orbit_base::Promise<void>{}};
-  std::array futures = {promises[0].GetFuture(), promises[1].GetFuture()};
-  executor.Schedule([&]() { executor.AbortWaitingJobs(); });
-  EXPECT_EQ(executor.WaitForAll(absl::MakeSpan(futures)), MainThreadExecutor::WaitResult::kAborted);
 }
 
 }  // namespace orbit_qt_utils

@@ -25,10 +25,10 @@
 #include "CodeViewer/FontSizeInEm.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_qt {
@@ -101,7 +101,7 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   std::vector<orbit_code_report::AnnotatingLine> annotations_;
 
   // Keep the executor at the bottom of the list of members, so that it's destroyed first.
-  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_{};
+  orbit_qt_utils::MainThreadExecutor main_thread_executor_{};
 };
 
 // This function opens the given dialog and ensures it is deleted when closed.

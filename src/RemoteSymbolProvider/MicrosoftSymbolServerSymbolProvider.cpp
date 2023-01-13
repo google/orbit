@@ -18,7 +18,7 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/NotFoundOr.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 
 using orbit_base::CanceledOr;
 using orbit_base::Future;

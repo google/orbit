@@ -51,7 +51,6 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitGl/CallTreeView.h"
@@ -60,7 +59,7 @@
 #include "OrbitGl/StaticTimeGraphLayout.h"
 #include "OrbitQt/FilterPanelWidgetAction.h"
 #include "OrbitQt/orbitglwidget.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 
@@ -311,7 +310,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   bool is_connected_ = false;
 
   // Keep this at the bottom of the member list, so that it's destroyed first!
-  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_;
+  orbit_qt_utils::MainThreadExecutor main_thread_executor_;
 };
 
 #endif  // ORBIT_QT_ORBIT_MAIN_WINDOW_H_

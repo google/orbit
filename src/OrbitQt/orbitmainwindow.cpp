@@ -127,7 +127,7 @@
 #include "OrbitQt/types.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "SessionSetup/Connections.h"
 #include "SessionSetup/OrbitServiceInstance.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -1562,8 +1562,6 @@ void OrbitMainWindow::Exit(int return_code) {
     app_->SetCaptureFailedCallback([this, return_code] { Exit(return_code); });
     app_->AbortCapture();
   }
-
-  main_thread_executor_.AbortWaitingJobs();
 
   if (introspection_widget_ != nullptr) {
     introspection_widget_->close();

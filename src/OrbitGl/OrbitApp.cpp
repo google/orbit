@@ -87,11 +87,11 @@
 #include "OrbitBase/Action.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
@@ -259,7 +259,7 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                   orbit_base::MainThreadExecutor* main_thread_executor)
+                   orbit_base::Executor* main_thread_executor)
     : main_window_{main_window}, main_thread_executor_(main_thread_executor) {
   ORBIT_CHECK(main_window_ != nullptr);
 
@@ -724,7 +724,7 @@ void OrbitApp::OnOutOfOrderEventsDiscardedEvent(
 }
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(orbit_gl::MainWindowInterface* main_window,
-                                           orbit_base::MainThreadExecutor* main_thread_executor) {
+                                           orbit_base::Executor* main_thread_executor) {
   return std::make_unique<OrbitApp>(main_window, main_thread_executor);
 }
 

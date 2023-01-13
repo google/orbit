@@ -37,7 +37,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/WhenAll.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "Test/Path.h"
 #include "TestUtils/TemporaryDirectory.h"
 #include "TestUtils/TestUtils.h"
@@ -142,7 +142,7 @@ class HttpDownloadManagerTest : public ::testing::Test {
   }
 
   std::optional<HttpDownloadManager> manager_{std::in_place};
-  orbit_qt_utils::MainThreadExecutorImpl executor_;
+  orbit_qt_utils::MainThreadExecutor executor_;
 
  private:
   QProcess local_http_server_process_;
