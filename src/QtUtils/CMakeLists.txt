@@ -24,11 +24,13 @@ target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
                               include/QtUtils/ExecuteProcess.h
                               include/QtUtils/FutureWatcher.h
                               include/QtUtils/MainThreadExecutorImpl.h
+                              include/QtUtils/SingleThreadExecutor.h
                               include/QtUtils/Throttle.h)
 
 target_sources(QtUtils PRIVATE ExecuteProcess.cpp
                                FutureWatcher.cpp
                                MainThreadExecutorImpl.cpp
+                               SingleThreadExecutor.cpp
                                Throttle.cpp)
 
 set_target_properties(QtUtils PROPERTIES AUTOMOC ON)
@@ -43,6 +45,7 @@ target_sources(QtUtilsTests PRIVATE CreateTimeoutTest.cpp
                                     ExecuteProcessTest.cpp
                                     FutureWatcherTest.cpp
                                     MainThreadExecutorImplTest.cpp
+                                    SingleThreadExecutorTest.cpp
                                     ThrottleTest.cpp)
-target_link_libraries(QtUtilsTests PRIVATE TestUtils QtUtils GTest::QtCoreMain)
+target_link_libraries(QtUtilsTests PRIVATE TestUtils QtTestUtils QtUtils GTest::QtCoreMain)
 register_test(QtUtilsTests)
