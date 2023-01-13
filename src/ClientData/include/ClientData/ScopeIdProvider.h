@@ -108,6 +108,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info_;
   mutable absl::Mutex mutex_;
 };
+
 }  // namespace orbit_client_data
 
 #endif  // ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_
