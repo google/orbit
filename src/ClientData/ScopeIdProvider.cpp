@@ -70,20 +70,32 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::FunctionIdToScopeId(
 // The code below is an optimized version of the following
 // ```
 // static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
-//  switch (timer.type()) {
-//    case TimerInfo::kNone:
-//      return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
-//                 ? ScopeType::kDynamicallyInstrumentedFunction
-//                 : ScopeType::kInvalid;
-//    case TimerInfo::kApiScope:
-//      return ScopeType::kApiScope;
-//    case TimerInfo::kApiScopeAsync:
-//      return ScopeType::kApiScopeAsync;
-//    default:
-//      return ScopeType::kInvalid;
-//  }
-//}
-//```
+//   switch (timer.type()) {
+//     case TimerInfo::kNone:
+//       return timer.function_id() == orbit_grpc_protos::kInvalidFunctionId
+//                  ? ScopeType::kInvalid;
+//                  : ScopeType::kDynamicallyInstrumentedFunction
+//     case TimerInfo::kApiScope:
+//       return ScopeType::kApiScope;
+//     case TimerInfo::kApiScopeAsync:
+//       return ScopeType::kApiScopeAsync;
+//     default:
+//       return ScopeType::kInvalid;
+//   }
+// }
+// ```
+//
+// The idea is to cast the `TimerInfo` enum to `int`, do some arithmetic and use a look-up table
+// `kTable` to get the result and cast it to `ScopeType` enum. Each value of
+// `TimerInfo` corresponds to two consecutive values of the table. If `kNone` is
+// passed, either `kTable[0]` (corresponding to `kDynamicallyInstrumentedFunction`) or `kTable[1]`
+// (corresponding to `kInvalid`) can be returned depending on whether `function_id` is set. Really,
+// to calculate `index` we double `type` and add `1` if the `function_id` is not set. The arithmetic
+// is implemented via bit shift and XOR for the sake of performance. For all `timer` types that are
+// neither `kApiScope(Async)` nor `kNone`, only `kInvalid` is returned, as for such
+// input `index` will be less than `25`. For `kApiScope` and `kApiScopeAsync` index will be
+// `25 (kApiScope)` and `27 (kApiScopeAsync)` respectively, as `function_id` is never set for them.
+//
 static constexpr auto kScopeTypeFromTimerInfo = [](const TimerInfo& timer) -> ScopeType {
   static constexpr std::array<int, 28> kTable = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3};
