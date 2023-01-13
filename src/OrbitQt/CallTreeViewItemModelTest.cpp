@@ -156,8 +156,8 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::ModuleManager module_manager{};
   orbit_client_data::PostProcessedSamplingData sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(
-          capture_data->GetCallstackData(), *capture_data, module_manager);
+      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
+                                                          *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       sampling_data, module_manager, *capture_data);
@@ -325,8 +325,8 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::ModuleManager module_manager{};
   orbit_client_data::PostProcessedSamplingData sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(
-          capture_data->GetCallstackData(), *capture_data, module_manager);
+      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
+                                                          *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       sampling_data, module_manager, *capture_data);
