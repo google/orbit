@@ -126,11 +126,11 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   //  }
   //}
   //```
-  static constexpr std::array<int, 14> kTable = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3};
+  static constexpr std::array<int, 14> kTable = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3};
   static constexpr auto kScopeTypeFromTimerInfo = [](const TimerInfo& timer) -> ScopeType {
     const int type = timer.type();
     const int index =
-        type ^ static_cast<int>(timer.function_id() != orbit_grpc_protos::kInvalidFunctionId);
+        type ^ static_cast<int>(timer.function_id() == orbit_grpc_protos::kInvalidFunctionId);
     return static_cast<ScopeType>(kTable[index]);
   };
 };
