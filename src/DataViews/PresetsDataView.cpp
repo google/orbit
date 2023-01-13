@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <functional>
+#include <memory>
 
 #include "DataViewUtils.h"
 #include "DataViews/AppInterface.h"

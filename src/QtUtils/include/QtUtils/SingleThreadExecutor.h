@@ -6,6 +6,7 @@
 #define QT_UTILS_SINGLE_THREAD_EXECUTOR_H_
 
 #include <QObject>
+#include <QString>
 #include <QThread>
 #include <memory>
 
