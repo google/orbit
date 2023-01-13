@@ -108,31 +108,6 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   /// TODO(http://b/247467504): Add FunctionInfo to ScopeInfo.
   absl::flat_hash_map<ScopeId, FunctionInfo> scope_id_to_function_info_;
   mutable absl::Mutex mutex_;
-
-  // The code below is an optimized version of the following
-  // ```
-  // static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
-  //  switch (timer.type()) {
-  //    case TimerInfo::kNone:
-  //      return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
-  //                 ? ScopeType::kDynamicallyInstrumentedFunction
-  //                 : ScopeType::kInvalid;
-  //    case TimerInfo::kApiScope:
-  //      return ScopeType::kApiScope;
-  //    case TimerInfo::kApiScopeAsync:
-  //      return ScopeType::kApiScopeAsync;
-  //    default:
-  //      return ScopeType::kInvalid;
-  //  }
-  //}
-  //```
-  static constexpr std::array<int, 14> kTable = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3};
-  static constexpr auto kScopeTypeFromTimerInfo = [](const TimerInfo& timer) -> ScopeType {
-    const int type = timer.type();
-    const int index =
-        type ^ static_cast<int>(timer.function_id() == orbit_grpc_protos::kInvalidFunctionId);
-    return static_cast<ScopeType>(kTable[index]);
-  };
 };
 }  // namespace orbit_client_data
 

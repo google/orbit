@@ -67,6 +67,32 @@ std::optional<ScopeId> NameEqualityScopeIdProvider::FunctionIdToScopeId(
   return ScopeId(function_id);
 }
 
+// The code below is an optimized version of the following
+// ```
+// static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
+//  switch (timer.type()) {
+//    case TimerInfo::kNone:
+//      return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
+//                 ? ScopeType::kDynamicallyInstrumentedFunction
+//                 : ScopeType::kInvalid;
+//    case TimerInfo::kApiScope:
+//      return ScopeType::kApiScope;
+//    case TimerInfo::kApiScopeAsync:
+//      return ScopeType::kApiScopeAsync;
+//    default:
+//      return ScopeType::kInvalid;
+//  }
+//}
+//```
+static constexpr auto kScopeTypeFromTimerInfo = [](const TimerInfo& timer) -> ScopeType {
+  static constexpr std::array<int, 28> kTable = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3};
+  const int type = timer.type();
+  const int index =
+      (type << 1) ^ static_cast<int>(timer.function_id() == orbit_grpc_protos::kInvalidFunctionId);
+  return static_cast<ScopeType>(kTable[index]);
+};
+
 std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   const ScopeType scope_type = kScopeTypeFromTimerInfo(timer_info);
 
