@@ -24,7 +24,8 @@ target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
                               include/QtUtils/ExecuteProcess.h
                               include/QtUtils/MainThreadExecutor.h
                               include/QtUtils/SingleThreadExecutor.h
-                              include/QtUtils/Throttle.h)
+                              include/QtUtils/Throttle.h
+                              include/QtUtils/WaitFor.h)
 
 target_sources(QtUtils PRIVATE ExecuteProcess.cpp
                                MainThreadExecutor.cpp
@@ -43,6 +44,7 @@ target_sources(QtUtilsTests PRIVATE CreateTimeoutTest.cpp
                                     ExecuteProcessTest.cpp
                                     MainThreadExecutorTest.cpp
                                     SingleThreadExecutorTest.cpp
-                                    ThrottleTest.cpp)
+                                    ThrottleTest.cpp
+                                    WaitForTest.cpp)
 target_link_libraries(QtUtilsTests PRIVATE TestUtils QtTestUtils QtUtils GTest::QtCoreMain)
 register_test(QtUtilsTests)

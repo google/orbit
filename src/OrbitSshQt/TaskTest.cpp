@@ -64,6 +64,10 @@ TEST_F(SshTaskTest, Stdout) {
   QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdOut};
 
   EXPECT_THAT(WaitForWithTimeout(task.Start()), YieldsResult(HasNoError()));
+  // If we haven't yet received the `finished` signal, let's wait for it.
+  if (finished_signal.empty()) {
+    EXPECT_TRUE(finished_signal.wait());
+  }
   EXPECT_THAT(WaitForWithTimeout(task.Stop()), YieldsResult(HasNoError()));
 
   EXPECT_FALSE(ready_read_signal.empty());
@@ -76,6 +80,10 @@ TEST_F(SshTaskTest, Stderr) {
   QSignalSpy ready_read_signal{&task, &orbit_ssh_qt::Task::readyReadStdErr};
 
   EXPECT_THAT(WaitForWithTimeout(task.Start()), YieldsResult(HasNoError()));
+  // If we haven't yet received the `finished` signal, let's wait for it.
+  if (finished_signal.empty()) {
+    EXPECT_TRUE(finished_signal.wait());
+  }
   EXPECT_THAT(WaitForWithTimeout(task.Stop()), YieldsResult(HasNoError()));
 
   EXPECT_GE(ready_read_signal.size(), 1);
