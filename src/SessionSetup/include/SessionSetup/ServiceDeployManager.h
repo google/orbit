@@ -36,6 +36,7 @@
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
+#include "QtUtils/SingleThreadExecutor.h"
 
 namespace orbit_session_setup {
 
@@ -79,7 +80,7 @@ class ServiceDeployManager : public QObject {
   std::unique_ptr<orbit_ssh_qt::SftpChannel> sftp_channel_;
   QTimer ssh_watchdog_timer_;
 
-  QThread background_thread_;
+  orbit_qt_utils::SingleThreadExecutor background_executor_{};
 
   void Shutdown();
   ErrorMessageOr<void> ConnectToServer();
