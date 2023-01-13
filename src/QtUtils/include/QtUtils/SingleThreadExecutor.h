@@ -24,16 +24,16 @@ class SingleThreadExecutor : public QObject, public orbit_base::Executor {
   explicit SingleThreadExecutor(QObject* parent = nullptr);
   ~SingleThreadExecutor() override;
 
-  [[nodiscard]] const QThread* GetThread() const { return &thread; }
-  [[nodiscard]] QThread* GetThread() { return &thread; }
+  [[nodiscard]] const QThread* GetThread() const { return &thread_; }
+  [[nodiscard]] QThread* GetThread() { return &thread_; }
 
   [[nodiscard]] Handle GetExecutorHandle() const override { return executor_handle_.Get(); }
 
  private:
   void ScheduleImpl(std::unique_ptr<Action> action) override;
 
-  QThread thread{};
-  QObject context{};
+  QThread thread_{};
+  QObject context_{};
   ScopedHandle executor_handle_{this};
 };
 

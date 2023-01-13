@@ -14,18 +14,18 @@
 namespace orbit_qt_utils {
 
 SingleThreadExecutor::SingleThreadExecutor(QObject* parent) : QObject{parent} {
-  thread.start();
-  context.moveToThread(&thread);
+  thread_.start();
+  context_.moveToThread(&thread_);
 }
 
 SingleThreadExecutor::~SingleThreadExecutor() {
-  thread.quit();
-  thread.wait();
+  thread_.quit();
+  thread_.wait();
 }
 
 void SingleThreadExecutor::ScheduleImpl(std::unique_ptr<Action> action) {
   QMetaObject::invokeMethod(
-      &context,
+      &context_,
       [action = std::move(action)]() {
         ORBIT_SCOPE("SingleThreadExecutor Action");
         action->Execute();
