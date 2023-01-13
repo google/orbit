@@ -6,6 +6,7 @@
 
 #include <QMetaObject>
 #include <Qt>
+#include <type_traits>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"

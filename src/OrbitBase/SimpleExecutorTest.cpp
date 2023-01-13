@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include <memory>
 #include <vector>
 
 #include "OrbitBase/Future.h"

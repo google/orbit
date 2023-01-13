@@ -60,6 +60,7 @@
 #include "OrbitGl/StaticTimeGraphLayout.h"
 #include "OrbitQt/FilterPanelWidgetAction.h"
 #include "OrbitQt/orbitglwidget.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
 

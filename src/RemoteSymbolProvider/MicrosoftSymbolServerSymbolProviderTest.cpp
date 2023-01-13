@@ -9,7 +9,6 @@
 
 #include <QCoreApplication>
 #include <filesystem>
-#include <memory>
 #include <string>
 #include <type_traits>
 #include <utility>

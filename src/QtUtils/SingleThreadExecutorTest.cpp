@@ -2,25 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/types/span.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QCoreApplication>
+#include <QThread>
 #include <algorithm>
-#include <array>
 #include <chrono>
 #include <memory>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <type_traits>
-#include <utility>
-#include <vector>
 
-#include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
-#include "OrbitBase/Result.h"
 #include "QtTestUtils/WaitFor.h"
 #include "QtUtils/SingleThreadExecutor.h"
 
