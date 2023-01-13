@@ -21,7 +21,6 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
