@@ -29,12 +29,10 @@ using orbit_client_data::ThreadSampleData;
 
 SamplingReport::SamplingReport(
     OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
-    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
-    bool has_summary)
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data)
     : app_{app},
       callstack_data_{callstack_data},
-      post_processed_sampling_data_{post_processed_sampling_data},
-      has_summary_{has_summary} {
+      post_processed_sampling_data_{post_processed_sampling_data} {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_SCOPED_TIMED_LOG("SamplingReport::SamplingReport");
   ORBIT_CHECK(callstack_data_ != nullptr);

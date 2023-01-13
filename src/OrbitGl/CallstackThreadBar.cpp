@@ -223,7 +223,7 @@ void CallstackThreadBar::SelectCallstacks() {
           ? capture_data_->GetCallstackData().GetCallstackEventsInTimeRange(t0, t1)
           : capture_data_->GetCallstackData().GetCallstackEventsOfTidInTimeRange(thread_id, t0, t1);
 
-  app_->SelectCallstackEvents(selected_callstack_events, thread_id_is_all_threads);
+  app_->SelectCallstackEvents(selected_callstack_events);
 }
 
 bool CallstackThreadBar::IsEmpty() const {

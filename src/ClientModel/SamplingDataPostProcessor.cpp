@@ -85,8 +85,7 @@ class SamplingDataPostProcessor {
 
   PostProcessedSamplingData ProcessSamples(const CallstackData& callstack_data,
                                            const CaptureData& capture_data,
-                                           const ModuleManager& module_manager,
-                                           bool generate_summary);
+                                           const ModuleManager& module_manager);
 
  private:
   void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data,
@@ -114,20 +113,17 @@ class SamplingDataPostProcessor {
 
 PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& callstack_data,
                                                           const CaptureData& capture_data,
-                                                          const ModuleManager& module_manager,
-                                                          bool generate_summary) {
+                                                          const ModuleManager& module_manager) {
   ORBIT_SCOPED_TIMED_LOG("CreatePostProcessedSamplingData");
-  return SamplingDataPostProcessor{}.ProcessSamples(callstack_data, capture_data, module_manager,
-                                                    generate_summary);
+  return SamplingDataPostProcessor{}.ProcessSamples(callstack_data, capture_data, module_manager);
 }
 
 namespace {
 PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     const CallstackData& callstack_data, const CaptureData& capture_data,
-    const ModuleManager& module_manager, bool generate_summary) {
+    const ModuleManager& module_manager) {
   // Unique call stacks and per thread data
-  callstack_data.ForEachCallstackEvent([this, &callstack_data,
-                                        generate_summary](const CallstackEvent& event) {
+  callstack_data.ForEachCallstackEvent([this, &callstack_data](const CallstackEvent& event) {
     const CallstackInfo* callstack_info = callstack_data.GetCallstack(event.callstack_id());
     ORBIT_CHECK(callstack_info != nullptr);
 
@@ -160,9 +156,6 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       thread_sample_data->sampled_address_to_count[sorted_frames[i]]++;
     }
 
-    if (!generate_summary) {
-      return;
-    }
     ThreadSampleData* all_thread_sample_data =
         &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
     all_thread_sample_data->thread_id = orbit_base::kAllProcessThreadsTid;
@@ -176,6 +169,10 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       all_thread_sample_data->sampled_address_to_count[sorted_frames[i]]++;
     }
   });
+  // Only include the summary if there is more than 1 thread in the data.
+  if (thread_id_to_sample_data_.size() == 2) {
+    thread_id_to_sample_data_.erase(orbit_base::kAllProcessThreadsTid);
+  }
 
   ResolveCallstacks(callstack_data, capture_data, module_manager);
 

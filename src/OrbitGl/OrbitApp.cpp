@@ -1008,15 +1008,14 @@ void OrbitApp::ClearSamplingReport() {
 
 void OrbitApp::SetSelectionReport(
     const CallstackData* selection_callstack_data,
-    const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data,
-    bool has_summary) {
+    const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data) {
   // clear old selection report
   if (selection_report_ != nullptr) {
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(
-      this, selection_callstack_data, selection_post_processed_sampling_data, has_summary);
+  auto report = std::make_shared<SamplingReport>(this, selection_callstack_data,
+                                                 selection_post_processed_sampling_data);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
@@ -2257,7 +2256,7 @@ uint64_t OrbitApp::GetGroupIdToHighlight() const {
 }
 
 void OrbitApp::SetCaptureDataSelectionFields(
-    absl::Span<const CallstackEvent> selected_callstack_events, bool origin_is_multiple_threads) {
+    absl::Span<const CallstackEvent> selected_callstack_events) {
   const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
@@ -2268,32 +2267,27 @@ void OrbitApp::SetCaptureDataSelectionFields(
   // Generate selection report.
   PostProcessedSamplingData selection_post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(
-          GetCaptureData().selection_callstack_data(), GetCaptureData(), *module_manager_,
-          /*generate_summary*/ origin_is_multiple_threads);
+          GetCaptureData().selection_callstack_data(), GetCaptureData(), *module_manager_);
   GetMutableCaptureData().set_selection_post_processed_sampling_data(
       std::move(selection_post_processed_sampling_data));
 }
 
-void OrbitApp::SelectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events,
-                                     bool origin_is_multiple_threads) {
+void OrbitApp::SelectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events) {
   main_window_->ClearCallstackInspection();
-  SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
+  SetCaptureDataSelectionFields(selected_callstack_events);
   SetSelectionTopDownView(GetCaptureData().selection_post_processed_sampling_data(),
                           GetCaptureData());
   SetSelectionBottomUpView(GetCaptureData().selection_post_processed_sampling_data(),
                            GetCaptureData());
   SetSelectionReport(&GetCaptureData().selection_callstack_data(),
-                     &GetCaptureData().selection_post_processed_sampling_data(),
-                     /*has_summary*/ origin_is_multiple_threads);
+                     &GetCaptureData().selection_post_processed_sampling_data());
 }
 
-void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events,
-                                      bool origin_is_multiple_threads) {
-  SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
+void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events) {
+  SetCaptureDataSelectionFields(selected_callstack_events);
   std::unique_ptr<SamplingReport> report =
       std::make_unique<SamplingReport>(this, &GetCaptureData().selection_callstack_data(),
-                                       &GetCaptureData().selection_post_processed_sampling_data(),
-                                       /*generate_summary*/ origin_is_multiple_threads);
+                                       &GetCaptureData().selection_post_processed_sampling_data());
   main_window_->SetCallstackInspection(
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
           GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
@@ -2312,8 +2306,7 @@ void OrbitApp::ClearSelectionTabs() {
 }
 
 void OrbitApp::ClearInspection() {
-  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
-                                /*origin_is_multiple_threads*/ false);
+  SetCaptureDataSelectionFields(std::vector<CallstackEvent>());
   main_window_->ClearCallstackInspection();
   FireRefreshCallbacks();
 }
@@ -2342,8 +2335,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   PostProcessedSamplingData selection_post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data.selection_callstack_data(),
-                                                          capture_data, *module_manager_,
-                                                          selection_report_->has_summary());
+                                                          capture_data, *module_manager_);
   GetMutableCaptureData().set_selection_post_processed_sampling_data(
       std::move(selection_post_processed_sampling_data));
 
@@ -2830,8 +2822,7 @@ void OrbitApp::ClearTimeRangeSelection() {
 }
 
 void OrbitApp::ClearThreadAndTimeRangeSelection() {
-  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
-                                /*origin_is_multiple_threads*/ false);
+  SetCaptureDataSelectionFields(std::vector<CallstackEvent>());
   main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
   SetTopDownView(GetCaptureData().post_processed_sampling_data());
   SetBottomUpView(GetCaptureData().post_processed_sampling_data());
@@ -2858,13 +2849,11 @@ void OrbitApp::OnThreadOrTimeRangeSelectionChange() {
       has_time_range ? data_manager_->GetSelectionTimeRange().value() : kDefaultTimeRange;
   if (thread_id == kAllProcessThreadsTid) {
     SetCaptureDataSelectionFields(GetCaptureData().GetCallstackData().GetCallstackEventsInTimeRange(
-                                      time_range.start, time_range.end),
-                                  /*origin_is_multiple_threads=*/true);
+        time_range.start, time_range.end));
   } else {
     SetCaptureDataSelectionFields(
         GetCaptureData().GetCallstackData().GetCallstackEventsOfTidInTimeRange(
-            thread_id, time_range.start, time_range.end),
-        /*origin_is_multiple_threads=*/false);
+            thread_id, time_range.start, time_range.end));
   }
 
   main_window_->SetLiveTabScopeStatsCollection(

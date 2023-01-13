@@ -34,10 +34,15 @@
 #include "QtUtils/AssertNoQtLogWarnings.h"
 
 constexpr uint64_t kCallstackId = 1;
+constexpr uint64_t kCallstackId2 = 1;
 constexpr uint64_t kUnwindErrorCallstackId = 2;
 constexpr uint64_t kFunctionAbsoluteAddress = 0x30;
 constexpr uint64_t kInstructionAbsoluteAddress = 0x31;
+constexpr uint64_t kTimestamp1 = 1234;
+constexpr uint64_t kTimestamp2 = 2345;
+constexpr uint64_t kTimestamp3 = 3456;
 constexpr int32_t kThreadId = 42;
+constexpr int32_t kThreadId2 = 43;
 constexpr const char* kFunctionName = "example function";
 constexpr const char* kModuleName = "example module";
 constexpr const char* kThreadName = "example thread";
@@ -65,11 +70,11 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent 1
-  orbit_client_data::CallstackEvent callstack_event_1{1234, kCallstackId, kThreadId};
+  orbit_client_data::CallstackEvent callstack_event_1{kTimestamp1, kCallstackId, kThreadId};
   capture_data->AddCallstackEvent(callstack_event_1);
 
   // CallstackEvent 2
-  orbit_client_data::CallstackEvent callstack_event_2{2345, kCallstackId, kThreadId};
+  orbit_client_data::CallstackEvent callstack_event_2{kTimestamp2, kCallstackId, kThreadId};
   capture_data->AddCallstackEvent(callstack_event_2);
 
   // CallstackInfo
@@ -115,47 +120,44 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
   QAbstractItemModelTester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
 }
 
-TEST(CallTreeViewItemModel, SummaryItem) {
+TEST(CallTreeViewItemModel, RowsWithoutSummaryItem) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
 
-  {
-    bool generate_summary = false;
+  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::PostProcessedSamplingData sampling_data =
+      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
+                                                          *capture_data, module_manager);
+  auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+      sampling_data, module_manager, *capture_data);
 
-    orbit_client_data::ModuleManager module_manager{};
-    orbit_client_data::PostProcessedSamplingData sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(
-            capture_data->GetCallstackData(), *capture_data, module_manager, generate_summary);
-    auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-        sampling_data, module_manager, *capture_data);
+  CallTreeViewItemModel model{std::move(call_tree_view)};
 
-    CallTreeViewItemModel model{std::move(call_tree_view)};
+  EXPECT_EQ(model.rowCount({}), 1);
+}
 
-    EXPECT_EQ(model.rowCount({}), 1);
-  }
+TEST(CallTreeViewItemModel, RowsWithSummaryItem) {
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
+  orbit_client_data::CallstackEvent callstack_event_1{kTimestamp3, kCallstackId2, kThreadId2};
+  capture_data->AddCallstackEvent(callstack_event_1);
 
-  {
-    bool generate_summary = true;
-    orbit_client_data::ModuleManager module_manager{};
-    orbit_client_data::PostProcessedSamplingData sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(
-            capture_data->GetCallstackData(), *capture_data, module_manager, generate_summary);
-    auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-        sampling_data, module_manager, *capture_data);
+  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::PostProcessedSamplingData sampling_data =
+      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
+                                                          *capture_data, module_manager);
+  auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+      sampling_data, module_manager, *capture_data);
 
-    CallTreeViewItemModel model{std::move(call_tree_view)};
+  CallTreeViewItemModel model{std::move(call_tree_view)};
 
-    EXPECT_EQ(model.rowCount({}), 2);
-  }
+  EXPECT_EQ(model.rowCount({}), 3);
 }
 
 TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::ModuleManager module_manager{};
-  // do not create summary, because this creates an additional top level row (all threads) and this
-  // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                          *capture_data, module_manager, false);
+      orbit_client_model::CreatePostProcessedSamplingData(
+          capture_data->GetCallstackData(), *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       sampling_data, module_manager, *capture_data);
@@ -322,11 +324,9 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
 TEST(CallTreeViewItemModel, GetEditRoleData) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::ModuleManager module_manager{};
-  // do not create summary, because this creates an additional top level row (all threads) and this
-  // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                          *capture_data, module_manager, false);
+      orbit_client_model::CreatePostProcessedSamplingData(
+          capture_data->GetCallstackData(), *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       sampling_data, module_manager, *capture_data);
