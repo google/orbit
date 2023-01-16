@@ -49,7 +49,6 @@
 #include "ClientData/SystemMemoryInfo.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TimerChain.h"
-#include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientData/WineSyscallHandlingMethod.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientProtos/preset.pb.h"
@@ -78,15 +77,12 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
-#include "OrbitGl/CallTreeView.h"
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/DataViewFactory.h"
 #include "OrbitGl/FrameTrackOnlineProcessor.h"
-#include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/IntrospectionWindow.h"
 #include "OrbitGl/MainWindowInterface.h"
 #include "OrbitGl/ManualInstrumentationManager.h"
-#include "OrbitGl/SamplingReport.h"
 #include "OrbitGl/SymbolLoader.h"
 #include "OrbitGl/TimeGraph.h"
 #include "PresetFile/PresetFile.h"
@@ -151,10 +147,6 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_data::ModuleManager* GetMutableModuleManager() override {
     ORBIT_CHECK(module_manager_ != nullptr);
     return module_manager_.get();
-  }
-
-  [[nodiscard]] bool HasSampleSelection() const {
-    return selection_report_ != nullptr && selection_report_->HasSamples();
   }
 
   void ListPresets();
@@ -560,9 +552,6 @@ class OrbitApp final : public DataViewFactory,
 
   CaptureWindow* capture_window_ = nullptr;
   IntrospectionWindow* introspection_window_ = nullptr;
-
-  std::shared_ptr<SamplingReport> sampling_report_;
-  std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
   // A boolean information about if the default Frame Track was added in the current session.
   bool default_frame_track_was_added_ = false;

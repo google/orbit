@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "DataViews/DataView.h"
+#include "OrbitGl/OrbitApp.h"
 #include "OrbitQt/orbitdataviewpanel.h"
 
 class SamplingReport;
@@ -27,15 +28,27 @@ class OrbitSamplingReport : public QWidget {
   explicit OrbitSamplingReport(QWidget* parent = nullptr);
   ~OrbitSamplingReport() override;
 
-  void Initialize(orbit_data_views::DataView* callstack_data_view,
-                  const std::shared_ptr<class SamplingReport>& report);
+  void Initialize(OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
+                  const orbit_client_data::CallstackData* callstack_data,
+                  const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
+
+  void UpdateReport(
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
+
   void Deinitialize();
 
   void RefreshCallstackView();
   void RefreshTabs();
 
-  void SetInspection(orbit_data_views::DataView* callstack_data_view,
-                     std::unique_ptr<SamplingReport> report);
+  [[nodiscard]] bool HasSamples() const {
+    return sampling_report_ != nullptr && sampling_report_->HasSamples();
+  }
+
+  void SetInspection(
+      OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
 
  signals:
   void LeaveCallstackInspectionClicked();

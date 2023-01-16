@@ -59,17 +59,24 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
 
 OrbitSamplingReport::~OrbitSamplingReport() { delete ui_; }
 
-void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_view,
-                                     const std::shared_ptr<SamplingReport>& report) {
+void OrbitSamplingReport::Initialize(
+    OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ui_->CallstackTreeView->Initialize(callstack_data_view, SelectionType::kExtended,
                                      FontType::kDefault, false);
-  sampling_report_ = report;
+  if (callstack_data == nullptr || post_processed_sampling_data == nullptr) {
+    sampling_report_ = nullptr;
+    return;
+  }
 
-  if (!report) return;
+  sampling_report_ =
+      std::make_shared<SamplingReport>(app, callstack_data, post_processed_sampling_data);
 
   sampling_report_->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
-  for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadDataViews()) {
+  for (orbit_data_views::SamplingReportDataView& report_data_view :
+       sampling_report_->GetThreadDataViews()) {
     ORBIT_SCOPE("SamplingReportDataView tab creation");
     auto* tab = new QWidget();
     tab->setObjectName(QStringLiteral("samplingReportThreadTab"));
@@ -194,11 +201,21 @@ void OrbitSamplingReport::RefreshTabs() {
   }
 }
 
-void OrbitSamplingReport::SetInspection(orbit_data_views::DataView* callstack_data_view,
-                                        std::unique_ptr<SamplingReport> report) {
+void OrbitSamplingReport::SetInspection(
+    OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   Deinitialize();
-  Initialize(callstack_data_view, std::move(report));
+  Initialize(app, callstack_data_view, callstack_data, post_processed_sampling_data);
   ui_->inspectionNoticeWidget->show();
   RefreshCallstackView();
   RefreshTabs();
+}
+
+void OrbitSamplingReport::UpdateReport(
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
+  if (sampling_report_ != nullptr) {
+    sampling_report_->UpdateReport(callstack_data, post_processed_sampling_data);
+  }
 }

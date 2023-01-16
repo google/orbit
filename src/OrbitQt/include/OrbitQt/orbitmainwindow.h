@@ -82,11 +82,20 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnRefreshDataViewPanels(orbit_data_views::DataViewType type);
   void UpdatePanel(orbit_data_views::DataViewType type);
 
-  void SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
-                         const std::shared_ptr<class SamplingReport>& sampling_report) override;
+  void SetSamplingReport(
+      orbit_data_views::DataView* callstack_data_view,
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
   void SetSelectionSamplingReport(
       orbit_data_views::DataView* callstack_data_view,
-      const std::shared_ptr<class SamplingReport>& selection_report) override;
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
+  void UpdateSamplingReport(
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
+  void UpdateSelectionReport(
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
 
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) override;
   void SetSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view) override;
@@ -134,10 +143,11 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
       const orbit_client_data::ModuleData* module) override;
 
-  void SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
-                              std::unique_ptr<CallTreeView> bottom_up_view,
-                              orbit_data_views::DataView* callstack_data_view,
-                              std::unique_ptr<class SamplingReport> report) override;
+  void SetCallstackInspection(
+      std::unique_ptr<CallTreeView> top_down_view, std::unique_ptr<CallTreeView> bottom_up_view,
+      orbit_data_views::DataView* callstack_data_view,
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
 
   void ClearCallstackInspection() override;
 

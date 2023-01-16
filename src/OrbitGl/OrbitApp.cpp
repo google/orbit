@@ -104,7 +104,6 @@
 #include "OrbitGl/CaptureWindow.h"
 #include "OrbitGl/FrameTrackOnlineProcessor.h"
 #include "OrbitGl/MainWindowInterface.h"
-#include "OrbitGl/SamplingReport.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/Track.h"
 #include "OrbitGl/TrackContainer.h"
@@ -986,48 +985,25 @@ void OrbitApp::SetSamplingReport(
     const CallstackData* callstack_data,
     const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ORBIT_SCOPE_FUNCTION;
-  // clear old sampling report
-  if (sampling_report_ != nullptr) {
-    sampling_report_->ClearReport();
-  }
-
-  auto report =
-      std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data);
-  orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
-  main_window_->SetSamplingReport(callstack_data_view, report);
-
-  sampling_report_ = report;
+  main_window_->SetSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), callstack_data,
+                                  post_processed_sampling_data);
 }
 
 void OrbitApp::ClearSamplingReport() {
-  if (sampling_report_ == nullptr) return;
-  sampling_report_->ClearReport();
-  sampling_report_.reset();
-  main_window_->SetSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
+  main_window_->SetSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr, nullptr);
 }
 
 void OrbitApp::SetSelectionReport(
     const CallstackData* selection_callstack_data,
     const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data) {
-  // clear old selection report
-  if (selection_report_ != nullptr) {
-    selection_report_->ClearReport();
-  }
-
-  auto report = std::make_shared<SamplingReport>(this, selection_callstack_data,
-                                                 selection_post_processed_sampling_data);
-  orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
-
-  selection_report_ = report;
-  main_window_->SetSelectionSamplingReport(callstack_data_view, report);
-  FireRefreshCallbacks();
+  main_window_->SetSelectionSamplingReport(GetOrCreateSelectionCallstackDataView(),
+                                           selection_callstack_data,
+                                           selection_post_processed_sampling_data);
 }
 
 void OrbitApp::ClearSelectionReport() {
-  if (selection_report_ == nullptr) return;
-  selection_report_->ClearReport();
-  selection_report_.reset();
-  main_window_->SetSelectionSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr);
+  main_window_->SetSelectionSamplingReport(GetOrCreateDataView(DataViewType::kCallstack), nullptr,
+                                           nullptr);
 }
 
 void OrbitApp::SetTopDownView(
@@ -2281,13 +2257,11 @@ void OrbitApp::SelectCallstackEvents(absl::Span<const CallstackEvent> selected_c
                            GetCaptureData());
   SetSelectionReport(&GetCaptureData().selection_callstack_data(),
                      &GetCaptureData().selection_post_processed_sampling_data());
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_callstack_events) {
   SetCaptureDataSelectionFields(selected_callstack_events);
-  std::unique_ptr<SamplingReport> report =
-      std::make_unique<SamplingReport>(this, &GetCaptureData().selection_callstack_data(),
-                                       &GetCaptureData().selection_post_processed_sampling_data());
   main_window_->SetCallstackInspection(
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
           GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
@@ -2295,7 +2269,8 @@ void OrbitApp::InspectCallstackEvents(absl::Span<const CallstackEvent> selected_
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
           GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
           GetCaptureData()),
-      GetOrCreateSelectionCallstackDataView(), std::move(report));
+      GetOrCreateSelectionCallstackDataView(), &GetCaptureData().selection_callstack_data(),
+      &GetCaptureData().selection_post_processed_sampling_data());
   FireRefreshCallbacks();
 }
 
@@ -2318,20 +2293,14 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   }
   const CaptureData& capture_data = GetCaptureData();
 
-  if (sampling_report_ != nullptr) {
-    PostProcessedSamplingData post_processed_sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
-                                                            capture_data, *module_manager_);
-    GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
-    sampling_report_->UpdateReport(&capture_data.GetCallstackData(),
-                                   &capture_data.post_processed_sampling_data());
-    SetTopDownView(capture_data.post_processed_sampling_data());
-    SetBottomUpView(capture_data.post_processed_sampling_data());
-  }
-
-  if (selection_report_ == nullptr) {
-    return;
-  }
+  PostProcessedSamplingData post_processed_sampling_data =
+      orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
+                                                          capture_data, *module_manager_);
+  GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
+  main_window_->UpdateSamplingReport(&capture_data.GetCallstackData(),
+                                     &capture_data.post_processed_sampling_data());
+  SetTopDownView(capture_data.post_processed_sampling_data());
+  SetBottomUpView(capture_data.post_processed_sampling_data());
 
   PostProcessedSamplingData selection_post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data.selection_callstack_data(),
@@ -2341,16 +2310,13 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   SetSelectionTopDownView(capture_data.selection_post_processed_sampling_data(), capture_data);
   SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(), capture_data);
-  selection_report_->UpdateReport(&capture_data.selection_callstack_data(),
-                                  &capture_data.selection_post_processed_sampling_data());
+  main_window_->UpdateSelectionReport(&capture_data.selection_callstack_data(),
+                                      &capture_data.selection_post_processed_sampling_data());
 }
 
 void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
 
 void OrbitApp::UpdateAfterCaptureCleared() {
-  PostProcessedSamplingData empty_post_processed_sampling_data;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> empty_unique_callstacks;
-
   ClearSamplingReport();
   ClearSelectionReport();
   ClearTopDownView();
