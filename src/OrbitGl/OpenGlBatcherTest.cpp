@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "Containers/BlockChain.h"
+#include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/Geometry.h"
