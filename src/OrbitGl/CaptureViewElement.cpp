@@ -257,8 +257,7 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
     previous_text_render_group_ = text_renderer.GetCurrentRenderGroup();
 
     BatchRenderGroupId new_render_group;
-    const std::string kRenderGroupName = std::string("rg_cve_") + std::to_string(GetUid());
-    new_render_group.name = kRenderGroupName;
+    new_render_group.name = std::string("rg_cve_") + std::to_string(GetUid());
 
     BatchRenderGroupState state = BatchRenderGroupManager::GetGroupState(new_render_group);
     state.stencil.pos = {GetPos()[0], GetPos()[1]};

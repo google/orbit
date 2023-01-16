@@ -105,7 +105,8 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
     }
   }
 
-  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(const BatchRenderGroupId& group) const {
+  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(
+      const BatchRenderGroupId& group) const {
     return primitive_buffers_by_group_.at(group);
   }
 

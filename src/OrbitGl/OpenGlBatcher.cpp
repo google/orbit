@@ -250,7 +250,7 @@ size_t CalculateBlockChainNonEmptyBlockCount(const orbit_containers::BlockChain<
 [[nodiscard]] Batcher::Statistics OpenGlBatcher::GetStatistics() const {
   Statistics result;
 
-  for (auto& layer : primitive_buffers_by_group_) {
+  for (const auto& layer : primitive_buffers_by_group_) {
     result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.boxes_);
     result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.picking_colors_);
     result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.colors_);

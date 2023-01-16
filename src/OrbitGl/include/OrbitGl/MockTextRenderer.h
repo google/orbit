@@ -29,7 +29,7 @@ class MockTextRenderer : public TextRenderer {
 
   MOCK_METHOD(void, DrawRenderGroup, (QPainter*, const BatchRenderGroupId&), (override));
   [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override {
-    return std::vector<BatchRenderGroupId>(render_groups_.begin(), render_groups_.end());
+    return {render_groups_.begin(), render_groups_.end()};
   }
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;

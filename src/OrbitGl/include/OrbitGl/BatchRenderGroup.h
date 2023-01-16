@@ -24,7 +24,7 @@ struct BatchRenderGroupId {
   std::string name = kGlobalGroup;
   float layer;
 
-  explicit BatchRenderGroupId(const std::string& name, float layer);
+  explicit BatchRenderGroupId(std::string name, float layer);
   explicit BatchRenderGroupId(float layer = 0) : BatchRenderGroupId(kGlobalGroup, layer){};
 };
 

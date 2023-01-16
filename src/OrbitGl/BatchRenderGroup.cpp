@@ -1,6 +1,8 @@
-#include "OrbitGl/BatchRenderGroup.h"
+// Copyright (c) 2023 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 
 namespace orbit_gl {
 
@@ -42,8 +44,8 @@ void SetGroupState(const BatchRenderGroupId& id, BatchRenderGroupState state) {
 }
 }  // namespace BatchRenderGroupManager
 
-BatchRenderGroupId::BatchRenderGroupId(const std::string& name, float layer)
-    : name(name), layer(layer) {}
+BatchRenderGroupId::BatchRenderGroupId(std::string name, float layer)
+    : name(std::move(name)), layer(layer) {}
 
 const std::string BatchRenderGroupId::kGlobalGroup = "global";
 

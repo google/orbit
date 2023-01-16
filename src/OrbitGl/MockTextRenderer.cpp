@@ -104,10 +104,11 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 }
 
 bool MockTextRenderer::IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return std::find_if_not(render_groups_.begin(), render_groups_.end(),
-                          [z_layer_min, z_layer_max](const BatchRenderGroupId& group) {
-                            return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(group.layer);
-                          }) == render_groups_.end();
+  return std::find_if_not(
+             render_groups_.begin(), render_groups_.end(),
+             [z_layer_min, z_layer_max](const BatchRenderGroupId& group) {
+               return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(group.layer);
+             }) == render_groups_.end();
 }
 
 void MockTextRenderer::AdjustDrawingBoundaries(Vec2 point) {

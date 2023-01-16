@@ -166,7 +166,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   [[nodiscard]] virtual bool RestrictDrawingToBody() const { return false; }
 
-  [[nodiscard]] const uint32_t GetUid() const { return uid_; }
+  [[nodiscard]] uint32_t GetUid() const { return uid_; }
 
  private:
   bool is_mouse_over_ = false;

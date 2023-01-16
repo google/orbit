@@ -35,7 +35,7 @@ struct LineBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_LINES_PER_BLOCK = 64 * 1024;
+  static const int NUM_LINES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
@@ -48,7 +48,7 @@ struct BoxBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
+  static const int NUM_BOXES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Quad, NUM_BOXES_PER_BLOCK> boxes_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
@@ -61,7 +61,7 @@ struct TriangleBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
+  static const int NUM_TRIANGLES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
@@ -126,7 +126,7 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
     // However, this would mean a lot of changes to all the rendering code, we'd remove all
     // z-parameters from all "AddXXX" calls and instead rely on a stateful "current z" setting in
     // the batcher.
-    [[unlikely]] if (current_render_group_.layer != layer_z_value) {
+    if (current_render_group_.layer != layer_z_value) {
       // We also need to copy over the state to the new group, because users of this class assume to
       // set the state once and keep it until they explicitly change the render group.
       auto current_group_state = BatchRenderGroupManager::GetGroupState(current_render_group_);
