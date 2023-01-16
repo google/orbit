@@ -16,5 +16,5 @@ setup(
     description='Orbit capture utilities',
     # This should stay in sync with the proto version we use in C++ (see conanfile.py).
     # Make sure that your `protoc` version also matches this.
-    install_requires=["protobuf==3.9.1"],
+    install_requires=["protobuf==3.18.3"],
 )
