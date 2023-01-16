@@ -39,12 +39,11 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
         unloaded_modules.push_back(module);
       }
     } else {
-      ModuleIdentifier module_id_or_error = module_identifier_provider_->CreateModuleIdentifier(
+      ModuleIdentifier module_id = module_identifier_provider_->CreateModuleIdentifier(
           module_info.file_path(), module_info.build_id());
-      bool success = module_map_
-                         .try_emplace(module_id_or_error,
-                                      std::make_unique<ModuleData>(module_info, module_id_or_error))
-                         .second;
+      bool success =
+          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info, module_id))
+              .second;
       ORBIT_CHECK(success);
     }
   }
