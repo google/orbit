@@ -41,7 +41,7 @@ class OrbitSamplingReport : public QWidget {
   void RefreshCallstackView();
   void RefreshTabs();
 
-  [[nodiscard]] bool HasSamples() {
+  [[nodiscard]] bool HasSamples() const {
     return sampling_report_ != nullptr && sampling_report_->HasSamples();
   }
 
