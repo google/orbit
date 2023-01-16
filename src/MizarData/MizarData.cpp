@@ -78,7 +78,9 @@ void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& captur
                                  absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   ConstructCaptureData(capture_started, std::move(file_path), std::move(frame_track_function_ids),
                        orbit_client_data::CaptureData::DataSource::kLoadedCapture);
-  module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
+  module_identifier_provider_ = std::make_unique<orbit_client_data::ModuleIdentifierProvider>();
+  module_manager_ =
+      std::make_unique<orbit_client_data::ModuleManager>(module_identifier_provider_.get());
 }
 
 void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
@@ -106,7 +108,8 @@ void MizarData::UpdateModules(absl::Span<const orbit_grpc_protos::ModuleInfo> mo
        module_manager_->AddOrUpdateNotLoadedModules(module_infos)) {
     ORBIT_LOG("Module %s is not updated", not_updated_module->file_path());
   }
-  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
+  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos,
+                                                               *module_identifier_provider_);
 }
 
 void MizarData::LoadSymbolsForAllModules() {

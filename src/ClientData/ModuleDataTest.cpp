@@ -9,6 +9,7 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 
@@ -40,13 +41,17 @@ TEST(ModuleData, Constructor) {
   *module_info.add_object_segments() = object_segment;
   module_info.set_object_file_type(kObjectFileType);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
 
   EXPECT_EQ(module.name(), kName);
   EXPECT_EQ(module.file_path(), kFilePath);
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);
   EXPECT_EQ(module.load_bias(), kLoadBias);
+  EXPECT_EQ(module.module_id(), kModuleIdentifier);
   EXPECT_EQ(module.object_file_type(), kObjectFileType);
   ASSERT_EQ(module.GetObjectSegments().size(), 1);
   EXPECT_EQ(module.GetObjectSegments()[0].offset_in_file(), object_segment.offset_in_file());
@@ -71,7 +76,10 @@ TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaElf) {
   *module_info.add_object_segments() = object_segment;
   module_info.set_object_file_type(ModuleInfo::kElfFile);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
   EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x101100), 0x1100);
   EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x1100), 0x101100);
 }
@@ -88,7 +96,10 @@ TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaPe) {
   *module_info.add_object_segments() = object_segment;
   module_info.set_object_file_type(ModuleInfo::kCoffFile);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
   EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x101100), 0x300);
   EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x300), 0x101100);
 }
@@ -99,7 +110,10 @@ TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaPeNoSections
   module_info.set_load_bias(0x100000);
   module_info.set_object_file_type(ModuleInfo::kCoffFile);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
   EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x100300), 0x300);
   EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x300), 0x100300);
 }
@@ -111,7 +125,10 @@ TEST(ModuleData, AddSymbolsAndAddFallbackSymbols) {
   ModuleInfo module_info{};
   module_info.set_file_path(kModuleFilePath);
   module_info.set_build_id(kBuildId);
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
 
   // Setup ModuleSymbols.
   constexpr const char* kSymbolPrettyName = "pretty name";
@@ -161,7 +178,10 @@ TEST(ModuleData, FindFunctionFromHash) {
   SymbolInfo* symbol = symbols.add_symbol_infos();
   symbol->set_demangled_name("demangled name");
 
-  ModuleData module{ModuleInfo{}};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{ModuleInfo{}, kModuleIdentifier};
   module.AddSymbols(symbols);
   ASSERT_EQ(module.GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kDebugSymbols);
   ASSERT_FALSE(module.GetFunctions().empty());
@@ -196,8 +216,12 @@ TEST(ModuleData, UpdateIfChangedAndUnload) {
   module_info.set_load_bias(kLoadBias);
   module_info.set_object_file_type(kObjectFileType);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
   EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.module_id(), kModuleIdentifier);
   EXPECT_EQ(module.file_path(), kFilePath);
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);
@@ -277,8 +301,12 @@ TEST(ModuleData, UpdateIfChangedAndNotLoaded) {
   module_info.set_load_bias(kLoadBias);
   module_info.set_object_file_type(object_file_type);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
   EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.module_id(), kModuleIdentifier);
   EXPECT_EQ(module.file_path(), kFilePath);
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);
@@ -366,9 +394,13 @@ TEST(ModuleData, UpdateIfChangedWithBuildId) {
   module_info.set_load_bias(kLoadBias);
   module_info.set_object_file_type(kObjectFileType);
 
-  ModuleData module{module_info};
+  ModuleIdentifierProvider module_identifier_provider;
+  static const ModuleIdentifier kModuleIdentifier =
+      module_identifier_provider.CreateModuleIdentifier("/a/path/", "build_id");
+  ModuleData module{module_info, kModuleIdentifier};
 
   EXPECT_EQ(module.name(), kName);
+  EXPECT_EQ(module.module_id(), kModuleIdentifier);
   EXPECT_EQ(module.file_path(), kFilePath);
   EXPECT_EQ(module.file_size(), kFileSize);
   EXPECT_EQ(module.build_id(), kBuildId);

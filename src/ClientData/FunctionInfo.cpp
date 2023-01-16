@@ -29,7 +29,7 @@ uint64_t FunctionInfo::ComputeFileOffset(const ModuleData& module) const {
 std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& process,
                                                          const ModuleData& module) const {
   std::vector<uint64_t> page_aligned_base_addresses =
-      process.GetModuleBaseAddresses(module.file_path(), module.build_id());
+      process.GetModuleBaseAddresses(module.module_id());
 
   if (page_aligned_base_addresses.empty()) {
     return std::nullopt;

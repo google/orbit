@@ -86,9 +86,6 @@ class LiveFunctionsDataView : public DataView {
   void DoFilter() override;
   void DoSort() override;
   [[nodiscard]] ScopeId GetScopeId(uint32_t row) const;
-  [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
-  CreateFunctionInfoFromInstrumentedFunction(
-      const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
   // Maps scope_ids corresponding to dynamically instrumented functions to FunctionInfo instances
   absl::flat_hash_map<ScopeId, orbit_client_data::FunctionInfo> scope_id_to_function_info_{};

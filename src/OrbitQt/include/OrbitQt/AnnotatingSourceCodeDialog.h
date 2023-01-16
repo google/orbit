@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/Dialog.h"
@@ -29,7 +30,6 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/MainThreadExecutor.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_qt {
 
@@ -55,8 +55,8 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
 
   // Same interface as OrbitApp::RetrieveModuleWithDebugInfo;
   using RetrieveModuleWithDebugInfoCallback =
-      std::function<orbit_base::Future<ErrorMessageOr<std::filesystem::path>>(
-          const orbit_symbol_provider::ModuleIdentifier&)>;
+      std::function<orbit_base::Future<ErrorMessageOr<std::filesystem::path>>(std::string_view,
+                                                                              std::string_view)>;
 
   void SetDisassemblyCodeReport(orbit_code_report::DisassemblyReport report) {
     report_ = std::move(report);

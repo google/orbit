@@ -11,7 +11,6 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
 
@@ -26,7 +25,8 @@ class StructuredDebugDirectorySymbolProvider : public SymbolProvider {
       : directory_(std::move(directory)), symbol_source_(symbol_source) {}
 
   [[nodiscard]] orbit_base::Future<SymbolLoadingOutcome> RetrieveSymbols(
-      const ModuleIdentifier& module_id, orbit_base::StopToken stop_token) override;
+      std::string_view /*file_path*/, std::string_view build_id,
+      orbit_base::StopToken stop_token) override;
 
  private:
   [[nodiscard]] SymbolLoadingOutcome FindSymbolFile(std::string_view build_id) const;

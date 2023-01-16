@@ -50,6 +50,7 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
@@ -111,7 +112,6 @@
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "absl/flags/internal/flag.h"
 
@@ -172,7 +172,7 @@ using orbit_grpc_protos::TracepointInfo;
 
 using orbit_preset_file::PresetFile;
 
-using orbit_symbol_provider::ModuleIdentifier;
+using orbit_client_data::ModuleIdentifier;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 
 using DynamicInstrumentationMethod =
@@ -187,8 +187,9 @@ constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 const TimeRange kDefaultTimeRange =
     TimeRange(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 
-orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
-                                                               const ProcessData* process) {
+orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(
+    const PresetFile& preset, const ProcessData* process,
+    const orbit_client_data::ModuleIdentifierProvider& module_identifier_provider) {
   if (process == nullptr) {
     return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kNotLoadable);
   }
@@ -197,7 +198,7 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile&
   auto module_paths = preset.GetModulePaths();
   for (const auto& path : module_paths) {
     const std::string& module_path = path.string();
-    if (!process->IsModuleLoadedByProcess(module_path)) {
+    if (!process->IsModuleLoadedByProcess(module_path, module_identifier_provider)) {
       modules_not_found_count++;
     }
   }
@@ -272,7 +273,9 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
 
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
-  module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
+  module_identifier_provider_ = std::make_unique<orbit_client_data::ModuleIdentifierProvider>();
+  module_manager_ =
+      std::make_unique<orbit_client_data::ModuleManager>(module_identifier_provider_.get());
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 
   QObject::connect(
@@ -536,13 +539,15 @@ void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
 
 void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload({module_info});
-  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
+  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info,
+                                                                   *module_identifier_provider_);
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
 void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(module_infos);
-  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
+  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos,
+                                                               *module_identifier_provider_);
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
@@ -840,7 +845,8 @@ void OrbitApp::RefreshCaptureView() {
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   ORBIT_CHECK(process_ != nullptr);
-  const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
+  const ModuleData* module =
+      GetModuleByModulePathAndBuildId(function.module_path(), function.module_build_id());
   ORBIT_CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   std::optional<uint64_t> absolute_address = function.GetAbsoluteAddress(*process_, *module);
@@ -892,9 +898,11 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
-  const ModuleData* module = GetModuleByModuleIdentifier(function.module_id());
+  const ModuleData* module =
+      GetModuleByModulePathAndBuildId(function.module_path(), function.module_build_id());
 
-  auto loaded_module = RetrieveModuleWithDebugInfo(module->module_id());
+  auto loaded_module =
+      RetrieveModuleWithDebugInfo(function.module_path(), function.module_build_id());
 
   (void)loaded_module.Then(main_thread_executor_, [this, module, function](
                                                       const ErrorMessageOr<std::filesystem::path>&
@@ -1129,7 +1137,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(std::string_view filename) {
 }
 
 orbit_data_views::PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
-  return GetPresetLoadStateForProcess(preset, GetTargetProcess());
+  return GetPresetLoadStateForProcess(preset, GetTargetProcess(), *module_identifier_provider_);
 }
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
@@ -1243,9 +1251,10 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
 static void FindAndAddFunctionToStopUnwindingAt(
     std::string_view function_name, std::string_view module_name,
     const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
+    const orbit_client_data::ModuleIdentifierProvider& module_identifier_provider,
     std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
   std::vector<orbit_client_data::ModuleInMemory> modules =
-      process.FindModulesByFilename(module_name);
+      process.FindModulesByFilename(module_name, module_identifier_provider);
   for (const auto& module_in_memory : modules) {
     const ModuleData* module_data =
         module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id());
@@ -1339,7 +1348,7 @@ void OrbitApp::StartCapture() {
       data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     FindAndAddFunctionToStopUnwindingAt(
         kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
-        &absolute_address_to_size_of_functions_to_stop_unwinding_at);
+        *module_identifier_provider_, &absolute_address_to_size_of_functions_to_stop_unwinding_at);
   }
 
   ClientCaptureOptions options;
@@ -1557,14 +1566,15 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
-    const ModuleIdentifier& module_id) {
-  return symbol_loader_->RetrieveModuleWithDebugInfo(module_id);
+    std::string_view module_file_path, std::string_view module_build_id) {
+  return symbol_loader_->RetrieveModuleWithDebugInfo(module_file_path, module_build_id);
 }
 
-void OrbitApp::AddSymbols(const ModuleIdentifier& module_id,
+void OrbitApp::AddSymbols(std::string_view module_file_path, std::string_view module_build_id,
                           const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   ORBIT_SCOPE_FUNCTION;
-  ModuleData* module_data = GetMutableModuleByModuleIdentifier(module_id);
+  ModuleData* module_data =
+      GetMutableModuleByModulePathAndBuildId(module_file_path, module_build_id);
   // In case fallback symbols were previously loaded, remove them. Careful to call this before
   // ModuleData::AddSymbols, as it will clear the fallback symbols from the ModuleData, and
   // FunctionsDataView contains pointers to them.
@@ -1573,7 +1583,7 @@ void OrbitApp::AddSymbols(const ModuleIdentifier& module_id,
 
   const ProcessData* selected_process = GetTargetProcess();
   if (selected_process != nullptr &&
-      selected_process->IsModuleLoadedByProcess(module_data->file_path())) {
+      selected_process->IsModuleLoadedByProcess(module_data->module_id())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
     ORBIT_LOG("Added loaded function symbols for module \"%s\" to the Functions tab",
               module_data->file_path());
@@ -1583,15 +1593,17 @@ void OrbitApp::AddSymbols(const ModuleIdentifier& module_id,
   UpdateAfterSymbolLoadingThrottled();
 }
 
-void OrbitApp::AddFallbackSymbols(const ModuleIdentifier& module_id,
+void OrbitApp::AddFallbackSymbols(std::string_view module_file_path,
+                                  std::string_view module_build_id,
                                   const orbit_grpc_protos::ModuleSymbols& fallback_symbols) {
   ORBIT_SCOPE_FUNCTION;
-  ModuleData* module_data = GetMutableModuleByModuleIdentifier(module_id);
+  ModuleData* module_data =
+      GetMutableModuleByModulePathAndBuildId(module_file_path, module_build_id);
   module_data->AddFallbackSymbols(fallback_symbols);
 
   const ProcessData* selected_process = GetTargetProcess();
   if (selected_process != nullptr &&
-      selected_process->IsModuleLoadedByProcess(module_data->file_path())) {
+      selected_process->IsModuleLoadedByProcess(module_data->module_id())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
     ORBIT_LOG("Added fallback symbols for module \"%s\" to the Functions tab",
               module_data->file_path());
@@ -1603,13 +1615,12 @@ void OrbitApp::AddFallbackSymbols(const ModuleIdentifier& module_id,
 
 ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
     const std::filesystem::path& module_path) const {
-  std::vector<std::string> build_ids =
-      GetTargetProcess()->FindModuleBuildIdsByPath(module_path.string());
+  std::vector<std::string> build_ids = GetTargetProcess()->FindModuleBuildIdsByPath(
+      module_path.string(), *module_identifier_provider_);
 
   std::vector<const ModuleData*> result;
   for (const auto& build_id : build_ids) {
-    const ModuleData* module_data =
-        GetModuleByModuleIdentifier(ModuleIdentifier{module_path.string(), build_id});
+    const ModuleData* module_data = GetModuleByModulePathAndBuildId(module_path.string(), build_id);
     if (module_data == nullptr) {
       ORBIT_ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
                   module_path.string());
@@ -1955,11 +1966,6 @@ void OrbitApp::RefreshUIAfterModuleReload() {
 
 Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     absl::Span<const ModuleInfo> module_infos) {
-  ProcessData* process = GetMutableTargetProcess();
-
-  ORBIT_CHECK(process != nullptr);
-  process->UpdateModuleInfos(module_infos);
-
   // Updating the list of loaded modules (in memory) of a process can mean that a process has
   // now less loaded modules than before. If the user hooked (selected) functions of a module
   // that is now no longer used by the process, these functions need to be deselected (A).
@@ -1974,10 +1980,16 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   // Update modules and get the ones to reload.
   std::vector<ModuleData*> modules_to_reload = module_manager_->AddOrUpdateModules(module_infos);
 
+  ProcessData* process = GetMutableTargetProcess();
+
+  ORBIT_CHECK(process != nullptr);
+  process->UpdateModuleInfos(module_infos, *module_identifier_provider_);
+
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-    const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
-    if (!process->IsModuleLoadedByProcess(module->file_path())) {
+    const ModuleData* module =
+        GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
+    if (!process->IsModuleLoadedByProcess(module->file_path(), *module_identifier_provider_)) {
       // (A) deselect functions when the module is not loaded by the process anymore
       data_manager_->DeselectFunction(func);
     } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
@@ -1990,10 +2002,11 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
   for (const FunctionInfo& func :
        data_manager_->user_defined_capture_data().frame_track_functions()) {
-    const ModuleData* module = GetModuleByModuleIdentifier(func.module_id());
+    const ModuleData* module =
+        GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
-    if (!process->IsModuleLoadedByProcess(module->file_path())) {
+    if (!process->IsModuleLoadedByProcess(module->file_path(), *module_identifier_provider_)) {
       RemoveFrameTrack(func);
     } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
       RemoveFrameTrack(func);

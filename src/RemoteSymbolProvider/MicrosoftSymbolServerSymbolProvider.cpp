@@ -35,20 +35,21 @@ MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
   ORBIT_CHECK(download_manager != nullptr);
 }
 
-std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
-    const orbit_symbol_provider::ModuleIdentifier& module_id) {
+std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(std::string_view file_path,
+                                                                std::string_view build_id) {
   constexpr std::string_view kUrlToSymbolServer = "https://msdl.microsoft.com/download/symbols";
-  std::filesystem::path module_path(module_id.file_path);
+  std::filesystem::path module_path(file_path);
   std::filesystem::path symbol_filename = module_path.filename();
   symbol_filename.replace_extension(".pdb");
-  std::string build_id = absl::StrReplaceAll(module_id.build_id, {{"-", ""}});
-  return absl::Substitute("$0/$1/$2/$1", kUrlToSymbolServer, symbol_filename.string(), build_id);
+  std::string build_id_modified = absl::StrReplaceAll(build_id, {{"-", ""}});
+  return absl::Substitute("$0/$1/$2/$1", kUrlToSymbolServer, symbol_filename.string(),
+                          build_id_modified);
 }
 
 Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
-    const orbit_symbol_provider::ModuleIdentifier& module_id, orbit_base::StopToken stop_token) {
-  std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFilePath(module_id.file_path);
-  std::string url = GetDownloadUrl(module_id);
+    std::string_view file_path, std::string_view build_id, orbit_base::StopToken stop_token) {
+  std::filesystem::path save_file_path = symbol_cache_->GenerateCachedFilePath(file_path);
+  std::string url = GetDownloadUrl(file_path, build_id);
 
   return download_manager_->Download(std::move(url), save_file_path, std::move(stop_token))
       .ThenIfSuccess(

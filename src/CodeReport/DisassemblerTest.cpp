@@ -12,13 +12,14 @@
 
 #include "AssemblyTestLiterals.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "CodeReport/Disassembler.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_code_report::kFibonacciAbsoluteAddress;
 using orbit_code_report::kFibonacciAssembly;
@@ -28,7 +29,8 @@ using orbit_code_report::kFibonacciDisassembledWithSymbolsLoaded;
 TEST(Disassembler, Disassemble) {
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData empty_process{};
-  orbit_client_data::ModuleManager empty_module_manager{};
+  orbit_client_data::ModuleIdentifierProvider empty_module_identifier_provider{};
+  orbit_client_data::ModuleManager empty_module_manager{&empty_module_identifier_provider};
   disassembler.Disassemble(empty_process, empty_module_manager,
                            static_cast<const void*>(kFibonacciAssembly.data()),
                            kFibonacciAssembly.size(), kFibonacciAbsoluteAddress, true);
@@ -63,13 +65,15 @@ TEST(Disassembler, DisassembleWithSymbols) {
   module_info.set_build_id(kBuildId);
   module_info.set_file_path(kFilePath);
 
-  orbit_client_data::ProcessData process{};
-  process.AddOrUpdateModuleInfo(module_info);
-
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider{};
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   (void)module_manager.AddOrUpdateModules({module_info});
-  orbit_client_data::ModuleData* module_data = module_manager.GetMutableModuleByModuleIdentifier(
-      orbit_symbol_provider::ModuleIdentifier{kFilePath, kBuildId});
+
+  orbit_client_data::ModuleData* module_data =
+      module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
+
+  orbit_client_data::ProcessData process{};
+  process.AddOrUpdateModuleInfo(module_info, module_identifier_provider);
 
   orbit_grpc_protos::ModuleSymbols symbols;
   orbit_grpc_protos::SymbolInfo* symbol = symbols.add_symbol_infos();

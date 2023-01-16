@@ -368,7 +368,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void SetPostProcessedSamplingData() {
-    orbit_client_data::ModuleManager module_manager{};
+    orbit_client_data::ModuleIdentifierProvider module_identifier_provider{};
+    orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
     ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
                                             module_manager);
   }

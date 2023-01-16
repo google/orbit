@@ -41,7 +41,7 @@ constexpr const char* kEscapedFunctionName = "void foo&lt;int&gt;(const Foo&amp;
 
 const CallstackInfo kEmptyCallstack{{}, CallstackType::kDwarfUnwindingError};
 const CaptureData kEmptyCaptureData{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-const ModuleManager kModuleManager{};
+const ModuleManager kModuleManager{{}};
 
 const CallstackInfo kOneFrameCallstack{{kFrame1}, CallstackType::kComplete};
 

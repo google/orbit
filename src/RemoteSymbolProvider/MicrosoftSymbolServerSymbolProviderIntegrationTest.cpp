@@ -25,7 +25,6 @@
 #include "OrbitBase/StopSource.h"
 #include "QtUtils/MainThreadExecutor.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/MockSymbolCache.h"
 #include "TestUtils/TemporaryFile.h"
@@ -56,13 +55,12 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
 
   orbit_qt_utils::MainThreadExecutor executor{};
 
-  const std::string valid_module_name{"d3d11.pdb"};
-  const std::string valid_module_build_id{"FF5440275BFED43A86CC2B1F287A72151"};
-  orbit_symbol_provider::ModuleIdentifier valid_module_id{valid_module_name, valid_module_build_id};
+  constexpr std::string_view kValidModuleName{"d3d11.pdb"};
+  constexpr std::string_view kValidModuleBuildId{"FF5440275BFED43A86CC2B1F287A72151"};
 
   orbit_base::StopSource stop_source{};
 
-  symbol_provider.RetrieveSymbols(valid_module_id, stop_source.GetStopToken())
+  symbol_provider.RetrieveSymbols(kValidModuleName, kValidModuleBuildId, stop_source.GetStopToken())
       .Then(&executor, [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         orbit_symbol_provider::SymbolLoadingSuccessResult success_result =

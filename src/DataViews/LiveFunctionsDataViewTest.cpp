@@ -32,6 +32,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/MockScopeStatsCollection.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
@@ -51,7 +52,6 @@
 #include "MockAppInterface.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 
@@ -217,8 +217,8 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_grpc_protos::ModuleSymbols module_symbols;
     module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
-    orbit_client_data::ModuleData* module_data = module_manager->GetMutableModuleByModuleIdentifier(
-        orbit_symbol_provider::ModuleIdentifier{kModulePaths[i], kBuildIds[i]});
+    orbit_client_data::ModuleData* module_data =
+        module_manager->GetMutableModuleByModulePathAndBuildId(kModulePaths[i], kBuildIds[i]);
     module_data->AddSymbols(module_symbols);
 
     const FunctionInfo& function = *module_data->FindFunctionByVirtualAddress(kAddresses[i], true);
@@ -301,7 +301,8 @@ class LiveFunctionsDataViewTest : public testing::Test {
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::LiveFunctionsDataView view_;
 
-  orbit_client_data::ModuleManager module_manager_;
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider_;
+  orbit_client_data::ModuleManager module_manager_{&module_identifier_provider_};
   absl::flat_hash_map<ScopeId, FunctionInfo> functions_;
   std::unique_ptr<CaptureData> capture_data_;
 };

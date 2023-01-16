@@ -9,15 +9,16 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/module.pb.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_client_data {
 
+using orbit_client_data::ModuleIdentifier;
 using orbit_grpc_protos::ModuleInfo;
-using orbit_symbol_provider::ModuleIdentifier;
 
 TEST(ModuleManager, GetModuleByModuleIdentifier) {
   std::string name = "name of module";
@@ -33,33 +34,23 @@ TEST(ModuleManager, GetModuleByModuleIdentifier) {
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  {
-    const ModuleIdentifier module_id{file_path, build_id};
-    const ModuleData* module = module_manager.GetModuleByModuleIdentifier(module_id);
-    const ModuleData* mutable_module = module_manager.GetMutableModuleByModuleIdentifier(module_id);
-    ASSERT_NE(module, nullptr);
-    EXPECT_EQ(module, mutable_module);
-    EXPECT_EQ(module->name(), name);
-    EXPECT_EQ(module->file_path(), file_path);
-    EXPECT_EQ(module->file_size(), file_size);
-    EXPECT_EQ(module->build_id(), build_id);
-    EXPECT_EQ(module->load_bias(), load_bias);
-  }
-
-  {
-    const ModuleData* module_invalid_path =
-        module_manager.GetModuleByModuleIdentifier(ModuleIdentifier{"wrong/path", build_id});
-    EXPECT_EQ(module_invalid_path, nullptr);
-  }
-
-  {
-    const ModuleData* module_invalid_build_id =
-        module_manager.GetModuleByModuleIdentifier(ModuleIdentifier{file_path, "wrong buildid"});
-    EXPECT_EQ(module_invalid_build_id, nullptr);
-  }
+  const std::optional<ModuleIdentifier> module_id =
+      module_identifier_provider.GetModuleIdentifier(file_path, build_id);
+  ASSERT_TRUE(module_id.has_value());
+  const ModuleData* module = module_manager.GetModuleByModuleIdentifier(module_id.value());
+  const ModuleData* mutable_module =
+      module_manager.GetMutableModuleByModuleIdentifier(module_id.value());
+  ASSERT_NE(module, nullptr);
+  EXPECT_EQ(module, mutable_module);
+  EXPECT_EQ(module->name(), name);
+  EXPECT_EQ(module->file_path(), file_path);
+  EXPECT_EQ(module->file_size(), file_size);
+  EXPECT_EQ(module->build_id(), build_id);
+  EXPECT_EQ(module->load_bias(), load_bias);
 }
 
 TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
@@ -68,7 +59,6 @@ TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
   uint64_t file_size = 300;
   std::string build_id = "build id 1";
   uint64_t load_bias = 0x400;
-  const ModuleIdentifier module_id{file_path, build_id};
 
   ModuleInfo module_info;
   module_info.set_name(name);
@@ -77,10 +67,14 @@ TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByModuleIdentifier(module_id);
+  const std::optional<ModuleIdentifier> module_id =
+      module_identifier_provider.GetModuleIdentifier(file_path, build_id);
+  ASSERT_TRUE(module_id.has_value());
+  ModuleData* module = module_manager.GetMutableModuleByModuleIdentifier(module_id.value());
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), name);
   EXPECT_EQ(module->file_path(), file_path);
@@ -91,13 +85,6 @@ TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
   EXPECT_EQ(module->GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kNoSymbols);
   module->AddSymbols({});
   EXPECT_EQ(module->GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kDebugSymbols);
-
-  EXPECT_EQ(
-      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{"wrong/path", build_id}),
-      nullptr);
-  EXPECT_EQ(module_manager.GetMutableModuleByModuleIdentifier(
-                ModuleIdentifier{file_path, "wrong build_id"}),
-            nullptr);
 }
 
 TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
@@ -116,10 +103,14 @@ TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
   module_info.set_load_bias(kLoadBias);
   module_info.set_executable_segment_offset(kExecutableSegmentOffset);
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  ModuleInMemory module_in_memory{0x1000, 0x2000, kFilePath, kBuildId};
+  std::optional<ModuleIdentifier> module_identifier =
+      module_identifier_provider.GetModuleIdentifier(kFilePath, kBuildId);
+  ASSERT_TRUE(module_identifier.has_value());
+  ModuleInMemory module_in_memory{0x1000, 0x2000, module_identifier.value()};
 
   EXPECT_NE(module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id()), nullptr);
   EXPECT_EQ(module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(module_in_memory, 0x1000),
@@ -167,13 +158,13 @@ TEST(ModuleManager, AddOrUpdateModules) {
   module_info.set_build_id(kBuildId);
   module_info.set_load_bias(kLoadBias);
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   std::vector<ModuleData*> unloaded_modules = module_manager.AddOrUpdateModules({module_info});
   EXPECT_EQ(module_manager.GetAllModuleData().size(), 1);
   EXPECT_TRUE(unloaded_modules.empty());
 
-  ModuleData* module =
-      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{kFilePath, kBuildId});
+  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -245,8 +236,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->file_path(), kFilePath);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module = module_manager.GetModuleByModuleIdentifier(
-      ModuleIdentifier{different_path, kDifferentBuildId});
+  const ModuleData* different_module =
+      module_manager.GetModuleByModulePathAndBuildId(different_path, kDifferentBuildId);
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
@@ -266,13 +257,13 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   module_info.set_build_id(kBuildId);
   module_info.set_load_bias(kLoadBias);
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   std::vector<ModuleData*> not_changed_modules =
       module_manager.AddOrUpdateNotLoadedModules({module_info});
   EXPECT_TRUE(not_changed_modules.empty());
 
-  ModuleData* module =
-      module_manager.GetMutableModuleByModuleIdentifier(ModuleIdentifier{kFilePath, kBuildId});
+  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -340,8 +331,8 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_EQ(module->file_path(), kFilePath);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module = module_manager.GetModuleByModuleIdentifier(
-      ModuleIdentifier{different_path, kDifferentBuildId});
+  const ModuleData* different_module =
+      module_manager.GetModuleByModulePathAndBuildId(different_path, kDifferentBuildId);
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
@@ -363,7 +354,8 @@ TEST(ModuleManager, GetModulesByFilename) {
   module_info_3.set_file_path("path/to/file_3.ext");
   module_info_3.set_build_id("build_id_3");
 
-  ModuleManager module_manager;
+  ModuleIdentifierProvider module_identifier_provider{};
+  ModuleManager module_manager{&module_identifier_provider};
   std::vector<ModuleData*> changed_modules =
       module_manager.AddOrUpdateModules({module_info_1, module_info_2, module_info_3});
   EXPECT_TRUE(changed_modules.empty());

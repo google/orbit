@@ -17,8 +17,9 @@
 namespace orbit_symbol_provider {
 
 orbit_base::Future<SymbolLoadingOutcome> StructuredDebugDirectorySymbolProvider::RetrieveSymbols(
-    const ModuleIdentifier& module_id, orbit_base::StopToken /*stop_token*/) {
-  return {FindSymbolFile(module_id.build_id)};
+    std::string_view /*file_path*/, std::string_view build_id,
+    orbit_base::StopToken /*stop_token*/) {
+  return {FindSymbolFile(build_id)};
 }
 
 [[nodiscard]] SymbolLoadingOutcome StructuredDebugDirectorySymbolProvider::FindSymbolFile(

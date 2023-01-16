@@ -37,7 +37,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolUtils.h"
@@ -213,14 +212,14 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 }
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
-    const std::filesystem::path& structured_debug_store,
-    const orbit_symbol_provider::ModuleIdentifier& module_id) {
+    const std::filesystem::path& structured_debug_store, std::string_view module_path,
+    std::string_view build_id) {
   orbit_symbol_provider::StructuredDebugDirectorySymbolProvider provider{
       structured_debug_store,
       orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kStadiaInstanceUsrLibDebug};
   orbit_base::StopSource stop_source;
   orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> retrieve_future =
-      provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+      provider.RetrieveSymbols(module_path, build_id, stop_source.GetStopToken());
   // TODO(b/246919095): Do not use `.Get()` and do not do the explicit handling of
   // success/error/not_found here anymore, as soon as the rest of `FindSymbolsFilePath` is using
   // SymbolProviders.
@@ -267,9 +266,8 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
   // 3. If elf file, search in structured symbols stores.
   if (object_file_or_error.value()->IsElf()) {
     const fs::path structured_debug_store{"/usr/lib/debug"};
-    orbit_symbol_provider::ModuleIdentifier module_id{module_path, build_id};
-    ErrorMessageOr<fs::path> debug_store_result =
-        FindSymbolsFilePathInStructuredDebugStore(structured_debug_store, module_id);
+    ErrorMessageOr<fs::path> debug_store_result = FindSymbolsFilePathInStructuredDebugStore(
+        structured_debug_store, module_path.string(), build_id);
     if (debug_store_result.has_value()) return debug_store_result.value();
 
     not_found_messages.emplace_back(debug_store_result.error().message());

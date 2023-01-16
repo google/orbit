@@ -13,16 +13,16 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "TestUtils/TestUtils.h"
 
+using orbit_client_data::ModuleIdentifier;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_symbol_provider::ModuleIdentifier;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
@@ -73,30 +73,36 @@ TEST(ProcessData, DefaultConstructor) {
 TEST(ProcessData, UpdateModuleInfos) {
   {
     // valid module infos
-    const std::string file_path_1 = "filepath1";
-    constexpr const char* kBuildId1 = "build_id_1";
-    constexpr const char* kBuildId2 = "build_id_2";
+    constexpr std::string_view kFilePath1 = "filepath1";
+    constexpr std::string_view kBuildId1 = "build_id_1";
     uint64_t start_address1 = 0;
     uint64_t end_address_1 = 10;
     ModuleInfo module_info1;
-    module_info1.set_file_path(file_path_1);
-    module_info1.set_build_id(kBuildId1);
+    module_info1.set_file_path(std::string{kFilePath1});
+    module_info1.set_build_id(std::string{kBuildId1});
     module_info1.set_address_start(start_address1);
     module_info1.set_address_end(end_address_1);
 
-    const std::string file_path_2 = "filepath2";
+    constexpr std::string_view kFilePath2 = "filepath2";
+    constexpr std::string_view kBuildId2 = "build_id_2";
     uint64_t start_address_2 = 100;
     uint64_t end_address_2 = 110;
     ModuleInfo module_info2;
-    module_info2.set_file_path(file_path_2);
-    module_info2.set_build_id(kBuildId2);
+    module_info2.set_file_path(std::string{kFilePath2});
+    module_info2.set_build_id(std::string{kBuildId2});
     module_info2.set_address_start(start_address_2);
     module_info2.set_address_end(end_address_2);
 
     std::vector<ModuleInfo> module_infos{module_info1, module_info2};
 
+    ModuleIdentifierProvider module_identifier_provider;
+    ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+        module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId1);
+    ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+        module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId2);
+
     ProcessData process(ProcessInfo{});
-    process.UpdateModuleInfos(module_infos);
+    process.UpdateModuleInfos(module_infos, module_identifier_provider);
 
     const std::map<uint64_t, ModuleInMemory> module_memory_map = process.GetMemoryMapCopy();
 
@@ -105,46 +111,60 @@ TEST(ProcessData, UpdateModuleInfos) {
     const ModuleInMemory& memory_space_1 = module_memory_map.at(start_address1);
     EXPECT_EQ(memory_space_1.start(), start_address1);
     EXPECT_EQ(memory_space_1.end(), end_address_1);
-    EXPECT_EQ(memory_space_1.file_path(), file_path_1);
-    EXPECT_EQ(memory_space_1.build_id(), kBuildId1);
+    ASSERT_TRUE(module_identifier1.has_value());
+    EXPECT_EQ(memory_space_1.module_id(), module_identifier1.value());
 
     const ModuleInMemory& memory_space_2 = module_memory_map.at(start_address_2);
     EXPECT_EQ(memory_space_2.start(), start_address_2);
     EXPECT_EQ(memory_space_2.end(), end_address_2);
-    EXPECT_EQ(memory_space_2.file_path(), file_path_2);
-    EXPECT_EQ(memory_space_2.build_id(), kBuildId2);
+    ASSERT_TRUE(module_identifier2.has_value());
+    EXPECT_EQ(memory_space_2.module_id(), module_identifier2.value());
   }
   {
     // invalid module infos: same start address
     uint64_t start_address = 0;
 
-    const std::string file_path_1 = "filepath1";
+    constexpr std::string_view kFilePath1 = "filepath1";
+    constexpr std::string_view kBuildId1 = "build_id_1";
     uint64_t end_address_1 = 10;
     ModuleInfo module_info_1;
-    module_info_1.set_file_path(file_path_1);
+    module_info_1.set_file_path(std::string{kFilePath1});
+    module_info_1.set_build_id(std::string{kBuildId1});
     module_info_1.set_address_start(start_address);
     module_info_1.set_address_end(end_address_1);
 
-    const std::string file_path_2 = "filepath2";
+    constexpr std::string_view kFilePath2 = "filepath2";
+    constexpr std::string_view kBuildId2 = "build_id_2";
     uint64_t end_address_2 = 110;
     ModuleInfo module_info_2;
-    module_info_2.set_file_path(file_path_2);
+    module_info_2.set_file_path(std::string{kFilePath2});
+    module_info_2.set_build_id(std::string{kBuildId2});
     module_info_2.set_address_start(start_address);
-    module_info_1.set_address_end(end_address_2);
+    module_info_2.set_address_end(end_address_2);
 
     std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
+    ModuleIdentifierProvider module_identifier_provider;
+    ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+        module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId1);
+    ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+        module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId2);
+
     ProcessData process(ProcessInfo{});
-    ASSERT_DEATH(process.UpdateModuleInfos(module_infos), "Check failed");
+    ASSERT_DEATH(process.UpdateModuleInfos(module_infos, module_identifier_provider),
+                 "Check failed");
   }
 }
 
-TEST(ProcessData, MemorySpace) {
+TEST(ProcessData, FormattedAddressRange) {
   {
     // AddressRange
     uint64_t start = 0x4000;
     uint64_t end = 0x4100;
-    ModuleInMemory ms{start, end, "path/to/file", "build_id"};
+    orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+    ModuleInMemory ms{
+        start, end,
+        module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
     EXPECT_EQ(ms.FormattedAddressRange(), "[0000000000004000 - 0000000000004100]");
   }
 }
@@ -180,20 +200,32 @@ TEST(ProcessData, FindModuleBuildIdsByPath) {
   module_info_3.set_address_start(kStartAddress3);
   module_info_3.set_address_end(kEndAddress3);
 
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId1);
+  ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId2);
+  ErrorMessageOr<ModuleIdentifier> module_identifier3 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath3, kBuildId3);
+
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   ProcessData process(ProcessInfo{});
-  process.UpdateModuleInfos(module_infos);
-  process.AddOrUpdateModuleInfo(module_info_3);
+  process.UpdateModuleInfos(module_infos, module_identifier_provider);
+  process.AddOrUpdateModuleInfo(module_info_3, module_identifier_provider);
 
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath1));
-  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath1), ElementsAre(kBuildId1));
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath2));
-  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath2), ElementsAre(kBuildId2, kBuildId3));
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath3));
-  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath3), ElementsAre(kBuildId2, kBuildId3));
-  EXPECT_FALSE(process.IsModuleLoadedByProcess("not/loaded/module"));
-  EXPECT_TRUE(process.FindModuleBuildIdsByPath("not/loaded/module").empty());
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath1, module_identifier_provider));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath1, module_identifier_provider),
+              ElementsAre(kBuildId1));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath2, module_identifier_provider));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath2, module_identifier_provider),
+              ElementsAre(kBuildId2, kBuildId3));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath3, module_identifier_provider));
+  EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath3, module_identifier_provider),
+              ElementsAre(kBuildId2, kBuildId3));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess("not/loaded/module", module_identifier_provider));
+  EXPECT_TRUE(
+      process.FindModuleBuildIdsByPath("not/loaded/module", module_identifier_provider).empty());
 }
 
 TEST(ProcessData, FindModulesByFilename) {
@@ -236,76 +268,99 @@ TEST(ProcessData, FindModulesByFilename) {
   module_info_4.set_address_start(kStartAddress4);
   module_info_4.set_address_end(kEndAddress4);
 
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId1);
+  ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId2);
+  ErrorMessageOr<ModuleIdentifier> module_identifier3 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId3);
+
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2, module_info_3, module_info_4};
 
   ProcessData process(ProcessInfo{});
-  process.UpdateModuleInfos(module_infos);
+  process.UpdateModuleInfos(module_infos, module_identifier_provider);
 
-  EXPECT_THAT(process.FindModulesByFilename(kFileName1),
-              UnorderedElementsAre(AllOf(Property(&ModuleInMemory::file_path, kFilePath1),
-                                         Property(&ModuleInMemory::build_id, kBuildId1),
-                                         Property(&ModuleInMemory::start, kStartAddress1),
-                                         Property(&ModuleInMemory::end, kEndAddress1))));
+  ASSERT_TRUE(module_identifier1.has_value());
+  EXPECT_THAT(
+      process.FindModulesByFilename(kFileName1, module_identifier_provider),
+      UnorderedElementsAre(AllOf(Property(&ModuleInMemory::module_id, module_identifier1.value()),
+                                 Property(&ModuleInMemory::start, kStartAddress1),
+                                 Property(&ModuleInMemory::end, kEndAddress1))));
 
-  EXPECT_THAT(process.FindModulesByFilename(kFileName2),
-              UnorderedElementsAre(AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
-                                         Property(&ModuleInMemory::build_id, kBuildId2),
-                                         Property(&ModuleInMemory::start, kStartAddress2),
-                                         Property(&ModuleInMemory::end, kEndAddress2)),
-                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
-                                         Property(&ModuleInMemory::build_id, kBuildId3),
-                                         Property(&ModuleInMemory::start, kStartAddress3),
-                                         Property(&ModuleInMemory::end, kEndAddress3)),
-                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
-                                         Property(&ModuleInMemory::build_id, kBuildId2),
-                                         Property(&ModuleInMemory::start, kStartAddress4),
-                                         Property(&ModuleInMemory::end, kEndAddress4))));
+  EXPECT_THAT(
+      process.FindModulesByFilename(kFileName2, module_identifier_provider),
+      UnorderedElementsAre(AllOf(Property(&ModuleInMemory::module_id, module_identifier2.value()),
+                                 Property(&ModuleInMemory::start, kStartAddress2),
+                                 Property(&ModuleInMemory::end, kEndAddress2)),
+                           AllOf(Property(&ModuleInMemory::module_id, module_identifier3.value()),
+                                 Property(&ModuleInMemory::start, kStartAddress3),
+                                 Property(&ModuleInMemory::end, kEndAddress3)),
+                           AllOf(Property(&ModuleInMemory::module_id, module_identifier2.value()),
+                                 Property(&ModuleInMemory::start, kStartAddress4),
+                                 Property(&ModuleInMemory::end, kEndAddress4))));
 }
 
 TEST(ProcessData, IsModuleLoadedByProcess) {
+  constexpr std::string_view kFilePath1 = "path/to/file1";
+  constexpr std::string_view kBuildId1 = "build_id_1";
   ModuleInfo module_info_1;
-  module_info_1.set_file_path("path/to/file1");
+  module_info_1.set_file_path(std::string(kFilePath1));
+  module_info_1.set_build_id(std::string(kBuildId1));
   module_info_1.set_address_start(0);
   module_info_1.set_address_end(10);
 
+  constexpr std::string_view kFilePath2 = "path/to/file2";
+  constexpr std::string_view kBuildId2 = "build_id_2";
   ModuleInfo module_info_2;
-  module_info_2.set_file_path("path/to/file2");
+  module_info_2.set_file_path(std::string(kFilePath2));
+  module_info_2.set_build_id(std::string(kBuildId2));
   module_info_2.set_address_start(100);
   module_info_2.set_address_end(110);
-  module_info_2.set_build_id("build_id_2");
+
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId1);
+  ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath2, kBuildId2);
 
   ProcessData process(ProcessInfo{});
-  process.UpdateModuleInfos({module_info_1, module_info_2});
+  process.UpdateModuleInfos({module_info_1, module_info_2}, module_identifier_provider);
 
   // path empty
-  EXPECT_FALSE(process.IsModuleLoadedByProcess(""));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess("", module_identifier_provider));
 
   // wrong path
-  EXPECT_FALSE(process.IsModuleLoadedByProcess("/path/to/file1"));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess("/path/to/file1", module_identifier_provider));
 
   // correct path
-  EXPECT_TRUE(process.IsModuleLoadedByProcess("path/to/file1"));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(kFilePath1, module_identifier_provider));
 
   // Module without build id
-  ModuleData module_1{module_info_1};
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_1));
+  ASSERT_TRUE(module_identifier1.has_value());
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(module_identifier1.value()));
 
   // Module with build id
-  ModuleData module_2{module_info_2};
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_2));
+  ASSERT_TRUE(module_identifier2.has_value());
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(module_identifier2.value()));
 
   // Different module (same path, different build_id)
+  constexpr std::string_view kBuildId3 = "build_id_3";
   ModuleInfo module_info_3;
-  module_info_3.set_file_path("path/to/file1");
+  module_info_3.set_file_path(std::string(kFilePath1));
+  module_info_3.set_build_id(std::string(kBuildId3));
   module_info_3.set_address_start(0);
   module_info_3.set_address_end(10);
-  module_info_3.set_build_id("build_id_3");
-  process.AddOrUpdateModuleInfo({module_info_3});
 
-  EXPECT_TRUE(process.IsModuleLoadedByProcess("path/to/file1"));
-  EXPECT_FALSE(process.IsModuleLoadedByProcess(&module_1));
-  ModuleData module_3{module_info_3};
-  EXPECT_TRUE(process.IsModuleLoadedByProcess(&module_3));
+  ErrorMessageOr<ModuleIdentifier> module_identifier3 =
+      module_identifier_provider.CreateModuleIdentifier(kFilePath1, kBuildId3);
+  ASSERT_TRUE(module_identifier3.has_value());
+
+  process.AddOrUpdateModuleInfo({module_info_3}, module_identifier_provider);
+
+  EXPECT_TRUE(process.IsModuleLoadedByProcess("path/to/file1", module_identifier_provider));
+  EXPECT_FALSE(process.IsModuleLoadedByProcess(module_identifier1.value()));
+  EXPECT_TRUE(process.IsModuleLoadedByProcess(module_identifier3.value()));
 }
 
 TEST(ProcessData, GetModuleBaseAddresses) {
@@ -339,41 +394,67 @@ TEST(ProcessData, GetModuleBaseAddresses) {
   module_info_3.set_address_start(start_address_3);
   module_info_3.set_address_end(end_address_3);
 
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+      module_identifier_provider.CreateModuleIdentifier(file_path_1, build_id_1);
+  ASSERT_TRUE(module_identifier1.has_value());
+  ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+      module_identifier_provider.CreateModuleIdentifier(file_path_2, build_id_2);
+  ASSERT_TRUE(module_identifier2.has_value());
+
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   ProcessData process(ProcessInfo{});
-  process.UpdateModuleInfos(module_infos);
+  process.UpdateModuleInfos(module_infos, module_identifier_provider);
 
   {
     const std::vector<uint64_t> file_1_base_address =
-        process.GetModuleBaseAddresses(file_path_1, build_id_1);
+        process.GetModuleBaseAddresses(module_identifier1.value());
     ASSERT_EQ(file_1_base_address.size(), 1);
     EXPECT_THAT(file_1_base_address, ElementsAre(start_address_1));
 
     const std::vector<uint64_t> file_2_base_address =
-        process.GetModuleBaseAddresses(file_path_2, build_id_2);
+        process.GetModuleBaseAddresses(module_identifier2.value());
     ASSERT_EQ(file_2_base_address.size(), 1);
     EXPECT_THAT(file_2_base_address, ElementsAre(start_address_2));
 
-    EXPECT_EQ(process.GetModuleBaseAddresses("does/not/exist", "nobuildid").size(), 0);
-    EXPECT_EQ(process.GetModuleBaseAddresses(file_path_1, build_id_2).size(), 0);
+    ErrorMessageOr<ModuleIdentifier> module_identifier_module_does_not_exist1 =
+        module_identifier_provider.CreateModuleIdentifier("does/not/exist", "nobuildid");
+    ASSERT_TRUE(module_identifier_module_does_not_exist1.has_value());
+    EXPECT_EQ(
+        process.GetModuleBaseAddresses(module_identifier_module_does_not_exist1.value()).size(), 0);
+
+    ErrorMessageOr<ModuleIdentifier> module_identifier_module_does_not_exist2 =
+        module_identifier_provider.CreateModuleIdentifier(file_path_1, build_id_2);
+    ASSERT_TRUE(module_identifier_module_does_not_exist2.has_value());
+    EXPECT_EQ(
+        process.GetModuleBaseAddresses(module_identifier_module_does_not_exist2.value()).size(), 0);
   }
 
-  process.AddOrUpdateModuleInfo(module_info_3);
+  process.AddOrUpdateModuleInfo(module_info_3, module_identifier_provider);
 
   {
     const std::vector<uint64_t> file_1_base_address =
-        process.GetModuleBaseAddresses(file_path_1, build_id_1);
+        process.GetModuleBaseAddresses(module_identifier1.value());
     ASSERT_EQ(file_1_base_address.size(), 1);
     EXPECT_THAT(file_1_base_address, ElementsAre(start_address_1));
 
     const std::vector<uint64_t> file_2_base_address =
-        process.GetModuleBaseAddresses(file_path_2, build_id_2);
+        process.GetModuleBaseAddresses(module_identifier2.value());
     ASSERT_EQ(file_2_base_address.size(), 2);
     EXPECT_THAT(file_2_base_address, ElementsAre(start_address_2, start_address_3));
 
-    EXPECT_EQ(process.GetModuleBaseAddresses("does/not/exist", "nobuildid").size(), 0);
-    EXPECT_EQ(process.GetModuleBaseAddresses(file_path_1, build_id_2).size(), 0);
+    std::optional<ModuleIdentifier> module_identifier_module_does_not_exist1 =
+        module_identifier_provider.GetModuleIdentifier("does/not/exist", "nobuildid");
+    ASSERT_TRUE(module_identifier_module_does_not_exist1.has_value());
+    EXPECT_EQ(
+        process.GetModuleBaseAddresses(module_identifier_module_does_not_exist1.value()).size(), 0);
+
+    std::optional<ModuleIdentifier> module_identifier_module_does_not_exist2 =
+        module_identifier_provider.GetModuleIdentifier(file_path_1, build_id_2);
+    ASSERT_TRUE(module_identifier_module_does_not_exist2.has_value());
+    EXPECT_EQ(
+        process.GetModuleBaseAddresses(module_identifier_module_does_not_exist2.value()).size(), 0);
   }
 }
 
@@ -404,7 +485,12 @@ TEST(ProcessData, FindModuleByAddress) {
   module_info.set_address_start(start_address);
   module_info.set_address_end(end_address);
 
-  process.UpdateModuleInfos({module_info});
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier =
+      module_identifier_provider.CreateModuleIdentifier(module_path, kBuildId);
+  ASSERT_TRUE(module_identifier.has_value());
+
+  process.UpdateModuleInfos({module_info}, module_identifier_provider);
 
   {
     // before start address
@@ -419,19 +505,16 @@ TEST(ProcessData, FindModuleByAddress) {
     // start address
     const auto result = process.FindModuleByAddress(start_address);
     ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value().file_path(), module_path);
+    // TODO: CHECK MODULE ID
     EXPECT_EQ(result.value().start(), start_address);
     EXPECT_EQ(result.value().end(), end_address);
-    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
   {
     // after start address
     const auto result = process.FindModuleByAddress(start_address + 10);
     ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value().file_path(), module_path);
     EXPECT_EQ(result.value().start(), start_address);
     EXPECT_EQ(result.value().end(), end_address);
-    EXPECT_EQ(result.value().build_id(), kBuildId);
   }
   {
     // exactly end address
@@ -481,16 +564,24 @@ TEST(ProcessData, GetUniqueModulesPathAndBuildIds) {
   module_info_3.set_address_start(start_address_3);
   module_info_3.set_address_end(end_address_3);
 
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier1 =
+      module_identifier_provider.CreateModuleIdentifier(file_path_1, build_id_1);
+  ASSERT_TRUE(module_identifier1.has_value());
+  ErrorMessageOr<ModuleIdentifier> module_identifier2 =
+      module_identifier_provider.CreateModuleIdentifier(file_path_2, build_id_2);
+  ASSERT_TRUE(module_identifier2.has_value());
+
   std::vector<ModuleInfo> module_infos{module_info_1, module_info_2};
 
   ProcessData process(ProcessInfo{});
-  process.UpdateModuleInfos(module_infos);
-  process.AddOrUpdateModuleInfo(module_info_3);
+  process.UpdateModuleInfos(module_infos, module_identifier_provider);
+  process.AddOrUpdateModuleInfo(module_info_3, module_identifier_provider);
 
   auto module_ids = process.GetUniqueModuleIdentifiers();
   ASSERT_EQ(module_ids.size(), 2);
-  EXPECT_THAT(module_ids, testing::UnorderedElementsAre(ModuleIdentifier{file_path_1, build_id_1},
-                                                        ModuleIdentifier{file_path_2, build_id_2}));
+  EXPECT_THAT(module_ids, testing::UnorderedElementsAre(module_identifier1.value(),
+                                                        module_identifier2.value()));
 }
 
 TEST(ProcessData, RemapModule) {
@@ -515,39 +606,41 @@ TEST(ProcessData, RemapModule) {
   module_info.set_address_start(kStartAddress);
   module_info.set_address_end(kEndAddress);
 
-  process.UpdateModuleInfos({module_info});
+  ModuleIdentifierProvider module_identifier_provider;
+  ErrorMessageOr<ModuleIdentifier> module_identifier =
+      module_identifier_provider.CreateModuleIdentifier(kModulePath, kBuildId);
+  ASSERT_TRUE(module_identifier.has_value());
+
+  process.UpdateModuleInfos({module_info}, module_identifier_provider);
 
   {
     const auto result = process.FindModuleByAddress(kStartAddress);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath);
     EXPECT_EQ(result.value().start(), kStartAddress);
     EXPECT_EQ(result.value().end(), kEndAddress);
-    EXPECT_EQ(result.value().build_id(), kBuildId);
+    EXPECT_EQ(result.value().module_id(), module_identifier.value());
   }
 
   module_info.set_address_start(kNewStartAddress);
   module_info.set_address_end(kNewEndAddress);
-  process.AddOrUpdateModuleInfo(module_info);
+  process.AddOrUpdateModuleInfo(module_info, module_identifier_provider);
 
   {
     // old start address is still there and has correct data
     const auto result = process.FindModuleByAddress(kStartAddress);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath);
     EXPECT_EQ(result.value().start(), kStartAddress);
     EXPECT_EQ(result.value().end(), kEndAddress);
-    EXPECT_EQ(result.value().build_id(), kBuildId);
+    EXPECT_EQ(result.value().module_id(), module_identifier.value());
   }
 
   {
     // new start address is also available
     const auto result = process.FindModuleByAddress(kNewStartAddress);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath);
     EXPECT_EQ(result.value().start(), kNewStartAddress);
     EXPECT_EQ(result.value().end(), kNewEndAddress);
-    EXPECT_EQ(result.value().build_id(), kBuildId);
+    EXPECT_EQ(result.value().module_id(), module_identifier.value());
   }
 }
 
@@ -557,7 +650,7 @@ class ProcessDataModuleIntersectionTest : public ::testing::Test {
     ProcessInfo info;
     info.set_name(kProcessName);
     process_.SetProcessInfo(info);
-    process_.UpdateModuleInfos(initial_mapping_);
+    process_.UpdateModuleInfos(initial_mapping_, module_identifier_provider_);
   }
 
   static constexpr const char* kProcessName = "Test Name";
@@ -585,30 +678,34 @@ class ProcessDataModuleIntersectionTest : public ::testing::Test {
   static constexpr const char* kNewModulePath = "test/file/path";
   static constexpr const char* kNewBuildId = "build_id";
 
-  static ModuleInfo CreateModule(std::string module_path, std::string build_id,
-                                 uint64_t start_address, uint64_t end_address) {
+  ModuleInfo CreateModule(std::string module_path, std::string build_id, uint64_t start_address,
+                          uint64_t end_address) {
+    std::ignore = module_identifier_provider_.CreateModuleIdentifier(module_path, build_id);
+
     ModuleInfo module_info;
     module_info.set_file_path(std::move(module_path));
     module_info.set_build_id(std::move(build_id));
     module_info.set_address_start(start_address);
     module_info.set_address_end(end_address);
+
     return module_info;
   }
+
+  ProcessData process_;
+  ModuleIdentifierProvider module_identifier_provider_;
 
   const std::vector<ModuleInfo> initial_mapping_{
       CreateModule(kModulePath0, kBuildId0, kStartAddress0, kEndAddress0),
       CreateModule(kModulePath1, kBuildId1, kStartAddress1, kEndAddress1),
       CreateModule(kModulePath2, kBuildId2, kStartAddress2, kEndAddress2),
       CreateModule(kModulePath3, kBuildId3, kStartAddress3, kEndAddress3)};
-
-  ProcessData process_;
 };
 
 TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 150, 250);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 3);
 
@@ -616,8 +713,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath0);
-    EXPECT_EQ(result.value().build_id(), kBuildId0);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath0, kBuildId0).value());
     EXPECT_EQ(result.value().start(), kStartAddress0);
     EXPECT_EQ(result.value().end(), kEndAddress0);
   }
@@ -625,8 +722,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath3);
-    EXPECT_EQ(result.value().build_id(), kBuildId3);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath3, kBuildId3).value());
     EXPECT_EQ(result.value().start(), kStartAddress3);
     EXPECT_EQ(result.value().end(), kEndAddress3);
   }
@@ -635,8 +732,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
     // We can find the new module
     const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 150);
     EXPECT_EQ(result.value().end(), 250);
 
@@ -649,7 +746,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
 
 TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBorders) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 100, 300);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 3);
 
@@ -657,8 +754,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
   {
     const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath0);
-    EXPECT_EQ(result.value().build_id(), kBuildId0);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath0, kBuildId0).value());
     EXPECT_EQ(result.value().start(), kStartAddress0);
     EXPECT_EQ(result.value().end(), kEndAddress0);
   }
@@ -666,8 +763,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
   {
     const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath3);
-    EXPECT_EQ(result.value().build_id(), kBuildId3);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath3, kBuildId3).value());
     EXPECT_EQ(result.value().start(), kStartAddress3);
     EXPECT_EQ(result.value().end(), kEndAddress3);
   }
@@ -676,8 +773,8 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
     // We can find the new module
     const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 100);
     EXPECT_EQ(result.value().end(), 300);
   }
@@ -686,7 +783,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
 TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) {
   // Address range is fully inside another module's address range
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 110, 190);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
@@ -694,8 +791,8 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
   {
     const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath0);
-    EXPECT_EQ(result.value().build_id(), kBuildId0);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath0, kBuildId0).value());
     EXPECT_EQ(result.value().start(), kStartAddress0);
     EXPECT_EQ(result.value().end(), kEndAddress0);
   }
@@ -703,8 +800,8 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
   {
     const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath2);
-    EXPECT_EQ(result.value().build_id(), kBuildId2);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath2, kBuildId2).value());
     EXPECT_EQ(result.value().start(), kStartAddress2);
     EXPECT_EQ(result.value().end(), kEndAddress2);
   }
@@ -712,8 +809,8 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
   {
     const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath3);
-    EXPECT_EQ(result.value().build_id(), kBuildId3);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath3, kBuildId3).value());
     EXPECT_EQ(result.value().start(), kStartAddress3);
     EXPECT_EQ(result.value().end(), kEndAddress3);
   }
@@ -722,8 +819,8 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
     // We can find the new module
     const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 110);
     EXPECT_EQ(result.value().end(), 190);
 
@@ -735,15 +832,15 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
 
 TEST_F(ProcessDataModuleIntersectionTest, OverlapsWithEverything) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 10, 450);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 1);
 
   {
     const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 10);
     EXPECT_EQ(result.value().end(), 450);
   }
@@ -751,15 +848,15 @@ TEST_F(ProcessDataModuleIntersectionTest, OverlapsWithEverything) {
 
 TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 10, 90);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   {
     const auto result = process_.FindModuleByAddress(50);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 10);
     EXPECT_EQ(result.value().end(), 90);
 
@@ -771,8 +868,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress1);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath1);
-    EXPECT_EQ(result.value().build_id(), kBuildId1);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath1, kBuildId1).value());
     EXPECT_EQ(result.value().start(), kStartAddress1);
     EXPECT_EQ(result.value().end(), kEndAddress1);
   }
@@ -780,8 +877,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath2);
-    EXPECT_EQ(result.value().build_id(), kBuildId2);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath2, kBuildId2).value());
     EXPECT_EQ(result.value().start(), kStartAddress2);
     EXPECT_EQ(result.value().end(), kEndAddress2);
   }
@@ -789,8 +886,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath3);
-    EXPECT_EQ(result.value().build_id(), kBuildId3);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath3, kBuildId3).value());
     EXPECT_EQ(result.value().start(), kStartAddress3);
     EXPECT_EQ(result.value().end(), kEndAddress3);
   }
@@ -798,15 +895,15 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
 
 TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 350, 450);
-  process_.AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module, module_identifier_provider_);
 
   EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   {
     const auto result = process_.FindModuleByAddress(370);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kNewModulePath);
-    EXPECT_EQ(result.value().build_id(), kNewBuildId);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kNewModulePath, kNewBuildId).value());
     EXPECT_EQ(result.value().start(), 350);
     EXPECT_EQ(result.value().end(), 450);
 
@@ -818,8 +915,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath0);
-    EXPECT_EQ(result.value().build_id(), kBuildId0);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath0, kBuildId0).value());
     EXPECT_EQ(result.value().start(), kStartAddress0);
     EXPECT_EQ(result.value().end(), kEndAddress0);
   }
@@ -827,8 +924,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress1);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath1);
-    EXPECT_EQ(result.value().build_id(), kBuildId1);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath1, kBuildId1).value());
     EXPECT_EQ(result.value().start(), kStartAddress1);
     EXPECT_EQ(result.value().end(), kEndAddress1);
   }
@@ -836,8 +933,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   {
     const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
-    EXPECT_EQ(result.value().file_path(), kModulePath2);
-    EXPECT_EQ(result.value().build_id(), kBuildId2);
+    EXPECT_EQ(result.value().module_id(),
+              module_identifier_provider_.GetModuleIdentifier(kModulePath2, kBuildId2).value());
     EXPECT_EQ(result.value().start(), kStartAddress2);
     EXPECT_EQ(result.value().end(), kEndAddress2);
   }

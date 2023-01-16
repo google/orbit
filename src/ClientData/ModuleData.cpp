@@ -19,7 +19,9 @@ using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
 
-ModuleData::ModuleData(ModuleInfo module_info) : module_info_{std::move(module_info)} {}
+ModuleData::ModuleData(ModuleInfo module_info,
+                       orbit_client_data::ModuleIdentifier module_identifier)
+    : module_identifier_(module_identifier), module_info_{std::move(module_info)} {}
 
 const std::string& ModuleData::name() const {
   absl::MutexLock lock(&mutex_);
@@ -59,11 +61,6 @@ ModuleInfo::ObjectFileType ModuleData::object_file_type() const {
 std::vector<ModuleInfo::ObjectSegment> ModuleData::GetObjectSegments() const {
   absl::MutexLock lock(&mutex_);
   return {module_info_.object_segments().begin(), module_info_.object_segments().end()};
-}
-
-orbit_symbol_provider::ModuleIdentifier ModuleData::module_id() const {
-  absl::MutexLock lock(&mutex_);
-  return orbit_symbol_provider::ModuleIdentifier{module_info_.file_path(), module_info_.build_id()};
 }
 
 uint64_t ModuleData::ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const {

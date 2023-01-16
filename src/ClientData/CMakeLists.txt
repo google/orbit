@@ -29,6 +29,9 @@ target_sources(ClientData PUBLIC
         include/ClientData/MockScopeStatsCollection.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
+        include/ClientData/ModuleIdentifier.h
+        include/ClientData/ModuleIdentifierProvider.h
+        include/ClientData/ModuleInMemory.h
         include/ClientData/ModuleManager.h
         include/ClientData/PageFaultsInfo.h
         include/ClientData/PostProcessedSamplingData.h
@@ -98,8 +101,9 @@ target_sources(ClientDataTests PRIVATE
         DataManagerTest.cpp
         FastRenderingUtilsTest.cpp
         FunctionInfoTest.cpp
-        ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
+        ModuleIdentifierTest.cpp
+        ModuleIdentifierProviderTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeIdProviderTest.cpp

@@ -32,7 +32,7 @@ TEST(DisassemblyReport, Empty) {
 
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData process;
-  orbit_client_data::ModuleManager module_manager;
+  orbit_client_data::ModuleManager module_manager{{}};
   disassembler.Disassemble(process, module_manager,
                            static_cast<const void*>(kFibonacciAssembly.data()),
                            kFibonacciAssembly.size(), kFibonacciAbsoluteAddress, true);
@@ -69,7 +69,7 @@ TEST(DisassemblyReport, Simple) {
 
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData process;
-  orbit_client_data::ModuleManager module_manager;
+  orbit_client_data::ModuleManager module_manager{{}};
   disassembler.Disassemble(process, module_manager,
                            static_cast<const void*>(kFibonacciAssembly.data()),
                            kFibonacciAssembly.size(), kFibonacciAbsoluteAddress, true);

@@ -25,6 +25,7 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureSerializer.h"
@@ -38,7 +39,6 @@
 #include "OrbitBase/NotFoundOr.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "Symbols/SymbolHelper.h"
 
 ABSL_DECLARE_FLAG(bool, thread_state);
@@ -202,9 +202,8 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
-  main_module_ =
-      module_manager_.GetMutableModuleByModuleIdentifier(orbit_symbol_provider::ModuleIdentifier{
-          target_process_->full_path(), target_process_build_id});
+  main_module_ = module_manager_.GetMutableModuleByModulePathAndBuildId(
+      target_process_->full_path(), target_process_build_id);
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }
@@ -212,7 +211,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   ORBIT_LOG("Module info: name:%s, path:%s, size:%d, build_id:%s", main_module_->name(),
             main_module_->file_path(), main_module_->file_size(), main_module_->build_id());
 
-  target_process_->UpdateModuleInfos(module_infos);
+  target_process_->UpdateModuleInfos(module_infos, module_identifier_provider_);
 
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();

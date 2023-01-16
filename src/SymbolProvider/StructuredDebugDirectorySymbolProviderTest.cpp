@@ -13,7 +13,6 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/StopSource.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Test/Path.h"
@@ -38,10 +37,9 @@ class StructuredDebugDirectorySymbolProviderTest : public ::testing::Test {
 
 TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsSuccessfully) {
   const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
-  const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-  const orbit_base::Future<SymbolLoadingOutcome> future =
-      symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
+  const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
+      "/not/needed/module/path", build_id, stop_source_.GetStopToken());
 
   bool lambda_executed = false;
   orbit_base::ImmediateExecutor executor;
@@ -66,10 +64,9 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsSuccessfully) 
 
 TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsNotFound) {
   const std::string build_id = "different build id";
-  const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-  const orbit_base::Future<SymbolLoadingOutcome> future =
-      symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
+  const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
+      "/not/needed/module/path", build_id, stop_source_.GetStopToken());
 
   bool lambda_executed = false;
   orbit_base::ImmediateExecutor executor;
@@ -89,10 +86,9 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsNotFound) {
 TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsError) {
   {
     const std::string build_id = "a";  // build id mal formed (too short)
-    const ModuleIdentifier module_id{"/not/needed/module/path", build_id};
 
-    const orbit_base::Future<SymbolLoadingOutcome> future =
-        symbol_provider_.RetrieveSymbols(module_id, stop_source_.GetStopToken());
+    const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
+        "/not/needed/module/path", build_id, stop_source_.GetStopToken());
 
     bool lambda_executed = false;
     orbit_base::ImmediateExecutor executor;

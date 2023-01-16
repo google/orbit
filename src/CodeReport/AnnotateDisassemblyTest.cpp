@@ -67,7 +67,7 @@ static void TestSimple(bool windows_line_endings) {
 
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData process;
-  orbit_client_data::ModuleManager module_manager;
+  orbit_client_data::ModuleManager module_manager{{}};
   disassembler.Disassemble(process, module_manager,
                            static_cast<const void*>(kMainFunctionInstructions.data()),
                            kMainFunctionInstructions.size(), 0x401140, true);

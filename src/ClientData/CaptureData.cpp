@@ -17,18 +17,18 @@
 
 #include "ClientData/FastRenderingUtils.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStatsCollection.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/Typedef.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
+using orbit_client_data::ModuleIdentifier;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_symbol_provider::ModuleIdentifier;
 
 namespace orbit_client_data {
 
@@ -176,8 +176,8 @@ void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
       continue;
     }
 
-    const ModuleData* const module_data = module_manager.GetModuleByModuleIdentifier(
-        ModuleIdentifier{instrumented_function.file_path(), instrumented_function.file_build_id()});
+    const ModuleData* const module_data = module_manager.GetModuleByModulePathAndBuildId(
+        instrumented_function.file_path(), instrumented_function.file_build_id());
     if (module_data == nullptr) {
       continue;
     }

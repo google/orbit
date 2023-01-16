@@ -41,6 +41,8 @@
 #include "ClientData/DataManager.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PageFaultsInfo.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -90,7 +92,6 @@
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "Statistics/Histogram.h"
 #include "StringManager/StringManager.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::AbstractCaptureListener<OrbitApp>,
@@ -264,7 +265,7 @@ class OrbitApp final : public DataViewFactory,
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      const orbit_symbol_provider::ModuleIdentifier& module_id);
+      std::string_view module_file_path, std::string_view module_build_id);
 
   orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() override;
   orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
@@ -311,12 +312,20 @@ class OrbitApp final : public DataViewFactory,
     return manual_instrumentation_manager_.get();
   }
   [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByModuleIdentifier(
-      const orbit_symbol_provider::ModuleIdentifier& module_id) override {
+      const orbit_client_data::ModuleIdentifier& module_id) override {
     return module_manager_->GetMutableModuleByModuleIdentifier(module_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
-      const orbit_symbol_provider::ModuleIdentifier& module_id) const override {
+      const orbit_client_data::ModuleIdentifier& module_id) const override {
     return module_manager_->GetModuleByModuleIdentifier(module_id);
+  }
+  [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByModulePathAndBuildId(
+      std::string_view module_path, std::string_view build_id) override {
+    return module_manager_->GetMutableModuleByModulePathAndBuildId(module_path, build_id);
+  }
+  [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByModulePathAndBuildId(
+      std::string_view module_path, std::string_view build_id) const override {
+    return module_manager_->GetModuleByModulePathAndBuildId(module_path, build_id);
   }
   [[nodiscard]] const orbit_client_data::ProcessData& GetConnectedOrLoadedProcess() const;
 
@@ -448,9 +457,9 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) override;
-  void AddSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
+  void AddSymbols(std::string_view module_file_path, std::string_view module_build_id,
                   const orbit_grpc_protos::ModuleSymbols& module_symbols) override;
-  void AddFallbackSymbols(const orbit_symbol_provider::ModuleIdentifier& module_id,
+  void AddFallbackSymbols(std::string_view module_file_path, std::string_view module_build_id,
                           const orbit_grpc_protos::ModuleSymbols& fallback_symbols) override;
 
   [[nodiscard]] bool IsModuleDownloading(
@@ -566,6 +575,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
+  std::unique_ptr<orbit_client_data::ModuleIdentifierProvider> module_identifier_provider_;
   std::unique_ptr<orbit_client_data::DataManager> data_manager_;
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;

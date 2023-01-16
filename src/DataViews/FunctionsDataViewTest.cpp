@@ -297,7 +297,8 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   // Since CaptureData is entangled with ModuleManager the test needs to create a lot of empty
   // data structures and manager objects.
 
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager));
   (void)module_manager.AddOrUpdateModules({module_infos_[0]});
   ASSERT_EQ(module_manager.GetAllModuleData().size(), 1);
@@ -309,7 +310,8 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   orbit_grpc_protos::ModuleSymbols module_symbols;
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
   orbit_client_data::ModuleData* module_data =
-      module_manager.GetMutableModuleByModuleIdentifier(functions_[0].module_id());
+      module_manager.GetMutableModuleByModulePathAndBuildId(functions_[0].module_path(),
+                                                            functions_[0].module_build_id());
   module_data->AddSymbols(module_symbols);
 
   orbit_grpc_protos::CaptureStarted capture_started{};

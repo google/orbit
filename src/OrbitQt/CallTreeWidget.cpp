@@ -45,6 +45,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DataViews/FunctionsDataView.h"
@@ -54,7 +55,6 @@
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitQt/CallTreeViewItemModel.h"
 #include "OrbitQt/CustomSignalsTreeView.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "UtilWidgets/NoticeWidget.h"
 #include "absl/flags/internal/flag.h"
 #include "ui_CallTreeWidget.h"
@@ -62,8 +62,8 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
-using orbit_symbol_provider::ModuleIdentifier;
 
 [[nodiscard]] static std::optional<float> FloatFromIndex(const QModelIndex& index) {
   bool is_float = false;
@@ -522,7 +522,7 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
 
 static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
                                                       absl::Span<const QModelIndex> indices) {
-  absl::flat_hash_set<ModuleIdentifier> unique_module_ids;
+  absl::flat_hash_set<std::pair<std::string, std::string>> unique_module_paths_and_build_ids;
   for (const auto& index : indices) {
     const QModelIndex model_index =
         index.model()->index(index.row(), CallTreeViewItemModel::kModule, index.parent());
@@ -530,12 +530,12 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
         model_index.data(CallTreeViewItemModel::kModulePathRole).toString().toStdString();
     const std::string module_build_id =
         model_index.data(CallTreeViewItemModel::kModuleBuildIdRole).toString().toStdString();
-    unique_module_ids.emplace(ModuleIdentifier{module_path, module_build_id});
+    unique_module_paths_and_build_ids.emplace(std::pair{module_path, module_build_id});
   }
 
   std::vector<ModuleData*> modules;
-  for (const ModuleIdentifier& module_id : unique_module_ids) {
-    ModuleData* module = app->GetMutableModuleByModuleIdentifier(module_id);
+  for (const auto& [module_path, build_id] : unique_module_paths_and_build_ids) {
+    ModuleData* module = app->GetMutableModuleByModulePathAndBuildId(module_path, build_id);
     if (module != nullptr) {
       modules.emplace_back(module);
     }

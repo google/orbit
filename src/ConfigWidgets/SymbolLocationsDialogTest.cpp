@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
@@ -33,6 +34,8 @@
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_config_widgets {
+
+namespace {
 
 using orbit_client_symbols::ModuleSymbolFileMappings;
 using orbit_test_utils::HasError;
@@ -114,6 +117,7 @@ class SymbolLocationsDialogTest : public ::testing::Test {
   MockPersistentStorageManager mock_storage_manager_;
 };
 
+}  // namespace
 TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
   SetLoadAndExpectedSaveEmpty();
 
@@ -172,7 +176,11 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleNoBuildId) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
   module_info.set_name("lib.so");
-  orbit_client_data::ModuleData module{module_info};
+
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   SetLoadAndExpectedSaveEmpty();
 
@@ -192,7 +200,10 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleWithBuildId) {
   module_info.set_file_path("/path/to/lib.so");
   module_info.set_name("lib.so");
   module_info.set_build_id("some build id");
-  orbit_client_data::ModuleData module{module_info};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   SetLoadAndExpectedSaveEmpty();
 
@@ -287,7 +298,10 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleData module{module_info};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   std::filesystem::path no_symbols_elf_debug =
       orbit_test::GetTestdataDir() / "no_symbols_elf.debug";
@@ -319,7 +333,10 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleData module{module_info};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   std::filesystem::path no_symbols_elf_debug =
       orbit_test::GetTestdataDir() / "no_symbols_elf.debug";
@@ -365,7 +382,10 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleData module{module_info};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   std::filesystem::path symbols_file_no_build_id_debug =
       orbit_test::GetTestdataDir() / "symbols_file_no_build_id.debug";
@@ -391,7 +411,10 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbols
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
-  orbit_client_data::ModuleData module{module_info};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleData module{
+      module_info,
+      module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
 
   std::filesystem::path symbols_file_no_build_id_debug =
       orbit_test::GetTestdataDir() / "symbols_file_no_build_id.debug";

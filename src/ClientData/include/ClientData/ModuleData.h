@@ -19,9 +19,9 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
@@ -31,7 +31,8 @@ namespace orbit_client_data {
 // Represents information about a module on the client. This class if fully synchronized.
 class ModuleData final {
  public:
-  explicit ModuleData(orbit_grpc_protos::ModuleInfo module_info);
+  explicit ModuleData(orbit_grpc_protos::ModuleInfo module_info,
+                      orbit_client_data::ModuleIdentifier module_identifier);
 
   [[nodiscard]] const std::string& name() const;
   [[nodiscard]] const std::string& file_path() const;
@@ -42,7 +43,7 @@ class ModuleData final {
   [[nodiscard]] orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type() const;
   [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> GetObjectSegments() const;
 
-  [[nodiscard]] orbit_symbol_provider::ModuleIdentifier module_id() const;
+  [[nodiscard]] orbit_client_data::ModuleIdentifier module_id() const { return module_identifier_; }
 
   [[nodiscard]] uint64_t ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const;
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;
@@ -77,6 +78,8 @@ class ModuleData final {
 
   void AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& module_symbols,
                           SymbolCompleteness completeness);
+
+  const orbit_client_data::ModuleIdentifier module_identifier_;
 
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ModuleInfo module_info_ ABSL_GUARDED_BY(mutex_);
