@@ -30,15 +30,9 @@ orbit_grpc_protos::ModuleInfo CreateModuleInfo() {
   return module_info;
 }
 
-orbit_client_data::ModuleIdentifier CreateAModuleIdentifier() {
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
-  return module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id");
-}
-
 class StopSymbolDownloadDialogTest : public testing::Test {
  public:
-  explicit StopSymbolDownloadDialogTest()
-      : module_(CreateModuleInfo(), CreateAModuleIdentifier()), dialog_(&module_) {}
+  explicit StopSymbolDownloadDialogTest() : module_(CreateModuleInfo()), dialog_(&module_) {}
 
  protected:
   void SetUp() override {

@@ -31,16 +31,9 @@ orbit_grpc_protos::ModuleInfo CreateModuleInfo(std::string module_path) {
   return module_info;
 }
 
-orbit_client_data::ModuleIdentifier CreateAModuleIdentifier() {
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
-  return module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id");
-}
-
 class SymbolErrorDialogTest : public testing::Test {
  public:
-  SymbolErrorDialogTest()
-      : module_{CreateModuleInfo(module_path_), CreateAModuleIdentifier()},
-        dialog_(&module_, error_) {}
+  SymbolErrorDialogTest() : module_{CreateModuleInfo(module_path_)}, dialog_(&module_, error_) {}
 
  protected:
   void SetUp() override {
@@ -129,8 +122,7 @@ TEST_F(SymbolErrorDialogTest, OnRejected) {
 
 TEST(SymbolErrorDialog, EmptyBuildId) {
   orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
-  orbit_client_data::ModuleData module{
-      {}, module_identifier_provider.CreateModuleIdentifier("/path/to/module", "build_id")};
+  orbit_client_data::ModuleData module{{}};
   SymbolErrorDialog dialog{&module, "error"};
   auto* on_add_symbol_location_button = dialog.findChild<QPushButton*>("addSymbolLocationButton");
   ASSERT_NE(on_add_symbol_location_button, nullptr);

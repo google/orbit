@@ -19,9 +19,7 @@ using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
 
-ModuleData::ModuleData(ModuleInfo module_info,
-                       orbit_client_data::ModuleIdentifier module_identifier)
-    : module_identifier_(module_identifier), module_info_{std::move(module_info)} {}
+ModuleData::ModuleData(ModuleInfo module_info) : module_info_{std::move(module_info)} {}
 
 const std::string& ModuleData::name() const {
   absl::MutexLock lock(&mutex_);

@@ -18,6 +18,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/SymbolLoadingState.h"
 #include "GrpcProtos/symbol.pb.h"
@@ -63,7 +64,8 @@ class SymbolLoader {
 
   SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
                orbit_base::ThreadPool* thread_pool, orbit_base::Executor* main_thread_executor,
-               orbit_client_services::ProcessManager* process_manager);
+               orbit_client_services::ProcessManager* process_manager,
+               const orbit_client_data::ModuleIdentifierProvider* module_identity_provider);
 
   // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
   // `RetrieveModuleSymbolsAndLoadSymbols`. If this fails, it falls back on
@@ -136,6 +138,7 @@ class SymbolLoader {
   orbit_base::ThreadPool* thread_pool_;
   orbit_base::Executor* main_thread_executor_;
   orbit_client_services::ProcessManager* process_manager_;
+  const orbit_client_data::ModuleIdentifierProvider* module_identity_provider_;
 
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
 

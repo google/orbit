@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "GrpcProtos/symbol.pb.h"
+#include "ModuleIdentifier.h"
 
 namespace orbit_client_data {
 
@@ -64,7 +65,8 @@ class FunctionInfo {
   // TODO(b/191248550): Disassemble from file instead of doing it from process memory.
   // Please also remove the forward declaration of ProcessData and ModuleData when removing this.
   [[nodiscard, deprecated]] std::optional<uint64_t> GetAbsoluteAddress(
-      const ProcessData& process, const ModuleData& module) const;
+      const ProcessData& process, const ModuleData& module,
+      ModuleIdentifier module_identifier) const;
 
   [[nodiscard]] bool IsFunctionSelectable() const;
 

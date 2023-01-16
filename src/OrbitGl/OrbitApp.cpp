@@ -734,7 +734,7 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(orbit_gl::MainWindowInterface* main_w
 
 void OrbitApp::PostInit(bool is_connected) {
   symbol_loader_.emplace(this, main_thread_id_, thread_pool_.get(), main_thread_executor_,
-                         process_manager_);
+                         process_manager_, module_identifier_provider_.get());
 
   if (is_connected) {
     ORBIT_CHECK(process_manager_ != nullptr);
@@ -848,8 +848,13 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   const ModuleData* module =
       GetModuleByModulePathAndBuildId(function.module_path(), function.module_build_id());
   ORBIT_CHECK(module != nullptr);
+  const std::optional<ModuleIdentifier> module_identifier =
+      module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+  ORBIT_CHECK(module_identifier.has_value());
+
   const bool is_64_bit = process_->is_64_bit();
-  std::optional<uint64_t> absolute_address = function.GetAbsoluteAddress(*process_, *module);
+  std::optional<uint64_t> absolute_address =
+      function.GetAbsoluteAddress(*process_, *module, module_identifier.value());
   if (!absolute_address.has_value()) {
     SendErrorToUi(
         "Error reading memory",
@@ -933,7 +938,13 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
 
     if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
       const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
-      const auto absolute_address = function.GetAbsoluteAddress(*process_, *module);
+
+      const std::optional<ModuleIdentifier> module_identifier =
+          module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+      ORBIT_CHECK(module_identifier.has_value());
+
+      const auto absolute_address =
+          function.GetAbsoluteAddress(*process_, *module, module_identifier.value());
 
       if (!absolute_address.has_value()) {
         SendErrorToUi(
@@ -1581,9 +1592,13 @@ void OrbitApp::AddSymbols(std::string_view module_file_path, std::string_view mo
   functions_data_view_->RemoveFunctionsOfModule(module_data->file_path());
   module_data->AddSymbols(module_symbols);
 
+  const std::optional<ModuleIdentifier> module_identifier =
+      module_identifier_provider_->GetModuleIdentifier(module_file_path, module_build_id);
+  ORBIT_CHECK(module_identifier.has_value());
+
   const ProcessData* selected_process = GetTargetProcess();
   if (selected_process != nullptr &&
-      selected_process->IsModuleLoadedByProcess(module_data->module_id())) {
+      selected_process->IsModuleLoadedByProcess(module_identifier.value())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
     ORBIT_LOG("Added loaded function symbols for module \"%s\" to the Functions tab",
               module_data->file_path());
@@ -1601,9 +1616,13 @@ void OrbitApp::AddFallbackSymbols(std::string_view module_file_path,
       GetMutableModuleByModulePathAndBuildId(module_file_path, module_build_id);
   module_data->AddFallbackSymbols(fallback_symbols);
 
+  const std::optional<ModuleIdentifier> module_identifier =
+      module_identifier_provider_->GetModuleIdentifier(module_file_path, module_build_id);
+  ORBIT_CHECK(module_identifier.has_value());
+
   const ProcessData* selected_process = GetTargetProcess();
   if (selected_process != nullptr &&
-      selected_process->IsModuleLoadedByProcess(module_data->module_id())) {
+      selected_process->IsModuleLoadedByProcess(module_identifier.value())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
     ORBIT_LOG("Added fallback symbols for module \"%s\" to the Functions tab",
               module_data->file_path());
@@ -2745,7 +2764,12 @@ bool OrbitApp::IsSymbolLoadingInProgressForModule(
     const orbit_client_data::ModuleData* module) const {
   ORBIT_CHECK(module != nullptr);
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
-  return symbol_loader_->IsSymbolLoadingInProgressForModule(module->module_id());
+
+  const std::optional<ModuleIdentifier> module_identifier =
+      module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+  ORBIT_CHECK(module_identifier.has_value());
+
+  return symbol_loader_->IsSymbolLoadingInProgressForModule(module_identifier.value());
 }
 
 void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> modules,
