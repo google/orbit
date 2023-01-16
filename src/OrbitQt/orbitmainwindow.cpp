@@ -109,7 +109,6 @@
 #include "OrbitGl/IntrospectionWindow.h"
 #include "OrbitGl/LiveFunctionsController.h"
 #include "OrbitGl/OrbitApp.h"
-#include "OrbitGl/SamplingReport.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TrackManager.h"
 #include "OrbitPaths/Paths.h"

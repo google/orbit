@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>

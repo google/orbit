@@ -38,8 +38,10 @@
 #include <variant>
 #include <vector>
 
+#include "ClientData/CallstackData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStatsCollection.h"
 #include "ClientData/TimerTrackDataIdManager.h"
