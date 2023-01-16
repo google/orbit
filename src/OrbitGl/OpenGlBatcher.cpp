@@ -214,21 +214,47 @@ size_t CalculateBlockChainMemory(const orbit_containers::BlockChain<T, size>& ch
 
   return result;
 }
+
+template <class T, uint32_t size>
+size_t CalculateBlockChainNonEmptyBlockCount(const orbit_containers::BlockChain<T, size>& chain) {
+  size_t result = 0;
+
+  auto block = chain.root();
+  while (block != nullptr) {
+    if (block->size() != 0) result++;
+    block = block->next();
+  }
+
+  return result;
+}
 }  // namespace
 
-[[nodiscard]] size_t OpenGlBatcher::GetReservedMemorySize() const {
-  size_t result = 0;
+[[nodiscard]] Batcher::Statistics OpenGlBatcher::GetStatistics() const {
+  Statistics result;
+
   for (auto& layer : primitive_buffers_by_layer_) {
-    result += CalculateBlockChainMemory(layer.second.box_buffer.boxes_);
-    result += CalculateBlockChainMemory(layer.second.box_buffer.picking_colors_);
-    result += CalculateBlockChainMemory(layer.second.box_buffer.colors_);
-    result += CalculateBlockChainMemory(layer.second.line_buffer.lines_);
-    result += CalculateBlockChainMemory(layer.second.line_buffer.picking_colors_);
-    result += CalculateBlockChainMemory(layer.second.line_buffer.colors_);
-    result += CalculateBlockChainMemory(layer.second.triangle_buffer.triangles_);
-    result += CalculateBlockChainMemory(layer.second.triangle_buffer.picking_colors_);
-    result += CalculateBlockChainMemory(layer.second.triangle_buffer.colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.boxes_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.picking_colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.box_buffer.colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.line_buffer.lines_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.line_buffer.picking_colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.line_buffer.colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.triangle_buffer.triangles_);
+    result.reserved_memory +=
+        CalculateBlockChainMemory(layer.second.triangle_buffer.picking_colors_);
+    result.reserved_memory += CalculateBlockChainMemory(layer.second.triangle_buffer.colors_);
+
+    result.stored_vertices += layer.second.box_buffer.boxes_.size() * 4;
+    result.stored_vertices += layer.second.line_buffer.lines_.size() * 2;
+    result.stored_vertices += layer.second.triangle_buffer.triangles_.size() * 3;
+
+    result.draw_calls += CalculateBlockChainNonEmptyBlockCount(layer.second.box_buffer.boxes_);
+    result.draw_calls += CalculateBlockChainNonEmptyBlockCount(layer.second.line_buffer.lines_);
+    result.draw_calls +=
+        CalculateBlockChainNonEmptyBlockCount(layer.second.triangle_buffer.triangles_);
   }
+
+  result.stored_layers = primitive_buffers_by_layer_.size();
 
   return result;
 }

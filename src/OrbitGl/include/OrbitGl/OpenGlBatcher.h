@@ -105,7 +105,7 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
 
-  [[nodiscard]] size_t GetReservedMemorySize() const override;
+  [[nodiscard]] Statistics GetStatistics() const override;
 
  protected:
   std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
