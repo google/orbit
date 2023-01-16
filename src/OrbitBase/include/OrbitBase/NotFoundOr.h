@@ -15,7 +15,7 @@ namespace orbit_base {
 
 // NotFound type that carries a message
 struct NotFound {
-  explicit NotFound(std::string message) : message(std::move(message)) {}
+  explicit NotFound(std::string message = "") : message(std::move(message)) {}
   std::string message;
 };
 
