@@ -11,8 +11,11 @@
 #include <memory>
 #include <vector>
 
+#include "ClientData/CallstackData.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "DataViews/DataView.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitGl/SamplingReport.h"
 #include "OrbitQt/orbitdataviewpanel.h"
 
 class SamplingReport;

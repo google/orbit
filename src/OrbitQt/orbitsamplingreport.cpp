@@ -22,7 +22,6 @@
 #include <Qt>
 #include <algorithm>
 #include <string>
-#include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "DataViews/SamplingReportDataView.h"
