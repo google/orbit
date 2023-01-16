@@ -5,7 +5,11 @@
 #ifndef ORBIT_GL_BATCHER_H_
 #define ORBIT_GL_BATCHER_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "OrbitGl/BatcherInterface.h"
+#include "OrbitGl/PickingManager.h"
 #include "OrbitGl/TranslationStack.h"
 
 namespace orbit_gl {
