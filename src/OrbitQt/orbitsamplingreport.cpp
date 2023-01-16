@@ -101,10 +101,6 @@ void OrbitSamplingReport::Initialize(
     tree_view->setAccessibleName(QStringLiteral("SamplingReportDataView"));
     grid_layout_2->addWidget(tree_view, 0, 0, 1, 1);
     tree_view->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
-    {
-      ORBIT_SCOPE("resizeSections");
-      tree_view->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
-    }
     tree_view->GetTreeView()->SetIsMultiSelection(true);
 
     tree_view->Link(ui_->CallstackTreeView);
