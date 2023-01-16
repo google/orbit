@@ -23,7 +23,17 @@ class Batcher : public BatcherInterface {
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
 
-  [[nodiscard]] virtual size_t GetReservedMemorySize() const = 0;
+  struct Statistics {
+    size_t reserved_memory = 0;
+    uint32_t draw_calls = 0;
+    uint32_t stored_layers = 0;
+    uint32_t stored_vertices = 0;
+  };
+
+  [[nodiscard]] virtual Statistics GetStatistics() const = 0;
+
+  friend bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
+  friend bool operator!=(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
 
  protected:
   orbit_gl::TranslationStack translations_;

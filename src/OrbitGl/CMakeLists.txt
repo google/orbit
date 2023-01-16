@@ -99,6 +99,7 @@ target_sources(
           AnnotationTrack.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
+          Batcher.cpp
           Button.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp

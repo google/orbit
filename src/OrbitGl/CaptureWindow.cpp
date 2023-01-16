@@ -663,6 +663,20 @@ std::string CaptureWindow::GetCaptureInfo() const {
   return capture_info;
 }
 
+namespace {
+void AppendBatcherStatistics(std::string& output, const std::string& batcher_name,
+                             const Batcher::Statistics& statistics) {
+  absl::StrAppendFormat(&output, "%s batcher memory: %.2f MB\n", batcher_name,
+                        static_cast<float>(statistics.reserved_memory) / 1024 / 1024);
+  absl::StrAppendFormat(&output, "%s batcher stored vertices: %d\n", batcher_name,
+                        statistics.stored_vertices);
+  absl::StrAppendFormat(&output, "%s batcher stored layers: %d\n", batcher_name,
+                        statistics.stored_layers);
+  absl::StrAppendFormat(&output, "%s batcher draw calls: %d\n", batcher_name,
+                        statistics.draw_calls);
+}
+}  // namespace
+
 std::string CaptureWindow::GetPerformanceInfo() const {
   std::string performance_info;
   for (const auto& item : scoped_frame_times_) {
@@ -674,10 +688,10 @@ std::string CaptureWindow::GetPerformanceInfo() const {
                           item.second->GetMaxTimeMs());
   }
   if (time_graph_ != nullptr) {
-    absl::StrAppendFormat(
-        &performance_info, "TimeGraph Batcher Memory: %.2f MB\n",
-        static_cast<float>(time_graph_->GetBatcher().GetReservedMemorySize()) / 1024 / 1024);
+    AppendBatcherStatistics(performance_info, "TimeGraph",
+                            time_graph_->GetBatcher().GetStatistics());
   }
+  AppendBatcherStatistics(performance_info, "UI", ui_batcher_.GetStatistics());
   return performance_info;
 }
 
