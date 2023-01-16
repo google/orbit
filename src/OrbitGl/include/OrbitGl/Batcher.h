@@ -32,14 +32,15 @@ class Batcher : public BatcherInterface {
 
   [[nodiscard]] virtual Statistics GetStatistics() const = 0;
 
+  friend bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
+  friend bool operator!=(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
+
  protected:
   orbit_gl::TranslationStack translations_;
 
  private:
   BatcherId batcher_id_;
 };
-
-[[nodiscard]] bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
 
 }  // namespace orbit_gl
 
