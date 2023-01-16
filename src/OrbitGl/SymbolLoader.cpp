@@ -47,7 +47,7 @@ namespace orbit_gl {
 
 SymbolLoader::SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
                            orbit_base::ThreadPool* thread_pool,
-                           orbit_base::MainThreadExecutor* main_thread_executor,
+                           orbit_base::Executor* main_thread_executor,
                            orbit_client_services::ProcessManager* process_manager)
     : app_interface_{app_interface},
       main_thread_id_{main_thread_id},

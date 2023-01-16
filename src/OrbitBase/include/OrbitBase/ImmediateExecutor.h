@@ -26,7 +26,6 @@ namespace orbit_base {
 // Future<void> void_future = result.Then(&immediate_executor, [](std::string_view str) {
 //   (void) str;
 // });
-// main_thread_executor_->WaitFor(void_future); // WaitFor only works with Future<void>
 //
 class ImmediateExecutor {
  public:

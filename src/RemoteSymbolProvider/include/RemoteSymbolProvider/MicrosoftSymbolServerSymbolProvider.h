@@ -9,10 +9,10 @@
 #include <string>
 
 #include "Http/DownloadManager.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/StopToken.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "SymbolProvider/SymbolProvider.h"
@@ -36,7 +36,7 @@ class MicrosoftSymbolServerSymbolProvider : public orbit_symbol_provider::Symbol
 
   const orbit_symbols::SymbolCacheInterface* symbol_cache_;
   orbit_http::DownloadManager* download_manager_;
-  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_;
+  orbit_qt_utils::MainThreadExecutor main_thread_executor_;
 };
 
 }  // namespace orbit_remote_symbol_provider

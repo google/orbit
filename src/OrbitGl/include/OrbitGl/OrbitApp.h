@@ -72,9 +72,9 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
@@ -105,11 +105,11 @@ class OrbitApp final : public DataViewFactory,
 
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                    orbit_base::MainThreadExecutor* main_thread_executor);
+                    orbit_base::Executor* main_thread_executor);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(orbit_gl::MainWindowInterface* main_window,
-                                          orbit_base::MainThreadExecutor* main_thread_executor);
+                                          orbit_base::Executor* main_thread_executor);
 
   void PostInit(bool is_connected);
   void MainTick();
@@ -571,7 +571,7 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   orbit_gl::MainWindowInterface* main_window_ = nullptr;
-  orbit_base::MainThreadExecutor* main_thread_executor_;
+  orbit_base::Executor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;

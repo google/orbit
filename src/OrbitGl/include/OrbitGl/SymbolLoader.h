@@ -22,8 +22,8 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "Http/HttpDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
-#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
@@ -57,8 +57,7 @@ class SymbolLoader {
   };
 
   SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
-               orbit_base::ThreadPool* thread_pool,
-               orbit_base::MainThreadExecutor* main_thread_executor,
+               orbit_base::ThreadPool* thread_pool, orbit_base::Executor* main_thread_executor,
                orbit_client_services::ProcessManager* process_manager);
 
   // RetrieveModuleAndLoadSymbols tries to retrieve and load the module symbols by calling
@@ -128,7 +127,7 @@ class SymbolLoader {
   AppInterface* app_interface_;
   std::thread::id main_thread_id_;
   orbit_base::ThreadPool* thread_pool_;
-  orbit_base::MainThreadExecutor* main_thread_executor_;
+  orbit_base::Executor* main_thread_executor_;
   orbit_client_services::ProcessManager* process_manager_;
 
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};

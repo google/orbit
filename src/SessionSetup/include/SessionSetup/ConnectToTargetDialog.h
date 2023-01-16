@@ -18,7 +18,7 @@
 #include "Connections.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Result.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "SessionSetupUtils.h"
 #include "TargetConfiguration.h"
 
@@ -50,7 +50,7 @@ class ConnectToTargetDialog : public QDialog {
   std::optional<TargetConfiguration> target_configuration_;
 
   // Keep the executor at the bottom of the members, so that it's destructed first!
-  orbit_qt_utils::MainThreadExecutorImpl main_thread_executor_;
+  orbit_qt_utils::MainThreadExecutor main_thread_executor_;
 
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
 

@@ -29,7 +29,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 
 using orbit_preset_file::PresetFile;
 

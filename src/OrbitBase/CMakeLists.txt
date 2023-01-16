@@ -30,7 +30,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
         include/OrbitBase/Logging.h
-        include/OrbitBase/MainThreadExecutor.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/NotFoundOr.h
         include/OrbitBase/GetProcessIds.h

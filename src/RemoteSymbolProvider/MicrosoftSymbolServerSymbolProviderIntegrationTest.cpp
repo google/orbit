@@ -24,7 +24,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
-#include "QtUtils/MainThreadExecutorImpl.h"
+#include "QtUtils/MainThreadExecutor.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
 #include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
@@ -55,7 +55,7 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
   orbit_http::HttpDownloadManager download_manager{};
   MicrosoftSymbolServerSymbolProvider symbol_provider{&symbol_cache, &download_manager};
 
-  orbit_qt_utils::MainThreadExecutorImpl executor{};
+  orbit_qt_utils::MainThreadExecutor executor{};
 
   const std::string valid_module_name{"d3d11.pdb"};
   const std::string valid_module_build_id{"FF5440275BFED43A86CC2B1F287A72151"};
