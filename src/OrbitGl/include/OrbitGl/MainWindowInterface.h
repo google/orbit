@@ -78,10 +78,11 @@ class MainWindowInterface {
 
   virtual ~MainWindowInterface() = default;
 
-  virtual void SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
-                                      std::unique_ptr<CallTreeView> bottom_up_view,
-                                      orbit_data_views::DataView* callstack_data_view,
-                                      std::unique_ptr<class SamplingReport> report) = 0;
+  virtual void SetCallstackInspection(
+      std::unique_ptr<CallTreeView> top_down_view, std::unique_ptr<CallTreeView> bottom_up_view,
+      orbit_data_views::DataView* callstack_data_view,
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
   virtual void ClearCallstackInspection() = 0;
 
   virtual bool IsConnected() = 0;
@@ -94,11 +95,20 @@ class MainWindowInterface {
   virtual void SetBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
   virtual void SetSelectionTopDownView(std::unique_ptr<CallTreeView> view) = 0;
   virtual void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
-  virtual void SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
-                                 const std::shared_ptr<class SamplingReport>& sampling_report) = 0;
+  virtual void SetSamplingReport(
+      orbit_data_views::DataView* callstack_data_view,
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
   virtual void SetSelectionSamplingReport(
       orbit_data_views::DataView* callstack_data_view,
-      const std::shared_ptr<class SamplingReport>& selection_report) = 0;
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
+  virtual void UpdateSamplingReport(
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
+  virtual void UpdateSelectionReport(
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
 };
 
 }  // namespace orbit_gl

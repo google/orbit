@@ -608,7 +608,7 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   };
 
   const bool has_data = app_->HasCaptureData();
-  const bool has_selection = has_data && app_->HasSampleSelection();
+  const bool has_selection = has_data && ui->selectionReport->HasSamples();
   CaptureClient::State capture_state = app_->GetCaptureState();
   const bool is_capturing = capture_state != CaptureClient::State::kStopped;
   const bool is_target_process_running = target_process_state_ == TargetProcessState::kRunning;
@@ -802,13 +802,16 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
   }
 }
 
-void OrbitMainWindow::SetSamplingReport(orbit_data_views::DataView* callstack_data_view,
-                                        const std::shared_ptr<SamplingReport>& sampling_report) {
+void OrbitMainWindow::SetSamplingReport(
+    orbit_data_views::DataView* callstack_data_view,
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ui->samplingGridLayout->removeWidget(ui->samplingReport);
   delete ui->samplingReport;
 
   ui->samplingReport = new OrbitSamplingReport(ui->samplingTab);
-  ui->samplingReport->Initialize(callstack_data_view, sampling_report);
+  ui->samplingReport->Initialize(app_.get(), callstack_data_view, callstack_data,
+                                 post_processed_sampling_data);
   ui->samplingGridLayout->addWidget(ui->samplingReport, 0, 0, 1, 1);
 
   UpdateCaptureStateDependentWidgets();
@@ -816,17 +819,30 @@ void OrbitMainWindow::SetSamplingReport(orbit_data_views::DataView* callstack_da
 
 void OrbitMainWindow::SetSelectionSamplingReport(
     orbit_data_views::DataView* callstack_data_view,
-    const std::shared_ptr<SamplingReport>& selection_report) {
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
-  bool has_samples = selection_report != nullptr && selection_report->HasSamples();
 
   ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
-  ui->selectionReport->Initialize(callstack_data_view, selection_report);
+  ui->selectionReport->Initialize(app_.get(), callstack_data_view, callstack_data,
+                                  post_processed_sampling_data);
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
-  UpdateActiveTabsAfterSelection(has_samples);
+  UpdateActiveTabsAfterSelection(ui->selectionReport->HasSamples());
   UpdateCaptureStateDependentWidgets();
+}
+
+void OrbitMainWindow::UpdateSamplingReport(
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
+  ui->samplingReport->UpdateReport(callstack_data, post_processed_sampling_data);
+}
+
+void OrbitMainWindow::UpdateSelectionReport(
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
+  ui->selectionReport->UpdateReport(callstack_data, post_processed_sampling_data);
 }
 
 void OrbitMainWindow::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
@@ -1897,15 +1913,17 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
-                                             std::unique_ptr<CallTreeView> bottom_up_view,
-                                             orbit_data_views::DataView* callstack_data_view,
-                                             std::unique_ptr<class SamplingReport> report) {
+void OrbitMainWindow::SetCallstackInspection(
+    std::unique_ptr<CallTreeView> top_down_view, std::unique_ptr<CallTreeView> bottom_up_view,
+    orbit_data_views::DataView* callstack_data_view,
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ui->topDownWidget->SetInspection(std::move(top_down_view));
   ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
 
   ui->samplingReport->hide();
-  ui->inspectionReport->SetInspection(callstack_data_view, std::move(report));
+  ui->inspectionReport->SetInspection(app_.get(), callstack_data_view, callstack_data,
+                                      post_processed_sampling_data);
   connect(ui->inspectionReport, &OrbitSamplingReport::LeaveCallstackInspectionClicked, this,
           [this]() { app_->ClearInspection(); });
   ui->inspectionReport->show();
