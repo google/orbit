@@ -9,7 +9,6 @@
 
 #include <QColor>
 #include <QGridLayout>
-#include <QHeaderView>
 #include <QItemSelectionModel>
 #include <QLabel>
 #include <QList>
