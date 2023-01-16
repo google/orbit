@@ -14,8 +14,7 @@
 namespace orbit_base {
 
 TEST(CanceledOr, IsCanceled) {
-  // Default constructed is NOT canceled
-  CanceledOr<int> canceled_or_int;
+  CanceledOr<int> canceled_or_int{0};
   EXPECT_FALSE(IsCanceled(canceled_or_int));
 
   canceled_or_int = Canceled{};
@@ -24,8 +23,7 @@ TEST(CanceledOr, IsCanceled) {
   canceled_or_int = 5;
   EXPECT_FALSE(IsCanceled(canceled_or_int));
 
-  // Default constructed is NOT canceled
-  CanceledOr<void> canceled_or_void;
+  CanceledOr<void> canceled_or_void{outcome::success()};
   EXPECT_FALSE(IsCanceled(canceled_or_void));
 
   canceled_or_void = Canceled{};

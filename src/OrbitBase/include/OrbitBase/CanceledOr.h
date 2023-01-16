@@ -5,42 +5,40 @@
 #ifndef ORBIT_BASE_CANCELED_OR_H_
 #define ORBIT_BASE_CANCELED_OR_H_
 
-#include <variant>
+#include <utility>
 
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/VoidToMonostate.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_base {
 
 // Type to indicate a CanceledOr type is canceled.
 struct Canceled {};
 
-// CanceledOr can be used as the return type of an cancelable operation. Based on std::variant.
-// Check whether CanceledOr object is canceled, use orbit_base::IsCanceled. Get the value of a non
-// canceled CanceledOr with std::get<T>().
+// CanceledOr can be used as the return type of an cancelable operation.
+// Check whether CanceledOr object is canceled, use orbit_base::IsCanceled or `._has_error()`.
+// Get the value of a non canceled CanceledOr with `.value()` or `GetNonCanceled(...);`
 template <typename T>
-using CanceledOr = std::variant<VoidToMonostate_t<T>, Canceled>;
+using CanceledOr = Result<T, Canceled>;
 
-// Free function to quickly check whether a CanceledOr type is canceled. Abstracts
-// std::holds_alternative
+// Free function to quickly check whether a CanceledOr type is canceled.
 template <typename T>
-[[nodiscard]] bool IsCanceled(const std::variant<T, Canceled>& canceled_or) {
-  return std::holds_alternative<Canceled>(canceled_or);
+[[nodiscard]] bool IsCanceled(const CanceledOr<T>& canceled_or) {
+  return canceled_or.has_error();
 }
 
-// Free function to get the "Not canceled" content of a CanceledOr object. Abstracts std::get
+// Free function to get the "Not canceled" content of a CanceledOr object.
 template <typename T>
-[[nodiscard]] const T& GetNotCanceled(const std::variant<T, Canceled>& canceled_or) {
+[[nodiscard]] const T& GetNotCanceled(const CanceledOr<T>& canceled_or) {
   ORBIT_CHECK(!IsCanceled(canceled_or));
-  return std::get<T>(canceled_or);
+  return canceled_or.value();
 }
 
 // Free function with move semantics to get the "Not canceled" content of a CanceledOr object.
-// Abstracts std::get
 template <typename T>
-[[nodiscard]] T&& GetNotCanceled(std::variant<T, Canceled>&& canceled_or) {
+[[nodiscard]] T&& GetNotCanceled(CanceledOr<T>&& canceled_or) {
   ORBIT_CHECK(!IsCanceled(canceled_or));
-  return std::get<T>(std::move(canceled_or));
+  return std::move(canceled_or).value();
 }
 
 }  // namespace orbit_base

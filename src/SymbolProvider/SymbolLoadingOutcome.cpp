@@ -29,9 +29,7 @@ std::string GetNotFoundMessage(const SymbolLoadingOutcome& outcome) {
 }
 
 bool IsSuccessResult(const SymbolLoadingOutcome& outcome) {
-  return outcome.has_value() && !IsCanceled(outcome) && !IsNotFound(outcome) &&
-         std::holds_alternative<SymbolLoadingSuccessResult>(
-             orbit_base::GetNotCanceled(outcome.value()));
+  return outcome.has_value() && !IsCanceled(outcome) && !IsNotFound(outcome);
 }
 
 SymbolLoadingSuccessResult GetSuccessResult(const SymbolLoadingOutcome& outcome) {

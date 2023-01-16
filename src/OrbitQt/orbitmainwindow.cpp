@@ -1959,20 +1959,17 @@ orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
   StopSymbolDownloadDialog dialog{module};
   Result dialog_result = dialog.Exec();
 
-  orbit_base::CanceledOr<void> return_canceled_or;
   switch (dialog_result) {
     case Result::kCancel:
-      return_canceled_or = orbit_base::Canceled{};
-      break;
-    case Result::kStopAndDisable: {
+      return orbit_base::Canceled{};
+    case Result::kStopAndDisable:
       app_->DisableDownloadForModule(module->file_path());
-      break;
-    }
+      return outcome::success();
     case Result::kStop:
-      break;
+      return outcome::success();
   }
 
-  return return_canceled_or;
+  ORBIT_UNREACHABLE();
 }
 
 void OrbitMainWindow::SetLiveTabScopeStatsCollection(
