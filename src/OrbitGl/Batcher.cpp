@@ -6,7 +6,8 @@
 
 namespace orbit_gl {
 bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs) {
-  return std::memcmp(&lhs, &rhs, sizeof(Batcher::Statistics)) != 0;
+  return lhs.draw_calls == rhs.draw_calls && lhs.reserved_memory == rhs.reserved_memory &&
+         lhs.stored_layers == rhs.stored_layers && lhs.stored_vertices == rhs.stored_vertices;
 }
 
 }  // namespace orbit_gl
