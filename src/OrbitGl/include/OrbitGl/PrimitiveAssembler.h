@@ -132,6 +132,10 @@ class PrimitiveAssembler {
     batcher_->SetCurrentRenderGroup(render_group);
   }
 
+  [[nodiscard]] BatchRenderGroupManager* GetRenderGroupManager() {
+    return batcher_->GetRenderGroupManager();
+  }
+
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
     return batcher_->GetUserData(id);

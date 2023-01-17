@@ -12,6 +12,7 @@
 #include <QPainter>
 #include <algorithm>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "OrbitGl/BatchRenderGroup.h"
@@ -58,10 +59,12 @@ class MockTextRenderer : public TextRenderer {
 
   Vec2 min_point_;
   Vec2 max_point_;
-  std::set<BatchRenderGroupId> render_groups_;
+  std::unordered_set<BatchRenderGroupId> render_groups_;
   std::set<uint32_t> num_characters_in_add_text_;
   std::set<float> vertical_position_in_add_text;
   int num_add_text_calls_ = 0;
+
+  BatchRenderGroupManager owned_manager_;
 };
 
 }  // namespace orbit_gl

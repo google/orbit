@@ -89,7 +89,8 @@ struct PrimitiveBuffers {
 // "jumping" around when their coordinates are changed slightly.
 class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
  public:
-  explicit OpenGlBatcher(BatcherId batcher_id) : Batcher(batcher_id) {}
+  explicit OpenGlBatcher(BatchRenderGroupManager* manager, BatcherId batcher_id)
+      : Batcher(manager, batcher_id) {}
 
   void ResetElements() override;
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
@@ -129,9 +130,9 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
     if (current_render_group_.layer != layer_z_value) {
       // We also need to copy over the state to the new group, because users of this class assume to
       // set the state once and keep it until they explicitly change the render group.
-      auto current_group_state = BatchRenderGroupManager::GetGroupState(current_render_group_);
+      auto current_group_state = manager_->GetGroupState(current_render_group_);
       current_render_group_.layer = layer_z_value;
-      BatchRenderGroupManager::SetGroupState(current_render_group_, current_group_state);
+      manager_->SetGroupState(current_render_group_, current_group_state);
     }
   }
 };

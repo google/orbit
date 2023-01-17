@@ -14,8 +14,10 @@
 #include <limits>
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -67,12 +69,14 @@ class MockBatcher : public Batcher {
 
   Vec2 min_point_;
   Vec2 max_point_;
-  std::set<BatchRenderGroupId> render_groups_;
+  std::unordered_set<BatchRenderGroupId> render_groups_;
   int num_vertical_lines_ = 0;
   int num_horizontal_lines_ = 0;
   absl::btree_map<Color, int> num_lines_by_color_;
   absl::btree_map<Color, int> num_triangles_by_color_;
   absl::btree_map<Color, int> num_boxes_by_color_;
+
+  BatchRenderGroupManager owned_manager_;
 };
 
 }  // namespace orbit_gl

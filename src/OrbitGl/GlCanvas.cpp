@@ -62,8 +62,9 @@ const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas()
     : AccessibleInterfaceProvider(),
+      text_renderer_(&render_group_manager_),
       viewport_(0, 0),
-      ui_batcher_(BatcherId::kUi),
+      ui_batcher_(&render_group_manager_, BatcherId::kUi),
       primitive_assembler_(&ui_batcher_, &picking_manager_) {
   // Note that `GlCanvas` is the bridge to OpenGl content, and `GlCanvas`'s parent needs special
   // handling for accessibility. Thus, we use `nullptr` here.

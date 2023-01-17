@@ -28,6 +28,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitGl/AccessibleInterfaceProvider.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/Button.h"
 #include "OrbitGl/CaptureViewElement.h"
@@ -54,7 +55,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
-                     PickingManager* picking_manager, TimeGraphLayout* time_graph_layout);
+                     PickingManager* picking_manager,
+                     orbit_gl::BatchRenderGroupManager* render_group_manager,
+                     TimeGraphLayout* time_graph_layout);
 
   [[nodiscard]] float GetHeight() const override;
 

@@ -24,10 +24,12 @@ namespace orbit_gl {
 // Qt implementation of TextRenderer.
 class QtTextRenderer : public TextRenderer {
  public:
+  explicit QtTextRenderer(BatchRenderGroupManager* manager) : TextRenderer(manager){};
+
   void Init() override{};
   void Clear() override {
     stored_text_.clear();
-    current_render_group_ = BatchRenderGroupId();
+    current_render_group_ = manager_->CreateId();
   };
 
   [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override;
@@ -61,8 +63,7 @@ class QtTextRenderer : public TextRenderer {
     int h = 0;
     TextFormatting formatting;
   };
-  absl::flat_hash_map<BatchRenderGroupId, std::pair<BatchRenderGroupId, std::vector<StoredText>>>
-      stored_text_;
+  absl::flat_hash_map<BatchRenderGroupId, std::vector<StoredText>> stored_text_;
   absl::flat_hash_map<uint32_t, float> minimum_string_width_cache_;
 };
 

@@ -57,14 +57,17 @@ using orbit_gl::VariableTrack;
 
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, CaptureData* capture_data,
-                     PickingManager* picking_manager, TimeGraphLayout* time_graph_layout)
+                     PickingManager* picking_manager,
+                     orbit_gl::BatchRenderGroupManager* render_group_manager,
+                     TimeGraphLayout* time_graph_layout)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, viewport, time_graph_layout),
       accessible_parent_{parent},
+      text_renderer_static_(render_group_manager),
       layout_{time_graph_layout},
-      batcher_(BatcherId::kTimeGraph),
+      batcher_(render_group_manager, BatcherId::kTimeGraph),
       primitive_assembler_(&batcher_, picking_manager),
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       capture_data_{capture_data},

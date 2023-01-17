@@ -13,7 +13,9 @@
 
 namespace orbit_gl {
 
-MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(batcher_id) { ResetElements(); }
+MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(&owned_manager_, batcher_id) {
+  ResetElements();
+}
 
 void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                           const Color& /*picking_color*/,
@@ -23,7 +25,7 @@ void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   if (from[1] == to[1]) num_horizontal_lines_++;
   AdjustDrawingBoundaries({from[0], from[1]});
   AdjustDrawingBoundaries({to[0], to[1]});
-  render_groups_.insert(BatchRenderGroupId(BatchRenderGroupId::kGlobalGroup, z));
+  render_groups_.insert(manager_->CreateId(z));
 }
 void MockBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
                          const Color& /*picking_color*/,
@@ -32,7 +34,7 @@ void MockBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& c
   for (int i = 0; i < 4; i++) {
     AdjustDrawingBoundaries(box.vertices[i]);
   }
-  render_groups_.insert(BatchRenderGroupId(BatchRenderGroupId::kGlobalGroup, z));
+  render_groups_.insert(manager_->CreateId(z));
 }
 void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                               const Color& /*picking_color*/,
@@ -41,7 +43,7 @@ void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::arra
   for (int i = 0; i < 3; i++) {
     AdjustDrawingBoundaries(triangle.vertices[i]);
   }
-  render_groups_.insert(BatchRenderGroupId(BatchRenderGroupId::kGlobalGroup, z));
+  render_groups_.insert(manager_->CreateId(z));
 }
 
 void MockBatcher::ResetElements() {

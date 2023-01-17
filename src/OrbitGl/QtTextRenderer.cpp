@@ -78,13 +78,13 @@ void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId
   if (text_for_layer == stored_text_.end()) {
     return;
   }
-  for (const auto& text_entry : text_for_layer->second.second) {
+  for (const auto& text_entry : text_for_layer->second) {
     font.setPixelSize(text_entry.formatting.font_size);
     painter->setFont(font);
     painter->setPen(QColor(text_entry.formatting.color[0], text_entry.formatting.color[1],
                            text_entry.formatting.color[2], text_entry.formatting.color[3]));
 
-    auto stencil = BatchRenderGroupManager::GetGroupState(group).stencil;
+    auto stencil = manager_->GetGroupState(group).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_->WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_->WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
@@ -101,12 +101,11 @@ void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId
 }
 
 std::vector<BatchRenderGroupId> QtTextRenderer::GetRenderGroups() const {
-  std::vector<BatchRenderGroupId> result(stored_text_.size());
-  int index = 0;
+  std::vector<BatchRenderGroupId> result;
+  result.reserve(stored_text_.size());
   for (const auto& [group, unused_text] : stored_text_) {
-    result[index++] = group;
+    result.push_back(group);
   }
-  std::sort(result.begin(), result.end());
   return result;
 };
 
@@ -136,8 +135,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
       {{static_cast<float>(pen_pos[0]), static_cast<float>(pen_pos[1])}, z});
 
   current_render_group_.layer = transformed.z;
-  stored_text_[current_render_group_].first = current_render_group_;
-  BatchRenderGroupManager::TouchId(current_render_group_);
+  manager_->TouchId(current_render_group_);
 
   const int max_width = static_cast<int>(viewport_->WorldToScreen({formatting.max_size, 0})[0]);
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
@@ -153,7 +151,7 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
     const float width = GetStringWidth(elided_line, formatting.font_size);
     max_line_width = std::max(max_line_width, width);
     const float x_offset = GetXOffsetFromAlignment(formatting.halign, width);
-    stored_text_[current_render_group_].second.emplace_back(
+    stored_text_[current_render_group_].emplace_back(
         elided_line, std::lround(transformed.xy[0] + x_offset),
         std::lround(transformed.xy[1] + y_offset), std::lround(width),
         std::lround(single_line_height), formatting);
@@ -271,10 +269,9 @@ float QtTextRenderer::AddFittingSingleLineText(const QString& text, float x, flo
   float y_offset = GetYOffsetFromAlignment(formatting.valign, single_line_height);
 
   current_render_group_.layer = transformed.z;
-  stored_text_[current_render_group_].first = current_render_group_;
-  BatchRenderGroupManager::TouchId(current_render_group_);
+  manager_->TouchId(current_render_group_);
 
-  stored_text_[current_render_group_].second.emplace_back(
+  stored_text_[current_render_group_].emplace_back(
       text, std::lround(transformed.xy[0] + x_offset), std::lround(transformed.xy[1] + y_offset),
       std::lround(width), std::lround(single_line_height), formatting);
   return width;

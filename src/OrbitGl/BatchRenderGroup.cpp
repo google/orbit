@@ -4,48 +4,40 @@
 
 #include "OrbitGl/BatchRenderGroup.h"
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_gl {
 
-namespace BatchRenderGroupManager {
-absl::flat_hash_map<BatchRenderGroupId, uint64_t> creation_order_index;
-absl::flat_hash_map<BatchRenderGroupId, BatchRenderGroupState> group_states;
-uint64_t current_creation_order_index = 0;
-uint64_t frame_start_index = 0;
-
-inline bool HasValidCreationIndex(const BatchRenderGroupId& id) {
-  return creation_order_index.contains(id) && (creation_order_index[id] >= frame_start_index);
+inline bool BatchRenderGroupManager::HasValidCreationIndex(const BatchRenderGroupId& id) const {
+  return id_to_touch_index_.contains(id) && (id_to_touch_index_.at(id) >= frame_start_index_);
 }
 
-inline uint64_t GetCreationOrderIndex(const BatchRenderGroupId& id) {
-  uint64_t index = BatchRenderGroupManager::creation_order_index.contains(id)
-                       ? BatchRenderGroupManager::creation_order_index.at(id)
-                       : BatchRenderGroupManager::frame_start_index;
-  if (index < frame_start_index) {
-    index = frame_start_index;
+inline uint64_t BatchRenderGroupManager::GetCreationOrderIndex(const BatchRenderGroupId& id) const {
+  uint64_t index = id_to_touch_index_.contains(id) ? id_to_touch_index_.at(id) : frame_start_index_;
+  if (index < frame_start_index_) {
+    index = frame_start_index_;
   }
 
   return index;
 }
 
-void ResetOrdering() { frame_start_index = ++current_creation_order_index; }
+void BatchRenderGroupManager::ResetOrdering() { frame_start_index_ = ++current_touch_index_; }
 
-void TouchId(const BatchRenderGroupId& id) {
+void BatchRenderGroupManager::TouchId(const BatchRenderGroupId& id) {
   if (!HasValidCreationIndex(id)) {
-    creation_order_index[id] = ++current_creation_order_index;
+    id_to_touch_index_[id] = ++current_touch_index_;
   }
 }
 
-[[nodiscard]] BatchRenderGroupState GetGroupState(const BatchRenderGroupId& id) {
-  return group_states[id];
+[[nodiscard]] BatchRenderGroupState BatchRenderGroupManager::GetGroupState(
+    const BatchRenderGroupId& id) const {
+  return id_to_state_.contains(id) ? id_to_state_.at(id) : BatchRenderGroupState();
 }
 
-void SetGroupState(const BatchRenderGroupId& id, BatchRenderGroupState state) {
-  group_states[id] = std::move(state);
+void BatchRenderGroupManager::SetGroupState(const BatchRenderGroupId& id,
+                                            BatchRenderGroupState state) {
+  id_to_state_[id] = state;
 }
-}  // namespace BatchRenderGroupManager
-
-BatchRenderGroupId::BatchRenderGroupId(std::string name, float layer)
-    : name(std::move(name)), layer(layer) {}
 
 const std::string BatchRenderGroupId::kGlobalGroup = "global";
 
@@ -57,28 +49,15 @@ bool operator!=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
   return !(lhs == rhs);
 }
 
-bool operator<(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+bool BatchRenderGroupIdComparator::operator()(const BatchRenderGroupId& lhs,
+                                              const BatchRenderGroupId& rhs) {
+  ORBIT_CHECK(lhs.manager_ == rhs.manager_ && lhs.manager_ == manager_);
+
   if (lhs.layer != rhs.layer) return lhs.layer < rhs.layer;
 
-  uint64_t lhs_creation = BatchRenderGroupManager::GetCreationOrderIndex(lhs);
-  uint64_t rhs_creation = BatchRenderGroupManager::GetCreationOrderIndex(rhs);
+  uint64_t lhs_creation = manager_->GetCreationOrderIndex(lhs);
+  uint64_t rhs_creation = manager_->GetCreationOrderIndex(rhs);
   return lhs_creation < rhs_creation;
-}
-
-bool operator<=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
-  if (lhs < rhs) return true;
-
-  uint64_t lhs_creation = BatchRenderGroupManager::GetCreationOrderIndex(lhs);
-  uint64_t rhs_creation = BatchRenderGroupManager::GetCreationOrderIndex(rhs);
-  return (lhs.layer == rhs.layer && lhs_creation == rhs_creation);
-}
-
-bool operator>(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
-  return !(lhs <= rhs);
-}
-
-bool operator>=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
-  return !(lhs < rhs);
 }
 
 }  // namespace orbit_gl

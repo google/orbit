@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "Containers/BlockChain.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -26,7 +27,8 @@ namespace orbit_gl {
 
 class FakeOpenGlBatcher : public OpenGlBatcher {
  public:
-  explicit FakeOpenGlBatcher(BatcherId id) : OpenGlBatcher(id) {}
+  explicit FakeOpenGlBatcher(BatchRenderGroupManager* manager, BatcherId id)
+      : OpenGlBatcher(manager, id) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -129,7 +131,8 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
 }
 
 TEST(OpenGlBatcher, SimpleElementsDrawing) {
-  FakeOpenGlBatcher batcher(BatcherId::kUi);
+  BatchRenderGroupManager manager;
+  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
@@ -156,7 +159,8 @@ void ExpectCustomDataEq(const FakeOpenGlBatcher& batcher, const Color& rendered_
 }
 
 TEST(OpenGlBatcher, PickingSimpleElements) {
-  FakeOpenGlBatcher batcher(BatcherId::kUi);
+  BatchRenderGroupManager manager;
+  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
   EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
@@ -188,7 +192,8 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
 }
 
 TEST(OpenGlBatcher, MultipleDrawCalls) {
-  FakeOpenGlBatcher batcher(BatcherId::kUi);
+  BatchRenderGroupManager manager;
+  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -243,7 +248,8 @@ void LineEq(const Line3D& lhs, const Line& rhs) {
 }
 
 TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
-  FakeOpenGlBatcher batcher(BatcherId::kUi);
+  BatchRenderGroupManager manager;
+  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
@@ -252,8 +258,8 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   const Line3D transformed_expectation{original_expectation.start_point + transform,
                                        original_expectation.end_point + transform};
 
-  const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
-    return *batcher.GetInternalBuffers(BatchRenderGroupId(z)).line_buffer.lines_.begin();
+  const auto first_from_layer = [&manager, &batcher = std::as_const(batcher)](float z) {
+    return *batcher.GetInternalBuffers(manager.CreateId(z)).line_buffer.lines_.begin();
   };
 
   const auto add_line_assert_eq = [&batcher, &first_from_layer](const Line3D& expectation) {
@@ -279,7 +285,8 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
 }
 
 TEST(OpenGlBatcher, StatisticsAreReportedCorrectly) {
-  FakeOpenGlBatcher batcher(BatcherId::kUi);
+  BatchRenderGroupManager manager;
+  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   const size_t kExpectedBoxBlockSize =
       orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * (sizeof(Quad) + 8 * sizeof(Color));

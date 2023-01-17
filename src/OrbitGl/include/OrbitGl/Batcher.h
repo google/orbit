@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/PickingManager.h"
 #include "OrbitGl/TranslationStack.h"
@@ -20,7 +21,8 @@ namespace orbit_gl {
 // translations that will be called by CaptureViewElements.
 class Batcher : public BatcherInterface {
  public:
-  explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
+  explicit Batcher(BatchRenderGroupManager* manager, BatcherId batcher_id)
+      : current_render_group_(manager->CreateId()), manager_(manager), batcher_id_(batcher_id) {}
 
   [[nodiscard]] BatcherId GetBatcherId() const { return batcher_id_; }
 
@@ -45,9 +47,12 @@ class Batcher : public BatcherInterface {
     current_render_group_ = render_group;
   }
 
+  [[nodiscard]] BatchRenderGroupManager* GetRenderGroupManager() { return manager_; }
+
  protected:
   orbit_gl::TranslationStack translations_;
   BatchRenderGroupId current_render_group_;
+  BatchRenderGroupManager* manager_;
 
  private:
   BatcherId batcher_id_;

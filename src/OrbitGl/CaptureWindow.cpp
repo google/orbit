@@ -556,9 +556,11 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     orbit_base::Append(all_groups_sorted, text_renderer_.GetRenderGroups());
 
     // Sort and remove duplicates.
-    std::sort(all_groups_sorted.begin(), all_groups_sorted.end());
+    std::sort(all_groups_sorted.begin(), all_groups_sorted.end(),
+              render_group_manager_.CreateComparator());
     auto it = std::unique(all_groups_sorted.begin(), all_groups_sorted.end());
-    all_groups_sorted.resize(std::distance(all_groups_sorted.begin(), it));
+    all_groups_sorted.resize(std::distance(all_groups_sorted.begin(), it),
+                             render_group_manager_.CreateId());
   }
 
   last_rendered_layers_ = all_groups_sorted.size();
@@ -569,7 +571,7 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
   }
 
   for (const orbit_gl::BatchRenderGroupId& group : all_groups_sorted) {
-    auto stencil = orbit_gl::BatchRenderGroupManager::GetGroupState(group).stencil;
+    auto stencil = render_group_manager_.GetGroupState(group).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_.WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
@@ -622,8 +624,9 @@ void CaptureWindow::set_draw_help(bool draw_help) {
 }
 
 void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
-  time_graph_ = std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data,
-                                            &GetPickingManager(), time_graph_layout_);
+  time_graph_ =
+      std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager(),
+                                  &render_group_manager_, time_graph_layout_);
 }
 
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
@@ -815,8 +818,7 @@ void CaptureWindow::DrawLayerDebugInfo(
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
 
   for (const auto& layer : sorted_layers) {
-    const orbit_gl::StencilConfig& stencil =
-        orbit_gl::BatchRenderGroupManager::GetGroupState(layer).stencil;
+    const orbit_gl::StencilConfig& stencil = render_group_manager_.GetGroupState(layer).stencil;
     if (!stencil.enabled) continue;
 
     PrepareGlState();

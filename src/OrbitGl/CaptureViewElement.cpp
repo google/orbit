@@ -253,17 +253,21 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
 
   if (RestrictDrawingToBody()) {
+    ORBIT_CHECK(primitive_assembler.GetRenderGroupManager() ==
+                text_renderer.GetRenderGroupManager());
+    BatchRenderGroupManager* manager = primitive_assembler.GetRenderGroupManager();
+
     previous_batcher_render_group_ = primitive_assembler.GetCurrentRenderGroup();
     previous_text_render_group_ = text_renderer.GetCurrentRenderGroup();
 
-    BatchRenderGroupId new_render_group;
+    BatchRenderGroupId new_render_group = manager->CreateId();
     new_render_group.name = std::string("rg_cve_") + std::to_string(GetUid());
 
-    BatchRenderGroupState state = BatchRenderGroupManager::GetGroupState(new_render_group);
+    BatchRenderGroupState state = manager->GetGroupState(new_render_group);
     state.stencil.pos = {GetPos()[0], GetPos()[1]};
     state.stencil.size = {GetSize()[0], GetSize()[1]};
     state.stencil.enabled = true;
-    BatchRenderGroupManager::SetGroupState(new_render_group, state);
+    manager->SetGroupState(new_render_group, state);
 
     primitive_assembler.SetCurrentRenderGroup(new_render_group);
     text_renderer.SetCurrentRenderGroup(new_render_group);
@@ -273,8 +277,8 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
 void CaptureViewElement::PostRender(PrimitiveAssembler& primitive_assembler,
                                     TextRenderer& text_renderer) {
   if (RestrictDrawingToBody()) {
-    primitive_assembler.SetCurrentRenderGroup(previous_batcher_render_group_);
-    text_renderer.SetCurrentRenderGroup(previous_text_render_group_);
+    primitive_assembler.SetCurrentRenderGroup(previous_batcher_render_group_.value());
+    text_renderer.SetCurrentRenderGroup(previous_text_render_group_.value());
   }
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();
