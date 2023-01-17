@@ -8,12 +8,12 @@
 
 namespace orbit_gl {
 
-MultivariateTimeSeries::MultivariateTimeSeries(absl::Span<const std::string> series_names,
+MultivariateTimeSeries::MultivariateTimeSeries(std::vector<std::string> series_names,
                                                uint8_t value_decimal_digits, std::string value_unit)
-    : series_names_(series_names.begin(), series_names.end()),
+    : series_names_{std::move(series_names)},
       value_decimal_digits_{value_decimal_digits},
       value_unit_{std::move(value_unit)} {
-  ORBIT_CHECK(!series_names.empty());
+  ORBIT_CHECK(!series_names_.empty());
 }
 
 double MultivariateTimeSeries::GetMin() const {
@@ -48,7 +48,7 @@ uint64_t MultivariateTimeSeries::EndTimeInNs() const {
   return time_to_series_values_.rbegin()->first;
 }
 
-const std::vector<double>& MultivariateTimeSeries::GetPreviousOrFirstEntry(uint64_t time) const {
+std::vector<double> MultivariateTimeSeries::GetPreviousOrFirstEntry(uint64_t time) const {
   absl::MutexLock lock(&mutex_);
   return GetPreviousOrFirstEntryIterator(time)->second;
 }

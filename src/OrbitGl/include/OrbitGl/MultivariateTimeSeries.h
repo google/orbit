@@ -16,7 +16,8 @@ namespace orbit_gl {
 
 class MultivariateTimeSeries {
  public:
-  explicit MultivariateTimeSeries(absl::Span<const std::string> series_names,
+  // The size of series_names SHOULD be consistent with the series dimension.
+  explicit MultivariateTimeSeries(std::vector<std::string> series_names,
                                   uint8_t value_decimal_digits, std::string value_unit);
 
   [[nodiscard]] const std::vector<std::string>& GetSeriesNames() const { return series_names_; }
@@ -29,7 +30,7 @@ class MultivariateTimeSeries {
   [[nodiscard]] size_t GetTimeToSeriesValuesSize() const;
   [[nodiscard]] uint64_t StartTimeInNs() const;
   [[nodiscard]] uint64_t EndTimeInNs() const;
-  [[nodiscard]] const std::vector<double>& GetPreviousOrFirstEntry(uint64_t time) const;
+  [[nodiscard]] std::vector<double> GetPreviousOrFirstEntry(uint64_t time) const;
 
   // Returns an empty vector if no overlap between time range [min_time, max_time] and
   // [StartTimeInNs(), EndTimeInNs()].
@@ -43,8 +44,7 @@ class MultivariateTimeSeries {
 
   void AddValues(uint64_t timestamp_ns, absl::Span<const double> values);
 
-  using TimeSeriesEntryIter =
-      typename absl::btree_map<uint64_t, std::vector<double>>::const_iterator;
+  using TimeSeriesEntryIter = absl::btree_map<uint64_t, std::vector<double>>::const_iterator;
 
  private:
   [[nodiscard]] TimeSeriesEntryIter GetPreviousOrFirstEntryIterator(uint64_t time) const
@@ -58,9 +58,9 @@ class MultivariateTimeSeries {
   double min_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
   double max_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
 
-  const std::vector<std::string> series_names_;
-  const uint8_t value_decimal_digits_;
-  const std::string value_unit_;
+  std::vector<std::string> series_names_;
+  uint8_t value_decimal_digits_;
+  std::string value_unit_;
 };
 
 }  // namespace orbit_gl
