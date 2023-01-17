@@ -8,9 +8,9 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <variant>
 
 #include "OrbitBase/NotFoundOr.h"
+#include "outcome.hpp"
 
 namespace orbit_base {
 

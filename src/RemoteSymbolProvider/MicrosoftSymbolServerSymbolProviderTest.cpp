@@ -12,7 +12,6 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <variant>
 
 #include "Http/MockDownloadManager.h"
 #include "OrbitBase/CanceledOr.h"

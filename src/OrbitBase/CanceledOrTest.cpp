@@ -7,9 +7,9 @@
 #include <memory>
 #include <tuple>
 #include <utility>
-#include <variant>
 
 #include "OrbitBase/CanceledOr.h"
+#include "outcome.hpp"
 
 namespace orbit_base {
 

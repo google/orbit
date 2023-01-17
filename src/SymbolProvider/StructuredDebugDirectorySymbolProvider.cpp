@@ -8,7 +8,6 @@
 
 #include <string>
 #include <string_view>
-#include <variant>
 
 #include "OrbitBase/File.h"
 #include "OrbitBase/NotFoundOr.h"
