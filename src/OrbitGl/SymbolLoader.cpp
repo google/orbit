@@ -187,7 +187,9 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleSymbolsAndL
 
         orbit_base::ImmediateExecutor executor;
         return LoadSymbols(local_file_path, module_id)
-            .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
+            .ThenIfSuccess(&executor, []() -> CanceledOr<void> {
+              return CanceledOr<void>{outcome::success()};
+            });
       });
 }
 
@@ -518,7 +520,9 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLo
 
         orbit_base::ImmediateExecutor executor;
         return LoadFallbackSymbols(local_file_path, module_id)
-            .ThenIfSuccess(&executor, []() -> CanceledOr<void> { return CanceledOr<void>{}; });
+            .ThenIfSuccess(&executor, []() -> CanceledOr<void> {
+              return CanceledOr<void>{outcome::success()};
+            });
       });
 }
 
