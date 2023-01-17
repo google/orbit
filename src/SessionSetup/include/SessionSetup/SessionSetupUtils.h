@@ -35,7 +35,7 @@ struct ConnectionTarget {
 };
 
 [[nodiscard]] std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port);
-[[nodiscard]] std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
+[[nodiscard]] std::optional<orbit_grpc_protos::ProcessInfo> TryToFindProcessData(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list,
     std::string_view process_name_or_path);
 

@@ -122,11 +122,11 @@ void TargetLabel::ChangeToFileTarget(const fs::path& path) {
 }
 
 void TargetLabel::ChangeToSshTarget(const SshTarget& ssh_target) {
-  ChangeToSshTarget(*ssh_target.GetProcess(),
+  ChangeToSshTarget(ssh_target.GetProcess(),
                     ssh_target.GetConnection()->GetAddrAndPort().GetHumanReadable());
 }
 
-void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& process,
+void TargetLabel::ChangeToSshTarget(const orbit_grpc_protos::ProcessInfo& process,
                                     std::string_view ssh_target_id) {
   Clear();
   process_ = QString::fromStdString(process.name());
@@ -144,11 +144,7 @@ void TargetLabel::ChangeToSshTarget(const orbit_client_data::ProcessData& proces
 }
 
 void TargetLabel::ChangeToLocalTarget(const LocalTarget& local_target) {
-  ChangeToLocalTarget(*local_target.GetProcess());
-}
-
-void TargetLabel::ChangeToLocalTarget(const orbit_client_data::ProcessData& process) {
-  ChangeToLocalTarget(QString::fromStdString(process.name()), process.cpu_usage());
+  ChangeToLocalTarget(local_target.GetProcess());
 }
 
 void TargetLabel::ChangeToLocalTarget(const orbit_grpc_protos::ProcessInfo& process_info) {

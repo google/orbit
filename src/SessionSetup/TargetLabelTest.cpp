@@ -48,14 +48,12 @@ const char* kCpuUsageDisplay = "50%";
 const char* kSshMachineId = "1.1.1.1:2222";
 
 static void ChangeToFakeSshTarget(TargetLabel& label) {
-  orbit_client_data::ProcessData process;
   orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_name(kProcessName);
   process_info.set_full_path("/mnt/developer/test_process");
   process_info.set_cpu_usage(kCpuUsage);
-  process.SetProcessInfo(process_info);
 
-  label.ChangeToSshTarget(process, kSshMachineId);
+  label.ChangeToSshTarget(process_info, kSshMachineId);
 }
 
 TEST(TargetLabel, ChangeToSshTarget) {

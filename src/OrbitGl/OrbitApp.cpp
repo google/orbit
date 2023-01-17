@@ -2622,13 +2622,12 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
   }
 }
 
-void OrbitApp::SetTargetProcess(ProcessData* process) {
-  ORBIT_CHECK(process != nullptr);
-
-  if (process != process_) {
+void OrbitApp::SetTargetProcess(orbit_grpc_protos::ProcessInfo process) {
+  if (process_ == nullptr || process.full_path() != process_->full_path() ||
+      process.build_id() != process_->build_id()) {
     data_manager_->ClearSelectedFunctions();
     data_manager_->ClearUserDefinedCaptureData();
-    process_ = process;
+    process_ = std::make_unique<orbit_client_data::ProcessData>(process);
   }
 }
 

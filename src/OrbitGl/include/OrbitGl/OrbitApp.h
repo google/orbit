@@ -298,15 +298,17 @@ class OrbitApp final : public DataViewFactory,
     ORBIT_CHECK(process_manager != nullptr);
     process_manager_ = process_manager;
   }
-  void SetTargetProcess(orbit_client_data::ProcessData* process);
+  void SetTargetProcess(orbit_grpc_protos::ProcessInfo process);
   [[nodiscard]] orbit_data_views::DataView* GetOrCreateDataView(
       orbit_data_views::DataViewType type) override;
   [[nodiscard]] orbit_data_views::DataView* GetOrCreateSelectionCallstackDataView();
 
   [[nodiscard]] orbit_string_manager::StringManager* GetStringManager() { return &string_manager_; }
-  [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
+  [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const {
+    return process_.get();
+  }
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
-    return process_;
+    return process_.get();
   }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
@@ -580,7 +582,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
-  orbit_client_data::ProcessData* process_ = nullptr;
+  std::unique_ptr<orbit_client_data::ProcessData> process_ = nullptr;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

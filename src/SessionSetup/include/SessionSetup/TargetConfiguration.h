@@ -23,17 +23,14 @@ class SshTarget {
   friend class SessionSetupDialog;
 
  public:
-  explicit SshTarget(SshConnection&& connection,
-                     std::unique_ptr<orbit_client_data::ProcessData> process)
-      : connection_(std::move(connection)), process_(std::move(process)) {
-    ORBIT_CHECK(process_ != nullptr);
-  }
+  explicit SshTarget(SshConnection&& connection, orbit_grpc_protos::ProcessInfo process)
+      : connection_(std::move(connection)), process_(std::move(process)) {}
   [[nodiscard]] const SshConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
+  [[nodiscard]] orbit_grpc_protos::ProcessInfo GetProcess() const { return process_; }
 
  private:
   SshConnection connection_;
-  std::unique_ptr<orbit_client_data::ProcessData> process_;
+  orbit_grpc_protos::ProcessInfo process_;
 };
 
 /*
@@ -47,17 +44,14 @@ class LocalTarget {
   friend class SessionSetupDialog;
 
  public:
-  explicit LocalTarget(LocalConnection&& connection,
-                       std::unique_ptr<orbit_client_data::ProcessData> process)
-      : connection_(std::move(connection)), process_(std::move(process)) {
-    ORBIT_CHECK(process_ != nullptr);
-  }
+  explicit LocalTarget(LocalConnection&& connection, orbit_grpc_protos::ProcessInfo process)
+      : connection_(std::move(connection)), process_(std::move(process)) {}
   [[nodiscard]] const LocalConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_client_data::ProcessData* GetProcess() const { return process_.get(); }
+  [[nodiscard]] orbit_grpc_protos::ProcessInfo GetProcess() const { return process_; }
 
  private:
   LocalConnection connection_;
-  std::unique_ptr<orbit_client_data::ProcessData> process_;
+  orbit_grpc_protos::ProcessInfo process_;
 };
 
 /*

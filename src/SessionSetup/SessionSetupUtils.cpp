@@ -25,7 +25,7 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
   return result;
 }
 
-std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
+std::optional<orbit_grpc_protos::ProcessInfo> TryToFindProcessData(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list,
     std::string_view process_name_or_path) {
   std::string_view shortened_process_name = process_name_or_path.substr(0, kMaxProcessNameLength);
@@ -36,11 +36,11 @@ std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
          const orbit_grpc_protos::ProcessInfo& rhs) -> bool { return lhs.pid() > rhs.pid(); });
   for (auto& process : process_list) {
     if (process.full_path() == process_name_or_path || process.name() == shortened_process_name) {
-      return std::make_unique<orbit_client_data::ProcessData>(process);
+      return process;
     }
   }
 
-  return nullptr;
+  return std::nullopt;
 }
 
 }  // namespace orbit_session_setup
