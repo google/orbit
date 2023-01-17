@@ -105,7 +105,7 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
 
 CallTreeWidget::~CallTreeWidget() = default;
 
-void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
+void CallTreeWidget::SetCallTreeView(std::shared_ptr<const CallTreeView> call_tree_view,
                                      std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model) {
   ORBIT_CHECK(app_ != nullptr);
 
@@ -216,7 +216,7 @@ static void ExpandRecursivelyWithThreshold(QTreeView* tree_view, const QModelInd
   }
 }
 
-void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
+void CallTreeWidget::SetTopDownView(std::shared_ptr<const CallTreeView> top_down_view) {
   // Expand recursively if CallTreeView contains information for a single thread.
   bool should_expand = IsSliderEnabled() && top_down_view->thread_count() == 1;
 
@@ -230,14 +230,14 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
   }
 }
 
-void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
+void CallTreeWidget::SetBottomUpView(std::shared_ptr<const CallTreeView> bottom_up_view) {
   SetCallTreeView(std::move(bottom_up_view),
                   std::make_unique<HideValuesForBottomUpProxyModel>(nullptr));
   // Don't show the "Exclusive" column for the bottom-up tree, it provides no useful information.
   ui_->callTreeTreeView->hideColumn(CallTreeViewItemModel::kExclusive);
 }
 
-void CallTreeWidget::SetInspection(std::unique_ptr<CallTreeView> call_tree_view) {
+void CallTreeWidget::SetInspection(std::shared_ptr<const CallTreeView> call_tree_view) {
   ORBIT_CHECK(hide_values_proxy_model_ != nullptr);
   ui_->inspectionNoticeWidget->show();
   inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));

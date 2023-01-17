@@ -20,7 +20,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 
-CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,
+CallTreeViewItemModel::CallTreeViewItemModel(std::shared_ptr<const CallTreeView> call_tree_view,
                                              QObject* parent)
     : QAbstractItemModel{parent}, call_tree_view_{std::move(call_tree_view)} {}
 
@@ -362,7 +362,7 @@ QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex&
     return {};
   }
 
-  CallTreeNode* parent_item = nullptr;
+  const CallTreeNode* parent_item = nullptr;
   if (!parent.isValid()) {
     parent_item = call_tree_view_.get();
   } else {

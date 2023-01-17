@@ -57,11 +57,11 @@ class CallTreeWidget : public QWidget {
     app_ = nullptr;
   }
 
-  void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
-  void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
+  void SetTopDownView(std::shared_ptr<const CallTreeView> top_down_view);
+  void SetBottomUpView(std::shared_ptr<const CallTreeView> bottom_up_view);
   void ClearCallTreeView();
   // These methods can only be called after SetTopDownView or SetBottomUpView.
-  void SetInspection(std::unique_ptr<CallTreeView> call_tree_view);
+  void SetInspection(std::shared_ptr<const CallTreeView> call_tree_view);
   void ClearInspection();
 
  protected:
@@ -132,7 +132,7 @@ class CallTreeWidget : public QWidget {
                const QModelIndex& index) const override;
   };
 
-  void SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
+  void SetCallTreeView(std::shared_ptr<const CallTreeView> call_tree_view,
                        std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model);
 
   void ResizeColumnsIfNecessary();
