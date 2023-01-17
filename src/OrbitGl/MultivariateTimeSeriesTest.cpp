@@ -15,44 +15,41 @@
 
 namespace orbit_gl {
 
-static constexpr uint8_t kDefaultValueDesimalDigits = 6;
-static constexpr const char* kDefaultValueUnits = "";
+const std::vector<std::string> kSeriesNames{"Series A", "Series B", "Series C"};
+static constexpr uint8_t kDefaultValueDecimalDigits = 6;
+static constexpr const char* kDefaultValueUnits = "Unit";
+
+constexpr uint64_t kTimestamp1 = 100;
+constexpr std::array<double, 3> kValues1{1.1, 1.2, 1.3};
+constexpr uint64_t kTimestamp2 = 200;
+constexpr std::array<double, 3> kValues2{2.1, 2.2, 2.3};
+constexpr uint64_t kTimestamp3 = 300;
+constexpr std::array<double, 3> kValues3{3.1, 3.2, 3.3};
+
+void AddTestValuesToSeries(MultivariateTimeSeries& series) {
+  series.AddValues(kTimestamp1, kValues1);
+  series.AddValues(kTimestamp2, kValues2);
+  series.AddValues(kTimestamp3, kValues3);
+}
 
 TEST(MultivariateTimeSeries, BasicSetAndGet) {
-  std::array<std::string, 3> series_names = {"Series A", "Series B", "Series C"};
-  MultivariateTimeSeries<3> series =
-      MultivariateTimeSeries<3>(series_names, kDefaultValueDesimalDigits, kDefaultValueUnits);
-  EXPECT_EQ(series.GetSeriesNames(), series_names);
+  MultivariateTimeSeries series{kSeriesNames, kDefaultValueDecimalDigits, kDefaultValueUnits};
+  EXPECT_EQ(series.GetSeriesNames(), kSeriesNames);
+  EXPECT_EQ(series.GetValueDecimalDigits(), kDefaultValueDecimalDigits);
+  EXPECT_EQ(series.GetValueUnit(), kDefaultValueUnits);
   EXPECT_TRUE(series.IsEmpty());
 
-  uint64_t timestamp_1 = 100;
-  std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
-  uint64_t timestamp_2 = 200;
-  std::array<double, 3> values_2 = {2.1, 2.2, 2.3};
-  uint64_t timestamp_3 = 300;
-  std::array<double, 3> values_3 = {3.1, 3.2, 3.3};
-  series.AddValues(timestamp_1, values_1);
-  series.AddValues(timestamp_2, values_2);
-  series.AddValues(timestamp_3, values_3);
-  EXPECT_FALSE(series.IsEmpty());
-  EXPECT_EQ(series.GetMax(), values_3[2]);
-  EXPECT_EQ(series.GetMin(), values_1[0]);
-  EXPECT_EQ(series.StartTimeInNs(), timestamp_1);
-  EXPECT_EQ(series.EndTimeInNs(), timestamp_3);
+  AddTestValuesToSeries(series);
+  EXPECT_EQ(series.GetTimeToSeriesValuesSize(), 3);
+  EXPECT_EQ(series.GetMin(), kValues1[0]);
+  EXPECT_EQ(series.GetMax(), kValues3[2]);
+  EXPECT_EQ(series.StartTimeInNs(), kTimestamp1);
+  EXPECT_EQ(series.EndTimeInNs(), kTimestamp3);
 }
 
 TEST(MultivariateTimeSeries, GetPreviousOrFirstEntry) {
-  MultivariateTimeSeries<3> series = MultivariateTimeSeries<3>(
-      {"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits, kDefaultValueUnits);
-  uint64_t timestamp_1 = 100;
-  std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
-  uint64_t timestamp_2 = 200;
-  std::array<double, 3> values_2 = {2.1, 2.2, 2.3};
-  uint64_t timestamp_3 = 300;
-  std::array<double, 3> values_3 = {3.1, 3.2, 3.3};
-  series.AddValues(timestamp_1, values_1);
-  series.AddValues(timestamp_2, values_2);
-  series.AddValues(timestamp_3, values_3);
+  MultivariateTimeSeries series{kSeriesNames, kDefaultValueDecimalDigits, kDefaultValueUnits};
+  AddTestValuesToSeries(series);
 
   {
     uint64_t timestamp_before_first_time = 50;
@@ -74,17 +71,8 @@ TEST(MultivariateTimeSeries, GetPreviousOrFirstEntry) {
 }
 
 TEST(MultivariateTimeSeries, GetEntriesAffectedByTimeRange) {
-  MultivariateTimeSeries<3> series = MultivariateTimeSeries<3>(
-      {"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits, kDefaultValueUnits);
-  uint64_t timestamp_1 = 100;
-  std::array<double, 3> values_1 = {1.1, 1.2, 1.3};
-  uint64_t timestamp_2 = 200;
-  std::array<double, 3> values_2 = {2.1, 2.2, 2.3};
-  uint64_t timestamp_3 = 300;
-  std::array<double, 3> values_3 = {3.1, 3.2, 3.3};
-  series.AddValues(timestamp_1, values_1);
-  series.AddValues(timestamp_2, values_2);
-  series.AddValues(timestamp_3, values_3);
+  MultivariateTimeSeries series{kSeriesNames, kDefaultValueDecimalDigits, kDefaultValueUnits};
+  AddTestValuesToSeries(series);
 
   {
     // Test the case that min_time >= max time
@@ -108,24 +96,13 @@ TEST(MultivariateTimeSeries, GetEntriesAffectedByTimeRange) {
     uint64_t max_time = 400;
     auto entries = series.GetEntriesAffectedByTimeRange(min_time, max_time);
     ASSERT_EQ(entries.size(), 3);
-    EXPECT_EQ(entries[0].first, timestamp_1);
+    EXPECT_EQ(entries[0].first, kTimestamp1);
     EXPECT_THAT(entries[0].second, testing::ElementsAre(1.1, 1.2, 1.3));
-    EXPECT_EQ(entries[1].first, timestamp_2);
+    EXPECT_EQ(entries[1].first, kTimestamp2);
     EXPECT_THAT(entries[1].second, testing::ElementsAre(2.1, 2.2, 2.3));
-    EXPECT_EQ(entries[2].first, timestamp_3);
+    EXPECT_EQ(entries[2].first, kTimestamp3);
     EXPECT_THAT(entries[2].second, testing::ElementsAre(3.1, 3.2, 3.3));
   }
 }
 
-TEST(MultivariateTimeSeries, GetValueDecimalDigits) {
-  MultivariateTimeSeries<3> series =
-      MultivariateTimeSeries<3>({"Series A", "Series B", "Series C"}, 42, kDefaultValueUnits);
-  EXPECT_EQ(series.GetValueDecimalDigits(), 42);
-}
-
-TEST(MultivariateTimeSeries, GetValueUnits) {
-  MultivariateTimeSeries<3> series = MultivariateTimeSeries<3>(
-      {"Series A", "Series B", "Series C"}, kDefaultValueDesimalDigits, "Meeples");
-  EXPECT_EQ(series.GetValueUnit(), "Meeples");
-}
 }  // namespace orbit_gl

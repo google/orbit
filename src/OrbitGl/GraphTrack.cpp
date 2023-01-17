@@ -136,7 +136,7 @@ float GraphTrack<Dimension>::GetLabelYFromValues(
 template <size_t Dimension>
 std::string GraphTrack<Dimension>::GetLabelTextFromValues(
     const std::array<double, Dimension>& values) const {
-  const std::array<std::string, Dimension>& series_names = series_.GetSeriesNames();
+  const std::vector<std::string>& series_names = series_.GetSeriesNames();
   std::optional<uint8_t> value_decimal_digits = series_.GetValueDecimalDigits();
   std::string value_unit = series_.GetValueUnit();
   std::string text;
@@ -175,8 +175,11 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   const Color transparent_white(255, 255, 255, 180);
 
   uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
-  const std::array<double, Dimension>& values =
-      series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+
+  // TODO(vickyliu): remove this vector to array conversion after changing to not use span.
+  const std::vector<double>& values_tmp = series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+  std::array<double, Dimension> values;
+  std::copy_n(values_tmp.begin(), Dimension, values.begin());
   uint64_t first_time = series_.StartTimeInNs();
   uint64_t label_time = std::max(current_mouse_time_ns, first_time);
   Vec2 target_point_pos{timeline_info_->GetWorldFromTick(label_time), GetLabelYFromValues(values)};
@@ -225,7 +228,7 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
                                        TextRenderer& text_renderer,
-                                       const std::array<std::string, Dimension>& series_names,
+                                       absl::Span<const std::string> series_names,
                                        const Color& legend_text_color) {
   const float space_between_legend_symbol_and_text = layout_->GetGenericFixedSpacerWidth();
   const float space_between_legend_entries = layout_->GetGenericFixedSpacerWidth() * 2;
@@ -281,7 +284,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   // We skip the last element because we can't calculate time passed between last element
   // and the next one.
   while (current_it != last_it) {
-    std::array<double, Dimension> cumulative_values{current_it->second};
+    std::vector<double> cumulative_values = current_it->second;
     std::partial_sum(cumulative_values.begin(), cumulative_values.end(), cumulative_values.begin());
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
