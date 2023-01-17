@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef __ORBIT_GL_BATCH_RENDER_GROUP_H__
-#define __ORBIT_GL_BATCH_RENDER_GROUP_H__
+#ifndef ORBIT_GL_BATCH_RENDER_GROUP_H_
+#define ORBIT_GL_BATCH_RENDER_GROUP_H_
 
 #include <functional>
 #include <string>

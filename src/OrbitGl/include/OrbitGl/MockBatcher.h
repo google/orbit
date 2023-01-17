@@ -43,7 +43,7 @@ class MockBatcher : public Batcher {
   [[nodiscard]] uint32_t GetNumElements() const override;
 
   [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override {
-    return std::vector<BatchRenderGroupId>(render_groups_.begin(), render_groups_.end());
+    return {render_groups_.begin(), render_groups_.end()};
   }
 
   void DrawRenderGroup(const BatchRenderGroupId& /*group*/, bool /*picking*/) override {}
