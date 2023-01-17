@@ -176,7 +176,7 @@ ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(uin
     return ErrorMessage(absl::StrFormat("Error: Process with pid %d not found", pid));
   }
   ORBIT_LOG("Found process by pid, set target process");
-  auto process = std::make_unique<ProcessData>(*process_it);
+  auto process = std::make_unique<ProcessData>(*process_it, &module_identifier_provider_);
   ORBIT_LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->pid(), process->name(),
             process->full_path(), process->is_64_bit());
   return process;
@@ -211,7 +211,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   ORBIT_LOG("Module info: name:%s, path:%s, size:%d, build_id:%s", main_module_->name(),
             main_module_->file_path(), main_module_->file_size(), main_module_->build_id());
 
-  target_process_->UpdateModuleInfos(module_infos, module_identifier_provider_);
+  target_process_->UpdateModuleInfos(module_infos);
 
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();

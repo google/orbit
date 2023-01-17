@@ -156,11 +156,11 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(executable_path);
 
-  auto capture_data =
-      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, &module_identifier_provider);
   ProcessData* process = capture_data->mutable_process();
-  process->UpdateModuleInfos(modules, module_identifier_provider);
+  process->UpdateModuleInfos(modules);
 
   return capture_data;
 }

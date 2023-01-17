@@ -199,7 +199,8 @@ std::string GetExpectedDisplayAddress(uint64_t address) { return absl::StrFormat
 std::string GetExpectedDisplayCount(uint64_t count) { return absl::StrFormat("%lu", count); }
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
-    orbit_client_data::ModuleManager* module_manager) {
+    orbit_client_data::ModuleManager* module_manager,
+    const orbit_client_data::ModuleIdentifierProvider* module_identifier_provider) {
   orbit_grpc_protos::CaptureStarted capture_started{};
 
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -232,9 +233,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     instrumented_function->set_function_name(kPrettyNames[i]);
   }
 
-  auto capture_data =
-      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, module_identifier_provider);
 
   for (const TimerInfo* timer_info : kTimerPointers) {
     capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
@@ -264,7 +265,8 @@ class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterfa
 class LiveFunctionsDataViewTest : public testing::Test {
  public:
   explicit LiveFunctionsDataViewTest()
-      : view_{&live_functions_, &app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+      : view_{&live_functions_, &app_},
+        capture_data_(GenerateTestCaptureData(&module_manager_, &module_identifier_provider_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(Return(true));

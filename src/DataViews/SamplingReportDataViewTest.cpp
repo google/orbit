@@ -214,7 +214,7 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_client_data::ModuleManager* module_manager,
-    const orbit_client_data::ModuleIdentifierProvider& module_identifier_provider) {
+    const orbit_client_data::ModuleIdentifierProvider* module_identifier_provider) {
   std::vector<ModuleInfo> modules;
 
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -260,11 +260,11 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(executable_path);
 
-  auto capture_data =
-      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, module_identifier_provider);
   ProcessData* process = capture_data.get()->mutable_process();
-  process->UpdateModuleInfos(modules, module_identifier_provider);
+  process->UpdateModuleInfos(modules);
 
   for (size_t i = 0; i < kCallstackInfoNum; ++i) {
     capture_data->AddOrAssignThreadName(kTids[i], kThreadNames[i]);
@@ -379,7 +379,7 @@ class SamplingReportDataViewTest : public testing::Test {
  public:
   explicit SamplingReportDataViewTest()
       : view_{&app_},
-        capture_data_(GenerateTestCaptureData(&module_manager_, module_identifier_provider_)) {
+        capture_data_(GenerateTestCaptureData(&module_manager_, &module_identifier_provider_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetConfidenceIntervalEstimator())

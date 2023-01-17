@@ -81,8 +81,9 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
       kMainFunctionInstructions.size(), "main",    /*is_hotpatchable=*/false};
 
   orbit_code_report::Disassembler disassembler{};
-  orbit_client_data::ProcessData process_data{};
-  orbit_client_data::ModuleManager module_manager{{}};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ProcessData process_data{{}, &module_identifier_provider};
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   disassembler.Disassemble(process_data, module_manager,
                            static_cast<const void*>(kMainFunctionInstructions.data()),
                            kMainFunctionInstructions.size(), 0x401140, true);

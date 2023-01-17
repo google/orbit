@@ -61,7 +61,8 @@ class CaptureData {
   explicit CaptureData(orbit_grpc_protos::CaptureStarted capture_started,
                        std::optional<std::filesystem::path> file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                       DataSource data_source);
+                       DataSource data_source,
+                       const ModuleIdentifierProvider* module_identifier_provider);
 
   // We cannot copy the unique_ptr, so we cannot copy this object.
   CaptureData(const CaptureData& other) = delete;
@@ -70,8 +71,8 @@ class CaptureData {
   CaptureData(CaptureData&& other) = delete;
   CaptureData& operator=(CaptureData&& other) = delete;
 
-  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_; }
-  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_; }
+  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return process_.get(); }
+  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return process_.get(); }
 
   [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const {
     return capture_started_.capture_options().memory_sampling_period_ns();
@@ -288,7 +289,7 @@ class CaptureData {
  private:
   orbit_grpc_protos::CaptureStarted capture_started_;
 
-  orbit_client_data::ProcessData process_;
+  std::unique_ptr<orbit_client_data::ProcessData> process_;
   // TODO(b/249262736): Replace this map in favor of ScopeIdProvider's scope_id_to_function_info_.
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   uint64_t memory_warning_threshold_kb_ = 0;

@@ -28,8 +28,8 @@ using orbit_code_report::kFibonacciDisassembledWithSymbolsLoaded;
 
 TEST(Disassembler, Disassemble) {
   orbit_code_report::Disassembler disassembler{};
-  orbit_client_data::ProcessData empty_process{};
-  orbit_client_data::ModuleIdentifierProvider empty_module_identifier_provider{};
+  orbit_client_data::ModuleIdentifierProvider empty_module_identifier_provider;
+  orbit_client_data::ProcessData empty_process{{}, &empty_module_identifier_provider};
   orbit_client_data::ModuleManager empty_module_manager{&empty_module_identifier_provider};
   disassembler.Disassemble(empty_process, empty_module_manager,
                            static_cast<const void*>(kFibonacciAssembly.data()),
@@ -72,8 +72,8 @@ TEST(Disassembler, DisassembleWithSymbols) {
   orbit_client_data::ModuleData* module_data =
       module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
 
-  orbit_client_data::ProcessData process{};
-  process.AddOrUpdateModuleInfo(module_info, module_identifier_provider);
+  orbit_client_data::ProcessData process{{}, &module_identifier_provider};
+  process.AddOrUpdateModuleInfo(module_info);
 
   orbit_grpc_protos::ModuleSymbols symbols;
   orbit_grpc_protos::SymbolInfo* symbol = symbols.add_symbol_infos();

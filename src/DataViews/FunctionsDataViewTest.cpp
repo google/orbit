@@ -334,8 +334,11 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
 
   EXPECT_CALL(app_, HasCaptureData).Times(2).WillRepeatedly(testing::Return(true));
 
-  CaptureData capture_data{
-      capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{capture_started,
+                           std::nullopt,
+                           {},
+                           CaptureData::DataSource::kLiveCapture,
+                           &module_identifier_provider};
   EXPECT_CALL(app_, GetCaptureData).Times(2).WillRepeatedly(testing::ReturnPointee(&capture_data));
 
   // Note that `CaptureData` also keeps a list of enabled frame track function ids, but this list is
@@ -600,7 +603,9 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
-  CaptureData capture_data{{}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  CaptureData capture_data{
+      {}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture, &module_identifier_provider};
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
@@ -638,7 +643,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   constexpr int kRandomPid = 4242;
   orbit_grpc_protos::ProcessInfo process_info{};
   process_info.set_pid(kRandomPid);
-  orbit_client_data::ProcessData process_data{process_info};
+  orbit_client_data::ProcessData process_data{process_info, &module_identifier_provider};
 
   EXPECT_CALL(app_, GetTargetProcess).Times(1).WillRepeatedly(testing::Return(&process_data));
   EXPECT_CALL(app_, Disassemble)

@@ -21,13 +21,6 @@ using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
 
-ProcessData::ProcessData() { process_info_.set_pid(-1); }
-
-void ProcessData::SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info) {
-  absl::MutexLock lock(&mutex_);
-  process_info_ = process_info;
-}
-
 uint32_t ProcessData::pid() const {
   absl::MutexLock lock(&mutex_);
   return process_info_.pid();
@@ -75,16 +68,15 @@ const std::string& ProcessData::build_id() const {
   return true;
 }
 
-void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos,
-                                    const ModuleIdentifierProvider& module_identifier_provider) {
+void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
   absl::MutexLock lock(&mutex_);
   start_address_to_module_in_memory_.clear();
   absolute_address_to_module_in_memory_cache_.clear();
 
   for (const auto& module_info : module_infos) {
     std::optional<orbit_client_data::ModuleIdentifier> module_id_opt =
-        module_identifier_provider.GetModuleIdentifier(module_info.file_path(),
-                                                       module_info.build_id());
+        module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
+                                                         module_info.build_id());
     ORBIT_CHECK(module_id_opt.has_value());
     const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
         module_info.address_start(), module_info.address_start(), module_info.address_end(),
@@ -97,15 +89,13 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos,
   ORBIT_DCHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
-std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
-    std::string_view module_path,
-    const ModuleIdentifierProvider& module_identifier_provider) const {
+std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(std::string_view module_path) const {
   absl::MutexLock lock(&mutex_);
   std::set<std::string> build_ids;
 
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
     std::optional<std::pair<std::string, std::string>> current_module_path_and_build_id =
-        module_identifier_provider.GetModulePathAndBuildId(module_in_memory.module_id());
+        module_identifier_provider_->GetModulePathAndBuildId(module_in_memory.module_id());
     ORBIT_CHECK(current_module_path_and_build_id.has_value());
     if (current_module_path_and_build_id->first == module_path) {
       build_ids.insert(current_module_path_and_build_id->second);
@@ -115,12 +105,11 @@ std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(
   return {build_ids.begin(), build_ids.end()};
 }
 
-void ProcessData::AddOrUpdateModuleInfo(
-    const ModuleInfo& module_info, const ModuleIdentifierProvider& module_identifier_provider) {
+void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   absl::MutexLock lock(&mutex_);
   std::optional<orbit_client_data::ModuleIdentifier> module_id_opt =
-      module_identifier_provider.GetModuleIdentifier(module_info.file_path(),
-                                                     module_info.build_id());
+      module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
+                                                       module_info.build_id());
   ORBIT_CHECK(module_id_opt.has_value());
   ModuleInMemory module_in_memory{module_info.address_start(), module_info.address_end(),
                                   module_id_opt.value()};
@@ -192,13 +181,12 @@ std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(
   return result;
 }
 
-std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(
-    std::string_view filename, const ModuleIdentifierProvider& module_identifier_provider) const {
+std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(std::string_view filename) const {
   absl::MutexLock lock(&mutex_);
   std::vector<ModuleInMemory> result;
   for (const auto& [unused_start_address, module_in_memory] : start_address_to_module_in_memory_) {
     std::optional<std::string> current_module_path =
-        module_identifier_provider.GetModulePath(module_in_memory.module_id());
+        module_identifier_provider_->GetModulePath(module_in_memory.module_id());
     ORBIT_CHECK(current_module_path.has_value());
     if (std::filesystem::path(current_module_path.value()).filename().string() == filename) {
       result.push_back(module_in_memory);

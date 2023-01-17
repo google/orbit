@@ -100,8 +100,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                       orbit_grpc_protos::ModuleInfo module_info) override {
     UpdateModules({module_info});
 
-    GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info,
-                                                                     *module_identifier_provider_);
+    GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
   }
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override {

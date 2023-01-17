@@ -258,9 +258,9 @@ IntrospectionWindow::IntrospectionWindow(
   capture_started.set_process_id(orbit_base::GetCurrentProcessId());
   capture_started.set_executable_path("Orbit");
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
-  capture_data_ = std::make_unique<CaptureData>(capture_started, std::nullopt,
-                                                std::move(frame_track_function_ids),
-                                                CaptureData::DataSource::kLiveCapture);
+  capture_data_ = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, std::move(frame_track_function_ids),
+      CaptureData::DataSource::kLiveCapture, app->GetModuleIdentifierProvider());
   // Start recording on window creation.
   ToggleRecording();
 }

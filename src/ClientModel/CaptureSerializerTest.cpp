@@ -42,10 +42,13 @@ TEST(CaptureSerializer, GenerateCaptureFileName) {
 
   orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   ModuleManager module_manager{&module_identifier_provider};
-  CaptureData capture_data{
-      capture_started, std::filesystem::path{}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{capture_started,
+                           std::filesystem::path{},
+                           {},
+                           CaptureData::DataSource::kLiveCapture,
+                           &module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
-  capture_data.mutable_process()->UpdateModuleInfos({module_info}, module_identifier_provider);
+  capture_data.mutable_process()->UpdateModuleInfos({module_info});
 
   std::string expected_file_name = absl::StrCat(
       "p_",

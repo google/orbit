@@ -35,7 +35,8 @@ namespace orbit_client_data {
 CaptureData::CaptureData(CaptureStarted capture_started,
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                         DataSource data_source)
+                         DataSource data_source,
+                         const ModuleIdentifierProvider* module_identifier_provider)
     : capture_started_(std::move(capture_started)),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
@@ -50,7 +51,7 @@ CaptureData::CaptureData(CaptureStarted capture_started,
   process_info.set_full_path(executable_path.string());
   process_info.set_name(executable_path.filename().string());
   process_info.set_is_64_bit(true);
-  process_.SetProcessInfo(process_info);
+  process_ = std::make_unique<ProcessData>(process_info, module_identifier_provider);
 
   for (const auto& instrumented_function :
        capture_started_.capture_options().instrumented_functions()) {
@@ -218,9 +219,9 @@ void CaptureData::InsertAddressInfo(LinuxAddressInfo address_info) {
   address_infos_.emplace(absolute_address, std::move(address_info));
 }
 
-uint32_t CaptureData::process_id() const { return process_.pid(); }
+uint32_t CaptureData::process_id() const { return process_->pid(); }
 
-std::string CaptureData::process_name() const { return process_.name(); }
+std::string CaptureData::process_name() const { return process_->name(); }
 
 void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {

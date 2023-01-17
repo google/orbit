@@ -187,9 +187,8 @@ constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 const TimeRange kDefaultTimeRange =
     TimeRange(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 
-orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(
-    const PresetFile& preset, const ProcessData* process,
-    const orbit_client_data::ModuleIdentifierProvider& module_identifier_provider) {
+orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
+                                                               const ProcessData* process) {
   if (process == nullptr) {
     return orbit_data_views::PresetLoadState(orbit_data_views::PresetLoadState::kNotLoadable);
   }
@@ -198,7 +197,7 @@ orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(
   auto module_paths = preset.GetModulePaths();
   for (const auto& path : module_paths) {
     const std::string& module_path = path.string();
-    if (!process->IsModuleLoadedByProcess(module_path, module_identifier_provider)) {
+    if (!process->IsModuleLoadedByProcess(module_path)) {
       modules_not_found_count++;
     }
   }
@@ -367,7 +366,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     // It is safe to do this write on the main thread, as the capture thread is suspended until
     // this task is completely executed.
     ConstructCaptureData(capture_started, file_path, std::move(frame_track_function_ids),
-                         data_source_);
+                         data_source_, module_identifier_provider_.get());
     GetMutableCaptureData().set_memory_warning_threshold_kb(
         data_manager_->memory_warning_threshold_kb());
     capture_window_->CreateTimeGraph(&GetMutableCaptureData());
@@ -539,15 +538,13 @@ void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
 
 void OrbitApp::OnModuleUpdate(uint64_t /*timestamp_ns*/, ModuleInfo module_info) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload({module_info});
-  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info,
-                                                                   *module_identifier_provider_);
+  GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
 void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> module_infos) {
   UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(module_infos);
-  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos,
-                                                               *module_identifier_provider_);
+  GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
@@ -1148,7 +1145,7 @@ ErrorMessageOr<void> OrbitApp::OnLoadPreset(std::string_view filename) {
 }
 
 orbit_data_views::PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile& preset) const {
-  return GetPresetLoadStateForProcess(preset, GetTargetProcess(), *module_identifier_provider_);
+  return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
@@ -1262,10 +1259,9 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
 static void FindAndAddFunctionToStopUnwindingAt(
     std::string_view function_name, std::string_view module_name,
     const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
-    const orbit_client_data::ModuleIdentifierProvider& module_identifier_provider,
     std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
   std::vector<orbit_client_data::ModuleInMemory> modules =
-      process.FindModulesByFilename(module_name, module_identifier_provider);
+      process.FindModulesByFilename(module_name);
   for (const auto& module_in_memory : modules) {
     const ModuleData* module_data =
         module_manager.GetModuleByModuleIdentifier(module_in_memory.module_id());
@@ -1359,7 +1355,7 @@ void OrbitApp::StartCapture() {
       data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     FindAndAddFunctionToStopUnwindingAt(
         kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
-        *module_identifier_provider_, &absolute_address_to_size_of_functions_to_stop_unwinding_at);
+        &absolute_address_to_size_of_functions_to_stop_unwinding_at);
   }
 
   ClientCaptureOptions options;
@@ -1634,8 +1630,8 @@ void OrbitApp::AddFallbackSymbols(std::string_view module_file_path,
 
 ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
     const std::filesystem::path& module_path) const {
-  std::vector<std::string> build_ids = GetTargetProcess()->FindModuleBuildIdsByPath(
-      module_path.string(), *module_identifier_provider_);
+  std::vector<std::string> build_ids =
+      GetTargetProcess()->FindModuleBuildIdsByPath(module_path.string());
 
   std::vector<const ModuleData*> result;
   for (const auto& build_id : build_ids) {
@@ -2002,13 +1998,13 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   ProcessData* process = GetMutableTargetProcess();
 
   ORBIT_CHECK(process != nullptr);
-  process->UpdateModuleInfos(module_infos, *module_identifier_provider_);
+  process->UpdateModuleInfos(module_infos);
 
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
     const ModuleData* module =
         GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
-    if (!process->IsModuleLoadedByProcess(module->file_path(), *module_identifier_provider_)) {
+    if (!process->IsModuleLoadedByProcess(module->file_path())) {
       // (A) deselect functions when the module is not loaded by the process anymore
       data_manager_->DeselectFunction(func);
     } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
@@ -2025,7 +2021,7 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
         GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
-    if (!process->IsModuleLoadedByProcess(module->file_path(), *module_identifier_provider_)) {
+    if (!process->IsModuleLoadedByProcess(module->file_path())) {
       RemoveFrameTrack(func);
     } else if (!module->AreAtLeastFallbackSymbolsLoaded()) {
       RemoveFrameTrack(func);
@@ -2626,7 +2622,8 @@ void OrbitApp::SetTargetProcess(orbit_grpc_protos::ProcessInfo process) {
   if (process_ == nullptr || process.pid() != process_->pid()) {
     data_manager_->ClearSelectedFunctions();
     data_manager_->ClearUserDefinedCaptureData();
-    process_ = std::make_unique<orbit_client_data::ProcessData>(process);
+    process_ = std::make_unique<orbit_client_data::ProcessData>(process,
+                                                                module_identifier_provider_.get());
   }
 }
 

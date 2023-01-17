@@ -310,6 +310,10 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
     return process_.get();
   }
+  [[nodiscard]] const orbit_client_data::ModuleIdentifierProvider* GetModuleIdentifierProvider()
+      const {
+    return module_identifier_provider_.get();
+  }
   [[nodiscard]] ManualInstrumentationManager* GetManualInstrumentationManager() {
     return manual_instrumentation_manager_.get();
   }

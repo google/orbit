@@ -391,10 +391,9 @@ int main(int argc, char* argv[]) {
 
   orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
-  orbit_client_data::ProcessData process_data;
   orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_pid(options.process_id);
-  process_data.SetProcessInfo(process_info);
+  orbit_client_data::ProcessData process_data{process_info, &module_identifier_provider};
   ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
       orbit_module_utils::ReadModules(options.process_id);
   ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
@@ -443,7 +442,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  process_data.UpdateModuleInfos(modules_or_error.value(), module_identifier_provider);
+  process_data.UpdateModuleInfos(modules_or_error.value());
 
   std::unique_ptr<orbit_capture_client::CaptureEventProcessor> capture_event_processor;
   switch (absl::GetFlag(FLAGS_event_processor)) {

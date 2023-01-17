@@ -188,11 +188,15 @@ void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
 class CaptureDataTest : public testing::Test {
  public:
   explicit CaptureDataTest()
-      : capture_data_{
-            CreateCaptureStarted(), std::nullopt, {}, CaptureData::DataSource::kLiveCapture} {}
+      : capture_data_{CreateCaptureStarted(),
+                      std::nullopt,
+                      {},
+                      CaptureData::DataSource::kLiveCapture,
+                      &module_identifier_provider_} {}
 
  protected:
   CaptureData capture_data_;
+  ModuleIdentifierProvider module_identifier_provider_;
 };
 
 }  // namespace

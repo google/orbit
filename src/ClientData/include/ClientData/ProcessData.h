@@ -38,12 +38,10 @@ namespace orbit_client_data {
 // Contains current information about process
 class ProcessData final {
  public:
-  ProcessData();
-
-  explicit ProcessData(orbit_grpc_protos::ProcessInfo process_info)
-      : process_info_(std::move(process_info)) {}
-
-  void SetProcessInfo(const orbit_grpc_protos::ProcessInfo& process_info);
+  explicit ProcessData(orbit_grpc_protos::ProcessInfo process_info,
+                       const ModuleIdentifierProvider* module_identifier_provider)
+      : process_info_(std::move(process_info)),
+        module_identifier_provider_(module_identifier_provider) {}
 
   [[nodiscard]] uint32_t pid() const;
   [[nodiscard]] const std::string& name() const;
@@ -53,15 +51,13 @@ class ProcessData final {
   [[nodiscard]] bool is_64_bit() const;
   [[nodiscard]] const std::string& build_id() const;
 
-  void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos,
-                         const ModuleIdentifierProvider& module_identifier_provider);
+  void UpdateModuleInfos(absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
 
   // This method removes all modules with addresses intersecting with module_info.
   // Some background on this. The service currently does not send any unmap event
   // to the client, which means that if the client receives a module with mapping
   // intersecting with exiting mapping the old module was likely unloaded.
-  void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_info,
-                             const ModuleIdentifierProvider& module_identifier_provider);
+  void AddOrUpdateModuleInfo(const orbit_grpc_protos::ModuleInfo& module_info);
 
   [[nodiscard]] ErrorMessageOr<ModuleInMemory> FindModuleByAddress(uint64_t absolute_address) const;
 
@@ -74,18 +70,14 @@ class ProcessData final {
   [[nodiscard]] std::vector<orbit_client_data::ModuleIdentifier> GetUniqueModuleIdentifiers() const;
 
   [[nodiscard]] std::vector<std::string> FindModuleBuildIdsByPath(
-      std::string_view module_path,
-      const ModuleIdentifierProvider& module_identifier_provider) const;
+      std::string_view module_path) const;
 
   // Returns the list of modules with the given filename. Note this method matches based on the
   // actual filename and not based on the full path.
-  [[nodiscard]] std::vector<ModuleInMemory> FindModulesByFilename(
-      std::string_view filename, const ModuleIdentifierProvider& module_identifier_provider) const;
+  [[nodiscard]] std::vector<ModuleInMemory> FindModulesByFilename(std::string_view filename) const;
 
-  [[nodiscard]] bool IsModuleLoadedByProcess(
-      std::string_view module_path,
-      const ModuleIdentifierProvider& module_identifier_provider) const {
-    return !FindModuleBuildIdsByPath(module_path, module_identifier_provider).empty();
+  [[nodiscard]] bool IsModuleLoadedByProcess(std::string_view module_path) const {
+    return !FindModuleBuildIdsByPath(module_path).empty();
   }
 
   [[nodiscard]] bool IsModuleLoadedByProcess(
@@ -97,6 +89,8 @@ class ProcessData final {
   std::map<uint64_t, ModuleInMemory> start_address_to_module_in_memory_ ABSL_GUARDED_BY(mutex_);
   mutable absl::flat_hash_map<uint64_t, ModuleInMemory> absolute_address_to_module_in_memory_cache_
       ABSL_GUARDED_BY(mutex_);
+
+  [[maybe_unused]] const ModuleIdentifierProvider* module_identifier_provider_;
 };
 
 }  // namespace orbit_client_data
