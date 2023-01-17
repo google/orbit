@@ -15,7 +15,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "GrpcProtos/symbol.pb.h"
 #include "Http/HttpDownloadManager.h"
