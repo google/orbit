@@ -58,6 +58,7 @@ target_sources(
          include/OrbitGl/SamplingReport.h
          include/OrbitGl/SchedulerTrack.h
          include/OrbitGl/SchedulingStats.h
+         include/OrbitGl/SelectionData.h
          include/OrbitGl/ShortenStringWithEllipsis.h
          include/OrbitGl/SimpleTimings.h
          include/OrbitGl/StaticTimeGraphLayout.h
@@ -133,6 +134,7 @@ target_sources(
           SamplingReport.cpp
           SchedulerTrack.cpp
           SchedulingStats.cpp
+          SelectionData.cpp
           SimpleTimings.cpp
           SymbolLoader.cpp
           SystemMemoryTrack.cpp

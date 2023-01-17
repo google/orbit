@@ -151,7 +151,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assemb
       primitive_assembler.AddVerticalLine({pos_x, GetPos()[1]}, track_height, z, green_selection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
-        capture_data_->selection_callstack_data();
+        app_->GetSelectedCallstackData();
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       selection_callstack_data.ForEachCallstackEventInTimeRangeDiscretized(
           min_tick, max_tick, resolution_in_pixels, action_on_selected_callstack_events);

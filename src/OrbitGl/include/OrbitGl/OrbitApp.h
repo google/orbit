@@ -83,6 +83,7 @@
 #include "OrbitGl/IntrospectionWindow.h"
 #include "OrbitGl/MainWindowInterface.h"
 #include "OrbitGl/ManualInstrumentationManager.h"
+#include "OrbitGl/SelectionData.h"
 #include "OrbitGl/SymbolLoader.h"
 #include "OrbitGl/TimeGraph.h"
 #include "PresetFile/PresetFile.h"
@@ -399,6 +400,8 @@ class OrbitApp final : public DataViewFactory,
   void ClearInspection();
   void ClearSelectionTabs();
 
+  const orbit_client_data::CallstackData& GetSelectedCallstackData() const;
+
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
 
@@ -583,6 +586,10 @@ class OrbitApp final : public DataViewFactory,
   std::optional<orbit_gl::SymbolLoader> symbol_loader_;
   static constexpr std::chrono::milliseconds kMaxPostProcessingInterval{1000};
   orbit_qt_utils::Throttle update_after_symbol_loading_throttle_{kMaxPostProcessingInterval};
+
+  std::unique_ptr<SelectionData> full_capture_selection_;
+  std::unique_ptr<SelectionData> time_range_thread_selection_;
+  std::unique_ptr<SelectionData> inspection_selection_;
 };
 
 #endif  // ORBIT_GL_APP_H_
