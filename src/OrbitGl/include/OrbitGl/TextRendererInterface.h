@@ -38,6 +38,7 @@ class TextRendererInterface {
 
   // Add a - potentially multiline - text at the given position and z-layer and with the specifier
   // formatting. If formatting.max_size is set all lines are elided to fit into this width.
+  // It is allowed for `text` to contain unicode characters.
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting) = 0;
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                        Vec2* out_text_pos, Vec2* out_text_size) = 0;
@@ -46,11 +47,15 @@ class TextRendererInterface {
   // The renderer will shorten the text if the width exceeds formatting.max_size. The shortening
   // will happen in a way that tries to preserve the given numnber of trailing characters.
   // This is mainly used to preserve the duration in the text of time intervals. E.g. something like
-  // "MyVeryLongButNotSoImportantMethodName 2.35 ms" will render as "MyVery...2.35 ms".
+  // "MyVeryLongButNotSoImportantMethodName 2.35 ms" will render as "MyVery 2.35 ms".
+  // `text` must not contain unicode characters - this method is ascii only. The reason for that is
+  // that this allows for a much quicker heuristic for shortening strings as described above.
   virtual float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                 TextFormatting formatting,
                                                 size_t trailing_chars_length) = 0;
 
+  // Return the width and height of `text` in world coordinates. The text might contain line breaks
+  // and unicode characters.
   [[nodiscard]] virtual float GetStringWidth(const char* text, uint32_t font_size) = 0;
   [[nodiscard]] virtual float GetStringHeight(const char* text, uint32_t font_size) = 0;
 };
