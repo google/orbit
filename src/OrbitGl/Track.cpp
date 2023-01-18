@@ -89,6 +89,7 @@ void Track::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
   header_->SetWidth(layout_->GetTrackHeaderWidth());
+  header_->SetHeight(GetHeight());
   header_->SetPos(GetPos()[0], GetPos()[1]);
   UpdatePositionOfSubtracks();
 }
