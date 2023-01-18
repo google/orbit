@@ -13,7 +13,7 @@
 namespace orbit_client_data {
 
 // This class is used to uniquely identify a module, e.g. to store the
-// identifier into a map. `ModuleIdentifier`s can only be created by an
+// identifier into a map. `ModuleIdentifier`s can only be created by a
 // `ModuleIdentifierProvider`, which also ensures uniqueness of ids for the
 // same modules.
 class ModuleIdentifier {

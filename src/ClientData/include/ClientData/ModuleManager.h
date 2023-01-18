@@ -42,20 +42,10 @@ class ModuleManager final {
       const ModuleInMemory& module_in_memory, uint64_t absolute_address);
 
   [[nodiscard]] const ModuleData* GetModuleByModulePathAndBuildId(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
-    std::optional<orbit_client_data::ModuleIdentifier> module_id =
-        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
-    if (!module_id.has_value()) return nullptr;
-    return GetModuleByModuleIdentifier(module_id.value());
-  }
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const;
 
   [[nodiscard]] ModuleData* GetMutableModuleByModulePathAndBuildId(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
-    std::optional<orbit_client_data::ModuleIdentifier> module_id =
-        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
-    if (!module_id.has_value()) return nullptr;
-    return GetMutableModuleByModuleIdentifier(module_id.value());
-  }
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
 
   [[nodiscard]] const ModuleData* GetModuleByModuleIdentifier(
       const orbit_client_data::ModuleIdentifier& module_id) const;
@@ -79,6 +69,12 @@ class ModuleManager final {
       std::string_view filename) const;
 
  private:
+  [[nodiscard]] const ModuleData* GetModuleByModuleIdentifierInternal(
+      const orbit_client_data::ModuleIdentifier& module_id) const
+      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  [[nodiscard]] ModuleData* GetMutableModuleByModuleIdentifierInternal(
+      const orbit_client_data::ModuleIdentifier& module_id) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
   mutable absl::Mutex mutex_;
   ModuleIdentifierProvider* module_identifier_provider_;
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map

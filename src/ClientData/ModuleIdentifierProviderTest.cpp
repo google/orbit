@@ -52,8 +52,8 @@ TEST(ModuleIdentifierProvider, ReturnsNulloptsForUnknownModule) {
           {.module_path = std::string(kUnknownModulePath),
            .build_id = std::string(kUnknownBuildId)});
 
-  EXPECT_EQ(std::nullopt, module_identifier_provider.GetModulePath(unknown_module_identifier));
-  EXPECT_EQ(std::nullopt, module_identifier_provider.GetModuleBuildId(unknown_module_identifier));
+  EXPECT_EQ(std::nullopt,
+            module_identifier_provider.GetModulePathAndBuildId(unknown_module_identifier));
   EXPECT_EQ(std::nullopt,
             module_identifier_provider.GetModulePathAndBuildId(unknown_module_identifier));
 }
@@ -71,8 +71,11 @@ TEST(ModuleIdentifierProvider, CanCreateMultipleModuleIdentifiersAndReturnInform
           {.module_path = std::string(kModulePath1), .build_id = std::string(kBuildId1)});
   ASSERT_TRUE(module_identifier1_opt.has_value());
   EXPECT_EQ(module_identifier1, module_identifier1_opt.value());
-  EXPECT_EQ(kModulePath1, module_identifier_provider.GetModulePath(module_identifier1));
-  EXPECT_EQ(kBuildId1, module_identifier_provider.GetModuleBuildId(module_identifier1));
+  static const std::optional<orbit_symbol_provider::ModulePathAndBuildId>
+      kExpectedModulePathAndBuildId = orbit_symbol_provider::ModulePathAndBuildId{
+          .module_path = std::string(kModulePath1), .build_id = std::string(kBuildId1)};
+  EXPECT_EQ(kExpectedModulePathAndBuildId,
+            module_identifier_provider.GetModulePathAndBuildId(module_identifier1));
   static const orbit_symbol_provider::ModulePathAndBuildId kExpectedModulePathAndBuildId1{
       .module_path = std::string{kModulePath1}, .build_id = std::string{kBuildId1}};
   EXPECT_EQ(kExpectedModulePathAndBuildId1,
@@ -89,10 +92,6 @@ TEST(ModuleIdentifierProvider, CanCreateMultipleModuleIdentifiersAndReturnInform
                 {.module_path = std::string(kModulePath2), .build_id = std::string(kBuildId2)}),
             module_identifier_provider.GetModuleIdentifier(
                 {.module_path = std::string(kModulePath2), .build_id = std::string(kBuildId2)}));
-  EXPECT_NE(module_identifier_provider.GetModulePath(module_identifier1),
-            module_identifier_provider.GetModulePath(module_identifier2));
-  EXPECT_NE(module_identifier_provider.GetModuleBuildId(module_identifier1),
-            module_identifier_provider.GetModuleBuildId(module_identifier2));
   EXPECT_NE(module_identifier_provider.GetModulePathAndBuildId(module_identifier1),
             module_identifier_provider.GetModulePathAndBuildId(module_identifier2));
 
@@ -101,8 +100,6 @@ TEST(ModuleIdentifierProvider, CanCreateMultipleModuleIdentifiersAndReturnInform
           {.module_path = std::string(kModulePath2), .build_id = std::string(kBuildId2)});
   ASSERT_TRUE(module_identifier2_opt.has_value());
   EXPECT_EQ(module_identifier2, module_identifier2_opt.value());
-  EXPECT_EQ(kModulePath2, module_identifier_provider.GetModulePath(module_identifier2));
-  EXPECT_EQ(kBuildId2, module_identifier_provider.GetModuleBuildId(module_identifier2));
   static const orbit_symbol_provider::ModulePathAndBuildId kExpectedModulePathAndBuildId2{
       .module_path = std::string{kModulePath2}, .build_id = std::string{kBuildId2}};
   EXPECT_EQ(kExpectedModulePathAndBuildId2,

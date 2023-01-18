@@ -140,7 +140,11 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
 const ModuleData* ModuleManager::GetModuleByModuleIdentifier(
     const ModuleIdentifier& module_id) const {
   absl::MutexLock lock(&mutex_);
+  return GetModuleByModuleIdentifierInternal(module_id);
+}
 
+const ModuleData* ModuleManager::GetModuleByModuleIdentifierInternal(
+    const ModuleIdentifier& module_id) const {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
@@ -149,11 +153,33 @@ const ModuleData* ModuleManager::GetModuleByModuleIdentifier(
 
 ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(const ModuleIdentifier& module_id) {
   absl::MutexLock lock(&mutex_);
+  return GetMutableModuleByModuleIdentifierInternal(module_id);
+}
 
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifierInternal(
+    const ModuleIdentifier& module_id) {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return it->second.get();
+}
+
+const ModuleData* ModuleManager::GetModuleByModulePathAndBuildId(
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
+  absl::MutexLock lock(&mutex_);
+  std::optional<orbit_client_data::ModuleIdentifier> module_id =
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+  if (!module_id.has_value()) return nullptr;
+  return GetModuleByModuleIdentifierInternal(module_id.value());
+}
+
+ModuleData* ModuleManager::GetMutableModuleByModulePathAndBuildId(
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+  absl::MutexLock lock(&mutex_);
+  std::optional<orbit_client_data::ModuleIdentifier> module_id =
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+  if (!module_id.has_value()) return nullptr;
+  return GetMutableModuleByModuleIdentifierInternal(module_id.value());
 }
 
 std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {

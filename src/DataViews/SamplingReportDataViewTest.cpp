@@ -746,7 +746,9 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, GetMutableModuleByModuleIdentifier)
         .Times(1)
         .WillOnce([&](const ModuleIdentifier& module_id) -> ModuleData* {
-          // TODO EXPECT_EQ(module_id.build_id, kModuleBuildIds[2]);
+          EXPECT_EQ(std::make_optional<ModuleIdentifier>(module_id),
+                    module_identifier_provider_.GetModuleIdentifier(
+                        {.module_path = kModulePaths[2], .build_id = kModuleBuildIds[2]}));
           return module_manager_.GetMutableModuleByModuleIdentifier(module_id);
         });
     EXPECT_CALL(app_, LoadSymbolsManually)

@@ -67,6 +67,7 @@ target_sources(ClientData PRIVATE
         FunctionInfo.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
+        ModuleIdentifierProvider.cpp
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp

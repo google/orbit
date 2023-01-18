@@ -186,7 +186,8 @@ std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(std::string_view 
   std::vector<ModuleInMemory> result;
   for (const auto& [unused_start_address, module_in_memory] : start_address_to_module_in_memory_) {
     std::optional<std::string> current_module_path =
-        module_identifier_provider_->GetModulePath(module_in_memory.module_id());
+        module_identifier_provider_->GetModulePathAndBuildId(module_in_memory.module_id())
+            ->module_path;
     ORBIT_CHECK(current_module_path.has_value());
     if (std::filesystem::path(current_module_path.value()).filename().string() == filename) {
       result.push_back(module_in_memory);
