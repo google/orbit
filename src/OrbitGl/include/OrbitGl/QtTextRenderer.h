@@ -39,13 +39,21 @@ class QtTextRenderer : public TextRenderer {
 
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size) override;
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
+  [[nodiscard]] float GetMinimumTextWidth(uint32_t font_size) override;
 
  private:
-  [[nodiscard]] float GetStringWidth(const QString& text, uint32_t font_size);
-  [[nodiscard]] float GetMinimumTextWidth(uint32_t font_size);
-  [[nodiscard]] float AddFittingSingleLineText(const QString& text, float x, float y, float z,
-                                               TextFormatting formatting);
+  using CharacterWidthLookup = std::array<int, 256>;
 
+  [[nodiscard]] float GetStringWidth(const QString& text, uint32_t font_size);
+  [[nodiscard]] float GetSingleLineStringHeight(uint32_t font_size);
+  [[nodiscard]] const CharacterWidthLookup& GetCharacterWidthLookup(uint32_t font_size);
+  [[nodiscard]] float GetStringWidthFast(const QString& text, const CharacterWidthLookup& lookup,
+                                         uint32_t font_size);
+  [[nodiscard]] static QString ElideText(const QString& text, int max_width,
+                                         const CharacterWidthLookup& lookup, uint32_t font_size);
+  [[nodiscard]] float AddFittingSingleLineText(const QString& text, float x, float y, float z,
+                                               const TextFormatting& formatting,
+                                               const CharacterWidthLookup& lookup);
   struct StoredText {
     StoredText() = default;
     StoredText(const QString& text, int x, int y, int w, int h, TextFormatting formatting)
@@ -59,6 +67,8 @@ class QtTextRenderer : public TextRenderer {
   };
   absl::flat_hash_map<float, std::vector<StoredText>> stored_text_;
   absl::flat_hash_map<uint32_t, float> minimum_string_width_cache_;
+  absl::flat_hash_map<uint32_t, CharacterWidthLookup> character_width_lookup_cache_;
+  absl::flat_hash_map<uint32_t, int> single_line_height_cache_;
 };
 
 }  // namespace orbit_gl

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <atomic>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -166,7 +167,9 @@ class TimerTrack : public Track {
 
   [[nodiscard]] inline bool BoxHasRoomForText(orbit_gl::TextRenderer& text_renderer,
                                               const float width) {
-    return text_renderer.GetStringWidth("w", layout_->GetFontSize()) < width;
+    const uint32_t font_size = layout_->GetFontSize();
+    const float width_of_single_char = text_renderer.GetMinimumTextWidth(font_size);
+    return width_of_single_char < width;
   }
 
   [[nodiscard]] bool ShouldHaveBorder(
@@ -180,6 +183,7 @@ class TimerTrack : public Track {
   OrbitApp* app_ = nullptr;
 
   orbit_client_data::TimerData* timer_data_;
+  absl::flat_hash_map<uint32_t, float> width_of_single_char_cache_;
 };
 
 #endif  // ORBIT_GL_TIMER_TRACK_H_
