@@ -39,11 +39,11 @@ namespace {
 // Applying the heuristic below to the result from the lookup reliably yields a fairly tight upper
 // bound for the true width of the rendered string. Don't try to make sense of the formula - it is
 // just a line fitted to example data.
-inline int MaximumHeuristic(int width, int length, uint32_t font_size) {
+[[nodiscard]] int MaximumHeuristic(int width, int length, uint32_t font_size) {
   return 2 + (length * static_cast<int>(font_size)) / (12 * 14) + width;
 }
 
-float GetYOffsetFromAlignment(QtTextRenderer::VAlign alignment, float height) {
+[[nodiscard]] float GetYOffsetFromAlignment(QtTextRenderer::VAlign alignment, float height) {
   switch (alignment) {
     case QtTextRenderer::VAlign::Top:
       return 0.f;
@@ -61,7 +61,7 @@ float GetYOffsetFromAlignment(QtTextRenderer::VAlign alignment, float height) {
   }
 }
 
-float GetXOffsetFromAlignment(QtTextRenderer::HAlign alignment, float width) {
+[[nodiscard]] float GetXOffsetFromAlignment(QtTextRenderer::HAlign alignment, float width) {
   // kOffset is a hack to compensate for subtle differences in the placement of the rendered text
   // under Linux and Windows. Setting kOffset == 0 under Windows results in texts starting left of
   // the interval border for unknown reasons (also see https://github.com/google/orbit/issues/4627).
