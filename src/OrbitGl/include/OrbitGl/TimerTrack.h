@@ -168,13 +168,8 @@ class TimerTrack : public Track {
   [[nodiscard]] inline bool BoxHasRoomForText(orbit_gl::TextRenderer& text_renderer,
                                               const float width) {
     const uint32_t font_size = layout_->GetFontSize();
-    auto it = width_of_single_char_cache_.find(font_size);
-    if (it == width_of_single_char_cache_.end()) {
-      const float width_of_single_char = text_renderer.GetStringWidth("w", font_size);
-      width_of_single_char_cache_[font_size] = width_of_single_char;
-      return width_of_single_char < width;
-    }
-    return it->second < width;
+    const float width_of_single_char = text_renderer.GetMinimumTextWidth(font_size);
+    return width_of_single_char < width;
   }
 
   [[nodiscard]] bool ShouldHaveBorder(

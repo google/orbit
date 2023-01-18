@@ -6,8 +6,8 @@
 
 #include <GteVector.h>
 #include <absl/meta/type_traits.h>
-#include <qchar.h>
 
+#include <QChar>
 #include <QColor>
 #include <QFont>
 #include <QFontDatabase>
@@ -170,7 +170,6 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
 float QtTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                       TextFormatting formatting,
                                                       size_t trailing_chars_length) {
-  ORBIT_SCOPE_FUNCTION;
   // Early-out: If we can't fit a single char, there's no use to do all the expensive
   // calculations below - this is a major bottleneck in some cases
   if (formatting.max_size >= 0 && GetMinimumTextWidth(formatting.font_size) > formatting.max_size) {
@@ -269,14 +268,14 @@ const QtTextRenderer::CharacterWidthLookup& QtTextRenderer::GetCharacterWidthLoo
     uint32_t font_size) {
   auto it = character_width_lookup_cache_.find(font_size);
   if (it == character_width_lookup_cache_.end()) {
-    CharacterWidthLookup& lut = character_width_lookup_cache_[font_size];
     QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
     font.setPixelSize(static_cast<int>(font_size));
     QFontMetrics metrics(font);
+    CharacterWidthLookup lut;
     for (int i = 0; i < 256; i++) {
       lut[i] = metrics.horizontalAdvance(QChar(i));
     }
-    return lut;
+    it = character_width_lookup_cache_.emplace(font_size, lut).first;
   }
   return it->second;
 }

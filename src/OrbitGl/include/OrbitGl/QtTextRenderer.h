@@ -39,12 +39,12 @@ class QtTextRenderer : public TextRenderer {
 
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size) override;
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
+  [[nodiscard]] float GetMinimumTextWidth(uint32_t font_size) override;
 
  private:
   using CharacterWidthLookup = std::array<int, 256>;
 
   [[nodiscard]] float GetStringWidth(const QString& text, uint32_t font_size);
-  [[nodiscard]] float GetMinimumTextWidth(uint32_t font_size);
   [[nodiscard]] float GetSingleLineStringHeight(uint32_t font_size);
   [[nodiscard]] const CharacterWidthLookup& GetCharacterWidthLookup(uint32_t font_size);
   [[nodiscard]] float GetStringWidthFast(const QString& text, const CharacterWidthLookup& lookup,

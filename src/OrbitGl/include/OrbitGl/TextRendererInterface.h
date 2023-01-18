@@ -58,6 +58,9 @@ class TextRendererInterface {
   // and unicode characters.
   [[nodiscard]] virtual float GetStringWidth(const char* text, uint32_t font_size) = 0;
   [[nodiscard]] virtual float GetStringHeight(const char* text, uint32_t font_size) = 0;
+
+  // Returns the width of a minimum single character of given font size.
+  [[nodiscard]] virtual float GetMinimumTextWidth(uint32_t font_size) = 0;
 };
 
 }  // namespace orbit_gl

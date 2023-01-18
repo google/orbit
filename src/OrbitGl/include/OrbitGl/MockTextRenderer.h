@@ -11,6 +11,7 @@
 
 #include <QPainter>
 #include <algorithm>
+#include <cstdint>
 #include <set>
 #include <vector>
 
@@ -41,6 +42,8 @@ class MockTextRenderer : public TextRenderer {
 
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size) override;
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
+
+  [[nodiscard]] float GetMinimumTextWidth(uint32_t /*font_size*/) override { return 0.f; };
 
   [[nodiscard]] bool HasAddTextsSameLength() const {
     return num_characters_in_add_text_.size() <= 1;
