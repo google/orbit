@@ -88,11 +88,11 @@ void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& primitive_assembler,
                                   GlCanvas::kZValueTrackText);
 }
 
-void BasicPageFaultsTrack::DrawSingleSeriesEntry(
-    PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, kBasicPageFaultsTrackDimension>& prev_normalized_values,
-    const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
-    bool is_last) {
+void BasicPageFaultsTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler,
+                                                 uint64_t start_tick, uint64_t end_tick,
+                                                 absl::Span<const float> prev_normalized_values,
+                                                 absl::Span<const float> curr_normalized_values,
+                                                 float z, bool is_last) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
       primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values, z,
       is_last);

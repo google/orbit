@@ -11,15 +11,15 @@
 
 using ::testing::ElementsAre;
 
-namespace {
+namespace orbit_gl {
 
 TEST(GraphTrackDataAggregator, InitialEntryIsEmpty) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   EXPECT_EQ(aggr.GetAccumulatedEntry(), nullptr);
 }
 
 TEST(GraphTrackDataAggregator, CanStartEntry) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(1, 2, {3.f});
   ASSERT_NE(aggr.GetAccumulatedEntry(), nullptr);
   EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
@@ -29,7 +29,7 @@ TEST(GraphTrackDataAggregator, CanStartEntry) {
 }
 
 TEST(GraphTrackDataAggregator, MergingDataIntoEmptyStartsNewEntry) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.MergeDataIntoEntry(1, 2, {3.f});
   ASSERT_NE(aggr.GetAccumulatedEntry(), nullptr);
   EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
@@ -39,7 +39,7 @@ TEST(GraphTrackDataAggregator, MergingDataIntoEmptyStartsNewEntry) {
 }
 
 TEST(GraphTrackDataAggregator, StartNewEntryOverridesPrevious) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(1, 2, {3.f});
   aggr.SetEntry(3, 4, {5.f});
   EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 3);
@@ -49,21 +49,21 @@ TEST(GraphTrackDataAggregator, StartNewEntryOverridesPrevious) {
 }
 
 TEST(GraphTrackDataAggregator, MaxAggrPicksMaxValues) {
-  GraphTrackDataAggregator<2> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(1, 2, {10.f, 20.f});
   aggr.MergeDataIntoEntry(3, 4, {1.f, 100.f});
   EXPECT_THAT(aggr.GetAccumulatedEntry()->max_vals, ElementsAre(10.f, 100.f));
 }
 
 TEST(GraphTrackDataAggregator, MinAggrPicksMinValues) {
-  GraphTrackDataAggregator<2> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(1, 2, {10.f, 20.f});
   aggr.MergeDataIntoEntry(3, 4, {1.f, 100.f});
   EXPECT_THAT(aggr.GetAccumulatedEntry()->min_vals, ElementsAre(1.f, 20.f));
 }
 
 TEST(GraphTrackDataAggregator, TimeBoundsAreMerged) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(1, 2, {});
   aggr.MergeDataIntoEntry(10, 20, {});
   EXPECT_EQ(aggr.GetAccumulatedEntry()->start_tick, 1);
@@ -71,7 +71,7 @@ TEST(GraphTrackDataAggregator, TimeBoundsAreMerged) {
 }
 
 TEST(GraphTrackDataAggregator, DataCanBeAddedOutOfOrder) {
-  GraphTrackDataAggregator<1> aggr;
+  GraphTrackDataAggregator aggr;
   aggr.SetEntry(10, 20, {});
   aggr.MergeDataIntoEntry(1, 10, {});
   aggr.MergeDataIntoEntry(30, 40, {});
@@ -79,4 +79,4 @@ TEST(GraphTrackDataAggregator, DataCanBeAddedOutOfOrder) {
   EXPECT_EQ(aggr.GetAccumulatedEntry()->end_tick, 40);
 }
 
-}  // namespace
+}  // namespace orbit_gl

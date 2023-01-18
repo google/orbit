@@ -22,10 +22,10 @@
 
 namespace orbit_gl {
 
-template <size_t Dimension>
-[[nodiscard]] static std::array<float, Dimension> GetNormalizedValues(
-    absl::Span<const double> values, double min, double inverse_value_range) {
-  std::array<float, Dimension> normalized_values;
+[[nodiscard]] static std::vector<float> GetNormalizedValues(absl::Span<const double> values,
+                                                            double min,
+                                                            double inverse_value_range) {
+  std::vector<float> normalized_values(values.size());
   std::transform(values.begin(), values.end(), normalized_values.begin(),
                  [min, inverse_value_range](double value) {
                    return static_cast<float>((value - min) * inverse_value_range);
@@ -40,8 +40,7 @@ float LineGraphTrack<Dimension>::GetLabelYFromValues(
   float base_y = this->GetGraphContentBottomY();
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
-  std::array<float, Dimension> normalized_values =
-      GetNormalizedValues<Dimension>(values, min, inverse_value_range);
+  std::vector<float> normalized_values = GetNormalizedValues(values, min, inverse_value_range);
   // The label will point to the only value.
   if (Dimension == 1) return base_y - normalized_values[0] * content_height;
 
@@ -62,13 +61,13 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
   auto last_iterator = std::prev(entries.end());
 
   // Normalized values that were last used for drawing.
-  std::array<float, Dimension> prev_drawn_values =
-      GetNormalizedValues<Dimension>(curr_iterator->second, min, inverse_value_range);
+  std::vector<float> prev_drawn_values =
+      GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
 
   // Normalized values of the last entry we've iterated over.
-  std::array<float, Dimension> last_entry_values = prev_drawn_values;
+  std::vector<float> last_entry_values = prev_drawn_values;
 
-  GraphTrackDataAggregator<Dimension> aggr;
+  GraphTrackDataAggregator aggr;
 
   const uint32_t resolution_in_pixels =
       this->GetViewport()->WorldToScreen({this->GetWidth(), 0})[0];
@@ -77,43 +76,42 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
   // Issues draws for the aggregated entry depending on `aggregation_mode_` and updates
   // `prev_normalized_values` with last drawn values.
-  auto draw_aggregated =
-      [&](const typename GraphTrackDataAggregator<Dimension>::AccumulatedEntry& accumulated_entry,
-          bool is_last) {
-        // First draw the entry for the max values.
-        DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.start_tick,
-                              accumulated_entry.end_tick, prev_drawn_values,
-                              accumulated_entry.max_vals, z, is_last);
-        prev_drawn_values = accumulated_entry.max_vals;
+  auto draw_aggregated = [&](const GraphTrackDataAggregator::AccumulatedEntry& accumulated_entry,
+                             bool is_last) {
+    // First draw the entry for the max values.
+    DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.start_tick,
+                          accumulated_entry.end_tick, prev_drawn_values, accumulated_entry.max_vals,
+                          z, is_last);
+    prev_drawn_values = accumulated_entry.max_vals;
 
-        // Draw min values if needed.
-        if (aggregation_mode_ == AggregationMode::kMinMax &&
-            accumulated_entry.min_vals != accumulated_entry.max_vals) {
-          // Draw a single-sized entry (starts and ends at `end_tick`) that goes from max to min
-          // values.
-          DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
-                                accumulated_entry.end_tick, prev_drawn_values,
-                                accumulated_entry.min_vals, z, is_last);
-          prev_drawn_values = accumulated_entry.min_vals;
-        }
+    // Draw min values if needed.
+    if (aggregation_mode_ == AggregationMode::kMinMax &&
+        accumulated_entry.min_vals != accumulated_entry.max_vals) {
+      // Draw a single-sized entry (starts and ends at `end_tick`) that goes from max to min
+      // values.
+      DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
+                            accumulated_entry.end_tick, prev_drawn_values,
+                            accumulated_entry.min_vals, z, is_last);
+      prev_drawn_values = accumulated_entry.min_vals;
+    }
 
-        // Finally, draw the last entry. This ensures that the horizontal line from this pixel to
-        // the next entry would be at the same position both zoomed in and out.
-        if (last_entry_values != prev_drawn_values) {
-          DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
-                                accumulated_entry.end_tick, prev_drawn_values, last_entry_values, z,
-                                is_last);
-          prev_drawn_values = last_entry_values;
-        }
-      };
+    // Finally, draw the last entry. This ensures that the horizontal line from this pixel to
+    // the next entry would be at the same position both zoomed in and out.
+    if (last_entry_values != prev_drawn_values) {
+      DrawSingleSeriesEntry(primitive_assembler, accumulated_entry.end_tick,
+                            accumulated_entry.end_tick, prev_drawn_values, last_entry_values, z,
+                            is_last);
+      prev_drawn_values = last_entry_values;
+    }
+  };
 
   while (curr_iterator != last_iterator) {
     uint64_t prev_time = curr_iterator->first;
     curr_iterator = std::next(curr_iterator);
 
     uint64_t curr_time = curr_iterator->first;
-    std::array<float, Dimension> curr_normalized_values =
-        GetNormalizedValues<Dimension>(curr_iterator->second, min, inverse_value_range);
+    std::vector<float> curr_normalized_values =
+        GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
 
     if (aggr.GetAccumulatedEntry() == nullptr) {
       aggr.SetEntry(prev_time, curr_time, curr_normalized_values);
@@ -165,8 +163,8 @@ static void DrawSquareDot(PrimitiveAssembler& primitive_assembler, Vec2 center, 
 template <size_t Dimension>
 void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
     PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, Dimension>& prev_normalized_values,
-    const std::array<float, Dimension>& curr_normalized_values, float z, bool is_last) {
+    absl::Span<const float> prev_normalized_values, absl::Span<const float> curr_normalized_values,
+    float z, bool is_last) {
   constexpr float kDotRadius = 2.f;
   float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
   float x1 = this->timeline_info_->GetWorldFromTick(end_tick);

@@ -56,11 +56,10 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
-  void DrawSingleSeriesEntry(
-      PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-      const std::array<float, kBasicPageFaultsTrackDimension>& prev_normalized_values,
-      const std::array<float, kBasicPageFaultsTrackDimension>& curr_normalized_values, float z,
-      bool is_last) override;
+  void DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
+                             uint64_t end_tick, absl::Span<const float> prev_normalized_values,
+                             absl::Span<const float> curr_normalized_values, float z,
+                             bool is_last) override;
 
   // Once this is set, if values[index_of_series_to_highlight_] > 0 in the sampling window t, we
   // will draw a colored box in this sampling window to highlight the occurrence of page faults
