@@ -24,7 +24,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   Q_OBJECT
 
  public:
-  explicit CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_tree_view,
+  explicit CallTreeViewItemModel(std::shared_ptr<const CallTreeView> call_tree_view,
                                  QObject* parent = nullptr);
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
@@ -62,7 +62,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   [[nodiscard]] QVariant GetCopyableValueRoleData(const QModelIndex& index) const;
   [[nodiscard]] static QVariant GetExclusiveCallstackEventsRoleData(const QModelIndex& index);
 
-  std::unique_ptr<CallTreeView> call_tree_view_;
+  std::shared_ptr<const CallTreeView> call_tree_view_;
 };
 
 #endif  // ORBIT_QT_CALL_TREE_VIEW_ITEM_MODEL_H_

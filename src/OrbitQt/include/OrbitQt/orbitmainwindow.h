@@ -99,11 +99,13 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
 
-  void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) override;
-  void SetSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view) override;
+  void SetTopDownView(std::shared_ptr<const CallTreeView> top_down_view) override;
+  void SetSelectionTopDownView(
+      std::shared_ptr<const CallTreeView> selection_top_down_view) override;
 
-  void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) override;
-  void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> selection_bottom_up_view) override;
+  void SetBottomUpView(std::shared_ptr<const CallTreeView> bottom_up_view) override;
+  void SetSelectionBottomUpView(
+      std::shared_ptr<const CallTreeView> selection_bottom_up_view) override;
 
   void OpenCapture(std::string_view filepath);
   void OnCaptureCleared() override;
@@ -146,7 +148,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       const orbit_client_data::ModuleData* module) override;
 
   void SetCallstackInspection(
-      std::unique_ptr<CallTreeView> top_down_view, std::unique_ptr<CallTreeView> bottom_up_view,
+      std::shared_ptr<const CallTreeView> top_down_view,
+      std::shared_ptr<const CallTreeView> bottom_up_view,
       orbit_data_views::DataView* callstack_data_view,
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;

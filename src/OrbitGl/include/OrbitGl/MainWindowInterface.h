@@ -79,7 +79,8 @@ class MainWindowInterface {
   virtual ~MainWindowInterface() = default;
 
   virtual void SetCallstackInspection(
-      std::unique_ptr<CallTreeView> top_down_view, std::unique_ptr<CallTreeView> bottom_up_view,
+      std::shared_ptr<const CallTreeView> top_down_view,
+      std::shared_ptr<const CallTreeView> bottom_up_view,
       orbit_data_views::DataView* callstack_data_view,
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
@@ -91,10 +92,10 @@ class MainWindowInterface {
   virtual void SetLiveTabScopeStatsCollection(
       std::shared_ptr<const orbit_client_data::ScopeStatsCollection> scope_collection) = 0;
 
-  virtual void SetTopDownView(std::unique_ptr<CallTreeView> view) = 0;
-  virtual void SetBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
-  virtual void SetSelectionTopDownView(std::unique_ptr<CallTreeView> view) = 0;
-  virtual void SetSelectionBottomUpView(std::unique_ptr<CallTreeView> view) = 0;
+  virtual void SetTopDownView(std::shared_ptr<const CallTreeView> view) = 0;
+  virtual void SetBottomUpView(std::shared_ptr<const CallTreeView> view) = 0;
+  virtual void SetSelectionTopDownView(std::shared_ptr<const CallTreeView> view) = 0;
+  virtual void SetSelectionBottomUpView(std::shared_ptr<const CallTreeView> view) = 0;
   virtual void SetSamplingReport(
       orbit_data_views::DataView* callstack_data_view,
       const orbit_client_data::CallstackData* callstack_data,
