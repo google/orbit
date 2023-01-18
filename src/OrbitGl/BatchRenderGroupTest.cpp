@@ -12,19 +12,6 @@
 namespace orbit_gl {
 namespace {
 
-TEST(BatchRenderGroupId, IsHashableBasedOnNameAndLayer) {
-  BatchRenderGroupId g1(1, "g1");
-  BatchRenderGroupId g2(2, "g2");
-
-  EXPECT_NE(std::hash<BatchRenderGroupId>()(g1), std::hash<BatchRenderGroupId>()(g2));
-
-  g2.layer = 1;
-  EXPECT_NE(std::hash<BatchRenderGroupId>()(g1), std::hash<BatchRenderGroupId>()(g2));
-
-  g2.name = "g1";
-  EXPECT_EQ(std::hash<BatchRenderGroupId>()(g1), std::hash<BatchRenderGroupId>()(g2));
-}
-
 TEST(BatchRenderGroupId, ComparisonOperators) {
   BatchRenderGroupId g1(1);
   BatchRenderGroupId g2(2);
@@ -44,7 +31,7 @@ TEST(BatchRenderGroupId, ComparisonOperators) {
   EXPECT_TRUE(g1 != g2);
 }
 
-TEST(BatchRenderGroupId, WorksWithHashMap) {
+TEST(BatchRenderGroupId, WorksWithHashMapBasedOnNameAndLayer) {
   BatchRenderGroupId g1(1);
   BatchRenderGroupId g2(2);
 
@@ -66,7 +53,6 @@ TEST(BatchRenderGroupId, WorksWithHashMap) {
   ASSERT_NE(g3, g1);
   ASSERT_NE(g3, g2);
   ASSERT_EQ(g3, g4);
-  ASSERT_EQ(std::hash<BatchRenderGroupId>()(g3), std::hash<BatchRenderGroupId>()(g3));
 
   hash_map[g3] = "custom";
   EXPECT_EQ(hash_map.size(), 3);

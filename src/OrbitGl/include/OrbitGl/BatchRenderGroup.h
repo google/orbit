@@ -35,23 +35,12 @@ struct BatchRenderGroupId {
 
   explicit BatchRenderGroupId(float layer = 0, std::string name = kGlobalGroup)
       : name(std::move(name)), layer(layer) {}
-};
 
-}  // namespace orbit_gl
-
-namespace std {
-template <>
-struct hash<orbit_gl::BatchRenderGroupId> {
-  size_t operator()(const orbit_gl::BatchRenderGroupId& obj) const {
-    // "Inspired" by "hash_combine" from boost
-    size_t seed = std::hash<float>()(obj.layer);
-    seed ^= hash<std::string>()(obj.name) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    return seed;
+  template <typename H>
+  friend H AbslHashValue(H h, const BatchRenderGroupId& o) {
+    return H::combine(std::move(h), o.name, o.layer);
   }
 };
-}  // namespace std
-
-namespace orbit_gl {
 
 // Group property: This defines if all rendering should be restricted to a bounding box, and if so,
 // stores the extents of this box
