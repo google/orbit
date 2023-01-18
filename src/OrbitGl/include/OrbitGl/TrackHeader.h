@@ -36,7 +36,9 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
   [[nodiscard]] const TriangleToggle* GetCollapseToggle() const { return collapse_toggle_.get(); }
   [[nodiscard]] TriangleToggle* GetCollapseToggle() { return collapse_toggle_.get(); }
 
-  [[nodiscard]] float GetHeight() const override { return GetParent()->GetHeight(); }
+  [[nodiscard]] float GetHeight() const override { return height_; }
+  void SetHeight(float height);
+  
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return 0; }
 
   void OnPick(int x, int y) override;
@@ -67,6 +69,7 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
  private:
   std::shared_ptr<TriangleToggle> collapse_toggle_;
   TrackControlInterface* track_;
+  float height_ = 0.f;
 };
 
 }  // namespace orbit_gl
