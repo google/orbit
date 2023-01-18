@@ -21,6 +21,10 @@ target_include_directories(SymbolProvider PUBLIC
 target_link_libraries(SymbolProvider PUBLIC
         OrbitBase)
 
+if(WIN32)
+  target_compile_features(SymbolProvider PRIVATE cxx_std_20)
+endif()
+
 add_executable(SymbolProviderTests)
 
 target_sources(SymbolProviderTests PRIVATE
