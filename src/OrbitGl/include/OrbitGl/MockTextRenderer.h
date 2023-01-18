@@ -28,7 +28,9 @@ class MockTextRenderer : public TextRenderer {
   MOCK_METHOD(void, Init, (), (override));
   void Clear() override;
 
-  MOCK_METHOD(void, DrawRenderGroup, (QPainter*, const BatchRenderGroupId&), (override));
+  MOCK_METHOD(void, DrawRenderGroup,
+              (QPainter*, BatchRenderGroupStateManager& state_manager, const BatchRenderGroupId&),
+              (override));
   [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override {
     return {render_groups_.begin(), render_groups_.end()};
   }
@@ -63,8 +65,6 @@ class MockTextRenderer : public TextRenderer {
   std::set<uint32_t> num_characters_in_add_text_;
   std::set<float> vertical_position_in_add_text;
   int num_add_text_calls_ = 0;
-
-  BatchRenderGroupStateManager owned_manager_;
 };
 
 }  // namespace orbit_gl

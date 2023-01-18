@@ -172,8 +172,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool is_mouse_over_ = false;
   uint32_t uid_;
 
-  std::optional<BatchRenderGroupId> previous_batcher_render_group_;
-  std::optional<BatchRenderGroupId> previous_text_render_group_;
+  std::string previous_batcher_render_group_name_ = BatchRenderGroupId::kGlobalGroup;
+  std::string previous_text_render_group_name_ = BatchRenderGroupId::kGlobalGroup;
 
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);

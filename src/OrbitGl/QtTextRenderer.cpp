@@ -71,7 +71,8 @@ float GetXOffsetFromAlignment(QtTextRenderer::HAlign alignment, float width) {
 
 }  // namespace
 
-void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId& group) {
+void QtTextRenderer::DrawRenderGroup(QPainter* painter, BatchRenderGroupStateManager& manager,
+                                     const BatchRenderGroupId& group) {
   ORBIT_SCOPE_FUNCTION;
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   auto text_for_layer = stored_text_.find(group);
@@ -84,7 +85,7 @@ void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId
     painter->setPen(QColor(text_entry.formatting.color[0], text_entry.formatting.color[1],
                            text_entry.formatting.color[2], text_entry.formatting.color[3]));
 
-    auto stencil = manager_->GetGroupState(group.name).stencil;
+    auto stencil = manager.GetGroupState(group.name).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_->WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_->WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));

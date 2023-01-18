@@ -256,33 +256,28 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
     static const std::string kGroupPrefix = "|rg_cve_";
     BatchRenderGroupStateManager* manager = primitive_assembler.GetRenderGroupManager();
 
-    previous_batcher_render_group_ = primitive_assembler.GetCurrentRenderGroup();
-    BatchRenderGroupId new_batcher_render_group = previous_batcher_render_group_.value();
-    new_batcher_render_group.name += kGroupPrefix + std::to_string(GetUid());
-    primitive_assembler.SetCurrentRenderGroup(new_batcher_render_group);
+    previous_batcher_render_group_name_ = primitive_assembler.GetCurrentRenderGroupName();
+    const std::string new_batcher_render_group_name =
+        previous_batcher_render_group_name_ + kGroupPrefix + std::to_string(GetUid());
+    primitive_assembler.SetCurrentRenderGroupName(new_batcher_render_group_name);
 
-    BatchRenderGroupState state =
-        manager->GetGroupState(previous_batcher_render_group_.value().name);
+    BatchRenderGroupState state = manager->GetGroupState(previous_batcher_render_group_name_);
     state.stencil.pos = {GetPos()[0], GetPos()[1]};
     state.stencil.size = {GetSize()[0], GetSize()[1]};
     state.stencil.enabled = true;
-    manager->SetGroupState(new_batcher_render_group.name, state);
+    manager->SetGroupState(new_batcher_render_group_name, state);
 
-    BatchRenderGroupId new_text_render_group = previous_batcher_render_group_.value();
-    previous_text_render_group_ = text_renderer.GetCurrentRenderGroup();
-    new_text_render_group.name += kGroupPrefix + std::to_string(GetUid());
-    text_renderer.SetCurrentRenderGroup(new_text_render_group);
+    previous_text_render_group_name_ = text_renderer.GetCurrentRenderGroupName();
+    std::string new_text_render_group_name =
+        previous_text_render_group_name_ + kGroupPrefix + std::to_string(GetUid());
+    text_renderer.SetCurrentRenderGroupName(new_text_render_group_name);
 
-    if (new_text_render_group != new_batcher_render_group ||
-        text_renderer.GetRenderGroupManager() != manager) {
-      manager = text_renderer.GetRenderGroupManager();
-
-      BatchRenderGroupState state =
-          manager->GetGroupState(previous_text_render_group_.value().name);
+    if (new_text_render_group_name != new_batcher_render_group_name) {
+      BatchRenderGroupState state = manager->GetGroupState(previous_text_render_group_name_);
       state.stencil.pos = {GetPos()[0], GetPos()[1]};
       state.stencil.size = {GetSize()[0], GetSize()[1]};
       state.stencil.enabled = true;
-      manager->SetGroupState(new_text_render_group.name, state);
+      manager->SetGroupState(new_text_render_group_name, state);
     }
   }
 }
@@ -290,8 +285,8 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
 void CaptureViewElement::PostRender(PrimitiveAssembler& primitive_assembler,
                                     TextRenderer& text_renderer) {
   if (RestrictDrawingToBody()) {
-    primitive_assembler.SetCurrentRenderGroup(previous_batcher_render_group_.value());
-    text_renderer.SetCurrentRenderGroup(previous_text_render_group_.value());
+    primitive_assembler.SetCurrentRenderGroupName(previous_batcher_render_group_name_);
+    text_renderer.SetCurrentRenderGroupName(previous_text_render_group_name_);
   }
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();

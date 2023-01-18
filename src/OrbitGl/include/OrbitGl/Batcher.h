@@ -21,8 +21,7 @@ namespace orbit_gl {
 // translations that will be called by CaptureViewElements.
 class Batcher : public BatcherInterface {
  public:
-  explicit Batcher(BatchRenderGroupStateManager* manager, BatcherId batcher_id)
-      : manager_(manager), batcher_id_(batcher_id) {}
+  explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
 
   [[nodiscard]] BatcherId GetBatcherId() const { return batcher_id_; }
 
@@ -40,19 +39,16 @@ class Batcher : public BatcherInterface {
   };
 
   [[nodiscard]] virtual Statistics GetStatistics() const = 0;
-  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const override {
-    return current_render_group_;
+  [[nodiscard]] std::string GetCurrentRenderGroupName() const override {
+    return current_render_group_.name;
   }
-  void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) override {
-    current_render_group_ = render_group;
+  void SetCurrentRenderGroupName(std::string name) override {
+    current_render_group_.name = std::move(name);
   }
-
-  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() { return manager_; }
 
  protected:
   orbit_gl::TranslationStack translations_;
   BatchRenderGroupId current_render_group_;
-  BatchRenderGroupStateManager* manager_;
 
  private:
   BatcherId batcher_id_;

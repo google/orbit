@@ -13,28 +13,23 @@ namespace orbit_gl {
 
 class TextRenderer : public TextRendererInterface {
  public:
-  explicit TextRenderer(BatchRenderGroupStateManager* manager) : manager_(manager){};
-
   void SetViewport(Viewport* viewport) { viewport_ = viewport; }
 
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
 
-  void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) override {
-    current_render_group_ = render_group;
+  void SetCurrentRenderGroupName(std::string name) override {
+    current_render_group_.name = std::move(name);
   }
-  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const override {
-    return current_render_group_;
+  [[nodiscard]] std::string GetCurrentRenderGroupName() const override {
+    return current_render_group_.name;
   }
-
-  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() { return manager_; }
 
  protected:
   Viewport* viewport_ = nullptr;
 
   TranslationStack translations_;
   BatchRenderGroupId current_render_group_;
-  BatchRenderGroupStateManager* manager_;
 };
 
 }  // namespace orbit_gl

@@ -18,8 +18,6 @@ struct StencilConfig {
   std::array<float, 2> size = {0, 0};
 };
 
-class BatchRenderGroupStateManager;
-
 struct BatchRenderGroupId {
   static const std::string kGlobalGroup;
 

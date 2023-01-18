@@ -591,10 +591,10 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     painter->endNativePainting();
 
     if (picking_mode_ == PickingMode::kNone) {
-      text_renderer_.DrawRenderGroup(painter, group);
+      text_renderer_.DrawRenderGroup(painter, render_group_manager_, group);
       if (time_graph_ != nullptr) {
         ORBIT_SCOPE("CaptureWindow: Text Rendering");
-        time_graph_->GetTextRenderer()->DrawRenderGroup(painter, group);
+        time_graph_->GetTextRenderer()->DrawRenderGroup(painter, render_group_manager_, group);
       }
     }
 

@@ -48,8 +48,8 @@ class BatcherInterface {
 
   [[nodiscard]] virtual const PickingUserData* GetUserData(PickingId id) const = 0;
 
-  [[nodiscard]] virtual BatchRenderGroupId GetCurrentRenderGroup() const = 0;
-  virtual void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) = 0;
+  [[nodiscard]] virtual std::string GetCurrentRenderGroupName() const = 0;
+  virtual void SetCurrentRenderGroupName(std::string name) = 0;
 };
 
 }  // namespace orbit_gl

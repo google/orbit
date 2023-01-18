@@ -89,8 +89,7 @@ struct PrimitiveBuffers {
 // "jumping" around when their coordinates are changed slightly.
 class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
  public:
-  explicit OpenGlBatcher(BatchRenderGroupStateManager* manager, BatcherId batcher_id)
-      : Batcher(manager, batcher_id) {}
+  explicit OpenGlBatcher(BatcherId batcher_id) : Batcher(batcher_id) {}
 
   void ResetElements() override;
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,

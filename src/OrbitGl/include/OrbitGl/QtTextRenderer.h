@@ -24,8 +24,6 @@ namespace orbit_gl {
 // Qt implementation of TextRenderer.
 class QtTextRenderer : public TextRenderer {
  public:
-  explicit QtTextRenderer(BatchRenderGroupStateManager* manager) : TextRenderer(manager){};
-
   void Init() override{};
   void Clear() override {
     stored_text_.clear();
@@ -33,7 +31,8 @@ class QtTextRenderer : public TextRenderer {
   };
 
   [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override;
-  void DrawRenderGroup(QPainter* painter, const BatchRenderGroupId& group) override;
+  void DrawRenderGroup(QPainter* painter, BatchRenderGroupStateManager& manager,
+                       const BatchRenderGroupId& group) override;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,

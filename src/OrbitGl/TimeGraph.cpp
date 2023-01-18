@@ -65,10 +65,10 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, viewport, time_graph_layout),
       accessible_parent_{parent},
-      text_renderer_static_(render_group_manager),
+      text_renderer_static_(),
       layout_{time_graph_layout},
-      batcher_(render_group_manager, BatcherId::kTimeGraph),
-      primitive_assembler_(&batcher_, picking_manager),
+      batcher_(BatcherId::kTimeGraph),
+      primitive_assembler_(&batcher_, render_group_manager, picking_manager),
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       capture_data_{capture_data},
       app_{app} {

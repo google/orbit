@@ -27,8 +27,7 @@ namespace orbit_gl {
 
 class FakeOpenGlBatcher : public OpenGlBatcher {
  public:
-  explicit FakeOpenGlBatcher(BatchRenderGroupStateManager* manager, BatcherId id)
-      : OpenGlBatcher(manager, id) {}
+  explicit FakeOpenGlBatcher(BatcherId id) : OpenGlBatcher(id) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -131,8 +130,7 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
 }
 
 TEST(OpenGlBatcher, SimpleElementsDrawing) {
-  BatchRenderGroupStateManager manager;
-  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
@@ -159,8 +157,7 @@ void ExpectCustomDataEq(const FakeOpenGlBatcher& batcher, const Color& rendered_
 }
 
 TEST(OpenGlBatcher, PickingSimpleElements) {
-  BatchRenderGroupStateManager manager;
-  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
   EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
@@ -192,8 +189,7 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
 }
 
 TEST(OpenGlBatcher, MultipleDrawCalls) {
-  BatchRenderGroupStateManager manager;
-  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -248,8 +244,7 @@ void LineEq(const Line3D& lhs, const Line& rhs) {
 }
 
 TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
-  BatchRenderGroupStateManager manager;
-  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
@@ -285,8 +280,7 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
 }
 
 TEST(OpenGlBatcher, StatisticsAreReportedCorrectly) {
-  BatchRenderGroupStateManager manager;
-  FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   const size_t kExpectedBoxBlockSize =
       orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * (sizeof(Quad) + 8 * sizeof(Color));

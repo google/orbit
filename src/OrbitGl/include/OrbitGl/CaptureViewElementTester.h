@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CAPTURE_VIEW_ELEMENT_TESTER_H_
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_TESTER_H_
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/MockBatcher.h"
 #include "OrbitGl/MockTextRenderer.h"
@@ -73,6 +74,7 @@ class CaptureViewElementTester {
   MockBatcher batcher_;
   MockTextRenderer text_renderer_;
   PickingManager picking_manager_;
+  BatchRenderGroupStateManager state_manager_;
 
   PrimitiveAssembler primitive_assembler_;
 };

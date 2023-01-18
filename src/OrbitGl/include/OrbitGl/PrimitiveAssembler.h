@@ -44,8 +44,9 @@ AddInternalMethods, ResetElements(), GetRenderGroups() and DrawLayers().
 class PrimitiveAssembler {
  public:
   static constexpr int32_t kCirclePoints = 22;
-  explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager = nullptr)
-      : batcher_(batcher), picking_manager_(picking_manager) {
+  explicit PrimitiveAssembler(Batcher* batcher, BatchRenderGroupStateManager* state_manager,
+                              PickingManager* picking_manager = nullptr)
+      : batcher_(batcher), state_manager_(state_manager), picking_manager_(picking_manager) {
     ORBIT_CHECK(batcher_ != nullptr);
 
     const float angle = (kPiFloat * 2.f) / kCirclePoints;
@@ -125,16 +126,14 @@ class PrimitiveAssembler {
 
   void StartNewFrame();
 
-  [[nodiscard]] BatchRenderGroupId GetCurrentRenderGroup() const {
-    return batcher_->GetCurrentRenderGroup();
+  [[nodiscard]] std::string GetCurrentRenderGroupName() const {
+    return batcher_->GetCurrentRenderGroupName();
   }
-  virtual void SetCurrentRenderGroup(const BatchRenderGroupId& render_group) {
-    batcher_->SetCurrentRenderGroup(render_group);
+  virtual void SetCurrentRenderGroupName(std::string name) {
+    batcher_->SetCurrentRenderGroupName(std::move(name));
   }
 
-  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() {
-    return batcher_->GetRenderGroupManager();
-  }
+  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() { return state_manager_; }
 
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
@@ -160,6 +159,7 @@ class PrimitiveAssembler {
       ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
   Batcher* batcher_;
+  BatchRenderGroupStateManager* state_manager_;
   PickingManager* picking_manager_;
 
   std::vector<Vec2> circle_points;

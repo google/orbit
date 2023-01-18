@@ -13,9 +13,7 @@
 
 namespace orbit_gl {
 
-MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(&owned_manager_, batcher_id) {
-  ResetElements();
-}
+MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(batcher_id) { ResetElements(); }
 
 void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                           const Color& /*picking_color*/,
