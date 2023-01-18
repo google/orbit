@@ -112,7 +112,7 @@ class GraphTrack : public Track {
                               const DrawContext& draw_context);
   virtual void DrawLegend(orbit_gl::PrimitiveAssembler& primitive_assembler,
                           orbit_gl::TextRenderer& text_renderer,
-                          const std::array<std::string, Dimension>& series_names,
+                          absl::Span<const std::string> series_names,
                           const Color& legend_text_color);
   virtual void DrawSeries(orbit_gl::PrimitiveAssembler& primitive_assembler, uint64_t min_tick,
                           uint64_t max_tick, float z);
@@ -122,7 +122,7 @@ class GraphTrack : public Track {
            std::pow(10, GetNumberOfDecimalDigits());
   }
 
-  MultivariateTimeSeries<Dimension> series_;
+  orbit_gl::MultivariateTimeSeries series_;
 
  private:
   [[nodiscard]] virtual std::string GetLegendTooltips(size_t legend_index) const = 0;

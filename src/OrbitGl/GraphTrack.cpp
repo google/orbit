@@ -47,7 +47,8 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
                                   const orbit_client_data::ModuleManager* module_manager,
                                   const orbit_client_data::CaptureData* capture_data)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
-      series_{series_names, series_value_decimal_digits, std::move(series_value_units)} {}
+      series_{std::vector(series_names.begin(), series_names.end()), series_value_decimal_digits,
+              std::move(series_value_units)} {}
 
 template <size_t Dimension>
 bool GraphTrack<Dimension>::HasLegend() const {
@@ -136,14 +137,14 @@ float GraphTrack<Dimension>::GetLabelYFromValues(
 template <size_t Dimension>
 std::string GraphTrack<Dimension>::GetLabelTextFromValues(
     const std::array<double, Dimension>& values) const {
-  const std::array<std::string, Dimension>& series_names = series_.GetSeriesNames();
+  const std::vector<std::string>& series_names = series_.GetSeriesNames();
   std::optional<uint8_t> value_decimal_digits = series_.GetValueDecimalDigits();
   std::string value_unit = series_.GetValueUnit();
   std::string text;
   std::string_view delimiter = "";
   for (int i = Dimension - 1; i >= 0; i--) {
     std::string formatted_name =
-        series_names[i].empty() ? "" : absl::StrFormat("%s: ", series_names[i]);
+        series_names.at(i).empty() ? "" : absl::StrFormat("%s: ", series_names.at(i));
     std::string formatted_value =
         absl::StrFormat("%.*f", value_decimal_digits.value_or(6), values[i]);
     absl::StrAppend(&text, delimiter, formatted_name, formatted_value, value_unit);
@@ -175,8 +176,12 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   const Color transparent_white(255, 255, 255, 180);
 
   uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
-  const std::array<double, Dimension>& values =
-      series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+
+  // TODO(vickyliu): remove this vector to array conversion after changing to not use array.
+  const std::vector<double>& values_tmp = series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+  ORBIT_CHECK(values_tmp.size() == Dimension);
+  std::array<double, Dimension> values;
+  std::copy_n(values_tmp.begin(), Dimension, values.begin());
   uint64_t first_time = series_.StartTimeInNs();
   uint64_t label_time = std::max(current_mouse_time_ns, first_time);
   Vec2 target_point_pos{timeline_info_->GetWorldFromTick(label_time), GetLabelYFromValues(values)};
@@ -225,7 +230,7 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
                                        TextRenderer& text_renderer,
-                                       const std::array<std::string, Dimension>& series_names,
+                                       absl::Span<const std::string> series_names,
                                        const Color& legend_text_color) {
   const float space_between_legend_symbol_and_text = layout_->GetGenericFixedSpacerWidth();
   const float space_between_legend_entries = layout_->GetGenericFixedSpacerWidth() * 2;
@@ -244,13 +249,13 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
     x0 += legend_symbol_width + space_between_legend_symbol_and_text;
 
     const float legend_text_width =
-        text_renderer.GetStringWidth(series_names[i].c_str(), font_size);
+        text_renderer.GetStringWidth(series_names.at(i).c_str(), font_size);
     const Vec2 legend_text_box_size(legend_text_width, layout_->GetTextBoxHeight());
 
     TextRenderer::TextFormatting formatting{font_size, legend_text_color, legend_text_box_size[0]};
     formatting.valign = TextRenderer::VAlign::Middle;
 
-    text_renderer.AddText(series_names[i].c_str(), x0, y0 + legend_symbol_height / 2.f, text_z,
+    text_renderer.AddText(series_names.at(i).c_str(), x0, y0 + legend_symbol_height / 2.f, text_z,
                           formatting);
     auto user_data = std::make_unique<PickingUserData>(
         nullptr, [this, i](PickingId /*id*/) { return GetLegendTooltips(i); });
@@ -271,6 +276,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   double inverse_value_range = GetInverseOfGraphValueRange();
   auto current_it = entries.begin();
   auto last_it = std::prev(entries.end());
+  ORBIT_CHECK(current_it->second.size() == Dimension);
 
   GraphTrackDataAggregator<Dimension> aggr;
 
@@ -281,7 +287,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   // We skip the last element because we can't calculate time passed between last element
   // and the next one.
   while (current_it != last_it) {
-    std::array<double, Dimension> cumulative_values{current_it->second};
+    std::vector<double> cumulative_values = current_it->second;
     std::partial_sum(cumulative_values.begin(), cumulative_values.end(), cumulative_values.begin());
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be

@@ -125,6 +125,7 @@ target_sources(
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
+          MultivariateTimeSeries.cpp
           OpenGlBatcher.cpp
           OrbitApp.cpp
           QtTextRenderer.cpp

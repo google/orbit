@@ -24,7 +24,7 @@ namespace orbit_gl {
 
 template <size_t Dimension>
 [[nodiscard]] static std::array<float, Dimension> GetNormalizedValues(
-    const std::array<double, Dimension>& values, double min, double inverse_value_range) {
+    absl::Span<const double> values, double min, double inverse_value_range) {
   std::array<float, Dimension> normalized_values;
   std::transform(values.begin(), values.end(), normalized_values.begin(),
                  [min, inverse_value_range](double value) {
@@ -41,7 +41,7 @@ float LineGraphTrack<Dimension>::GetLabelYFromValues(
   double min = this->GetGraphMinValue();
   double inverse_value_range = this->GetInverseOfGraphValueRange();
   std::array<float, Dimension> normalized_values =
-      GetNormalizedValues(values, min, inverse_value_range);
+      GetNormalizedValues<Dimension>(values, min, inverse_value_range);
   // The label will point to the only value.
   if (Dimension == 1) return base_y - normalized_values[0] * content_height;
 
@@ -63,7 +63,7 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
   // Normalized values that were last used for drawing.
   std::array<float, Dimension> prev_drawn_values =
-      GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
+      GetNormalizedValues<Dimension>(curr_iterator->second, min, inverse_value_range);
 
   // Normalized values of the last entry we've iterated over.
   std::array<float, Dimension> last_entry_values = prev_drawn_values;
@@ -113,7 +113,7 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
     uint64_t curr_time = curr_iterator->first;
     std::array<float, Dimension> curr_normalized_values =
-        GetNormalizedValues(curr_iterator->second, min, inverse_value_range);
+        GetNormalizedValues<Dimension>(curr_iterator->second, min, inverse_value_range);
 
     if (aggr.GetAccumulatedEntry() == nullptr) {
       aggr.SetEntry(prev_time, curr_time, curr_normalized_values);
