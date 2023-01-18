@@ -200,20 +200,6 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .initial_value = 20.f,
       .label = "Minimum Slider Length:",
   }};
-  FloatProperty track_tab_width_{{
-      .initial_value = 350.f,
-      .min = 0.f,
-      .max = 1000.f,
-      .label = "Track Tab Width:",
-  }};
-  FloatProperty track_tab_height_{{
-      .initial_value = 25.f,
-      .label = "Track Tab Height:",
-  }};
-  FloatProperty track_tab_offset_{{
-      .initial_value = 0.f,
-      .label = "Track Tab Offset:",
-  }};
   FloatProperty track_indent_offset_{{
       .initial_value = 5.f,
       .label = "Track Indent Offset:",

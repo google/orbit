@@ -22,9 +22,6 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&slider_width_);
   AddWidgetForProperty(&min_slider_length_);
   AddWidgetForProperty(&time_bar_height_);
-  AddWidgetForProperty(&track_tab_width_);
-  AddWidgetForProperty(&track_tab_height_);
-  AddWidgetForProperty(&track_tab_offset_);
   AddWidgetForProperty(&track_indent_offset_);
   AddWidgetForProperty(&collapse_button_offset_);
   AddWidgetForProperty(&collapse_button_size_);

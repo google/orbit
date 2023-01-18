@@ -270,20 +270,21 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
-  const Vec2 pos = GetPos();
+  Vec2 pos = GetPos();
+  pos[0] += header_->GetWidth();
   float current_y = GetPos()[1] + layout_->GetTrackContentTopMargin();
 
-  thread_state_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
+  thread_state_bar_->SetPos(pos[0], current_y);
   if (thread_state_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + thread_state_track_height);
   }
 
-  event_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
+  event_bar_->SetPos(pos[0], current_y);
   if (event_bar_->ShouldBeRendered()) {
     current_y += (space_between_subtracks + event_track_height);
   }
 
-  tracepoint_bar_->SetPos(pos[0] + header_->GetWidth(), current_y);
+  tracepoint_bar_->SetPos(pos[0], current_y);
 }
 
 void ThreadTrack::SelectTrack() { app_->set_selected_thread_id(GetThreadId()); }
