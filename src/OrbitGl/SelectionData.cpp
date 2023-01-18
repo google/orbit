@@ -20,8 +20,8 @@ using orbit_client_data::PostProcessedSamplingData;
 SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureData& capture_data,
                              PostProcessedSamplingData post_processed_sampling_data,
                              const CallstackData* callstack_data)
-    : post_processed_sampling_data_(std::move(post_processed_sampling_data)) {
-  callstack_data_pointer_ = callstack_data;
+    : post_processed_sampling_data_(std::move(post_processed_sampling_data)),
+      callstack_data_pointer_(callstack_data) {
   top_down_view_ = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       post_processed_sampling_data_, module_manager, capture_data);
   bottom_up_view_ = CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
