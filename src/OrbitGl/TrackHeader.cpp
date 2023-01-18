@@ -46,7 +46,7 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
   const float text_z = GlCanvas::kZValueTrackText;
 
   // Draw tab background
-  const float label_height = GetParent()->GetHeight();
+  const float label_height = height_;
   const float label_width = GetWidth();
 
   const float indentation_x0 =
@@ -94,17 +94,16 @@ void TrackHeader::UpdateCollapseToggle() {
   const float x0 = GetPos()[0] + layout_->GetTrackIndentOffset() * track_->GetIndentationLevel();
   const float size = layout_->GetCollapseButtonSize(track_->GetIndentationLevel());
 
-  constexpr float kOffsetX = -0.5f;
   constexpr float kOffsetY = 1.f;
-  const float toggle_x_pos = x0 + layout_->GetCollapseButtonOffset() + kOffsetX;
+  const float toggle_x_pos = x0 + layout_->GetCollapseButtonOffset();
   const float toggle_y_pos =
       GetPos()[1] + layout_->GetTextBoxHeight() * 0.5f - size * 0.5f + kOffsetY;
 
-  Vec2 toggle_pos = Vec2(toggle_x_pos, toggle_y_pos);
+  Vec2 toggle_pos = Vec2(toggle_x_pos, toggle_y_pos + GetVerticalLabelOffset());
 
   collapse_toggle_->SetWidth(size);
   collapse_toggle_->SetHeight(size);
-  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1] + GetVerticalLabelOffset());
+  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
 
   // Update the "collapsible" property of the triangle toggle to match the same property in the
   // parent track. This makes sure that changes to the track "collapsible" property are correctly
@@ -116,6 +115,9 @@ float TrackHeader::GetVerticalLabelOffset() const {
   // This offset only affect subtracks, which are a very special case that need refactoring.
   // Subtracks are only used for the memory track. The following offset is to avoid overlap between
   // the labels of the track and it's subtrack. Subtracks should have their own header altogether.
+  if (track_->GetIndentationLevel() > 1) {
+    ORBIT_ERROR_ONCE("Track indentation level is greater than one, layout will be broken.", );
+  }
   return track_->GetIndentationLevel() > 0 ? layout_->GetTextBoxHeight() : 0.f;
 }
 

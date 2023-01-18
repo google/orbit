@@ -231,7 +231,7 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
   const float space_between_legend_entries = layout_->GetGenericFixedSpacerWidth() * 2;
   const float legend_symbol_height = GetLegendHeight();
   const float legend_symbol_width = legend_symbol_height;
-  float x0 = GetPos()[0] + +header_->GetWidth() + layout_->GetRightMargin();
+  float x0 = GetPos()[0] + header_->GetWidth() + layout_->GetRightMargin();
   const float y0 = header_->GetPos()[1] + layout_->GetTrackContentTopMargin();
   uint32_t font_size = GetLegendFontSize(indentation_level_);
   const Color fully_transparent(255, 255, 255, 0);
