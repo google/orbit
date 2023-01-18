@@ -38,7 +38,7 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
 
   [[nodiscard]] float GetHeight() const override { return height_; }
   void SetHeight(float height);
-  
+
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return 0; }
 
   void OnPick(int x, int y) override;
