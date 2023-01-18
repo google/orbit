@@ -754,11 +754,16 @@ void CaptureWindow::RenderSelectionOverlay() {
   uint64_t min_time = std::min(select_start_time_, select_stop_time_);
   uint64_t max_time = std::max(select_start_time_, select_stop_time_);
 
-  float start_world = time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromUs(time_graph_->GetMinTimeUs()));
-  float end_world = time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromUs(time_graph_->GetMaxTimeUs()));
-  float select_start_world = time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(min_time));
-  float select_end_world = time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(max_time));
-  float stop_pos_world = time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(select_stop_time_));
+  float start_world = time_graph_->ClampToTimelineUiElementWorldX(
+      time_graph_->GetWorldFromUs(time_graph_->GetMinTimeUs()));
+  float end_world = time_graph_->ClampToTimelineUiElementWorldX(
+      time_graph_->GetWorldFromUs(time_graph_->GetMaxTimeUs()));
+  float select_start_world =
+      time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(min_time));
+  float select_end_world =
+      time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(max_time));
+  float stop_pos_world =
+      time_graph_->ClampToTimelineUiElementWorldX(time_graph_->GetWorldFromTick(select_stop_time_));
   float initial_y_position = time_graph_layout_->GetTimeBarHeight();
   float bar_height = viewport_.GetWorldHeight() - initial_y_position;
 
