@@ -55,7 +55,10 @@ namespace std {
 template <>
 struct hash<orbit_gl::BatchRenderGroupId> {
   size_t operator()(const orbit_gl::BatchRenderGroupId& obj) const {
-    return hash<float>()(obj.layer) ^ hash<std::string>()(obj.name);
+    // "Inspired" by "hash_combine" from boost
+    size_t seed = std::hash<float>()(obj.layer);
+    seed ^= hash<std::string>()(obj.name) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed;
   }
 };
 }  // namespace std
