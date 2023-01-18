@@ -6,14 +6,15 @@
 
 namespace orbit_gl {
 
-[[nodiscard]] BatchRenderGroupState BatchRenderGroupManager::GetGroupState(
-    const BatchRenderGroupId& id) const {
-  return id_to_state_.contains(id) ? id_to_state_.at(id) : BatchRenderGroupState();
+[[nodiscard]] BatchRenderGroupState BatchRenderGroupStateManager::GetGroupState(
+    const std::string& group_name) const {
+  return group_name_to_state_.contains(group_name) ? group_name_to_state_.at(group_name)
+                                                   : BatchRenderGroupState();
 }
 
-void BatchRenderGroupManager::SetGroupState(const BatchRenderGroupId& id,
-                                            BatchRenderGroupState state) {
-  id_to_state_[id] = state;
+void BatchRenderGroupStateManager::SetGroupState(const std::string& group_name,
+                                                 BatchRenderGroupState state) {
+  group_name_to_state_[group_name] = state;
 }
 
 const std::string BatchRenderGroupId::kGlobalGroup = "global";

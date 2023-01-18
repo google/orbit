@@ -89,7 +89,7 @@ struct PrimitiveBuffers {
 // "jumping" around when their coordinates are changed slightly.
 class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
  public:
-  explicit OpenGlBatcher(BatchRenderGroupManager* manager, BatcherId batcher_id)
+  explicit OpenGlBatcher(BatchRenderGroupStateManager* manager, BatcherId batcher_id)
       : Batcher(manager, batcher_id) {}
 
   void ResetElements() override;
@@ -119,22 +119,6 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
   void DrawLineBuffer(const BatchRenderGroupId& group, bool picking);
   void DrawBoxBuffer(const BatchRenderGroupId& group, bool picking);
   void DrawTriangleBuffer(const BatchRenderGroupId& group, bool picking);
-
-  inline void UpdateRenderGroupZ(float layer_z_value) {
-    // This should be refactored in the future:
-    // Different z-values mean different render groups. Adjusting the z-value of the current render
-    // group should be done explicitly by the users of this class instead of implicitly here.
-    // However, this would mean a lot of changes to all the rendering code, we'd remove all
-    // z-parameters from all "AddXXX" calls and instead rely on a stateful "current z" setting in
-    // the batcher.
-    if (current_render_group_.layer != layer_z_value) {
-      // We also need to copy over the state to the new group, because users of this class assume to
-      // set the state once and keep it until they explicitly change the render group.
-      auto current_group_state = manager_->GetGroupState(current_render_group_);
-      current_render_group_.layer = layer_z_value;
-      manager_->SetGroupState(current_render_group_, current_group_state);
-    }
-  }
 };
 
 }  // namespace orbit_gl

@@ -254,33 +254,35 @@ void CaptureViewElement::PreRender(PrimitiveAssembler& primitive_assembler,
 
   if (RestrictDrawingToBody()) {
     static const std::string kGroupPrefix = "|rg_cve_";
-
-    ORBIT_CHECK(primitive_assembler.GetRenderGroupManager() ==
-                text_renderer.GetRenderGroupManager());
-    BatchRenderGroupManager* manager = primitive_assembler.GetRenderGroupManager();
+    BatchRenderGroupStateManager* manager = primitive_assembler.GetRenderGroupManager();
 
     previous_batcher_render_group_ = primitive_assembler.GetCurrentRenderGroup();
     BatchRenderGroupId new_batcher_render_group = previous_batcher_render_group_.value();
     new_batcher_render_group.name += kGroupPrefix + std::to_string(GetUid());
     primitive_assembler.SetCurrentRenderGroup(new_batcher_render_group);
 
-    BatchRenderGroupState state = manager->GetGroupState(previous_batcher_render_group_.value());
+    BatchRenderGroupState state =
+        manager->GetGroupState(previous_batcher_render_group_.value().name);
     state.stencil.pos = {GetPos()[0], GetPos()[1]};
     state.stencil.size = {GetSize()[0], GetSize()[1]};
     state.stencil.enabled = true;
-    manager->SetGroupState(new_batcher_render_group, state);
+    manager->SetGroupState(new_batcher_render_group.name, state);
 
     BatchRenderGroupId new_text_render_group = previous_batcher_render_group_.value();
     previous_text_render_group_ = text_renderer.GetCurrentRenderGroup();
     new_text_render_group.name += kGroupPrefix + std::to_string(GetUid());
     text_renderer.SetCurrentRenderGroup(new_text_render_group);
 
-    if (new_text_render_group != new_batcher_render_group) {
-      BatchRenderGroupState state = manager->GetGroupState(previous_text_render_group_.value());
+    if (new_text_render_group != new_batcher_render_group ||
+        text_renderer.GetRenderGroupManager() != manager) {
+      manager = text_renderer.GetRenderGroupManager();
+
+      BatchRenderGroupState state =
+          manager->GetGroupState(previous_text_render_group_.value().name);
       state.stencil.pos = {GetPos()[0], GetPos()[1]};
       state.stencil.size = {GetSize()[0], GetSize()[1]};
       state.stencil.enabled = true;
-      manager->SetGroupState(new_text_render_group, state);
+      manager->SetGroupState(new_text_render_group.name, state);
     }
   }
 }

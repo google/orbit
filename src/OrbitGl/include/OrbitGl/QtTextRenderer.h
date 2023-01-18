@@ -24,7 +24,7 @@ namespace orbit_gl {
 // Qt implementation of TextRenderer.
 class QtTextRenderer : public TextRenderer {
  public:
-  explicit QtTextRenderer(BatchRenderGroupManager* manager) : TextRenderer(manager){};
+  explicit QtTextRenderer(BatchRenderGroupStateManager* manager) : TextRenderer(manager){};
 
   void Init() override{};
   void Clear() override {

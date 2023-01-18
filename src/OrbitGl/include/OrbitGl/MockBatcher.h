@@ -76,7 +76,7 @@ class MockBatcher : public Batcher {
   absl::btree_map<Color, int> num_triangles_by_color_;
   absl::btree_map<Color, int> num_boxes_by_color_;
 
-  BatchRenderGroupManager owned_manager_;
+  BatchRenderGroupStateManager owned_manager_;
 };
 
 }  // namespace orbit_gl

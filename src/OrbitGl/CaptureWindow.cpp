@@ -569,7 +569,7 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
   }
 
   for (const orbit_gl::BatchRenderGroupId& group : all_groups_sorted) {
-    auto stencil = render_group_manager_.GetGroupState(group).stencil;
+    auto stencil = render_group_manager_.GetGroupState(group.name).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_.WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
@@ -812,17 +812,18 @@ void CaptureWindow::RenderSelectionOverlay() {
 }
 
 void CaptureWindow::DrawLayerDebugInfo(
-    const std::vector<orbit_gl::BatchRenderGroupId>& sorted_layers, QPainter* painter) {
+    const std::vector<orbit_gl::BatchRenderGroupId>& sorted_groups, QPainter* painter) {
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
 
-  for (const auto& layer : sorted_layers) {
-    const orbit_gl::StencilConfig& stencil = render_group_manager_.GetGroupState(layer).stencil;
+  for (const auto& group : sorted_groups) {
+    const orbit_gl::StencilConfig& stencil =
+        render_group_manager_.GetGroupState(group.name).stencil;
     if (!stencil.enabled) continue;
 
     PrepareGlState();
     if (time_graph_ != nullptr) {
       Color color = time_graph_->GetColor(static_cast<uint32_t>(
-          std::hash<std::string>()(layer.name) % std::numeric_limits<uint32_t>::max()));
+          std::hash<std::string>()(group.name) % std::numeric_limits<uint32_t>::max()));
       glColor4f(static_cast<float>(color[0]) / 255.f, static_cast<float>(color[1]) / 255.f,
                 static_cast<float>(color[2]) / 255.f, 1.f);
     } else {
@@ -843,7 +844,7 @@ void CaptureWindow::DrawLayerDebugInfo(
     painter->setFont(font);
     painter->setPen(QColor(255, 255, 255));
     Vec2i pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
-    painter->drawText(pos[0], pos[1], 100, 20, Qt::AlignLeft, QString::fromStdString(layer.name));
+    painter->drawText(pos[0], pos[1], 100, 20, Qt::AlignLeft, QString::fromStdString(group.name));
     painter->beginNativePainting();
   }
 }

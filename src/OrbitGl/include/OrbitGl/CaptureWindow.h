@@ -112,7 +112,7 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
  private:
   TimeGraphLayout* time_graph_layout_ = nullptr;
 
-  void DrawLayerDebugInfo(const std::vector<orbit_gl::BatchRenderGroupId>& sorted_layers,
+  void DrawLayerDebugInfo(const std::vector<orbit_gl::BatchRenderGroupId>& sorted_groups,
                           QPainter* painter);
 };
 

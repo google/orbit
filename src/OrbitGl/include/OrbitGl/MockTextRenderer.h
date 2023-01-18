@@ -64,7 +64,7 @@ class MockTextRenderer : public TextRenderer {
   std::set<float> vertical_position_in_add_text;
   int num_add_text_calls_ = 0;
 
-  BatchRenderGroupManager owned_manager_;
+  BatchRenderGroupStateManager owned_manager_;
 };
 
 }  // namespace orbit_gl

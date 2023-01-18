@@ -27,7 +27,7 @@ namespace orbit_gl {
 
 class FakeOpenGlBatcher : public OpenGlBatcher {
  public:
-  explicit FakeOpenGlBatcher(BatchRenderGroupManager* manager, BatcherId id)
+  explicit FakeOpenGlBatcher(BatchRenderGroupStateManager* manager, BatcherId id)
       : OpenGlBatcher(manager, id) {}
 
   void ResetMockDrawCounts() {
@@ -131,7 +131,7 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
 }
 
 TEST(OpenGlBatcher, SimpleElementsDrawing) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
@@ -159,7 +159,7 @@ void ExpectCustomDataEq(const FakeOpenGlBatcher& batcher, const Color& rendered_
 }
 
 TEST(OpenGlBatcher, PickingSimpleElements) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
   EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
@@ -192,7 +192,7 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
 }
 
 TEST(OpenGlBatcher, MultipleDrawCalls) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
@@ -248,7 +248,7 @@ void LineEq(const Line3D& lhs, const Line& rhs) {
 }
 
 TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
@@ -285,7 +285,7 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
 }
 
 TEST(OpenGlBatcher, StatisticsAreReportedCorrectly) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   FakeOpenGlBatcher batcher(&manager, BatcherId::kUi);
 
   const size_t kExpectedBoxBlockSize =

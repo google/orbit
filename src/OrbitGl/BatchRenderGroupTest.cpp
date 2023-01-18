@@ -103,6 +103,7 @@ TEST(BatchRenderGroupId, OrderingComparator) {
   EXPECT_FALSE(parent_group > child_group);
   EXPECT_FALSE(parent_group >= child_group);
 
+  child_group.name = "cve_000";
   // After changing the name, the order should be affected
   EXPECT_TRUE(parent_group > child_group);
   EXPECT_TRUE(parent_group >= child_group);
@@ -111,19 +112,19 @@ TEST(BatchRenderGroupId, OrderingComparator) {
 }
 
 TEST(BatchRenderGroupManager, SetAndGetState) {
-  BatchRenderGroupManager manager;
+  BatchRenderGroupStateManager manager;
   BatchRenderGroupId g1;
   BatchRenderGroupState state;
 
   state.stencil.enabled = !state.stencil.enabled;
-  manager.SetGroupState(g1, state);
+  manager.SetGroupState(g1.name, state);
 
-  EXPECT_EQ(manager.GetGroupState(g1).stencil.enabled, state.stencil.enabled);
+  EXPECT_EQ(manager.GetGroupState(g1.name).stencil.enabled, state.stencil.enabled);
 
   state.stencil.enabled = !state.stencil.enabled;
-  manager.SetGroupState(g1, state);
+  manager.SetGroupState(g1.name, state);
 
-  EXPECT_EQ(manager.GetGroupState(g1).stencil.enabled, state.stencil.enabled);
+  EXPECT_EQ(manager.GetGroupState(g1.name).stencil.enabled, state.stencil.enabled);
 }
 
 }  // namespace

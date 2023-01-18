@@ -84,7 +84,7 @@ void QtTextRenderer::DrawRenderGroup(QPainter* painter, const BatchRenderGroupId
     painter->setPen(QColor(text_entry.formatting.color[0], text_entry.formatting.color[1],
                            text_entry.formatting.color[2], text_entry.formatting.color[3]));
 
-    auto stencil = manager_->GetGroupState(group).stencil;
+    auto stencil = manager_->GetGroupState(group.name).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_->WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_->WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));

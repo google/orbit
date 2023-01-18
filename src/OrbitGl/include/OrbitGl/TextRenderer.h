@@ -13,7 +13,7 @@ namespace orbit_gl {
 
 class TextRenderer : public TextRendererInterface {
  public:
-  explicit TextRenderer(BatchRenderGroupManager* manager) : manager_(manager){};
+  explicit TextRenderer(BatchRenderGroupStateManager* manager) : manager_(manager){};
 
   void SetViewport(Viewport* viewport) { viewport_ = viewport; }
 
@@ -27,14 +27,14 @@ class TextRenderer : public TextRendererInterface {
     return current_render_group_;
   }
 
-  [[nodiscard]] BatchRenderGroupManager* GetRenderGroupManager() { return manager_; }
+  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() { return manager_; }
 
  protected:
   Viewport* viewport_ = nullptr;
 
   TranslationStack translations_;
   BatchRenderGroupId current_render_group_;
-  BatchRenderGroupManager* manager_;
+  BatchRenderGroupStateManager* manager_;
 };
 
 }  // namespace orbit_gl

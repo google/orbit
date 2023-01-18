@@ -56,7 +56,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
                      PickingManager* picking_manager,
-                     orbit_gl::BatchRenderGroupManager* render_group_manager,
+                     orbit_gl::BatchRenderGroupStateManager* render_group_manager,
                      TimeGraphLayout* time_graph_layout);
 
   [[nodiscard]] float GetHeight() const override;

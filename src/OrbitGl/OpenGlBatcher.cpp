@@ -48,7 +48,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
-  UpdateRenderGroupZ(layer_z_value);
+  current_render_group_.layer = layer_z_value;
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
 
   buffer.line_buffer.lines_.emplace_back(line);
@@ -67,7 +67,7 @@ void OpenGlBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>&
     layer_z_value = layered_vec2.z;
   }
 
-  UpdateRenderGroupZ(layer_z_value);
+  current_render_group_.layer = layer_z_value;
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
   buffer.box_buffer.boxes_.emplace_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
@@ -86,7 +86,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
     layer_z_value = layered_vec2.z;
   }
 
-  UpdateRenderGroupZ(layer_z_value);
+  current_render_group_.layer = layer_z_value;
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
   buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back(colors);

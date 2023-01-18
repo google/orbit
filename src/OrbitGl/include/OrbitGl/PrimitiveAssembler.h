@@ -132,7 +132,7 @@ class PrimitiveAssembler {
     batcher_->SetCurrentRenderGroup(render_group);
   }
 
-  [[nodiscard]] BatchRenderGroupManager* GetRenderGroupManager() {
+  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() {
     return batcher_->GetRenderGroupManager();
   }
 

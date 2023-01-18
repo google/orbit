@@ -58,7 +58,7 @@ using orbit_gl::VariableTrack;
 TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, CaptureData* capture_data,
                      PickingManager* picking_manager,
-                     orbit_gl::BatchRenderGroupManager* render_group_manager,
+                     orbit_gl::BatchRenderGroupStateManager* render_group_manager,
                      TimeGraphLayout* time_graph_layout)
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the

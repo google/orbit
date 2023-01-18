@@ -18,7 +18,7 @@ struct StencilConfig {
   std::array<float, 2> size = {0, 0};
 };
 
-class BatchRenderGroupManager;
+class BatchRenderGroupStateManager;
 
 struct BatchRenderGroupId {
   static const std::string kGlobalGroup;
@@ -61,13 +61,13 @@ struct BatchRenderGroupState {
   StencilConfig stencil;
 };
 
-class BatchRenderGroupManager {
+class BatchRenderGroupStateManager {
  public:
-  [[nodiscard]] BatchRenderGroupState GetGroupState(const BatchRenderGroupId& id) const;
-  void SetGroupState(const BatchRenderGroupId& id, BatchRenderGroupState state);
+  [[nodiscard]] BatchRenderGroupState GetGroupState(const std::string& group_name) const;
+  void SetGroupState(const std::string& group_name, BatchRenderGroupState state);
 
  private:
-  absl::flat_hash_map<BatchRenderGroupId, BatchRenderGroupState> id_to_state_;
+  absl::flat_hash_map<std::string, BatchRenderGroupState> group_name_to_state_;
 };
 
 }  // namespace orbit_gl
