@@ -10,6 +10,7 @@
 
 #include <QPainter>
 #include <QString>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <vector>

@@ -6,9 +6,16 @@
 #ifndef CLIENT_DATA_SELECTION_DATA_H_
 #define CLIENT_DATA_SELECTION_DATA_H_
 
+#include <absl/types/span.h>
+
+#include <memory>
+
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitGl/CallTreeView.h"
 
 // This is meant to hold the data needed to update the data tabs to a specific selection.

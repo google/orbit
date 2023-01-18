@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "OrbitGl/GlCanvas.h"
+#include "OrbitGl/MultivariateTimeSeries.h"
 #include "OrbitGl/PickingManager.h"
 
 namespace orbit_gl {

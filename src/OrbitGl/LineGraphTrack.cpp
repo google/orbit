@@ -5,6 +5,7 @@
 #include "OrbitGl/LineGraphTrack.h"
 
 #include <GteVector.h>
+#include <absl/types/span.h>
 
 #include <algorithm>
 #include <array>

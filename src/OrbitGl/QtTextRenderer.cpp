@@ -8,6 +8,7 @@
 #include <absl/meta/type_traits.h>
 
 #include <QChar>
+#include <QCharRef>
 #include <QColor>
 #include <QFont>
 #include <QFontDatabase>
@@ -20,7 +21,8 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdint>
-#include <string>
+#include <cstring>
+#include <utility>
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
