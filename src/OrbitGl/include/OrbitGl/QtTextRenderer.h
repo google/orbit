@@ -29,7 +29,7 @@ class QtTextRenderer : public TextRenderer {
   void Init() override{};
   void Clear() override {
     stored_text_.clear();
-    current_render_group_ = manager_->CreateId();
+    current_render_group_ = BatchRenderGroupId();
   };
 
   [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override;

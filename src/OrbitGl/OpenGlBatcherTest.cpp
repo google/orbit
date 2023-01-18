@@ -258,8 +258,8 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   const Line3D transformed_expectation{original_expectation.start_point + transform,
                                        original_expectation.end_point + transform};
 
-  const auto first_from_layer = [&manager, &batcher = std::as_const(batcher)](float z) {
-    return *batcher.GetInternalBuffers(manager.CreateId(z)).line_buffer.lines_.begin();
+  const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
+    return *batcher.GetInternalBuffers(BatchRenderGroupId(z)).line_buffer.lines_.begin();
   };
 
   const auto add_line_assert_eq = [&batcher, &first_from_layer](const Line3D& expectation) {

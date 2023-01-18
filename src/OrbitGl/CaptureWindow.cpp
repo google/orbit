@@ -556,11 +556,9 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     orbit_base::Append(all_groups_sorted, text_renderer_.GetRenderGroups());
 
     // Sort and remove duplicates.
-    std::sort(all_groups_sorted.begin(), all_groups_sorted.end(),
-              render_group_manager_.CreateComparator());
+    std::sort(all_groups_sorted.begin(), all_groups_sorted.end());
     auto it = std::unique(all_groups_sorted.begin(), all_groups_sorted.end());
-    all_groups_sorted.resize(std::distance(all_groups_sorted.begin(), it),
-                             render_group_manager_.CreateId());
+    all_groups_sorted.erase(it, all_groups_sorted.end());
   }
 
   last_rendered_layers_ = all_groups_sorted.size();

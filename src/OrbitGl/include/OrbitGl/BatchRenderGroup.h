@@ -24,29 +24,21 @@ struct BatchRenderGroupId {
   static const std::string kGlobalGroup;
 
   std::string name = kGlobalGroup;
-  float layer;
+  float layer = 0;
 
   friend bool operator==(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
   friend bool operator!=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
+  friend bool operator<(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
+  friend bool operator<=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
+  friend bool operator>(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
+  friend bool operator>=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
 
-  BatchRenderGroupId& operator=(const BatchRenderGroupId& rhs) {
-    if (this == &rhs) return *this;
-
-    name = rhs.name;
-    layer = rhs.layer;
-    return *this;
-  }
-
+  BatchRenderGroupId& operator=(const BatchRenderGroupId& rhs) = default;
   BatchRenderGroupId(const BatchRenderGroupId& rhs) = default;
+  BatchRenderGroupId(BatchRenderGroupId&& rhs) = default;
 
- private:
-  friend class BatchRenderGroupManager;
-  friend class BatchRenderGroupIdComparator;
-
-  explicit BatchRenderGroupId(const BatchRenderGroupManager* manager, float layer = 0,
-                              std::string name = kGlobalGroup)
-      : name(std::move(name)), layer(layer), manager_(manager) {}
-  const BatchRenderGroupManager* manager_;
+  explicit BatchRenderGroupId(float layer = 0, std::string name = kGlobalGroup)
+      : name(std::move(name)), layer(layer) {}
 };
 
 }  // namespace orbit_gl
@@ -69,45 +61,13 @@ struct BatchRenderGroupState {
   StencilConfig stencil;
 };
 
-class BatchRenderGroupIdComparator {
- public:
-  [[nodiscard]] bool operator()(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-
- private:
-  friend class BatchRenderGroupManager;
-
-  explicit BatchRenderGroupIdComparator(BatchRenderGroupManager* manager) : manager_(manager) {}
-
-  const BatchRenderGroupManager* manager_;
-};
-
 class BatchRenderGroupManager {
  public:
-  void ResetOrdering();
-  void TouchId(const BatchRenderGroupId& id);
-
   [[nodiscard]] BatchRenderGroupState GetGroupState(const BatchRenderGroupId& id) const;
   void SetGroupState(const BatchRenderGroupId& id, BatchRenderGroupState state);
 
-  [[nodiscard]] BatchRenderGroupId CreateId(float layer = 0,
-                                            std::string name = BatchRenderGroupId::kGlobalGroup) {
-    return BatchRenderGroupId(this, layer, name);
-  }
-
-  [[nodiscard]] BatchRenderGroupIdComparator CreateComparator() {
-    return BatchRenderGroupIdComparator(this);
-  }
-
  private:
-  absl::flat_hash_map<BatchRenderGroupId, uint64_t> id_to_touch_index_;
   absl::flat_hash_map<BatchRenderGroupId, BatchRenderGroupState> id_to_state_;
-  uint64_t current_touch_index_ = 0;
-  uint64_t frame_start_index_ = 0;
-
-  [[nodiscard]] bool HasValidCreationIndex(const BatchRenderGroupId& id) const;
-  [[nodiscard]] uint64_t GetCreationOrderIndex(const BatchRenderGroupId& id) const;
-
-  friend class BatchRenderGroupIdComparator;
 };
 
 }  // namespace orbit_gl

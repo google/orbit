@@ -66,7 +66,7 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
 
   AdjustDrawingBoundaries({real_start_x, real_start_y});
   AdjustDrawingBoundaries({real_start_x + text_width, real_start_y + text_height});
-  render_groups_.insert(manager_->CreateId(z));
+  render_groups_.insert(BatchRenderGroupId(z));
   num_add_text_calls_++;
   num_characters_in_add_text_.insert(strlen(text));
   vertical_position_in_add_text.insert(real_start_y);

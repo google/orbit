@@ -26,7 +26,7 @@ void OpenGlBatcher::ResetElements() {
   }
   user_data_.clear();
   ORBIT_CHECK(translations_.IsEmpty());
-  current_render_group_ = manager_->CreateId();
+  current_render_group_ = BatchRenderGroupId();
 }
 
 static void MoveLineToPixelCenterIfHorizontal(Line& line) {
@@ -49,7 +49,6 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
   UpdateRenderGroupZ(layer_z_value);
-  manager_->TouchId(current_render_group_);
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
 
   buffer.line_buffer.lines_.emplace_back(line);
@@ -69,7 +68,6 @@ void OpenGlBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>&
   }
 
   UpdateRenderGroupZ(layer_z_value);
-  manager_->TouchId(current_render_group_);
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
   buffer.box_buffer.boxes_.emplace_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
@@ -89,7 +87,6 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   }
 
   UpdateRenderGroupZ(layer_z_value);
-  manager_->TouchId(current_render_group_);
   auto& buffer = primitive_buffers_by_group_[current_render_group_];
   buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back(colors);

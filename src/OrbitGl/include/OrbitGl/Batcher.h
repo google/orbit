@@ -22,7 +22,7 @@ namespace orbit_gl {
 class Batcher : public BatcherInterface {
  public:
   explicit Batcher(BatchRenderGroupManager* manager, BatcherId batcher_id)
-      : current_render_group_(manager->CreateId()), manager_(manager), batcher_id_(batcher_id) {}
+      : manager_(manager), batcher_id_(batcher_id) {}
 
   [[nodiscard]] BatcherId GetBatcherId() const { return batcher_id_; }
 

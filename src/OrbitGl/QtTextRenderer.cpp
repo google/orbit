@@ -135,7 +135,6 @@ void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFo
       {{static_cast<float>(pen_pos[0]), static_cast<float>(pen_pos[1])}, z});
 
   current_render_group_.layer = transformed.z;
-  manager_->TouchId(current_render_group_);
 
   const int max_width = static_cast<int>(viewport_->WorldToScreen({formatting.max_size, 0})[0]);
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
@@ -269,7 +268,6 @@ float QtTextRenderer::AddFittingSingleLineText(const QString& text, float x, flo
   float y_offset = GetYOffsetFromAlignment(formatting.valign, single_line_height);
 
   current_render_group_.layer = transformed.z;
-  manager_->TouchId(current_render_group_);
 
   stored_text_[current_render_group_].emplace_back(
       text, std::lround(transformed.xy[0] + x_offset), std::lround(transformed.xy[1] + y_offset),

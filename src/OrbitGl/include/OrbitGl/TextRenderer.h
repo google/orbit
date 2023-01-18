@@ -13,8 +13,7 @@ namespace orbit_gl {
 
 class TextRenderer : public TextRendererInterface {
  public:
-  explicit TextRenderer(BatchRenderGroupManager* manager)
-      : current_render_group_(manager->CreateId()), manager_(manager){};
+  explicit TextRenderer(BatchRenderGroupManager* manager) : manager_(manager){};
 
   void SetViewport(Viewport* viewport) { viewport_ = viewport; }
 
