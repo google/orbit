@@ -89,7 +89,7 @@ TEST(ModuleIdentifierProvider, CanCreateMultipleModuleIdentifiersAndReturnInform
 
   EXPECT_NE(module_identifier1, module_identifier2);
   EXPECT_NE(module_identifier_provider.GetModuleIdentifier(
-                {.module_path = std::string(kModulePath2), .build_id = std::string(kBuildId2)}),
+                {.module_path = std::string(kModulePath1), .build_id = std::string(kBuildId1)}),
             module_identifier_provider.GetModuleIdentifier(
                 {.module_path = std::string(kModulePath2), .build_id = std::string(kBuildId2)}));
   EXPECT_NE(module_identifier_provider.GetModulePathAndBuildId(module_identifier1),

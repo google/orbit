@@ -239,7 +239,7 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->file_size(), kFileSize);
 
   const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
-      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
+      {.module_path = std::string(different_path), .build_id = std::string(kDifferentBuildId)});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
@@ -335,7 +335,7 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_EQ(module->file_size(), kFileSize);
 
   const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
-      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
+      {.module_path = std::string(different_path), .build_id = std::string(kDifferentBuildId)});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);

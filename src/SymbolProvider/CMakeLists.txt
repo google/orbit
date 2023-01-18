@@ -37,3 +37,7 @@ target_link_libraries(SymbolProviderTests PRIVATE
         GTest::Main)
     
 register_test(SymbolProviderTests)
+
+if(WIN32)
+  target_compile_features(SymbolProviderTests PRIVATE cxx_std_20)
+endif()
