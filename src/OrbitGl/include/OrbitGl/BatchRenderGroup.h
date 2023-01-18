@@ -22,12 +22,29 @@ struct BatchRenderGroupId {
   std::string name = kGlobalGroup;
   float layer = 0;
 
-  friend bool operator==(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-  friend bool operator!=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-  friend bool operator<(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-  friend bool operator<=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-  friend bool operator>(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
-  friend bool operator>=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs);
+  friend bool operator==(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return lhs.layer == rhs.layer && lhs.name == rhs.name;
+  }
+
+  friend bool operator!=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return !(lhs == rhs);
+  }
+
+  friend bool operator<(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return lhs.layer < rhs.layer || (lhs.layer == rhs.layer && lhs.name < rhs.name);
+  }
+
+  friend bool operator<=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return lhs < rhs || lhs == rhs;
+  }
+
+  friend bool operator>(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return !(lhs <= rhs);
+  }
+
+  friend bool operator>=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
+    return !(lhs < rhs);
+  }
 
   BatchRenderGroupId& operator=(const BatchRenderGroupId& rhs) = default;
   BatchRenderGroupId(const BatchRenderGroupId& rhs) = default;
@@ -64,8 +81,14 @@ struct BatchRenderGroupState {
 // ID defines a sub-ordering underneath this group name to ensure correct rendering order.
 class BatchRenderGroupStateManager {
  public:
-  [[nodiscard]] BatchRenderGroupState GetGroupState(const std::string& group_name) const;
-  void SetGroupState(const std::string& group_name, BatchRenderGroupState state);
+  [[nodiscard]] BatchRenderGroupState GetGroupState(const std::string& group_name) const {
+    return group_name_to_state_.contains(group_name) ? group_name_to_state_.at(group_name)
+                                                     : BatchRenderGroupState();
+  }
+
+  void SetGroupState(const std::string& group_name, BatchRenderGroupState state) {
+    group_name_to_state_[group_name] = state;
+  }
 
  private:
   absl::flat_hash_map<std::string, BatchRenderGroupState> group_name_to_state_;
