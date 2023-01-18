@@ -26,6 +26,7 @@
 #include "PresetFile/PresetFile.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "Statistics/Histogram.h"
+#include "SymbolProvider/ModulePathAndBuildId.h"
 
 namespace orbit_data_views {
 
@@ -96,9 +97,9 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModuleIdentifier(
       const orbit_client_data::ModuleIdentifier& module_id) = 0;
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModulePathAndBuildId(
-      std::string_view module_path, std::string_view build_id) const = 0;
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const = 0;
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModulePathAndBuildId(
-      std::string_view module_path, std::string_view build_id) = 0;
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) = 0;
 
   virtual orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;

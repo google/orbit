@@ -10,6 +10,7 @@ target_sources(SymbolProvider PRIVATE
         SymbolLoadingOutcome.cpp)
 
 target_sources(SymbolProvider PUBLIC
+        include/SymbolProvider/ModulePathAndBuildId.h
         include/SymbolProvider/StructuredDebugDirectorySymbolProvider.h
         include/SymbolProvider/SymbolLoadingOutcome.h
         include/SymbolProvider/SymbolProvider.h)

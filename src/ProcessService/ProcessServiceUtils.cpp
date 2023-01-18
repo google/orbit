@@ -212,14 +212,14 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 }
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
-    const std::filesystem::path& structured_debug_store, std::string_view module_path,
-    std::string_view build_id) {
+    const std::filesystem::path& structured_debug_store,
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
   orbit_symbol_provider::StructuredDebugDirectorySymbolProvider provider{
       structured_debug_store,
       orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kStadiaInstanceUsrLibDebug};
   orbit_base::StopSource stop_source;
   orbit_base::Future<orbit_symbol_provider::SymbolLoadingOutcome> retrieve_future =
-      provider.RetrieveSymbols(module_path, build_id, stop_source.GetStopToken());
+      provider.RetrieveSymbols(module_path_and_build_id, stop_source.GetStopToken());
   // TODO(b/246919095): Do not use `.Get()` and do not do the explicit handling of
   // success/error/not_found here anymore, as soon as the rest of `FindSymbolsFilePath` is using
   // SymbolProviders.
@@ -267,7 +267,7 @@ ErrorMessageOr<orbit_base::NotFoundOr<fs::path>> FindSymbolsFilePath(
   if (object_file_or_error.value()->IsElf()) {
     const fs::path structured_debug_store{"/usr/lib/debug"};
     ErrorMessageOr<fs::path> debug_store_result = FindSymbolsFilePathInStructuredDebugStore(
-        structured_debug_store, module_path.string(), build_id);
+        structured_debug_store, {.module_path = module_path.string(), .build_id = build_id});
     if (debug_store_result.has_value()) return debug_store_result.value();
 
     not_found_messages.emplace_back(debug_store_result.error().message());

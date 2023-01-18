@@ -196,8 +196,9 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   if (object_file_type == ModuleInfo::kElfFile) {
     for (auto& provider : structured_debug_directory_providers_) {
       const orbit_base::StopSource stop_source;
-      orbit_base::Future<SymbolLoadingOutcome> future =
-          provider.RetrieveSymbols(module_path.string(), build_id, stop_source.GetStopToken());
+      orbit_base::Future<SymbolLoadingOutcome> future = provider.RetrieveSymbols(
+          {.module_path = module_path.string(), .build_id = std::string(build_id)},
+          stop_source.GetStopToken());
 
       // TODO(antonrohr): This `.Get()` makes this asynchronous future operation a syncronous
       // operation. This is okay for now.

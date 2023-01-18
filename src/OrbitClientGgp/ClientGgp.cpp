@@ -203,7 +203,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
   main_module_ = module_manager_.GetMutableModuleByModulePathAndBuildId(
-      target_process_->full_path(), target_process_build_id);
+      {.module_path = target_process_->full_path(), .build_id = target_process_build_id});
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }

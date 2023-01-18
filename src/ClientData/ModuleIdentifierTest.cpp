@@ -15,11 +15,15 @@ namespace orbit_client_data {
 TEST(ModuleIdentifier, Hash) {
   ModuleIdentifierProvider module_identifier_provider;
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
-      module_identifier_provider.CreateModuleIdentifier("/a/file/path", "build_id"),
-      module_identifier_provider.CreateModuleIdentifier("a string", "abcdefg"),
-      module_identifier_provider.CreateModuleIdentifier("", ""),
-      module_identifier_provider.CreateModuleIdentifier("/a/file/path", "build_id2"),
-      module_identifier_provider.CreateModuleIdentifier("", "build_id"),
+      module_identifier_provider.CreateModuleIdentifier(
+          {.module_path = "/a/file/path", .build_id = "build_id"}),
+      module_identifier_provider.CreateModuleIdentifier(
+          {.module_path = "a string", .build_id = "abcdefg"}),
+      module_identifier_provider.CreateModuleIdentifier({.module_path = "", .build_id = ""}),
+      module_identifier_provider.CreateModuleIdentifier(
+          {.module_path = "/a/file/path", .build_id = "build_id2"}),
+      module_identifier_provider.CreateModuleIdentifier(
+          {.module_path = "", .build_id = "build_id"}),
   }));
 }
 

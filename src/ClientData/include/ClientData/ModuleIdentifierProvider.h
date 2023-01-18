@@ -15,6 +15,7 @@
 
 #include "ClientData/ModuleIdentifier.h"
 #include "OrbitBase/Result.h"
+#include "SymbolProvider/ModulePathAndBuildId.h"
 
 namespace orbit_client_data {
 
@@ -35,14 +36,15 @@ class ModuleIdentifierProvider {
   // Creates and returns a new module identifier for the given module path and build id. If there
   // already exists a module identifier with that path and build id, the existing module identifier
   // is return.
-  ModuleIdentifier CreateModuleIdentifier(std::string_view module_path, std::string_view build_id) {
+  ModuleIdentifier CreateModuleIdentifier(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
     absl::WriterMutexLock lock(&mutex_);
 
     // We are using the current size as next id. If insertion does not take place, size remains the
     // same and we are not wasting ids.
     ModuleIdentifier module_identifier{module_identifier_map_.size()};
-    auto [module_identifier_it, insertion_happened] = module_identifier_map_.try_emplace(
-        std::pair<std::string, std::string>{module_path, build_id}, module_identifier);
+    auto [module_identifier_it, insertion_happened] =
+        module_identifier_map_.try_emplace(module_path_and_build_id, module_identifier);
 
     return module_identifier_it->second;
   }
@@ -50,10 +52,9 @@ class ModuleIdentifierProvider {
   // Returns the unquie module identifier for the given module path and build id, or std::nullopt,
   // the module is yet unknown.
   [[nodiscard]] std::optional<ModuleIdentifier> GetModuleIdentifier(
-      std::string_view module_path, std::string_view build_id) const {
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
     absl::ReaderMutexLock lock(&mutex_);
-    const auto it =
-        module_identifier_map_.find(std::pair<std::string, std::string>{module_path, build_id});
+    const auto it = module_identifier_map_.find(module_path_and_build_id);
     if (it == module_identifier_map_.end()) return std::nullopt;
     return it->second;
   }
@@ -66,7 +67,7 @@ class ModuleIdentifierProvider {
     for (const auto& [current_module_path_and_build_id, current_module_identifier] :
          module_identifier_map_) {
       if (current_module_identifier == module_identifier) {
-        return current_module_path_and_build_id.first;
+        return current_module_path_and_build_id.module_path;
       }
     }
     return std::nullopt;
@@ -81,7 +82,7 @@ class ModuleIdentifierProvider {
     for (const auto& [current_module_path_and_build_id, current_module_identifier] :
          module_identifier_map_) {
       if (current_module_identifier == module_identifier) {
-        return current_module_path_and_build_id.second;
+        return current_module_path_and_build_id.build_id;
       }
     }
     return std::nullopt;
@@ -89,7 +90,7 @@ class ModuleIdentifierProvider {
 
   // Returns the module path and build id associated with the given module identifier, or
   // std::nullopt if the module is yet unknown.
-  [[nodiscard]] std::optional<std::pair<std::string, std::string>> GetModulePathAndBuildId(
+  [[nodiscard]] std::optional<orbit_symbol_provider::ModulePathAndBuildId> GetModulePathAndBuildId(
       ModuleIdentifier module_identifier) const {
     absl::ReaderMutexLock lock(&mutex_);
 
@@ -104,8 +105,8 @@ class ModuleIdentifierProvider {
 
  private:
   mutable absl::Mutex mutex_;
-  absl::flat_hash_map<std::pair<std::string, std::string>, ModuleIdentifier> module_identifier_map_
-      ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<orbit_symbol_provider::ModulePathAndBuildId, ModuleIdentifier>
+      module_identifier_map_ ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_client_data

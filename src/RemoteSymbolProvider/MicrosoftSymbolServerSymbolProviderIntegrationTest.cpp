@@ -60,7 +60,10 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
 
   orbit_base::StopSource stop_source{};
 
-  symbol_provider.RetrieveSymbols(kValidModuleName, kValidModuleBuildId, stop_source.GetStopToken())
+  symbol_provider
+      .RetrieveSymbols({.module_path = std::string(kValidModuleName),
+                        .build_id = std::string(kValidModuleBuildId)},
+                       stop_source.GetStopToken())
       .Then(&executor, [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         orbit_symbol_provider::SymbolLoadingSuccessResult success_result =

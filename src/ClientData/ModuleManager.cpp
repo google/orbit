@@ -28,9 +28,10 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
+    orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
+        .module_path = module_info.file_path(), .build_id = module_info.build_id()};
     std::optional<ModuleIdentifier> module_id_opt =
-        module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
-                                                         module_info.build_id());
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
     if (module_id_opt.has_value()) {
       auto module_it = module_map_.find(module_id_opt.value());
       ORBIT_CHECK(module_it != module_map_.end());
@@ -39,8 +40,8 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
         unloaded_modules.push_back(module);
       }
     } else {
-      ModuleIdentifier module_id = module_identifier_provider_->CreateModuleIdentifier(
-          module_info.file_path(), module_info.build_id());
+      ModuleIdentifier module_id =
+          module_identifier_provider_->CreateModuleIdentifier(module_path_and_build_id);
       bool success =
           module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
       ORBIT_CHECK(success);
@@ -57,9 +58,10 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
   std::vector<ModuleData*> not_updated_modules;
 
   for (const auto& module_info : module_infos) {
+    orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
+        .module_path = module_info.file_path(), .build_id = module_info.build_id()};
     std::optional<ModuleIdentifier> module_id_opt =
-        module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
-                                                         module_info.build_id());
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
 
     if (module_id_opt.has_value()) {
       auto module_it = module_map_.find(module_id_opt.value());
@@ -70,8 +72,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
       }
     } else {
       ErrorMessageOr<ModuleIdentifier> module_id_or_error =
-          module_identifier_provider_->CreateModuleIdentifier(module_info.file_path(),
-                                                              module_info.build_id());
+          module_identifier_provider_->CreateModuleIdentifier(module_path_and_build_id);
       ORBIT_CHECK(module_id_or_error.has_value());
       bool success =
           module_map_

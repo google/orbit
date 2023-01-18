@@ -310,8 +310,9 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   orbit_grpc_protos::ModuleSymbols module_symbols;
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
   orbit_client_data::ModuleData* module_data =
-      module_manager.GetMutableModuleByModulePathAndBuildId(functions_[0].module_path(),
-                                                            functions_[0].module_build_id());
+      module_manager.GetMutableModuleByModulePathAndBuildId(
+          {.module_path = functions_[0].module_path(),
+           .build_id = functions_[0].module_build_id()});
   module_data->AddSymbols(module_symbols);
 
   orbit_grpc_protos::CaptureStarted capture_started{};

@@ -76,7 +76,8 @@ class ModulesDataViewTest : public testing::Test {
       EXPECT_TRUE(module_manager_.AddOrUpdateModules({module_info}).empty());
 
       std::optional<orbit_client_data::ModuleIdentifier> module_id =
-          module_identifier_provider_.GetModuleIdentifier(kFilePaths[i], kBuildIds[i]);
+          module_identifier_provider_.GetModuleIdentifier(
+              {.module_path = kFilePaths[i], .build_id = kBuildIds[i]});
       ORBIT_CHECK(module_id.has_value());
       ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], module_id.value()};
       modules_in_memory_.push_back(module_in_memory);

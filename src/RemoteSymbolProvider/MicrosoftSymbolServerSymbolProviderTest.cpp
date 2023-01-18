@@ -100,7 +100,8 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_
-      .RetrieveSymbols(kValidModulePath, kValidModuleBuildId, stop_source.GetStopToken())
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [this](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         SymbolLoadingSuccessResult success_result = orbit_symbol_provider::GetSuccessResult(result);
@@ -123,7 +124,9 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
   SetUpDownloadManager(DownloadResultState::kNotFound, expected_url);
 
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(kModulePath, kBuildId, stop_source.GetStopToken())
+  symbol_provider_
+      .RetrieveSymbols({.module_path = std::string(kModulePath), .build_id = std::string(kBuildId)},
+                       stop_source.GetStopToken())
       .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));
         EXPECT_EQ(orbit_symbol_provider::GetNotFoundMessage(result),
@@ -142,7 +145,8 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
   // case.
   orbit_base::StopSource stop_source{};
   symbol_provider_
-      .RetrieveSymbols(kValidModulePath, kValidModuleBuildId, stop_source.GetStopToken())
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         EXPECT_TRUE(orbit_symbol_provider::IsCanceled(result));
 
@@ -158,7 +162,8 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleError) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_
-      .RetrieveSymbols(kValidModulePath, kValidModuleBuildId, stop_source.GetStopToken())
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [error_msg](const SymbolLoadingOutcome& result) {
         EXPECT_THAT(result, HasError(error_msg));
 

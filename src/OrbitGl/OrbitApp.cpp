@@ -842,11 +842,12 @@ void OrbitApp::RefreshCaptureView() {
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   ORBIT_CHECK(process_ != nullptr);
-  const ModuleData* module =
-      GetModuleByModulePathAndBuildId(function.module_path(), function.module_build_id());
+  orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
+      .module_path = function.module_path(), .build_id = function.module_build_id()};
+  const ModuleData* module = GetModuleByModulePathAndBuildId(module_path_and_build_id);
   ORBIT_CHECK(module != nullptr);
   const std::optional<ModuleIdentifier> module_identifier =
-      module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
   ORBIT_CHECK(module_identifier.has_value());
 
   const bool is_64_bit = process_->is_64_bit();
@@ -900,11 +901,11 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
-  const ModuleData* module =
-      GetModuleByModulePathAndBuildId(function.module_path(), function.module_build_id());
+  orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
+      .module_path = function.module_path(), .build_id = function.module_build_id()};
+  const ModuleData* module = GetModuleByModulePathAndBuildId(module_path_and_build_id);
 
-  auto loaded_module =
-      RetrieveModuleWithDebugInfo(function.module_path(), function.module_build_id());
+  auto loaded_module = RetrieveModuleWithDebugInfo(module_path_and_build_id);
 
   (void)loaded_module.Then(main_thread_executor_, [this, module, function](
                                                       const ErrorMessageOr<std::filesystem::path>&
@@ -937,7 +938,8 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
       const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
 
       const std::optional<ModuleIdentifier> module_identifier =
-          module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+          module_identifier_provider_->GetModuleIdentifier(
+              {.module_path = module->file_path(), .build_id = module->build_id()});
       ORBIT_CHECK(module_identifier.has_value());
 
       const auto absolute_address =
@@ -1573,15 +1575,15 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
-    std::string_view module_file_path, std::string_view module_build_id) {
-  return symbol_loader_->RetrieveModuleWithDebugInfo(module_file_path, module_build_id);
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+  return symbol_loader_->RetrieveModuleWithDebugInfo(module_path_and_build_id);
 }
 
-void OrbitApp::AddSymbols(std::string_view module_file_path, std::string_view module_build_id,
-                          const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+void OrbitApp::AddSymbols(
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+    const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   ORBIT_SCOPE_FUNCTION;
-  ModuleData* module_data =
-      GetMutableModuleByModulePathAndBuildId(module_file_path, module_build_id);
+  ModuleData* module_data = GetMutableModuleByModulePathAndBuildId(module_path_and_build_id);
   // In case fallback symbols were previously loaded, remove them. Careful to call this before
   // ModuleData::AddSymbols, as it will clear the fallback symbols from the ModuleData, and
   // FunctionsDataView contains pointers to them.
@@ -1589,7 +1591,7 @@ void OrbitApp::AddSymbols(std::string_view module_file_path, std::string_view mo
   module_data->AddSymbols(module_symbols);
 
   const std::optional<ModuleIdentifier> module_identifier =
-      module_identifier_provider_->GetModuleIdentifier(module_file_path, module_build_id);
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
   ORBIT_CHECK(module_identifier.has_value());
 
   const ProcessData* selected_process = GetTargetProcess();
@@ -1604,16 +1606,15 @@ void OrbitApp::AddSymbols(std::string_view module_file_path, std::string_view mo
   UpdateAfterSymbolLoadingThrottled();
 }
 
-void OrbitApp::AddFallbackSymbols(std::string_view module_file_path,
-                                  std::string_view module_build_id,
-                                  const orbit_grpc_protos::ModuleSymbols& fallback_symbols) {
+void OrbitApp::AddFallbackSymbols(
+    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+    const orbit_grpc_protos::ModuleSymbols& fallback_symbols) {
   ORBIT_SCOPE_FUNCTION;
-  ModuleData* module_data =
-      GetMutableModuleByModulePathAndBuildId(module_file_path, module_build_id);
+  ModuleData* module_data = GetMutableModuleByModulePathAndBuildId(module_path_and_build_id);
   module_data->AddFallbackSymbols(fallback_symbols);
 
   const std::optional<ModuleIdentifier> module_identifier =
-      module_identifier_provider_->GetModuleIdentifier(module_file_path, module_build_id);
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
   ORBIT_CHECK(module_identifier.has_value());
 
   const ProcessData* selected_process = GetTargetProcess();
@@ -1635,7 +1636,8 @@ ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
 
   std::vector<const ModuleData*> result;
   for (const auto& build_id : build_ids) {
-    const ModuleData* module_data = GetModuleByModulePathAndBuildId(module_path.string(), build_id);
+    const ModuleData* module_data = GetModuleByModulePathAndBuildId(
+        {.module_path = module_path.string(), .build_id = build_id});
     if (module_data == nullptr) {
       ORBIT_ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
                   module_path.string());
@@ -2002,8 +2004,8 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
 
   absl::flat_hash_map<std::string, std::vector<uint64_t>> function_hashes_to_hook_map;
   for (const FunctionInfo& func : data_manager_->GetSelectedFunctions()) {
-    const ModuleData* module =
-        GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
+    const ModuleData* module = GetModuleByModulePathAndBuildId(
+        {.module_path = func.module_path(), .build_id = func.module_build_id()});
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
       // (A) deselect functions when the module is not loaded by the process anymore
       data_manager_->DeselectFunction(func);
@@ -2017,8 +2019,8 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
   for (const FunctionInfo& func :
        data_manager_->user_defined_capture_data().frame_track_functions()) {
-    const ModuleData* module =
-        GetModuleByModulePathAndBuildId(func.module_path(), func.module_build_id());
+    const ModuleData* module = GetModuleByModulePathAndBuildId(
+        {.module_path = func.module_path(), .build_id = func.module_build_id()});
     // Frame tracks are only meaningful if the module for the underlying function is actually
     // loaded by the process.
     if (!process->IsModuleLoadedByProcess(module->file_path())) {
@@ -2761,7 +2763,8 @@ bool OrbitApp::IsSymbolLoadingInProgressForModule(
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
   const std::optional<ModuleIdentifier> module_identifier =
-      module_identifier_provider_->GetModuleIdentifier(module->file_path(), module->build_id());
+      module_identifier_provider_->GetModuleIdentifier(
+          {.module_path = module->file_path(), .build_id = module->build_id()});
   ORBIT_CHECK(module_identifier.has_value());
 
   return symbol_loader_->IsSymbolLoadingInProgressForModule(module_identifier.value());

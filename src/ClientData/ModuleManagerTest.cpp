@@ -38,8 +38,8 @@ TEST(ModuleManager, GetModuleByModuleIdentifier) {
   ModuleManager module_manager{&module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  const std::optional<ModuleIdentifier> module_id =
-      module_identifier_provider.GetModuleIdentifier(file_path, build_id);
+  const std::optional<ModuleIdentifier> module_id = module_identifier_provider.GetModuleIdentifier(
+      {.module_path = file_path, .build_id = build_id});
   ASSERT_TRUE(module_id.has_value());
   const ModuleData* module = module_manager.GetModuleByModuleIdentifier(module_id.value());
   const ModuleData* mutable_module =
@@ -71,8 +71,8 @@ TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
   ModuleManager module_manager{&module_identifier_provider};
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
-  const std::optional<ModuleIdentifier> module_id =
-      module_identifier_provider.GetModuleIdentifier(file_path, build_id);
+  const std::optional<ModuleIdentifier> module_id = module_identifier_provider.GetModuleIdentifier(
+      {.module_path = file_path, .build_id = build_id});
   ASSERT_TRUE(module_id.has_value());
   ModuleData* module = module_manager.GetMutableModuleByModuleIdentifier(module_id.value());
   ASSERT_NE(module, nullptr);
@@ -108,7 +108,8 @@ TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
   EXPECT_TRUE(module_manager.AddOrUpdateModules({module_info}).empty());
 
   std::optional<ModuleIdentifier> module_identifier =
-      module_identifier_provider.GetModuleIdentifier(kFilePath, kBuildId);
+      module_identifier_provider.GetModuleIdentifier(
+          {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
   ASSERT_TRUE(module_identifier.has_value());
   ModuleInMemory module_in_memory{0x1000, 0x2000, module_identifier.value()};
 
@@ -164,7 +165,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module_manager.GetAllModuleData().size(), 1);
   EXPECT_TRUE(unloaded_modules.empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
+  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(
+      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -236,8 +238,8 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->file_path(), kFilePath);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module =
-      module_manager.GetModuleByModulePathAndBuildId(different_path, kDifferentBuildId);
+  const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
+      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
@@ -263,7 +265,8 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
       module_manager.AddOrUpdateNotLoadedModules({module_info});
   EXPECT_TRUE(not_changed_modules.empty());
 
-  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
+  ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(
+      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -331,8 +334,8 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_EQ(module->file_path(), kFilePath);
   EXPECT_EQ(module->file_size(), kFileSize);
 
-  const ModuleData* different_module =
-      module_manager.GetModuleByModulePathAndBuildId(different_path, kDifferentBuildId);
+  const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
+      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);

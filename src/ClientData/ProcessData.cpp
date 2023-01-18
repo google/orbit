@@ -75,8 +75,8 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
 
   for (const auto& module_info : module_infos) {
     std::optional<orbit_client_data::ModuleIdentifier> module_id_opt =
-        module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
-                                                         module_info.build_id());
+        module_identifier_provider_->GetModuleIdentifier(
+            {.module_path = module_info.file_path(), .build_id = module_info.build_id()});
     ORBIT_CHECK(module_id_opt.has_value());
     const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
         module_info.address_start(), module_info.address_start(), module_info.address_end(),
@@ -94,11 +94,11 @@ std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(std::string_view 
   std::set<std::string> build_ids;
 
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
-    std::optional<std::pair<std::string, std::string>> current_module_path_and_build_id =
+    std::optional<orbit_symbol_provider::ModulePathAndBuildId> current_module_path_and_build_id =
         module_identifier_provider_->GetModulePathAndBuildId(module_in_memory.module_id());
     ORBIT_CHECK(current_module_path_and_build_id.has_value());
-    if (current_module_path_and_build_id->first == module_path) {
-      build_ids.insert(current_module_path_and_build_id->second);
+    if (current_module_path_and_build_id->module_path == module_path) {
+      build_ids.insert(current_module_path_and_build_id->build_id);
     }
   }
 
@@ -108,8 +108,8 @@ std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(std::string_view 
 void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   absl::MutexLock lock(&mutex_);
   std::optional<orbit_client_data::ModuleIdentifier> module_id_opt =
-      module_identifier_provider_->GetModuleIdentifier(module_info.file_path(),
-                                                       module_info.build_id());
+      module_identifier_provider_->GetModuleIdentifier(
+          {.module_path = module_info.file_path(), .build_id = module_info.build_id()});
   ORBIT_CHECK(module_id_opt.has_value());
   ModuleInMemory module_in_memory{module_info.address_start(), module_info.address_end(),
                                   module_id_opt.value()};

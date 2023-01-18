@@ -70,7 +70,8 @@ TEST(Disassembler, DisassembleWithSymbols) {
   (void)module_manager.AddOrUpdateModules({module_info});
 
   orbit_client_data::ModuleData* module_data =
-      module_manager.GetMutableModuleByModulePathAndBuildId(kFilePath, kBuildId);
+      module_manager.GetMutableModuleByModulePathAndBuildId(
+          {.module_path = kFilePath, .build_id = kBuildId});
 
   orbit_client_data::ProcessData process{{}, &module_identifier_provider};
   process.AddOrUpdateModuleInfo(module_info);

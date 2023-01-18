@@ -39,7 +39,8 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsSuccessfully) 
   const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
 
   const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
-      "/not/needed/module/path", build_id, stop_source_.GetStopToken());
+      {.module_path = "/not/needed/module/path", .build_id = build_id},
+      stop_source_.GetStopToken());
 
   bool lambda_executed = false;
   orbit_base::ImmediateExecutor executor;
@@ -66,7 +67,8 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsNotFound) {
   const std::string build_id = "different build id";
 
   const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
-      "/not/needed/module/path", build_id, stop_source_.GetStopToken());
+      {.module_path = "/not/needed/module/path", .build_id = build_id},
+      stop_source_.GetStopToken());
 
   bool lambda_executed = false;
   orbit_base::ImmediateExecutor executor;
@@ -88,7 +90,8 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsError) {
     const std::string build_id = "a";  // build id mal formed (too short)
 
     const orbit_base::Future<SymbolLoadingOutcome> future = symbol_provider_.RetrieveSymbols(
-        "/not/needed/module/path", build_id, stop_source_.GetStopToken());
+        {.module_path = "/not/needed/module/path", .build_id = build_id},
+        stop_source_.GetStopToken());
 
     bool lambda_executed = false;
     orbit_base::ImmediateExecutor executor;

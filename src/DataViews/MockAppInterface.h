@@ -80,9 +80,11 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModuleIdentifier,
               (const orbit_client_data::ModuleIdentifier&), (override));
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModulePathAndBuildId,
-              (std::string_view, std::string_view), (const, override));
+              (const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id),
+              (const, override));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModulePathAndBuildId,
-              (std::string_view, std::string_view), (override));
+              (const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id),
+              (override));
 
   MOCK_METHOD(orbit_base::Future<void>, LoadSymbolsManually,
               (absl::Span<const orbit_client_data::ModuleData* const>), (override));

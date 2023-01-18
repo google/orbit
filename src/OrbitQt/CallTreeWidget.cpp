@@ -535,7 +535,8 @@ static std::vector<ModuleData*> GetModulesFromIndices(OrbitApp* app,
 
   std::vector<ModuleData*> modules;
   for (const auto& [module_path, build_id] : unique_module_paths_and_build_ids) {
-    ModuleData* module = app->GetMutableModuleByModulePathAndBuildId(module_path, build_id);
+    ModuleData* module = app->GetMutableModuleByModulePathAndBuildId(
+        {.module_path = module_path, .build_id = build_id});
     if (module != nullptr) {
       modules.emplace_back(module);
     }

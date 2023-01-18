@@ -240,7 +240,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
       module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
       ModuleData* module_data = module_manager->GetMutableModuleByModulePathAndBuildId(
-          kModulePaths[i], kModuleBuildIds[i]);
+          {.module_path = kModulePaths[i], .build_id = kModuleBuildIds[i]});
       switch (kModuleSymbolCompleteness[i]) {
         case ModuleData::SymbolCompleteness::kNoSymbols:
           ORBIT_UNREACHABLE();

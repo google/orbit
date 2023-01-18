@@ -265,7 +265,7 @@ class OrbitApp final : public DataViewFactory,
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      std::string_view module_file_path, std::string_view module_build_id);
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
 
   orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() override;
   orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
@@ -326,12 +326,12 @@ class OrbitApp final : public DataViewFactory,
     return module_manager_->GetModuleByModuleIdentifier(module_id);
   }
   [[nodiscard]] orbit_client_data::ModuleData* GetMutableModuleByModulePathAndBuildId(
-      std::string_view module_path, std::string_view build_id) override {
-    return module_manager_->GetMutableModuleByModulePathAndBuildId(module_path, build_id);
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) override {
+    return module_manager_->GetMutableModuleByModulePathAndBuildId(module_path_and_build_id);
   }
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleByModulePathAndBuildId(
-      std::string_view module_path, std::string_view build_id) const override {
-    return module_manager_->GetModuleByModulePathAndBuildId(module_path, build_id);
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const override {
+    return module_manager_->GetModuleByModulePathAndBuildId(module_path_and_build_id);
   }
   [[nodiscard]] const orbit_client_data::ProcessData& GetConnectedOrLoadedProcess() const;
 
@@ -463,10 +463,11 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) override;
-  void AddSymbols(std::string_view module_file_path, std::string_view module_build_id,
+  void AddSymbols(const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
                   const orbit_grpc_protos::ModuleSymbols& module_symbols) override;
-  void AddFallbackSymbols(std::string_view module_file_path, std::string_view module_build_id,
-                          const orbit_grpc_protos::ModuleSymbols& fallback_symbols) override;
+  void AddFallbackSymbols(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+      const orbit_grpc_protos::ModuleSymbols& fallback_symbols) override;
 
   [[nodiscard]] bool IsModuleDownloading(
       const orbit_client_data::ModuleData* module) const override;

@@ -24,6 +24,7 @@
 #include "ClientData/ModuleInMemory.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
+#include "SymbolProvider/ModulePathAndBuildId.h"
 #include "absl/container/node_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -40,18 +41,18 @@ class ModuleManager final {
   [[nodiscard]] ModuleData* GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
       const ModuleInMemory& module_in_memory, uint64_t absolute_address);
 
-  [[nodiscard]] const ModuleData* GetModuleByModulePathAndBuildId(std::string_view module_path,
-                                                                  std::string_view build_id) const {
+  [[nodiscard]] const ModuleData* GetModuleByModulePathAndBuildId(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
     std::optional<orbit_client_data::ModuleIdentifier> module_id =
-        module_identifier_provider_->GetModuleIdentifier(module_path, build_id);
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
     if (!module_id.has_value()) return nullptr;
     return GetModuleByModuleIdentifier(module_id.value());
   }
 
-  [[nodiscard]] ModuleData* GetMutableModuleByModulePathAndBuildId(std::string_view module_path,
-                                                                   std::string_view build_id) {
+  [[nodiscard]] ModuleData* GetMutableModuleByModulePathAndBuildId(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
     std::optional<orbit_client_data::ModuleIdentifier> module_id =
-        module_identifier_provider_->GetModuleIdentifier(module_path, build_id);
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
     if (!module_id.has_value()) return nullptr;
     return GetMutableModuleByModuleIdentifier(module_id.value());
   }

@@ -7,6 +7,7 @@
 
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopToken.h"
+#include "SymbolProvider/ModulePathAndBuildId.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 
 namespace orbit_symbol_provider {
@@ -18,7 +19,7 @@ class SymbolProvider {
   virtual ~SymbolProvider() = default;
 
   [[nodiscard]] virtual orbit_base::Future<SymbolLoadingOutcome> RetrieveSymbols(
-      std::string_view file_path, std::string_view build_id, orbit_base::StopToken stop_token) = 0;
+      const ModulePathAndBuildId& module_path_and_build_id, orbit_base::StopToken stop_token) = 0;
 };
 
 }  // namespace orbit_symbol_provider

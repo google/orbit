@@ -178,7 +178,8 @@ void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
     }
 
     const ModuleData* const module_data = module_manager.GetModuleByModulePathAndBuildId(
-        instrumented_function.file_path(), instrumented_function.file_build_id());
+        {.module_path = instrumented_function.file_path(),
+         .build_id = instrumented_function.file_build_id()});
     if (module_data == nullptr) {
       continue;
     }

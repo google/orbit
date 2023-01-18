@@ -43,11 +43,9 @@ class SymbolLoader {
     virtual ~AppInterface() = default;
 
     [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModulePathAndBuildId(
-        std::string_view module_path, std::string_view build_id) const = 0;
+        const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const = 0;
     [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModulePathAndBuildId(
-        std::string_view module_path, std::string_view build_id) = 0;
-    [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
-        const orbit_client_data::ModuleIdentifier& module_id) const = 0;
+        const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) = 0;
     [[nodiscard]] virtual bool IsConnected() const = 0;
     [[nodiscard]] virtual bool IsLocalTarget() const = 0;
     virtual orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
@@ -55,11 +53,12 @@ class SymbolLoader {
                              std::filesystem::path local_path,
                              orbit_base::StopToken stop_token) = 0;
     virtual void OnModuleListUpdated() = 0;
-    virtual void AddSymbols(std::string_view module_file_path, std::string_view module_build_id,
-                            const orbit_grpc_protos::ModuleSymbols& module_symbols) = 0;
-    virtual void AddFallbackSymbols(std::string_view module_file_path,
-                                    std::string_view module_build_id,
-                                    const orbit_grpc_protos::ModuleSymbols& fallback_symbols) = 0;
+    virtual void AddSymbols(
+        const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+        const orbit_grpc_protos::ModuleSymbols& module_symbols) = 0;
+    virtual void AddFallbackSymbols(
+        const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+        const orbit_grpc_protos::ModuleSymbols& fallback_symbols) = 0;
   };
 
   SymbolLoader(AppInterface* app_interface, std::thread::id main_thread_id,
@@ -76,7 +75,7 @@ class SymbolLoader {
   // This method is pretty similar to `RetrieveModuleSymbols`, but it also requires debug
   // information to be present.
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
-      std::string_view module_file_path, std::string_view module_build_id);
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
 
   void DisableDownloadForModule(std::string_view module_path);
   void EnableDownloadForModules(const absl::flat_hash_set<std::string>& module_paths);
@@ -100,16 +99,18 @@ class SymbolLoader {
   // RetrieveModuleSymbolsAndLoadSymbols retrieves the module symbols by calling
   // `RetrieveModuleSymbols` and afterwards loads the symbols by calling `LoadSymbols`.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
-  RetrieveModuleSymbolsAndLoadSymbols(std::string_view module_file_path,
-                                      std::string_view module_build_id);
+  RetrieveModuleSymbolsAndLoadSymbols(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
   // RetrieveModuleSymbols retrieves a module file and returns the local file path (potentially from
   // the local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleSymbols(std::string_view module_file_path, std::string_view module_build_id);
+  RetrieveModuleSymbols(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> FindModuleLocally(
       const orbit_client_data::ModuleData* module_data);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleFromRemote(std::string_view module_file_path, std::string_view module_build_id);
+  RetrieveModuleFromRemote(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleFromInstance(std::string_view module_file_path, orbit_base::StopToken stop_token);
 
@@ -117,21 +118,21 @@ class SymbolLoader {
   // `RetrieveModuleItself` and afterwards loads the fallback symbols by calling
   // `LoadFallbackSymbols`.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
-  RetrieveModuleItselfAndLoadFallbackSymbols(std::string_view module_file_path,
-                                             std::string_view module_build_id,
-                                             uint64_t module_file_size);
+  RetrieveModuleItselfAndLoadFallbackSymbols(
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+      uint64_t module_file_size);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
-  RetrieveModuleItself(std::string_view module_file_path, std::string_view module_build_id,
+  RetrieveModuleItself(const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
                        uint64_t module_file_size);
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
   RetrieveModuleItselfFromInstance(std::string_view module_file_path);
 
-  orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(const std::filesystem::path& symbols_path,
-                                                       std::string_view module_file_path,
-                                                       std::string_view module_build_id);
+  orbit_base::Future<ErrorMessageOr<void>> LoadSymbols(
+      const std::filesystem::path& symbols_path,
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
   orbit_base::Future<ErrorMessageOr<void>> LoadFallbackSymbols(
-      const std::filesystem::path& object_path, std::string_view module_file_path,
-      std::string_view module_build_id);
+      const std::filesystem::path& object_path,
+      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
 
   AppInterface* app_interface_;
   std::thread::id main_thread_id_;
