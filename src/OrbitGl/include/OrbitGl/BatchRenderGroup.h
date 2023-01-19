@@ -17,13 +17,13 @@ namespace orbit_gl {
 // used to manually separate elements into different groups. It is used by the Batcher and
 // TextRenderer to group elements into draw calls.
 struct BatchRenderGroupId {
-  static const std::string kGlobalGroup;
+  static constexpr std::string_view kGlobalGroup = "global";
 
-  std::string name = kGlobalGroup;
+  std::string name = std::string(kGlobalGroup);
   float layer = 0;
 
   friend bool operator==(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
-    return lhs.layer == rhs.layer && lhs.name == rhs.name;
+    return std::tie(lhs.layer, lhs.name) == std::tie(rhs.layer, rhs.name);
   }
 
   friend bool operator!=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
@@ -31,7 +31,7 @@ struct BatchRenderGroupId {
   }
 
   friend bool operator<(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
-    return lhs.layer < rhs.layer || (lhs.layer == rhs.layer && lhs.name < rhs.name);
+    return std::tie(lhs.layer, lhs.name) < std::tie(rhs.layer, rhs.name);
   }
 
   friend bool operator<=(const BatchRenderGroupId& lhs, const BatchRenderGroupId& rhs) {
@@ -46,11 +46,7 @@ struct BatchRenderGroupId {
     return !(lhs < rhs);
   }
 
-  BatchRenderGroupId& operator=(const BatchRenderGroupId& rhs) = default;
-  BatchRenderGroupId(const BatchRenderGroupId& rhs) = default;
-  BatchRenderGroupId(BatchRenderGroupId&& rhs) = default;
-
-  explicit BatchRenderGroupId(float layer = 0, std::string name = kGlobalGroup)
+  explicit BatchRenderGroupId(float layer = 0, std::string name = std::string(kGlobalGroup))
       : name(std::move(name)), layer(layer) {}
 
   template <typename H>
@@ -81,12 +77,12 @@ struct BatchRenderGroupState {
 // ID defines a sub-ordering underneath this group name to ensure correct rendering order.
 class BatchRenderGroupStateManager {
  public:
-  [[nodiscard]] BatchRenderGroupState GetGroupState(const std::string& group_name) const {
+  [[nodiscard]] BatchRenderGroupState GetGroupState(std::string_view group_name) const {
     return group_name_to_state_.contains(group_name) ? group_name_to_state_.at(group_name)
                                                      : BatchRenderGroupState();
   }
 
-  void SetGroupState(const std::string& group_name, BatchRenderGroupState state) {
+  void SetGroupState(std::string_view group_name, BatchRenderGroupState state) {
     group_name_to_state_[group_name] = state;
   }
 
