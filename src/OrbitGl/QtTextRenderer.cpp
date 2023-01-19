@@ -294,7 +294,7 @@ QString QtTextRenderer::ElideText(const QString& text, int max_width,
   int width_lookup = 0;
   int characters = 0;
   while (characters < text.length()) {
-    char c = text[characters].toLatin1();
+    const char c = text[characters].toLatin1();
     const int next_char_width = lookup[static_cast<unsigned char>(c)];
     if (MaximumHeuristic(width_lookup + next_char_width, characters, font_size) > max_width) {
       break;
