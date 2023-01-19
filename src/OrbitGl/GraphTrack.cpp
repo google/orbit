@@ -19,6 +19,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/FastRenderingUtils.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"

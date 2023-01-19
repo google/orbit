@@ -4,6 +4,9 @@
 
 #include "OrbitGl/MultivariateTimeSeries.h"
 
+#include <algorithm>
+#include <iterator>
+
 #include "OrbitBase/Logging.h"
 
 namespace orbit_gl {

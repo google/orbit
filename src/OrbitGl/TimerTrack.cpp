@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <absl/flags/flag.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 #include <stddef.h>

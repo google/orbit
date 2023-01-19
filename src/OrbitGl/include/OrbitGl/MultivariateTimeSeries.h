@@ -5,12 +5,18 @@
 #ifndef ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 #define ORBIT_GL_MULTIVARIATE_TIME_SERIES_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/btree_map.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/types/span.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <limits>
 #include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace orbit_gl {
 

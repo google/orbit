@@ -6,6 +6,7 @@
 #define ORBIT_GL_GRAPH_TRACK_H_
 
 #include <GteVector.h>
+#include <absl/types/span.h>
 #include <stddef.h>
 #include <stdint.h>
 
