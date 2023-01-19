@@ -21,10 +21,6 @@ target_link_libraries(SymbolProvider PUBLIC
         ClientData
         OrbitBase)
 
-if(WIN32)
-  target_compile_features(SymbolProvider PRIVATE cxx_std_20)
-endif()
-
 add_executable(SymbolProviderTests)
 
 target_sources(SymbolProviderTests PRIVATE
@@ -37,7 +33,3 @@ target_link_libraries(SymbolProviderTests PRIVATE
         GTest::Main)
     
 register_test(SymbolProviderTests)
-
-if(WIN32)
-  target_compile_features(SymbolProviderTests PRIVATE cxx_std_20)
-endif()

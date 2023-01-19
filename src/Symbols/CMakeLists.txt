@@ -25,10 +25,6 @@ target_link_libraries(Symbols PUBLIC
         OrbitBase
         SymbolProvider)
 
-if(WIN32)
-  target_compile_features(Symbols PRIVATE cxx_std_20)
-endif()
-
 add_executable(SymbolsTests)
 target_sources(SymbolsTests PRIVATE
         SymbolHelperTest.cpp

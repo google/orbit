@@ -38,11 +38,6 @@ target_link_libraries(
                 ClientSymbols
                 OrbitBase)
 
-if(WIN32)
-  target_compile_features(MizarData PRIVATE cxx_std_20)
-endif()
-
-
 add_executable(MizarDataTests)
 
 target_sources(MizarDataTests PRIVATE
@@ -59,7 +54,3 @@ target_link_libraries(MizarDataTests PRIVATE GrpcProtos
                                                 GTest::Main
                                                 TestUtils)
 register_test(MizarDataTests)
-
-if(WIN32)
-  target_compile_features(MizarDataTests PRIVATE cxx_std_20)
-endif()

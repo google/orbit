@@ -195,10 +195,6 @@ elseif(TARGET OpenGL::GL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GL)
 endif()
 
-if(WIN32)
-  target_compile_features(OrbitGl PRIVATE cxx_std_20)
-endif()
-
 add_executable(OrbitGlTests)
 
 target_sources(OrbitGlTests PRIVATE
@@ -245,8 +241,4 @@ target_link_libraries(
           GTest::Main)
 
 register_test(OrbitGlTests)
-
-if(WIN32)
-  target_compile_features(OrbitGlTests PRIVATE cxx_std_20)
-endif()
 
