@@ -28,8 +28,8 @@ void GraphTrackDataAggregator::SetEntry(uint64_t start_tick, uint64_t end_tick,
                                         absl::Span<const float> values) {
   ORBIT_CHECK(start_tick <= end_tick);
 
-  std::vector<float> entry_values(values.begin(), values.end());
-  accumulated_entry_ = AccumulatedEntry{start_tick, end_tick, entry_values, entry_values};
+  accumulated_entry_ = AccumulatedEntry{
+      start_tick, end_tick, {values.begin(), values.end()}, {values.begin(), values.end()}};
 }
 
 void GraphTrackDataAggregator::MergeDataIntoEntry(uint64_t start_tick, uint64_t end_tick,
