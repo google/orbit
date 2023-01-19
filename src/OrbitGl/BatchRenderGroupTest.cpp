@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <gtest/gtest.h>
 
-#include <unordered_map>
+#include <string>
 
 #include "OrbitGl/BatchRenderGroup.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace orbit_gl {
 namespace {
