@@ -189,6 +189,10 @@ add_custom_command(TARGET OrbitGl POST_BUILD COMMAND ${CMAKE_COMMAND}
                    -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/stadia-default-frame-track.opr
                    ${CMAKE_BINARY_DIR}/bin/autopresets/stadia-default-frame-track.opr)
 
+if(WIN32)
+  target_compile_features(OrbitGl PRIVATE cxx_std_20)
+endif()
+
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
 elseif(TARGET OpenGL::GL)
@@ -246,3 +250,8 @@ target_link_libraries(
           GTest::Main)
 
 register_test(OrbitGlTests)
+
+if(WIN32)
+  target_compile_features(OrbitGlTests PRIVATE cxx_std_20)
+endif()
+

@@ -74,7 +74,6 @@ target_link_libraries(DataViewsTests PRIVATE
 
 register_test(DataViewsTests)
 
-
 if(WIN32)
   target_compile_features(DataViewsTests PRIVATE cxx_std_20)
 endif()
