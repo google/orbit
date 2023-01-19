@@ -368,3 +368,14 @@ void OrbitTreeView::columnResized(int column, int /*oldSize*/, int new_size) {
     column_ratios_[column] = static_cast<float>(new_size) / size().width();
   }
 }
+
+int OrbitTreeView::sizeHintForColumn(int column) const {
+  if (model_ == nullptr) {
+    return -1;
+  }
+  orbit_data_views::DataView* data_view = model_->GetDataView();
+  if (data_view == nullptr) {
+    return -1;
+  }
+  return static_cast<int>(data_view->GetColumns().at(column).ratio * static_cast<float>(width()));
+}

@@ -57,6 +57,9 @@ class OrbitTreeView : public QTreeView {
  public slots:  // NOLINT(readability-redundant-access-specifiers)
   void columnResized(int column, int old_size, int new_size);
 
+ protected:
+  [[nodiscard]] int sizeHintForColumn(int column) const override;
+
   // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
   // and remove the "public slots" specifier
  private slots:
