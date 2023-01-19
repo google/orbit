@@ -20,6 +20,7 @@ target_sources(
          include/OrbitGl/BasicPageFaultsTrack.h
          include/OrbitGl/Batcher.h
          include/OrbitGl/BatcherInterface.h
+         include/OrbitGl/BatchRenderGroup.h
          include/OrbitGl/Button.h
          include/OrbitGl/CallstackThreadBar.h
          include/OrbitGl/CallTreeView.h
@@ -100,6 +101,7 @@ target_sources(
           AnnotationTrack.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
+          Batcher.cpp
           Batcher.cpp
           Button.cpp
           CallstackThreadBar.cpp
@@ -213,6 +215,7 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
+               BatchRenderGroupTest.cpp
                ButtonTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
