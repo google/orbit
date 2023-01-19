@@ -294,8 +294,7 @@ TEST(OpenGlBatcher, StatisticsAreReportedCorrectly) {
   // This should have added a block in the box blockchain for the box geometry, picking color, and
   // regular color However, the block chain directly allocates the first block for all types of
   // geometry, so we also expect the lines and triangle blocks to exist.
-  expected_statistics.reserved_memory =
-      kExpectedBoxBlockSize + kExpectedLineBlockSize + kExpectedTriangleBlockSize;
+  expected_statistics.reserved_memory = kExpectedBoxBlockSize;
   expected_statistics.draw_calls = 1;
   expected_statistics.stored_layers = 1;
   expected_statistics.stored_vertices = 4;
@@ -305,6 +304,7 @@ TEST(OpenGlBatcher, StatisticsAreReportedCorrectly) {
   batcher.AddTriangleHelper(Triangle(Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)), 0, Color(0, 255, 0, 255));
 
   // Adding a line and a triangle should only use the already existing blocks
+  expected_statistics.reserved_memory += kExpectedLineBlockSize + kExpectedTriangleBlockSize;
   expected_statistics.draw_calls += 2;
   expected_statistics.stored_vertices += 2 + 3;
   EXPECT_EQ(expected_statistics, batcher.GetStatistics());

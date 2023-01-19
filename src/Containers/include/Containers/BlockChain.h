@@ -99,17 +99,28 @@ class BlockIterator final {
 template <class T, uint32_t BlockSize>
 class BlockChain final {
  public:
-  BlockChain() : size_(0) { root_ = current_ = new Block<T, BlockSize>(nullptr); }
+  BlockChain() : size_(0) { root_ = current_ = nullptr; }
 
   BlockChain(const BlockChain& other) = delete;
 
   BlockChain& operator=(const BlockChain& other) = delete;
 
-  BlockChain(BlockChain&& other) = delete;
+  BlockChain(BlockChain&& other) { *this = std::move(other); }
 
-  BlockChain& operator=(BlockChain&& other) = delete;
+  BlockChain& operator=(BlockChain&& other) {
+    size_ = other.size_;
+    root_ = other.root_;
+    current_ = other.current_;
+
+    other.root_ = other.current_ = nullptr;
+    other.size_ = 0;
+
+    return *this;
+  }
 
   ~BlockChain() {
+    if (root_ == nullptr) return;
+
     // Find last block in chain
     while (current_->HasNext()) {
       current_ = current_->mutable_next();
@@ -138,6 +149,11 @@ class BlockChain final {
 
   template <class... Args>
   T& emplace_back(Args&&... args) {
+    if (root_ == nullptr) {
+      root_ = new Block<T, BlockSize>(nullptr);
+      current_ = root_;
+    }
+
     if (current_->at_capacity()) AllocateOrRecycleBlock();
     T& new_item = current_->emplace_back(std::forward<Args>(args)...);
     ++size_;
@@ -145,6 +161,8 @@ class BlockChain final {
   }
 
   void clear() {
+    if (root_ == nullptr) return;
+
     root_->Reset();
     size_ = 0;
 

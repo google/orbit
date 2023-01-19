@@ -47,6 +47,24 @@ class MovableType {
 
 };  // namespace
 
+TEST(BlockChain, CreateAndMove) {
+  BlockChain<int, 1024> source_chain;
+  EXPECT_EQ(source_chain.root(), nullptr);
+  source_chain.emplace_back(1);
+  source_chain.emplace_back(2);
+  EXPECT_NE(source_chain.root(), nullptr);
+
+  BlockChain<int, 1024> target_chain(std::move(source_chain));
+  EXPECT_EQ(target_chain.size(), 2);
+  EXPECT_EQ(target_chain.root()->data()[0], 1);
+  EXPECT_EQ(source_chain.size(), 0);
+  EXPECT_EQ(source_chain.root(), nullptr);
+
+  source_chain.emplace_back(3);
+  EXPECT_EQ(source_chain.size(), 1);
+  EXPECT_EQ(source_chain.root()->data()[0], 3);
+}
+
 TEST(BlockChain, AddCopyableTypes) {
   CopyableType v1("hello world");
   CopyableType v2("or not");
