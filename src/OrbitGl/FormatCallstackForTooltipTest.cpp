@@ -40,10 +40,10 @@ constexpr const char* kFunctionNameWithSpecialChars = "void foo<int>(const Foo&)
 constexpr const char* kEscapedFunctionName = "void foo&lt;int&gt;(const Foo&amp;)";
 
 const CallstackInfo kEmptyCallstack{{}, CallstackType::kDwarfUnwindingError};
-const orbit_client_data::ModuleIdentifierProvider kEmptyModuleIdentifierProvider{};
+orbit_client_data::ModuleIdentifierProvider kEmptyModuleIdentifierProvider{};
 const CaptureData kEmptyCaptureData{
     {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
-const ModuleManager kModuleManager{{}};
+const ModuleManager kModuleManager{&kEmptyModuleIdentifierProvider};
 
 const CallstackInfo kOneFrameCallstack{{kFrame1}, CallstackType::kComplete};
 

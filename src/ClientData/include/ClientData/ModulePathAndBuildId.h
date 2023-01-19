@@ -15,7 +15,7 @@ struct ModulePathAndBuildId {
 
   [[nodiscard]] friend bool operator==(const ModulePathAndBuildId& lhs,
                                        const ModulePathAndBuildId& rhs) {
-    return lhs.module_path == rhs.module_path && lhs.build_id == lhs.build_id;
+    return lhs.module_path == rhs.module_path && lhs.build_id == rhs.build_id;
   }
   [[nodiscard]] friend bool operator!=(const ModulePathAndBuildId& lhs,
                                        const ModulePathAndBuildId& rhs) {
