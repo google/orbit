@@ -33,6 +33,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleIdentifierProvider.h
         include/ClientData/ModuleInMemory.h
         include/ClientData/ModuleManager.h
+        include/ClientData/ModulePathAndBuildId.h
         include/ClientData/PageFaultsInfo.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
@@ -69,7 +70,6 @@ target_sources(ClientData PRIVATE
         ModuleData.cpp
         ModuleIdentifierProvider.cpp
         ModuleManager.cpp
-        ModulePathAndBuildIdTest.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
         ScopeIdProvider.cpp
