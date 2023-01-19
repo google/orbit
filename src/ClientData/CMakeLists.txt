@@ -95,6 +95,10 @@ target_link_libraries(ClientData PUBLIC
         SymbolProvider
         xxHash::xxHash)
 
+if(WIN32)
+  target_compile_features(ClientData PRIVATE cxx_std_20)
+endif()
+
 add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
@@ -125,6 +129,10 @@ target_link_libraries(ClientDataTests PRIVATE
         GTest::Main)
 
 register_test(ClientDataTests)
+
+if(WIN32)
+  target_compile_features(ClientDataTests PRIVATE cxx_std_20)
+endif()
 
 add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
 target_link_libraries(
