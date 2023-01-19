@@ -9,20 +9,27 @@
 
 #include <QTimer>
 #include <chrono>
+#include <string_view>
 #include <variant>
 
 #include "OrbitBase/Future.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/VoidToMonostate.h"
+#include "OrbitBase/WhenAny.h"
 
 namespace orbit_qt_utils {
 
-// This helper type indicates an occured Timeout and is returned - wrapped in a future - by
-// `CreateTimeout`. It doesn't hold any data. It's most useful in conjunction with
-// `orbit_base::WhenAny` which returns a `std::variant` (wrapped in a future). You can determine
-// whether a timeout occured by checking whether it holds a value of type `Timeout`
-struct Timeout {};
+// This simple error type indicates a passed Timeout. See `CreateTimeout` and `WhenValueOrTimeout`
+// below on how to make use of it.
+struct Timeout {
+  [[nodiscard]] constexpr static std::string_view message() { return "The operation timed out."; }
+};
 
-// Returns a future that completes at the earliest when `duration` has passed.
+// Returns a future that completes at the earliest when `duration` has passed. Note that the timeout
+// is checked by the current thread's event loop. If that event loop is busy, this timeout will also
+// not expire.
 [[nodiscard]] inline orbit_base::Future<Timeout> CreateTimeout(std::chrono::milliseconds duration) {
   orbit_base::Promise<Timeout> promise{};
   orbit_base::Future<Timeout> future = promise.GetFuture();
@@ -39,27 +46,38 @@ struct Timeout {};
   return future;
 }
 
-// Returns a future that completes at the earliest when `duration` has passed.
+// Convenience overload of the previous function that takes an `absl::Duration` instead.
 [[nodiscard]] inline orbit_base::Future<Timeout> CreateTimeout(absl::Duration duration) {
   return CreateTimeout(absl::ToChronoMilliseconds(duration));
 }
 
-// This is a helper type alias that is useful in combination with WhenAny. It provides a nicer way
-// to write the value type of the future that is returned by WhenAny when given an arbitrary future
-// and a Future<Timeout>.
 template <typename T>
-using ValueOrTimeout = std::variant<T, Timeout>;
+using TimeoutOr = Result<T, Timeout>;
 
-// This is a helper type alias that is useful in combination with WhenAny. It provides a nicer way
-// to write the return type of WhenAny when given an arbitrary future and a Future<Timeout>.
+// This is a helper function to `CreateTimeout`. It returns a future that completes when either the
+// given future `value` completes or when `duration` passes - whatever happens first.
 template <typename T>
-using ValueOrTimeoutFuture = orbit_base::Future<std::variant<T, Timeout>>;
+orbit_base::Future<TimeoutOr<T>> WhenValueOrTimeout(const orbit_base::Future<T>& value,
+                                                    std::chrono::milliseconds duration) {
+  orbit_base::ImmediateExecutor executor{};
+  return orbit_base::WhenAny(value, CreateTimeout(duration))
+      .Then(&executor,
+            [](const std::variant<orbit_base::VoidToMonostate_t<T>, Timeout>& result)
+                -> TimeoutOr<T> {
+              if (result.index() == 1) return outcome::failure(std::get<1>(result));
+              if constexpr (std::is_same_v<T, void>) {
+                return outcome::success();
+              } else {
+                return outcome::success(std::get<0>(result));
+              }
+            });
+}
 
-// This function helps to checks whether the timeout has completed first when joined with another
-// future using `WhenAny`.
+// Convenience overload of the previous function that takes an `absl::Duration` instead.
 template <typename T>
-[[nodiscard]] bool HasTimedOut(const std::variant<T, Timeout>& value_or_timeout) {
-  return value_or_timeout.index() == 1;
+orbit_base::Future<TimeoutOr<T>> WhenValueOrTimeout(const orbit_base::Future<T>& value,
+                                                    absl::Duration duration) {
+  return WhenValueOrTimeout(value, absl::ToChronoMilliseconds(duration));
 }
 
 }  // namespace orbit_qt_utils
