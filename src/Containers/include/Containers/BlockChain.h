@@ -99,7 +99,7 @@ class BlockIterator final {
 template <class T, uint32_t BlockSize>
 class BlockChain final {
  public:
-  BlockChain() : size_(0) { root_ = current_ = nullptr; }
+  BlockChain() : root_{nullptr}, current_{nullptr}, size_{0} {}
 
   BlockChain(const BlockChain& other) = delete;
 
@@ -108,6 +108,8 @@ class BlockChain final {
   BlockChain(BlockChain&& other) { *this = std::move(other); }
 
   BlockChain& operator=(BlockChain&& other) {
+    if (this == &other) return *this;
+
     size_ = other.size_;
     root_ = other.root_;
     current_ = other.current_;

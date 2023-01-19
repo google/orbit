@@ -63,6 +63,11 @@ TEST(BlockChain, CreateAndMove) {
   source_chain.emplace_back(3);
   EXPECT_EQ(source_chain.size(), 1);
   EXPECT_EQ(source_chain.root()->data()[0], 3);
+
+  // Verify both block chains are fully decoupled
+  source_chain.emplace_back(10);
+  EXPECT_EQ(source_chain.size(), 1);
+  EXPECT_EQ(target_chain.size(), 2);
 }
 
 TEST(BlockChain, AddCopyableTypes) {
