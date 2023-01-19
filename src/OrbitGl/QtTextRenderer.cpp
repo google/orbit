@@ -24,7 +24,6 @@
 #include <cstring>
 #include <utility>
 
-#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGl/TranslationStack.h"
 #include "OrbitGl/Viewport.h"

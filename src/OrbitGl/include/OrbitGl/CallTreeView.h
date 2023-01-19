@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_CALL_TREE_VIEW_H_
 #define ORBIT_GL_CALL_TREE_VIEW_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/container/node_hash_map.h>
 #include <absl/hash/hash.h>
 #include <absl/types/span.h>
