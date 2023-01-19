@@ -107,9 +107,9 @@ class CallTreeNode {
  private:
   // absl::node_hash_map instead of absl::flat_hash_map as pointer stability is
   // needed for the CallTreeNode::parent_ field.
-  absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
-  absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
-  absl::node_hash_map<orbit_client_data::CallstackType, CallTreeUnwindErrorType>
+  absl::flat_hash_map<uint32_t, std::unique_ptr<CallTreeThread>> thread_children_;
+  absl::flat_hash_map<uint64_t, std::unique_ptr<CallTreeFunction>> function_children_;
+  absl::flat_hash_map<orbit_client_data::CallstackType, std::unique_ptr<CallTreeUnwindErrorType>>
       unwind_error_type_children_;
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).

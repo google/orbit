@@ -31,17 +31,17 @@ const std::vector<const CallTreeNode*>& CallTreeNode::children() const {
 
   children_cache_.emplace();
   for (const auto& tid_and_thread : thread_children_) {
-    children_cache_->push_back(&tid_and_thread.second);
+    children_cache_->push_back(tid_and_thread.second.get());
   }
   for (const auto& address_and_functions : function_children_) {
-    children_cache_->push_back(&address_and_functions.second);
+    children_cache_->push_back(address_and_functions.second.get());
   }
   if (unwind_errors_child_ != nullptr) {
     children_cache_->push_back(unwind_errors_child_.get());
   }
 
   for (const auto& error_type_and_unwind_error : unwind_error_type_children_) {
-    children_cache_->push_back(&error_type_and_unwind_error.second);
+    children_cache_->push_back(error_type_and_unwind_error.second.get());
   }
 
   return *children_cache_;
@@ -52,15 +52,15 @@ CallTreeThread* CallTreeNode::GetThreadOrNull(uint32_t thread_id) {
   if (thread_it == thread_children_.end()) {
     return nullptr;
   }
-  return &thread_it->second;
+  return thread_it->second.get();
 }
 
 CallTreeThread* CallTreeNode::AddAndGetThread(uint32_t thread_id, std::string thread_name) {
   const auto& [it, inserted] = thread_children_.try_emplace(
-      thread_id, CallTreeThread{thread_id, std::move(thread_name), this});
+      thread_id, std::make_unique<CallTreeThread>(thread_id, std::move(thread_name), this));
   ORBIT_CHECK(inserted);
   children_cache_.reset();
-  return &it->second;
+  return it->second.get();
 }
 
 CallTreeFunction* CallTreeNode::GetFunctionOrNull(uint64_t function_absolute_address) {
@@ -68,7 +68,7 @@ CallTreeFunction* CallTreeNode::GetFunctionOrNull(uint64_t function_absolute_add
   if (function_it == function_children_.end()) {
     return nullptr;
   }
-  return &function_it->second;
+  return function_it->second.get();
 }
 
 CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_address,
@@ -77,11 +77,11 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
                                                   std::string module_build_id) {
   const auto& [it, inserted] = function_children_.try_emplace(
       function_absolute_address,
-      CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
-                       std::move(module_build_id), this});
+      std::make_unique<CallTreeFunction>(function_absolute_address, std::move(function_name),
+                                         std::move(module_path), std::move(module_build_id), this));
   ORBIT_CHECK(inserted);
   children_cache_.reset();
-  return &it->second;
+  return it->second.get();
 }
 
 CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackType type) {
@@ -89,15 +89,15 @@ CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackType ty
   if (unwind_error_it == unwind_error_type_children_.end()) {
     return nullptr;
   }
-  return &unwind_error_it->second;
+  return unwind_error_it->second.get();
 }
 
 CallTreeUnwindErrorType* CallTreeNode::AddAndGetUnwindErrorType(CallstackType type) {
-  const auto& [it, inserted] =
-      unwind_error_type_children_.try_emplace(type, CallTreeUnwindErrorType{this, type});
+  const auto& [it, inserted] = unwind_error_type_children_.try_emplace(
+      type, std::make_unique<CallTreeUnwindErrorType>(this, type));
   ORBIT_CHECK(inserted);
   children_cache_.reset();
-  return &it->second;
+  return it->second.get();
 }
 
 CallTreeUnwindErrors* CallTreeNode::GetUnwindErrorsOrNull() { return unwind_errors_child_.get(); }
