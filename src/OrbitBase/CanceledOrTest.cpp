@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -48,6 +49,14 @@ TEST(CanceledOr, GetNotCanceledMoveOnly) {
 
   std::unique_ptr<int> moved_unique_ptr{GetNotCanceled(std::move(canceled_or_unique_ptr))};
   EXPECT_EQ(*moved_unique_ptr, 5);
+}
+
+TEST(Canceled, GetMessage) {
+  // We test whether the return type of `Canceled::message()` can be casted to a `std::string`
+  // (compile time check) and whether it returns some non-empty string (runtime check). There is no
+  // point in checking the actual string, as this would just duplicate the static string and does
+  // not add anything in terms of test coverage.
+  EXPECT_THAT(std::string{Canceled{}.message()}, testing::Not(testing::IsEmpty()));
 }
 
 }  // namespace orbit_base

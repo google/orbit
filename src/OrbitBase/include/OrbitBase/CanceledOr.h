@@ -5,6 +5,7 @@
 #ifndef ORBIT_BASE_CANCELED_OR_H_
 #define ORBIT_BASE_CANCELED_OR_H_
 
+#include <string_view>
 #include <utility>
 
 #include "OrbitBase/Logging.h"
@@ -13,7 +14,11 @@
 namespace orbit_base {
 
 // Type to indicate a CanceledOr type is canceled.
-struct Canceled {};
+struct Canceled {
+  [[nodiscard]] constexpr static std::string_view message() {
+    return "The operation was canceled.";
+  }
+};
 
 // CanceledOr can be used as the return type of an cancelable operation.
 // Check whether CanceledOr object is canceled, use orbit_base::IsCanceled or `._has_error()`.

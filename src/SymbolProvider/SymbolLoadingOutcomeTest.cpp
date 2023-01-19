@@ -49,7 +49,7 @@ TEST(SymbolLoadingOutcome, IsNotFound) {
 
 TEST(SymbolLoadingOutcome, GetNotFoundMessage) {
   SymbolLoadingOutcome outcome{kNotFound};
-  EXPECT_EQ(GetNotFoundMessage(outcome), kNotFound.message);
+  EXPECT_EQ(GetNotFoundMessage(outcome), kNotFound.message());
 }
 
 }  // namespace orbit_symbol_provider
