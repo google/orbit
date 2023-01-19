@@ -33,6 +33,15 @@ template <typename T>
 auto SaveUniquePtr(std::unique_ptr<T>* destination) {
   return [destination](std::unique_ptr<T> arg) { *destination = std::move(arg); };
 }
+
+// This is an error type - similar to ErrorMessage. We are not using ErrorMessage to make sure the
+// logic works with some unknown generic error type.
+struct ArbitraryError {
+  std::string message;
+};
+
+template <typename T>
+using ArbitraryErrorOr = Result<T, ArbitraryError>;
 }  // namespace
 
 namespace orbit_base {
@@ -93,16 +102,16 @@ TEST(Executor, ScheduleAfterIfSuccessShortCircuitOnErrorVoid) {
   std::unique_ptr<Action> action;
   EXPECT_CALL(executor, ScheduleImpl(testing::_)).Times(1).WillOnce(SaveUniquePtr(&action));
 
-  Promise<ErrorMessageOr<void>> promise{};
+  Promise<ArbitraryErrorOr<void>> promise{};
   auto future = promise.GetFuture();
   auto chained_future = executor.ScheduleAfterIfSuccess(future, []() {});
   EXPECT_FALSE(chained_future.IsFinished());
 
   constexpr const char* const kErrorMessage{"Error"};
-  promise.SetResult(ErrorMessage{kErrorMessage});
+  promise.SetResult(ArbitraryError{kErrorMessage});
   ASSERT_TRUE(chained_future.IsFinished());
   EXPECT_TRUE(chained_future.Get().has_error());
-  EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
+  EXPECT_EQ(chained_future.Get().error().message, kErrorMessage);
 
   EXPECT_EQ(executor.GetNumberOfWaitingContinuations(), 1);
   ASSERT_NE(action, nullptr);
@@ -115,7 +124,7 @@ TEST(Executor, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
   std::unique_ptr<Action> action;
   EXPECT_CALL(executor, ScheduleImpl(testing::_)).Times(1).WillOnce(SaveUniquePtr(&action));
 
-  Promise<ErrorMessageOr<int>> promise{};
+  Promise<ArbitraryErrorOr<int>> promise{};
   auto future = promise.GetFuture();
   auto chained_future = executor.ScheduleAfterIfSuccess(future, [](int value) {
     EXPECT_EQ(value, 42);
@@ -124,10 +133,10 @@ TEST(Executor, ScheduleAfterIfSuccessShortCircuitOnErrorInt) {
   EXPECT_FALSE(chained_future.IsFinished());
 
   constexpr const char* const kErrorMessage{"Error"};
-  promise.SetResult(ErrorMessage{kErrorMessage});
+  promise.SetResult(ArbitraryError{kErrorMessage});
   ASSERT_TRUE(chained_future.IsFinished());
   EXPECT_TRUE(chained_future.Get().has_error());
-  EXPECT_EQ(chained_future.Get().error().message(), kErrorMessage);
+  EXPECT_EQ(chained_future.Get().error().message, kErrorMessage);
 
   EXPECT_EQ(executor.GetNumberOfWaitingContinuations(), 1);
   ASSERT_NE(action, nullptr);
@@ -140,7 +149,7 @@ TEST(Executor, ScheduleAfterIfSuccessCallOnSuccessVoid) {
   std::unique_ptr<Action> action;
   EXPECT_CALL(executor, ScheduleImpl(testing::_)).Times(1).WillOnce(SaveUniquePtr(&action));
 
-  Promise<ErrorMessageOr<void>> promise{};
+  Promise<ArbitraryErrorOr<void>> promise{};
   auto future = promise.GetFuture();
   auto chained_future = executor.ScheduleAfterIfSuccess(future, []() {});
   EXPECT_EQ(action, nullptr);
@@ -158,7 +167,7 @@ TEST(Executor, ScheduleAfterIfSuccessCallOnSuccessInt) {
   std::unique_ptr<Action> action;
   EXPECT_CALL(executor, ScheduleImpl(testing::_)).Times(1).WillOnce(SaveUniquePtr(&action));
 
-  Promise<ErrorMessageOr<int>> promise{};
+  Promise<ArbitraryErrorOr<int>> promise{};
   auto future = promise.GetFuture();
   auto chained_future = executor.ScheduleAfterIfSuccess(future, [](int value) {
     EXPECT_EQ(value, 42);

@@ -62,17 +62,17 @@ class ImmediateExecutor {
     return UnwrapFuture(resulting_future);
   }
 
-  template <typename T, typename F>
-  auto ScheduleAfterIfSuccess(const Future<ErrorMessageOr<T>>& future, F&& invocable) {
+  template <typename T, typename E, typename F>
+  auto ScheduleAfterIfSuccess(const Future<Result<T, E>>& future, F&& invocable) {
     ORBIT_CHECK(future.IsValid());
 
     using ResultType = typename ContinuationReturnType<T, F>::Type;
-    using ReturnType = typename EnsureWrappedInErrorMessageOr<ResultType>::Type;
+    using ReturnType = typename EnsureWrappedInResult<ResultType, E>::Type;
     orbit_base::Promise<ReturnType> promise{};
     orbit_base::Future<ReturnType> resulting_future = promise.GetFuture();
 
     auto continuation = [invocable = std::forward<F>(invocable),
-                         promise = std::move(promise)](const ErrorMessageOr<T>& result) mutable {
+                         promise = std::move(promise)](const Result<T, E>& result) mutable {
       HandleErrorAndSetResultInPromise<ReturnType> helper{&promise};
       helper.Call(invocable, result);
     };

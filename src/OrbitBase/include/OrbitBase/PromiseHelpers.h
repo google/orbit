@@ -51,8 +51,8 @@ template <typename R>
 struct HandleErrorAndSetResultInPromise {
   orbit_base::Promise<R>* promise;
 
-  template <typename Invocable, typename T>
-  void Call(Invocable&& invocable, const ErrorMessageOr<T>& input) {
+  template <typename Invocable, typename T, typename E>
+  void Call(Invocable&& invocable, const Result<T, E>& input) {
     if (input.has_error()) {
       promise->SetResult(outcome::failure(input.error()));
       return;
@@ -120,16 +120,16 @@ struct ContinuationReturnType<void, Invocable> {
 // is already a ErrorMessageOr.
 //
 // Examples:
-// EnsureWrappedInErrorMessageOr<int>::Type == ErrorMessageOr<int>
-// EnsureWrappedInErrorMessageOr<ErrorMessageOr<int>>::Type == ErrorMessageOr<int>
-template <typename T>
-struct EnsureWrappedInErrorMessageOr {
-  using Type = ErrorMessageOr<T>;
+// EnsureWrappedInResult<int, ErrorMessage>::Type == Result<int, ErrorMessage>
+// EnsureWrappedInResult<Result<int, ErrorMessage>, ErrorMessage>::Type == Result<int, ErrorMessage>
+template <typename T, typename E>
+struct EnsureWrappedInResult {
+  using Type = Result<T, E>;
 };
 
-template <typename T>
-struct EnsureWrappedInErrorMessageOr<ErrorMessageOr<T>> {
-  using Type = ErrorMessageOr<T>;
+template <typename T, typename E>
+struct EnsureWrappedInResult<Result<T, E>, E> {
+  using Type = Result<T, E>;
 };
 
 }  // namespace orbit_base

@@ -156,13 +156,13 @@ class Executor : public std::enable_shared_from_this<Executor> {
   // `future` has completed, and only if `future` returns a non-error result.
   //
   // Note: The continuation is only executed if `*this` is still alive when `future` completes.
-  template <typename T, typename F>
-  auto ScheduleAfterIfSuccess(const orbit_base::Future<ErrorMessageOr<T>>& future, F&& functor) {
+  template <typename T, typename E, typename F>
+  auto ScheduleAfterIfSuccess(const orbit_base::Future<Result<T, E>>& future, F&& functor) {
     ORBIT_CHECK(future.IsValid());
 
     using ContinuationReturnType = typename orbit_base::ContinuationReturnType<T, F>::Type;
     using PromiseReturnType =
-        typename orbit_base::EnsureWrappedInErrorMessageOr<ContinuationReturnType>::Type;
+        typename orbit_base::EnsureWrappedInResult<ContinuationReturnType, E>::Type;
 
     orbit_base::Promise<PromiseReturnType> promise{};
     orbit_base::Future<PromiseReturnType> resulting_future = promise.GetFuture();
@@ -171,7 +171,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
     auto function_reference = waiting_continuations_.begin();
 
     auto continuation = [this, function_reference, executor_handle = GetExecutorHandle(),
-                         promise = std::move(promise)](const ErrorMessageOr<T>& argument) mutable {
+                         promise = std::move(promise)](const Result<T, E>& argument) mutable {
       absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
       if (executor_handle.data_->executor_ == nullptr) return;
 
