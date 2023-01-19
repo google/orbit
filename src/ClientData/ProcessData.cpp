@@ -77,7 +77,6 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
     std::optional<orbit_client_data::ModuleIdentifier> module_id_opt =
         module_identifier_provider_->GetModuleIdentifier(
             {.module_path = module_info.file_path(), .build_id = module_info.build_id()});
-    ORBIT_CHECK(module_id_opt.has_value());
     const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
         module_info.address_start(), module_info.address_start(), module_info.address_end(),
         module_id_opt.value());

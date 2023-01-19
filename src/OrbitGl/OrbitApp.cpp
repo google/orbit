@@ -847,7 +847,6 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   ORBIT_CHECK(module != nullptr);
   const std::optional<ModuleIdentifier> module_identifier =
       module_identifier_provider_.GetModuleIdentifier(module_path_and_build_id);
-  ORBIT_CHECK(module_identifier.has_value());
 
   const bool is_64_bit = process_->is_64_bit();
   std::optional<uint64_t> absolute_address =

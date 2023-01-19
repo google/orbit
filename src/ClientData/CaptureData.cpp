@@ -32,12 +32,29 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace orbit_client_data {
 
+namespace {
+ProcessData CreateProcessData(uint32_t process_id, std::string_view executable_path_string,
+                              const ModuleIdentifierProvider* module_identifier_provider) {
+  ProcessInfo process_info;
+  process_info.set_pid(process_id);
+  std::filesystem::path executable_path{std::string(executable_path_string)};
+  process_info.set_full_path(executable_path.string());
+  process_info.set_name(executable_path.filename().string());
+  process_info.set_is_64_bit(true);
+  ORBIT_CHECK(module_identifier_provider != nullptr);
+
+  return ProcessData{process_info, module_identifier_provider};
+}
+}  // namespace
+
 CaptureData::CaptureData(CaptureStarted capture_started,
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids,
                          DataSource data_source,
                          const ModuleIdentifierProvider* module_identifier_provider)
     : capture_started_(std::move(capture_started)),
+      process_(CreateProcessData(capture_started_.process_id(), capture_started_.executable_path(),
+                                 module_identifier_provider)),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
@@ -45,15 +62,6 @@ CaptureData::CaptureData(CaptureStarted capture_started,
       thread_track_data_provider_(
           std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)),
       all_scopes_(std::make_shared<ScopeStatsCollection>()) {
-  ProcessInfo process_info;
-  process_info.set_pid(capture_started_.process_id());
-  std::filesystem::path executable_path{capture_started_.executable_path()};
-  process_info.set_full_path(executable_path.string());
-  process_info.set_name(executable_path.filename().string());
-  process_info.set_is_64_bit(true);
-  ORBIT_CHECK(module_identifier_provider != nullptr);
-  process_.emplace(process_info, module_identifier_provider);
-
   for (const auto& instrumented_function :
        capture_started_.capture_options().instrumented_functions()) {
     instrumented_functions_.insert_or_assign(instrumented_function.function_id(),
@@ -221,9 +229,9 @@ void CaptureData::InsertAddressInfo(LinuxAddressInfo address_info) {
   address_infos_.emplace(absolute_address, std::move(address_info));
 }
 
-uint32_t CaptureData::process_id() const { return process_->pid(); }
+uint32_t CaptureData::process_id() const { return process_.pid(); }
 
-std::string CaptureData::process_name() const { return process_->name(); }
+std::string CaptureData::process_name() const { return process_.name(); }
 
 void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {

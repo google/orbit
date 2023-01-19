@@ -617,13 +617,11 @@ TEST(ProcessData, RemapModule) {
 }
 
 class ProcessDataModuleIntersectionTest : public ::testing::Test {
+ public:
+  ProcessDataModuleIntersectionTest() : process_{CreateProcessData(&module_identifier_provider_)} {}
+
  protected:
-  void SetUp() override {
-    ProcessInfo info;
-    info.set_name(kProcessName);
-    process_ = std::make_unique<ProcessData>(info, &module_identifier_provider_);
-    process_->UpdateModuleInfos(initial_mapping_);
-  }
+  void SetUp() override { process_.UpdateModuleInfos(initial_mapping_); }
 
   static constexpr const char* kProcessName = "Test Name";
 
@@ -664,27 +662,33 @@ class ProcessDataModuleIntersectionTest : public ::testing::Test {
     return module_info;
   }
 
-  std::unique_ptr<ProcessData> process_;
   ModuleIdentifierProvider module_identifier_provider_;
-
   const std::vector<ModuleInfo> initial_mapping_{
       CreateModule(kModulePath0, kBuildId0, kStartAddress0, kEndAddress0),
       CreateModule(kModulePath1, kBuildId1, kStartAddress1, kEndAddress1),
       CreateModule(kModulePath2, kBuildId2, kStartAddress2, kEndAddress2),
       CreateModule(kModulePath3, kBuildId3, kStartAddress3, kEndAddress3)};
+  ProcessData process_;
+
+ private:
+  static ProcessData CreateProcessData(const ModuleIdentifierProvider* module_identifier_provider) {
+    ProcessInfo info;
+    info.set_name(kProcessName);
+    return ProcessData{info, module_identifier_provider};
+  }
 };
 
 TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 4);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 150, 250);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 3);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 3);
 
   // Non intersecting modules are still there
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress0);
+    const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -695,7 +699,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress3);
+    const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -707,7 +711,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
 
   {
     // We can find the new module
-    const auto result = process_->FindModuleByAddress(150);
+    const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -717,21 +721,21 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
     EXPECT_EQ(result.value().end(), 250);
 
     // Intersecting modules are gone
-    EXPECT_THAT(process_->FindModuleByAddress(148), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_->FindModuleByAddress(250), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_->FindModuleByAddress(270), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(148), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(250), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(270), HasError("Unable to find module for address"));
   }
 }
 
 TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBorders) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 100, 300);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 3);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 3);
 
   // Non intersecting modules are still there
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress0);
+    const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -742,7 +746,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress3);
+    const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -754,7 +758,7 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
 
   {
     // We can find the new module
-    const auto result = process_->FindModuleByAddress(150);
+    const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -768,13 +772,13 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModulesWithMatchingBor
 TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) {
   // Address range is fully inside another module's address range
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 110, 190);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 4);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   // Non intersecting modules are still there
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress0);
+    const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -785,7 +789,7 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress2);
+    const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -796,7 +800,7 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress3);
+    const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -808,7 +812,7 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
 
   {
     // We can find the new module
-    const auto result = process_->FindModuleByAddress(150);
+    const auto result = process_.FindModuleByAddress(150);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -818,19 +822,19 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
     EXPECT_EQ(result.value().end(), 190);
 
     // Original module is gone
-    EXPECT_THAT(process_->FindModuleByAddress(108), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_->FindModuleByAddress(190), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(108), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(190), HasError("Unable to find module for address"));
   }
 }
 
 TEST_F(ProcessDataModuleIntersectionTest, OverlapsWithEverything) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 10, 450);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 1);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 1);
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress0);
+    const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -843,12 +847,12 @@ TEST_F(ProcessDataModuleIntersectionTest, OverlapsWithEverything) {
 
 TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 10, 90);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 4);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   {
-    const auto result = process_->FindModuleByAddress(50);
+    const auto result = process_.FindModuleByAddress(50);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -858,12 +862,12 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
     EXPECT_EQ(result.value().end(), 90);
 
     // Original module is gone
-    EXPECT_THAT(process_->FindModuleByAddress(90), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(90), HasError("Unable to find module for address"));
   }
 
   // Non intersecting modules are still there
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress1);
+    const auto result = process_.FindModuleByAddress(kStartAddress1);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -874,7 +878,7 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress2);
+    const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -885,7 +889,7 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress3);
+    const auto result = process_.FindModuleByAddress(kStartAddress3);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -898,12 +902,12 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
 
 TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   ModuleInfo intersecting_module = CreateModule(kNewModulePath, kNewBuildId, 350, 450);
-  process_->AddOrUpdateModuleInfo(intersecting_module);
+  process_.AddOrUpdateModuleInfo(intersecting_module);
 
-  EXPECT_EQ(process_->GetMemoryMapCopy().size(), 4);
+  EXPECT_EQ(process_.GetMemoryMapCopy().size(), 4);
 
   {
-    const auto result = process_->FindModuleByAddress(370);
+    const auto result = process_.FindModuleByAddress(370);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -913,12 +917,12 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
     EXPECT_EQ(result.value().end(), 450);
 
     // Original module is gone
-    EXPECT_THAT(process_->FindModuleByAddress(310), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(310), HasError("Unable to find module for address"));
   }
 
   // Non intersecting modules are still there
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress0);
+    const auto result = process_.FindModuleByAddress(kStartAddress0);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -929,7 +933,7 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress1);
+    const auto result = process_.FindModuleByAddress(kStartAddress1);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
@@ -940,7 +944,7 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
   }
 
   {
-    const auto result = process_->FindModuleByAddress(kStartAddress2);
+    const auto result = process_.FindModuleByAddress(kStartAddress2);
     ASSERT_THAT(result, HasNoError());
     EXPECT_EQ(result.value().module_id(),
               module_identifier_provider_
