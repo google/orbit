@@ -94,7 +94,7 @@ std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(std::string_view 
   std::set<std::string> build_ids;
 
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
-    std::optional<orbit_symbol_provider::ModulePathAndBuildId> current_module_path_and_build_id =
+    std::optional<ModulePathAndBuildId> current_module_path_and_build_id =
         module_identifier_provider_->GetModulePathAndBuildId(module_in_memory.module_id());
     ORBIT_CHECK(current_module_path_and_build_id.has_value());
     if (current_module_path_and_build_id->module_path == module_path) {
@@ -170,7 +170,7 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
 }
 
 std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(
-    const orbit_client_data::ModuleIdentifier& module_identifier) const {
+    orbit_client_data::ModuleIdentifier module_identifier) const {
   absl::MutexLock lock(&mutex_);
   std::vector<uint64_t> result;
   for (const auto& [start_address, module_in_memory] : start_address_to_module_in_memory_) {
@@ -202,7 +202,7 @@ std::map<uint64_t, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
 }
 
 bool ProcessData::IsModuleLoadedByProcess(
-    const orbit_client_data::ModuleIdentifier& module_identifier) const {
+    orbit_client_data::ModuleIdentifier module_identifier) const {
   absl::MutexLock lock(&mutex_);
   return std::any_of(
       start_address_to_module_in_memory_.begin(), start_address_to_module_in_memory_.end(),
@@ -211,12 +211,12 @@ bool ProcessData::IsModuleLoadedByProcess(
 
 std::vector<orbit_client_data::ModuleIdentifier> ProcessData::GetUniqueModuleIdentifiers() const {
   absl::MutexLock lock(&mutex_);
-  absl::flat_hash_set<orbit_client_data::ModuleIdentifier> module_keys;
+  absl::flat_hash_set<orbit_client_data::ModuleIdentifier> module_ids;
   for (const auto& [unused_address, module_in_memory] : start_address_to_module_in_memory_) {
-    module_keys.insert(module_in_memory.module_id());
+    module_ids.insert(module_in_memory.module_id());
   }
 
-  return {module_keys.begin(), module_keys.end()};
+  return {module_ids.begin(), module_ids.end()};
 }
 
 }  // namespace orbit_client_data

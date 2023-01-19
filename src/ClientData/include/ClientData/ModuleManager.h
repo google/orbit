@@ -22,9 +22,10 @@
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleInMemory.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
-#include "SymbolProvider/ModulePathAndBuildId.h"
+#include "OrbitBase/Logging.h"
 #include "absl/container/node_hash_map.h"
 #include "absl/synchronization/mutex.h"
 
@@ -33,7 +34,9 @@ namespace orbit_client_data {
 class ModuleManager final {
  public:
   explicit ModuleManager(ModuleIdentifierProvider* module_identifier_provider)
-      : module_identifier_provider_{module_identifier_provider} {};
+      : module_identifier_provider_{module_identifier_provider} {
+    ORBIT_CHECK(module_identifier_provider != nullptr);
+  };
 
   [[nodiscard]] const ModuleData* GetModuleByModuleInMemoryAndAbsoluteAddress(
       const ModuleInMemory& module_in_memory, uint64_t absolute_address) const;
@@ -42,15 +45,15 @@ class ModuleManager final {
       const ModuleInMemory& module_in_memory, uint64_t absolute_address);
 
   [[nodiscard]] const ModuleData* GetModuleByModulePathAndBuildId(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const;
+      const ModulePathAndBuildId& module_path_and_build_id) const;
 
   [[nodiscard]] ModuleData* GetMutableModuleByModulePathAndBuildId(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
+      const ModulePathAndBuildId& module_path_and_build_id);
 
   [[nodiscard]] const ModuleData* GetModuleByModuleIdentifier(
-      const orbit_client_data::ModuleIdentifier& module_id) const;
+      orbit_client_data::ModuleIdentifier module_id) const;
   [[nodiscard]] ModuleData* GetMutableModuleByModuleIdentifier(
-      const orbit_client_data::ModuleIdentifier& module_id);
+      orbit_client_data::ModuleIdentifier module_id);
   // Add new modules for the module_infos that do not exist yet, and update the modules that do
   // exist. If the update changed the module in a way that symbols were not valid anymore, the
   // symbols are discarded, i.e., the module is no longer loaded. This method returns the list of
@@ -70,13 +73,12 @@ class ModuleManager final {
 
  private:
   [[nodiscard]] const ModuleData* GetModuleByModuleIdentifierInternal(
-      const orbit_client_data::ModuleIdentifier& module_id) const
-      ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+      orbit_client_data::ModuleIdentifier module_id) const ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   [[nodiscard]] ModuleData* GetMutableModuleByModuleIdentifierInternal(
-      const orbit_client_data::ModuleIdentifier& module_id) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+      orbit_client_data::ModuleIdentifier module_id) ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   mutable absl::Mutex mutex_;
-  ModuleIdentifierProvider* module_identifier_provider_;
+  ModuleIdentifierProvider* module_identifier_provider_ ABSL_GUARDED_BY(mutex_);
   // We are sharing pointers to that entries and ensure reference stability by using node_hash_map
   // Map of ModuleIdentifier -> ModuleData (ModuleIdentifier is file_path and build_id)
   absl::flat_hash_map<orbit_client_data::ModuleIdentifier, std::unique_ptr<ModuleData>> module_map_

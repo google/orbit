@@ -88,10 +88,10 @@ TEST(ModuleManager, GetMutableModuleByModuleIdentifier) {
 }
 
 TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
-  constexpr const char* kName = "name of module";
-  constexpr const char* kFilePath = "path/of/module";
+  static const std::string kName = "name of module";
+  static const std::string kFilePath = "path/of/module";
   constexpr uint64_t kFileSize = 300;
-  constexpr const char* kBuildId = "build id 1";
+  static const std::string kBuildId = "build id 1";
   constexpr uint64_t kLoadBias = 0x4000;
   constexpr uint64_t kExecutableSegmentOffset = 0x25;
 
@@ -109,7 +109,7 @@ TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
 
   std::optional<ModuleIdentifier> module_identifier =
       module_identifier_provider.GetModuleIdentifier(
-          {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
+          {.module_path = kFilePath, .build_id = kBuildId});
   ASSERT_TRUE(module_identifier.has_value());
   ModuleInMemory module_in_memory{0x1000, 0x2000, module_identifier.value()};
 
@@ -146,9 +146,9 @@ TEST(ModuleManager, GetModuleByModuleInMemoryAndAddress) {
 }
 
 TEST(ModuleManager, AddOrUpdateModules) {
-  constexpr const char* kName = "name of module";
-  constexpr const char* kFilePath = "path/of/module";
-  constexpr const char* kBuildId = "";
+  static const std::string kName = "name of module";
+  static const std::string kFilePath = "path/of/module";
+  static const std::string kBuildId = "";
   constexpr uint64_t kFileSize = 300;
   constexpr uint64_t kLoadBias = 0x400;
 
@@ -166,7 +166,7 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_TRUE(unloaded_modules.empty());
 
   ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(
-      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
+      {.module_path = kFilePath, .build_id = kBuildId});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -215,7 +215,7 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->GetLoadedSymbolsCompleteness(), ModuleData::SymbolCompleteness::kDebugSymbols);
 
   // Change the build id: this creates a new module.
-  constexpr const char* kDifferentBuildId = "different build id";
+  static const std::string kDifferentBuildId = "different build id";
   module_info.set_build_id(kDifferentBuildId);
   unloaded_modules = module_manager.AddOrUpdateModules({module_info});
   EXPECT_EQ(module_manager.GetAllModuleData().size(), 2);
@@ -239,16 +239,16 @@ TEST(ModuleManager, AddOrUpdateModules) {
   EXPECT_EQ(module->file_size(), kFileSize);
 
   const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
-      {.module_path = std::string(different_path), .build_id = std::string(kDifferentBuildId)});
+      {.module_path = different_path, .build_id = kDifferentBuildId});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);
 }
 
 TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
-  constexpr const char* kName = "name of module";
-  constexpr const char* kFilePath = "path/of/module";
-  constexpr const char* kBuildId = "";
+  static const std::string kName = "name of module";
+  static const std::string kFilePath = "path/of/module";
+  static const std::string kBuildId = "";
   constexpr uint64_t kFileSize = 300;
   constexpr uint64_t kLoadBias = 0x400;
 
@@ -266,7 +266,7 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_TRUE(not_changed_modules.empty());
 
   ModuleData* module = module_manager.GetMutableModuleByModulePathAndBuildId(
-      {.module_path = std::string(kFilePath), .build_id = std::string(kBuildId)});
+      {.module_path = kFilePath, .build_id = kBuildId});
 
   ASSERT_NE(module, nullptr);
   EXPECT_EQ(module->name(), kName);
@@ -311,7 +311,7 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
             ModuleData::SymbolCompleteness::kDebugSymbols);
 
   // Change the build id: this creates a new module.
-  constexpr const char* kDifferentBuildId = "different build id";
+  static const std::string kDifferentBuildId = "different build id";
   module_info.set_build_id(kDifferentBuildId);
   not_changed_modules = module_manager.AddOrUpdateNotLoadedModules({module_info});
   EXPECT_EQ(module_manager.GetAllModuleData().size(), 2);
@@ -335,7 +335,7 @@ TEST(ModuleManager, AddOrUpdateNotLoadedModules) {
   EXPECT_EQ(module->file_size(), kFileSize);
 
   const ModuleData* different_module = module_manager.GetModuleByModulePathAndBuildId(
-      {.module_path = std::string(different_path), .build_id = std::string(kDifferentBuildId)});
+      {.module_path = different_path, .build_id = kDifferentBuildId});
   ASSERT_NE(different_module, nullptr);
   EXPECT_EQ(different_module->file_path(), different_path);
   EXPECT_EQ(different_module->file_size(), different_file_size);

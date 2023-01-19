@@ -14,8 +14,8 @@
 #include <string_view>
 
 #include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "OrbitBase/Result.h"
-#include "SymbolProvider/ModulePathAndBuildId.h"
 
 namespace orbit_client_data {
 
@@ -29,32 +29,31 @@ namespace orbit_client_data {
 //
 // `ModuleIdentifier` objects are created using the `CreateModuleIdentifier` method, while existing
 // identifiers can be queried using `GetModuleIdentifier` method.
-// In order to get a path or build id of a concrete `ModuleIdentifier`, this class also provides
-// accessor methods.
+// To get a path or build id of a concrete `ModuleIdentifier`, this class provides
+// `GetModulePathAndBuildId`.
 //
-// Thread-safety: This class is thread-save.
+// Thread-safety: This class is thread-safe.
 class ModuleIdentifierProvider {
  public:
   // Creates and returns a new module identifier for the given module path and build id. If there
   // already exists a module identifier with that path and build id, the existing module identifier
   // is returned.
-  ModuleIdentifier CreateModuleIdentifier(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id);
+  ModuleIdentifier CreateModuleIdentifier(const ModulePathAndBuildId& module_path_and_build_id);
 
   // Returns the unique module identifier for the given module path and build id, or std::nullopt
   // the module is unknown.
   [[nodiscard]] std::optional<ModuleIdentifier> GetModuleIdentifier(
-      const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const;
+      const ModulePathAndBuildId& module_path_and_build_id) const;
 
   // Returns the module path and build id associated with the given module identifier, or
-  // std::nullopt if the module is yet unknown.
-  [[nodiscard]] std::optional<orbit_symbol_provider::ModulePathAndBuildId> GetModulePathAndBuildId(
+  // std::nullopt if the module is unknown.
+  [[nodiscard]] std::optional<ModulePathAndBuildId> GetModulePathAndBuildId(
       ModuleIdentifier module_identifier) const;
 
  private:
   mutable absl::Mutex mutex_;
-  absl::flat_hash_map<orbit_symbol_provider::ModulePathAndBuildId, ModuleIdentifier>
-      module_identifier_map_ ABSL_GUARDED_BY(mutex_);
+  absl::flat_hash_map<ModulePathAndBuildId, ModuleIdentifier> module_identifier_map_
+      ABSL_GUARDED_BY(mutex_);
 };
 
 }  // namespace orbit_client_data

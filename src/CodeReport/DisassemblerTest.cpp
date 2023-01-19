@@ -67,7 +67,7 @@ TEST(Disassembler, DisassembleWithSymbols) {
 
   orbit_client_data::ModuleIdentifierProvider module_identifier_provider{};
   orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
-  (void)module_manager.AddOrUpdateModules({module_info});
+  std::ignore = module_manager.AddOrUpdateModules({module_info});
 
   orbit_client_data::ModuleData* module_data =
       module_manager.GetMutableModuleByModulePathAndBuildId(

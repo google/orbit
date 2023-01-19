@@ -36,7 +36,7 @@ MicrosoftSymbolServerSymbolProvider::MicrosoftSymbolServerSymbolProvider(
 }
 
 std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   constexpr std::string_view kUrlToSymbolServer = "https://msdl.microsoft.com/download/symbols";
   std::filesystem::path module_path(module_path_and_build_id.module_path);
   std::filesystem::path symbol_filename = module_path.filename();
@@ -48,7 +48,7 @@ std::string MicrosoftSymbolServerSymbolProvider::GetDownloadUrl(
 }
 
 Future<SymbolLoadingOutcome> MicrosoftSymbolServerSymbolProvider::RetrieveSymbols(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id,
     orbit_base::StopToken stop_token) {
   std::filesystem::path save_file_path =
       symbol_cache_->GenerateCachedFilePath(module_path_and_build_id.module_path);

@@ -213,7 +213,7 @@ std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
 
 static ErrorMessageOr<fs::path> FindSymbolsFilePathInStructuredDebugStore(
     const std::filesystem::path& structured_debug_store,
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   orbit_symbol_provider::StructuredDebugDirectorySymbolProvider provider{
       structured_debug_store,
       orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource::kStadiaInstanceUsrLibDebug};

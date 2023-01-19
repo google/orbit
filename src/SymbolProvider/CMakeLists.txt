@@ -10,7 +10,6 @@ target_sources(SymbolProvider PRIVATE
         SymbolLoadingOutcome.cpp)
 
 target_sources(SymbolProvider PUBLIC
-        include/SymbolProvider/ModulePathAndBuildId.h
         include/SymbolProvider/StructuredDebugDirectorySymbolProvider.h
         include/SymbolProvider/SymbolLoadingOutcome.h
         include/SymbolProvider/SymbolProvider.h)
@@ -19,6 +18,7 @@ target_include_directories(SymbolProvider PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(SymbolProvider PUBLIC
+        ClientData
         OrbitBase)
 
 if(WIN32)

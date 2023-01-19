@@ -48,16 +48,17 @@ SymbolLoader::SymbolLoader(
     AppInterface* app_interface, std::thread::id main_thread_id,
     orbit_base::ThreadPool* thread_pool, orbit_base::Executor* main_thread_executor,
     orbit_client_services::ProcessManager* process_manager,
-    const orbit_client_data::ModuleIdentifierProvider* module_identity_provider)
+    const orbit_client_data::ModuleIdentifierProvider* module_identifier_provider)
     : app_interface_{app_interface},
       main_thread_id_{main_thread_id},
       thread_pool_{thread_pool},
       main_thread_executor_{main_thread_executor},
       process_manager_{process_manager},
-      module_identity_provider_{module_identity_provider} {
+      module_identifier_provider{module_identifier_provider} {
   ORBIT_CHECK(app_interface_ != nullptr);
   ORBIT_CHECK(thread_pool_ != nullptr);
   ORBIT_CHECK(main_thread_executor_ != nullptr);
+  ORBIT_CHECK(module_identifier_provider != nullptr);
 
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
   download_disabled_modules_ = storage_manager.LoadDisabledModulePaths();
@@ -92,13 +93,13 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
   ORBIT_CHECK(module_data != nullptr);
-  ORBIT_CHECK(module_identity_provider_ != nullptr);
+  ORBIT_CHECK(module_identifier_provider != nullptr);
 
-  orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
+  orbit_client_data::ModulePathAndBuildId module_path_and_build_id{
       .module_path = module_data->file_path(), .build_id = module_data->build_id()};
 
   std::optional<orbit_client_data::ModuleIdentifier> module_identifier =
-      module_identity_provider_->GetModuleIdentifier(module_path_and_build_id);
+      module_identifier_provider->GetModuleIdentifier(module_path_and_build_id);
   ORBIT_CHECK(module_identifier.has_value());
 
   modules_with_symbol_loading_error_.erase(module_identifier.value());
@@ -175,7 +176,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleAndLoadSymb
 }
 
 Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleSymbolsAndLoadSymbols(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_module_symbols_future =
       RetrieveModuleSymbols(module_path_and_build_id);
 
@@ -204,7 +205,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleSymbolsAndL
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleSymbols(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
@@ -386,7 +387,7 @@ ConvertSymbolProviderRetrieveFuture(const Future<SymbolLoadingOutcome>& future,
 };
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleFromRemote(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
   if (const auto it =
@@ -517,7 +518,7 @@ Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::Retrieve
 }
 
 Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLoadFallbackSymbols(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id,
     uint64_t module_file_size) {
   Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> retrieve_module_itself_future =
       RetrieveModuleItself(module_path_and_build_id, module_file_size);
@@ -547,7 +548,7 @@ Future<ErrorMessageOr<CanceledOr<void>>> SymbolLoader::RetrieveModuleItselfAndLo
 }
 
 Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> SymbolLoader::RetrieveModuleItself(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id,
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id,
     uint64_t module_file_size) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
@@ -682,7 +683,7 @@ SymbolLoader::RetrieveModuleItselfFromInstance(std::string_view module_file_path
 
 Future<ErrorMessageOr<void>> SymbolLoader::LoadSymbols(
     const std::filesystem::path& symbols_path,
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   ORBIT_SCOPE_FUNCTION;
 
   auto load_symbols_from_file_future = thread_pool_->Schedule(
@@ -714,7 +715,7 @@ Future<ErrorMessageOr<void>> SymbolLoader::LoadSymbols(
 
 Future<ErrorMessageOr<void>> SymbolLoader::LoadFallbackSymbols(
     const std::filesystem::path& object_path,
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   ORBIT_SCOPE_FUNCTION;
 
   auto load_fallback_symbols_future =
@@ -742,7 +743,7 @@ Future<ErrorMessageOr<void>> SymbolLoader::LoadFallbackSymbols(
 }
 
 Future<ErrorMessageOr<std::filesystem::path>> SymbolLoader::RetrieveModuleWithDebugInfo(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
   auto loaded_module = RetrieveModuleSymbols(module_path_and_build_id);
   return loaded_module.ThenIfSuccess(
       main_thread_executor_,
@@ -804,14 +805,14 @@ orbit_data_views::SymbolLoadingState SymbolLoader::GetSymbolLoadingStateForModul
     const orbit_client_data::ModuleData* module) const {
   ORBIT_CHECK(module != nullptr);
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
-  ORBIT_CHECK(module_identity_provider_ != nullptr);
+  ORBIT_CHECK(module_identifier_provider != nullptr);
 
   if (IsModuleDownloading(module->file_path())) {
     return SymbolLoadingState(SymbolLoadingState::kDownloading);
   }
 
   std::optional<ModuleIdentifier> module_identifier =
-      module_identity_provider_->GetModuleIdentifier(
+      module_identifier_provider->GetModuleIdentifier(
           {.module_path = module->file_path(), .build_id = module->build_id()});
   ORBIT_CHECK(module_identifier.has_value());
   if (symbols_currently_loading_.contains(module_identifier.value())) {

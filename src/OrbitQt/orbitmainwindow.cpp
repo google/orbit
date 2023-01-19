@@ -1876,7 +1876,7 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& fun
 
   dialog_ptr->AddAnnotatingSourceCode(
       function_info,
-      [this](const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+      [this](const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) {
         return app_->RetrieveModuleWithDebugInfo(module_path_and_build_id);
       });
 }

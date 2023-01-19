@@ -28,8 +28,8 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
-    orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
-        .module_path = module_info.file_path(), .build_id = module_info.build_id()};
+    ModulePathAndBuildId module_path_and_build_id{.module_path = module_info.file_path(),
+                                                  .build_id = module_info.build_id()};
     std::optional<ModuleIdentifier> module_id_opt =
         module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
     if (module_id_opt.has_value()) {
@@ -58,8 +58,8 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
   std::vector<ModuleData*> not_updated_modules;
 
   for (const auto& module_info : module_infos) {
-    orbit_symbol_provider::ModulePathAndBuildId module_path_and_build_id{
-        .module_path = module_info.file_path(), .build_id = module_info.build_id()};
+    ModulePathAndBuildId module_path_and_build_id{.module_path = module_info.file_path(),
+                                                  .build_id = module_info.build_id()};
     std::optional<ModuleIdentifier> module_id_opt =
         module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
 
@@ -71,13 +71,10 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
         not_updated_modules.push_back(module);
       }
     } else {
-      ErrorMessageOr<ModuleIdentifier> module_id_or_error =
+      ModuleIdentifier module_id =
           module_identifier_provider_->CreateModuleIdentifier(module_path_and_build_id);
-      ORBIT_CHECK(module_id_or_error.has_value());
       bool success =
-          module_map_
-              .try_emplace(module_id_or_error.value(), std::make_unique<ModuleData>(module_info))
-              .second;
+          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
       ORBIT_CHECK(success);
     }
   }
@@ -118,7 +115,7 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   if (cache_it != absolute_address_to_module_data_cache_.end()) {
     return cache_it->second;
   }
-  auto it = module_map_.find(ModuleIdentifier{module_in_memory.module_id()});
+  auto it = module_map_.find(module_in_memory.module_id());
   if (it == module_map_.end()) {
     absolute_address_to_module_data_cache_.emplace(absolute_address, nullptr);
     return nullptr;
@@ -137,27 +134,25 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   return result;
 }
 
-const ModuleData* ModuleManager::GetModuleByModuleIdentifier(
-    const ModuleIdentifier& module_id) const {
+const ModuleData* ModuleManager::GetModuleByModuleIdentifier(ModuleIdentifier module_id) const {
   absl::MutexLock lock(&mutex_);
   return GetModuleByModuleIdentifierInternal(module_id);
 }
 
 const ModuleData* ModuleManager::GetModuleByModuleIdentifierInternal(
-    const ModuleIdentifier& module_id) const {
+    ModuleIdentifier module_id) const {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return it->second.get();
 }
 
-ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(const ModuleIdentifier& module_id) {
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(ModuleIdentifier module_id) {
   absl::MutexLock lock(&mutex_);
   return GetMutableModuleByModuleIdentifierInternal(module_id);
 }
 
-ModuleData* ModuleManager::GetMutableModuleByModuleIdentifierInternal(
-    const ModuleIdentifier& module_id) {
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifierInternal(ModuleIdentifier module_id) {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
@@ -165,7 +160,7 @@ ModuleData* ModuleManager::GetMutableModuleByModuleIdentifierInternal(
 }
 
 const ModuleData* ModuleManager::GetModuleByModulePathAndBuildId(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
+    const ModulePathAndBuildId& module_path_and_build_id) const {
   absl::MutexLock lock(&mutex_);
   std::optional<orbit_client_data::ModuleIdentifier> module_id =
       module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
@@ -174,7 +169,7 @@ const ModuleData* ModuleManager::GetModuleByModulePathAndBuildId(
 }
 
 ModuleData* ModuleManager::GetMutableModuleByModulePathAndBuildId(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const ModulePathAndBuildId& module_path_and_build_id) {
   absl::MutexLock lock(&mutex_);
   std::optional<orbit_client_data::ModuleIdentifier> module_id =
       module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);

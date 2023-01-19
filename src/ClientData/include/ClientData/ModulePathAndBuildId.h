@@ -7,7 +7,7 @@
 
 #include <string>
 
-namespace orbit_symbol_provider {
+namespace orbit_client_data {
 
 struct ModulePathAndBuildId {
   std::string module_path;
@@ -28,6 +28,6 @@ struct ModulePathAndBuildId {
   }
 };
 
-}  // namespace orbit_symbol_provider
+}  // namespace orbit_client_data
 
 #endif  // SYMBOL_PROVIDER_MODULE_PATH_AND_BUILD_ID_H_

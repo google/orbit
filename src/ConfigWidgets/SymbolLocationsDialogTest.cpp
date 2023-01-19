@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
@@ -118,6 +117,7 @@ class SymbolLocationsDialogTest : public ::testing::Test {
 };
 
 }  // namespace
+
 TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
   SetLoadAndExpectedSaveEmpty();
 
@@ -177,7 +177,6 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleNoBuildId) {
   module_info.set_file_path("/path/to/lib.so");
   module_info.set_name("lib.so");
 
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   SetLoadAndExpectedSaveEmpty();
@@ -198,7 +197,6 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleWithBuildId) {
   module_info.set_file_path("/path/to/lib.so");
   module_info.set_name("lib.so");
   module_info.set_build_id("some build id");
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   SetLoadAndExpectedSaveEmpty();
@@ -294,7 +292,6 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   std::filesystem::path no_symbols_elf_debug =
@@ -327,7 +324,6 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   std::filesystem::path no_symbols_elf_debug =
@@ -374,7 +370,6 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   std::filesystem::path symbols_file_no_build_id_debug =
@@ -401,7 +396,6 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbols
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
-  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{module_info};
 
   std::filesystem::path symbols_file_no_build_id_debug =

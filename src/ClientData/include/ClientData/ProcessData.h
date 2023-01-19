@@ -41,7 +41,9 @@ class ProcessData final {
   explicit ProcessData(orbit_grpc_protos::ProcessInfo process_info,
                        const ModuleIdentifierProvider* module_identifier_provider)
       : process_info_(std::move(process_info)),
-        module_identifier_provider_(module_identifier_provider) {}
+        module_identifier_provider_(module_identifier_provider) {
+    ORBIT_CHECK(module_identifier_provider != nullptr);
+  }
 
   [[nodiscard]] uint32_t pid() const;
   [[nodiscard]] const std::string& name() const;
@@ -64,7 +66,7 @@ class ProcessData final {
   // Returns module base addresses. Note that the same module could be mapped twice in which case
   // this function returns two base addresses. If no module found the function returns empty vector.
   [[nodiscard]] std::vector<uint64_t> GetModuleBaseAddresses(
-      const orbit_client_data::ModuleIdentifier& module_identifier) const;
+      orbit_client_data::ModuleIdentifier module_identifier) const;
 
   [[nodiscard]] std::map<uint64_t, ModuleInMemory> GetMemoryMapCopy() const;
   [[nodiscard]] std::vector<orbit_client_data::ModuleIdentifier> GetUniqueModuleIdentifiers() const;
@@ -81,7 +83,7 @@ class ProcessData final {
   }
 
   [[nodiscard]] bool IsModuleLoadedByProcess(
-      const orbit_client_data::ModuleIdentifier& module_identifier) const;
+      orbit_client_data::ModuleIdentifier module_identifier) const;
 
  private:
   mutable absl::Mutex mutex_;
@@ -90,7 +92,7 @@ class ProcessData final {
   mutable absl::flat_hash_map<uint64_t, ModuleInMemory> absolute_address_to_module_in_memory_cache_
       ABSL_GUARDED_BY(mutex_);
 
-  [[maybe_unused]] const ModuleIdentifierProvider* module_identifier_provider_;
+  const ModuleIdentifierProvider* module_identifier_provider_;
 };
 
 }  // namespace orbit_client_data

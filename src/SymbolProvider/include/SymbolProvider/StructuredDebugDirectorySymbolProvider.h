@@ -25,7 +25,7 @@ class StructuredDebugDirectorySymbolProvider : public SymbolProvider {
       : directory_(std::move(directory)), symbol_source_(symbol_source) {}
 
   [[nodiscard]] orbit_base::Future<SymbolLoadingOutcome> RetrieveSymbols(
-      const ModulePathAndBuildId& module_path_and_build_id,
+      const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id,
       orbit_base::StopToken stop_token) override;
 
  private:

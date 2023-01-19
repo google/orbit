@@ -3,10 +3,12 @@
 // found in the LICENSE file.
 #include "ClientData/ModuleIdentifierProvider.h"
 
+#include "ClientData/ModulePathAndBuildId.h"
+
 namespace orbit_client_data {
 
 ModuleIdentifier ModuleIdentifierProvider::CreateModuleIdentifier(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) {
+    const ModulePathAndBuildId& module_path_and_build_id) {
   absl::WriterMutexLock lock(&mutex_);
 
   // We are using the current size as next id. If insertion does not take place, size remains the
@@ -19,15 +21,15 @@ ModuleIdentifier ModuleIdentifierProvider::CreateModuleIdentifier(
 }
 
 std::optional<ModuleIdentifier> ModuleIdentifierProvider::GetModuleIdentifier(
-    const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id) const {
+    const ModulePathAndBuildId& module_path_and_build_id) const {
   absl::ReaderMutexLock lock(&mutex_);
   const auto it = module_identifier_map_.find(module_path_and_build_id);
   if (it == module_identifier_map_.end()) return std::nullopt;
   return it->second;
 }
 
-std::optional<orbit_symbol_provider::ModulePathAndBuildId>
-ModuleIdentifierProvider::GetModulePathAndBuildId(ModuleIdentifier module_identifier) const {
+std::optional<ModulePathAndBuildId> ModuleIdentifierProvider::GetModulePathAndBuildId(
+    ModuleIdentifier module_identifier) const {
   absl::ReaderMutexLock lock(&mutex_);
 
   for (const auto& [current_module_path_and_build_id, current_module_identifier] :

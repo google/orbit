@@ -116,8 +116,8 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
 }
 
 TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
-  constexpr std::string_view kModulePath = "module/path/to/some_module_name";
-  constexpr std::string_view kBuildId = "some_build_id";
+  static const std::string kModulePath = "module/path/to/some_module_name";
+  static const std::string kBuildId = "some_build_id";
   const std::string expected_url{
       "https://msdl.microsoft.com/download/symbols/some_module_name.pdb/some_build_id/"
       "some_module_name.pdb"};
@@ -125,7 +125,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
 
   orbit_base::StopSource stop_source{};
   symbol_provider_
-      .RetrieveSymbols({.module_path = std::string(kModulePath), .build_id = std::string(kBuildId)},
+      .RetrieveSymbols({.module_path = kModulePath, .build_id = kBuildId},
                        stop_source.GetStopToken())
       .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));

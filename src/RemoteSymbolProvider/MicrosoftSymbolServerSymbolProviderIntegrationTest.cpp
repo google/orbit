@@ -55,14 +55,13 @@ TEST(MicrosoftSymbolServerSymbolProviderIntegrationTest, RetrieveWindowsPdbAndLo
 
   orbit_qt_utils::MainThreadExecutor executor{};
 
-  constexpr std::string_view kValidModuleName{"d3d11.pdb"};
-  constexpr std::string_view kValidModuleBuildId{"FF5440275BFED43A86CC2B1F287A72151"};
+  static const std::string kValidModuleName{"d3d11.pdb"};
+  static const std::string kValidModuleBuildId{"FF5440275BFED43A86CC2B1F287A72151"};
 
   orbit_base::StopSource stop_source{};
 
   symbol_provider
-      .RetrieveSymbols({.module_path = std::string(kValidModuleName),
-                        .build_id = std::string(kValidModuleBuildId)},
+      .RetrieveSymbols({.module_path = kValidModuleName, .build_id = kValidModuleBuildId},
                        stop_source.GetStopToken())
       .Then(&executor, [](const orbit_symbol_provider::SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));

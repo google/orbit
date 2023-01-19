@@ -69,6 +69,7 @@ target_sources(ClientData PRIVATE
         ModuleData.cpp
         ModuleIdentifierProvider.cpp
         ModuleManager.cpp
+        ModulePathAndBuildIdTest.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
         ScopeIdProvider.cpp
@@ -92,7 +93,6 @@ target_link_libraries(ClientData PUBLIC
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase
-        SymbolProvider
         xxHash::xxHash)
 
 if(WIN32)
@@ -110,6 +110,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleIdentifierTest.cpp
         ModuleIdentifierProviderTest.cpp
         ModuleManagerTest.cpp
+        ModulePathAndBuildIdTest.cpp
         ProcessDataTest.cpp
         ScopeIdProviderTest.cpp
         ScopeInfoTest.cpp

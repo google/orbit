@@ -51,6 +51,7 @@ CaptureData::CaptureData(CaptureStarted capture_started,
   process_info.set_full_path(executable_path.string());
   process_info.set_name(executable_path.filename().string());
   process_info.set_is_64_bit(true);
+  ORBIT_CHECK(module_identifier_provider != nullptr);
   process_ = std::make_unique<ProcessData>(process_info, module_identifier_provider);
 
   for (const auto& instrumented_function :

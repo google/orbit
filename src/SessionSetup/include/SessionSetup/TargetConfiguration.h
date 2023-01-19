@@ -26,7 +26,7 @@ class SshTarget {
   explicit SshTarget(SshConnection&& connection, orbit_grpc_protos::ProcessInfo process)
       : connection_(std::move(connection)), process_(std::move(process)) {}
   [[nodiscard]] const SshConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_grpc_protos::ProcessInfo GetProcess() const { return process_; }
+  [[nodiscard]] const orbit_grpc_protos::ProcessInfo& GetProcess() const { return process_; }
 
  private:
   SshConnection connection_;
@@ -47,7 +47,7 @@ class LocalTarget {
   explicit LocalTarget(LocalConnection&& connection, orbit_grpc_protos::ProcessInfo process)
       : connection_(std::move(connection)), process_(std::move(process)) {}
   [[nodiscard]] const LocalConnection* GetConnection() const { return &connection_; }
-  [[nodiscard]] orbit_grpc_protos::ProcessInfo GetProcess() const { return process_; }
+  [[nodiscard]] const orbit_grpc_protos::ProcessInfo& GetProcess() const { return process_; }
 
  private:
   LocalConnection connection_;

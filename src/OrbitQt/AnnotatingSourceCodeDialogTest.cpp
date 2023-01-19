@@ -98,7 +98,7 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
   bool callback_called = false;
   dialog.AddAnnotatingSourceCode(
       function_info,
-      [&](const orbit_symbol_provider::ModulePathAndBuildId& /*module_path_and_build_id*/) {
+      [&](const orbit_client_data::ModulePathAndBuildId& /*module_path_and_build_id*/) {
         callback_called = true;
         return orbit_base::Future<ErrorMessageOr<std::filesystem::path>>{file_path};
       });

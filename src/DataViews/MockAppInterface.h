@@ -76,14 +76,14 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_client_data::ProcessData*, GetTargetProcess, (), (const, override));
 
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModuleIdentifier,
-              (const orbit_client_data::ModuleIdentifier&), (const, override));
+              (orbit_client_data::ModuleIdentifier), (const, override));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModuleIdentifier,
-              (const orbit_client_data::ModuleIdentifier&), (override));
+              (orbit_client_data::ModuleIdentifier), (override));
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModulePathAndBuildId,
-              (const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id),
+              (const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id),
               (const, override));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModulePathAndBuildId,
-              (const orbit_symbol_provider::ModulePathAndBuildId& module_path_and_build_id),
+              (const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id),
               (override));
 
   MOCK_METHOD(orbit_base::Future<void>, LoadSymbolsManually,
