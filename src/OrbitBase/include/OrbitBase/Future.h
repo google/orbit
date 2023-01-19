@@ -236,13 +236,13 @@ class Future<void> : public orbit_base_internal::InternalFuture<void, Future<voi
 // Check out the docs and implementation of your executor's `ScheduleAfterIfSuccess` method which is
 // actually doing the work. `ThenIfSuccess` is only syntactic sugar around
 // `AnyExecutor::ScheduleAfterIfSuccess`.
-template <typename T>
-class [[nodiscard]] Future<ErrorMessageOr<T>>
-    : public orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future<ErrorMessageOr<T>>> {
-  friend orbit_base_internal::PromiseBase<ErrorMessageOr<T>>;
+template <typename T, typename E>
+class [[nodiscard]] Future<Result<T, E>>
+    : public orbit_base_internal::InternalFuture<Result<T, E>, Future<Result<T, E>>> {
+  friend orbit_base_internal::PromiseBase<Result<T, E>>;
 
  public:
-  using orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>::InternalFuture;
+  using orbit_base_internal::InternalFuture<Result<T, E>, Future>::InternalFuture;
 
   Future(ErrorMessage error_message)  // NOLINT(google-explicit-constructor)
       : orbit_base_internal::InternalFuture<ErrorMessageOr<T>, Future>{

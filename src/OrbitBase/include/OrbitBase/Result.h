@@ -54,16 +54,16 @@ class [[nodiscard]] ErrorMessage final {
 };
 
 template <typename T, typename E>
-using Result = outcome::result<T, E, outcome::policy::terminate>;
-
-template <typename T>
-class [[nodiscard]] ErrorMessageOr : public Result<T, ErrorMessage> {
+class [[nodiscard]] Result : public outcome::result<T, E, outcome::policy::terminate> {
  public:
-  using Result<T, ErrorMessage>::Result;
+  using outcome::result<T, E, outcome::policy::terminate>::result;
 
   operator bool() = delete;
   operator bool() const = delete;
 };
+
+template <typename T>
+using ErrorMessageOr = Result<T, ErrorMessage>;
 
 template <typename T>
 struct IsErrorMessageOr : std::false_type {};
