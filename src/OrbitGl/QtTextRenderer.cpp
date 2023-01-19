@@ -87,7 +87,6 @@ namespace {
 }  // namespace
 
 void QtTextRenderer::RenderLayer(QPainter* painter, float layer) {
-  ORBIT_SCOPE_FUNCTION;
   QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
   auto text_for_layer = stored_text_.find(layer);
   if (text_for_layer == stored_text_.end()) {
@@ -115,13 +114,11 @@ std::vector<float> QtTextRenderer::GetLayers() const {
 
 void QtTextRenderer::AddText(const char* text, float x, float y, float z,
                              TextFormatting formatting) {
-  ORBIT_SCOPE_FUNCTION;
   AddText(text, x, y, z, formatting, nullptr, nullptr);
 }
 
 void QtTextRenderer::AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                              Vec2* out_text_pos, Vec2* out_text_size) {
-  ORBIT_SCOPE_FUNCTION;
   if (out_text_pos != nullptr) {
     (*out_text_pos)[0] = (*out_text_pos)[1] = 0.f;
   }
@@ -286,7 +283,7 @@ float QtTextRenderer::GetStringWidthFast(const QString& text, const CharacterWid
                                          uint32_t font_size) {
   int width = 0;
   for (const QChar& c : text) {
-    width += lookup[c.toLatin1()];
+    width += lookup[static_cast<unsigned char>(c.toLatin1())];
   }
   const int horizontal_advance = MaximumHeuristic(width, text.length(), font_size);
   return viewport_->ScreenToWorld(Vec2i(horizontal_advance, 0))[0];
@@ -297,7 +294,8 @@ QString QtTextRenderer::ElideText(const QString& text, int max_width,
   int width_lookup = 0;
   int characters = 0;
   while (characters < text.length()) {
-    const int next_char_width = lookup[text[characters].toLatin1()];
+    const char c = text[characters].toLatin1();
+    const int next_char_width = lookup[static_cast<unsigned char>(c)];
     if (MaximumHeuristic(width_lookup + next_char_width, characters, font_size) > max_width) {
       break;
     }
