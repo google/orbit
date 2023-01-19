@@ -57,7 +57,6 @@ target_link_libraries(OrbitSshQtTests PUBLIC
   TestUtils
   QtTestUtils
   SshQtTestUtils
-  GTest::QtCoreMain
-  Qt::Test)
+  GTest::QtCoreMain)
 
 register_test(OrbitSshQtTests)
