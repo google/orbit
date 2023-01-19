@@ -58,14 +58,7 @@ class OrbitTreeView : public QTreeView {
   void columnResized(int column, int old_size, int new_size);
 
  protected:
-  [[nodiscard]] int sizeHintForColumn(int column) const override {
-    ORBIT_CHECK(model_ != nullptr);
-    orbit_data_views::DataView* data_view = model_->GetDataView();
-    ORBIT_CHECK(data_view != nullptr);
-    std::vector<orbit_data_views::DataView::Column> columns = data_view->GetColumns();
-    ORBIT_CHECK(column >= 0 && static_cast<size_t>(column) < columns.size());
-    return static_cast<int>(columns[column].ratio * static_cast<float>(width()));
-  }
+  [[nodiscard]] int sizeHintForColumn(int column) const override;
 
   // TODO(https://github.com/google/orbit/issues/4589): Connect slots via code and not via UI files,
   // and remove the "public slots" specifier
