@@ -71,8 +71,8 @@ class CaptureData {
   CaptureData(CaptureData&& other) = delete;
   CaptureData& operator=(CaptureData&& other) = delete;
 
-  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return process_.get(); }
-  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return process_.get(); }
+  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_.value(); }
+  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_.value(); }
 
   [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const {
     return capture_started_.capture_options().memory_sampling_period_ns();
@@ -289,7 +289,9 @@ class CaptureData {
  private:
   orbit_grpc_protos::CaptureStarted capture_started_;
 
-  std::unique_ptr<orbit_client_data::ProcessData> process_;
+  // The initialization is delayed, but still in the constructor. Afterwards, it
+  // must never be std::nullopt.
+  std::optional<orbit_client_data::ProcessData> process_;
   // TODO(b/249262736): Replace this map in favor of ScopeIdProvider's scope_id_to_function_info_.
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   uint64_t memory_warning_threshold_kb_ = 0;
