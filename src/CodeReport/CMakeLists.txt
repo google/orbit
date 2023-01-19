@@ -28,6 +28,11 @@ target_sources(CodeReport PRIVATE AnnotateDisassembly.cpp
                                   DisassemblyReport.cpp
                                   SourceCodeReport.cpp)
 
+
+if(WIN32)
+  target_compile_features(CodeReport PRIVATE cxx_std_20)
+endif()
+
 add_executable(CodeReportTests)
 target_sources(CodeReportTests PRIVATE AnnotateDisassemblyTest.cpp
                                        AssemblyTestLiterals.h
@@ -40,3 +45,7 @@ target_link_libraries(CodeReportTests PRIVATE
         SymbolProvider
         GTest::Main)
 register_test(CodeReportTests)
+
+if(WIN32)
+  target_compile_features(CodeReportTests PRIVATE cxx_std_20)
+endif()
