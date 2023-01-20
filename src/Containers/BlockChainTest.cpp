@@ -57,17 +57,20 @@ TEST(BlockChain, CreateAndMove) {
   BlockChain<int, 1024> target_chain(std::move(source_chain));
   EXPECT_EQ(target_chain.size(), 2);
   EXPECT_EQ(target_chain.root()->data()[0], 1);
-  EXPECT_EQ(source_chain.size(), 0);
-  EXPECT_EQ(source_chain.root(), nullptr);
+
+  // Verify the moved-from block chain is still in a valid state, even if it should no longer be
+  // used
+  EXPECT_EQ(source_chain.size(), 0);        // NOLINT(bugprone-use-after-move)
+  EXPECT_EQ(source_chain.root(), nullptr);  // NOLINT(bugprone-use-after-move)
 
   source_chain.emplace_back(3);
-  EXPECT_EQ(source_chain.size(), 1);
-  EXPECT_EQ(source_chain.root()->data()[0], 3);
+  EXPECT_EQ(source_chain.size(), 1);             // NOLINT(bugprone-use-after-move)
+  EXPECT_EQ(source_chain.root()->data()[0], 3);  // NOLINT(bugprone-use-after-move)
 
   // Verify both block chains are fully decoupled
-  source_chain.emplace_back(10);
-  EXPECT_EQ(source_chain.size(), 2);
-  EXPECT_EQ(target_chain.size(), 2);
+  target_chain.emplace_back(10);
+  EXPECT_EQ(source_chain.size(), 1);  // NOLINT(bugprone-use-after-move)
+  EXPECT_EQ(target_chain.size(), 3);
 }
 
 TEST(BlockChain, AddCopyableTypes) {
