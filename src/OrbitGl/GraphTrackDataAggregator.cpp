@@ -5,6 +5,7 @@
 #include "OrbitGl/GraphTrackDataAggregator.h"
 
 #include <algorithm>
+#include <cstddef>
 
 #include "OrbitBase/Logging.h"
 
