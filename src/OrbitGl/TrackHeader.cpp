@@ -131,6 +131,10 @@ void TrackHeader::OnDrag(int x, int y) {
 
 bool TrackHeader::Draggable() { return track_->Draggable(); }
 
-void TrackHeader::SetHeight(float height) { height_ = height; }
+void TrackHeader::SetHeight(float height) {
+  if (height == height_) return;
+  height_ = height;
+  RequestUpdate(RequestUpdateScope::kDraw);
+}
 
 }  // namespace orbit_gl
