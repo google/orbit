@@ -2291,35 +2291,48 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   if (!HasCaptureData()) {
     return;
   }
-  const CaptureData& capture_data = GetCaptureData();
+  Future<std::shared_ptr<std::unique_ptr<SelectionData>>> selection_future =
+      thread_pool_->Schedule([this]() {
+        const CaptureData& capture_data = GetCaptureData();
 
-  PostProcessedSamplingData post_processed_sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
-                                                          capture_data, *module_manager_);
-  GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
-  auto selection = std::make_unique<SelectionData>(*module_manager_, GetCaptureData(),
-                                                   GetCaptureData().post_processed_sampling_data(),
-                                                   &GetCaptureData().GetCallstackData());
-  main_window_->SetTopDownView(selection->GetTopDownView());
-  main_window_->SetBottomUpView(selection->GetBottomUpView());
-  main_window_->UpdateSamplingReport(&selection->GetCallstackData(),
-                                     &selection->GetPostProcessedSamplingData());
-  full_capture_selection_ = std::move(selection);
+        PostProcessedSamplingData post_processed_sampling_data =
+            orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
+                                                                capture_data, *module_manager_);
+        GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
+        auto selection = std::make_unique<SelectionData>(
+            *module_manager_, GetCaptureData(), GetCaptureData().post_processed_sampling_data(),
+            &GetCaptureData().GetCallstackData());
+        return std::make_shared<std::unique_ptr<SelectionData>>(std::move(selection));
+      });
 
-  main_window_->ClearCallstackInspection();
-  inspection_selection_.reset();
-  time_range_thread_selection_.reset();
+  selection_future.Then(
+      main_thread_executor_,
+      [this](std::shared_ptr<std::unique_ptr<SelectionData>> selection_wrapped) {
+        std::unique_ptr<SelectionData> selection = std::move(*selection_wrapped);
+        main_window_->SetTopDownView(selection->GetTopDownView());
+        main_window_->SetBottomUpView(selection->GetBottomUpView());
+        main_window_->UpdateSamplingReport(&selection->GetCallstackData(),
+                                           &selection->GetPostProcessedSamplingData());
+        full_capture_selection_ = std::move(selection);
 
-  PostProcessedSamplingData selection_post_processed_sampling_data =
-      orbit_client_model::CreatePostProcessedSamplingData(capture_data.selection_callstack_data(),
-                                                          capture_data, *module_manager_);
-  GetMutableCaptureData().set_selection_post_processed_sampling_data(
-      std::move(selection_post_processed_sampling_data));
+        main_window_->ClearCallstackInspection();
+        inspection_selection_.reset();
+        time_range_thread_selection_.reset();
 
-  SetSelectionTopDownView(capture_data.selection_post_processed_sampling_data(), capture_data);
-  SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(), capture_data);
-  main_window_->UpdateSelectionReport(&capture_data.selection_callstack_data(),
-                                      &capture_data.selection_post_processed_sampling_data());
+        const CaptureData& capture_data = GetCaptureData();
+        PostProcessedSamplingData selection_post_processed_sampling_data =
+            orbit_client_model::CreatePostProcessedSamplingData(
+                capture_data.selection_callstack_data(), capture_data, *module_manager_);
+        GetMutableCaptureData().set_selection_post_processed_sampling_data(
+            std::move(selection_post_processed_sampling_data));
+
+        SetSelectionTopDownView(capture_data.selection_post_processed_sampling_data(),
+                                capture_data);
+        SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(),
+                                 capture_data);
+        main_window_->UpdateSelectionReport(&capture_data.selection_callstack_data(),
+                                            &capture_data.selection_post_processed_sampling_data());
+      });
 }
 
 void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
