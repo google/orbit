@@ -35,6 +35,7 @@
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TimerTrack.h"
 #include "OrbitGl/Track.h"
+#include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_client_data::FunctionInfo;

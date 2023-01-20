@@ -14,7 +14,6 @@
 #include "OrbitGl/PickingManager.h"
 #include "OrbitGl/TextRenderer.h"
 #include "OrbitGl/TimeGraphLayout.h"
-#include "OrbitGl/TrackRenderHelper.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_gl::PrimitiveAssembler;

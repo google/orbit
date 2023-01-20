@@ -31,6 +31,7 @@
 #include "OrbitGl/OrbitApp.h"
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_client_data::ScopeId;
