@@ -279,7 +279,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   auto last_it = std::prev(entries.end());
   ORBIT_CHECK(current_it->second.size() == Dimension);
 
-  GraphTrackDataAggregator<Dimension> aggr;
+  orbit_gl::GraphTrackDataAggregator aggr;
 
   const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];
   uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
@@ -341,7 +341,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    const std::array<float, Dimension>& normalized_cumulative_values, float z) {
+    absl::Span<const float> normalized_cumulative_values, float z) {
   const float x0 = timeline_info_->GetWorldFromTick(start_tick);
   const float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   const float content_height = GetGraphContentHeight();

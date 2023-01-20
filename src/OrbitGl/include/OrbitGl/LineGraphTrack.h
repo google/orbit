@@ -33,9 +33,9 @@ class LineGraphTrack : public GraphTrack<Dimension> {
                   float z) override;
   virtual void DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
                                      uint64_t end_tick,
-                                     const std::array<float, Dimension>& prev_normalized_values,
-                                     const std::array<float, Dimension>& curr_normalized_values,
-                                     float z, bool is_last);
+                                     absl::Span<const float> prev_normalized_values,
+                                     absl::Span<const float> curr_normalized_values, float z,
+                                     bool is_last);
 
   // Determines how values should be aggregated for drawing.
   enum class AggregationMode {

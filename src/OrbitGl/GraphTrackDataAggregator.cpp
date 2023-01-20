@@ -8,36 +8,32 @@
 
 #include "OrbitBase/Logging.h"
 
-template <size_t Dimension>
-using ValuesT = typename GraphTrackDataAggregator<Dimension>::ValuesT;
+namespace orbit_gl {
 
 namespace {
-template <size_t Dimension>
-void MergeValuesWithMax(const ValuesT<Dimension>& src, ValuesT<Dimension>& dest) {
-  for (size_t i = 0; i < Dimension; ++i) {
-    dest[i] = std::max(dest[i], src[i]);
-  }
+void MergeValuesWithMax(absl::Span<const float> src, absl::Span<float> dest) {
+  ORBIT_CHECK(src.size() == dest.size());
+
+  for (size_t i = 0; i < dest.size(); ++i) dest[i] = std::max(dest[i], src[i]);
 }
 
-template <size_t Dimension>
-void MergeValuesWithMin(const ValuesT<Dimension>& src, ValuesT<Dimension>& dest) {
-  for (size_t i = 0; i < Dimension; ++i) {
-    dest[i] = std::min(dest[i], src[i]);
-  }
+void MergeValuesWithMin(absl::Span<const float> src, absl::Span<float> dest) {
+  ORBIT_CHECK(src.size() == dest.size());
+
+  for (size_t i = 0; i < dest.size(); ++i) dest[i] = std::min(dest[i], src[i]);
 }
 }  // namespace
 
-template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::SetEntry(uint64_t start_tick, uint64_t end_tick,
-                                                   const ValuesT& values) {
+void GraphTrackDataAggregator::SetEntry(uint64_t start_tick, uint64_t end_tick,
+                                        absl::Span<const float> values) {
   ORBIT_CHECK(start_tick <= end_tick);
 
-  accumulated_entry_ = AccumulatedEntry{start_tick, end_tick, values, values};
+  accumulated_entry_ = AccumulatedEntry{
+      start_tick, end_tick, {values.begin(), values.end()}, {values.begin(), values.end()}};
 }
 
-template <size_t Dimension>
-void GraphTrackDataAggregator<Dimension>::MergeDataIntoEntry(uint64_t start_tick, uint64_t end_tick,
-                                                             const ValuesT& values) {
+void GraphTrackDataAggregator::MergeDataIntoEntry(uint64_t start_tick, uint64_t end_tick,
+                                                  absl::Span<const float> values) {
   if (!accumulated_entry_.has_value()) {
     SetEntry(start_tick, end_tick, values);
     return;
@@ -45,21 +41,18 @@ void GraphTrackDataAggregator<Dimension>::MergeDataIntoEntry(uint64_t start_tick
 
   ORBIT_CHECK(start_tick <= end_tick);
 
-  MergeValuesWithMin<Dimension>(values, accumulated_entry_->min_vals);
-  MergeValuesWithMax<Dimension>(values, accumulated_entry_->max_vals);
+  MergeValuesWithMin(values, absl::MakeSpan(accumulated_entry_->min_vals));
+  MergeValuesWithMax(values, absl::MakeSpan(accumulated_entry_->max_vals));
 
   accumulated_entry_->start_tick = std::min(accumulated_entry_->start_tick, start_tick);
   accumulated_entry_->end_tick = std::max(accumulated_entry_->end_tick, end_tick);
 }
 
-template <size_t Dimension>
-[[nodiscard]] const typename GraphTrackDataAggregator<Dimension>::AccumulatedEntry*
-GraphTrackDataAggregator<Dimension>::GetAccumulatedEntry() const {
+[[nodiscard]] const GraphTrackDataAggregator::AccumulatedEntry*
+GraphTrackDataAggregator::GetAccumulatedEntry() const {
   if (accumulated_entry_.has_value()) return &accumulated_entry_.value();
+
   return nullptr;
 }
 
-template class GraphTrackDataAggregator<1>;
-template class GraphTrackDataAggregator<2>;
-template class GraphTrackDataAggregator<3>;
-template class GraphTrackDataAggregator<4>;
+}  // namespace orbit_gl
