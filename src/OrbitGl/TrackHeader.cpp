@@ -112,9 +112,7 @@ void TrackHeader::UpdateCollapseToggle() {
 }
 
 float TrackHeader::GetVerticalLabelOffset() const {
-  // This offset only affect subtracks, which are a very special case that need refactoring.
-  // Subtracks are only used for the memory track. The following offset is to avoid overlap between
-  // the labels of the track and it's subtrack. Subtracks should have their own header altogether.
+  // TODO: Track hierarchy refactor, remove hack below.
   if (track_->GetIndentationLevel() > 1) {
     ORBIT_LOG_ONCE("Error: Track indentation level is greater than one, layout will be broken.");
   }

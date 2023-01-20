@@ -114,10 +114,12 @@ float GpuTrack::GetHeight() const {
   float height = 0;
   if (submission_track_->ShouldBeRendered()) {
     float additional_height = submission_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
+    // TODO: Track hierarchy refactor, remove hack below.
     height += std::max(additional_height, 2.f * layout_->GetThreadTrackMinimumHeight());
   }
   if (marker_track_->ShouldBeRendered()) {
     float additional_height = marker_track_->GetHeight() + layout_->GetSpaceBetweenSubtracks();
+    // TODO: Track hierarchy refactor, remove hack below.
     height += std::max(additional_height, 2.f * layout_->GetThreadTrackMinimumHeight());
   }
   return height;
