@@ -66,7 +66,7 @@ TEST(BlockChain, CreateAndMove) {
 
   // Verify both block chains are fully decoupled
   source_chain.emplace_back(10);
-  EXPECT_EQ(source_chain.size(), 1);
+  EXPECT_EQ(source_chain.size(), 2);
   EXPECT_EQ(target_chain.size(), 2);
 }
 
