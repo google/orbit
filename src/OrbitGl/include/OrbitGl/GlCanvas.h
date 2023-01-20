@@ -119,6 +119,8 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider, protected QOpenGL
   PickingMode picking_mode_ = PickingMode::kNone;
   bool draw_as_if_picking_ = false;
 
+  orbit_gl::BatchRenderGroupStateManager render_group_manager_;
+
   double ref_time_click_{0.0};
   float track_container_click_scrolling_offset_ = 0;
   orbit_gl::QtTextRenderer text_renderer_;

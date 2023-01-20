@@ -14,14 +14,17 @@
 #include <limits>
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/PickingManager.h"
 #include "absl/container/btree_map.h"
+#include "absl/container/flat_hash_set.h"
 
 namespace orbit_gl {
 
@@ -40,11 +43,11 @@ class MockBatcher : public Batcher {
   void ResetElements() override;
   [[nodiscard]] uint32_t GetNumElements() const override;
 
-  [[nodiscard]] std::vector<float> GetLayers() const override {
-    return std::vector<float>(z_layers_.begin(), z_layers_.end());
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override {
+    return std::vector<BatchRenderGroupId>(render_groups_.begin(), render_groups_.end());
   }
 
-  void DrawLayer(float /*layer*/, bool /*picking*/) override {}
+  void DrawRenderGroup(const BatchRenderGroupId& /*group*/, bool /*picking*/) override {}
 
   [[nodiscard]] Statistics GetStatistics() const override { return {}; }
 
@@ -67,12 +70,14 @@ class MockBatcher : public Batcher {
 
   Vec2 min_point_;
   Vec2 max_point_;
-  std::set<float> z_layers_;
+  absl::flat_hash_set<BatchRenderGroupId> render_groups_;
   int num_vertical_lines_ = 0;
   int num_horizontal_lines_ = 0;
   absl::btree_map<Color, int> num_lines_by_color_;
   absl::btree_map<Color, int> num_triangles_by_color_;
   absl::btree_map<Color, int> num_boxes_by_color_;
+
+  BatchRenderGroupStateManager owned_manager_;
 };
 
 }  // namespace orbit_gl

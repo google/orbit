@@ -15,6 +15,7 @@
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGl/AccessibleInterfaceProvider.h"
+#include "OrbitGl/BatchRenderGroup.h"
 
 // TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1
@@ -62,9 +63,10 @@ const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 
 GlCanvas::GlCanvas()
     : AccessibleInterfaceProvider(),
+      text_renderer_(),
       viewport_(0, 0),
       ui_batcher_(BatcherId::kUi),
-      primitive_assembler_(&ui_batcher_, &picking_manager_) {
+      primitive_assembler_(&ui_batcher_, &render_group_manager_, &picking_manager_) {
   // Note that `GlCanvas` is the bridge to OpenGl content, and `GlCanvas`'s parent needs special
   // handling for accessibility. Thus, we use `nullptr` here.
   text_renderer_.SetViewport(&viewport_);
@@ -189,6 +191,7 @@ void GlCanvas::Render(QPainter* painter, int width, int height) {
   if (!IsRedrawNeeded()) {
     return;
   }
+
   painter->beginNativePainting();
   redraw_requested_ = false;
   ui_batcher_.ResetElements();

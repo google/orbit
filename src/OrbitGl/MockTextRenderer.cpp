@@ -9,12 +9,14 @@
 
 #include <limits>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
+#include "OrbitGl/TextRenderer.h"
 
 namespace orbit_gl {
 
 // Clearing counters also in creation to not duplicate code.
-MockTextRenderer::MockTextRenderer() { Clear(); }
+MockTextRenderer::MockTextRenderer() : TextRenderer() { Clear(); }
 
 void MockTextRenderer::Clear() {
   min_point_ = Vec2{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
@@ -64,7 +66,7 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
 
   AdjustDrawingBoundaries({real_start_x, real_start_y});
   AdjustDrawingBoundaries({real_start_x + text_width, real_start_y + text_height});
-  z_layers_.insert(z);
+  render_groups_.insert(BatchRenderGroupId(z));
   num_add_text_calls_++;
   num_characters_in_add_text_.insert(strlen(text));
   vertical_position_in_add_text.insert(real_start_y);
@@ -103,10 +105,11 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 }
 
 bool MockTextRenderer::IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return std::find_if_not(z_layers_.begin(), z_layers_.end(),
-                          [z_layer_min, z_layer_max](float layer) {
-                            return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(layer);
-                          }) == z_layers_.end();
+  return std::find_if_not(
+             render_groups_.begin(), render_groups_.end(),
+             [z_layer_min, z_layer_max](const BatchRenderGroupId& group) {
+               return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(group.layer);
+             }) == render_groups_.end();
 }
 
 void MockTextRenderer::AdjustDrawingBoundaries(Vec2 point) {

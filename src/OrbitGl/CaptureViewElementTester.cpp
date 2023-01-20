@@ -10,7 +10,7 @@
 #include <vector>
 
 orbit_gl::CaptureViewElementTester::CaptureViewElementTester()
-    : viewport_(1920, 1080), primitive_assembler_(&batcher_, &picking_manager_) {}
+    : viewport_(1920, 1080), primitive_assembler_(&batcher_, &state_manager_, &picking_manager_) {}
 
 void orbit_gl::CaptureViewElementTester::RunTests(CaptureViewElement* element) {
   TestWidthPropagationToChildren(element);

@@ -23,7 +23,7 @@ void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   if (from[1] == to[1]) num_horizontal_lines_++;
   AdjustDrawingBoundaries({from[0], from[1]});
   AdjustDrawingBoundaries({to[0], to[1]});
-  z_layers_.insert(z);
+  render_groups_.insert(BatchRenderGroupId(z));
 }
 void MockBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
                          const Color& /*picking_color*/,
@@ -32,7 +32,7 @@ void MockBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& c
   for (int i = 0; i < 4; i++) {
     AdjustDrawingBoundaries(box.vertices[i]);
   }
-  z_layers_.insert(z);
+  render_groups_.insert(BatchRenderGroupId(z));
 }
 void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                               const Color& /*picking_color*/,
@@ -41,7 +41,7 @@ void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::arra
   for (int i = 0; i < 3; i++) {
     AdjustDrawingBoundaries(triangle.vertices[i]);
   }
-  z_layers_.insert(z);
+  render_groups_.insert(BatchRenderGroupId(z));
 }
 
 void MockBatcher::ResetElements() {
@@ -52,7 +52,7 @@ void MockBatcher::ResetElements() {
   num_vertical_lines_ = 0;
   min_point_ = Vec2{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   max_point_ = Vec2{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
-  z_layers_.clear();
+  render_groups_.clear();
 }
 
 uint32_t MockBatcher::GetNumElements() const {
@@ -91,10 +91,11 @@ bool MockBatcher::IsEverythingInsideRectangle(const Vec2& start, const Vec2& siz
 }
 
 bool MockBatcher::IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return std::find_if_not(z_layers_.begin(), z_layers_.end(),
-                          [z_layer_min, z_layer_max](float layer) {
-                            return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(layer);
-                          }) == z_layers_.end();
+  return std::find_if_not(
+             render_groups_.begin(), render_groups_.end(),
+             [z_layer_min, z_layer_max](const BatchRenderGroupId& group) {
+               return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(group.layer);
+             }) == render_groups_.end();
 }
 
 void MockBatcher::AdjustDrawingBoundaries(Vec2 point) {

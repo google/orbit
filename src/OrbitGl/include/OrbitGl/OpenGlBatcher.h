@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -17,6 +18,7 @@
 #include <vector>
 
 #include "Containers/BlockChain.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -34,7 +36,7 @@ struct LineBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_LINES_PER_BLOCK = 64 * 1024;
+  static const int NUM_LINES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
@@ -47,7 +49,7 @@ struct BoxBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
+  static const int NUM_BOXES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Quad, NUM_BOXES_PER_BLOCK> boxes_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
@@ -60,7 +62,7 @@ struct TriangleBuffer {
     picking_colors_.Reset();
   }
 
-  static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
+  static const int NUM_TRIANGLES_PER_BLOCK = 1024;
   orbit_containers::BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
@@ -76,6 +78,7 @@ struct PrimitiveBuffers {
   LineBuffer line_buffer;
   BoxBuffer box_buffer;
   TriangleBuffer triangle_buffer;
+  BatchRenderGroupState metadata;
 };
 
 }  // namespace orbit_gl_internal
@@ -100,21 +103,22 @@ class OpenGlBatcher : public Batcher, protected QOpenGLFunctions {
                    std::unique_ptr<PickingUserData> user_data = nullptr) override;
 
   [[nodiscard]] uint32_t GetNumElements() const override { return user_data_.size(); }
-  [[nodiscard]] std::vector<float> GetLayers() const override;
-  void DrawLayer(float layer, bool picking) override;
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override;
+  void DrawRenderGroup(const BatchRenderGroupId& group, bool picking) override;
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
 
   [[nodiscard]] Statistics GetStatistics() const override;
 
  protected:
-  std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
+  absl::flat_hash_map<BatchRenderGroupId, orbit_gl_internal::PrimitiveBuffers>
+      primitive_buffers_by_group_;
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
-  void DrawLineBuffer(float layer, bool picking);
-  void DrawBoxBuffer(float layer, bool picking);
-  void DrawTriangleBuffer(float layer, bool picking);
+  void DrawLineBuffer(const BatchRenderGroupId& group, bool picking);
+  void DrawBoxBuffer(const BatchRenderGroupId& group, bool picking);
+  void DrawTriangleBuffer(const BatchRenderGroupId& group, bool picking);
 };
 
 }  // namespace orbit_gl

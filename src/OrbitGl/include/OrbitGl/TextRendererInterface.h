@@ -33,8 +33,12 @@ class TextRendererInterface {
   virtual void Init() = 0;
   virtual void Clear() = 0;
 
-  virtual void RenderLayer(QPainter* painter, float layer) = 0;
-  [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
+  [[nodiscard]] virtual std::vector<BatchRenderGroupId> GetRenderGroups() const = 0;
+  virtual void DrawRenderGroup(QPainter* painter, BatchRenderGroupStateManager& manager,
+                               const BatchRenderGroupId& group) = 0;
+
+  [[nodiscard]] virtual std::string GetCurrentRenderGroupName() const = 0;
+  virtual void SetCurrentRenderGroupName(std::string name) = 0;
 
   // Add a - potentially multiline - text at the given position and z-layer and with the specifier
   // formatting. If formatting.max_size is set all lines are elided to fit into this width.

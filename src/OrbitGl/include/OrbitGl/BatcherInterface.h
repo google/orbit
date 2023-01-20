@@ -6,6 +6,7 @@
 #define ORBIT_GL_BATCHER_INTERFACE_H_
 
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/PickingManager.h"
 
@@ -26,7 +27,7 @@ struct PickingUserData {
 //
 // BatcherInterface is an interface class. By calling BatcherInterface::AddXXX, primitives are
 // added to internal CPU buffers, and sorted into layers formed by equal z-coordinates. Each layer
-// should then be drawn seperately with BatcherInterface::DrawLayer(). BatcherInterface also
+// should then be drawn seperately with BatcherInterface::DrawRenderGroup(). BatcherInterface also
 // provides a method to get the user data given a picking_id (in general used for tooltips).
 class BatcherInterface {
  public:
@@ -42,10 +43,13 @@ class BatcherInterface {
                            std::unique_ptr<PickingUserData> user_data) = 0;
   [[nodiscard]] virtual uint32_t GetNumElements() const = 0;
 
-  [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
-  virtual void DrawLayer(float layer, bool picking) = 0;
+  [[nodiscard]] virtual std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const = 0;
+  virtual void DrawRenderGroup(const BatchRenderGroupId& group, bool picking) = 0;
 
   [[nodiscard]] virtual const PickingUserData* GetUserData(PickingId id) const = 0;
+
+  [[nodiscard]] virtual std::string GetCurrentRenderGroupName() const = 0;
+  virtual void SetCurrentRenderGroupName(std::string name) = 0;
 };
 
 }  // namespace orbit_gl
