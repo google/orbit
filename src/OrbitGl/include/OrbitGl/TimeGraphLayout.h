@@ -20,16 +20,14 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetMinSliderLength() const = 0;
   [[nodiscard]] virtual float GetSliderResizeMargin() const = 0;
   [[nodiscard]] virtual float GetTimeBarHeight() const = 0;
-  [[nodiscard]] virtual float GetTrackTabWidth() const = 0;
-  [[nodiscard]] virtual float GetTrackTabHeight() const = 0;
-  [[nodiscard]] virtual float GetTrackTabOffset() const = 0;
   [[nodiscard]] virtual float GetTrackIndentOffset() const = 0;
   [[nodiscard]] virtual float GetCollapseButtonSize(int indentation_level) const = 0;
   [[nodiscard]] virtual float GetCollapseButtonOffset() const = 0;
   [[nodiscard]] virtual float GetRoundingRadius() const = 0;
   [[nodiscard]] virtual float GetRoundingNumSides() const = 0;
   [[nodiscard]] virtual float GetTextOffset() const = 0;
-  [[nodiscard]] virtual float GetLeftMargin() const = 0;
+  [[nodiscard]] virtual float GetTrackHeaderWidth() const = 0;
+  [[nodiscard]] virtual float GetThreadTrackMinimumHeight() const = 0;
   [[nodiscard]] virtual float GetRightMargin() const = 0;
   [[nodiscard]] virtual float GetMinButtonSize() const = 0;
   [[nodiscard]] virtual float GetButtonWidth() const = 0;
@@ -46,8 +44,11 @@ class TimeGraphLayout {
   [[nodiscard]] virtual float GetThreadDependencyArrowBodyWidth() const = 0;
   [[nodiscard]] virtual float GetScale() const = 0;
   [[nodiscard]] virtual bool GetDrawTrackBackground() const = 0;
+  [[nodiscard]] virtual bool GetDrawTrackHeaderBackground() const = 0;
   [[nodiscard]] virtual uint32_t GetFontSize() const = 0;
   [[nodiscard]] virtual int GetMaxLayoutingLoops() const = 0;
+  [[nodiscard]] virtual bool GetDrawAsIfPicking() const = 0;
+  [[nodiscard]] virtual bool GetDrawTimeGraphMasks() const = 0;
   virtual void SetScale(float value) = 0;
 
   ~TimeGraphLayout() = default;

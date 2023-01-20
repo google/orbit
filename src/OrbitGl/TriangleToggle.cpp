@@ -28,7 +28,7 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  const float z = GlCanvas::kZValueTrack;
+  const float z = GlCanvas::kZValueTrackText;
 
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
   const Color white(255, 255, 255, 255);
@@ -58,8 +58,7 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
     primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
-    Quad box = MakeBox(midpoint - Vec2(half_triangle_side_length, half_triangle_side_length),
-                       Vec2(triangle_side_length, triangle_side_length));
+    Quad box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
     primitive_assembler.AddBox(box, z, color, shared_from_this());
   }
 }

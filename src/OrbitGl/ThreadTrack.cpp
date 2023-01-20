@@ -35,7 +35,6 @@
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/TimerTrack.h"
 #include "OrbitGl/Track.h"
-#include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_client_data::FunctionInfo;
@@ -271,9 +270,9 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
-  const Vec2 pos = GetPos();
-  float current_y =
-      header_->GetPos()[1] + header_->GetHeight() + layout_->GetTrackContentTopMargin();
+  Vec2 pos = GetPos();
+  pos[0] += header_->GetWidth();
+  float current_y = GetPos()[1] + layout_->GetTrackContentTopMargin();
 
   thread_state_bar_->SetPos(pos[0], current_y);
   if (thread_state_bar_->ShouldBeRendered()) {
@@ -330,9 +329,10 @@ float ThreadTrack::GetHeight() const {
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
       (depth > 0);
-  return GetHeightAboveTimers() +
-         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenThreadPanes() : 0) +
-         layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
+  float height = GetHeightAboveTimers() +
+                 (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenThreadPanes() : 0) +
+                 layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
+  return std::max(height, layout_->GetThreadTrackMinimumHeight());
 }
 
 float ThreadTrack::GetHeightAboveTimers() const {
@@ -341,7 +341,7 @@ float ThreadTrack::GetHeightAboveTimers() const {
   const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
-  float header_height = header_->GetHeight() + layout_->GetTrackContentTopMargin();
+  float header_height = layout_->GetTrackContentTopMargin();
   int track_count = 0;
   if (!thread_state_bar_->IsEmpty()) {
     header_height += thread_state_track_height;
@@ -389,8 +389,9 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_,
-                  viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
+      GetDrawData(min_tick, max_tick, GetPos()[0] + header_->GetWidth(),
+                  GetWidth() - header_->GetWidth(), &primitive_assembler, timeline_info_, viewport_,
+                  IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
                   app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];

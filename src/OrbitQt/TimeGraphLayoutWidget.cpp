@@ -22,9 +22,6 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&slider_width_);
   AddWidgetForProperty(&min_slider_length_);
   AddWidgetForProperty(&time_bar_height_);
-  AddWidgetForProperty(&track_tab_width_);
-  AddWidgetForProperty(&track_tab_height_);
-  AddWidgetForProperty(&track_tab_offset_);
   AddWidgetForProperty(&track_indent_offset_);
   AddWidgetForProperty(&collapse_button_offset_);
   AddWidgetForProperty(&collapse_button_size_);
@@ -32,7 +29,8 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&rounding_radius_);
   AddWidgetForProperty(&rounding_num_sides_);
   AddWidgetForProperty(&text_offset_);
-  AddWidgetForProperty(&left_margin_);
+  AddWidgetForProperty(&track_header_width_);
+  AddWidgetForProperty(&thread_track_minimum_height_);
   AddWidgetForProperty(&right_margin_);
   AddWidgetForProperty(&min_button_size_);
   AddWidgetForProperty(&button_width_);
@@ -47,6 +45,10 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&thread_dependency_arrow_head_width_);
   AddWidgetForProperty(&thread_dependency_arrow_head_height_);
   AddWidgetForProperty(&thread_dependency_arrow_body_width_);
+  AddWidgetForProperty(&draw_track_background_);
+  AddWidgetForProperty(&draw_track_header_background_);
+  AddWidgetForProperty(&draw_timegraph_masks_);
+  AddWidgetForProperty(&draw_as_if_picking_);
   AddWidgetForProperty(&scale_);
 }
 

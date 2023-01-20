@@ -53,11 +53,6 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] float GetTimeBarHeight() const override {
     return time_bar_height_.value() * scale_.value();
   }
-  [[nodiscard]] float GetTrackTabWidth() const override { return track_tab_width_.value(); }
-  [[nodiscard]] float GetTrackTabHeight() const override {
-    return track_tab_height_.value() * scale_.value();
-  }
-  [[nodiscard]] float GetTrackTabOffset() const override { return track_tab_offset_.value(); }
   [[nodiscard]] float GetTrackIndentOffset() const override { return track_indent_offset_.value(); }
   [[nodiscard]] float GetCollapseButtonSize(int indentation_level) const override;
   [[nodiscard]] float GetCollapseButtonOffset() const override {
@@ -70,8 +65,11 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] float GetTextOffset() const override {
     return text_offset_.value() * scale_.value();
   }
-  [[nodiscard]] float GetLeftMargin() const override {
-    return left_margin_.value() * scale_.value();
+  [[nodiscard]] float GetTrackHeaderWidth() const override {
+    return track_header_width_.value() * scale_.value();
+  }
+  [[nodiscard]] float GetThreadTrackMinimumHeight() const override {
+    return thread_track_minimum_height_.value() * scale_.value();
   }
   [[nodiscard]] float GetRightMargin() const override {
     return right_margin_.value() * scale_.value();
@@ -118,11 +116,19 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] bool GetDrawTrackBackground() const override {
     return draw_track_background_.value();
   }
+  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override {
+    return draw_track_header_background_.value();
+  }
+  [[nodiscard]] bool GetDrawTimeGraphMasks() const override {
+    return draw_timegraph_masks_.value();
+  }
   [[nodiscard]] uint32_t GetFontSize() const override {
     return std::lround(static_cast<float>(font_size_.value()) * scale_.value());
   }
 
   [[nodiscard]] int GetMaxLayoutingLoops() const override { return max_layouting_loops_.value(); }
+
+  [[nodiscard]] bool GetDrawAsIfPicking() const override { return draw_as_if_picking_.value(); }
 
  private:
   FloatProperty text_box_height_{{
@@ -167,7 +173,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Space between GPU depths:",
   }};
   FloatProperty space_between_tracks_{{
-      .initial_value = 10.f,
+      .initial_value = 2.f,
       .label = "Space between Tracks:",
   }};
   FloatProperty space_between_tracks_and_timeline_{{
@@ -194,26 +200,12 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .initial_value = 20.f,
       .label = "Minimum Slider Length:",
   }};
-  FloatProperty track_tab_width_{{
-      .initial_value = 350.f,
-      .min = 0.f,
-      .max = 1000.f,
-      .label = "Track Tab Width:",
-  }};
-  FloatProperty track_tab_height_{{
-      .initial_value = 25.f,
-      .label = "Track Tab Height:",
-  }};
-  FloatProperty track_tab_offset_{{
-      .initial_value = 0.f,
-      .label = "Track Tab Offset:",
-  }};
   FloatProperty track_indent_offset_{{
       .initial_value = 5.f,
       .label = "Track Indent Offset:",
   }};
   FloatProperty collapse_button_offset_{{
-      .initial_value = 15.f,
+      .initial_value = 10.f,
       .label = "Collapse Button Offset:",
   }};
   FloatProperty collapse_button_size_{{
@@ -233,11 +225,17 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .initial_value = 5.f,
       .label = "Text Offset:",
   }};
-  FloatProperty left_margin_{{
-      .initial_value = 0.f,
+  FloatProperty track_header_width_{{
+      .initial_value = 250.f,
       .min = 0.f,
       .max = 1000.f,
-      .label = "Left Margin:",
+      .label = "Track Header Width:",
+  }};
+  FloatProperty thread_track_minimum_height_{{
+      .initial_value = 24.f,
+      .min = 0.f,
+      .max = 100.f,
+      .label = "Minimum Thread Track Height:",
   }};
   FloatProperty right_margin_{{
       .initial_value = 10.f,
@@ -294,6 +292,11 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Thread Dependency Arrow Head Width:",
   }};
   BoolProperty draw_track_background_{{.initial_value = true, .label = "Draw Track Background"}};
+  BoolProperty draw_track_header_background_{
+      {.initial_value = true, .label = "Draw Track Header Background"}};
+  BoolProperty draw_timegraph_masks_{{.initial_value = true, .label = "Draw TimeGraph Masks"}};
+  BoolProperty draw_as_if_picking_{{.initial_value = false, .label = "Draw as if Picking"}};
+
   IntProperty max_layouting_loops_{
       {.initial_value = 10, .min = 1, .max = 100, .label = "Max layouting loops:"}};
 };

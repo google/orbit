@@ -48,9 +48,6 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
     return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
   }
   [[nodiscard]] float GetTimeBarHeight() const override { return kTimeBarHeight * scale_; }
-  [[nodiscard]] float GetTrackTabWidth() const override { return kTrackTabWidth; }
-  [[nodiscard]] float GetTrackTabHeight() const override { return kTrackTabHeight * scale_; }
-  [[nodiscard]] float GetTrackTabOffset() const override { return kTrackTabOffset; }
   [[nodiscard]] float GetTrackIndentOffset() const override { return kTrackIndentOffset; }
   [[nodiscard]] float GetCollapseButtonSize(int indentation_level) const override {
     float button_size_without_scaling =
@@ -64,7 +61,10 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   [[nodiscard]] float GetRoundingRadius() const override { return kRoundingRadius * scale_; }
   [[nodiscard]] float GetRoundingNumSides() const override { return kRoundingNumSides; }
   [[nodiscard]] float GetTextOffset() const override { return kTextOffset * scale_; }
-  [[nodiscard]] float GetLeftMargin() const override { return kLeftMargin * scale_; }
+  [[nodiscard]] float GetTrackHeaderWidth() const override { return kLeftMargin * scale_; }
+  [[nodiscard]] float GetThreadTrackMinimumHeight() const override {
+    return kThreadTrackMinHeight * scale_;
+  }
   [[nodiscard]] float GetRightMargin() const override { return kRightMargin * scale_; }
   [[nodiscard]] float GetMinButtonSize() const override { return kMinButtonSize; }
   [[nodiscard]] float GetButtonWidth() const override { return kButtonWidth * scale_; }
@@ -104,6 +104,10 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
 
   [[nodiscard]] int GetMaxLayoutingLoops() const override { return kMaxLayoutingLoops; }
 
+  [[nodiscard]] bool GetDrawTrackHeaderBackground() const override { return false; }
+  [[nodiscard]] bool GetDrawAsIfPicking() const override { return false; }
+  [[nodiscard]] bool GetDrawTimeGraphMasks() const override { return false; }
+
  private:
   constexpr static float kTextBoxHeight = 20.f;
   constexpr static float kCoreHeight = 10.f;
@@ -133,6 +137,7 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   constexpr static float kRoundingNumSides = 16;
   constexpr static float kTextOffset = 5.f;
   constexpr static float kLeftMargin = 100.f;
+  constexpr static float kThreadTrackMinHeight = 20.f;
   constexpr static float kRightMargin = 10.f;
   constexpr static float kMinButtonSize = 5.f;
   constexpr static float kButtonWidth = 15.f;

@@ -30,6 +30,7 @@ float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.06f;
 float GlCanvas::kZValueBoxBorder = 0.07f;
+float GlCanvas::kZValueTrackHeader = 0.075f;
 float GlCanvas::kZValueTrackText = 0.08f;
 float GlCanvas::kZValueTrackLabel = 0.09f;
 float GlCanvas::kZValueTimeBar = 0.31f;
@@ -235,7 +236,7 @@ void GlCanvas::PostRender(QPainter* painter) {
     can_hover_ = false;
   }
 
-  if (prev_picking_mode != PickingMode::kNone) {
+  if (!draw_as_if_picking_ && prev_picking_mode != PickingMode::kNone) {
     Pick(prev_picking_mode, mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
     GlCanvas::Render(painter, viewport_.GetScreenWidth(), viewport_.GetScreenHeight());
   }
