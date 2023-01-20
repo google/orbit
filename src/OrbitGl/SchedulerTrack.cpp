@@ -23,6 +23,7 @@
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/ThreadColor.h"
 #include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
 #include "OrbitGl/Viewport.h"
 
 using orbit_client_protos::TimerInfo;

@@ -20,6 +20,7 @@
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TextRenderer.h"
 #include "OrbitGl/TimeGraphLayout.h"
+#include "OrbitGl/TrackHeader.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
