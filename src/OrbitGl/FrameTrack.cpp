@@ -219,10 +219,10 @@ void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& t
   const Color black_color(0, 0, 0, 255);
   const Vec2 pos = GetPos();
 
-  const float x = pos[0];
+  const float x = pos[0] + header_->GetWidth();
   const float y = pos[1] + GetHeightAboveTimers() + GetMaximumBoxHeight() - GetAverageBoxHeight();
   Vec2 from(x, y);
-  Vec2 to(x + GetWidth(), y);
+  Vec2 to(pos[0] + GetWidth(), y);
   float text_z = GlCanvas::kZValueTrackText;
 
   std::string avg_time =
@@ -230,7 +230,7 @@ void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& t
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->GetFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
-  Vec2 white_text_box_position(pos[0] + layout_->GetRightMargin(), y);
+  Vec2 white_text_box_position(x + layout_->GetRightMargin(), y);
 
   primitive_assembler.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
                               white_color);

@@ -71,8 +71,9 @@ void SchedulerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_,
-                  viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
+      GetDrawData(min_tick, max_tick, GetPos()[0] + header_->GetWidth(),
+                  GetWidth() - header_->GetWidth(), &primitive_assembler, timeline_info_, viewport_,
+                  IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
                   app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   const uint32_t resolution_in_pixels = viewport_->WorldToScreen({GetWidth(), 0})[0];

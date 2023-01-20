@@ -100,6 +100,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] uint64_t GetCaptureTimeSpanNs() const override;
   [[nodiscard]] std::pair<float, float> GetBoxPosXAndWidthFromTicks(
       uint64_t start_tick, uint64_t end_tick) const override;
+  [[nodiscard]] float ClampToTimelineUiElementWorldX(float x) const;
 
   void UpdateCaptureMinMaxTimestamps();
 

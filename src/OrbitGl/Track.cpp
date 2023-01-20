@@ -55,59 +55,42 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
   // Same for picking - the track background is not pickable
   if (picking || !draw_background) return;
 
-  const float x0 = GetPos()[0];
+  const float x0 = GetPos()[0] + header_->GetWidth();
   const float y0 = GetPos()[1];
-  const float header_height = header_->GetHeight();
   const float track_z = GlCanvas::kZValueTrack;
 
   Color track_background_color = GetTrackBackgroundColor();
 
   Vec2 track_size = GetSize();
 
-  // Draw rounded corners.
-  float radius = std::min(layout_->GetRoundingRadius(), layout_->GetTrackTabHeight() * 0.5f);
-  auto sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
-  auto rounded_corner = orbit_gl::GetRoundedCornerMask(radius, sides);
-
   // This draws the non-tab content of the track. The tab itself is a separate CaptureViewElement
   // child of the track.
   // Note that the top-left corner is not rounded due to the design of the track tab sitting
   // in the top left.
   //
-  // [ Header ] ________________________  content_top_right
-  // |                                  `
-  // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
-  // \__________________________________/
-  // content_bottom_left                 content_bottom_right
+  //  ____________________________________________  content_top_right
+  // |         |                                  |
+  // | header  |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+  // |_________|__________________________________|
+  //            content_bottom_left                 content_bottom_right
   //
   Vec2 content_bottom_left(x0, y0 + track_size[1]);
   Vec2 content_bottom_right(x0 + track_size[0], y0 + track_size[1]);
 
-  // The track content starts underneath the track header, and we only draw the background
-  // starting
-  // there. This could be prevented by moving the track content into a separate child, but in the
-  // end, the design of track and track header will need to influence each other...
-  Vec2 content_top_right(x0 + track_size[0], y0 + header_height);
-  Vec2 content_top_left(x0, y0 + header_height);
-
-  auto shared_this = shared_from_this();
-  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_left,
-                            GlCanvas::kBackgroundColor, 0, track_z, shared_this);
-  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_right,
-                            GlCanvas::kBackgroundColor, -90.f, track_z, shared_this);
-  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_top_right,
-                            GlCanvas::kBackgroundColor, 180.f, track_z, shared_this);
+  Vec2 content_top_right(x0 + track_size[0], y0);
+  Vec2 content_top_left(x0, y0);
 
   // Draw track's content background.
-  Quad box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight() - header_height));
+  Quad box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight()));
   primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
 }
 
 void Track::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
-  header_->SetWidth(layout_->GetTrackTabWidth());
-  header_->SetPos(GetPos()[0] + layout_->GetTrackTabOffset(), GetPos()[1]);
+  header_->SetWidth(layout_->GetTrackHeaderWidth());
+  header_->SetHeight(GetHeight());
+  header_->SetPos(GetPos()[0], GetPos()[1]);
   UpdatePositionOfSubtracks();
 }
 
