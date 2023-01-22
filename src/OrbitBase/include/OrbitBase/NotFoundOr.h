@@ -15,8 +15,12 @@ namespace orbit_base {
 
 // NotFound type that carries a message
 struct NotFound {
-  explicit NotFound(std::string message = "") : message(std::move(message)) {}
-  std::string message;
+  explicit NotFound(std::string message = "") : message_(std::move(message)) {}
+
+  [[nodiscard]] const std::string& message() const { return message_; }
+
+ private:
+  std::string message_;
 };
 
 // NotFoundOr can be used as the return type of a search operation, where the search can be
@@ -36,14 +40,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] const std::string& GetNotFoundMessage(const NotFoundOr<T>& not_found_or) {
   ORBIT_CHECK(IsNotFound(not_found_or));
-  return not_found_or.error().message;
-}
-
-// Free function with move semantics to get the not found message of a NotFoundOr object.
-template <typename T>
-[[nodiscard]] std::string&& GetNotFoundMessage(NotFoundOr<T>&& not_found_or) {
-  ORBIT_CHECK(IsNotFound(not_found_or));
-  return std::move(not_found_or).error().message;
+  return not_found_or.error().message();
 }
 
 // Free function to get the "found" content of a NotFoundOr object.
