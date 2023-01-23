@@ -104,6 +104,7 @@ class PrimitiveAssembler {
   void AddQuadBorder(const Quad& quad, float z, const Color& color,
                      std::unique_ptr<orbit_gl::PickingUserData> user_data);
   void AddQuadBorder(const Quad& quad, float z, const Color& color);
+  void AddAabbOutline(Vec2 pos, Vec2 size, float outline_width, float z, const Color& color);
   void AddCircle(const Vec2& position, float radius, float z, const Color& color);
 
   enum class ArrowDirection { kUp, kDown };

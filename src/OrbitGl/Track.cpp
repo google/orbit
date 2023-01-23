@@ -82,6 +82,15 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
   // Draw track's content background.
   Quad box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight()));
   primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
+
+  // Track header highlight on hover.
+  if (IsMouseOver()) {
+    const Color kOutlineColor = Color(128, 128, 128, 255);
+    constexpr float kOutlineWidth = 2.f;
+    Vec2 outline_size = header_->GetSize() - Vec2{layout_->GetSpaceBetweenTracks(), 0};
+    primitive_assembler.AddAabbOutline(GetPos(), outline_size, kOutlineWidth,
+                                       GlCanvas::kZValueMargin, kOutlineColor);
+  }
 }
 
 void Track::DoUpdateLayout() {
