@@ -90,6 +90,7 @@ target_sources(
          include/OrbitGl/TranslationStack.h
          include/OrbitGl/TriangleToggle.h
          include/OrbitGl/VariableTrack.h
+         include/OrbitGl/VerticalSizer.h
          include/OrbitGl/Viewport.h)
 
 target_sources(
@@ -159,6 +160,7 @@ target_sources(
           TrackTestData.cpp
           TranslationStack.cpp
           TriangleToggle.cpp
+          VerticalSizer.cpp
           Viewport.cpp)
 
 target_include_directories(OrbitGl PUBLIC include/)
