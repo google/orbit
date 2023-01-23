@@ -5,6 +5,12 @@
 #ifndef ORBIT_GL_VERTICAL_SIZER_H_
 #define ORBIT_GL_VERTICAL_SIZER_H_
 
+#include <stdint.h>
+
+#include <functional>
+#include <memory>
+
+#include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/PrimitiveAssembler.h"
 #include "OrbitGl/TextRenderer.h"

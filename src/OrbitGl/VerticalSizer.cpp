@@ -4,9 +4,11 @@
 
 #include "OrbitGl/VerticalSizer.h"
 
-#include <QCursor>
 #include <QGuiApplication>
+#include <Qt>
+#include <utility>
 
+#include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"
 
 namespace orbit_gl {
