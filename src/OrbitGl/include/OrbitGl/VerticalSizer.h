@@ -13,6 +13,8 @@
 
 namespace orbit_gl {
 
+// The VerticalSizer is a vertical line that we can move horizontally to trigger an action which is
+// user-defined in the `on_drag_callback`.
 class VerticalSizer : public orbit_gl::CaptureViewElement,
                       public std::enable_shared_from_this<VerticalSizer> {
  public:
@@ -25,7 +27,7 @@ class VerticalSizer : public orbit_gl::CaptureViewElement,
   void OnDrag(int /*x*/, int /*y*/) override;
 
   [[nodiscard]] float GetHeight() const override { return height_; }
-  void SetHeight(float height) { height_ = height; }
+  void SetHeight(float height);
 
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return LayoutFlags::kNone; }
 

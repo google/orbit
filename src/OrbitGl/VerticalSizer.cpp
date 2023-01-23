@@ -17,11 +17,17 @@ VerticalSizer::VerticalSizer(CaptureViewElement* parent, const orbit_gl::Viewpor
     : CaptureViewElement(parent, viewport, layout),
       on_drag_callback_(std::move(on_drag_callback)) {}
 
+void VerticalSizer::SetHeight(float height) {
+  if (height == height_) return;
+  height_ = height;
+  RequestUpdate(RequestUpdateScope::kDraw);
+}
+
 void VerticalSizer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
-  Quad right_margin_box = MakeBox(GetPos(), GetSize());
-  primitive_assembler.AddBox(right_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor,
+  Quad box = MakeBox(GetPos(), GetSize());
+  primitive_assembler.AddBox(box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor,
                              shared_from_this());
 }
 
@@ -30,7 +36,6 @@ CaptureViewElement::EventResult VerticalSizer::OnMouseEnter() {
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::setOverrideCursor(Qt::SizeHorCursor);
   }
-  RequestUpdate(RequestUpdateScope::kDraw);
   return event_result;
 }
 
@@ -39,14 +44,10 @@ CaptureViewElement::EventResult VerticalSizer::OnMouseLeave() {
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::restoreOverrideCursor();
   }
-  RequestUpdate(RequestUpdateScope::kDraw);
   return event_result;
 }
 
-void VerticalSizer::OnDrag(int x, int y) {
-  on_drag_callback_(x, y);
-  RequestUpdate(RequestUpdateScope::kDraw);
-}
+void VerticalSizer::OnDrag(int x, int y) { on_drag_callback_(x, y); }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 VerticalSizer::CreateAccessibleInterface() {

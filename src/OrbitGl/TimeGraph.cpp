@@ -93,6 +93,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
         float min_size = layout_->GetTimeBarHeight() + track_header_sizer_->GetWidth();
         float header_width = std::max(static_cast<float>(x) - GetPos()[0], min_size);
         layout_->SetTrackHeaderWidth(header_width);
+        RequestUpdate(RequestUpdateScope::kDraw);
       });
 
   horizontal_slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
@@ -698,6 +699,13 @@ void TimeGraph::DoUpdateLayout() {
 
   UpdateCaptureMinMaxTimestamps();
   UpdateChildrenPosAndContainerSize();
+
+  // Track header sizer.
+  float sizer_width = layout_->GetSpaceBetweenTracks();
+  float header_width = layout_->GetTrackHeaderWidth();
+  track_header_sizer_->SetWidth(sizer_width);
+  track_header_sizer_->SetHeight(GetHeight());
+  track_header_sizer_->SetPos(GetPos()[0] + header_width - sizer_width, GetPos()[1]);
 }
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
@@ -895,13 +903,6 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   if (layout_->GetDrawTimeGraphMasks()) {
     DrawMarginsBetweenChildren(primitive_assembler);
   }
-
-  // Track header sizer.
-  float sizer_width = layout_->GetSpaceBetweenTracks();
-  float header_width = layout_->GetTrackHeaderWidth();
-  track_header_sizer_->SetWidth(sizer_width);
-  track_header_sizer_->SetHeight(GetHeight());
-  track_header_sizer_->SetPos(GetPos()[0] + header_width - sizer_width, GetPos()[1]);
 }
 
 void TimeGraph::DrawMarginsBetweenChildren(
