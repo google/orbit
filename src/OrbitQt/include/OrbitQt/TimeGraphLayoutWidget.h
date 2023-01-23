@@ -68,6 +68,10 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
   [[nodiscard]] float GetTrackHeaderWidth() const override {
     return track_header_width_.value() * scale_.value();
   }
+  void SetTrackHeaderWidth(float width) override {
+    track_header_width_.SetValue(width / scale_.value());
+  }
+
   [[nodiscard]] float GetThreadTrackMinimumHeight() const override {
     return thread_track_minimum_height_.value() * scale_.value();
   }
@@ -177,7 +181,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Space between Tracks:",
   }};
   FloatProperty space_between_tracks_and_timeline_{{
-      .initial_value = 10.f,
+      .initial_value = 2.f,
       .label = "Space between Tracks and Timeline:",
   }};
   FloatProperty space_between_thread_panes_{{
@@ -238,7 +242,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
       .label = "Minimum Thread Track Height:",
   }};
   FloatProperty right_margin_{{
-      .initial_value = 10.f,
+      .initial_value = 0.f,
       .label = "Right Margin:",
   }};
   FloatProperty min_button_size_{{

@@ -44,6 +44,7 @@
 #include "OrbitGl/TimelineUi.h"
 #include "OrbitGl/TrackContainer.h"
 #include "OrbitGl/TrackManager.h"
+#include "OrbitGl/VerticalSizer.h"
 #include "OrbitGl/Viewport.h"
 
 class OrbitApp;
@@ -79,6 +80,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   }
   [[nodiscard]] orbit_gl::GlSlider* GetHorizontalSlider() const { return horizontal_slider_.get(); }
   [[nodiscard]] orbit_gl::GlSlider* GetVerticalSlider() const { return vertical_slider_.get(); }
+  [[nodiscard]] orbit_gl::VerticalSizer* GetTrackHeaderSizer() const {
+    return track_header_sizer_.get();
+  }
   [[nodiscard]] orbit_gl::TimelineUi* GetTimelineUi() const { return timeline_ui_.get(); }
   [[nodiscard]] orbit_gl::Button* GetPlusButton() const { return plus_button_.get(); }
   [[nodiscard]] orbit_gl::Button* GetMinusButton() const { return minus_button_.get(); }
@@ -200,6 +204,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   std::shared_ptr<orbit_gl::GlSlider> horizontal_slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
+  std::shared_ptr<orbit_gl::VerticalSizer> track_header_sizer_;
 
  private:
   [[nodiscard]] EventResult OnMouseWheel(

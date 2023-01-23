@@ -50,6 +50,7 @@ class TimeGraphLayout {
   [[nodiscard]] virtual bool GetDrawAsIfPicking() const = 0;
   [[nodiscard]] virtual bool GetDrawTimeGraphMasks() const = 0;
   virtual void SetScale(float value) = 0;
+  virtual void SetTrackHeaderWidth(float /*width*/){};
 
   ~TimeGraphLayout() = default;
 };

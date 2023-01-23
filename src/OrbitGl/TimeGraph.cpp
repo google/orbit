@@ -86,6 +86,14 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
       /*parent=*/this, viewport, layout_, /*timeline_info_interface=*/this);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
       /*parent=*/this, viewport, layout_, /*timeline_info_interface=*/this);
+  track_header_sizer_ = std::make_shared<orbit_gl::VerticalSizer>(
+      /*parent=*/this, viewport, layout_, [this](int x, int /*y*/) {
+        // Resize track header with minimum width being time bar width for symmetry and to leave
+        // space for triangle toggle.
+        float min_size = layout_->GetTimeBarHeight() + track_header_sizer_->GetWidth();
+        float header_width = std::max(static_cast<float>(x) - GetPos()[0], min_size);
+        layout_->SetTrackHeaderWidth(header_width);
+      });
 
   horizontal_slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
   horizontal_slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
@@ -887,6 +895,13 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   if (layout_->GetDrawTimeGraphMasks()) {
     DrawMarginsBetweenChildren(primitive_assembler);
   }
+
+  // Track header sizer.
+  float sizer_width = layout_->GetSpaceBetweenTracks();
+  float header_width = layout_->GetTrackHeaderWidth();
+  track_header_sizer_->SetWidth(sizer_width);
+  track_header_sizer_->SetHeight(GetHeight());
+  track_header_sizer_->SetPos(GetPos()[0] + header_width - sizer_width, GetPos()[1]);
 }
 
 void TimeGraph::DrawMarginsBetweenChildren(
@@ -951,8 +966,8 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTimelineUi(), GetTrackContainer(), GetHorizontalSlider(),
-          GetPlusButton(), GetMinusButton(),    GetVerticalSlider()};
+  return {GetTimelineUi(),  GetTrackContainer(), GetHorizontalSlider(), GetPlusButton(),
+          GetMinusButton(), GetVerticalSlider(), GetTrackHeaderSizer()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
