@@ -2291,23 +2291,29 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   if (!HasCaptureData()) {
     return;
   }
-  Future<std::shared_ptr<std::unique_ptr<SelectionData>>> selection_future =
+  Future<std::shared_ptr<PostProcessedSamplingData>> post_processed_sampling_data_future =
       thread_pool_->Schedule([this]() {
         const CaptureData& capture_data = GetCaptureData();
 
-        PostProcessedSamplingData post_processed_sampling_data =
+        return std::make_shared<PostProcessedSamplingData>(
             orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
-                                                                capture_data, *module_manager_);
-        GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
-        auto selection = std::make_unique<SelectionData>(
-            *module_manager_, GetCaptureData(), GetCaptureData().post_processed_sampling_data(),
-            &GetCaptureData().GetCallstackData());
-        return std::make_shared<std::unique_ptr<SelectionData>>(std::move(selection));
+                                                                capture_data, *module_manager_));
       });
+  Future<std::shared_ptr<std::unique_ptr<SelectionData>>> selection_future =
+      post_processed_sampling_data_future.Then(
+          thread_pool_.get(),
+          [this](const std::shared_ptr<PostProcessedSamplingData>& post_processed_sampling_data) {
+            GetMutableCaptureData().set_post_processed_sampling_data(
+                std::move(*post_processed_sampling_data));
+            auto selection = std::make_unique<SelectionData>(
+                *module_manager_, GetCaptureData(), GetCaptureData().post_processed_sampling_data(),
+                &GetCaptureData().GetCallstackData());
+            return std::make_shared<std::unique_ptr<SelectionData>>(std::move(selection));
+          });
 
   selection_future.Then(
       main_thread_executor_,
-      [this](std::shared_ptr<std::unique_ptr<SelectionData>> selection_wrapped) {
+      [this](const std::shared_ptr<std::unique_ptr<SelectionData>>& selection_wrapped) {
         std::unique_ptr<SelectionData> selection = std::move(*selection_wrapped);
         main_window_->SetTopDownView(selection->GetTopDownView());
         main_window_->SetBottomUpView(selection->GetBottomUpView());
