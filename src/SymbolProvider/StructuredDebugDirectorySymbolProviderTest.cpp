@@ -98,7 +98,7 @@ TEST_F(StructuredDebugDirectorySymbolProviderTest, RetrieveSymbolsError) {
     future
         .Then(&executor,
               [&](const SymbolLoadingOutcome& result) {
-                ASSERT_THAT(result, orbit_test_utils::HasError("malformed"));
+                ASSERT_THAT(result, orbit_test_utils::HasErrorWithMessage("malformed"));
                 lambda_executed = true;
               })
         .Wait();

@@ -53,12 +53,12 @@ TEST(CreateProcess, WorkingDirectory) {
 TEST(CreateProcess, NonExistingExecutable) {
   const std::string executable = R"(C:\non_existing_executable.exe)";
   auto result = orbit_windows_utils::CreateProcess(executable, "", "");
-  EXPECT_THAT(result, orbit_test_utils::HasError("Executable does not exist"));
+  EXPECT_THAT(result, orbit_test_utils::HasErrorWithMessage("Executable does not exist"));
 }
 
 TEST(CreateProcess, NonExistingWorkingDirectory) {
   const std::string non_existing_working_directory = R"(C:\non_existing_directory)";
   auto result = orbit_windows_utils::CreateProcess(GetTestExecutablePath(),
                                                    non_existing_working_directory, "");
-  EXPECT_THAT(result, orbit_test_utils::HasError("Working directory does not exist"));
+  EXPECT_THAT(result, orbit_test_utils::HasErrorWithMessage("Working directory does not exist"));
 }

@@ -28,7 +28,7 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_object_utils::ObjectFileInfo;
 using orbit_symbols::SymbolHelper;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 
@@ -162,68 +162,68 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
     const fs::path non_existing_path = "file.not.exist";
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         non_existing_path, "irrelevant build id", ModuleInfo::kElfFile, {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Directly provided symbols file does not exist
     const fs::path symbols_path = testdata_directory / "file.not.exist";
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         "irrelevant module path", "irrelevant build id", ModuleInfo::kElfFile, {symbols_path});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Find .debug fails because of wrong build id - in directory
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         no_symbols_elf, "wrong build id", ModuleInfo::kElfFile, {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Find .debug fails because of wrong build id - directly
 
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         no_symbols_elf, "wrong build id", ModuleInfo::kElfFile, {no_symbols_elf_debug});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Find .pdb fails because of wrong build id - in directory
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         dllmain_dll, "wrong build id", ModuleInfo::kCoffFile, {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Find .pdb fails because of wrong build id - directly
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         dllmain_dll, "wrong build id", ModuleInfo::kCoffFile, {dllmain_pdb});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
   }
 
   {  // Find .debug fails because of module does not have build id
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         no_symbols_elf, "", ModuleInfo::kElfFile, {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
-    EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("Could not find"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("does not contain a build id"));
   }
 
   {  // Find .pdb fails because of module does not have build id
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         dllmain_dll, "", ModuleInfo::kCoffFile, {testdata_directory});
-    EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
+    EXPECT_THAT(symbols_path_result, HasErrorWithMessage("does not contain a build id"));
   }
 
   {  // Find .debug fails because of object_file_type is wrong
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         no_symbols_elf, no_symbols_elf_build_id, ModuleInfo::kCoffFile, {testdata_directory});
-    EXPECT_THAT(
-        symbols_path_result,
-        HasError("Could not find a file with debug symbols on the local machine for module"));
+    EXPECT_THAT(symbols_path_result,
+                HasErrorWithMessage(
+                    "Could not find a file with debug symbols on the local machine for module"));
   }
 
   {  // Find .pdb fails because of object_file_type is wrong
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         dllmain_dll, dllmain_build_id, ModuleInfo::kElfFile, {testdata_directory});
-    EXPECT_THAT(
-        symbols_path_result,
-        HasError("Could not find a file with debug symbols on the local machine for module"));
+    EXPECT_THAT(symbols_path_result,
+                HasErrorWithMessage(
+                    "Could not find a file with debug symbols on the local machine for module"));
   }
 }
 
@@ -246,8 +246,8 @@ TEST(SymbolHelper, FindSymbolsInCacheBySize) {
     const auto file_size = orbit_base::FileSize(testdata_directory / file_name);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value());
-    EXPECT_THAT(result, HasError("Unable to load symbols file"));
-    EXPECT_THAT(result, HasError("File does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to load symbols file"));
+    EXPECT_THAT(result, HasErrorWithMessage("File does not contain symbols"));
   }
   {
     // File in cache has different size.
@@ -255,13 +255,13 @@ TEST(SymbolHelper, FindSymbolsInCacheBySize) {
     const auto file_size = orbit_base::FileSize(testdata_directory / file_name);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindSymbolsInCache(file_name, file_size.value() + 1);
-    EXPECT_THAT(result, HasError("File size doesn't match"));
+    EXPECT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
   {
     // File doesn't exist.
     const fs::path file_name = "non-existing_file";
     const auto result = symbol_helper.FindSymbolsInCache(file_name, 42);
-    EXPECT_THAT(result, HasError("Unable to find symbols in cache"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to find symbols in cache"));
   }
 }
 
@@ -289,32 +289,32 @@ TEST(SymbolHelper, FindSymbolsInCache) {
     const fs::path file_name = "no_symbols_elf";
     const auto result =
         symbol_helper.FindSymbolsInCache(file_name, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // COFF file in cache does not have symbols.
     const fs::path file_name = "dllmain.dll";
     const auto result =
         symbol_helper.FindSymbolsInCache(file_name, "92cdaeef73f74ebbbcf213b84f43b322-3");
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // ELF file in cache has different build id.
     const fs::path file_name = "no_symbols_elf.debug";
     const auto result = symbol_helper.FindSymbolsInCache(file_name, "non matching build id");
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // PDB in cache has different build id.
     const fs::path file_name = "dllmain.pdb";
     const auto result = symbol_helper.FindSymbolsInCache(file_name, "non matching build id");
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // File doesn't exist.
     const fs::path file_name = "non-existing_file";
     const auto result = symbol_helper.FindSymbolsInCache(file_name, "unimportant build id");
-    EXPECT_THAT(result, HasError("Unable to find symbols in cache"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to find symbols in cache"));
   }
 }
 
@@ -340,7 +340,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     ASSERT_THAT(file_size, HasNoError());
     const auto result =
         symbol_helper.FindObjectInCache(file_name, "non-matching build id", file_size.value());
-    ASSERT_THAT(result, HasError("has a different build id"));
+    ASSERT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // ELF file has a different size.
@@ -350,7 +350,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
         file_name, "d12d54bc5b72ccce54a408bdeda65e2530740ac8", file_size.value() + 1);
-    ASSERT_THAT(result, HasError("File size doesn't match"));
+    ASSERT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
   {
     // COFF file.
@@ -371,7 +371,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     ASSERT_THAT(file_size, HasNoError());
     const auto result =
         symbol_helper.FindObjectInCache(file_name, "non-matching build id", file_size.value());
-    ASSERT_THAT(result, HasError("has a different build id"));
+    ASSERT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // COFF file has a different size.
@@ -381,7 +381,7 @@ TEST(SymbolHelper, FindObjectInCache) {
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
         file_name, "92cdaeef73f74ebbbcf213b84f43b322-3", file_size.value() + 1);
-    ASSERT_THAT(result, HasError("File size doesn't match"));
+    ASSERT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
   {
     // PDB file.
@@ -391,16 +391,16 @@ TEST(SymbolHelper, FindObjectInCache) {
     ASSERT_THAT(file_size, HasNoError());
     const auto result = symbol_helper.FindObjectInCache(
         file_name, "92cdaeef73f74ebbbcf213b84f43b322-3", file_size.value());
-    EXPECT_THAT(result, HasError("The file was not recognized as a valid object file"));
+    EXPECT_THAT(result, HasErrorWithMessage("The file was not recognized as a valid object file"));
   }
   {
     // File doesn't exist.
     const fs::path file_name = "non-existing_file";
     const fs::path file_path = testdata_directory / file_name;
     const auto file_size = orbit_base::FileSize(file_path);
-    ASSERT_THAT(file_size, HasError(""));
+    ASSERT_THAT(file_size, HasErrorWithMessage(""));
     const auto result = symbol_helper.FindObjectInCache(file_name, "unimportant build id", 42);
-    EXPECT_THAT(result, HasError("Unable to find object file in cache"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to find object file in cache"));
   }
 }
 
@@ -430,20 +430,20 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
     // ELF file does not contain symbols.
     const fs::path file_path = testdata_directory / "no_symbols_elf";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // COFF file does not contain symbols.
     const fs::path file_path = testdata_directory / "dllmain.dll";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // File doesn't exist.
     const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadSymbolsFromFile(file_path, ObjectFileInfo{0x10000});
-    EXPECT_THAT(result, HasError("Unable to create symbols file"));
-    EXPECT_THAT(result, HasError("File does not exist"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to create symbols file"));
+    EXPECT_THAT(result, HasErrorWithMessage("File does not exist"));
   }
 }
 
@@ -474,14 +474,14 @@ TEST(SymbolHelper, LoadFallbackSymbolsFromFile) {
     // PDB file.
     const fs::path file_path = testdata_directory / "dllmain.pdb";
     const auto module_symbols_or_error = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
-    EXPECT_THAT(module_symbols_or_error, HasError("Unable to load object file"));
+    EXPECT_THAT(module_symbols_or_error, HasErrorWithMessage("Unable to load object file"));
   }
   {
     // Files doesn't exist.
     const fs::path file_path = testdata_directory / "file_does_not_exist";
     const auto result = SymbolHelper::LoadFallbackSymbolsFromFile(file_path);
-    EXPECT_THAT(result, HasError("Unable to load object file"));
-    EXPECT_THAT(result, HasError("such file or directory"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to load object file"));
+    EXPECT_THAT(result, HasErrorWithMessage("such file or directory"));
   }
 }
 
@@ -537,7 +537,7 @@ TEST(FileStartsWithDeprecationNote, FileDoesNotExist) {
   ErrorMessageOr<bool> error_result =
       orbit_symbols::FileStartsWithDeprecationNote("non/existing/path/");
 
-  EXPECT_THAT(error_result, HasError("Unable to open file"));
+  EXPECT_THAT(error_result, HasErrorWithMessage("Unable to open file"));
 }
 
 TEST(FileStartsWithDeprecationNote, EmptyFile) {
@@ -591,7 +591,7 @@ TEST(FileStartsWithDeprecationNote, HasDeprecationNote) {
 TEST(AddDeprecationNoteToFile, FileDoesNotExist) {
   ErrorMessageOr<void> error_result = orbit_symbols::AddDeprecationNoteToFile("non/existing/path/");
 
-  EXPECT_THAT(error_result, HasError("Unable to open file"));
+  EXPECT_THAT(error_result, HasErrorWithMessage("Unable to open file"));
 }
 
 TEST(AddDeprecationNoteToFile, AddNote) {

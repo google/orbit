@@ -27,7 +27,7 @@
 #include "TestUtils/TestUtils.h"
 
 using orbit_grpc_protos::SymbolInfo;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 namespace orbit_object_utils {
@@ -370,7 +370,7 @@ TEST(ElfFile, CalculateLoadBiasNoProgramHeaders) {
 
   ASSERT_THAT(
       elf_file_result,
-      HasError(absl::StrFormat(
+      HasErrorWithMessage(absl::StrFormat(
           "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
           test_elf_file.string())));
 }
@@ -646,7 +646,7 @@ TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
 
   constexpr uint64_t kAddressOfFunction = 0x10a0e0;
   EXPECT_THAT(program.value()->GetDeclarationLocationOfFunction(kAddressOfFunction),
-              orbit_test_utils::HasError("Address not associated with any subroutine"));
+              orbit_test_utils::HasErrorWithMessage("Address not associated with any subroutine"));
 
   ErrorMessageOr<orbit_grpc_protos::LineInfo> function_location =
       program.value()->GetLocationOfFunction(kAddressOfFunction);

@@ -16,7 +16,7 @@
 
 namespace orbit_windows_utils {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 namespace {
@@ -37,7 +37,7 @@ TEST(DllInjection, InjectDllInCurrentProcess) {
 
   // Re-injection.
   result = InjectDll(pid, GetTestDllPath());
-  EXPECT_THAT(result, HasError("is already loaded in process"));
+  EXPECT_THAT(result, HasErrorWithMessage("is already loaded in process"));
 
   // GetRemoteProcAddress.
   ErrorMessageOr<uint64_t> remote_proc_result =
@@ -53,7 +53,7 @@ TEST(DllInjection, InjectDllInCurrentProcess) {
 TEST(DllInjection, InjectNonExistentDll) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   ErrorMessageOr<void> result = InjectDll(pid, GetNonExistentDllPath());
-  EXPECT_THAT(result, HasError("Path does not exist"));
+  EXPECT_THAT(result, HasErrorWithMessage("Path does not exist"));
 }
 
 }  // namespace orbit_windows_utils

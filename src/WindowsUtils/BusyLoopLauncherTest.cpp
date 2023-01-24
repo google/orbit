@@ -23,7 +23,7 @@ namespace orbit_windows_utils {
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 [[nodiscard]] std::filesystem::path GetTestExecutablePath() {

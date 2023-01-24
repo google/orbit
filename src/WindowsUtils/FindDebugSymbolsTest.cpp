@@ -13,7 +13,7 @@
 
 namespace orbit_windows_utils {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 TEST(ProcessServiceUtils, ExistingPdbFile) {
@@ -35,7 +35,7 @@ TEST(ProcessServiceUtils, CorruptedPdb) {
   // "other.pdb" is a text file that acts as a fake corrupted pdb.
   const ErrorMessageOr<std::filesystem::path> result =
       FindDebugSymbols(module_path, {test_directory / "additional_directory"});
-  EXPECT_THAT(result, HasError("does not contain symbols"));
+  EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
 }
 
 TEST(ProcessServiceUtils, FileDoesNotExist) {
@@ -44,7 +44,7 @@ TEST(ProcessServiceUtils, FileDoesNotExist) {
   const std::filesystem::path module_path = test_directory / "not_existing_file";
   const ErrorMessageOr<std::filesystem::path> result =
       FindDebugSymbols(module_path, {test_directory});
-  EXPECT_THAT(result, HasError("Unable to load"));
+  EXPECT_THAT(result, HasErrorWithMessage("Unable to load"));
 }
 
 }  // namespace orbit_windows_utils

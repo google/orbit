@@ -14,7 +14,7 @@
 
 namespace orbit_linux_capture_service {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 TEST(ExtractSignalFromMinidump, ExtractSignal4) {
@@ -28,19 +28,19 @@ TEST(ExtractSignalFromMinidump, ExtractSignal4) {
 TEST(ExtractSignalFromMinidump, BrokenCoreFile) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "broken.core.dmp";
   const auto signal_or_error = ExtractSignalFromMinidump(file_path);
-  EXPECT_THAT(signal_or_error, HasError("Unexpected end of data."));
+  EXPECT_THAT(signal_or_error, HasErrorWithMessage("Unexpected end of data."));
 }
 
 TEST(ExtractSignalFromMinidump, EmptyCoreFile) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "empty.core.dmp";
   const auto signal_or_error = ExtractSignalFromMinidump(file_path);
-  EXPECT_THAT(signal_or_error, HasError("No termination signal found in core file."));
+  EXPECT_THAT(signal_or_error, HasErrorWithMessage("No termination signal found in core file."));
 }
 
 TEST(ExtractSignalFromMinidump, CoreFileDoesntExist) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "doesnt_exist.core.dmp";
   const auto signal_or_error = ExtractSignalFromMinidump(file_path);
-  EXPECT_THAT(signal_or_error, HasError("No such file or directory"));
+  EXPECT_THAT(signal_or_error, HasErrorWithMessage("No such file or directory"));
 }
 
 }  // namespace orbit_linux_capture_service

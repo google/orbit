@@ -42,7 +42,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using testing::Eq;
 
@@ -219,7 +219,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   const std::string non_existing_lib_name = "libNotFound.so";
   auto library_handle_or_error = DlmopenInTracee(pid, modules, non_existing_lib_name, RTLD_NOW,
                                                  LinkerNamespace::kCreateNewNamespace);
-  ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
+  ASSERT_THAT(library_handle_or_error, HasErrorWithMessage("Library does not exist at"));
 
   // Continue child process.
   ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());

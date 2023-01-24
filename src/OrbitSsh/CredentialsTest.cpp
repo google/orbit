@@ -18,7 +18,7 @@
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh {
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 using testing::Field;
 using testing::UnorderedElementsAre;
@@ -73,7 +73,7 @@ TEST(FindUsersCredentials, FailsWhenKnownHostsMissing) {
       orbit_test::GetTestdataDir() / "missing_known_hosts_ssh_config";
   auto result = FindUsersCredentials(ssh_config_dir, addr_and_port, username);
 
-  EXPECT_THAT(result, HasError("No known_hosts file found"));
+  EXPECT_THAT(result, HasErrorWithMessage("No known_hosts file found"));
 }
 
 TEST(FindUsersCredentials, FailsWhenNoKeyFound) {
@@ -84,7 +84,7 @@ TEST(FindUsersCredentials, FailsWhenNoKeyFound) {
       orbit_test::GetTestdataDir() / "missing_key_ssh_config";
   auto result = FindUsersCredentials(ssh_config_dir, addr_and_port, username);
 
-  EXPECT_THAT(result, HasError("No valid and/or supported SSH key files found"));
+  EXPECT_THAT(result, HasErrorWithMessage("No valid and/or supported SSH key files found"));
 }
 
 }  // namespace orbit_ssh

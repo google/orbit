@@ -39,5 +39,5 @@ TEST(WriteProcessMemory, WriteToInvalidMemoryLocation) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   const std::string test_string("The quick brown fox jumps over the lazy dog");
   auto result = orbit_windows_utils::WriteProcessMemory(pid, nullptr, test_string);
-  EXPECT_THAT(result, orbit_test_utils::HasError("Invalid access to memory location"));
+  EXPECT_THAT(result, orbit_test_utils::HasErrorWithMessage("Invalid access to memory location"));
 }

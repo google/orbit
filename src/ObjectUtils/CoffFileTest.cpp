@@ -25,7 +25,7 @@
 #include "TestUtils/TestUtils.h"
 
 using orbit_grpc_protos::SymbolInfo;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 namespace orbit_object_utils {
@@ -179,7 +179,7 @@ TEST(CoffFile, LoadSymbolsFromExportTableNoExportTable) {
   EXPECT_FALSE(coff_file->HasExportTable());
 
   const auto symbols_result = coff_file->LoadSymbolsFromExportTable();
-  ASSERT_THAT(symbols_result, HasError("PE/COFF file does not have an Export Table"));
+  ASSERT_THAT(symbols_result, HasErrorWithMessage("PE/COFF file does not have an Export Table"));
 }
 
 TEST(CoffFile, LoadExceptionTableEntriesAsSymbolsNoChainedInfo) {
@@ -322,7 +322,8 @@ TEST(CoffFile, FailsWithErrorIfPdbDataNotPresent) {
   ASSERT_THAT(coff_file_or_error, HasNoError());
 
   auto pdb_debug_info_or_error = coff_file_or_error.value()->GetDebugPdbInfo();
-  ASSERT_THAT(pdb_debug_info_or_error, HasError("Object file does not have debug PDB info."));
+  ASSERT_THAT(pdb_debug_info_or_error,
+              HasErrorWithMessage("Object file does not have debug PDB info."));
 }
 
 TEST(CoffFile, GetsCorrectBuildIdIfPdbInfoIsPresent) {

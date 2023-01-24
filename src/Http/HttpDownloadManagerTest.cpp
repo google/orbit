@@ -48,14 +48,14 @@ using orbit_base::GetNotCanceled;
 using orbit_base::IsCanceled;
 using orbit_base::IsNotFound;
 using orbit_base::StopSource;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using DownloadResult = ErrorMessageOr<orbit_base::CanceledOr<orbit_base::NotFoundOr<void>>>;
 
 namespace {
 
 void VerifyDownloadError(const DownloadResult& result, std::string_view expected_error) {
-  EXPECT_THAT(result, HasError(expected_error));
+  EXPECT_THAT(result, HasErrorWithMessage(expected_error));
 }
 
 void VerifyDownloadCanceled(const DownloadResult& result) {

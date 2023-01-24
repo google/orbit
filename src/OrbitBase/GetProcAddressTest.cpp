@@ -12,7 +12,7 @@
 
 namespace orbit_base {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 
 TEST(GetProcAddress, FindExistingFunctions) {
   static auto set_thread_description =
@@ -25,12 +25,12 @@ TEST(GetProcAddress, FindExistingFunctions) {
 
 TEST(GetProcAddress, NonExistingModule) {
   EXPECT_THAT(GetProcAddress("non_existing.dll", "non_existing_function_name"),
-              HasError("Could not find module"));
+              HasErrorWithMessage("Could not find module"));
 }
 
 TEST(GetProcAddress, NonExistingFunction) {
   EXPECT_THAT(GetProcAddress("kernel32.dll", "non_existing_function_name"),
-              HasError("Could not find function"));
+              HasErrorWithMessage("Could not find function"));
 }
 
 }  // namespace orbit_base
