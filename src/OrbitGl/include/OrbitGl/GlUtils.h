@@ -13,7 +13,7 @@
 }
 
 [[nodiscard]] inline double TicksToMicroseconds(uint64_t start, uint64_t end) {
-  return static_cast<double>(end - start) * 0.001;
+  return (static_cast<double>(end) - static_cast<double>(start)) * 0.001;
 }
 
 #endif  // ORBIT_GL_GL_UTILS_H_

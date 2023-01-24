@@ -32,3 +32,10 @@ TEST(GlUtils, TicksToMicroseconds) {
   EXPECT_TRUE(abs(dt0 - 1.0) < kEpsilon);
   EXPECT_TRUE(abs(dt1 - 2.0) < kEpsilon);
 }
+
+TEST(GlUtils, TicksToMicrosecondsNegative) {
+  uint64_t t0 = 0;
+  uint64_t t1 = 2000;
+  EXPECT_TRUE(TicksToMicroseconds(t0, t1) > 0);
+  EXPECT_TRUE(TicksToMicroseconds(t1, t0) < 0);
+}
