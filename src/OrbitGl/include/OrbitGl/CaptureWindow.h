@@ -91,6 +91,8 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;
 
+  uint last_rendered_layers_ = 0;
+
   uint64_t select_start_time_ = 0;
   uint64_t select_stop_time_ = 0;
 

@@ -61,6 +61,8 @@ struct StencilConfig {
   bool enabled = false;
   std::array<float, 2> pos = {0, 0};
   std::array<float, 2> size = {0, 0};
+
+  StencilConfig& ClipAt(const StencilConfig& parent);
 };
 
 // Collection of all properties that are associated with a BatchRenderGroup and that will influence

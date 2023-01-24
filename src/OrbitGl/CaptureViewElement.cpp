@@ -5,12 +5,14 @@
 #include "OrbitGl/CaptureViewElement.h"
 
 #include <GteVector.h>
+#include <absl/strings/str_cat.h>
 
 #include <algorithm>
 #include <tuple>
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Viewport.h"
 
 namespace orbit_gl {
@@ -19,6 +21,9 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewpor
                                        const TimeGraphLayout* layout)
     : viewport_(viewport), layout_(layout), parent_(parent) {
   ORBIT_CHECK(layout != nullptr);
+
+  static std::atomic<uint32_t> uid_counter = 0;
+  uid_ = uid_counter++;
 }
 
 void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -26,8 +31,7 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
   ORBIT_SCOPE_FUNCTION;
 
   draw_requested_ = false;
-  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
-  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+  RenderGroups previous_groups = PreRender(primitive_assembler, text_renderer);
 
   DoDraw(primitive_assembler, text_renderer, draw_context);
 
@@ -35,8 +39,7 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
     child->Draw(primitive_assembler, text_renderer, draw_context);
   }
 
-  text_renderer.PopTranslation();
-  primitive_assembler.PopTranslation();
+  PostRender(std::move(previous_groups), primitive_assembler, text_renderer);
 }
 
 void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assembler,
@@ -45,9 +48,7 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
   ORBIT_SCOPE_FUNCTION;
 
   update_primitives_requested_ = false;
-
-  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
-  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+  RenderGroups previous_groups = PreRender(primitive_assembler, text_renderer);
 
   DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
 
@@ -57,8 +58,7 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
     }
   }
 
-  text_renderer.PopTranslation();
-  primitive_assembler.PopTranslation();
+  PostRender(std::move(previous_groups), primitive_assembler, text_renderer);
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
@@ -246,6 +246,60 @@ void CaptureViewElement::RequestUpdate(RequestUpdateScope scope) {
   if (parent_ != nullptr) {
     parent_->RequestUpdate(scope);
   }
+}
+
+CaptureViewElement::RenderGroups CaptureViewElement::PreRender(
+    PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer) {
+  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
+  text_renderer.PushTranslation(0, 0, DetermineZOffset());
+
+  BatchRenderGroupStateManager* manager = primitive_assembler.GetRenderGroupManager();
+
+  RenderGroups result{primitive_assembler.GetCurrentRenderGroupName(),
+                      text_renderer.GetCurrentRenderGroupName()};
+
+  if (RequestSeparateRenderGroup()) {
+    constexpr std::string_view kGroupPrefix = "|rg_cve_";
+
+    const std::string new_batcher_render_group_name =
+        absl::StrCat(result.batcher_render_group_name, kGroupPrefix, std::to_string(GetUid()));
+    primitive_assembler.SetCurrentRenderGroupName(new_batcher_render_group_name);
+
+    BatchRenderGroupState parent_state = manager->GetGroupState(result.batcher_render_group_name);
+    BatchRenderGroupState state = parent_state;
+    state.stencil.pos = {GetPos()[0], GetPos()[1]};
+    state.stencil.size = {GetSize()[0], GetSize()[1]};
+    state.stencil.enabled = true;
+    state.stencil.ClipAt(parent_state.stencil);
+    manager->SetGroupState(new_batcher_render_group_name, state);
+
+    const std::string new_text_render_group_name =
+        absl::StrCat(result.text_render_group_name, kGroupPrefix, std::to_string(GetUid()));
+    text_renderer.SetCurrentRenderGroupName(new_text_render_group_name);
+
+    if (new_text_render_group_name != new_batcher_render_group_name) {
+      parent_state = manager->GetGroupState(result.text_render_group_name);
+      state = parent_state;
+      state.stencil.pos = {GetPos()[0], GetPos()[1]};
+      state.stencil.size = {GetSize()[0], GetSize()[1]};
+      state.stencil.enabled = true;
+      state.stencil.ClipAt(parent_state.stencil);
+      manager->SetGroupState(new_text_render_group_name, state);
+    }
+  }
+
+  return result;
+}
+
+void CaptureViewElement::PostRender(RenderGroups&& previous_groups,
+                                    PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer) {
+  if (RequestSeparateRenderGroup()) {
+    primitive_assembler.SetCurrentRenderGroupName(previous_groups.batcher_render_group_name);
+    text_renderer.SetCurrentRenderGroupName(previous_groups.text_render_group_name);
+  }
+  text_renderer.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
 }  // namespace orbit_gl

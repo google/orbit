@@ -83,6 +83,8 @@ class TrackContainer final : public CaptureViewElement {
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
   [[nodiscard]] std::vector<CaptureViewElement*> GetNonHiddenChildren() const override;
 
+  [[nodiscard]] bool RequestSeparateRenderGroup() const override { return true; }
+
  protected:
   void DoUpdateLayout() override;
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

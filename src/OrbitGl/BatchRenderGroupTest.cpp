@@ -11,6 +11,12 @@
 #include "OrbitGl/BatchRenderGroup.h"
 
 namespace orbit_gl {
+
+bool operator==(const StencilConfig& lhs, const StencilConfig& rhs) {
+  return std::tie(lhs.enabled, lhs.pos[0], lhs.pos[1], lhs.size[0], lhs.size[1]) ==
+         std::tie(rhs.enabled, rhs.pos[0], rhs.pos[1], rhs.size[0], rhs.size[1]);
+}
+
 namespace {
 
 TEST(BatchRenderGroupId, ComparisonOperators) {
@@ -112,6 +118,45 @@ TEST(BatchRenderGroupManager, SetAndGetState) {
   manager.SetGroupState(g1.name, state);
 
   EXPECT_EQ(manager.GetGroupState(g1.name).stencil.enabled, state.stencil.enabled);
+}
+
+TEST(StencilConfig, Intersection) {
+  StencilConfig parent;
+  StencilConfig child;
+
+  parent.enabled = true;
+  child.enabled = true;
+
+  parent.pos = {10, 20};
+  child.pos = {20, 30};
+
+  parent.size = {100, 50};
+  child.size = {10, 10};
+
+  // Fully contained child is unchanged
+  EXPECT_EQ(child.ClipAt(parent), child);
+
+  // Child is correctly cut if too large
+  child.pos = {0, 0};
+  child.size = {120, 120};
+
+  StencilConfig expectation;
+  expectation.enabled = true;
+  expectation.pos = {10, 20};
+  expectation.size = {100, 50};
+  EXPECT_EQ(child.ClipAt(parent), expectation);
+
+  // Disabled child inherits all values from its parent
+  child.enabled = false;
+  EXPECT_EQ(child.ClipAt(parent), parent);
+
+  // Disabled parent has no effect
+  child.size = {120, 120};
+  child.pos = {0, 0};
+  expectation = child;
+  parent.enabled = false;
+  child.enabled = true;
+  EXPECT_EQ(child.ClipAt(parent), expectation);
 }
 
 }  // namespace
