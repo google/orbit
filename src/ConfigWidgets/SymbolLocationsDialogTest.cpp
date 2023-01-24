@@ -37,7 +37,7 @@ namespace orbit_config_widgets {
 namespace {
 
 using orbit_client_symbols::ModuleSymbolFileMappings;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 class MockPersistentStorageManager : public orbit_client_symbols::PersistentStorageManager {
@@ -237,7 +237,8 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolPath) {
   {  // add the same path again -> warning that needs to be dismissed and nothing changes
     auto result = dialog.TryAddSymbolPath(path);
     ASSERT_TRUE(result.has_error());
-    EXPECT_THAT(result, HasError("Unable to add selected path, it is already part of the list."));
+    EXPECT_THAT(result, HasErrorWithMessage(
+                            "Unable to add selected path, it is already part of the list."));
     EXPECT_EQ(list_widget->count(), 1);
   }
 
@@ -274,7 +275,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
   {
     auto result = dialog.TryAddSymbolFile(text_file);
-    EXPECT_THAT(result, HasError("The selected file is not a viable symbol file"));
+    EXPECT_THAT(result, HasErrorWithMessage("The selected file is not a viable symbol file"));
   }
 
   // fails because no build-id
@@ -283,7 +284,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   {
     auto result = dialog.TryAddSymbolFile(hello_world_elf_no_build_id);
 
-    EXPECT_THAT(result, HasError("The selected file does not contain a build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("The selected file does not contain a build id"));
   }
 }
 
@@ -315,7 +316,8 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   std::filesystem::path libc_debug = orbit_test::GetTestdataDir() / "libc.debug";
   {
     auto result = dialog.TryAddSymbolFile(libc_debug);
-    EXPECT_THAT(result, HasError("The build ids of module and symbols file do not match."));
+    EXPECT_THAT(result,
+                HasErrorWithMessage("The build ids of module and symbols file do not match."));
   }
 }
 

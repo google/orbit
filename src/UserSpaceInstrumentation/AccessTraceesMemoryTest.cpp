@@ -32,7 +32,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 
 AddressRange AddressRangeFromString(std::string_view string_address) {
   AddressRange result{};
@@ -108,18 +108,18 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
 
   // Process does not exist.
   result = ReadTraceesMemory(-1, address, length);
-  EXPECT_THAT(result, HasError("Unable to open file"));
+  EXPECT_THAT(result, HasErrorWithMessage("Unable to open file"));
 
   // Read 0 bytes.
   EXPECT_DEATH(auto unused_result = ReadTraceesMemory(pid, address, 0), "Check failed");
 
   // Read past the end of the mappings.
   result = ReadTraceesMemory(pid, continuous_range.end - length, length + 1);
-  EXPECT_THAT(result, HasError("Input/output error"));
+  EXPECT_THAT(result, HasErrorWithMessage("Input/output error"));
 
   // Read from bad address.
   result = ReadTraceesMemory(pid, 0, length);
-  EXPECT_THAT(result, HasError("Input/output error"));
+  EXPECT_THAT(result, HasErrorWithMessage("Input/output error"));
 
   // Detach and end child.
   ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
@@ -167,7 +167,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
 
   // Process does not exist.
   result = WriteTraceesMemory(-1, address, bytes);
-  EXPECT_THAT(result, HasError("Unable to open file"));
+  EXPECT_THAT(result, HasErrorWithMessage("Unable to open file"));
 
   // Write 0 bytes.
   EXPECT_DEATH(auto unused_result = WriteTraceesMemory(pid, address, std::vector<uint8_t>()),
@@ -176,11 +176,11 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   // Write past the end of the mappings.
   bytes.push_back(0);
   result = WriteTraceesMemory(pid, continuous_range.end - length, bytes);
-  EXPECT_THAT(result, HasError("Input/output error"));
+  EXPECT_THAT(result, HasErrorWithMessage("Input/output error"));
 
   // Write to bad address.
   result = WriteTraceesMemory(pid, 0, bytes);
-  EXPECT_THAT(result, HasError("Input/output error"));
+  EXPECT_THAT(result, HasErrorWithMessage("Input/output error"));
 
   // Restore, detach and end child.
   ORBIT_CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());

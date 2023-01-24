@@ -29,7 +29,7 @@
 namespace orbit_qt_utils {
 
 using orbit_base::Future;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 TEST(QtUtilsExecuteProcess, ProgramNotFound) {
@@ -43,9 +43,9 @@ TEST(QtUtilsExecuteProcess, ProgramNotFound) {
   future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
-    EXPECT_THAT(result, HasError("Error occurred while executing process"));
-    EXPECT_THAT(result, HasError("non_existing_process"));
-    EXPECT_THAT(result, HasError("FailedToStart"));
+    EXPECT_THAT(result, HasErrorWithMessage("Error occurred while executing process"));
+    EXPECT_THAT(result, HasErrorWithMessage("non_existing_process"));
+    EXPECT_THAT(result, HasErrorWithMessage("FailedToStart"));
     QCoreApplication::exit();
   });
 
@@ -68,7 +68,7 @@ TEST(QtUtilsExecuteProcess, ReturnsFailExitCode) {
   future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
-    EXPECT_THAT(result, HasError("failed with exit code: 240"));
+    EXPECT_THAT(result, HasErrorWithMessage("failed with exit code: 240"));
     QCoreApplication::exit();
   });
 
@@ -165,7 +165,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeout) {
   future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
-    EXPECT_THAT(result, HasError("timed out after 100ms"));
+    EXPECT_THAT(result, HasErrorWithMessage("timed out after 100ms"));
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
@@ -192,7 +192,7 @@ TEST(QtUtilsExecuteProcess, FailsBecauseOfTimeoutWithValueZero) {
   future.Then(&mte, [&lambda_was_called](const ErrorMessageOr<QByteArray>& result) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
-    EXPECT_THAT(result, HasError("timed out after 0ms"));
+    EXPECT_THAT(result, HasErrorWithMessage("timed out after 0ms"));
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
@@ -221,7 +221,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedImmediately) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
-    EXPECT_THAT(result, HasError("killed because the parent object was destroyed"));
+    EXPECT_THAT(result, HasErrorWithMessage("killed because the parent object was destroyed"));
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
@@ -251,7 +251,7 @@ TEST(QtUtilsExecuteProcess, ParentGetsDeletedWhileExecuting) {
     EXPECT_FALSE(lambda_was_called);
     lambda_was_called = true;
 
-    EXPECT_THAT(result, HasError("killed because the parent object was destroyed"));
+    EXPECT_THAT(result, HasErrorWithMessage("killed because the parent object was destroyed"));
 
     // QApplication is not quit immediately here, to allow clean up (killing and deletion of the
     // process), which is queued in the event loop.
@@ -284,7 +284,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndTimeoutRace) {
     lambda_was_called = true;
 
     if (result.has_error()) {
-      EXPECT_THAT(result, HasError("timed out after 100ms"));
+      EXPECT_THAT(result, HasErrorWithMessage("timed out after 100ms"));
     } else {
       ASSERT_THAT(result, HasValue());
       EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Some example output"));
@@ -321,7 +321,7 @@ TEST(QtUtilsExecuteProcess, ProcessFinishAndParentGetsDeletedRace) {
     lambda_was_called = true;
 
     if (result.has_error()) {
-      EXPECT_THAT(result, HasError("killed because the parent object was destroyed"));
+      EXPECT_THAT(result, HasErrorWithMessage("killed because the parent object was destroyed"));
     } else {
       ASSERT_THAT(result, HasValue());
       EXPECT_TRUE(absl::StrContains(result.value().toStdString(), "Some example output"));

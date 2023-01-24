@@ -16,7 +16,7 @@ namespace orbit_windows_utils {
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 [[nodiscard]] std::filesystem::path GetTestExecutablePath() {
@@ -59,19 +59,19 @@ TEST(ProcessLauncher, LaunchNonExistingProcess) {
   auto result =
       launcher.LaunchProcess(non_existing_executable, /*working_directory=*/"", /*arguments=*/"",
                              /*pause_at_entry_point*/ false);
-  ASSERT_THAT(result, HasError("Executable does not exist"));
+  ASSERT_THAT(result, HasErrorWithMessage("Executable does not exist"));
 }
 
 TEST(ProcessLauncher, SuspendNonExistingProcess) {
   ProcessLauncher launcher;
   auto result = launcher.SuspendProcessSpinningAtEntryPoint(orbit_base::kInvalidProcessId);
-  ASSERT_THAT(result, HasError("Trying to suspend unknown process"));
+  ASSERT_THAT(result, HasErrorWithMessage("Trying to suspend unknown process"));
 }
 
 TEST(ProcessLauncher, ResumeNonExistingProcess) {
   ProcessLauncher launcher;
   auto result = launcher.ResumeProcessSuspendedAtEntryPoint(orbit_base::kInvalidProcessId);
-  ASSERT_THAT(result, HasError("Trying to resume unknown process"));
+  ASSERT_THAT(result, HasErrorWithMessage("Trying to resume unknown process"));
 }
 
 }  // namespace orbit_windows_utils

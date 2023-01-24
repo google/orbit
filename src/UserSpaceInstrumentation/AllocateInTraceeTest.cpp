@@ -34,7 +34,7 @@ namespace orbit_user_space_instrumentation {
 namespace {
 
 using orbit_base::ReadFileToString;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 enum class ProtState { kWrite, kExec, kAny };
@@ -95,15 +95,16 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   // Allocation fails for invalid process.
   constexpr uint64_t kMemorySize = 1024u * 1024u;
   auto my_memory_or_error = MemoryInTracee::Create(-1, 0, kMemorySize);
-  EXPECT_THAT(my_memory_or_error, HasError("No such process"));
+  EXPECT_THAT(my_memory_or_error, HasErrorWithMessage("No such process"));
 
   // Allocation fails for non page aligned address.
   my_memory_or_error = MemoryInTracee::Create(pid, 1, kMemorySize);
-  EXPECT_THAT(my_memory_or_error, HasError("but got memory at a different address"));
+  EXPECT_THAT(my_memory_or_error, HasErrorWithMessage("but got memory at a different address"));
 
   // Allocation fails for ridiculous size.
   my_memory_or_error = MemoryInTracee::Create(pid, 1, 1ull << 63);
-  EXPECT_THAT(my_memory_or_error, HasError("Syscall failed. Return value: Cannot allocate memory"));
+  EXPECT_THAT(my_memory_or_error,
+              HasErrorWithMessage("Syscall failed. Return value: Cannot allocate memory"));
 
   // Allocate a megabyte in the tracee.
   my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
@@ -218,7 +219,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
   auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
   EXPECT_THAT(
       my_memory_or_error,
-      HasError(absl::StrFormat(
+      HasErrorWithMessage(absl::StrFormat(
           "This might be due to thread %d being in seccomp mode 1 (SECCOMP_MODE_STRICT).", pid)));
 
   // The forked process was killed because of seccomp and it cannot be waited for.
@@ -283,7 +284,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccompFilter) {
   auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
   EXPECT_THAT(
       my_memory_or_error,
-      HasError(absl::StrFormat(
+      HasErrorWithMessage(absl::StrFormat(
           "This might be due to thread %d being in seccomp mode 2 (SECCOMP_MODE_FILTER).", pid)));
 
   // Detach and end child.

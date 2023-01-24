@@ -231,7 +231,7 @@ TYPED_TEST_P(PdbFileTest, CreatePdbFailsOnNonPdbFile) {
 
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::PdbFile>> pdb_file_result =
       TypeParam::CreatePdbFile(file_path_pdb, orbit_object_utils::ObjectFileInfo{0x180000000});
-  EXPECT_THAT(pdb_file_result, orbit_test_utils::HasError("Unable to load PDB file"));
+  EXPECT_THAT(pdb_file_result, orbit_test_utils::HasErrorWithMessage("Unable to load PDB file"));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(PdbFileTest, LoadDebugSymbols, LoadsFunctionsOnlyInPublicSymbols,

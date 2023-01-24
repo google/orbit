@@ -22,7 +22,7 @@ constexpr const char* kRememberKey = "OtherUserDialog.RememberKey";
 
 namespace orbit_session_setup {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 TEST(OtherUserDialog, ExecAccept) {
@@ -51,7 +51,7 @@ TEST(OtherUserDialog, ExecReject) {
       &dialog, [&]() { dialog.reject(); }, Qt::QueuedConnection);
 
   auto result = dialog.Exec();
-  EXPECT_THAT(result, HasError("user rejected"));
+  EXPECT_THAT(result, HasErrorWithMessage("user rejected"));
 }
 
 TEST(OtherUserDialog, Remember) {

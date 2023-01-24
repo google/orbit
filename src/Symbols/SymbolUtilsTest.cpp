@@ -18,7 +18,7 @@
 
 namespace orbit_symbols {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 
@@ -78,14 +78,14 @@ TEST(SymbolUtils, VerifySymbolFileByBuildId) {
     const std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     const std::string build_id = "incorrect build id";
     const auto result = VerifySymbolFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // ELF file with matching build-id, but no symbols.
     const std::filesystem::path symbols_file = testdata_directory / "no_symbols_elf";
     const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
     const auto result = VerifySymbolFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // PDB file with symbols and matching build id.
@@ -99,21 +99,21 @@ TEST(SymbolUtils, VerifySymbolFileByBuildId) {
     const std::filesystem::path symbols_file = testdata_directory / "dllmain.pdb";
     const std::string build_id = "incorrect build id";
     const auto result = VerifySymbolFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // COFF file with matching build id, but no symbols.
     const std::filesystem::path symbols_file = testdata_directory / "dllmain.dll";
     const std::string build_id = "92cdaeef73f74ebbbcf213b84f43b322-3";
     const auto result = VerifySymbolFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("does not contain symbols"));
   }
   {
     // File doesn't exist.
     const std::filesystem::path symbols_file = "path/to/invalid_file";
     const std::string build_id = "build id does not matter";
     const auto result = VerifySymbolFile(symbols_file, build_id);
-    EXPECT_THAT(result, HasError("Unable to create symbols file"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to create symbols file"));
   }
 }
 
@@ -133,8 +133,8 @@ TEST(SymbolUtils, VerifySymbolFileBySize) {
     const auto file_size = orbit_base::FileSize(symbols_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifySymbolFile(symbols_file, file_size.value());
-    EXPECT_THAT(result, HasError("Unable to load symbols file"));
-    EXPECT_THAT(result, HasError("File does not contain symbols"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to load symbols file"));
+    EXPECT_THAT(result, HasErrorWithMessage("File does not contain symbols"));
   }
   {
     // File with symbols, but of mis-matching file size.
@@ -142,7 +142,7 @@ TEST(SymbolUtils, VerifySymbolFileBySize) {
     const auto file_size = orbit_base::FileSize(symbols_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifySymbolFile(symbols_file, file_size.value() + 1);
-    EXPECT_THAT(result, HasError("File size doesn't match"));
+    EXPECT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
 }
 
@@ -164,7 +164,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // ELF file with mis-matching size.
@@ -173,7 +173,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value() + 1);
-    EXPECT_THAT(result, HasError("File size doesn't match"));
+    EXPECT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
   {
     // COFF file with matching build id.
@@ -191,7 +191,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
-    EXPECT_THAT(result, HasError("has a different build id"));
+    EXPECT_THAT(result, HasErrorWithMessage("has a different build id"));
   }
   {
     // COFF file with mis-matching size.
@@ -200,7 +200,7 @@ TEST(SymbolUtils, VerifyObjectFile) {
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value() + 1);
-    EXPECT_THAT(result, HasError("File size doesn't match"));
+    EXPECT_THAT(result, HasErrorWithMessage("File size doesn't match"));
   }
   {
     // PDB file.
@@ -209,14 +209,14 @@ TEST(SymbolUtils, VerifyObjectFile) {
     const auto file_size = orbit_base::FileSize(object_file);
     ASSERT_THAT(file_size, HasNoError());
     const auto result = VerifyObjectFile(object_file, build_id, file_size.value());
-    EXPECT_THAT(result, HasError("The file was not recognized as a valid object file"));
+    EXPECT_THAT(result, HasErrorWithMessage("The file was not recognized as a valid object file"));
   }
   {
     // File doesn't exist.
     const std::filesystem::path object_file = "path/to/nothing";
     const std::string build_id = "build id does not matter";
     const auto result = VerifyObjectFile(object_file, build_id, 42);
-    EXPECT_THAT(result, HasError("Unable to load object file"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to load object file"));
   }
 }
 

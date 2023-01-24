@@ -35,7 +35,7 @@ Q_DECLARE_METATYPE(std::error_code);
 namespace orbit_ssh_qt {
 using orbit_qt_test_utils::WaitFor;
 using orbit_qt_test_utils::YieldsResult;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 // This test fixure inherits all the functionality from SshTestFixture and on top ensures that
@@ -104,7 +104,7 @@ TEST_F(SshTunnelTest, StartFails) {
   qRegisterMetaType<std::error_code>("std::error_code");
   QSignalSpy error_signal{&tunnel, &orbit_ssh_qt::Tunnel::errorOccurred};
 
-  EXPECT_THAT(WaitFor(tunnel.Start()), YieldsResult(HasError("Channel failure")));
+  EXPECT_THAT(WaitFor(tunnel.Start()), YieldsResult(HasErrorWithMessage("Channel failure")));
   EXPECT_THAT(error_signal, testing::SizeIs(1));
 }
 

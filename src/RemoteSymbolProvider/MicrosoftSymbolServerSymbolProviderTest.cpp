@@ -35,7 +35,7 @@ using orbit_base::Future;
 using orbit_base::NotFoundOr;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 using orbit_symbol_provider::SymbolLoadingSuccessResult;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using ::testing::_;
 using ::testing::Return;
@@ -165,7 +165,7 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleError) {
       .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
                        stop_source.GetStopToken())
       .Then(&executor_, [error_msg](const SymbolLoadingOutcome& result) {
-        EXPECT_THAT(result, HasError(error_msg));
+        EXPECT_THAT(result, HasErrorWithMessage(error_msg));
 
         QCoreApplication::exit();
       });

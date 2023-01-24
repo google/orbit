@@ -23,7 +23,7 @@
 using orbit_client_data::ModuleIdentifier;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 using testing::AllOf;
@@ -494,8 +494,8 @@ TEST(ProcessData, FindModuleByAddress) {
   {
     // exactly end address
     const auto result = process.FindModuleByAddress(end_address);
-    EXPECT_THAT(result, HasError("Unable to find module for address"));
-    EXPECT_THAT(result, HasError("No module loaded at this address"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to find module for address"));
+    EXPECT_THAT(result, HasErrorWithMessage("No module loaded at this address"));
   }
   {
     // after end address
@@ -572,7 +572,8 @@ TEST(ProcessData, RemapModule) {
   info.set_name(kProcessName);
   ProcessData process(info, &module_identifier_provider);
 
-  EXPECT_THAT(process.FindModuleByAddress(0), HasError("Unable to find module for address"));
+  EXPECT_THAT(process.FindModuleByAddress(0),
+              HasErrorWithMessage("Unable to find module for address"));
 
   ModuleInfo module_info;
   module_info.set_file_path(kModulePath);
@@ -721,9 +722,12 @@ TEST_F(ProcessDataModuleIntersectionTest, IntersectWithTwoModules) {
     EXPECT_EQ(result.value().end(), 250);
 
     // Intersecting modules are gone
-    EXPECT_THAT(process_.FindModuleByAddress(148), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_.FindModuleByAddress(250), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_.FindModuleByAddress(270), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(148),
+                HasErrorWithMessage("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(250),
+                HasErrorWithMessage("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(270),
+                HasErrorWithMessage("Unable to find module for address"));
   }
 }
 
@@ -822,8 +826,10 @@ TEST_F(ProcessDataModuleIntersectionTest, FullyInsideAnotherModuleAddressRange) 
     EXPECT_EQ(result.value().end(), 190);
 
     // Original module is gone
-    EXPECT_THAT(process_.FindModuleByAddress(108), HasError("Unable to find module for address"));
-    EXPECT_THAT(process_.FindModuleByAddress(190), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(108),
+                HasErrorWithMessage("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(190),
+                HasErrorWithMessage("Unable to find module for address"));
   }
 }
 
@@ -862,7 +868,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceFirstModule) {
     EXPECT_EQ(result.value().end(), 90);
 
     // Original module is gone
-    EXPECT_THAT(process_.FindModuleByAddress(90), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(90),
+                HasErrorWithMessage("Unable to find module for address"));
   }
 
   // Non intersecting modules are still there
@@ -917,7 +924,8 @@ TEST_F(ProcessDataModuleIntersectionTest, ReplaceLastModule) {
     EXPECT_EQ(result.value().end(), 450);
 
     // Original module is gone
-    EXPECT_THAT(process_.FindModuleByAddress(310), HasError("Unable to find module for address"));
+    EXPECT_THAT(process_.FindModuleByAddress(310),
+                HasErrorWithMessage("Unable to find module for address"));
   }
 
   // Non intersecting modules are still there

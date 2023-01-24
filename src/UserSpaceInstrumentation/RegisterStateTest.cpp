@@ -23,7 +23,7 @@ namespace orbit_user_space_instrumentation {
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 
 // Let the parent trace us, write into rax and ymm0, then enter a breakpoint. While the child is
 // stopped the parent modifies the registers and continues the child. The child then reads back the
@@ -110,8 +110,10 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   EXPECT_EQ(WEXITSTATUS(status), 0);
 
   // After the process exited we get errors when backing up / restoring registers.
-  EXPECT_THAT(state.RestoreRegisters(), HasError("PTRACE_SETREGSET failed to write NT_PRSTATUS"));
-  EXPECT_THAT(state.BackupRegisters(pid), HasError("PTRACE_GETREGS, NT_PRSTATUS failed"));
+  EXPECT_THAT(state.RestoreRegisters(),
+              HasErrorWithMessage("PTRACE_SETREGSET failed to write NT_PRSTATUS"));
+  EXPECT_THAT(state.BackupRegisters(pid),
+              HasErrorWithMessage("PTRACE_GETREGS, NT_PRSTATUS failed"));
 }
 
 }  // namespace orbit_user_space_instrumentation

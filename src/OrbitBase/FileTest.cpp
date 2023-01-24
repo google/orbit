@@ -27,6 +27,7 @@
 #include "TestUtils/TestUtils.h"
 
 using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 using orbit_test_utils::TemporaryFile;
@@ -408,7 +409,7 @@ TEST(File, FileSize) {
     ErrorMessageOr<uint64_t> file_size_or_error = FileSize(file_path);
     // On Windows the error message is: "The system cannot find the file specified."
     // On Linux it is: "No such file or directory"
-    EXPECT_THAT(file_size_or_error, HasError("file"));
+    EXPECT_THAT(file_size_or_error, HasErrorWithMessage("file"));
   }
 }
 
@@ -460,9 +461,9 @@ TEST(File, IsDirectory) {
     // On Windows the error message is: " The system cannot find the path specified."
     // On Linux it is: "No such file or directory"
     EXPECT_THAT(IsDirectory(std::filesystem::path{"/tmp/complicated/non/existing/path/to/file"}),
-                HasError(""));
+                HasError());
     EXPECT_THAT(IsDirectory(std::filesystem::path{"/tmp/complicated/non/existing/path/to/folder/"}),
-                HasError(""));
+                HasError());
   }
 }
 

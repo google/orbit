@@ -26,7 +26,7 @@
 
 namespace orbit_capture_file_info {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 
 constexpr const char* kOrgName = "The Orbit Authors";
 
@@ -200,7 +200,7 @@ TEST(CaptureFileInfoManager, FillFromDirectory) {
 
   {  // Fail
     ErrorMessageOr<void> result = manager.FillFromDirectory("/non/existent/path/to/dir");
-    EXPECT_THAT(result, HasError("Unable to list files in directory"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to list files in directory"));
   }
 
   {  // Success

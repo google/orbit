@@ -19,13 +19,13 @@
 
 namespace orbit_user_space_instrumentation {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 
 TEST(AttachTest, AttachAndStopProcess) {
   TestProcess test_process;
   const pid_t pid = test_process.pid();
 
-  EXPECT_THAT(AttachAndStopProcess(-1), HasError("There is no process with pid"));
+  EXPECT_THAT(AttachAndStopProcess(-1), HasErrorWithMessage("There is no process with pid"));
 
   const auto result = AttachAndStopProcess(pid);
   ASSERT_FALSE(result.has_error()) << result.error().message();

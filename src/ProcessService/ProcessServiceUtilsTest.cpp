@@ -23,7 +23,7 @@ namespace orbit_process_service {
 
 using orbit_base::NotFoundOr;
 using orbit_grpc_protos::GetDebugInfoFileRequest;
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasValue;
 
 TEST(ProcessServiceUtils, GetCumulativeTotalCpuTime) {
@@ -120,7 +120,7 @@ TEST(ProcessServiceUtils, FindSymbolsFilePath) {
     request.set_module_path(module_path.string());
     request.add_additional_search_directories(test_directory);
     const ErrorMessageOr<NotFoundOr<std::filesystem::path>> result = FindSymbolsFilePath(request);
-    EXPECT_THAT(result, HasError("Unable to load object file"));
+    EXPECT_THAT(result, HasErrorWithMessage("Unable to load object file"));
   }
 
   {  // elf - no build id, but does include symbols

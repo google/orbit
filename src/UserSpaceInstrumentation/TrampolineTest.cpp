@@ -47,10 +47,11 @@
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
 
 namespace orbit_user_space_instrumentation {
+using orbit_test_utils::HasErrorWithMessage;
 
 namespace {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 using testing::ElementsAreArray;
@@ -263,13 +264,13 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
       {UINT64_MAX - k64Kb, UINT64_MAX - k1Kb}};
   address_range_or_error = FindAddressRangeForTrampoline(
       unavailable_ranges12, {UINT64_MAX - k64Kb, UINT64_MAX - k1Kb}, k64Kb);
-  ASSERT_THAT(address_range_or_error, HasError("No place to fit"));
+  ASSERT_THAT(address_range_or_error, HasErrorWithMessage("No place to fit"));
 
   // We can not fit anything close to a range larger than 2GB.
   const std::vector<AddressRange> unavailable_ranges13 = {{0, k64Kb}, {kOneGb, 4 * kOneGb}};
   address_range_or_error =
       FindAddressRangeForTrampoline(unavailable_ranges13, {kOneGb, 4 * kOneGb}, k64Kb);
-  ASSERT_THAT(address_range_or_error, HasError("No place to fit"));
+  ASSERT_THAT(address_range_or_error, HasErrorWithMessage("No place to fit"));
 }
 
 TEST(TrampolineTest, AllocateMemoryForTrampolines) {
@@ -332,7 +333,7 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::min(), result.value());
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Larger + 1);
-  EXPECT_THAT(result, HasError("Difference is larger than -2GB"));
+  EXPECT_THAT(result, HasErrorWithMessage("Difference is larger than -2GB"));
 
   // Result of the difference is positive; in the first case it just fits, the second case
   // overflows.
@@ -341,15 +342,15 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
   ASSERT_THAT(result, HasNoError());
   EXPECT_EQ(std::numeric_limits<int32_t>::max(), result.value());
   result = AddressDifferenceAsInt32(kAddr1, kAddr2Smaller - 1);
-  EXPECT_THAT(result, HasError("Difference is larger than +2GB"));
+  EXPECT_THAT(result, HasErrorWithMessage("Difference is larger than +2GB"));
 
   // Result of the difference does not even fit into a int64. We handle that gracefully as well.
   constexpr uint64_t kAddrHigh = 0xf234567812345678;
   constexpr uint64_t kAddrLow = kAddrHigh - 0xe234567812345678;
   result = AddressDifferenceAsInt32(kAddrHigh, kAddrLow);
-  EXPECT_THAT(result, HasError("Difference is larger than +2GB"));
+  EXPECT_THAT(result, HasErrorWithMessage("Difference is larger than +2GB"));
   result = AddressDifferenceAsInt32(kAddrLow, kAddrHigh);
-  EXPECT_THAT(result, HasError("Difference is larger than -2GB"));
+  EXPECT_THAT(result, HasErrorWithMessage("Difference is larger than -2GB"));
 }
 
 class RelocateInstructionTest : public testing::Test {
@@ -415,8 +416,9 @@ TEST_F(RelocateInstructionTest, RipRelativeAddressing) {
 
   result = RelocateInstruction(instruction_, kOriginalAddress, kOriginalAddress - 0x7fff0000);
   EXPECT_THAT(result,
-              HasError("While trying to relocate an instruction with rip relative addressing the "
-                       "target was out of range from the trampoline."));
+              HasErrorWithMessage(
+                  "While trying to relocate an instruction with rip relative addressing the "
+                  "target was out of range from the trampoline."));
 }
 
 TEST_F(RelocateInstructionTest, UnconditionalJumpTo8BitImmediate) {
@@ -469,7 +471,7 @@ TEST_F(RelocateInstructionTest, CallInstructionIsNotSupported) {
 
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
-  EXPECT_THAT(result, HasError("Relocating a call instruction is not supported."));
+  EXPECT_THAT(result, HasErrorWithMessage("Relocating a call instruction is not supported."));
 }
 
 TEST_F(RelocateInstructionTest, ConditionalJumpTo8BitImmediate) {
@@ -530,7 +532,7 @@ TEST_F(RelocateInstructionTest, LoopIsUnsupported) {
 
   ErrorMessageOr<RelocatedInstruction> result =
       RelocateInstruction(instruction_, 0x0100000000, 0x0200000000);
-  EXPECT_THAT(result, HasError("Relocating a loop instruction is not supported."));
+  EXPECT_THAT(result, HasErrorWithMessage("Relocating a loop instruction is not supported."));
 }
 
 TEST_F(RelocateInstructionTest, TrivialTranslation) {
@@ -755,7 +757,8 @@ TEST_F(InstrumentFunctionTest, TooShort) {
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(result, HasError("Unable to disassemble enough of the function to instrument it"));
+  EXPECT_THAT(result,
+              HasErrorWithMessage("Unable to disassemble enough of the function to instrument it"));
   RestartAndRemoveInstrumentation();
 }
 
@@ -949,7 +952,7 @@ TEST_F(InstrumentFunctionTest, Loop) {
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(result, HasError("Relocating a loop instruction is not supported."));
+  EXPECT_THAT(result, HasErrorWithMessage("Relocating a loop instruction is not supported."));
   RestartAndRemoveInstrumentation();
 }
 
@@ -1198,7 +1201,8 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffsetBackToBeginning) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result,
-              HasError("Failed to create trampoline since the function contains a jump back into"));
+              HasErrorWithMessage(
+                  "Failed to create trampoline since the function contains a jump back into"));
 }
 
 extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBackToBeginning() {
@@ -1231,7 +1235,8 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffsetBackToBeginning) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result,
-              HasError("Failed to create trampoline since the function contains a jump back into"));
+              HasErrorWithMessage(
+                  "Failed to create trampoline since the function contains a jump back into"));
 }
 
 extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackToBeginning() {
@@ -1263,7 +1268,8 @@ TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffsetBackToBeginning) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result,
-              HasError("Failed to create trampoline since the function contains a jump back into"));
+              HasErrorWithMessage(
+                  "Failed to create trampoline since the function contains a jump back into"));
 }
 
 extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackToBeginning() {
@@ -1296,7 +1302,8 @@ TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffsetBackToBeginning) {
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
   EXPECT_THAT(result,
-              HasError("Failed to create trampoline since the function contains a jump back into"));
+              HasErrorWithMessage(
+                  "Failed to create trampoline since the function contains a jump back into"));
 }
 
 extern "C" __attribute__((noinline, naked)) int LongConditionalJump32BitOffsetBackToBeginning() {

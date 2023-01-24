@@ -14,6 +14,8 @@
 #include "QtUtils/EventLoop.h"
 #include "TestUtils/TestUtils.h"
 
+using orbit_test_utils::HasErrorWithMessage;
+
 TEST(EventLoop, exec) {
   // Case 1: The event loop finishes successfully
   {
@@ -43,9 +45,9 @@ TEST(EventLoop, exec) {
           loop.error(std::make_error_code(std::errc::bad_message));
         },
         Qt::QueuedConnection);
-    EXPECT_THAT(loop.exec(),
-                orbit_test_utils::HasError(
-                    ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
+    EXPECT_THAT(
+        loop.exec(),
+        HasErrorWithMessage(ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
   }
 
   // Case 3: The event loop immediately returns due to a queued error.
@@ -61,9 +63,9 @@ TEST(EventLoop, exec) {
                    // to return early.
         },
         Qt::QueuedConnection);
-    EXPECT_THAT(loop.exec(),
-                orbit_test_utils::HasError(
-                    ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
+    EXPECT_THAT(
+        loop.exec(),
+        HasErrorWithMessage(ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
   }
 
   // Case 4: The event loop immediately returns due to a queued result (quit).
@@ -138,7 +140,7 @@ TEST(EventLoop, reuseLoop) {
           loop.error(error_code);
         },
         Qt::QueuedConnection);
-    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(ErrorMessage{error_code}.message()));
+    EXPECT_THAT(loop.exec(), HasErrorWithMessage(ErrorMessage{error_code}.message()));
   }
 
   // 3. normal error from ErrorMessage
@@ -152,7 +154,7 @@ TEST(EventLoop, reuseLoop) {
         },
         Qt::QueuedConnection);
 
-    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(error_message.message()));
+    EXPECT_THAT(loop.exec(), HasErrorWithMessage(error_message.message()));
   }
 
   // 4. premature quit
@@ -173,13 +175,13 @@ TEST(EventLoop, reuseLoop) {
   {
     const auto error_code = std::make_error_code(std::errc::bad_message);
     loop.error(error_code);
-    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(ErrorMessage{error_code}.message()));
+    EXPECT_THAT(loop.exec(), HasErrorWithMessage(ErrorMessage{error_code}.message()));
   }
 
   // 6. premature error from ErrorMessage
   {
     const ErrorMessage error_message{"Important error message"};
     loop.error(error_message);
-    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(error_message.message()));
+    EXPECT_THAT(loop.exec(), HasErrorWithMessage(error_message.message()));
   }
 }

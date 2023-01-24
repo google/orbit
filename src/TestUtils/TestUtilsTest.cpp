@@ -15,6 +15,7 @@ static ErrorMessageOr<std::string> ReturnString() { return "This is fine."; }
 static ErrorMessageOr<std::string> ReturnError() { return ErrorMessage{"This is not fine."}; }
 
 namespace orbit_test_utils {
+using testing::_;
 
 TEST(TestUtils, HasValue) {
   EXPECT_THAT(ReturnString(), HasValue());
@@ -26,20 +27,30 @@ TEST(TestUtils, HasValue) {
   EXPECT_THAT(ReturnError(), testing::Not(HasValue(testing::Eq("This is fine."))));
 }
 
-TEST(TestUtils, HasError) {
-  EXPECT_THAT(ReturnString(), testing::Not(HasError("This is not fine")));
+TEST(TestUtils, HasErrorWithMessage) {
+  EXPECT_THAT(ReturnString(), testing::Not(HasErrorWithMessage("This is not fine")));
   EXPECT_THAT(ReturnString(), HasValue("This is fine."));
   EXPECT_THAT(ReturnString(), HasValue(testing::Eq("This is fine.")));
   EXPECT_THAT(ReturnString(), HasValue(testing::EndsWith("fine.")));
 
-  EXPECT_THAT(ReturnError(), HasError("This is not fine."));
-  EXPECT_THAT(ReturnError(), HasError("not fine."));
-  EXPECT_THAT(ReturnError(), testing::Not(HasError("Other error message")));
+  EXPECT_THAT(ReturnError(), HasErrorWithMessage("This is not fine."));
+  EXPECT_THAT(ReturnError(), HasErrorWithMessage("not fine."));
+  EXPECT_THAT(ReturnError(), testing::Not(HasErrorWithMessage("Other error message")));
 }
 
 TEST(TestUtils, HasNoError) {
   EXPECT_THAT(ReturnString(), HasNoError());
   EXPECT_THAT(ReturnError(), testing::Not(HasNoError()));
+}
+
+TEST(TestUtils, HasError) {
+  EXPECT_THAT(ReturnString(), testing::Not(HasError()));
+  EXPECT_THAT(ReturnString(), testing::Not(HasError(_)));
+
+  EXPECT_THAT(ReturnError(), HasError());
+  EXPECT_THAT(ReturnError(), HasError(_));
+  EXPECT_THAT(ReturnError(),
+              HasError(testing::Property(&ErrorMessage::message, "This is not fine.")));
 }
 
 }  // namespace orbit_test_utils

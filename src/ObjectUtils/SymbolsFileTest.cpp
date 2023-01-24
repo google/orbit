@@ -14,7 +14,7 @@
 
 namespace orbit_object_utils {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 
 TEST(SymbolsFile, CreateSymbolsFileFromElf) {
@@ -28,8 +28,8 @@ TEST(SymbolsFile, CreateSymbolsFileFromElf) {
       orbit_test::GetTestdataDir() / "no_symbols_elf";
 
   auto invalid_symbols_file = CreateSymbolsFile(elf_without_symbols_path, ObjectFileInfo{0x10000});
-  EXPECT_THAT(invalid_symbols_file, HasError("Unable to create symbols file"));
-  EXPECT_THAT(invalid_symbols_file, HasError("File does not contain symbols."));
+  EXPECT_THAT(invalid_symbols_file, HasErrorWithMessage("Unable to create symbols file"));
+  EXPECT_THAT(invalid_symbols_file, HasErrorWithMessage("File does not contain symbols."));
 }
 
 TEST(SymbolsFile, CreateSymbolsFileFromCoff) {
@@ -42,8 +42,8 @@ TEST(SymbolsFile, CreateSymbolsFileFromCoff) {
       orbit_test::GetTestdataDir() / "dllmain.dll";
 
   auto invalid_symbols_file = CreateSymbolsFile(coff_without_symbols_path, ObjectFileInfo{0x10000});
-  EXPECT_THAT(invalid_symbols_file, HasError("Unable to create symbols file"));
-  EXPECT_THAT(invalid_symbols_file, HasError("File does not contain symbols."));
+  EXPECT_THAT(invalid_symbols_file, HasErrorWithMessage("Unable to create symbols file"));
+  EXPECT_THAT(invalid_symbols_file, HasErrorWithMessage("File does not contain symbols."));
 }
 
 TEST(SymbolsFile, CreateSymbolsFileFromPdb) {
@@ -59,14 +59,14 @@ TEST(SymbolsFile, FailToCreateSymbolsFile) {
   const std::filesystem::path path_to_text_file = orbit_test::GetTestdataDir() / "textfile.txt";
 
   auto text_file = CreateSymbolsFile(path_to_text_file, ObjectFileInfo{0x10000});
-  EXPECT_THAT(text_file, HasError("Unable to create symbols file"));
-  EXPECT_THAT(text_file, HasError("File cannot be read as an object file"));
-  EXPECT_THAT(text_file, HasError("File also cannot be read as a PDB file"));
+  EXPECT_THAT(text_file, HasErrorWithMessage("Unable to create symbols file"));
+  EXPECT_THAT(text_file, HasErrorWithMessage("File cannot be read as an object file"));
+  EXPECT_THAT(text_file, HasErrorWithMessage("File also cannot be read as a PDB file"));
 
   const std::filesystem::path invalid_path = orbit_test::GetTestdataDir() / "non_existing_file";
   auto invalid_file = CreateSymbolsFile(invalid_path, ObjectFileInfo{0x10000});
-  EXPECT_THAT(invalid_file, HasError("Unable to create symbols file"));
-  EXPECT_THAT(invalid_file, HasError("File does not exist"));
+  EXPECT_THAT(invalid_file, HasErrorWithMessage("Unable to create symbols file"));
+  EXPECT_THAT(invalid_file, HasErrorWithMessage("File does not exist"));
 }
 
 }  // namespace orbit_object_utils

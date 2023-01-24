@@ -33,7 +33,7 @@
 
 namespace orbit_capture_file {
 
-using orbit_test_utils::HasError;
+using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
 
@@ -219,7 +219,7 @@ TEST_F(CaptureFileTest, CreateCaptureFileWriteAdditionalSectionAndReadMainSectio
     ClientCaptureEvent event;
     ErrorMessageOr<void> error = capture_section->ReadMessage(&event);
     if (error.has_error()) {
-      ASSERT_THAT(error, HasError("Unexpected end of section"));
+      ASSERT_THAT(error, HasErrorWithMessage("Unexpected end of section"));
       return;
     }
     ASSERT_EQ(0, event.ByteSizeLong());
@@ -309,14 +309,14 @@ TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSignature) {
       HasNoError());
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(GetCaptureFilePath());
-  EXPECT_THAT(capture_file_or_error, HasError("Invalid file signature"));
+  EXPECT_THAT(capture_file_or_error, HasErrorWithMessage("Invalid file signature"));
 }
 
 TEST_F(CaptureFileHeaderTest, OpenCaptureFileTooSmall) {
   EXPECT_THAT(orbit_base::WriteStringToFile(GetCaptureFilePath(), "ups"), HasNoError());
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(GetCaptureFilePath());
-  EXPECT_THAT(capture_file_or_error, HasError("Failed to read the file signature"));
+  EXPECT_THAT(capture_file_or_error, HasErrorWithMessage("Failed to read the file signature"));
 }
 
 static std::string CreateHeader(uint32_t version, uint64_t capture_section_offset,
@@ -337,7 +337,7 @@ TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidVersion) {
   EXPECT_THAT(orbit_base::WriteStringToFile(GetCaptureFilePath(), header), HasNoError());
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(GetCaptureFilePath());
-  EXPECT_THAT(capture_file_or_error, HasError("Incompatible version 0, expected 1"));
+  EXPECT_THAT(capture_file_or_error, HasErrorWithMessage("Incompatible version 0, expected 1"));
 }
 
 TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSectionListSize) {
@@ -350,7 +350,8 @@ TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSectionListSize) {
   EXPECT_THAT(orbit_base::WriteStringToFile(GetCaptureFilePath(), header), HasNoError());
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(GetCaptureFilePath());
-  EXPECT_THAT(capture_file_or_error, HasError("Unexpected EOF while reading section list"));
+  EXPECT_THAT(capture_file_or_error,
+              HasErrorWithMessage("Unexpected EOF while reading section list"));
 }
 
 TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSectionListSizeTooLarge) {
@@ -363,7 +364,7 @@ TEST_F(CaptureFileHeaderTest, OpenCaptureFileInvalidSectionListSizeTooLarge) {
   EXPECT_THAT(orbit_base::WriteStringToFile(GetCaptureFilePath(), header), HasNoError());
 
   auto capture_file_or_error = CaptureFile::OpenForReadWrite(GetCaptureFilePath());
-  EXPECT_THAT(capture_file_or_error, HasError("The section list is too large"));
+  EXPECT_THAT(capture_file_or_error, HasErrorWithMessage("The section list is too large"));
 }
 
 TEST_F(CaptureFileTest, AddSectionOfTypeNoUserDataSection) {
@@ -410,8 +411,9 @@ TEST_F(CaptureFileTest, AddSectionOfTypeContainsUserDataSection) {
 }
 
 TEST_F(CaptureFileTest, CannotAddUserDataSectionAsAdditionalSection) {
-  EXPECT_THAT(capture_file_->AddAdditionalSectionOfType(kSectionTypeUserData, 50),
-              HasError("Cannot add a user data section as an additional (read only) section."));
+  EXPECT_THAT(
+      capture_file_->AddAdditionalSectionOfType(kSectionTypeUserData, 50),
+      HasErrorWithMessage("Cannot add a user data section as an additional (read only) section."));
 }
 
 TEST_F(CaptureFileHeaderTest, ModifyExisting) {
