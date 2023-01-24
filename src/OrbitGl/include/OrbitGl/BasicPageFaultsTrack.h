@@ -46,8 +46,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   // unknown type.
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kUnknown; }
 
-  void AddValues(uint64_t timestamp_ns,
-                 const std::array<double, kBasicPageFaultsTrackDimension>& values) override;
+  void AddValues(uint64_t timestamp_ns, absl::Span<const double> values) override;
   void AddValuesAndUpdateAnnotations(
       uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
 
@@ -79,8 +78,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   }
 
   Track* parent_;
-  std::optional<std::pair<uint64_t, std::array<double, kBasicPageFaultsTrackDimension>>>
-      previous_time_and_values_ = std::nullopt;
+  std::optional<std::pair<uint64_t, std::vector<double>>> previous_time_and_values_ = std::nullopt;
 };
 
 }  // namespace orbit_gl

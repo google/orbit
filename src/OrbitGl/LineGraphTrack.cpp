@@ -35,8 +35,7 @@ namespace orbit_gl {
 }
 
 template <size_t Dimension>
-float LineGraphTrack<Dimension>::GetLabelYFromValues(
-    const std::array<double, Dimension>& values) const {
+float LineGraphTrack<Dimension>::GetLabelYFromValues(absl::Span<const double> values) const {
   float content_height = this->GetGraphContentHeight();
   float base_y = this->GetGraphContentBottomY();
   double min = this->GetGraphMinValue();

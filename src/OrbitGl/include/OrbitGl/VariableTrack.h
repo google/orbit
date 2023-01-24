@@ -28,7 +28,7 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
                          const orbit_client_data::ModuleManager* module_manager,
                          const orbit_client_data::CaptureData* capture_data)
       : LineGraphTrack<kVariableTrackDimension>(parent, timeline_info, viewport, layout,
-                                                std::array<std::string, kVariableTrackDimension>{},
+                                                std::vector<std::string>(kVariableTrackDimension),
                                                 kTrackValueDecimalDigits, kTrackValueUnits,
                                                 module_manager, capture_data),
         name_{std::move(name)} {

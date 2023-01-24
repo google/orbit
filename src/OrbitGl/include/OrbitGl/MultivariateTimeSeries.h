@@ -31,6 +31,7 @@ class MultivariateTimeSeries {
   [[nodiscard]] std::string GetValueUnit() const { return value_unit_; }
   [[nodiscard]] double GetMin() const;
   [[nodiscard]] double GetMax() const;
+  [[nodiscard]] size_t GetDimension() const { return series_names_.size(); }
 
   [[nodiscard]] bool IsEmpty() const;
   [[nodiscard]] size_t GetTimeToSeriesValuesSize() const;
@@ -64,6 +65,7 @@ class MultivariateTimeSeries {
   double min_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::max();
   double max_ ABSL_GUARDED_BY(mutex_) = std::numeric_limits<double>::lowest();
 
+  // Should NOT be modified after construction.
   std::vector<std::string> series_names_;
   uint8_t value_decimal_digits_;
   std::string value_unit_;

@@ -10,7 +10,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <array>
 #include <cmath>
 #include <map>
 #include <optional>
@@ -32,14 +31,13 @@
 #include "OrbitGl/Track.h"
 #include "OrbitGl/Viewport.h"
 
-template <size_t Dimension>
 class GraphTrack : public Track {
  public:
   explicit GraphTrack(CaptureViewElement* parent,
                       const orbit_gl::TimelineInfoInterface* timeline_info,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                      std::array<std::string, Dimension> series_names,
-                      uint8_t series_value_decimal_digits, std::string series_value_unit,
+                      std::vector<std::string> series_names, uint8_t series_value_decimal_digits,
+                      std::string series_value_unit,
                       const orbit_client_data::ModuleManager* module_manager,
                       const orbit_client_data::CaptureData* capture_data);
 
@@ -51,15 +49,15 @@ class GraphTrack : public Track {
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }
 
-  virtual void AddValues(uint64_t timestamp_ns, const std::array<double, Dimension>& values) {
+  virtual void AddValues(uint64_t timestamp_ns, absl::Span<const double> values) {
     series_.AddValues(timestamp_ns, values);
   }
 
   [[nodiscard]] uint64_t GetMinTime() const override;
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
-  void SetSeriesColors(const std::array<Color, Dimension>& series_colors) {
-    series_colors_ = series_colors;
+  void SetSeriesColors(absl::Span<const Color> series_colors) {
+    series_colors_ = std::vector(series_colors.begin(), series_colors.end());
   }
 
   // These are not supported in GraphTracks
@@ -101,10 +99,8 @@ class GraphTrack : public Track {
   }
   [[nodiscard]] float GetGraphContentHeight() const;
 
-  [[nodiscard]] virtual float GetLabelYFromValues(
-      const std::array<double, Dimension>& values) const;
-  [[nodiscard]] virtual std::string GetLabelTextFromValues(
-      const std::array<double, Dimension>& values) const;
+  [[nodiscard]] virtual float GetLabelYFromValues(absl::Span<const double> values) const;
+  [[nodiscard]] virtual std::string GetLabelTextFromValues(absl::Span<const double> values) const;
   [[nodiscard]] uint32_t GetLegendFontSize(uint32_t indentation_level = 0) const;
 
   virtual void DrawMouseLabel(orbit_gl::PrimitiveAssembler& primitive_assembler,
@@ -131,7 +127,7 @@ class GraphTrack : public Track {
                              absl::Span<const float> normalized_cumulative_values, float z);
   [[nodiscard]] bool HasLegend() const;
 
-  std::optional<std::array<Color, Dimension>> series_colors_;
+  std::vector<Color> series_colors_;
 };
 
 #endif  // ORBIT_GL_GRAPH_TRACK_H_

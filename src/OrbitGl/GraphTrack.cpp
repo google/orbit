@@ -38,26 +38,20 @@ using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
-template <size_t Dimension>
-GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
-                                  const orbit_gl::TimelineInfoInterface* timeline_info,
-                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                  std::array<std::string, Dimension> series_names,
-                                  uint8_t series_value_decimal_digits,
-                                  std::string series_value_units,
-                                  const orbit_client_data::ModuleManager* module_manager,
-                                  const orbit_client_data::CaptureData* capture_data)
+GraphTrack::GraphTrack(CaptureViewElement* parent,
+                       const orbit_gl::TimelineInfoInterface* timeline_info,
+                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                       std::vector<std::string> series_names, uint8_t series_value_decimal_digits,
+                       std::string series_value_units,
+                       const orbit_client_data::ModuleManager* module_manager,
+                       const orbit_client_data::CaptureData* capture_data)
     : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
-      series_{std::vector(series_names.begin(), series_names.end()), series_value_decimal_digits,
-              std::move(series_value_units)} {}
-
-template <size_t Dimension>
-bool GraphTrack<Dimension>::HasLegend() const {
-  return !IsCollapsed() && Dimension > 1;
+      series_{std::move(series_names), series_value_decimal_digits, std::move(series_value_units)} {
 }
 
-template <size_t Dimension>
-float GraphTrack<Dimension>::GetHeight() const {
+bool GraphTrack::HasLegend() const { return !IsCollapsed() && series_.GetDimension() > 1; }
+
+float GraphTrack::GetHeight() const {
   // Top content margin is counted twice when there are legends because it is inserted above and
   // below the legend.
   float height_above_content =
@@ -66,8 +60,7 @@ float GraphTrack<Dimension>::GetHeight() const {
   return height_above_content + GetGraphContentHeight() + layout_->GetTrackContentBottomMargin();
 }
 
-template <size_t Dimension>
-float GraphTrack<Dimension>::GetLegendHeight() const {
+float GraphTrack::GetLegendHeight() const {
   if (!HasLegend()) return 0;
 
   // Legend size should be smaller than all regular textboxes across Orbit.
@@ -75,9 +68,8 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
   return legend_height;
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
-                                   TextRenderer& text_renderer, const DrawContext& draw_context) {
+void GraphTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                        const DrawContext& draw_context) {
   Track::DoDraw(primitive_assembler, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
 
@@ -90,11 +82,10 @@ void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
   DrawLegend(primitive_assembler, text_renderer, series_.GetSeriesNames(), white);
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
-                                               TextRenderer& text_renderer, uint64_t min_tick,
-                                               uint64_t max_tick, PickingMode picking_mode) {
-  ORBIT_SCOPE_WITH_COLOR("GraphTrack<Dimension>::DoUpdatePrimitives", kOrbitColorBlueGrey);
+void GraphTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("GraphTrack::DoUpdatePrimitives", kOrbitColorBlueGrey);
   Track::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
 
   float track_z = GlCanvas::kZValueTrack;
@@ -113,36 +104,30 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
   DrawSeries(primitive_assembler, min_tick, max_tick, graph_z);
 }
 
-template <size_t Dimension>
-Color GraphTrack<Dimension>::GetColor(size_t index) const {
-  if (series_colors_.has_value()) return series_colors_.value()[index];
+Color GraphTrack::GetColor(size_t index) const {
+  if (!series_colors_.empty()) return series_colors_.at(index);
+
   return TimeGraph::GetColor(index);
 }
 
-template <size_t Dimension>
-float GraphTrack<Dimension>::GetGraphContentHeight() const {
+float GraphTrack::GetGraphContentHeight() const {
   float result = layout_->GetTextBoxHeight() * kBoxHeightMultiplier;
-  if (!IsCollapsed()) {
-    result *= Dimension;
-  }
+  if (!IsCollapsed()) result *= series_.GetDimension();
+
   return result;
 }
 
-template <size_t Dimension>
-float GraphTrack<Dimension>::GetLabelYFromValues(
-    const std::array<double, Dimension>& /*values*/) const {
+float GraphTrack::GetLabelYFromValues(absl::Span<const double> /*values*/) const {
   return GetGraphContentBottomY() - GetGraphContentHeight() / 2.f;
 }
 
-template <size_t Dimension>
-std::string GraphTrack<Dimension>::GetLabelTextFromValues(
-    const std::array<double, Dimension>& values) const {
+std::string GraphTrack::GetLabelTextFromValues(absl::Span<const double> values) const {
   const std::vector<std::string>& series_names = series_.GetSeriesNames();
   std::optional<uint8_t> value_decimal_digits = series_.GetValueDecimalDigits();
   std::string value_unit = series_.GetValueUnit();
   std::string text;
   std::string_view delimiter = "";
-  for (int i = Dimension - 1; i >= 0; i--) {
+  for (int i = series_.GetDimension() - 1; i >= 0; i--) {
     std::string formatted_name =
         series_names.at(i).empty() ? "" : absl::StrFormat("%s: ", series_names.at(i));
     std::string formatted_value =
@@ -153,8 +138,7 @@ std::string GraphTrack<Dimension>::GetLabelTextFromValues(
   return text;
 }
 
-template <size_t Dimension>
-uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) const {
+uint32_t GraphTrack::GetLegendFontSize(uint32_t indentation_level) const {
   constexpr uint32_t kMinIndentationLevel = 1;
   int capped_indentation_level = std::max(indentation_level, kMinIndentationLevel);
 
@@ -162,10 +146,8 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) co
   return (font_size * (10 - capped_indentation_level)) / 10;
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembler,
-                                           TextRenderer& text_renderer,
-                                           const DrawContext& draw_context) {
+void GraphTrack::DrawMouseLabel(PrimitiveAssembler& primitive_assembler,
+                                TextRenderer& text_renderer, const DrawContext& draw_context) {
   if (!draw_context.current_mouse_tick.has_value()) return;
 
   const float text_left_margin = 2.f;
@@ -177,11 +159,7 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
 
   uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
 
-  // TODO(vickyliu): remove this vector to array conversion after changing to not use array.
-  const std::vector<double>& values_tmp = series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
-  ORBIT_CHECK(values_tmp.size() == Dimension);
-  std::array<double, Dimension> values;
-  std::copy_n(values_tmp.begin(), Dimension, values.begin());
+  const std::vector<double>& values = series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
   uint64_t first_time = series_.StartTimeInNs();
   uint64_t label_time = std::max(current_mouse_time_ns, first_time);
   Vec2 target_point_pos{timeline_info_->GetWorldFromTick(label_time), GetLabelYFromValues(values)};
@@ -228,11 +206,9 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   }
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
-                                       TextRenderer& text_renderer,
-                                       absl::Span<const std::string> series_names,
-                                       const Color& legend_text_color) {
+void GraphTrack::DrawLegend(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                            absl::Span<const std::string> series_names,
+                            const Color& legend_text_color) {
   const float space_between_legend_symbol_and_text = layout_->GetGenericFixedSpacerWidth();
   const float space_between_legend_entries = layout_->GetGenericFixedSpacerWidth() * 2;
   const float legend_symbol_height = GetLegendHeight();
@@ -243,7 +219,7 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
   const Color fully_transparent(255, 255, 255, 0);
 
   float text_z = GlCanvas::kZValueTrackText;
-  for (size_t i = 0; i < Dimension; ++i) {
+  for (size_t i = 0; i < series_.GetDimension(); ++i) {
     primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(legend_symbol_width, legend_symbol_height),
                                      text_z, GetColor(i));
     x0 += legend_symbol_width + space_between_legend_symbol_and_text;
@@ -266,9 +242,8 @@ void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& primitive_assembler,
   }
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t min_tick,
-                                       uint64_t max_tick, float z) {
+void GraphTrack::DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t min_tick,
+                            uint64_t max_tick, float z) {
   auto entries = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
   if (entries.empty()) return;
 
@@ -276,7 +251,6 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
   double inverse_value_range = GetInverseOfGraphValueRange();
   auto current_it = entries.begin();
   auto last_it = std::prev(entries.end());
-  ORBIT_CHECK(current_it->second.size() == Dimension);
 
   orbit_gl::GraphTrackDataAggregator aggr;
 
@@ -292,7 +266,7 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
     // flat. To address this problem, we compute y positions from the normalized cumulative values.
-    std::array<float, Dimension> normalized_cumulative_values{};
+    std::vector<float> normalized_cumulative_values(series_.GetDimension());
     std::transform(cumulative_values.begin(), cumulative_values.end(),
                    normalized_cumulative_values.begin(), [min, inverse_value_range](double value) {
                      return static_cast<float>((value - min) * inverse_value_range);
@@ -337,33 +311,23 @@ void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler, 
                         z);
 }
 
-template <size_t Dimension>
-void GraphTrack<Dimension>::DrawSingleSeriesEntry(
-    PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    absl::Span<const float> normalized_cumulative_values, float z) {
+void GraphTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
+                                       uint64_t end_tick,
+                                       absl::Span<const float> normalized_cumulative_values,
+                                       float z) {
   const float x0 = timeline_info_->GetWorldFromTick(start_tick);
   const float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   const float content_height = GetGraphContentHeight();
   const float base_y = GetGraphContentBottomY();
   float y0 = base_y;
   // Draw the stacked values from bottom to top
-  for (size_t i = 0; i < Dimension; ++i) {
+  for (size_t i = 0; i < series_.GetDimension(); ++i) {
     float height = normalized_cumulative_values[i] * content_height - (base_y - y0);
     y0 -= height;
     primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
   }
 }
 
-template <size_t Dimension>
-uint64_t GraphTrack<Dimension>::GetMinTime() const {
-  return series_.StartTimeInNs();
-}
-template <size_t Dimension>
-uint64_t GraphTrack<Dimension>::GetMaxTime() const {
-  return series_.EndTimeInNs();
-}
+uint64_t GraphTrack::GetMinTime() const { return series_.StartTimeInNs(); }
 
-template class GraphTrack<1>;
-template class GraphTrack<2>;
-template class GraphTrack<3>;
-template class GraphTrack<4>;
+uint64_t GraphTrack::GetMaxTime() const { return series_.EndTimeInNs(); }

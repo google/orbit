@@ -29,7 +29,7 @@
 namespace orbit_gl {
 
 template <size_t Dimension>
-class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
+class MemoryTrack : public GraphTrack, public AnnotationTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
@@ -38,9 +38,10 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
                        uint8_t series_value_decimal_digits, std::string series_value_units,
                        const orbit_client_data::ModuleManager* module_manager,
                        const orbit_client_data::CaptureData* capture_data)
-      : GraphTrack<Dimension>(parent, timeline_info, viewport, layout, series_names,
-                              series_value_decimal_digits, std::move(series_value_units),
-                              module_manager, capture_data),
+      : GraphTrack(parent, timeline_info, viewport, layout,
+                   std::vector(series_names.begin(), series_names.end()),
+                   series_value_decimal_digits, std::move(series_value_units), module_manager,
+                   capture_data),
         AnnotationTrack() {
     // Memory tracks are collapsed by default.
     this->SetCollapsed(true);
