@@ -38,6 +38,7 @@
 #include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "FakeCaptureEventProcessor.h"
@@ -55,7 +56,6 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace {
 
@@ -250,8 +250,8 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
   module_manager
-      ->GetMutableModuleByModuleIdentifier(
-          orbit_symbol_provider::ModuleIdentifier{std::move(file_path), std::move(build_id)})
+      ->GetMutableModuleByModulePathAndBuildId(
+          {.module_path = std::move(file_path), .build_id = std::move(build_id)})
       ->AddSymbols(module_symbols);
 }
 
@@ -391,15 +391,14 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<orbit_base::ThreadPool> thread_pool =
       orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
 
-  orbit_client_data::ModuleManager module_manager;
-  orbit_client_data::ProcessData process_data;
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_pid(options.process_id);
-  process_data.SetProcessInfo(process_info);
+  orbit_client_data::ProcessData process_data{process_info, &module_identifier_provider};
   ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
       orbit_module_utils::ReadModules(options.process_id);
   ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
-  process_data.UpdateModuleInfos(modules_or_error.value());
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
@@ -444,6 +443,8 @@ int main(int argc, char* argv[]) {
       ORBIT_LOG("%s not found", kGgpvlkModuleName);
     }
   }
+
+  process_data.UpdateModuleInfos(modules_or_error.value());
 
   std::unique_ptr<orbit_capture_client::CaptureEventProcessor> capture_event_processor;
   switch (absl::GetFlag(FLAGS_event_processor)) {

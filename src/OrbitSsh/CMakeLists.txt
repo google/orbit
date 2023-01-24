@@ -52,11 +52,6 @@ if(WIN32)
   target_compile_definitions(OrbitSsh PUBLIC WIN32_LEAN_AND_MEAN)
   target_compile_definitions(OrbitSsh PUBLIC -D_WIN32_WINNT=0x0700)
   target_compile_definitions(OrbitSsh PUBLIC -DNTDDI_VERSION=0x06030000)
-
-  # This is needed for the designated initializers. We don't enable this
-  # in general to not break the build for old GCC and clang compilers for
-  # no reason.
-  target_compile_features(OrbitSsh PUBLIC cxx_std_20)
 endif()
 
 add_executable(OrbitSshTests)

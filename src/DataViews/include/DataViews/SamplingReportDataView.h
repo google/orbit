@@ -16,6 +16,7 @@
 #include "ClientData/CallstackType.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -24,7 +25,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "OrbitBase/Result.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/container/flat_hash_set.h"
 
 class SamplingReport;
@@ -64,7 +64,7 @@ class SamplingReportDataView : public DataView {
   [[nodiscard]] const orbit_client_data::SampledFunction& GetSampledFunction(
       unsigned int row) const;
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
-  [[nodiscard]] std::optional<orbit_symbol_provider::ModuleIdentifier> GetModuleIdentifierFromRow(
+  [[nodiscard]] std::optional<orbit_client_data::ModuleIdentifier> GetModuleIdentifierFromRow(
       int row) const;
 
  private:

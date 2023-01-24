@@ -67,7 +67,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WITH_GUI "Setting this option will enable the Qt-based UI client." ON)
 
-set(CMAKE_CXX_STANDARD 17)
+# This is only for designated initializers
+if(WIN32)
+  set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ Standard" FORCE)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/cmake")
 

@@ -23,7 +23,6 @@
 #include "OrbitBase/StopToken.h"
 #include "QtUtils/MainThreadExecutor.h"
 #include "RemoteSymbolProvider/MicrosoftSymbolServerSymbolProvider.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/MockSymbolCache.h"
 #include "TestUtils/TestUtils.h"
@@ -34,7 +33,6 @@ namespace {
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::NotFoundOr;
-using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 using orbit_symbol_provider::SymbolLoadingSuccessResult;
 using orbit_test_utils::HasError;
@@ -45,8 +43,7 @@ using ::testing::Return;
 const std::filesystem::path kSymbolCacheDir{"symbol/cache/path"};
 const std::string kValidModuleName{"valid_module_name"};
 const std::string kValidModuleBuildId{"ABCD12345678"};
-const ModuleIdentifier kValidModuleId{absl::StrFormat("module/path/to/%s", kValidModuleName),
-                                      kValidModuleBuildId};
+const std::string kValidModulePath = absl::StrFormat("module/path/to/%s", kValidModuleName);
 const std::string kValidModuleDownloadUrl{
     absl::StrFormat("https://msdl.microsoft.com/download/symbols/%s.pdb/%s/%s.pdb",
                     kValidModuleName, kValidModuleBuildId, kValidModuleName)};
@@ -102,12 +99,13 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
   SetUpDownloadManager(DownloadResultState::kSuccess, kValidModuleDownloadUrl);
 
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
+  symbol_provider_
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [this](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsSuccessResult(result));
         SymbolLoadingSuccessResult success_result = orbit_symbol_provider::GetSuccessResult(result);
-        EXPECT_EQ(success_result.path,
-                  symbol_cache_.GenerateCachedFilePath(kValidModuleId.file_path));
+        EXPECT_EQ(success_result.path, symbol_cache_.GenerateCachedFilePath(kValidModulePath));
         EXPECT_EQ(success_result.symbol_source,
                   SymbolLoadingSuccessResult::SymbolSource::kMicrosoftSymbolServer);
 
@@ -118,14 +116,17 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleSuccess) {
 }
 
 TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleNotFound) {
-  const ModuleIdentifier module_id{"module/path/to/some_module_name", "some_build_id"};
+  static const std::string kModulePath = "module/path/to/some_module_name";
+  static const std::string kBuildId = "some_build_id";
   const std::string expected_url{
       "https://msdl.microsoft.com/download/symbols/some_module_name.pdb/some_build_id/"
       "some_module_name.pdb"};
   SetUpDownloadManager(DownloadResultState::kNotFound, expected_url);
 
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(module_id, stop_source.GetStopToken())
+  symbol_provider_
+      .RetrieveSymbols({.module_path = kModulePath, .build_id = kBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         ASSERT_TRUE(orbit_symbol_provider::IsNotFound(result));
         EXPECT_EQ(orbit_symbol_provider::GetNotFoundMessage(result),
@@ -143,7 +144,9 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleCanceled) {
   // Here we use the mock downloader manager rather than the stop token to simulate the canceled
   // case.
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
+  symbol_provider_
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [](const SymbolLoadingOutcome& result) {
         EXPECT_TRUE(orbit_symbol_provider::IsCanceled(result));
 
@@ -158,7 +161,9 @@ TEST_F(MicrosoftSymbolServerSymbolProviderTest, RetrieveModuleError) {
   SetUpDownloadManager(DownloadResultState::kError, kValidModuleDownloadUrl, error_msg);
 
   orbit_base::StopSource stop_source{};
-  symbol_provider_.RetrieveSymbols(kValidModuleId, stop_source.GetStopToken())
+  symbol_provider_
+      .RetrieveSymbols({.module_path = kValidModulePath, .build_id = kValidModuleBuildId},
+                       stop_source.GetStopToken())
       .Then(&executor_, [error_msg](const SymbolLoadingOutcome& result) {
         EXPECT_THAT(result, HasError(error_msg));
 

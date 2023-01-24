@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "GrpcProtos/symbol.pb.h"
-#include "SymbolProvider/ModuleIdentifier.h"
+#include "ModuleIdentifier.h"
 
 namespace orbit_client_data {
 
@@ -44,9 +44,6 @@ class FunctionInfo {
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
-  [[nodiscard]] orbit_symbol_provider::ModuleIdentifier module_id() const {
-    return orbit_symbol_provider::ModuleIdentifier{module_path(), module_build_id()};
-  }
   // The virtual address as specified in the object file.
   [[nodiscard]] uint64_t address() const { return address_; }
   [[nodiscard]] uint64_t size() const { return size_; }
@@ -68,7 +65,8 @@ class FunctionInfo {
   // TODO(b/191248550): Disassemble from file instead of doing it from process memory.
   // Please also remove the forward declaration of ProcessData and ModuleData when removing this.
   [[nodiscard, deprecated]] std::optional<uint64_t> GetAbsoluteAddress(
-      const ProcessData& process, const ModuleData& module) const;
+      const ProcessData& process, const ModuleData& module,
+      ModuleIdentifier module_identifier) const;
 
   [[nodiscard]] bool IsFunctionSelectable() const;
 

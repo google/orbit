@@ -53,10 +53,11 @@ using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 
-std::unique_ptr<CaptureData> GenerateTestCaptureData() {
-  auto capture_data = std::make_unique<CaptureData>(orbit_grpc_protos::CaptureStarted{},
-                                                    std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kLiveCapture);
+std::unique_ptr<CaptureData> GenerateTestCaptureData(
+    const orbit_client_data::ModuleIdentifierProvider* module_identifier_provider) {
+  auto capture_data = std::make_unique<CaptureData>(
+      orbit_grpc_protos::CaptureStarted{}, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, module_identifier_provider);
 
   // AddressInfo
   orbit_client_data::LinuxAddressInfo address_info{
@@ -104,10 +105,11 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterEmptyModel) {
 }
 
 TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_qt_utils::AssertNoQtLogWarnings message_handler{};
 
-  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
-  orbit_client_data::ModuleManager module_manager{};
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData(&module_identifier_provider);
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
@@ -121,9 +123,10 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
 }
 
 TEST(CallTreeViewItemModel, RowsWithoutSummaryItem) {
-  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData(&module_identifier_provider);
 
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
@@ -136,11 +139,12 @@ TEST(CallTreeViewItemModel, RowsWithoutSummaryItem) {
 }
 
 TEST(CallTreeViewItemModel, RowsWithSummaryItem) {
-  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData(&module_identifier_provider);
   orbit_client_data::CallstackEvent callstack_event_1{kTimestamp3, kCallstackId2, kThreadId2};
   capture_data->AddCallstackEvent(callstack_event_1);
 
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
@@ -153,8 +157,9 @@ TEST(CallTreeViewItemModel, RowsWithSummaryItem) {
 }
 
 TEST(CallTreeViewItemModel, GetDisplayRoleData) {
-  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData(&module_identifier_provider);
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
@@ -322,8 +327,9 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
 }
 
 TEST(CallTreeViewItemModel, GetEditRoleData) {
-  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData(&module_identifier_provider);
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);

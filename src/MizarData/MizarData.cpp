@@ -76,9 +76,12 @@ std::string MizarData::GetModuleFilenameWithoutExtension(AbsoluteAddress address
 void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                                  std::optional<std::filesystem::path> file_path,
                                  absl::flat_hash_set<uint64_t> frame_track_function_ids) {
+  module_identifier_provider_ = std::make_unique<orbit_client_data::ModuleIdentifierProvider>();
   ConstructCaptureData(capture_started, std::move(file_path), std::move(frame_track_function_ids),
-                       orbit_client_data::CaptureData::DataSource::kLoadedCapture);
-  module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
+                       orbit_client_data::CaptureData::DataSource::kLoadedCapture,
+                       module_identifier_provider_.get());
+  module_manager_ =
+      std::make_unique<orbit_client_data::ModuleManager>(module_identifier_provider_.get());
 }
 
 void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
@@ -112,7 +115,8 @@ void MizarData::UpdateModules(absl::Span<const orbit_grpc_protos::ModuleInfo> mo
 void MizarData::LoadSymbolsForAllModules() {
   for (const orbit_client_data::ModuleData* module_data : module_manager_->GetAllModuleData()) {
     orbit_client_data::ModuleData* mutable_module_data =
-        module_manager_->GetMutableModuleByModuleIdentifier(module_data->module_id());
+        module_manager_->GetMutableModuleByModulePathAndBuildId(
+            {.module_path = module_data->file_path(), .build_id = module_data->build_id()});
     LoadSymbols(*mutable_module_data);
   }
 }

@@ -19,9 +19,9 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_format.h"
 #include "absl/synchronization/mutex.h"
@@ -41,8 +41,6 @@ class ModuleData final {
   [[nodiscard]] uint64_t executable_segment_offset() const;
   [[nodiscard]] orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type() const;
   [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> GetObjectSegments() const;
-
-  [[nodiscard]] orbit_symbol_provider::ModuleIdentifier module_id() const;
 
   [[nodiscard]] uint64_t ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const;
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;

@@ -98,8 +98,9 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo module_info) override {
-    GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
     UpdateModules({module_info});
+
+    GetMutableCaptureData().mutable_process()->AddOrUpdateModuleInfo(module_info);
   }
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override {
@@ -151,6 +152,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   [[nodiscard]] std::string GetModuleFilenameWithoutExtension(AbsoluteAddress address) const;
 
+  std::unique_ptr<orbit_client_data::ModuleIdentifierProvider> module_identifier_provider_;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
   absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>> source_to_present_events_;

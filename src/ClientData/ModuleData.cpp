@@ -61,11 +61,6 @@ std::vector<ModuleInfo::ObjectSegment> ModuleData::GetObjectSegments() const {
   return {module_info_.object_segments().begin(), module_info_.object_segments().end()};
 }
 
-orbit_symbol_provider::ModuleIdentifier ModuleData::module_id() const {
-  absl::MutexLock lock(&mutex_);
-  return orbit_symbol_provider::ModuleIdentifier{module_info_.file_path(), module_info_.build_id()};
-}
-
 uint64_t ModuleData::ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const {
   absl::MutexLock lock(&mutex_);
 

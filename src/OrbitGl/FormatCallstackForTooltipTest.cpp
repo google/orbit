@@ -40,8 +40,10 @@ constexpr const char* kFunctionNameWithSpecialChars = "void foo<int>(const Foo&)
 constexpr const char* kEscapedFunctionName = "void foo&lt;int&gt;(const Foo&amp;)";
 
 const CallstackInfo kEmptyCallstack{{}, CallstackType::kDwarfUnwindingError};
-const CaptureData kEmptyCaptureData{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
-const ModuleManager kModuleManager{};
+orbit_client_data::ModuleIdentifierProvider kEmptyModuleIdentifierProvider{};
+const CaptureData kEmptyCaptureData{
+    {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
+const ModuleManager kModuleManager{&kEmptyModuleIdentifierProvider};
 
 const CallstackInfo kOneFrameCallstack{{kFrame1}, CallstackType::kComplete};
 
@@ -60,7 +62,8 @@ TEST(FormatInnermostFrameOfCallstackForTooltip, EmptyCallstackYieldsUnkownModule
 }
 
 TEST(FormatInnermostFrameOfCallstackForTooltip, PerformsHtmlEscaping) {
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{
+      {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
   capture_data.InsertAddressInfo(kAddressInfoForFunctionNameWithSpecialChars);
 
   FormattedModuleAndFunctionName module_and_function_name =
@@ -78,7 +81,8 @@ TEST(FormatCallstackForTooltip, EmptyCallstackYieldsEmptyString) {
 }
 
 TEST(FormatCallstackForTooltip, PerformsHtmlEscaping) {
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{
+      {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
   capture_data.InsertAddressInfo(kAddressInfoForFunctionNameWithSpecialChars);
 
   std::string formatted_callstack =
@@ -88,7 +92,8 @@ TEST(FormatCallstackForTooltip, PerformsHtmlEscaping) {
 }
 
 TEST(FormatCallstackForTooltip, ShortensLongFunctionNames) {
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{
+      {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
   constexpr const char* kLongFunctionName = "void very_very_very_very_long_function_name(int,int)";
   const LinuxAddressInfo address_info{kFrame1, kOffsetInFunction, kModulePath, kLongFunctionName};
   capture_data.InsertAddressInfo(address_info);
@@ -110,7 +115,8 @@ TEST(FormatCallstackForTooltip, ShortensLongCallstacks) {
       {kFrame1, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10, kFrame2to10,
        kFrame2to10, kFrame2to10, kFrame2to10, kFrame11, kFrame12},
       CallstackType::kComplete};
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{
+      {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
 
   constexpr const char* kFunction1 = "void foo(int,int)";
   const LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath, kFunction1};
@@ -158,7 +164,8 @@ TEST(FormatCallstackForTooltip, ColorsUnwindingErrors) {
   constexpr uint64_t kFrame4 = 0x3ADD5E55;
   const CallstackInfo callstack{{kFrame1, kFrame2, kFrame3, kFrame4},
                                 CallstackType::kDwarfUnwindingError};
-  CaptureData capture_data{{}, {}, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{
+      {}, {}, {}, CaptureData::DataSource::kLiveCapture, &kEmptyModuleIdentifierProvider};
 
   constexpr const char* kFunction1 = "void foo(int,int)";
   const LinuxAddressInfo address_info1{kFrame1, kOffsetInFunction, kModulePath, kFunction1};

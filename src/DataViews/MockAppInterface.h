@@ -14,6 +14,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -22,7 +23,6 @@
 #include "DataViews/SymbolLoadingState.h"
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_data_views {
 
@@ -76,9 +76,16 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_client_data::ProcessData*, GetTargetProcess, (), (const, override));
 
   MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModuleIdentifier,
-              (const orbit_symbol_provider::ModuleIdentifier&), (const, override));
+              (orbit_client_data::ModuleIdentifier), (const, override));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModuleIdentifier,
-              (const orbit_symbol_provider::ModuleIdentifier&), (override));
+              (orbit_client_data::ModuleIdentifier), (override));
+  MOCK_METHOD(const orbit_client_data::ModuleData*, GetModuleByModulePathAndBuildId,
+              (const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id),
+              (const, override));
+  MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByModulePathAndBuildId,
+              (const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id),
+              (override));
+
   MOCK_METHOD(orbit_base::Future<void>, LoadSymbolsManually,
               (absl::Span<const orbit_client_data::ModuleData* const>), (override));
 

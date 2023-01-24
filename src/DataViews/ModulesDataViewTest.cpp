@@ -68,16 +68,19 @@ class ModulesDataViewTest : public testing::Test {
   explicit ModulesDataViewTest() : view_{&app_} {
     view_.Init();
     for (size_t i = 0; i < kNumModules; i++) {
-      ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], kFilePaths[i],
-                                      kBuildIds[i]};
-      modules_in_memory_.push_back(module_in_memory);
-
       ModuleInfo module_info{};
       module_info.set_name(kNames[i]);
       module_info.set_file_path(kFilePaths[i]);
       module_info.set_build_id(kBuildIds[i]);
       module_info.set_file_size(kSizes[i]);
       EXPECT_TRUE(module_manager_.AddOrUpdateModules({module_info}).empty());
+
+      std::optional<orbit_client_data::ModuleIdentifier> module_id =
+          module_identifier_provider_.GetModuleIdentifier(
+              {.module_path = kFilePaths[i], .build_id = kBuildIds[i]});
+      ORBIT_CHECK(module_id.has_value());
+      ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], module_id.value()};
+      modules_in_memory_.push_back(module_in_memory);
     }
   }
 
@@ -95,7 +98,8 @@ class ModulesDataViewTest : public testing::Test {
  protected:
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::ModulesDataView view_;
-  orbit_client_data::ModuleManager module_manager_;
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider_;
+  orbit_client_data::ModuleManager module_manager_{&module_identifier_provider_};
   std::vector<ModuleInMemory> modules_in_memory_;
 };
 

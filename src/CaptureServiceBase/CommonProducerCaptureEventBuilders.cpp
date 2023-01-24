@@ -55,7 +55,9 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
 
   if (executable_path_or_error.has_value()) {
     const std::filesystem::path& executable_path = executable_path_or_error.value();
-    capture_started->set_executable_path(executable_path.u8string());
+    std::string executable_path_string{executable_path.u8string().begin(),
+                                       executable_path.u8string().end()};
+    capture_started->set_executable_path(executable_path_string);
 
     ErrorMessageOr<std::string> build_id_or_error = ErrorMessage("");
     if (executable_path.extension() == ".exe") {
@@ -67,7 +69,7 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
     if (build_id_or_error.has_value()) {
       capture_started->set_executable_build_id(build_id_or_error.value());
     } else {
-      ORBIT_ERROR("Unable to find build id for module \"%s\": %s", executable_path.u8string(),
+      ORBIT_ERROR("Unable to find build id for module \"%s\": %s", executable_path_string,
                   build_id_or_error.error().message());
     }
   } else {

@@ -17,17 +17,20 @@
 #include <utility>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ConfigWidgets/SymbolErrorDialog.h"
 #include "GrpcProtos/module.pb.h"
 
 namespace orbit_config_widgets {
 
+namespace {
 orbit_grpc_protos::ModuleInfo CreateModuleInfo(std::string module_path) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(std::move(module_path));
   module_info.set_build_id("some build id");
   return module_info;
 }
+
 class SymbolErrorDialogTest : public testing::Test {
  public:
   SymbolErrorDialogTest() : module_{CreateModuleInfo(module_path_)}, dialog_(&module_, error_) {}
@@ -47,6 +50,7 @@ class SymbolErrorDialogTest : public testing::Test {
   QPlainTextEdit* error_plain_text_edit_ = nullptr;
   QPushButton* show_error_button_ = nullptr;
 };
+}  // namespace
 
 TEST_F(SymbolErrorDialogTest, UiElements) {
   auto* module_name_label = dialog_.findChild<QLabel*>("moduleNameLabel");
@@ -117,6 +121,7 @@ TEST_F(SymbolErrorDialogTest, OnRejected) {
 }
 
 TEST(SymbolErrorDialog, EmptyBuildId) {
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
   orbit_client_data::ModuleData module{{}};
   SymbolErrorDialog dialog{&module, "error"};
   auto* on_add_symbol_location_button = dialog.findChild<QPushButton*>("addSymbolLocationButton");

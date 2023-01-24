@@ -28,9 +28,10 @@ std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
   orbit_grpc_protos::InstrumentedFunction* func =
       capture_started.mutable_capture_options()->mutable_instrumented_functions()->Add();
   func->set_function_id(kFunctionId);
-  auto capture_data =
-      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                    CaptureData::DataSource::kLiveCapture);
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  auto capture_data = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, &module_identifier_provider);
 
   // AddressInfo
   LinuxAddressInfo address_info{kInstructionAbsoluteAddress,

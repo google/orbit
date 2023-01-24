@@ -4,20 +4,20 @@
 
 #include "ClientData/ModuleManager.h"
 
+#include <absl/container/node_hash_map.h>
 #include <absl/meta/type_traits.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
-using orbit_symbol_provider::ModuleIdentifier;
+using orbit_client_data::ModuleIdentifier;
 
 namespace orbit_client_data {
 
@@ -28,17 +28,23 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
   std::vector<ModuleData*> unloaded_modules;
 
   for (const auto& module_info : module_infos) {
-    auto module_id = ModuleIdentifier{module_info.file_path(), module_info.build_id()};
-    auto module_it = module_map_.find(module_id);
-    if (module_it == module_map_.end()) {
-      const bool success =
-          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
-      ORBIT_CHECK(success);
-    } else {
+    ModulePathAndBuildId module_path_and_build_id{.module_path = module_info.file_path(),
+                                                  .build_id = module_info.build_id()};
+    std::optional<ModuleIdentifier> module_id_opt =
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+    if (module_id_opt.has_value()) {
+      auto module_it = module_map_.find(module_id_opt.value());
+      ORBIT_CHECK(module_it != module_map_.end());
       ModuleData* module = module_it->second.get();
       if (module->UpdateIfChangedAndUnload(module_info)) {
         unloaded_modules.push_back(module);
       }
+    } else {
+      ModuleIdentifier module_id =
+          module_identifier_provider_->CreateModuleIdentifier(module_path_and_build_id);
+      bool success =
+          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
+      ORBIT_CHECK(success);
     }
   }
 
@@ -52,17 +58,24 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
   std::vector<ModuleData*> not_updated_modules;
 
   for (const auto& module_info : module_infos) {
-    auto module_id = ModuleIdentifier{module_info.file_path(), module_info.build_id()};
-    auto module_it = module_map_.find(module_id);
-    if (module_it == module_map_.end()) {
-      const bool success =
-          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
-      ORBIT_CHECK(success);
-    } else {
+    ModulePathAndBuildId module_path_and_build_id{.module_path = module_info.file_path(),
+                                                  .build_id = module_info.build_id()};
+    std::optional<ModuleIdentifier> module_id_opt =
+        module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+
+    if (module_id_opt.has_value()) {
+      auto module_it = module_map_.find(module_id_opt.value());
+      ORBIT_CHECK(module_it != module_map_.end());
       ModuleData* module = module_it->second.get();
       if (!module->UpdateIfChangedAndNotLoaded(module_info)) {
         not_updated_modules.push_back(module);
       }
+    } else {
+      ModuleIdentifier module_id =
+          module_identifier_provider_->CreateModuleIdentifier(module_path_and_build_id);
+      bool success =
+          module_map_.try_emplace(module_id, std::make_unique<ModuleData>(module_info)).second;
+      ORBIT_CHECK(success);
     }
   }
 
@@ -76,8 +89,7 @@ const ModuleData* ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress(
   if (cache_it != absolute_address_to_module_data_cache_.end()) {
     return cache_it->second;
   }
-  auto it =
-      module_map_.find(ModuleIdentifier{module_in_memory.file_path(), module_in_memory.build_id()});
+  auto it = module_map_.find(module_in_memory.module_id());
   if (it == module_map_.end()) {
     absolute_address_to_module_data_cache_.emplace(absolute_address, nullptr);
     return nullptr;
@@ -103,8 +115,7 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   if (cache_it != absolute_address_to_module_data_cache_.end()) {
     return cache_it->second;
   }
-  auto it =
-      module_map_.find(ModuleIdentifier{module_in_memory.file_path(), module_in_memory.build_id()});
+  auto it = module_map_.find(module_in_memory.module_id());
   if (it == module_map_.end()) {
     absolute_address_to_module_data_cache_.emplace(absolute_address, nullptr);
     return nullptr;
@@ -123,23 +134,47 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   return result;
 }
 
-const ModuleData* ModuleManager::GetModuleByModuleIdentifier(
-    const ModuleIdentifier& module_id) const {
+const ModuleData* ModuleManager::GetModuleByModuleIdentifier(ModuleIdentifier module_id) const {
   absl::MutexLock lock(&mutex_);
+  return GetModuleByModuleIdentifierInternal(module_id);
+}
 
+const ModuleData* ModuleManager::GetModuleByModuleIdentifierInternal(
+    ModuleIdentifier module_id) const {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return it->second.get();
 }
 
-ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(const ModuleIdentifier& module_id) {
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifier(ModuleIdentifier module_id) {
   absl::MutexLock lock(&mutex_);
+  return GetMutableModuleByModuleIdentifierInternal(module_id);
+}
 
+ModuleData* ModuleManager::GetMutableModuleByModuleIdentifierInternal(ModuleIdentifier module_id) {
   auto it = module_map_.find(module_id);
   if (it == module_map_.end()) return nullptr;
 
   return it->second.get();
+}
+
+const ModuleData* ModuleManager::GetModuleByModulePathAndBuildId(
+    const ModulePathAndBuildId& module_path_and_build_id) const {
+  absl::MutexLock lock(&mutex_);
+  std::optional<orbit_client_data::ModuleIdentifier> module_id =
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+  if (!module_id.has_value()) return nullptr;
+  return GetModuleByModuleIdentifierInternal(module_id.value());
+}
+
+ModuleData* ModuleManager::GetMutableModuleByModulePathAndBuildId(
+    const ModulePathAndBuildId& module_path_and_build_id) {
+  absl::MutexLock lock(&mutex_);
+  std::optional<orbit_client_data::ModuleIdentifier> module_id =
+      module_identifier_provider_->GetModuleIdentifier(module_path_and_build_id);
+  if (!module_id.has_value()) return nullptr;
+  return GetMutableModuleByModuleIdentifierInternal(module_id.value());
 }
 
 std::vector<const ModuleData*> ModuleManager::GetAllModuleData() const {
@@ -156,7 +191,7 @@ std::vector<const ModuleData*> ModuleManager::GetModulesByFilename(
   absl::MutexLock lock(&mutex_);
   std::vector<const ModuleData*> result;
   for (const auto& [module_id, module_data] : module_map_) {
-    if (std::filesystem::path(module_id.file_path).filename().string() == filename) {
+    if (std::filesystem::path(module_data->file_path()).filename().string() == filename) {
       result.push_back(module_data.get());
     }
   }

@@ -297,7 +297,8 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   // Since CaptureData is entangled with ModuleManager the test needs to create a lot of empty
   // data structures and manager objects.
 
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager));
   (void)module_manager.AddOrUpdateModules({module_infos_[0]});
   ASSERT_EQ(module_manager.GetAllModuleData().size(), 1);
@@ -309,7 +310,9 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   orbit_grpc_protos::ModuleSymbols module_symbols;
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
   orbit_client_data::ModuleData* module_data =
-      module_manager.GetMutableModuleByModuleIdentifier(functions_[0].module_id());
+      module_manager.GetMutableModuleByModulePathAndBuildId(
+          {.module_path = functions_[0].module_path(),
+           .build_id = functions_[0].module_build_id()});
   module_data->AddSymbols(module_symbols);
 
   orbit_grpc_protos::CaptureStarted capture_started{};
@@ -332,8 +335,11 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
 
   EXPECT_CALL(app_, HasCaptureData).Times(2).WillRepeatedly(testing::Return(true));
 
-  CaptureData capture_data{
-      capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  CaptureData capture_data{capture_started,
+                           std::nullopt,
+                           {},
+                           CaptureData::DataSource::kLiveCapture,
+                           &module_identifier_provider};
   EXPECT_CALL(app_, GetCaptureData).Times(2).WillRepeatedly(testing::ReturnPointee(&capture_data));
 
   // Note that `CaptureData` also keeps a list of enabled frame track function ids, but this list is
@@ -598,7 +604,9 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
-  CaptureData capture_data{{}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  CaptureData capture_data{
+      {}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture, &module_identifier_provider};
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
@@ -636,7 +644,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   constexpr int kRandomPid = 4242;
   orbit_grpc_protos::ProcessInfo process_info{};
   process_info.set_pid(kRandomPid);
-  orbit_client_data::ProcessData process_data{process_info};
+  orbit_client_data::ProcessData process_data{process_info, &module_identifier_provider};
 
   EXPECT_CALL(app_, GetTargetProcess).Times(1).WillRepeatedly(testing::Return(&process_data));
   EXPECT_CALL(app_, Disassemble)

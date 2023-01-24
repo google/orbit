@@ -15,6 +15,8 @@
 #include "ClientData/CaptureDataHolder.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -25,7 +27,6 @@
 #include "PresetFile/PresetFile.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 #include "Statistics/Histogram.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 namespace orbit_data_views {
 
@@ -92,9 +93,14 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   [[nodiscard]] virtual const orbit_client_data::ProcessData* GetTargetProcess() const = 0;
 
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModuleIdentifier(
-      const orbit_symbol_provider::ModuleIdentifier& module_id) const = 0;
+      orbit_client_data::ModuleIdentifier module_id) const = 0;
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModuleIdentifier(
-      const orbit_symbol_provider::ModuleIdentifier& module_id) = 0;
+      orbit_client_data::ModuleIdentifier module_id) = 0;
+  [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleByModulePathAndBuildId(
+      const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) const = 0;
+  [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByModulePathAndBuildId(
+      const orbit_client_data::ModulePathAndBuildId& module_path_and_build_id) = 0;
+
   virtual orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 

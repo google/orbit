@@ -39,7 +39,7 @@ class IntrospectionWindow : public CaptureWindow {
   bool ShouldSkipRendering() const override { return false; };
 
  private:
-  [[nodiscard]] const char* GetHelpText() const override;
+  [[nodiscard]] std::string GetHelpText() const override;
   [[nodiscard]] bool ShouldAutoZoom() const override;
 
   std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener_;

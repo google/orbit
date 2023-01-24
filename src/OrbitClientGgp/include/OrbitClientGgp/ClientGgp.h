@@ -50,7 +50,8 @@ class ClientGgp {
   ClientGgpOptions options_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::unique_ptr<orbit_client_data::ProcessData> target_process_;
-  orbit_client_data::ModuleManager module_manager_;
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider_;
+  orbit_client_data::ModuleManager module_manager_{&module_identifier_provider_};
   absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions_;
   orbit_client_data::ModuleData* main_module_ = nullptr;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;

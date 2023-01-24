@@ -32,6 +32,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/MockScopeStatsCollection.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
@@ -51,7 +52,6 @@
 #include "MockAppInterface.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 
@@ -199,7 +199,8 @@ std::string GetExpectedDisplayAddress(uint64_t address) { return absl::StrFormat
 std::string GetExpectedDisplayCount(uint64_t count) { return absl::StrFormat("%lu", count); }
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
-    orbit_client_data::ModuleManager* module_manager) {
+    orbit_client_data::ModuleManager* module_manager,
+    const orbit_client_data::ModuleIdentifierProvider* module_identifier_provider) {
   orbit_grpc_protos::CaptureStarted capture_started{};
 
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -217,8 +218,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_grpc_protos::ModuleSymbols module_symbols;
     module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
-    orbit_client_data::ModuleData* module_data = module_manager->GetMutableModuleByModuleIdentifier(
-        orbit_symbol_provider::ModuleIdentifier{kModulePaths[i], kBuildIds[i]});
+    orbit_client_data::ModuleData* module_data =
+        module_manager->GetMutableModuleByModulePathAndBuildId(
+            {.module_path = kModulePaths[i], .build_id = kBuildIds[i]});
     module_data->AddSymbols(module_symbols);
 
     const FunctionInfo& function = *module_data->FindFunctionByVirtualAddress(kAddresses[i], true);
@@ -232,9 +234,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     instrumented_function->set_function_name(kPrettyNames[i]);
   }
 
-  auto capture_data =
-      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
-                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+      CaptureData::DataSource::kLiveCapture, module_identifier_provider);
 
   for (const TimerInfo* timer_info : kTimerPointers) {
     capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
@@ -264,7 +266,8 @@ class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterfa
 class LiveFunctionsDataViewTest : public testing::Test {
  public:
   explicit LiveFunctionsDataViewTest()
-      : view_{&live_functions_, &app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+      : view_{&live_functions_, &app_},
+        capture_data_(GenerateTestCaptureData(&module_manager_, &module_identifier_provider_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(Return(true));
@@ -301,7 +304,8 @@ class LiveFunctionsDataViewTest : public testing::Test {
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::LiveFunctionsDataView view_;
 
-  orbit_client_data::ModuleManager module_manager_;
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider_;
+  orbit_client_data::ModuleManager module_manager_{&module_identifier_provider_};
   absl::flat_hash_map<ScopeId, FunctionInfo> functions_;
   std::unique_ptr<CaptureData> capture_data_;
 };

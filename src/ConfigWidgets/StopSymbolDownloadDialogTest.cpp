@@ -15,11 +15,13 @@
 #include <string>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"
 #include "GrpcProtos/module.pb.h"
 
 namespace orbit_config_widgets {
 
+namespace {
 constexpr const char* kFilePath = "test/file/path";
 
 orbit_grpc_protos::ModuleInfo CreateModuleInfo() {
@@ -41,6 +43,7 @@ class StopSymbolDownloadDialogTest : public testing::Test {
   StopSymbolDownloadDialog dialog_;
   QPushButton* stop_button_ = nullptr;
 };
+}  // namespace
 
 TEST_F(StopSymbolDownloadDialogTest, UiContent) {
   auto* module_label = dialog_.findChild<QLabel*>("moduleLabel");

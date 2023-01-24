@@ -732,7 +732,7 @@ void CaptureWindow::RenderHelpUi() {
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   text_renderer_.AddText(
-      GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueUi,
+      GetHelpText().c_str(), world_pos[0], world_pos[1], GlCanvas::kZValueUi,
       {time_graph_layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f /*max_size*/},
       &text_bounding_box_pos, &text_bounding_box_size);
 
@@ -743,8 +743,8 @@ void CaptureWindow::RenderHelpUi() {
                                      GlCanvas::kZValueUi, kRoundingRadius, box_color, kMargin);
 }
 
-const char* CaptureWindow::GetHelpText() const {
-  const char* help_message =
+std::string CaptureWindow::GetHelpText() const {
+  decltype(auto) help_message{
       u8"Start/Stop Capture: F5\n\n"
       "Pan:  \U0001F130 ,  \U0001F133  OR Left Click + Drag\n\n"
       "Scroll:  ← ,  ↑ ,  → ,  ↓  OR Mouse Wheel\n\n"
@@ -753,8 +753,8 @@ const char* CaptureWindow::GetHelpText() const {
       "Select: Left Click\n\n"
       "Measure: Right Click + Drag\n\n"
       "UI Scale (10%): Ctrl + '±'\n\n"
-      "Toggle Help: Ctrl +  \U0001F137";
-  return help_message;
+      "Toggle Help: Ctrl +  \U0001F137"};
+  return std::string(std::begin(help_message), std::end(help_message));
 }
 
 void CaptureWindow::RenderSelectionOverlay() {

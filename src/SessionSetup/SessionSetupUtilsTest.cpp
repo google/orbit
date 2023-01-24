@@ -78,7 +78,7 @@ TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByPath) {
 TEST(SessionSetupUtils, TryToFindProcessDataReturnsNullOnFailure) {
   std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
 
-  EXPECT_EQ(nullptr, TryToFindProcessData(processes, "nonexisting_process"));
+  EXPECT_EQ(std::nullopt, TryToFindProcessData(processes, "nonexisting_process"));
 }
 
 }  // namespace orbit_session_setup

@@ -34,6 +34,8 @@
 
 namespace orbit_config_widgets {
 
+namespace {
+
 using orbit_client_symbols::ModuleSymbolFileMappings;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
@@ -114,6 +116,8 @@ class SymbolLocationsDialogTest : public ::testing::Test {
   MockPersistentStorageManager mock_storage_manager_;
 };
 
+}  // namespace
+
 TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
   SetLoadAndExpectedSaveEmpty();
 
@@ -172,6 +176,7 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleNoBuildId) {
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
   module_info.set_name("lib.so");
+
   orbit_client_data::ModuleData module{module_info};
 
   SetLoadAndExpectedSaveEmpty();

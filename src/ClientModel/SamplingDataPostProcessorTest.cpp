@@ -165,8 +165,10 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void TearDown() override {}
 
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider_{};
   CaptureData capture_data_{CaptureStarted{}, std::filesystem::path{},
-                            absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kLiveCapture};
+                            absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kLiveCapture,
+                            &module_identifier_provider_};
 
   void AddCallstackInfo(uint64_t callstack_id, absl::Span<const uint64_t> callstack_frames,
                         CallstackType callstack_type) {
@@ -368,7 +370,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void SetPostProcessedSamplingData() {
-    orbit_client_data::ModuleManager module_manager{};
+    orbit_client_data::ModuleManager module_manager{&module_identifier_provider_};
     ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
                                             module_manager);
   }

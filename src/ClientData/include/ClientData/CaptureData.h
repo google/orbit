@@ -61,7 +61,8 @@ class CaptureData {
   explicit CaptureData(orbit_grpc_protos::CaptureStarted capture_started,
                        std::optional<std::filesystem::path> file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
-                       DataSource data_source);
+                       DataSource data_source,
+                       const ModuleIdentifierProvider* module_identifier_provider);
 
   // We cannot copy the unique_ptr, so we cannot copy this object.
   CaptureData(const CaptureData& other) = delete;

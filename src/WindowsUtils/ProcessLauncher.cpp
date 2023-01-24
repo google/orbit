@@ -25,7 +25,7 @@ ErrorMessageOr<uint32_t> ProcessLauncher::LaunchProcess(
 ErrorMessageOr<uint32_t> ProcessLauncher::LaunchProcess(
     const std::filesystem::path& executable, const std::filesystem::path& working_directory,
     const std::string_view arguments) {
-  OUTCOME_TRY(ProcessInfo & process_info,
+  OUTCOME_TRY(ProcessInfo process_info,
               orbit_windows_utils::CreateProcess(executable, working_directory, arguments));
   return process_info.process_id;
 }

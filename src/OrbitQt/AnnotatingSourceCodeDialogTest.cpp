@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "CodeReport/Disassembler.h"
@@ -33,7 +34,6 @@
 #include "OrbitQt/AnnotatingSourceCodeDialog.h"
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SyntaxHighlighter/X86Assembly.h"
 #include "Test/Path.h"
 
@@ -81,8 +81,9 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
       kMainFunctionInstructions.size(), "main",    /*is_hotpatchable=*/false};
 
   orbit_code_report::Disassembler disassembler{};
-  orbit_client_data::ProcessData process_data{};
-  orbit_client_data::ModuleManager module_manager{};
+  orbit_client_data::ModuleIdentifierProvider module_identifier_provider;
+  orbit_client_data::ProcessData process_data{{}, &module_identifier_provider};
+  orbit_client_data::ModuleManager module_manager{&module_identifier_provider};
   disassembler.Disassemble(process_data, module_manager,
                            static_cast<const void*>(kMainFunctionInstructions.data()),
                            kMainFunctionInstructions.size(), 0x401140, true);
@@ -96,7 +97,8 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
 
   bool callback_called = false;
   dialog.AddAnnotatingSourceCode(
-      function_info, [&](const orbit_symbol_provider::ModuleIdentifier&) {
+      function_info,
+      [&](const orbit_client_data::ModulePathAndBuildId& /*module_path_and_build_id*/) {
         callback_called = true;
         return orbit_base::Future<ErrorMessageOr<std::filesystem::path>>{file_path};
       });

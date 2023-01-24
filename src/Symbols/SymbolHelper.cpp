@@ -36,7 +36,6 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"
 #include "OrbitBase/WriteStringToFile.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 #include "SymbolProvider/StructuredDebugDirectorySymbolProvider.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"
 #include "Symbols/SymbolUtils.h"
@@ -49,7 +48,6 @@ using orbit_object_utils::CreateObjectFile;
 using orbit_object_utils::CreateSymbolsFile;
 using orbit_object_utils::ElfFile;
 using orbit_object_utils::ObjectFileInfo;
-using orbit_symbol_provider::ModuleIdentifier;
 using orbit_symbol_provider::StructuredDebugDirectorySymbolProvider;
 using orbit_symbol_provider::SymbolLoadingOutcome;
 using SymbolSource = orbit_symbol_provider::SymbolLoadingSuccessResult::SymbolSource;
@@ -197,10 +195,10 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   // structured debug directories is only supported for elf files
   if (object_file_type == ModuleInfo::kElfFile) {
     for (auto& provider : structured_debug_directory_providers_) {
-      const ModuleIdentifier module_id{module_path.string(), std::string{build_id}};
       const orbit_base::StopSource stop_source;
-      orbit_base::Future<SymbolLoadingOutcome> future =
-          provider.RetrieveSymbols(module_id, stop_source.GetStopToken());
+      orbit_base::Future<SymbolLoadingOutcome> future = provider.RetrieveSymbols(
+          {.module_path = module_path.string(), .build_id = std::string(build_id)},
+          stop_source.GetStopToken());
 
       // TODO(antonrohr): This `.Get()` makes this asynchronous future operation a syncronous
       // operation. This is okay for now.

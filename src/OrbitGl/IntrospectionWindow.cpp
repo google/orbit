@@ -258,21 +258,19 @@ IntrospectionWindow::IntrospectionWindow(
   capture_started.set_process_id(orbit_base::GetCurrentProcessId());
   capture_started.set_executable_path("Orbit");
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
-  capture_data_ = std::make_unique<CaptureData>(capture_started, std::nullopt,
-                                                std::move(frame_track_function_ids),
-                                                CaptureData::DataSource::kLiveCapture);
+  capture_data_ = std::make_unique<CaptureData>(
+      capture_started, std::nullopt, std::move(frame_track_function_ids),
+      CaptureData::DataSource::kLiveCapture, app->GetModuleIdentifierProvider());
   // Start recording on window creation.
   ToggleRecording();
 }
 
 IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
 
-const char* IntrospectionWindow::GetHelpText() const {
-  const char* help_message =
-      "Client Side Introspection\n\n"
-      "Start/Stop Capture: 'X'\n"
-      "Toggle Help: 'H'";
-  return help_message;
+std::string IntrospectionWindow::GetHelpText() const {
+  return "Client Side Introspection\n\n"
+         "Start/Stop Capture: 'X'\n"
+         "Toggle Help: 'H'";
 }
 
 bool IntrospectionWindow::IsIntrospecting() const { return introspection_listener_ != nullptr; }

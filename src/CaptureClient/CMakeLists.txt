@@ -38,10 +38,6 @@ target_link_libraries(CaptureClient PUBLIC
         GrpcProtos
         Introspection)
 
-if(WIN32)
-  target_compile_features(CaptureClient PRIVATE cxx_std_20)
-endif()
-
 add_fuzzer(CaptureEventProcessorProcessEventsFuzzer CaptureEventProcessorProcessEventsFuzzer.cpp)
 target_link_libraries(CaptureEventProcessorProcessEventsFuzzer
         PRIVATE CaptureClient FuzzingUtils)

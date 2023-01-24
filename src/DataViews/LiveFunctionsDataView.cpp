@@ -28,6 +28,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
@@ -42,15 +43,14 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "SymbolProvider/ModuleIdentifier.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleIdentifier;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
-using orbit_symbol_provider::ModuleIdentifier;
 
 using orbit_client_protos::TimerInfo;
 
@@ -528,29 +528,6 @@ std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {
     }
   }
   return std::nullopt;
-}
-
-std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrumentedFunction(
-    const InstrumentedFunction& instrumented_function) {
-  const ModuleData* module_data = app_->GetModuleByModuleIdentifier(
-      ModuleIdentifier{instrumented_function.file_path(), instrumented_function.file_build_id()});
-  if (module_data == nullptr) {
-    return std::nullopt;
-  }
-
-  std::optional<ScopeId> scope_id =
-      app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id());
-  ORBIT_CHECK(scope_id.has_value());
-
-  const std::string& function_name = GetScopeInfo(scope_id.value()).GetName();
-
-  // size is unknown
-  return FunctionInfo{instrumented_function.file_path(),
-                      instrumented_function.file_build_id(),
-                      instrumented_function.function_virtual_address(),
-                      /*size=*/0,
-                      function_name,
-                      instrumented_function.is_hotpatchable()};
 }
 
 [[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(
