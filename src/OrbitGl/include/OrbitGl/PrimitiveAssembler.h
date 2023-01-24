@@ -19,6 +19,7 @@
 
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
@@ -34,17 +35,18 @@ Collects primitives to be rendered at a later point in time.
 
 By calling PrimitiveAssembler::AddXXX, primitives are added to internal CPU buffers, and sorted
 into layers formed by equal z-coordinates. Each layer can then be drawn seperately with
-PrimitiveAssembler::DrawLayer(), or all layers can be drawn at once in their correct order using
-PrimitiveAssembler::Draw():
+PrimitiveAssembler::DrawRenderGroup(), or all layers can be drawn at once in their correct order
+using PrimitiveAssembler::Draw():
 
 NOTE: PrimitiveAssembler has a few pure virtual functions that have to be implemented: A few
-AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
+AddInternalMethods, ResetElements(), GetRenderGroups() and DrawLayers().
 **/
 class PrimitiveAssembler {
  public:
   static constexpr int32_t kCirclePoints = 22;
-  explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager = nullptr)
-      : batcher_(batcher), picking_manager_(picking_manager) {
+  explicit PrimitiveAssembler(Batcher* batcher, BatchRenderGroupStateManager* state_manager,
+                              PickingManager* picking_manager = nullptr)
+      : batcher_(batcher), state_manager_(state_manager), picking_manager_(picking_manager) {
     ORBIT_CHECK(batcher_ != nullptr);
 
     const float angle = (kPiFloat * 2.f) / kCirclePoints;
@@ -124,6 +126,15 @@ class PrimitiveAssembler {
 
   void StartNewFrame();
 
+  [[nodiscard]] std::string GetCurrentRenderGroupName() const {
+    return batcher_->GetCurrentRenderGroupName();
+  }
+  virtual void SetCurrentRenderGroupName(std::string name) {
+    batcher_->SetCurrentRenderGroupName(std::move(name));
+  }
+
+  [[nodiscard]] BatchRenderGroupStateManager* GetRenderGroupManager() { return state_manager_; }
+
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
     return batcher_->GetUserData(id);
@@ -148,6 +159,7 @@ class PrimitiveAssembler {
       ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
   Batcher* batcher_;
+  BatchRenderGroupStateManager* state_manager_;
   PickingManager* picking_manager_;
 
   std::vector<Vec2> circle_points;

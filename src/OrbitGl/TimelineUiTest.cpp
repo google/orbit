@@ -12,6 +12,7 @@
 #include <optional>
 #include <random>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CaptureViewElement.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/GlCanvas.h"
@@ -37,7 +38,7 @@ class TimelineUiTest : public TimelineUi {
   explicit TimelineUiTest(MockTimelineInfo* mock_timeline_info, Viewport* viewport,
                           TimeGraphLayout* layout)
       : TimelineUi(nullptr /*parent*/, mock_timeline_info, viewport, layout),
-        primitive_assembler_(&mock_batcher_),
+        primitive_assembler_(&mock_batcher_, &state_manager_),
         viewport_(viewport),
         mock_timeline_info_(mock_timeline_info) {
     viewport->SetWorldSize(viewport->GetWorldWidth(), TimelineUi::GetHeight());
@@ -143,6 +144,7 @@ class TimelineUiTest : public TimelineUi {
   PrimitiveAssembler primitive_assembler_;
   Viewport* viewport_;
   MockTimelineInfo* mock_timeline_info_;
+  BatchRenderGroupStateManager state_manager_;
 };
 
 static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {

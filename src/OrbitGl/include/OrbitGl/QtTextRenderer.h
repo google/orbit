@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/TextRenderer.h"
 #include "OrbitGl/TextRendererInterface.h"
@@ -25,10 +26,14 @@ namespace orbit_gl {
 class QtTextRenderer : public TextRenderer {
  public:
   void Init() override{};
-  void Clear() override { stored_text_.clear(); };
+  void Clear() override {
+    stored_text_.clear();
+    current_render_group_ = BatchRenderGroupId();
+  };
 
-  void RenderLayer(QPainter* painter, float layer) override;
-  [[nodiscard]] std::vector<float> GetLayers() const override;
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override;
+  void DrawRenderGroup(QPainter* painter, BatchRenderGroupStateManager& manager,
+                       const BatchRenderGroupId& group) override;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
@@ -66,7 +71,7 @@ class QtTextRenderer : public TextRenderer {
     int h = 0;
     TextFormatting formatting;
   };
-  absl::flat_hash_map<float, std::vector<StoredText>> stored_text_;
+  absl::flat_hash_map<BatchRenderGroupId, std::vector<StoredText>> stored_text_;
   absl::flat_hash_map<uint32_t, float> minimum_string_width_cache_;
   absl::flat_hash_map<uint32_t, CharacterWidthLookup> character_width_lookup_cache_;
   absl::flat_hash_map<uint32_t, int> single_line_height_cache_;

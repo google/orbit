@@ -74,7 +74,6 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
 
   void RenderAllLayers(QPainter* painter);
 
-  virtual void RenderText(QPainter* painter, float layer);
   virtual bool ShouldSkipRendering() const;
 
   virtual void ToggleRecording();
@@ -110,6 +109,9 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
 
  private:
   TimeGraphLayout* time_graph_layout_ = nullptr;
+
+  void DrawLayerDebugInfo(const std::vector<orbit_gl::BatchRenderGroupId>& sorted_groups,
+                          QPainter* painter);
 };
 
 #endif  // ORBIT_GL_CAPTURE_WINDOW_H_

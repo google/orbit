@@ -10,6 +10,7 @@
 #include <array>
 #include <memory>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/Geometry.h"
@@ -35,7 +36,7 @@ const Vec2 kArrowHeadSize{4, 2};
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
   explicit PrimitiveAssemblerTester(PickingManager* picking_manager = nullptr)
-      : PrimitiveAssembler(&mock_batcher_, picking_manager) {}
+      : PrimitiveAssembler(&mock_batcher_, &state_manager_, picking_manager) {}
   [[nodiscard]] uint32_t GetNumLines() const { return mock_batcher_.GetNumLines(); }
   [[nodiscard]] uint32_t GetNumTriangles() const { return mock_batcher_.GetNumTriangles(); }
   [[nodiscard]] uint32_t GetNumBoxes() const { return mock_batcher_.GetNumBoxes(); }
@@ -46,6 +47,7 @@ class PrimitiveAssemblerTester : public PrimitiveAssembler {
 
  private:
   MockBatcher mock_batcher_;
+  BatchRenderGroupStateManager state_manager_;
 };
 
 }  // namespace

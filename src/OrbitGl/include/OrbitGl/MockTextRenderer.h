@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_MOCK_TEXT_RENDERER_H_
 #define ORBIT_GL_MOCK_TEXT_RENDERER_H_
 
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -13,8 +15,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/TextRenderer.h"
 
@@ -27,9 +31,11 @@ class MockTextRenderer : public TextRenderer {
   MOCK_METHOD(void, Init, (), (override));
   void Clear() override;
 
-  MOCK_METHOD(void, RenderLayer, (QPainter*, float), (override));
-  [[nodiscard]] std::vector<float> GetLayers() const override {
-    return std::vector<float>(z_layers_.begin(), z_layers_.end());
+  MOCK_METHOD(void, DrawRenderGroup,
+              (QPainter*, BatchRenderGroupStateManager& state_manager, const BatchRenderGroupId&),
+              (override));
+  [[nodiscard]] std::vector<BatchRenderGroupId> GetRenderGroups() const override {
+    return {render_groups_.begin(), render_groups_.end()};
   }
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;
@@ -60,7 +66,7 @@ class MockTextRenderer : public TextRenderer {
 
   Vec2 min_point_;
   Vec2 max_point_;
-  std::set<float> z_layers_;
+  absl::flat_hash_set<BatchRenderGroupId> render_groups_;
   std::set<uint32_t> num_characters_in_add_text_;
   std::set<float> vertical_position_in_add_text;
   int num_add_text_calls_ = 0;
