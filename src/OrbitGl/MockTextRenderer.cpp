@@ -16,7 +16,7 @@
 namespace orbit_gl {
 
 // Clearing counters also in creation to not duplicate code.
-MockTextRenderer::MockTextRenderer() : TextRenderer() { Clear(); }
+MockTextRenderer::MockTextRenderer() { Clear(); }
 
 void MockTextRenderer::Clear() {
   min_point_ = Vec2{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};

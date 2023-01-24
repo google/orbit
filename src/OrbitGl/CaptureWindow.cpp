@@ -4,7 +4,6 @@
 
 #include "OrbitGl/CaptureWindow.h"
 
-#include <GL/gl.h>
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
@@ -569,7 +568,7 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
   }
 
   for (const orbit_gl::BatchRenderGroupId& group : all_groups_sorted) {
-    auto stencil = render_group_manager_.GetGroupState(group.name).stencil;
+    orbit_gl::StencilConfig stencil = render_group_manager_.GetGroupState(group.name).stencil;
     if (stencil.enabled) {
       Vec2i stencil_screen_pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
       Vec2i stencil_screen_size = viewport_.WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));

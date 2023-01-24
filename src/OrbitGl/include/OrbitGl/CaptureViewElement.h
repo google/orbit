@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "OrbitGl/AccessibleInterfaceProvider.h"
-#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/PickingManager.h"
 #include "OrbitGl/PrimitiveAssembler.h"
@@ -118,6 +117,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void RequestUpdate(RequestUpdateScope scope = RequestUpdateScope::kDrawAndUpdatePrimitives);
 
   enum LayoutFlags : uint32_t { kNone = 0, kScaleHorizontallyWithParent = 1 << 0 };
+
   [[nodiscard]] virtual uint32_t GetLayoutFlags() const { return kScaleHorizontallyWithParent; }
   [[nodiscard]] virtual float DetermineZOffset() const { return 0.f; }
 
@@ -164,23 +164,12 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual EventResult OnMouseEnter();
   [[nodiscard]] virtual EventResult OnMouseLeave();
 
-  [[nodiscard]] virtual bool RestrictDrawingToBody() const { return false; }
-
-  [[nodiscard]] uint32_t GetUid() const { return uid_; }
-
  private:
   bool is_mouse_over_ = false;
-  uint32_t uid_;
-
-  std::string previous_batcher_render_group_name_{BatchRenderGroupId::kGlobalGroup};
-  std::string previous_text_render_group_name_{BatchRenderGroupId::kGlobalGroup};
 
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
-
-  void PreRender(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer);
-  void PostRender(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer);
 
   friend class CaptureViewElementTester;
 };

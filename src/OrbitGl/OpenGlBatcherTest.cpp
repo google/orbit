@@ -121,7 +121,7 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
                 uint32_t box_count) {
   batcher.ResetMockDrawCounts();
 
-  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+  for (const auto& group : batcher.GetNonEmptyRenderGroups()) {
     batcher.DrawRenderGroup(group);
   }
   EXPECT_EQ(batcher.GetDrawnLineColors().size(), line_count);
@@ -179,7 +179,7 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
   batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
-  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+  for (const auto& group : batcher.GetNonEmptyRenderGroups()) {
     batcher.DrawRenderGroup(group, true);
   }
 
@@ -210,7 +210,7 @@ TEST(OpenGlBatcher, MultipleDrawCalls) {
   batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
-  for (auto& group : batcher.GetNonEmptyRenderGroups()) {
+  for (const auto& group : batcher.GetNonEmptyRenderGroups()) {
     batcher.DrawRenderGroup(group, true);
   }
 

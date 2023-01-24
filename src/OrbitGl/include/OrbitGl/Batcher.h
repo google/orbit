@@ -54,8 +54,6 @@ class Batcher : public BatcherInterface {
   BatcherId batcher_id_;
 };
 
-[[nodiscard]] bool operator==(const Batcher::Statistics& lhs, const Batcher::Statistics& rhs);
-
 }  // namespace orbit_gl
 
 #endif  // ORBIT_GL_BATCHER_H_

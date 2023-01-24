@@ -21,7 +21,7 @@
 namespace orbit_gl {
 
 void OpenGlBatcher::ResetElements() {
-  for (auto& [_, buffer] : primitive_buffers_by_group_) {
+  for (auto& [unused_group_id, buffer] : primitive_buffers_by_group_) {
     buffer.Reset();
   }
   user_data_.clear();
@@ -101,7 +101,6 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
         buffers.triangle_buffer.triangles_.size() == 0) {
       continue;
     }
-    // ORBIT_CHECK(buffers.group == group);
     result.push_back(group);
   }
   return result;

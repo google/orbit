@@ -23,7 +23,6 @@
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/PickingManager.h"
-#include "absl/container/btree_map.h"
 #include "absl/container/flat_hash_set.h"
 
 namespace orbit_gl {
@@ -44,7 +43,7 @@ class MockBatcher : public Batcher {
   [[nodiscard]] uint32_t GetNumElements() const override;
 
   [[nodiscard]] std::vector<BatchRenderGroupId> GetNonEmptyRenderGroups() const override {
-    return std::vector<BatchRenderGroupId>(render_groups_.begin(), render_groups_.end());
+    return {render_groups_.begin(), render_groups_.end()};
   }
 
   void DrawRenderGroup(const BatchRenderGroupId& /*group*/, bool /*picking*/) override {}
