@@ -9,7 +9,9 @@
 #include <absl/flags/flag.h>
 #include <absl/strings/str_format.h>
 
+#include <algorithm>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -19,6 +21,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/DataManager.h"
 #include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"

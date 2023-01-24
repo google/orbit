@@ -32,7 +32,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/MockScopeStatsCollection.h"
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"

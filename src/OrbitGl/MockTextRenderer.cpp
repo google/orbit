@@ -5,13 +5,15 @@
 #include "OrbitGl/MockTextRenderer.h"
 
 #include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <string.h>
 
+#include <algorithm>
 #include <limits>
 
 #include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
-#include "OrbitGl/TextRenderer.h"
 
 namespace orbit_gl {
 

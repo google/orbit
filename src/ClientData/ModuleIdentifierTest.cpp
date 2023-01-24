@@ -5,7 +5,9 @@
 #include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
+#include <initializer_list>
 #include <variant>
+#include <vector>
 
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"

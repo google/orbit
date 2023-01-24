@@ -21,6 +21,7 @@
 #include "CaptureClient/CaptureClient.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"

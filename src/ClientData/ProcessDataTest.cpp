@@ -8,12 +8,15 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-#include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ProcessData.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"

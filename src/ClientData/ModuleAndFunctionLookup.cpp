@@ -7,6 +7,8 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"

@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/ModulePathAndBuildId.h"
 #include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/SymbolsFile.h"

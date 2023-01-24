@@ -9,6 +9,7 @@
 #include <string_view>
 #include <utility>
 
+#include "ClientData/ModulePathAndBuildId.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
 #include "SymbolProvider/SymbolLoadingOutcome.h"

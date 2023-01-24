@@ -9,6 +9,7 @@
 
 #include <QPainter>
 #include <memory>
+#include <string>
 
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/AppInterface.h"

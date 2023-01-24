@@ -21,8 +21,9 @@
 #include <utility>
 
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "ClientData/ProcessData.h"
 #include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"

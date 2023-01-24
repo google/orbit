@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 #include <GteVector.h>
+#include <absl/container/flat_hash_map.h>
 #include <gtest/gtest.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 

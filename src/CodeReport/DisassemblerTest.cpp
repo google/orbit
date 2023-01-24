@@ -9,10 +9,10 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <tuple>
 
 #include "AssemblyTestLiterals.h"
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"

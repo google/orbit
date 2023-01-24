@@ -15,7 +15,6 @@
 #include <string>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifierProvider.h"
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"
 #include "GrpcProtos/module.pb.h"
 

@@ -10,7 +10,6 @@
 #include <memory>
 #include <optional>
 
-#include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
 #include "SessionSetup/TargetLabel.h"
 

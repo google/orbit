@@ -12,14 +12,17 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ProcessData.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/ModulesDataView.h"

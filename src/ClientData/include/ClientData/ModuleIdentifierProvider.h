@@ -5,7 +5,9 @@
 #ifndef CLIENT_DATA_MODULE_IDENTIFIER_PROVIDER_H_
 #define CLIENT_DATA_MODULE_IDENTIFIER_PROVIDER_H_
 
+#include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <absl/strings/substitute.h>
 #include <absl/synchronization/mutex.h>
 

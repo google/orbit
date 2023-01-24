@@ -21,7 +21,6 @@
 #include <utility>
 #include <variant>
 
-#include "ClientData/ProcessData.h"
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"

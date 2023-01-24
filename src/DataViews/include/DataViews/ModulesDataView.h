@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ProcessData.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"

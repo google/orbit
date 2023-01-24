@@ -22,6 +22,7 @@
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/TracepointCustom.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"

@@ -47,6 +47,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DataViews/FunctionsDataView.h"
 #include "Introspection/Introspection.h"

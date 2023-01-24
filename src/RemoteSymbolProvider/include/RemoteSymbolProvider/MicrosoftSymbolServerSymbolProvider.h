@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "ClientData/ModulePathAndBuildId.h"
 #include "Http/DownloadManager.h"
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"

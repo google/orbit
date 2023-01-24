@@ -15,6 +15,7 @@
 
 #include "AssemblyTestLiterals.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"

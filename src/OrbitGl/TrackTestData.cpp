@@ -15,6 +15,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "GrpcProtos/capture.pb.h"
 
 using orbit_client_data::CallstackType;

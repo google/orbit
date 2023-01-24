@@ -8,6 +8,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <string>
+#include <utility>
+
 #include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/PickingManager.h"
