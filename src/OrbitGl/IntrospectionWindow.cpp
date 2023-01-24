@@ -269,8 +269,8 @@ IntrospectionWindow::~IntrospectionWindow() { StopIntrospection(); }
 
 std::string IntrospectionWindow::GetHelpText() const {
   return "Client Side Introspection\n\n"
-      "Start/Stop Capture: 'X'\n"
-      "Toggle Help: 'H'";
+         "Start/Stop Capture: 'X'\n"
+         "Toggle Help: 'H'";
 }
 
 bool IntrospectionWindow::IsIntrospecting() const { return introspection_listener_ != nullptr; }
