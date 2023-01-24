@@ -83,7 +83,7 @@ class CaptureWindow : public GlCanvas, public orbit_gl::CaptureWindowDebugInterf
   void RenderSelectionOverlay();
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
 
-  [[nodiscard]] virtual const char* GetHelpText() const;
+  [[nodiscard]] virtual std::string GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
   void HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x, int y) override;
   orbit_gl::Batcher& GetBatcherById(BatcherId batcher_id);
