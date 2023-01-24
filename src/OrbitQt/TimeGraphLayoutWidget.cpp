@@ -50,6 +50,7 @@ TimeGraphLayoutWidget::TimeGraphLayoutWidget(QWidget* parent)
   AddWidgetForProperty(&draw_timegraph_masks_);
   AddWidgetForProperty(&draw_as_if_picking_);
   AddWidgetForProperty(&scale_);
+  AddWidgetForProperty(&render_debug_layers_);
 }
 
 float TimeGraphLayoutWidget::GetCollapseButtonSize(int indentation_level) const {

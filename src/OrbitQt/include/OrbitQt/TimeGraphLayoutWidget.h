@@ -134,6 +134,8 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
 
   [[nodiscard]] bool GetDrawAsIfPicking() const override { return draw_as_if_picking_.value(); }
 
+  [[nodiscard]] bool GetRenderDebugLayers() const override { return render_debug_layers_.value(); }
+
  private:
   FloatProperty text_box_height_{{
       .initial_value = 20.f,
@@ -303,6 +305,7 @@ class TimeGraphLayoutWidget : public orbit_config_widgets::PropertyConfigWidget,
 
   IntProperty max_layouting_loops_{
       {.initial_value = 10, .min = 1, .max = 100, .label = "Max layouting loops:"}};
+  BoolProperty render_debug_layers_{{.initial_value = false, .label = "Render Debug Layers"}};
 };
 
 }  // namespace orbit_qt
