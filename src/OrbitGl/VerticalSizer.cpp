@@ -6,7 +6,10 @@
 
 #include <QCursor>
 #include <QGuiApplication>
+#include <Qt>
+#include <utility>
 
+#include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"
 
 namespace orbit_gl {
@@ -34,7 +37,7 @@ void VerticalSizer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer
 CaptureViewElement::EventResult VerticalSizer::OnMouseEnter() {
   EventResult event_result = CaptureViewElement::OnMouseEnter();
   if (QGuiApplication::instance() != nullptr) {
-    QGuiApplication::setOverrideCursor(Qt::SizeHorCursor);
+    QGuiApplication::setOverrideCursor(QCursor{Qt::SizeHorCursor});
   }
   return event_result;
 }
