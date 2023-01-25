@@ -36,12 +36,12 @@ SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent,
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
-  const std::array<Color, kSystemMemoryTrackDimension> system_memory_track_colors{
+  std::vector<Color> system_memory_track_colors{
       Color(231, 68, 53, 255),  // red
       Color(246, 196, 0, 255),  // orange
       Color(87, 166, 74, 255)   // green
   };
-  SetSeriesColors(system_memory_track_colors);
+  SetSeriesColors(std::move(system_memory_track_colors));
 
   const std::string value_lower_bound_label = "Minimum: 0 GB";
   constexpr double kValueLowerBoundRawValue = 0.0;

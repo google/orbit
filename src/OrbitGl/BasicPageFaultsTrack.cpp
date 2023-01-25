@@ -16,8 +16,8 @@
 
 namespace orbit_gl {
 
-[[nodiscard]] static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
-    std::string_view cgroup_name, std::string_view process_name) {
+[[nodiscard]] static std::vector<std::string> CreateSeriesName(std::string_view cgroup_name,
+                                                               std::string_view process_name) {
   return {absl::StrFormat("Process [%s]", process_name),
           absl::StrFormat("CGroup [%s]", cgroup_name), "System"};
 }
@@ -46,16 +46,16 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
                                               // rendering time when we do aggregation.
 }
 
-void BasicPageFaultsTrack::AddValues(
-    uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
+void BasicPageFaultsTrack::AddValues(uint64_t timestamp_ns, absl::Span<const double> values) {
   if (previous_time_and_values_.has_value()) {
-    std::array<double, kBasicPageFaultsTrackDimension> differences{};
+    std::vector<double> differences(kBasicPageFaultsTrackDimension);
     std::transform(values.begin(), values.end(), previous_time_and_values_.value().second.begin(),
                    differences.begin(), std::minus<double>());
     series_.AddValues(previous_time_and_values_.value().first, differences);
   }
 
-  previous_time_and_values_ = std::make_pair(timestamp_ns, values);
+  previous_time_and_values_ =
+      std::make_pair(timestamp_ns, std::vector(values.begin(), values.end()));
 }
 
 void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(

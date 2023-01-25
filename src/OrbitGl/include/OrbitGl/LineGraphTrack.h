@@ -22,14 +22,13 @@ namespace orbit_gl {
 // This is an implementation of the `GraphTrack` to visualize the `MultivariateTimeSeries` data in a
 // multi-line stairstep graph.
 template <size_t Dimension>
-class LineGraphTrack : public GraphTrack<Dimension> {
+class LineGraphTrack : public GraphTrack {
  public:
-  using GraphTrack<Dimension>::GraphTrack;
+  using GraphTrack::GraphTrack;
   ~LineGraphTrack() override = default;
 
  protected:
-  [[nodiscard]] float GetLabelYFromValues(
-      const std::array<double, Dimension>& values) const override;
+  [[nodiscard]] float GetLabelYFromValues(absl::Span<const double> values) const override;
   void DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t min_tick, uint64_t max_tick,
                   float z) override;
   virtual void DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
