@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 #include <absl/types/span.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QEventLoop>
+#include <QTimer>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -15,7 +17,6 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/WhenAll.h"
-#include "QtTestUtils/WaitFor.h"
 #include "QtUtils/CreateTimeout.h"
 #include "TestUtils/TestUtils.h"
 

@@ -14,6 +14,7 @@
 #include <QFontDatabase>
 #include <QFontMetrics>
 #include <QPainter>
+#include <QRect>
 #include <QString>
 #include <QStringList>
 #include <Qt>
@@ -22,6 +23,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <utility>
 
 #include "Introspection/Introspection.h"

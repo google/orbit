@@ -26,6 +26,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"

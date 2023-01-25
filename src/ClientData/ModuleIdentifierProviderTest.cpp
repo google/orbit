@@ -4,8 +4,12 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
+#include <string>
+
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"
+#include "ClientData/ModulePathAndBuildId.h"
 
 namespace orbit_client_data {
 

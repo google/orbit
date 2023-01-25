@@ -6,6 +6,7 @@
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/hash/hash.h>
 #include <stddef.h>
 #include <stdint.h>
 

@@ -5,7 +5,6 @@
 #include <libfuzzer/libfuzzer_macro.h>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifierProvider.h"
 #include "FuzzingUtils/ProtoFuzzer.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"

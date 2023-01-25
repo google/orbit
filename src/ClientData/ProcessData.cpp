@@ -7,13 +7,16 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/hash/hash.h>
 #include <absl/meta/type_traits.h>
+#include <absl/strings/str_format.h>
 
 #include <algorithm>
 #include <filesystem>
+#include <optional>
 #include <set>
 #include <vector>
 
 #include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 

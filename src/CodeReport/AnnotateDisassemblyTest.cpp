@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "CodeReport/AnnotateDisassembly.h"

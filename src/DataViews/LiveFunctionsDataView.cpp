@@ -40,6 +40,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"

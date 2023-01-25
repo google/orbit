@@ -19,6 +19,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"
+#include "ClientData/ModulePathAndBuildId.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/SymbolLoadingState.h"
 #include "GrpcProtos/symbol.pb.h"

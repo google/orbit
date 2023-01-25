@@ -7,13 +7,11 @@
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
-#include <qnamespace.h>
 
-#include <QFontDatabase>
-#include <QOpenGLFunctions>
+#include <QRect>
 #include <algorithm>
+#include <array>
 #include <iterator>
-#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>

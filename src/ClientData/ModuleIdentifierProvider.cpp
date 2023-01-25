@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 #include "ClientData/ModuleIdentifierProvider.h"
 
+#include <absl/meta/type_traits.h>
+
+#include <utility>
+
 #include "ClientData/ModulePathAndBuildId.h"
 
 namespace orbit_client_data {

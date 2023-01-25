@@ -23,6 +23,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/CgroupAndProcessMemoryInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PageFaultsInfo.h"
 #include "ClientData/ProcessData.h"

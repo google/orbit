@@ -30,6 +30,7 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"

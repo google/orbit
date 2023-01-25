@@ -5,14 +5,15 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ModuleIdentifierProvider.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ProcessData.h"
 #include "GrpcProtos/module.pb.h"
 
 namespace orbit_client_data {

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "ClientModel/CaptureSerializer.h"

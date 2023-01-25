@@ -6,6 +6,7 @@
 #define ORBIT_GL_MOCK_BATCHER_H_
 
 #include <absl/container/btree_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <stddef.h>
 #include <stdint.h>
 

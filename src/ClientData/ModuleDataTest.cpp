@@ -9,7 +9,6 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
-#include "ClientData/ModuleIdentifierProvider.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 

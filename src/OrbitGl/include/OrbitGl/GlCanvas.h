@@ -16,6 +16,7 @@
 
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitGl/AccessibleInterfaceProvider.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/CoreMath.h"
 #include "OrbitGl/OpenGlBatcher.h"
 #include "OrbitGl/PickingManager.h"

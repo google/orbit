@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"

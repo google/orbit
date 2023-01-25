@@ -31,6 +31,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleInMemory.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "DataViews/CallstackDataView.h"

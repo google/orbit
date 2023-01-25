@@ -6,7 +6,9 @@
 
 #include <GteVector.h>
 #include <absl/container/btree_map.h>
+#include <absl/hash/hash.h>
 
+#include <algorithm>
 #include <limits>
 
 #include "OrbitGl/CoreMath.h"

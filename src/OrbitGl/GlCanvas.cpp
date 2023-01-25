@@ -15,7 +15,6 @@
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitGl/AccessibleInterfaceProvider.h"
-#include "OrbitGl/BatchRenderGroup.h"
 
 // TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1

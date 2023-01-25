@@ -24,6 +24,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "DataViewTestUtils.h"

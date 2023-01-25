@@ -25,6 +25,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ModuleInMemory.h"
 #include "ClientData/ModuleManager.h"
 #include "GrpcProtos/module.pb.h"

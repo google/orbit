@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 #include "ClientData/FastRenderingUtils.h"

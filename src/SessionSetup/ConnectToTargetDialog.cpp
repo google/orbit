@@ -19,7 +19,6 @@
 #include <utility>
 #include <variant>
 
-#include "ClientData/ProcessData.h"
 #include "ClientServices/ProcessManager.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitSsh/AddrAndPort.h"

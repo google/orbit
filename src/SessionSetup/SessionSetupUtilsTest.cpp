@@ -5,10 +5,9 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
-#include <memory>
+#include <optional>
 #include <vector>
 
-#include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
 #include "SessionSetup/SessionSetupUtils.h"
 

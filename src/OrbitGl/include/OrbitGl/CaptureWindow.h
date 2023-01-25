@@ -18,6 +18,7 @@
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
+#include "OrbitGl/BatchRenderGroup.h"
 #include "OrbitGl/Batcher.h"
 #include "OrbitGl/CaptureStats.h"
 #include "OrbitGl/CaptureWindowDebugInterface.h"

@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleIdentifierProvider.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"

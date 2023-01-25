@@ -25,7 +25,6 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ModuleIdentifier.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientModel/CaptureSerializer.h"
