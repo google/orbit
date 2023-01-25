@@ -56,8 +56,8 @@ class GraphTrack : public Track {
   [[nodiscard]] uint64_t GetMinTime() const override;
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
-  void SetSeriesColors(absl::Span<const Color> series_colors) {
-    series_colors_ = std::vector(series_colors.begin(), series_colors.end());
+  void SetSeriesColors(std::vector<Color> series_colors) {
+    series_colors_ = std::move(series_colors);
   }
 
   // These are not supported in GraphTracks

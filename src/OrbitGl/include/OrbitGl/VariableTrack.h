@@ -15,7 +15,6 @@
 namespace orbit_gl {
 
 constexpr size_t kVariableTrackDimension = 1;
-const std::array<Color, kVariableTrackDimension> kVariableTrackColor{Color(0, 128, 255, 128)};
 
 class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   static constexpr uint8_t kTrackValueDecimalDigits = 6;
@@ -32,7 +31,8 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
                                                 kTrackValueDecimalDigits, kTrackValueUnits,
                                                 module_manager, capture_data),
         name_{std::move(name)} {
-    SetSeriesColors(kVariableTrackColor);
+    std::vector<Color> variable_track_color{Color(0, 128, 255, 128)};
+    SetSeriesColors(std::move(variable_track_color));
   }
 
   [[nodiscard]] bool IsCollapsible() const override { return false; }
