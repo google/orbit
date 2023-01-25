@@ -12,6 +12,7 @@
 #include <optional>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"

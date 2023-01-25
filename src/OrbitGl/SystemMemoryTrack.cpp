@@ -9,6 +9,8 @@
 
 #include <array>
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"

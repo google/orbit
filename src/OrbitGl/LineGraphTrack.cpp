@@ -8,7 +8,6 @@
 #include <absl/types/span.h>
 
 #include <algorithm>
-#include <array>
 #include <iterator>
 #include <utility>
 #include <vector>
