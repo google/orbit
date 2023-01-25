@@ -8,7 +8,6 @@
 #include <absl/strings/substitute.h>
 #include <stdint.h>
 
-#include <array>
 #include <optional>
 #include <string_view>
 #include <utility>
