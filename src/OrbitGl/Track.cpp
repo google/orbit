@@ -85,7 +85,7 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
 
   // Track header highlight on hover.
   if (IsMouseOver()) {
-    const Color kOutlineColor = Color(128, 128, 128, 255);
+    static const Color kOutlineColor = Color(128, 128, 128, 255);
     constexpr float kOutlineWidth = 2.f;
     Vec2 outline_size = header_->GetSize() - Vec2{layout_->GetSpaceBetweenTracks(), 0};
     primitive_assembler.AddAabbOutline(GetPos(), outline_size, kOutlineWidth,
