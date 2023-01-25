@@ -15,6 +15,8 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"

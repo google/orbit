@@ -10,16 +10,17 @@
 #include <absl/strings/str_split.h>
 
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/FastRenderingUtils.h"
-#include "OrbitBase/Logging.h"
 #include "OrbitGl/BatcherInterface.h"
 #include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"

@@ -11,6 +11,7 @@
 #include <array>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
