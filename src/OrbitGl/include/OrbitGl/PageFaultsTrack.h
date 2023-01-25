@@ -57,13 +57,13 @@ class PageFaultsTrack : public Track {
 
   void OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info);
 
-  void AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(
-      uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
+  void AddValuesAndUpdateAnnotationsForMajorPageFaultsSubtrack(uint64_t timestamp_ns,
+                                                               absl::Span<const double> values) {
     major_page_faults_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
 
-  void AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(
-      uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
+  void AddValuesAndUpdateAnnotationsForMinorPageFaultsSubtrack(uint64_t timestamp_ns,
+                                                               absl::Span<const double> values) {
     minor_page_faults_track_->AddValuesAndUpdateAnnotations(timestamp_ns, values);
   }
 

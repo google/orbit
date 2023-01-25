@@ -9,7 +9,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <array>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -21,7 +20,6 @@ namespace orbit_gl {
 
 // This is an implementation of the `GraphTrack` to visualize the `MultivariateTimeSeries` data in a
 // multi-line stairstep graph.
-template <size_t Dimension>
 class LineGraphTrack : public GraphTrack {
  public:
   using GraphTrack::GraphTrack;

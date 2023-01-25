@@ -16,6 +16,8 @@
 
 namespace orbit_gl {
 
+namespace {
+
 [[nodiscard]] static std::vector<std::string> CreateSeriesName(std::string_view cgroup_name,
                                                                std::string_view process_name) {
   return {absl::StrFormat("Process [%s]", process_name),
@@ -25,6 +27,8 @@ namespace orbit_gl {
 static constexpr uint8_t kTrackValueDecimalDigits = 0;
 static constexpr const char* kTrackValueUnits = "";
 
+}  // namespace
+
 BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
                                            const orbit_gl::TimelineInfoInterface* timeline_info,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -32,10 +36,9 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
                                            uint64_t memory_sampling_period_ms,
                                            const orbit_client_data::ModuleManager* module_manager,
                                            const orbit_client_data::CaptureData* capture_data)
-    : LineGraphTrack<kBasicPageFaultsTrackDimension>(
-          parent, timeline_info, viewport, layout,
-          CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueUnits, module_manager, capture_data),
+    : LineGraphTrack(parent, timeline_info, viewport, layout,
+                     CreateSeriesName(cgroup_name, capture_data->process_name()),
+                     kTrackValueDecimalDigits, kTrackValueUnits, module_manager, capture_data),
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
@@ -48,7 +51,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
 
 void BasicPageFaultsTrack::AddValues(uint64_t timestamp_ns, absl::Span<const double> values) {
   if (previous_time_and_values_.has_value()) {
-    std::vector<double> differences(kBasicPageFaultsTrackDimension);
+    std::vector<double> differences(series_.GetDimension());
     std::transform(values.begin(), values.end(), previous_time_and_values_.value().second.begin(),
                    differences.begin(), std::minus<double>());
     series_.AddValues(previous_time_and_values_.value().first, differences);
@@ -58,8 +61,8 @@ void BasicPageFaultsTrack::AddValues(uint64_t timestamp_ns, absl::Span<const dou
       std::make_pair(timestamp_ns, std::vector(values.begin(), values.end()));
 }
 
-void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
-    uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
+void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(uint64_t timestamp_ns,
+                                                         absl::Span<const double> values) {
   AddValues(timestamp_ns, values);
 
   double updated_max = GetGraphMaxValue();
@@ -81,10 +84,10 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
 
 void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& primitive_assembler,
                                   TextRenderer& text_renderer, const DrawContext& draw_context) {
-  LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(primitive_assembler, text_renderer,
-                                                         draw_context);
+  LineGraphTrack::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   if (draw_context.picking_mode != PickingMode::kNone || IsCollapsed()) return;
+
   AnnotationTrack::DrawAnnotation(primitive_assembler, text_renderer, layout_, indentation_level_,
                                   GlCanvas::kZValueTrackText);
 }
@@ -94,9 +97,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_a
                                                  absl::Span<const float> prev_normalized_values,
                                                  absl::Span<const float> curr_normalized_values,
                                                  float z, bool is_last) {
-  LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
-      primitive_assembler, start_tick, end_tick, prev_normalized_values, curr_normalized_values, z,
-      is_last);
+  LineGraphTrack::DrawSingleSeriesEntry(primitive_assembler, start_tick, end_tick,
+                                        prev_normalized_values, curr_normalized_values, z, is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
   if (prev_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
@@ -111,8 +113,7 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_a
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {
-  return LineGraphTrack<kBasicPageFaultsTrackDimension>::IsCollapsed() ||
-         GetParent()->IsCollapsed();
+  return LineGraphTrack::IsCollapsed() || GetParent()->IsCollapsed();
 }
 
 float BasicPageFaultsTrack::GetAnnotatedTrackContentHeight() const {

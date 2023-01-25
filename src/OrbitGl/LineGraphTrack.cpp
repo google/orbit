@@ -23,6 +23,8 @@
 
 namespace orbit_gl {
 
+namespace {
+
 [[nodiscard]] static std::vector<float> GetNormalizedValues(absl::Span<const double> values,
                                                             double min,
                                                             double inverse_value_range) {
@@ -34,28 +36,35 @@ namespace orbit_gl {
   return normalized_values;
 }
 
-template <size_t Dimension>
-float LineGraphTrack<Dimension>::GetLabelYFromValues(absl::Span<const double> values) const {
-  float content_height = this->GetGraphContentHeight();
-  float base_y = this->GetGraphContentBottomY();
-  double min = this->GetGraphMinValue();
-  double inverse_value_range = this->GetInverseOfGraphValueRange();
+static void DrawSquareDot(PrimitiveAssembler& primitive_assembler, Vec2 center, float radius,
+                          float z, const Color& color) {
+  Vec2 position(center[0] - radius, center[1] - radius);
+  Vec2 size(2 * radius, 2 * radius);
+  primitive_assembler.AddBox(MakeBox(position, size), z, color);
+}
+
+}  // namespace
+
+float LineGraphTrack::GetLabelYFromValues(absl::Span<const double> values) const {
+  float content_height = GetGraphContentHeight();
+  float base_y = GetGraphContentBottomY();
+  double min = GetGraphMinValue();
+  double inverse_value_range = GetInverseOfGraphValueRange();
   std::vector<float> normalized_values = GetNormalizedValues(values, min, inverse_value_range);
   // The label will point to the only value.
-  if (Dimension == 1) return base_y - normalized_values[0] * content_height;
+  if (series_.GetDimension() == 1) return base_y - normalized_values[0] * content_height;
 
   // The label will be centred on the track.
   return base_y - content_height / 2.0f;
 }
 
-template <size_t Dimension>
-void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembler,
-                                           uint64_t min_tick, uint64_t max_tick, float z) {
-  auto entries = this->series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
+void LineGraphTrack::DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t min_tick,
+                                uint64_t max_tick, float z) {
+  auto entries = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
   if (entries.empty()) return;
 
-  double min = this->GetGraphMinValue();
-  double inverse_value_range = this->GetInverseOfGraphValueRange();
+  double min = GetGraphMinValue();
+  double inverse_value_range = GetInverseOfGraphValueRange();
 
   auto curr_iterator = entries.begin();
   auto last_iterator = std::prev(entries.end());
@@ -69,8 +78,7 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
 
   GraphTrackDataAggregator aggr;
 
-  const uint32_t resolution_in_pixels =
-      this->GetViewport()->WorldToScreen({this->GetWidth(), 0})[0];
+  const uint32_t resolution_in_pixels = GetViewport()->WorldToScreen({GetWidth(), 0})[0];
   uint64_t next_pixel_start_ns = orbit_client_data::GetNextPixelBoundaryTimeNs(
       min_tick, resolution_in_pixels, min_tick, max_tick);
 
@@ -153,38 +161,26 @@ void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& primitive_assembl
   }
 }
 
-static void DrawSquareDot(PrimitiveAssembler& primitive_assembler, Vec2 center, float radius,
-                          float z, const Color& color) {
-  Vec2 position(center[0] - radius, center[1] - radius);
-  Vec2 size(2 * radius, 2 * radius);
-  primitive_assembler.AddBox(MakeBox(position, size), z, color);
-}
-
-template <size_t Dimension>
-void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
-    PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
-    absl::Span<const float> prev_normalized_values, absl::Span<const float> curr_normalized_values,
-    float z, bool is_last) {
+void LineGraphTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler,
+                                           uint64_t start_tick, uint64_t end_tick,
+                                           absl::Span<const float> prev_normalized_values,
+                                           absl::Span<const float> curr_normalized_values, float z,
+                                           bool is_last) {
   constexpr float kDotRadius = 2.f;
-  float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
-  float x1 = this->timeline_info_->GetWorldFromTick(end_tick);
-  float content_height = this->GetGraphContentHeight();
-  float base_y = this->GetGraphContentBottomY();
+  float x0 = timeline_info_->GetWorldFromTick(start_tick);
+  float x1 = timeline_info_->GetWorldFromTick(end_tick);
+  float content_height = GetGraphContentHeight();
+  float base_y = GetGraphContentBottomY();
 
-  for (size_t i = Dimension; i-- > 0;) {
+  for (size_t i = series_.GetDimension(); i-- > 0;) {
     float y0 = base_y - prev_normalized_values[i] * content_height;
-    DrawSquareDot(primitive_assembler, Vec2(x0, y0), kDotRadius, z, this->GetColor(i));
-    primitive_assembler.AddLine(Vec2(x0, y0), Vec2(x1, y0), z, this->GetColor(i));
+    DrawSquareDot(primitive_assembler, Vec2(x0, y0), kDotRadius, z, GetColor(i));
+    primitive_assembler.AddLine(Vec2(x0, y0), Vec2(x1, y0), z, GetColor(i));
     if (!is_last) {
       float y1 = base_y - curr_normalized_values[i] * content_height;
-      primitive_assembler.AddLine(Vec2(x1, y0), Vec2(x1, y1), z, this->GetColor(i));
+      primitive_assembler.AddLine(Vec2(x1, y0), Vec2(x1, y1), z, GetColor(i));
     }
   }
 }
-
-template class LineGraphTrack<1>;
-template class LineGraphTrack<2>;
-template class LineGraphTrack<3>;
-template class LineGraphTrack<4>;
 
 }  // namespace orbit_gl
