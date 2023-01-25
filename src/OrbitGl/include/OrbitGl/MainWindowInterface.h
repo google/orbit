@@ -23,7 +23,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
 #include "OrbitGl/CallTreeView.h"
-#include "OrbitGl/SamplingReport.h"
+#include "OrbitGl/SelectionData.h"
 
 namespace orbit_gl {
 
@@ -78,13 +78,7 @@ class MainWindowInterface {
 
   virtual ~MainWindowInterface() = default;
 
-  virtual void SetCallstackInspection(
-      std::shared_ptr<const CallTreeView> top_down_view,
-      std::shared_ptr<const CallTreeView> bottom_up_view,
-      orbit_data_views::DataView* callstack_data_view,
-      const orbit_client_data::CallstackData* callstack_data,
-      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
-  virtual void ClearCallstackInspection() = 0;
+  virtual void SetSelection(SelectionData& selection_data) = 0;
 
   virtual bool IsConnected() = 0;
   [[nodiscard]] virtual bool IsLocalTarget() const = 0;
@@ -97,7 +91,6 @@ class MainWindowInterface {
   virtual void SetSelectionTopDownView(std::shared_ptr<const CallTreeView> view) = 0;
   virtual void SetSelectionBottomUpView(std::shared_ptr<const CallTreeView> view) = 0;
   virtual void SetSamplingReport(
-      orbit_data_views::DataView* callstack_data_view,
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) = 0;
   virtual void SetSelectionSamplingReport(

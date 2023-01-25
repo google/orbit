@@ -61,7 +61,7 @@ class CallTreeWidget : public QWidget {
   void SetBottomUpView(std::shared_ptr<const CallTreeView> bottom_up_view);
   void ClearCallTreeView();
   // These methods can only be called after SetTopDownView or SetBottomUpView.
-  void SetInspection(std::shared_ptr<const CallTreeView> call_tree_view);
+  void SetInspection();
   void ClearInspection();
 
  protected:

@@ -195,16 +195,7 @@ void OrbitSamplingReport::RefreshTabs() {
   }
 }
 
-void OrbitSamplingReport::SetInspection(
-    OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
-    const orbit_client_data::CallstackData* callstack_data,
-    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
-  Deinitialize();
-  Initialize(app, callstack_data_view, callstack_data, post_processed_sampling_data);
-  ui_->inspectionNoticeWidget->show();
-  RefreshCallstackView();
-  RefreshTabs();
-}
+void OrbitSamplingReport::SetInspection() { ui_->inspectionNoticeWidget->show(); }
 
 void OrbitSamplingReport::UpdateReport(
     const orbit_client_data::CallstackData* callstack_data,

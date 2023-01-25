@@ -29,7 +29,8 @@ SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureD
 }
 
 SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureData& capture_data,
-                             absl::Span<const CallstackEvent> callstack_events) {
+                             absl::Span<const CallstackEvent> callstack_events,
+                             SelectionType selection_type) {
   for (const CallstackEvent& event : callstack_events) {
     callstack_data_object_.AddCallstackFromKnownCallstackData(event,
                                                               capture_data.GetCallstackData());
@@ -40,4 +41,5 @@ SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureD
       post_processed_sampling_data_, module_manager, capture_data);
   bottom_up_view_ = CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
       post_processed_sampling_data_, module_manager, capture_data);
+  selection_type_ = selection_type;
 }

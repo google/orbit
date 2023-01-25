@@ -85,7 +85,6 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void UpdatePanel(orbit_data_views::DataViewType type);
 
   void SetSamplingReport(
-      orbit_data_views::DataView* callstack_data_view,
       const orbit_client_data::CallstackData* callstack_data,
       const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
   void SetSelectionSamplingReport(
@@ -147,14 +146,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
       const orbit_client_data::ModuleData* module) override;
 
-  void SetCallstackInspection(
-      std::shared_ptr<const CallTreeView> top_down_view,
-      std::shared_ptr<const CallTreeView> bottom_up_view,
-      orbit_data_views::DataView* callstack_data_view,
-      const orbit_client_data::CallstackData* callstack_data,
-      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) override;
-
-  void ClearCallstackInspection() override;
+  void SetSelection(SelectionData& selection_data) override;
 
   bool IsConnected() override { return is_connected_; }
 

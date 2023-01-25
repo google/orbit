@@ -92,6 +92,7 @@
 #include "ConfigWidgets/StopSymbolDownloadDialog.h"
 #include "ConfigWidgets/SymbolErrorDialog.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -110,6 +111,7 @@
 #include "OrbitGl/IntrospectionWindow.h"
 #include "OrbitGl/LiveFunctionsController.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitGl/SelectionData.h"
 #include "OrbitGl/TimeGraph.h"
 #include "OrbitGl/TrackManager.h"
 #include "OrbitPaths/Paths.h"
@@ -793,8 +795,6 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
       ui->samplingReport->RefreshTabs();
       ui->selectionReport->RefreshCallstackView();
       ui->selectionReport->RefreshTabs();
-      ui->inspectionReport->RefreshCallstackView();
-      ui->inspectionReport->RefreshTabs();
       break;
     default:
       break;
@@ -802,12 +802,12 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
 }
 
 void OrbitMainWindow::SetSamplingReport(
-    orbit_data_views::DataView* callstack_data_view,
     const orbit_client_data::CallstackData* callstack_data,
     const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
   ui->samplingGridLayout->removeWidget(ui->samplingReport);
   delete ui->samplingReport;
 
+  auto* callstack_data_view = app_->GetOrCreateDataView(orbit_data_views::DataViewType::kCallstack);
   ui->samplingReport = new OrbitSamplingReport(ui->samplingTab);
   ui->samplingReport->Initialize(app_.get(), callstack_data_view, callstack_data,
                                  post_processed_sampling_data);
@@ -1911,29 +1911,22 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetCallstackInspection(
-    std::shared_ptr<const CallTreeView> top_down_view,
-    std::shared_ptr<const CallTreeView> bottom_up_view,
-    orbit_data_views::DataView* callstack_data_view,
-    const orbit_client_data::CallstackData* callstack_data,
-    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
-  ui->topDownWidget->SetInspection(std::move(top_down_view));
-  ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
+void OrbitMainWindow::SetSelection(SelectionData& selection_data) {
+  SetTopDownView(selection_data.GetTopDownView());
+  SetBottomUpView(selection_data.GetBottomUpView());
+  SetSamplingReport(&selection_data.GetCallstackData(),
+                    &selection_data.GetPostProcessedSamplingData());
 
-  ui->samplingReport->hide();
-  ui->inspectionReport->SetInspection(app_.get(), callstack_data_view, callstack_data,
-                                      post_processed_sampling_data);
-  connect(ui->inspectionReport, &OrbitSamplingReport::LeaveCallstackInspectionClicked, this,
-          [this]() { app_->ClearInspection(); });
-  ui->inspectionReport->show();
-}
-
-void OrbitMainWindow::ClearCallstackInspection() {
-  ui->topDownWidget->ClearInspection();
-  ui->bottomUpWidget->ClearInspection();
-  ui->inspectionReport->hide();
-  ui->inspectionReport->Deinitialize();
-  ui->samplingReport->show();
+  if (selection_data.IsInspection()) {
+    ui->topDownWidget->SetInspection();
+    ui->bottomUpWidget->SetInspection();
+    ui->samplingReport->SetInspection();
+    connect(ui->samplingReport, &OrbitSamplingReport::LeaveCallstackInspectionClicked, this,
+            [this]() { app_->ClearInspection(); });
+  } else {
+    ui->topDownWidget->ClearInspection();
+    ui->bottomUpWidget->ClearInspection();
+  }
 }
 
 orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::HandleSymbolError(
