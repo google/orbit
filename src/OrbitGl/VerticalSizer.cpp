@@ -21,13 +21,8 @@ void VerticalSizer::SetHeight(float height1) {
   if (height1 == height_)
 
     return;
-
-  height_ =
-      height1;
-
-
-  RequestUpdate(RequestUpdateScope::kDraw);
-}
+  if (height1 == height_) return;
+  height_ = height1;
 
 void VerticalSizer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                            const DrawContext& draw_context) {
