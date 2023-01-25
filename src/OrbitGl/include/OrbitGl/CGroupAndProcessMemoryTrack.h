@@ -22,15 +22,12 @@
 
 namespace orbit_gl {
 
-constexpr size_t kCGroupAndProcessMemoryTrackDimension = 4;
-
-class CGroupAndProcessMemoryTrack final
-    : public MemoryTrack<kCGroupAndProcessMemoryTrackDimension> {
+class CGroupAndProcessMemoryTrack final : public MemoryTrack {
  public:
   explicit CGroupAndProcessMemoryTrack(CaptureViewElement* parent,
                                        const orbit_gl::TimelineInfoInterface* timeline_info,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                                       std::string group_name,
+                                       std::string cgroup_name,
                                        const orbit_client_data::ModuleManager* module_manager,
                                        const orbit_client_data::CaptureData* capture_data);
 

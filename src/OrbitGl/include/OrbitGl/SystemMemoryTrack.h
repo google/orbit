@@ -22,9 +22,7 @@
 
 namespace orbit_gl {
 
-constexpr size_t kSystemMemoryTrackDimension = 3;
-
-class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> {
+class SystemMemoryTrack final : public MemoryTrack {
  public:
   explicit SystemMemoryTrack(CaptureViewElement* parent,
                              const orbit_gl::TimelineInfoInterface* timeline_info,

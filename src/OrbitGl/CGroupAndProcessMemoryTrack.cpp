@@ -19,26 +19,29 @@
 
 namespace orbit_gl {
 
-constexpr std::string_view kTrackValueLabelUnit = "MB";
+namespace {
 
-[[nodiscard]] static std::array<std::string, kCGroupAndProcessMemoryTrackDimension>
-CreateSeriesName(std::string_view cgroup_name, std::string_view process_name) {
+[[nodiscard]] static std::vector<std::string> CreateSeriesName(std::string_view cgroup_name,
+                                                               std::string_view process_name) {
   return {absl::StrFormat("Process [%s] RssAnon", process_name), "Other Processes RssAnon",
           absl::StrFormat("CGroup [%s] Mapped File", cgroup_name),
           absl::StrFormat("CGroup [%s] Unused", cgroup_name)};
 }
 
 static constexpr uint8_t kTrackValueDecimalDigits = 2;
+static constexpr std::string_view kTrackValueLabelUnit = "MB";
+
+}  // namespace
 
 CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
     orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string cgroup_name,
     const orbit_client_data::ModuleManager* module_manager,
     const orbit_client_data::CaptureData* capture_data)
-    : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
-          parent, timeline_info, viewport, layout,
-          CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          std::string{kTrackValueLabelUnit}, module_manager, capture_data),
+    : MemoryTrack(parent, timeline_info, viewport, layout,
+                  CreateSeriesName(cgroup_name, capture_data->process_name()),
+                  kTrackValueDecimalDigits, std::string{kTrackValueLabelUnit}, module_manager,
+                  capture_data),
       cgroup_name_(std::move(cgroup_name)) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
@@ -73,8 +76,7 @@ void CGroupAndProcessMemoryTrack::TrySetValueUpperBound(double cgroup_limit_mb) 
   std::string pretty_size = orbit_display_formats::GetDisplaySize(
       static_cast<uint64_t>(cgroup_limit_mb * kMegabytesToBytes));
   std::string pretty_label = absl::StrFormat("%s: %s", value_upper_bound_label, pretty_size);
-  MemoryTrack<kCGroupAndProcessMemoryTrackDimension>::TrySetValueUpperBound(pretty_label,
-                                                                            cgroup_limit_mb);
+  MemoryTrack::TrySetValueUpperBound(pretty_label, cgroup_limit_mb);
 }
 
 std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) const {
