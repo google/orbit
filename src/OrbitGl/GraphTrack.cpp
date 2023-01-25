@@ -112,7 +112,7 @@ Color GraphTrack::GetColor(size_t index) const {
 
 float GraphTrack::GetGraphContentHeight() const {
   float result = layout_->GetTextBoxHeight() * kBoxHeightMultiplier;
-  if (!IsCollapsed()) result *= series_.GetDimension();
+  if (!IsCollapsed()) result *= static_cast<float>(series_.GetDimension());
 
   return result;
 }
@@ -127,7 +127,7 @@ std::string GraphTrack::GetLabelTextFromValues(absl::Span<const double> values) 
   std::string value_unit = series_.GetValueUnit();
   std::string text;
   std::string_view delimiter = "";
-  for (int i = series_.GetDimension() - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(series_.GetDimension()) - 1; i >= 0; i--) {
     std::string formatted_name =
         series_names.at(i).empty() ? "" : absl::StrFormat("%s: ", series_names.at(i));
     std::string formatted_value =
