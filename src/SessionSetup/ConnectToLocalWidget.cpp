@@ -126,7 +126,7 @@ void ConnectToLocalWidget::SetupProcessListUpdater() {
           std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
         if (self == nullptr) return;
         emit self->ProcessListUpdated(
-            QVector<orbit_grpc_protos::ProcessInfo>(process_list.begin(), process_list.end()));
+            QVector<orbit_grpc_protos::ProcessInfo>::fromStdVector(process_list));
       });
 }
 
