@@ -23,7 +23,7 @@
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/Task.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 #include "SessionSetup/DeploymentConfigurations.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SshQtTestUtils/KillProcessListeningOnTcpPort.h"
@@ -34,7 +34,7 @@
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_session_setup {
-using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::WaitForWithTimeout;
 using orbit_qt_test_utils::YieldsResult;
 using orbit_ssh_qt_test_utils::KillProcessListeningOnTcpPort;
 using orbit_test_utils::HasNoError;
@@ -54,7 +54,7 @@ TEST_F(ServiceDeployManagerTest, NoDeployment) {
   ASSERT_THAT(context, orbit_test_utils::HasValue());
 
   orbit_ssh_qt::Session helper_session{&context.value()};
-  EXPECT_THAT(WaitFor(helper_session.ConnectToServer(GetCredentials())),
+  EXPECT_THAT(WaitForWithTimeout(helper_session.ConnectToServer(GetCredentials())),
               YieldsResult(HasNoError()));
 
   // This is emulating OrbitService - It's important that we don't hard code any ports because all
@@ -67,7 +67,7 @@ TEST_F(ServiceDeployManagerTest, NoDeployment) {
                        &orbit_service_task, [&orbit_service_task, &socat_output]() {
                          socat_output.append(orbit_service_task.ReadStdErr());
                        })};
-  EXPECT_THAT(WaitFor(orbit_service_task.Start()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(orbit_service_task.Start()), YieldsResult(HasNoError()));
 
   std::optional<ErrorMessageOr<int>> port_or_error{};
   std::ignore = QTest::qWaitFor([&]() {
@@ -91,8 +91,8 @@ TEST_F(ServiceDeployManagerTest, NoDeployment) {
   EXPECT_THAT(*socket_error_signal, testing::IsEmpty());
 
   EXPECT_THAT(KillProcessListeningOnTcpPort(&helper_session, grpc_port.grpc_port), HasNoError());
-  EXPECT_THAT(WaitFor(orbit_service_task.Stop()), YieldsResult(HasNoError()));
-  EXPECT_THAT(WaitFor(helper_session.Disconnect()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(orbit_service_task.Stop()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(helper_session.Disconnect()), YieldsResult(HasNoError()));
 }
 
 TEST_F(ServiceDeployManagerTest, BareExecutableAndRootPassword) {
@@ -100,7 +100,7 @@ TEST_F(ServiceDeployManagerTest, BareExecutableAndRootPassword) {
   ASSERT_THAT(context, orbit_test_utils::HasValue());
 
   orbit_ssh_qt::Session helper_session{&context.value()};
-  EXPECT_THAT(WaitFor(helper_session.ConnectToServer(GetCredentials())),
+  EXPECT_THAT(WaitForWithTimeout(helper_session.ConnectToServer(GetCredentials())),
               YieldsResult(HasNoError()));
 
   // We need the signal spy have longer lifetime than the ServiceDeployManager because we wanna
@@ -119,7 +119,7 @@ TEST_F(ServiceDeployManagerTest, BareExecutableAndRootPassword) {
   }
   EXPECT_THAT(*socket_error_signal, testing::IsEmpty());
 
-  EXPECT_THAT(WaitFor(helper_session.Disconnect()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(helper_session.Disconnect()), YieldsResult(HasNoError()));
 }
 
 TEST_F(ServiceDeployManagerSigningTest, SignedDebianPackageDeployment) {
@@ -127,7 +127,7 @@ TEST_F(ServiceDeployManagerSigningTest, SignedDebianPackageDeployment) {
   ASSERT_THAT(context, orbit_test_utils::HasValue());
 
   orbit_ssh_qt::Session helper_session{&context.value()};
-  EXPECT_THAT(WaitFor(helper_session.ConnectToServer(GetCredentials())),
+  EXPECT_THAT(WaitForWithTimeout(helper_session.ConnectToServer(GetCredentials())),
               YieldsResult(HasNoError()));
 
   // We need the signal spy have longer lifetime than the ServiceDeployManager because we wanna
@@ -145,7 +145,7 @@ TEST_F(ServiceDeployManagerSigningTest, SignedDebianPackageDeployment) {
   }
   EXPECT_THAT(*socket_error_signal, testing::IsEmpty());
 
-  EXPECT_THAT(WaitFor(helper_session.Disconnect()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(helper_session.Disconnect()), YieldsResult(HasNoError()));
 }
 
 TEST_F(ServiceDeployManagerTest, CopyFileToLocal) {
@@ -153,7 +153,7 @@ TEST_F(ServiceDeployManagerTest, CopyFileToLocal) {
   ASSERT_THAT(context, orbit_test_utils::HasValue());
 
   orbit_ssh_qt::Session helper_session{&context.value()};
-  EXPECT_THAT(WaitFor(helper_session.ConnectToServer(GetCredentials())),
+  EXPECT_THAT(WaitForWithTimeout(helper_session.ConnectToServer(GetCredentials())),
               YieldsResult(HasNoError()));
 
   // This is emulating OrbitService - It's important that we don't hard code any ports because all
@@ -166,7 +166,7 @@ TEST_F(ServiceDeployManagerTest, CopyFileToLocal) {
                        &orbit_service_task, [&orbit_service_task, &socat_output]() {
                          socat_output.append(orbit_service_task.ReadStdErr());
                        })};
-  EXPECT_THAT(WaitFor(orbit_service_task.Start()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(orbit_service_task.Start()), YieldsResult(HasNoError()));
 
   std::optional<ErrorMessageOr<int>> port_or_error{};
   std::ignore = QTest::qWaitFor([&]() {
@@ -188,12 +188,12 @@ TEST_F(ServiceDeployManagerTest, CopyFileToLocal) {
     auto future = sdm.CopyFileToLocal("/home/loginuser/plain.txt",
                                       temp_dir.value().GetDirectoryPath() / "plain.txt",
                                       stop_source.GetStopToken());
-    auto result = WaitFor(future);
+    auto result = WaitForWithTimeout(future);
     ASSERT_THAT(result, YieldsResult(HasValue(orbit_test_utils::HasNotBeenCanceled())));
   }
 
   EXPECT_THAT(KillProcessListeningOnTcpPort(&helper_session, grpc_port.grpc_port), HasNoError());
-  EXPECT_THAT(WaitFor(orbit_service_task.Stop()), YieldsResult(HasNoError()));
-  EXPECT_THAT(WaitFor(helper_session.Disconnect()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(orbit_service_task.Stop()), YieldsResult(HasNoError()));
+  EXPECT_THAT(WaitForWithTimeout(helper_session.Disconnect()), YieldsResult(HasNoError()));
 }
 }  // namespace orbit_session_setup

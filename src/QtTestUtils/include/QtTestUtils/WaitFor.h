@@ -2,143 +2,79 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef QT_TEST_UTILS_WAIT_FOR_H_
-#define QT_TEST_UTILS_WAIT_FOR_H_
+#ifndef QT_TEST_UTILS_WAIT_FOR_WITH_TIMEOUT_H_
+#define QT_TEST_UTILS_WAIT_FOR_WITH_TIMEOUT_H_
 
-#include <gmock/gmock-matchers.h>
+#include <absl/time/time.h>
 #include <gmock/gmock.h>
 
 #include <QTest>
 #include <chrono>
-#include <optional>
-#include <variant>
 
-#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
-#include "OrbitBase/VoidToMonostate.h"
-
-namespace orbit_qt_test_utils_internal {
-
-// This is a helper type indicating that a Timeout has occured in a WaitForResult<T>. You don't have
-// to interact with it directly. Rather use the predicates 'HasTimedOut' and 'HasValue'.
-struct TimeoutOccured {};
-
-constexpr int kWaitForResultTimeoutIndex = 0;
-constexpr int kWaitForResultValueIndex = 1;
-
-}  // namespace orbit_qt_test_utils_internal
+#include "QtUtils/CreateTimeout.h"
 
 namespace orbit_qt_test_utils {
 
-// That's the return value of the below defined `WaitFor` function. It either indicates a timeout or
-// holds a value that has been returned by the future. To check its state you can use the predicates
-// `HasValue` and `HasTimedOut`. There is also a `GetValue` function which extracts the value in
-// case the result holds a value.
 template <typename T>
-using WaitForResult = std::variant<orbit_qt_test_utils_internal::TimeoutOccured, T>;
-
-// Takes an orbit_base::Future and waits until it completes or it times out. While waiting a Qt
-// event loop is processing events in the background. The timeout duration can be adjusted with the
-// second parameter.
-//
-// The return type is a WaitForResult that either contains the future's return value (in
-// case the future completed) or indicates a timeout. You can use the predicates `HasTimedOut` and
-// `HasValue` to check its state. There are also GMock matchers `YieldsResult(value_matcher)`,
-// `YieldsNoTimeout()`, and `YieldsTimeout()`.
-template <typename T>
-[[nodiscard]] WaitForResult<orbit_base::VoidToMonostate_t<T>> WaitFor(
+orbit_qt_utils::TimeoutOr<T> WaitForWithTimeout(
     const orbit_base::Future<T>& future,
     std::chrono::milliseconds timeout = std::chrono::milliseconds{5000}) {
   if (QTest::qWaitFor([&future]() { return future.IsFinished(); },
                       static_cast<int>(timeout.count()))) {
     if constexpr (std::is_same_v<T, void>) {
-      return std::monostate{};
+      return outcome::success();
     } else {
       return future.Get();
     }
   }
-  return orbit_qt_test_utils_internal::TimeoutOccured{};
+
+  return orbit_qt_utils::Timeout{};
 }
 
 template <typename T>
-[[nodiscard]] bool HasTimedOut(const WaitForResult<T>& result) {
-  return result.index() == orbit_qt_test_utils_internal::kWaitForResultTimeoutIndex;
-}
-
-template <typename T>
-[[nodiscard]] bool HasValue(const WaitForResult<T>& result) {
-  return result.index() == orbit_qt_test_utils_internal::kWaitForResultValueIndex;
-}
-
-template <typename T>
-[[nodiscard]] std::optional<T> GetValue(const WaitForResult<T>& result) {
-  static_assert(!std::is_same_v<T, std::monostate>,
-                "Calling GetValue on a WaitForResult of a Future<void> makes no sense. You can use "
-                "'HasValue' to see if it succeeded.");
-  if (result.index() == orbit_qt_test_utils_internal::kWaitForResultValueIndex) {
-    return std::get<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(result);
-  }
-
-  return std::nullopt;
-}
-
-template <typename T>
-[[nodiscard]] std::optional<T> GetValue(WaitForResult<T>&& result) {
-  static_assert(!std::is_same_v<T, std::monostate>,
-                "Calling GetValue on a WaitForResult of a Future<void> makes no sense. You can use "
-                "'HasValue' to see if it succeeded.");
-  if (result.index() == orbit_qt_test_utils_internal::kWaitForResultValueIndex) {
-    return std::get<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(std::move(result));
-  }
-
-  return std::nullopt;
+orbit_qt_utils::TimeoutOr<T> WaitForWithTimeout(const orbit_base::Future<T>& future,
+                                                absl::Duration timeout) {
+  return WaitForWithTimeout(future, absl::ToChronoMilliseconds(timeout));
 }
 
 MATCHER(YieldsTimeout, "") {
-  if (HasTimedOut(arg)) return true;
+  if (arg.has_error()) return true;
   *result_listener << "Error: Expected a timeout, but the WaitFor call yielded a result.";
   return false;
 }
 
 MATCHER(YieldsNoTimeout, "") {
-  if (!HasTimedOut(arg)) return true;
+  if (!arg.has_error()) return true;
   *result_listener << "Error: Expected no timeout, but a timeout occured.";
   return false;
 }
 
 MATCHER_P(YieldsResult, value_matcher, "") {
-  if (HasTimedOut(arg)) {
+  if (!arg.has_value()) {
     *result_listener << "Error: Expected value, but the WaitFor call timed out.";
     return false;
   }
-  return testing::ExplainMatchResult(
-      value_matcher, std::get<orbit_qt_test_utils_internal::kWaitForResultValueIndex>(arg),
-      result_listener);
+  return testing::ExplainMatchResult(value_matcher, arg.value(), result_listener);
 }
 
 // This helper function simplifies interaction with OUTCOME_TRY. It allows to convert a
 // WaitForResult that timed out into a generic error message. That's useful if you don't need to
 // distinguish between a time out and any other error.
 template <typename T>
-ErrorMessageOr<T> ConsiderTimeoutAnError(WaitForResult<T> result) {
-  if (HasTimedOut(result)) {
-    return ErrorMessage{"The future didn't complete in time (Timeout occured)!"};
-  }
-
-  return GetValue(std::move(result)).value();
+ErrorMessageOr<T> ConsiderTimeoutAnError(orbit_qt_utils::TimeoutOr<T>&& result) {
+  if (result.has_value()) return result.value();
+  return ErrorMessage{result.error().message()};
 }
 
 // This overload avoids ErrorMessageOr<ErrorMessageOr<T>> double wrapping. Unfortunately there is no
 // good way to avoid the code deduplication that doesn't make it a lot more complex.
 template <typename T>
-ErrorMessageOr<T> ConsiderTimeoutAnError(WaitForResult<ErrorMessageOr<T>> result) {
-  if (HasTimedOut(result)) {
-    return ErrorMessage{"The future didn't complete in time (Timeout occured)!"};
-  }
-
-  return GetValue(std::move(result)).value();
+ErrorMessageOr<T> ConsiderTimeoutAnError(orbit_qt_utils::TimeoutOr<ErrorMessageOr<T>>&& result) {
+  if (result.has_value()) return result.value();
+  return ErrorMessage{std::string{result.error().message()}};
 }
 
 }  // namespace orbit_qt_test_utils
 
-#endif  // QT_TEST_UTILS_WAIT_FOR_H_
+#endif  // QT_TEST_UTILS_WAIT_FOR_WITH_TIMEOUT_H_

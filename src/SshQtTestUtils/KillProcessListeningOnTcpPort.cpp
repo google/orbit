@@ -9,16 +9,17 @@
 #include "OrbitBase/Result.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/Task.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 
 namespace orbit_ssh_qt_test_utils {
 using orbit_qt_test_utils::ConsiderTimeoutAnError;
-using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::WaitForWithTimeout;
 using orbit_ssh_qt::Task;
 
 ErrorMessageOr<void> KillProcessListeningOnTcpPort(orbit_ssh_qt::Session* session, int tcp_port) {
   Task kill_task{session, absl::StrFormat("kill $(fuser %d/tcp)", tcp_port)};
-  OUTCOME_TRY(Task::ExitCode exit_code, ConsiderTimeoutAnError(WaitFor(kill_task.Execute())));
+  OUTCOME_TRY(Task::ExitCode exit_code,
+              ConsiderTimeoutAnError(WaitForWithTimeout(kill_task.Execute())));
 
   if (*exit_code != 0) {
     return ErrorMessage{

@@ -24,7 +24,7 @@
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 #include "SshQtTestUtils/KillProcessListeningOnTcpPort.h"
 #include "SshQtTestUtils/ParsePortNumberFromSocatOutput.h"
 #include "SshQtTestUtils/SshTestFixture.h"
@@ -33,7 +33,7 @@
 Q_DECLARE_METATYPE(std::error_code);
 
 namespace orbit_ssh_qt {
-using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::WaitForWithTimeout;
 using orbit_qt_test_utils::YieldsResult;
 using orbit_test_utils::HasErrorWithMessage;
 using orbit_test_utils::HasNoError;
@@ -57,7 +57,7 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
         QObject::connect(&task_.value(), &orbit_ssh_qt::Task::readyReadStdErr, &task_.value(),
                          [this, &socat_output]() { socat_output.append(task_->ReadStdErr()); })};
 
-    ASSERT_THAT(orbit_qt_test_utils::WaitFor(task_->Start()),
+    ASSERT_THAT(orbit_qt_test_utils::WaitForWithTimeout(task_->Start()),
                 orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
 
     std::optional<ErrorMessageOr<int>> port_or_error{};
@@ -82,7 +82,7 @@ class SshTunnelTest : public orbit_ssh_qt_test_utils::SshTestFixture {
           orbit_ssh_qt_test_utils::KillProcessListeningOnTcpPort(GetSession(), GetEchoServerPort()),
           HasNoError());
 
-      EXPECT_THAT(orbit_qt_test_utils::WaitFor(task_->Stop()),
+      EXPECT_THAT(orbit_qt_test_utils::WaitForWithTimeout(task_->Stop()),
                   orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
     }
 
@@ -104,7 +104,8 @@ TEST_F(SshTunnelTest, StartFails) {
   qRegisterMetaType<std::error_code>("std::error_code");
   QSignalSpy error_signal{&tunnel, &orbit_ssh_qt::Tunnel::errorOccurred};
 
-  EXPECT_THAT(WaitFor(tunnel.Start()), YieldsResult(HasErrorWithMessage("Channel failure")));
+  EXPECT_THAT(WaitForWithTimeout(tunnel.Start()),
+              YieldsResult(HasErrorWithMessage("Channel failure")));
   EXPECT_THAT(error_signal, testing::SizeIs(1));
 }
 
