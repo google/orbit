@@ -8,7 +8,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <array>
 #include <string>
 #include <utility>
 
@@ -28,23 +27,21 @@
 
 namespace orbit_gl {
 
-template <size_t Dimension>
 class MemoryTrack : public GraphTrack, public AnnotationTrack {
  public:
   explicit MemoryTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
-                       std::array<std::string, Dimension> series_names,
-                       uint8_t series_value_decimal_digits, std::string series_value_units,
+                       std::vector<std::string> series_names, uint8_t series_value_decimal_digits,
+                       std::string series_value_units,
                        const orbit_client_data::ModuleManager* module_manager,
                        const orbit_client_data::CaptureData* capture_data)
-      : GraphTrack(parent, timeline_info, viewport, layout,
-                   std::vector(series_names.begin(), series_names.end()),
+      : GraphTrack(parent, timeline_info, viewport, layout, std::move(series_names),
                    series_value_decimal_digits, std::move(series_value_units), module_manager,
                    capture_data),
         AnnotationTrack() {
     // Memory tracks are collapsed by default.
-    this->SetCollapsed(true);
+    SetCollapsed(true);
   }
   ~MemoryTrack() override = default;
 
@@ -64,12 +61,12 @@ class MemoryTrack : public GraphTrack, public AnnotationTrack {
 
  private:
   [[nodiscard]] float GetAnnotatedTrackContentHeight() const override {
-    return this->GetGraphContentHeight();
+    return GetGraphContentHeight();
   }
-  [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return this->GetPos(); };
-  [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return this->GetSize(); };
+  [[nodiscard]] Vec2 GetAnnotatedTrackPosition() const override { return GetPos(); };
+  [[nodiscard]] Vec2 GetAnnotatedTrackSize() const override { return GetSize(); };
   [[nodiscard]] uint32_t GetAnnotationFontSize(int indentation_level) const override {
-    return this->GetLegendFontSize(indentation_level);
+    return GetLegendFontSize(indentation_level);
   }
 };
 

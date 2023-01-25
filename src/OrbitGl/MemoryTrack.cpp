@@ -13,69 +13,54 @@
 
 namespace orbit_gl {
 
-template <size_t Dimension>
-void MemoryTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
-                                                TextRenderer& text_renderer, uint64_t min_tick,
-                                                uint64_t max_tick, PickingMode picking_mode) {
-  ORBIT_SCOPE_WITH_COLOR("MemoryTrack<Dimension>::DoUpdatePrimitives", kOrbitColorGrey);
+void MemoryTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                     TextRenderer& text_renderer, uint64_t min_tick,
+                                     uint64_t max_tick, PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("MemoryTrack::DoUpdatePrimitives", kOrbitColorGrey);
   GraphTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
                                  picking_mode);
 }
 
-template <size_t Dimension>
-void MemoryTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
-                                    TextRenderer& text_renderer,
-                                    const CaptureViewElement::DrawContext& draw_context) {
+void MemoryTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                         const CaptureViewElement::DrawContext& draw_context) {
   GraphTrack::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  if (this->IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(primitive_assembler, text_renderer, this->layout_,
-                                  this->indentation_level_, GlCanvas::kZValueTrackText);
+  if (IsCollapsed()) return;
+
+  AnnotationTrack::DrawAnnotation(primitive_assembler, text_renderer, layout_, indentation_level_,
+                                  GlCanvas::kZValueTrackText);
 }
 
-template <size_t Dimension>
-void MemoryTrack<Dimension>::TrySetValueUpperBound(std::string pretty_label, double raw_value) {
+void MemoryTrack::TrySetValueUpperBound(std::string pretty_label, double raw_value) {
   double max_series_value = GraphTrack::GetGraphMaxValue();
   if (raw_value < max_series_value) {
     ORBIT_LOG("Fail to set MemoryTrack value upper bound: input value %f < maximum series value %f",
               raw_value, max_series_value);
     return;
   }
-  this->SetValueUpperBound(std::move(pretty_label), raw_value);
+  SetValueUpperBound(std::move(pretty_label), raw_value);
 }
 
-template <size_t Dimension>
-void MemoryTrack<Dimension>::TrySetValueLowerBound(std::string pretty_label, double raw_value) {
+void MemoryTrack::TrySetValueLowerBound(std::string pretty_label, double raw_value) {
   double min_series_value = GraphTrack::GetGraphMinValue();
   if (raw_value > min_series_value) {
     ORBIT_LOG("Fail to set MemoryTrack value lower bound: input value %f > minimum series value %f",
               raw_value, min_series_value);
     return;
   }
-  this->SetValueLowerBound(std::move(pretty_label), raw_value);
+  SetValueLowerBound(std::move(pretty_label), raw_value);
 }
 
-template <size_t Dimension>
-double MemoryTrack<Dimension>::GetGraphMaxValue() const {
-  if (!this->GetValueUpperBound().has_value()) {
-    return GraphTrack::GetGraphMaxValue();
-  }
+double MemoryTrack::GetGraphMaxValue() const {
+  if (!GetValueUpperBound().has_value()) return GraphTrack::GetGraphMaxValue();
 
-  return std::max(GraphTrack::GetGraphMaxValue(), this->GetValueUpperBound().value().second);
+  return std::max(GraphTrack::GetGraphMaxValue(), GetValueUpperBound().value().second);
 }
 
-template <size_t Dimension>
-double MemoryTrack<Dimension>::GetGraphMinValue() const {
-  if (!this->GetValueLowerBound().has_value()) {
-    return GraphTrack::GetGraphMinValue();
-  }
+double MemoryTrack::GetGraphMinValue() const {
+  if (!GetValueLowerBound().has_value()) return GraphTrack::GetGraphMinValue();
 
-  return std::min(GraphTrack::GetGraphMinValue(), this->GetValueLowerBound().value().second);
+  return std::min(GraphTrack::GetGraphMinValue(), GetValueLowerBound().value().second);
 }
-
-template class MemoryTrack<1>;
-template class MemoryTrack<2>;
-template class MemoryTrack<3>;
-template class MemoryTrack<4>;
 
 }  // namespace orbit_gl

@@ -17,22 +17,21 @@
 namespace orbit_gl {
 
 namespace {
-const std::string kTrackValueLabelUnit = "MB";
-const std::array<std::string, kSystemMemoryTrackDimension> kSeriesName = {
-    "Used", "Buffers / Cached", "Unused"};
-constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
+
+static const std::vector<std::string> kSeriesName = {"Used", "Buffers / Cached", "Unused"};
+static constexpr uint8_t kTrackValueDecimalDigits = 2;
+static const std::string kTrackValueLabelUnit = "MB";
+static constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
 
 }  // namespace
 
-constexpr uint8_t kTrackValueDecimalDigits = 2;
 SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent,
                                      const orbit_gl::TimelineInfoInterface* timeline_info,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                      const orbit_client_data::ModuleManager* module_manager,
                                      const orbit_client_data::CaptureData* capture_data)
-    : MemoryTrack<kSystemMemoryTrackDimension>(parent, timeline_info, viewport, layout, kSeriesName,
-                                               kTrackValueDecimalDigits, kTrackValueLabelUnit,
-                                               module_manager, capture_data) {
+    : MemoryTrack(parent, timeline_info, viewport, layout, kSeriesName, kTrackValueDecimalDigits,
+                  kTrackValueLabelUnit, module_manager, capture_data) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.
@@ -61,7 +60,7 @@ void SystemMemoryTrack::TrySetValueUpperBound(double total_mb) {
   std::string pretty_size =
       orbit_display_formats::GetDisplaySize(static_cast<uint64_t>(total_mb * kMegabytesToBytes));
   std::string pretty_label = absl::StrFormat("%s: %s", value_upper_bound_label, pretty_size);
-  MemoryTrack<kSystemMemoryTrackDimension>::TrySetValueUpperBound(pretty_label, total_mb);
+  MemoryTrack::TrySetValueUpperBound(pretty_label, total_mb);
 }
 
 void SystemMemoryTrack::SetWarningThreshold(double warning_threshold_mb) {
@@ -69,7 +68,7 @@ void SystemMemoryTrack::SetWarningThreshold(double warning_threshold_mb) {
   std::string pretty_size = orbit_display_formats::GetDisplaySize(
       static_cast<uint64_t>(warning_threshold_mb * kMegabytesToBytes));
   std::string pretty_label = absl::StrFormat("%s: %s", warning_threshold_label, pretty_size);
-  MemoryTrack<kSystemMemoryTrackDimension>::SetWarningThreshold(pretty_label, warning_threshold_mb);
+  MemoryTrack::SetWarningThreshold(pretty_label, warning_threshold_mb);
 }
 
 std::string SystemMemoryTrack::GetLegendTooltips(size_t legend_index) const {
