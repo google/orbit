@@ -7,7 +7,6 @@
 #include <absl/strings/str_format.h>
 #include <stdint.h>
 
-#include <array>
 #include <optional>
 #include <utility>
 #include <vector>
