@@ -17,9 +17,15 @@ VerticalSizer::VerticalSizer(CaptureViewElement* parent, const orbit_gl::Viewpor
     : CaptureViewElement(parent, viewport, layout),
       on_drag_callback_(std::move(on_drag_callback)) {}
 
-void VerticalSizer::SetHeight(float height) {
-  if (height == height_) return;
-  height_ = height;
+void VerticalSizer::SetHeight(float height1) {
+  if (height1 == height_)
+
+    return;
+
+  height_ =
+      height1;
+
+
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
