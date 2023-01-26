@@ -131,6 +131,9 @@ class Track : public orbit_gl::CaptureViewElement,
 
   virtual void UpdatePositionOfSubtracks() {}
 
+  [[nodiscard]] EventResult OnMouseEnter() override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
+
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
   bool pinned_ = false;

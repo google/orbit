@@ -16,6 +16,7 @@
 #include "OrbitGl/TimeGraphLayout.h"
 #include "OrbitGl/Viewport.h"
 
+using orbit_gl::CaptureViewElement;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
 
@@ -156,4 +157,16 @@ void Track::SetIndentationLevel(uint32_t level) {
 
   indentation_level_ = level;
   RequestUpdate();
+}
+
+CaptureViewElement::EventResult Track::OnMouseEnter() {
+  EventResult event_result = CaptureViewElement::OnMouseEnter();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
+}
+
+CaptureViewElement::EventResult Track::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
 }
