@@ -42,8 +42,6 @@ class BasicPageFaultsTrack : public LineGraphTrack, public AnnotationTrack {
   // unknown type.
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kUnknown; }
 
-  [[nodiscard]] size_t GetDimension() const { return series_.GetDimension(); }
-
   void AddValues(uint64_t timestamp_ns, absl::Span<const double> values) override;
   void AddValuesAndUpdateAnnotations(uint64_t timestamp_ns, absl::Span<const double> values);
 

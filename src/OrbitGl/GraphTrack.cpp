@@ -49,7 +49,7 @@ GraphTrack::GraphTrack(CaptureViewElement* parent,
       series_{std::move(series_names), series_value_decimal_digits, std::move(series_value_units)} {
 }
 
-bool GraphTrack::HasLegend() const { return !IsCollapsed() && series_.GetDimension() > 1; }
+bool GraphTrack::HasLegend() const { return !IsCollapsed() && GetDimension() > 1; }
 
 float GraphTrack::GetHeight() const {
   // Top content margin is counted twice when there are legends because it is inserted above and
@@ -112,7 +112,7 @@ Color GraphTrack::GetColor(size_t index) const {
 
 float GraphTrack::GetGraphContentHeight() const {
   float result = layout_->GetTextBoxHeight() * kBoxHeightMultiplier;
-  if (!IsCollapsed()) result *= static_cast<float>(series_.GetDimension());
+  if (!IsCollapsed()) result *= static_cast<float>(GetDimension());
 
   return result;
 }
@@ -127,7 +127,7 @@ std::string GraphTrack::GetLabelTextFromValues(absl::Span<const double> values) 
   std::string value_unit = series_.GetValueUnit();
   std::string text;
   std::string_view delimiter = "";
-  for (int i = static_cast<int>(series_.GetDimension()) - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(GetDimension()) - 1; i >= 0; i--) {
     std::string formatted_name =
         series_names.at(i).empty() ? "" : absl::StrFormat("%s: ", series_names.at(i));
     std::string formatted_value =
@@ -219,7 +219,7 @@ void GraphTrack::DrawLegend(PrimitiveAssembler& primitive_assembler, TextRendere
   const Color fully_transparent(255, 255, 255, 0);
 
   float text_z = GlCanvas::kZValueTrackText;
-  for (size_t i = 0; i < series_.GetDimension(); ++i) {
+  for (size_t i = 0; i < GetDimension(); ++i) {
     primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(legend_symbol_width, legend_symbol_height),
                                      text_z, GetColor(i));
     x0 += legend_symbol_width + space_between_legend_symbol_and_text;
@@ -266,7 +266,7 @@ void GraphTrack::DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t mi
     // For the stacked graph, computing y positions from the normalized values results in some
     // floating error. Event if the sum of values is fixed, the top of the stacked graph may not be
     // flat. To address this problem, we compute y positions from the normalized cumulative values.
-    std::vector<float> normalized_cumulative_values(series_.GetDimension());
+    std::vector<float> normalized_cumulative_values(GetDimension());
     std::transform(cumulative_values.begin(), cumulative_values.end(),
                    normalized_cumulative_values.begin(), [min, inverse_value_range](double value) {
                      return static_cast<float>((value - min) * inverse_value_range);
@@ -321,7 +321,7 @@ void GraphTrack::DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, 
   const float base_y = GetGraphContentBottomY();
   float y0 = base_y;
   // Draw the stacked values from bottom to top
-  for (size_t i = 0; i < series_.GetDimension(); ++i) {
+  for (size_t i = 0; i < GetDimension(); ++i) {
     float height = normalized_cumulative_values[i] * content_height - (base_y - y0);
     y0 -= height;
     primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
