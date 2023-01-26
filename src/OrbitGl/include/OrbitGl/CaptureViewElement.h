@@ -167,7 +167,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   // If TRUE, a new, uniquely named render group will be created for this element, and all of its
   // content and that of its children will use this group for rendering. The content will also be
   // restricted to the extents of the element automatically. By default, this returns false -
-  // override the method in a sub-class to change the behavior. Keep in mind that his has
+  // override the method in a sub-class to change the behavior. Keep in mind that this has
   // performance implications as it potentially adds a large number of render groups.
   [[nodiscard]] virtual bool RequestSeparateRenderGroup() const { return false; }
 
