@@ -8,11 +8,17 @@
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
 
+#include <QColor>
+#include <QFont>
 #include <QFontDatabase>
+#include <QOpenGLFunctions>
 #include <QRect>
+#include <QString>
+#include <Qt>
 #include <algorithm>
 #include <array>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <string>
 #include <string_view>
