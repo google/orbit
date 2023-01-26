@@ -19,6 +19,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "DataViews/DataViewType.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
@@ -78,7 +79,7 @@ class MainWindowInterface {
 
   virtual ~MainWindowInterface() = default;
 
-  virtual void SetSelection(SelectionData& selection_data) = 0;
+  virtual void SetSelection(const SelectionData& selection_data) = 0;
 
   virtual bool IsConnected() = 0;
   [[nodiscard]] virtual bool IsLocalTarget() const = 0;

@@ -21,10 +21,11 @@
 // This is meant to hold the data needed to update the data tabs to a specific selection.
 class SelectionData {
  public:
-  enum SelectionType {
+  enum class SelectionType {
     kUnknown,
     kInspection,
   };
+
   // Delete move/copy operators because callstack_data_pointer_ is pointing to a variable inside the
   // class.
   SelectionData(const SelectionData& other) = delete;
@@ -40,7 +41,7 @@ class SelectionData {
   SelectionData(const orbit_client_data::ModuleManager& module_manager,
                 const orbit_client_data::CaptureData& capture_data,
                 absl::Span<const orbit_client_data::CallstackEvent> callstack_events,
-                SelectionType selection_type = kUnknown);
+                SelectionType selection_type = SelectionType::kUnknown);
 
   std::shared_ptr<const CallTreeView> GetTopDownView() const { return top_down_view_; }
 
@@ -55,7 +56,7 @@ class SelectionData {
     return *callstack_data_pointer_;
   }
 
-  bool IsInspection() { return selection_type_ == kInspection; }
+  [[nodiscard]] bool IsInspection() const { return selection_type_ == SelectionType::kInspection; }
 
  private:
   std::shared_ptr<CallTreeView> top_down_view_;
@@ -68,7 +69,7 @@ class SelectionData {
   // the CallstackData object passed into SelectionData.
   const orbit_client_data::CallstackData* callstack_data_pointer_ = &callstack_data_object_;
 
-  SelectionType selection_type_ = kUnknown;
+  SelectionType selection_type_ = SelectionType::kUnknown;
 };
 
 #endif  // CLIENT_DATA_SELECTION_DATA_H_

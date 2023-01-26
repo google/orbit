@@ -146,7 +146,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
       const orbit_client_data::ModuleData* module) override;
 
-  void SetSelection(SelectionData& selection_data) override;
+  void SetSelection(const SelectionData& selection_data) override;
 
   bool IsConnected() override { return is_connected_; }
 

@@ -1911,7 +1911,7 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetSelection(SelectionData& selection_data) {
+void OrbitMainWindow::SetSelection(const SelectionData& selection_data) {
   SetTopDownView(selection_data.GetTopDownView());
   SetBottomUpView(selection_data.GetBottomUpView());
   SetSamplingReport(&selection_data.GetCallstackData(),
