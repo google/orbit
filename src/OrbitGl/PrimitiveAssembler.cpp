@@ -302,6 +302,14 @@ void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& c
   AddLine(quad.vertices[3], quad.vertices[0], z, color);
 }
 
+void PrimitiveAssembler::AddAabbOutline(Vec2 pos, Vec2 size, float outline_width, float z,
+                                        const Color& color) {
+  AddBox(MakeBox(pos, {size[0], outline_width}), z, color);
+  AddBox(MakeBox({pos[0], pos[1] + size[1] - outline_width}, {size[0], outline_width}), z, color);
+  AddBox(MakeBox(pos, {outline_width, size[1]}), z, color);
+  AddBox(MakeBox({pos[0] + size[0] - outline_width, pos[1]}, {outline_width, size[1]}), z, color);
+}
+
 void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                                               ShadingDirection shading_direction) {
   constexpr float kGradientCoeff = 0.94f;
