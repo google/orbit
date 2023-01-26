@@ -108,6 +108,8 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   [[nodiscard]] bool GetDrawAsIfPicking() const override { return false; }
   [[nodiscard]] bool GetDrawTimeGraphMasks() const override { return false; }
 
+  [[nodiscard]] bool GetRenderDebugLayers() const override { return kRenderDebugLayers; }
+
  private:
   constexpr static float kTextBoxHeight = 20.f;
   constexpr static float kCoreHeight = 10.f;
@@ -150,6 +152,7 @@ class StaticTimeGraphLayout : public TimeGraphLayout {
   constexpr static float kThreadDependencyArrowBodyWidth = 4;
   constexpr static bool kDrawTrackBackground = true;
   constexpr static int kMaxLayoutingLoops = 10;
+  constexpr static bool kRenderDebugLayers = false;
 
   float scale_ = 1.f;
 };

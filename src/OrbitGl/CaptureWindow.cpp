@@ -8,6 +8,7 @@
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
 
+#include <QFontDatabase>
 #include <QRect>
 #include <algorithm>
 #include <array>
@@ -565,6 +566,11 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     all_groups_sorted.erase(it, all_groups_sorted.end());
   }
 
+  if (time_graph_layout_->GetRenderDebugLayers() && picking_mode_ == PickingMode::kNone) {
+    DrawLayerDebugInfo(all_groups_sorted, painter);
+    return;
+  }
+
   for (const orbit_gl::BatchRenderGroupId& group : all_groups_sorted) {
     orbit_gl::StencilConfig stencil = render_group_manager_.GetGroupState(group.name).stencil;
     if (stencil.enabled) {
@@ -811,4 +817,42 @@ void CaptureWindow::RenderSelectionOverlay() {
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
                          GlCanvas::kZValueOverlay, formatting);
+}
+
+void CaptureWindow::DrawLayerDebugInfo(
+    const std::vector<orbit_gl::BatchRenderGroupId>& sorted_groups, QPainter* painter) {
+  QFont font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
+
+  for (const auto& group : sorted_groups) {
+    const orbit_gl::StencilConfig& stencil =
+        render_group_manager_.GetGroupState(group.name).stencil;
+    if (!stencil.enabled) continue;
+
+    PrepareGlState();
+    if (time_graph_ != nullptr) {
+      const Color color = time_graph_->GetColor(static_cast<uint32_t>(
+          std::hash<std::string>()(group.name) % std::numeric_limits<uint32_t>::max()));
+      glColor4f(static_cast<float>(color[0]) / 255.f, static_cast<float>(color[1]) / 255.f,
+                static_cast<float>(color[2]) / 255.f, 1.f);
+    } else {
+      glColor4f(1, 0, 0, 1);
+    }
+    glBegin(GL_POLYGON);
+    {
+      glVertex2f(stencil.pos[0], stencil.pos[1]);
+      glVertex2f(stencil.pos[0] + stencil.size[0], stencil.pos[1]);
+      glVertex2f(stencil.pos[0] + stencil.size[0], stencil.pos[1] + stencil.size[1]);
+      glVertex2f(stencil.pos[0], stencil.pos[1] + stencil.size[1]);
+    }
+    glEnd();
+    CleanupGlState();
+
+    painter->endNativePainting();
+    font.setPixelSize(14);
+    painter->setFont(font);
+    painter->setPen(QColor(255, 255, 255));
+    const Vec2i pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
+    painter->drawText(pos[0], pos[1], 100, 20, Qt::AlignLeft, QString::fromStdString(group.name));
+    painter->beginNativePainting();
+  }
 }
