@@ -58,6 +58,7 @@
 #include "OrbitGl/CallTreeView.h"
 #include "OrbitGl/MainWindowInterface.h"
 #include "OrbitGl/OrbitApp.h"
+#include "OrbitGl/SelectionData.h"
 #include "OrbitGl/StaticTimeGraphLayout.h"
 #include "OrbitQt/FilterPanelWidgetAction.h"
 #include "OrbitQt/orbitglwidget.h"
