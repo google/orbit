@@ -6,6 +6,7 @@
 
 #include <GteVector.h>
 #include <absl/types/span.h>
+#include <stddef.h>
 
 #include <algorithm>
 #include <iterator>
