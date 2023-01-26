@@ -10,13 +10,13 @@
 #include <Qt>
 #include <chrono>
 #include <memory>
-#include <optional>
 #include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "QtTestUtils/WaitForWithTimeout.h"
+#include "QtUtils/CreateTimeout.h"
 
 using namespace std::chrono_literals;
 
