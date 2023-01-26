@@ -12,13 +12,13 @@
 #include "OrbitBase/Typedef.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 #include "SftpTestFixture.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_ssh_qt {
-using orbit_qt_test_utils::WaitFor;
+using orbit_qt_test_utils::WaitForWithTimeout;
 using orbit_qt_test_utils::YieldsResult;
 using orbit_test_utils::HasValue;
 
@@ -38,6 +38,6 @@ TEST_F(SftpCopyToRemoteOperationTest, Upload) {
   }
 
   Task task{GetSession(), "cmp /home/loginuser/plain.txt /home/loginuser/upload.txt"};
-  EXPECT_THAT(WaitFor(task.Execute()), YieldsResult(HasValue(Task::ExitCode{0})));
+  EXPECT_THAT(WaitForWithTimeout(task.Execute()), YieldsResult(HasValue(Task::ExitCode{0})));
 }
 }  // namespace orbit_ssh_qt

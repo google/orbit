@@ -16,12 +16,13 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
-#include "OrbitBase/VoidToMonostate.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
+
+using namespace std::chrono_literals;
 
 namespace orbit_qt_test_utils {
 
-TEST(WaitFor, FinishesSuccessfully) {
+TEST(WaitForWithTimeout, FinishesSuccessfully) {
   orbit_base::Promise<void> promise{};
   orbit_base::Future<void> future = promise.GetFuture();
 
@@ -33,13 +34,11 @@ TEST(WaitFor, FinishesSuccessfully) {
       [promise = std::move(promise)]() mutable { promise.MarkFinished(); }, Qt::QueuedConnection);
 
   EXPECT_FALSE(future.IsFinished());
-  const auto result = WaitFor(future);
-  EXPECT_FALSE(HasTimedOut(result));
-  EXPECT_TRUE(HasValue(result));
+  const orbit_qt_utils::TimeoutOr<void> result = WaitForWithTimeout(future);
   EXPECT_THAT(result, YieldsNoTimeout());
 }
 
-TEST(WaitFor, FinishesSuccessfullyWithReturnValue) {
+TEST(WaitForWithTimeout, FinishesSuccessfullyWithReturnValue) {
   orbit_base::Promise<int> promise{};
   orbit_base::Future<int> future = promise.GetFuture();
 
@@ -51,36 +50,25 @@ TEST(WaitFor, FinishesSuccessfullyWithReturnValue) {
       [promise = std::move(promise)]() mutable { promise.SetResult(42); }, Qt::QueuedConnection);
 
   EXPECT_FALSE(future.IsFinished());
-  auto result = WaitFor(future);
-  EXPECT_FALSE(HasTimedOut(result));
-  EXPECT_TRUE(HasValue(result));
-  EXPECT_TRUE(GetValue(result).has_value());
-  EXPECT_EQ(GetValue(result).value(), 42);
+  orbit_qt_utils::TimeoutOr<int> result = WaitForWithTimeout(future);
   EXPECT_THAT(result, YieldsResult(42));
-
-  // We also need to check whether the r-value overload works.
-  EXPECT_EQ(GetValue(std::move(result)).value(), 42);  // NOLINT(performance-move-const-arg)
 }
 
-TEST(WaitFor, TimesOut) {
+TEST(WaitForWithTimeout, TimesOut) {
   orbit_base::Promise<void> promise{};
   orbit_base::Future<void> future = promise.GetFuture();
 
   EXPECT_FALSE(future.IsFinished());
-  const auto result = WaitFor(future, std::chrono::milliseconds{5});
-  EXPECT_TRUE(HasTimedOut(result));
-  EXPECT_FALSE(HasValue(result));
+  const orbit_qt_utils::TimeoutOr<void> result = WaitForWithTimeout(future, 5ms);
   EXPECT_THAT(result, YieldsTimeout());
 }
 
-TEST(WaitFor, TimesOutWithReturnValue) {
+TEST(WaitForWithTimeout, TimesOutWithReturnValue) {
   orbit_base::Promise<int> promise{};
   orbit_base::Future<int> future = promise.GetFuture();
 
   EXPECT_FALSE(future.IsFinished());
-  const auto result = WaitFor(future, std::chrono::milliseconds{5});
-  EXPECT_TRUE(HasTimedOut(result));
-  EXPECT_FALSE(HasValue(result));
+  const orbit_qt_utils::TimeoutOr<int> result = WaitForWithTimeout(future, 5ms);
   EXPECT_THAT(result, YieldsTimeout());
 }
 

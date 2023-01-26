@@ -11,7 +11,7 @@
 
 #include "OrbitSsh/Context.h"
 #include "OrbitSshQt/Session.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 #include "SshQtTestUtils/SshSessionTest.h"
 
 namespace orbit_ssh_qt_test_utils {
@@ -37,13 +37,14 @@ class SshTestFixture : public SshSessionTest {
 
     session_.emplace(&context_.value());
 
-    ASSERT_THAT(orbit_qt_test_utils::WaitFor(session_->ConnectToServer(GetCredentials())),
-                orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
+    ASSERT_THAT(
+        orbit_qt_test_utils::WaitForWithTimeout(session_->ConnectToServer(GetCredentials())),
+        orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
   }
 
   void TearDown() override {
     if (session_.has_value()) {
-      EXPECT_THAT(orbit_qt_test_utils::WaitFor(session_->Disconnect()),
+      EXPECT_THAT(orbit_qt_test_utils::WaitForWithTimeout(session_->Disconnect()),
                   orbit_qt_test_utils::YieldsResult(orbit_test_utils::HasNoError()));
     }
 

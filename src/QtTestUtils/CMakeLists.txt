@@ -10,12 +10,13 @@ add_library(QtTestUtils INTERFACE)
 target_include_directories(QtTestUtils INTERFACE include/)
 target_link_libraries(QtTestUtils INTERFACE
   OrbitBase
+  QtUtils
   Qt5::Core
   Qt5::Test)
 
-target_sources(QtTestUtils PUBLIC include/QtTestUtils/WaitFor.h)
+target_sources(QtTestUtils PUBLIC include/QtTestUtils/WaitForWithTimeout.h)
 
 add_executable(QtTestUtilsTests)
-target_sources(QtTestUtilsTests PRIVATE WaitForTest.cpp)
+target_sources(QtTestUtilsTests PRIVATE WaitForWithTimeoutTest.cpp)
 target_link_libraries(QtTestUtilsTests PRIVATE TestUtils QtTestUtils GTest::QtCoreMain)
 register_test(QtTestUtilsTests)

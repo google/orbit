@@ -12,10 +12,12 @@
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
-#include "QtTestUtils/WaitFor.h"
+#include "QtTestUtils/WaitForWithTimeout.h"
 #include "QtUtils/SingleThreadExecutor.h"
 
 namespace orbit_qt_utils {
+using orbit_qt_test_utils::WaitForWithTimeout;
+using orbit_qt_test_utils::YieldsTimeout;
 
 TEST(SingleThreadExecutor, Schedule) {
   SingleThreadExecutor executor{};
@@ -43,8 +45,7 @@ TEST(SingleThreadExecutor, ScheduleAfterOutOfLifetime) {
   promise.MarkFinished();
 
   // So this future never completes.
-  EXPECT_THAT(orbit_qt_test_utils::WaitFor(future, std::chrono::milliseconds{10}),
-              orbit_qt_test_utils::YieldsTimeout());
+  EXPECT_THAT(WaitForWithTimeout(future, std::chrono::milliseconds{10}), YieldsTimeout());
 }
 
 }  // namespace orbit_qt_utils
