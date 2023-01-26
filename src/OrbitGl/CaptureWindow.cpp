@@ -8,6 +8,7 @@
 #include <absl/container/btree_map.h>
 #include <absl/strings/str_format.h>
 
+#include <QFontDatabase>
 #include <QRect>
 #include <algorithm>
 #include <array>
