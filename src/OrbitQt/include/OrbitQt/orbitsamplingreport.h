@@ -48,10 +48,7 @@ class OrbitSamplingReport : public QWidget {
     return sampling_report_ != nullptr && sampling_report_->HasSamples();
   }
 
-  void SetInspection(
-      OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
-      const orbit_client_data::CallstackData* callstack_data,
-      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
+  void SetInspection();
 
  signals:
   void LeaveCallstackInspectionClicked();

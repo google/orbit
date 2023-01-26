@@ -126,6 +126,7 @@ void CallTreeWidget::SetCallTreeView(std::shared_ptr<const CallTreeView> call_tr
   ui_->callTreeTreeView->sortByColumn(CallTreeViewItemModel::kInclusive, Qt::DescendingOrder);
 
   OnSearchLineEditTextEdited(ui_->searchLineEdit->text());
+  OnSearchTypingFinishedTimerTimout();
 
   ResizeColumnsIfNecessary();
 }
@@ -238,21 +239,9 @@ void CallTreeWidget::SetBottomUpView(std::shared_ptr<const CallTreeView> bottom_
   ui_->callTreeTreeView->hideColumn(CallTreeViewItemModel::kExclusive);
 }
 
-void CallTreeWidget::SetInspection(std::shared_ptr<const CallTreeView> call_tree_view) {
-  ORBIT_CHECK(hide_values_proxy_model_ != nullptr);
-  ui_->inspectionNoticeWidget->show();
-  inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
-  hide_values_proxy_model_->setSourceModel(inspection_model_.get());
-  OnSearchTypingFinishedTimerTimout();
-}
+void CallTreeWidget::SetInspection() { ui_->inspectionNoticeWidget->show(); }
 
-void CallTreeWidget::ClearInspection() {
-  ORBIT_CHECK(hide_values_proxy_model_ != nullptr);
-  ui_->inspectionNoticeWidget->hide();
-  inspection_model_.reset();
-  hide_values_proxy_model_->setSourceModel(model_.get());
-  OnSearchTypingFinishedTimerTimout();
-}
+void CallTreeWidget::ClearInspection() { ui_->inspectionNoticeWidget->hide(); }
 
 void CallTreeWidget::resizeEvent(QResizeEvent* /*event*/) {
   if (column_resizing_state_ == ColumnResizingState::kInitial) {
