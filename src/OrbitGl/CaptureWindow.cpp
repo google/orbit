@@ -565,8 +565,6 @@ void CaptureWindow::RenderAllLayers(QPainter* painter) {
     all_groups_sorted.erase(it, all_groups_sorted.end());
   }
 
-  last_rendered_layers_ = all_groups_sorted.size();
-
   if (time_graph_layout_->GetRenderDebugLayers() && picking_mode_ == PickingMode::kNone) {
     DrawLayerDebugInfo(all_groups_sorted, painter);
     return;
