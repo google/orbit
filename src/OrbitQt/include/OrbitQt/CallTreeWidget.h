@@ -73,7 +73,7 @@ class CallTreeWidget : public QWidget {
   void OnAltKeyAndMousePressed(const QPoint& point);
   void OnCustomContextMenuRequested(const QPoint& point);
   void OnSearchLineEditTextEdited(const QString& text);
-  void OnSearchTypingFinishedTimerTimout();
+  void OnSearchTypingFinishedTimerTimeout();
   void OnSliderValueChanged(int value);
   void OnLeaveInspectionButtonClicked();
 

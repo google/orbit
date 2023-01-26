@@ -94,7 +94,7 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
           &CallTreeWidget::OnSearchLineEditTextEdited);
   connect(search_typing_finished_timer_, &QTimer::timeout, this,
-          &CallTreeWidget::OnSearchTypingFinishedTimerTimout);
+          &CallTreeWidget::OnSearchTypingFinishedTimerTimeout);
 
   if (IsSliderEnabled()) {
     connect(ui_->horizontalSlider, &QSlider::valueChanged, this,
@@ -126,7 +126,7 @@ void CallTreeWidget::SetCallTreeView(std::shared_ptr<const CallTreeView> call_tr
   ui_->callTreeTreeView->sortByColumn(CallTreeViewItemModel::kInclusive, Qt::DescendingOrder);
 
   OnSearchLineEditTextEdited(ui_->searchLineEdit->text());
-  OnSearchTypingFinishedTimerTimout();
+  OnSearchTypingFinishedTimerTimeout();
 
   ResizeColumnsIfNecessary();
 }
@@ -797,7 +797,7 @@ void CallTreeWidget::OnSearchLineEditTextEdited(const QString& /*text*/) {
   search_typing_finished_timer_->start(kSearchTypingFinishedTimerTimeoutMs);
 }
 
-void CallTreeWidget::OnSearchTypingFinishedTimerTimout() {
+void CallTreeWidget::OnSearchTypingFinishedTimerTimeout() {
   if (search_proxy_model_ == nullptr) {
     return;
   }
