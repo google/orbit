@@ -8,7 +8,6 @@
 #include <absl/types/span.h>
 #include <stddef.h>
 
-#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -29,12 +28,9 @@
 
 namespace orbit_gl {
 
-constexpr size_t kBasicPageFaultsTrackDimension = 3;
-
 // This is a implementation of `LineGraphTrack` to display major or minor page faults information,
 // used in the `PageFaultsTrack`.
-class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimension>,
-                             public AnnotationTrack {
+class BasicPageFaultsTrack : public LineGraphTrack, public AnnotationTrack {
  public:
   explicit BasicPageFaultsTrack(Track* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
                                 orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -48,8 +44,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   [[nodiscard]] Track::Type GetType() const override { return Track::Type::kUnknown; }
 
   void AddValues(uint64_t timestamp_ns, absl::Span<const double> values) override;
-  void AddValuesAndUpdateAnnotations(
-      uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values);
+  void AddValuesAndUpdateAnnotations(uint64_t timestamp_ns, absl::Span<const double> values);
 
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 

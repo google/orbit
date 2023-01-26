@@ -47,6 +47,7 @@ class GraphTrack : public Track {
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetLegendHeight() const;
   [[nodiscard]] uint8_t GetNumberOfDecimalDigits() const { return series_.GetValueDecimalDigits(); }
+  [[nodiscard]] size_t GetDimension() const { return series_.GetDimension(); }
 
   [[nodiscard]] bool IsCollapsible() const override { return true; }
   [[nodiscard]] bool IsEmpty() const override { return series_.IsEmpty(); }

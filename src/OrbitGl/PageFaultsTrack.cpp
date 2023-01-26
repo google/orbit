@@ -101,7 +101,7 @@ void PageFaultsTrack::UpdatePositionOfSubtracks() {
 
 void PageFaultsTrack::OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& page_faults_info) {
   if (page_faults_info.HasMajorPageFaultsInfo()) {
-    std::array<double, orbit_gl::kBasicPageFaultsTrackDimension> values{};
+    std::vector<double> values(major_page_faults_track_->GetDimension());
     values[static_cast<size_t>(MajorPageFaultsTrack::SeriesIndex::kProcess)] =
         static_cast<double>(page_faults_info.process_major_page_faults);
     values[static_cast<size_t>(MajorPageFaultsTrack::SeriesIndex::kCGroup)] =
@@ -112,7 +112,7 @@ void PageFaultsTrack::OnPageFaultsInfo(const orbit_client_data::PageFaultsInfo& 
   }
 
   if (page_faults_info.HasMinorPageFaultsInfo()) {
-    std::array<double, orbit_gl::kBasicPageFaultsTrackDimension> values{};
+    std::vector<double> values(minor_page_faults_track_->GetDimension());
     values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kProcess)] =
         static_cast<double>(page_faults_info.process_minor_page_faults);
     values[static_cast<size_t>(MinorPageFaultsTrack::SeriesIndex::kCGroup)] = static_cast<double>(

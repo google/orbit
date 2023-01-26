@@ -14,9 +14,8 @@
 
 namespace orbit_gl {
 
-constexpr size_t kVariableTrackDimension = 1;
-
-class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
+class VariableTrack final : public LineGraphTrack {
+  static constexpr size_t kVariableTrackDimension = 1;
   static constexpr uint8_t kTrackValueDecimalDigits = 6;
   static constexpr const char* kTrackValueUnits = "";
 
@@ -26,10 +25,9 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                          const orbit_client_data::ModuleManager* module_manager,
                          const orbit_client_data::CaptureData* capture_data)
-      : LineGraphTrack<kVariableTrackDimension>(parent, timeline_info, viewport, layout,
-                                                std::vector<std::string>(kVariableTrackDimension),
-                                                kTrackValueDecimalDigits, kTrackValueUnits,
-                                                module_manager, capture_data),
+      : LineGraphTrack(parent, timeline_info, viewport, layout,
+                       std::vector<std::string>(kVariableTrackDimension), kTrackValueDecimalDigits,
+                       kTrackValueUnits, module_manager, capture_data),
         name_{std::move(name)} {
     std::vector<Color> variable_track_color{Color(0, 128, 255, 128)};
     SetSeriesColors(std::move(variable_track_color));
