@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_PAGE_FAULTS_TRACK_H_
 #define ORBIT_GL_PAGE_FAULTS_TRACK_H_
 
+#include <absl/types/span.h>
 #include <stdint.h>
 
 #include <array>
