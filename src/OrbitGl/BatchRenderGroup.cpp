@@ -5,19 +5,25 @@
 #include "OrbitGl/BatchRenderGroup.h"
 
 namespace orbit_gl {
-StencilConfig& StencilConfig::ClipAt(const StencilConfig& parent) {
-  if (!parent.enabled) return *this;
-  if (!enabled) {
-    *this = parent;
-    return *this;
+StencilConfig ClipStencil(const StencilConfig& child, const StencilConfig& parent) {
+  if (!parent.enabled) return child;
+  if (!child.enabled) {
+    return parent;
   }
 
-  pos[0] = std::min(std::max(pos[0], parent.pos[0]), parent.pos[0] + parent.size[0]);
-  pos[1] = std::min(std::max(pos[1], parent.pos[1]), parent.pos[1] + parent.size[1]);
+  StencilConfig result = child;
 
-  size[0] = std::max(std::min(size[0], parent.pos[0] + parent.size[0] - pos[0]), 0.f);
-  size[1] = std::max(std::min(size[1], parent.pos[1] + parent.size[1] - pos[1]), 0.f);
+  Vec2 bottom_right = std::max(Vec2(child.pos + child.size), child.pos);
+  Vec2 parent_bottom_right = std::max(Vec2(parent.pos + parent.size), parent.pos);
 
-  return *this;
+  Vec2 pos = std::clamp(child.pos, parent.pos, parent_bottom_right);
+  bottom_right = std::clamp(bottom_right, parent.pos, parent_bottom_right);
+
+  Vec2 size = bottom_right - pos;
+
+  result.pos = pos;
+  result.size = size;
+
+  return result;
 }
 }  // namespace orbit_gl

@@ -270,7 +270,7 @@ CaptureViewElement::RenderGroups CaptureViewElement::PreRender(
     state.stencil.pos = {GetPos()[0], GetPos()[1]};
     state.stencil.size = {GetSize()[0], GetSize()[1]};
     state.stencil.enabled = true;
-    state.stencil.ClipAt(parent_state.stencil);
+    state.stencil = ClipStencil(state.stencil, parent_state.stencil);
     manager->SetGroupState(new_batcher_render_group_name, state);
 
     const std::string new_text_render_group_name =
@@ -283,7 +283,7 @@ CaptureViewElement::RenderGroups CaptureViewElement::PreRender(
       state.stencil.pos = {GetPos()[0], GetPos()[1]};
       state.stencil.size = {GetSize()[0], GetSize()[1]};
       state.stencil.enabled = true;
-      state.stencil.ClipAt(parent_state.stencil);
+      state.stencil = ClipStencil(state.stencil, parent_state.stencil);
       manager->SetGroupState(new_text_render_group_name, state);
     }
   }
