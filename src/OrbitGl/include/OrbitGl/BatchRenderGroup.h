@@ -67,6 +67,10 @@ struct StencilConfig {
   friend bool operator==(const StencilConfig& lhs, const StencilConfig& rhs) {
     return std::tie(lhs.enabled, lhs.pos, lhs.size) == std::tie(rhs.enabled, rhs.pos, rhs.size);
   }
+
+  friend bool operator!=(const StencilConfig& lhs, const StencilConfig& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
 // Returns a new StencilConfig that is the child clipped on the extents of the parent. If the parent
