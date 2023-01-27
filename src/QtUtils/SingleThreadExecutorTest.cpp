@@ -8,7 +8,7 @@
 #include <QThread>
 #include <algorithm>
 #include <chrono>
-#include <memory>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"

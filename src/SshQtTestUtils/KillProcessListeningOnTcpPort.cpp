@@ -6,6 +6,9 @@
 
 #include <absl/strings/str_format.h>
 
+#include <variant>
+#include <vector>
+
 #include "OrbitBase/Result.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/Task.h"

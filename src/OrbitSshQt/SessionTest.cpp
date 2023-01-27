@@ -8,6 +8,7 @@
 #include <QSignalSpy>
 #include <algorithm>
 #include <filesystem>
+#include <variant>
 #include <vector>
 
 #include "OrbitBase/File.h"

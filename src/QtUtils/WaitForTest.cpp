@@ -5,8 +5,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <QCoreApplication>
 #include <QMetaObject>
+#include <QObject>
+#include <Qt>
+#include <vector>
 
 #include "OrbitBase/Promise.h"
 #include "QtUtils/WaitFor.h"

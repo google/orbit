@@ -8,6 +8,8 @@
 #include <QSignalSpy>
 #include <filesystem>
 #include <string>
+#include <variant>
+#include <vector>
 
 #include "OrbitBase/Typedef.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
