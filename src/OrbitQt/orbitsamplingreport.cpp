@@ -55,7 +55,10 @@ OrbitSamplingReport::OrbitSamplingReport(QWidget* parent)
           &OrbitSamplingReport::OnCurrentThreadTabChanged);
 }
 
-OrbitSamplingReport::~OrbitSamplingReport() { delete ui_; }
+OrbitSamplingReport::~OrbitSamplingReport() {
+  Deinitialize();
+  delete ui_;
+}
 
 void OrbitSamplingReport::Initialize(
     OrbitApp* app, orbit_data_views::DataView* callstack_data_view,
