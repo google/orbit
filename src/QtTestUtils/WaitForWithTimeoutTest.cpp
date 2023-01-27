@@ -9,9 +9,9 @@
 #include <QMetaObject>
 #include <Qt>
 #include <chrono>
-#include <memory>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"

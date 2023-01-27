@@ -16,6 +16,8 @@
 #include <string_view>
 #include <system_error>
 #include <tuple>
+#include <variant>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 #include "OrbitBase/StopSource.h"

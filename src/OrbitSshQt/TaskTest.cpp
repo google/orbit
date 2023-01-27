@@ -17,6 +17,7 @@
 #include <array>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "OrbitBase/Future.h"
