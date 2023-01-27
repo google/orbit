@@ -8,11 +8,11 @@
 #include <absl/time/time.h>
 #include <gmock/gmock.h>
 
-#include <QTest>
 #include <chrono>
 
 #include "OrbitBase/Result.h"
 #include "QtUtils/CreateTimeout.h"
+#include "QtUtils/WaitFor.h"
 
 namespace orbit_qt_test_utils {
 
@@ -20,22 +20,13 @@ template <typename T>
 orbit_qt_utils::TimeoutOr<T> WaitForWithTimeout(
     const orbit_base::Future<T>& future,
     std::chrono::milliseconds timeout = std::chrono::milliseconds{5000}) {
-  if (QTest::qWaitFor([&future]() { return future.IsFinished(); },
-                      static_cast<int>(timeout.count()))) {
-    if constexpr (std::is_same_v<T, void>) {
-      return outcome::success();
-    } else {
-      return future.Get();
-    }
-  }
-
-  return orbit_qt_utils::Timeout{};
+  return orbit_qt_utils::WaitFor(orbit_qt_utils::WhenValueOrTimeout(future, timeout));
 }
 
 template <typename T>
 orbit_qt_utils::TimeoutOr<T> WaitForWithTimeout(const orbit_base::Future<T>& future,
                                                 absl::Duration timeout) {
-  return WaitForWithTimeout(future, absl::ToChronoMilliseconds(timeout));
+  return orbit_qt_utils::WaitFor(orbit_qt_utils::WhenValueOrTimeout(future, timeout));
 }
 
 MATCHER(YieldsTimeout, "") {
