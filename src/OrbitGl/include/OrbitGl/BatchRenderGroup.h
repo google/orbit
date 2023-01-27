@@ -64,11 +64,11 @@ struct StencilConfig {
   Vec2 pos = {0, 0};
   Vec2 size = {0, 0};
 
-  friend bool operator==(const StencilConfig& lhs, const StencilConfig& rhs) {
+  [[nodiscard]] friend bool operator==(const StencilConfig& lhs, const StencilConfig& rhs) {
     return std::tie(lhs.enabled, lhs.pos, lhs.size) == std::tie(rhs.enabled, rhs.pos, rhs.size);
   }
 
-  friend bool operator!=(const StencilConfig& lhs, const StencilConfig& rhs) {
+  [[nodiscard]] friend bool operator!=(const StencilConfig& lhs, const StencilConfig& rhs) {
     return !(lhs == rhs);
   }
 };
@@ -77,7 +77,7 @@ struct StencilConfig {
 // is not enabled, the child is returned. If the child is not enabled, it is assumed to be
 // equivalent to a bounding box of the whole domain, so it is still clipped to the parent and
 // enabled afterwards. Use this to ensure that child bounding boxes never exceed their parent's.
-StencilConfig ClipStencil(const StencilConfig& child, const StencilConfig& parent);
+[[nodiscard]] StencilConfig ClipStencil(const StencilConfig& child, const StencilConfig& parent);
 
 // Collection of all properties that are associated with a BatchRenderGroup and that will influence
 // how the group is rendered.
