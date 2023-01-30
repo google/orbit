@@ -164,12 +164,34 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual EventResult OnMouseEnter();
   [[nodiscard]] virtual EventResult OnMouseLeave();
 
+  // If TRUE, a new, uniquely named render group will be created for this element, and all of its
+  // content and that of its children will use this group for rendering. The content will also be
+  // restricted to the extents of the element automatically. By default, this returns false -
+  // override the method in a sub-class to change the behavior.
+  // Keep in mind that adding a large number of groups may have performance and memory implications
+  // as the data inside each group is stored in a `BlockChain`, and very small groups will always
+  // reserve at least one block of memory. It also increases the number of draw calls.
+  [[nodiscard]] virtual bool RequestSeparateRenderGroup() const { return false; }
+
+  [[nodiscard]] uint32_t GetUid() const { return uid_; }
+
  private:
   bool is_mouse_over_ = false;
+  uint32_t uid_;
 
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
+
+  struct RenderGroups {
+    std::string batcher_render_group_name;
+    std::string text_render_group_name;
+  };
+
+  [[nodiscard]] RenderGroups PreRender(PrimitiveAssembler& primitive_assembler,
+                                       TextRenderer& text_renderer);
+  void PostRender(RenderGroups&& previous_groups, PrimitiveAssembler& primitive_assembler,
+                  TextRenderer& text_renderer);
 
   friend class CaptureViewElementTester;
 };

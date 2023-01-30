@@ -11,6 +11,7 @@
 #include "OrbitGl/BatchRenderGroup.h"
 
 namespace orbit_gl {
+
 namespace {
 
 TEST(BatchRenderGroupId, ComparisonOperators) {
@@ -112,6 +113,56 @@ TEST(BatchRenderGroupManager, SetAndGetState) {
   manager.SetGroupState(g1.name, state);
 
   EXPECT_EQ(manager.GetGroupState(g1.name).stencil.enabled, state.stencil.enabled);
+}
+
+TEST(StencilConfig, ClipAtParent) {
+  StencilConfig parent;
+  StencilConfig child;
+
+  parent.enabled = true;
+  child.enabled = true;
+
+  parent.pos = {10, 20};
+  child.pos = {20, 30};
+
+  parent.size = {100, 50};
+  child.size = {10, 10};
+
+  // Fully contained child is unchanged
+  EXPECT_EQ(ClipStencil(child, parent), child);
+
+  // Child bottom-right outside of the parent
+  child.size = {120, 120};
+
+  StencilConfig expectation;
+  expectation.enabled = true;
+  expectation.pos = {20, 30};
+  expectation.size = {90, 40};
+  EXPECT_EQ(ClipStencil(child, parent), expectation);
+
+  // Child top-left outside of the parent
+  child.pos = {0, 0};
+  child.size = {30, 30};
+  expectation.pos = parent.pos;
+  expectation.size = {20, 10};
+
+  // Child is larger than the parent
+  child.pos = {0, 0};
+  child.size = {120, 120};
+  expectation = parent;
+  EXPECT_EQ(ClipStencil(child, parent), expectation);
+
+  // Disabled child inherits all values from its parent
+  child.enabled = false;
+  EXPECT_EQ(ClipStencil(child, parent), parent);
+
+  // Disabled parent has no effect
+  child.size = {120, 120};
+  child.pos = {0, 0};
+  parent.enabled = false;
+  child.enabled = true;
+  expectation = child;
+  EXPECT_EQ(ClipStencil(child, parent), expectation);
 }
 
 }  // namespace

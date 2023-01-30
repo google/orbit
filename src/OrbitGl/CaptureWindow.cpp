@@ -858,7 +858,9 @@ void CaptureWindow::DrawLayerDebugInfo(
     painter->setFont(font);
     painter->setPen(QColor(255, 255, 255));
     const Vec2i pos = viewport_.WorldToScreen(Vec2(stencil.pos[0], stencil.pos[1]));
-    painter->drawText(pos[0], pos[1], 100, 20, Qt::AlignLeft, QString::fromStdString(group.name));
+    const Vec2i size = viewport_.WorldToScreen(Vec2(stencil.size[0], stencil.size[1]));
+    painter->drawText(pos[0], pos[1], size[0], size[1], Qt::AlignLeft,
+                      QString::fromStdString(group.name));
     painter->beginNativePainting();
   }
 }

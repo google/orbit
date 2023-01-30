@@ -111,6 +111,11 @@ class Track : public orbit_gl::CaptureViewElement,
 
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
 
+  [[nodiscard]] bool RequestSeparateRenderGroup() const override {
+    // Child tracks do not request their own groups
+    return GetIndentationLevel() == 0;
+  }
+
   // Must be overriden by child class for sensible behavior.
   [[nodiscard]] virtual const orbit_client_protos::TimerInfo* GetLeft(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const = 0;

@@ -103,7 +103,7 @@ target_sources(
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
           Batcher.cpp
-          Batcher.cpp
+          BatchRenderGroup.cpp
           Button.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp

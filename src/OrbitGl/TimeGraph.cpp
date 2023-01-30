@@ -898,45 +898,6 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
     primitive_assembler.AddVerticalLine(green_line_pos, GetHeight(), GlCanvas::kZValueUi,
                                         white_line_color);
   }
-
-  // TODO(http://b/217719000): We are drawing boxes in margin positions because some elements are
-  // being drawn partially outside the TrackContainer space. This hack is needed until we assure
-  // that no element is drawn outside of its parent's area.
-  if (layout_->GetDrawTimeGraphMasks()) {
-    DrawMarginsBetweenChildren(primitive_assembler);
-  }
-}
-
-void TimeGraph::DrawMarginsBetweenChildren(
-    orbit_gl::PrimitiveAssembler& primitive_assembler) const {
-  // Margin between the Tracks and the Timeline.
-  Vec2 timeline_margin_pos = Vec2(GetPos()[0], GetPos()[1] + timeline_ui_->GetHeight());
-  Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_->GetSpaceBetweenTracksAndTimeline());
-  primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
-                             GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
-
-  // Right margin mask for Timegraph.
-  float right_margin_width = GetRightMargin();
-  float right_margin_height = GetHeight();
-  Vec2 right_margin_pos{GetWidth() - right_margin_width, GetPos()[1]};
-  Quad right_margin_box = MakeBox(right_margin_pos, Vec2(right_margin_width, right_margin_height));
-  primitive_assembler.AddBox(right_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
-
-  // Left margin mask for Timeline.
-  float left_margin_width = layout_->GetTrackHeaderWidth();
-  float left_margin_height = timeline_ui_->GetHeight();
-  Vec2 left_margin_pos = GetPos();
-  Quad left_margin_box = MakeBox(left_margin_pos, Vec2(left_margin_width, left_margin_height));
-  primitive_assembler.AddBox(left_margin_box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
-
-  // Left margin mask for horizontal slider.
-  float slider_height = layout_->GetSliderWidth();
-  Vec2 left_margin_slider_pos = GetPos();
-  left_margin_slider_pos[1] += (GetHeight() - slider_height);
-  Quad left_margin_box_slider =
-      MakeBox(left_margin_slider_pos, Vec2(left_margin_width, slider_height));
-  primitive_assembler.AddBox(left_margin_box_slider, GlCanvas::kZValueMargin,
-                             GlCanvas::kBackgroundColor);
 }
 
 bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {

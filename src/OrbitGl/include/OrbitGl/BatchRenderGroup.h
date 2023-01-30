@@ -5,9 +5,11 @@
 #ifndef ORBIT_GL_BATCH_RENDER_GROUP_H_
 #define ORBIT_GL_BATCH_RENDER_GROUP_H_
 
+#include <QRect>
 #include <functional>
 #include <string>
 
+#include "OrbitGl/CoreMath.h"
 #include "absl/container/flat_hash_map.h"
 
 namespace orbit_gl {
@@ -59,9 +61,23 @@ struct BatchRenderGroupId {
 // stores the extents of this box
 struct StencilConfig {
   bool enabled = false;
-  std::array<float, 2> pos = {0, 0};
-  std::array<float, 2> size = {0, 0};
+  Vec2 pos = {0, 0};
+  Vec2 size = {0, 0};
+
+  [[nodiscard]] friend bool operator==(const StencilConfig& lhs, const StencilConfig& rhs) {
+    return std::tie(lhs.enabled, lhs.pos, lhs.size) == std::tie(rhs.enabled, rhs.pos, rhs.size);
+  }
+
+  [[nodiscard]] friend bool operator!=(const StencilConfig& lhs, const StencilConfig& rhs) {
+    return !(lhs == rhs);
+  }
 };
+
+// Returns a new StencilConfig that is the child clipped on the extents of the parent. If the parent
+// is not enabled, the child is returned. If the child is not enabled, it is assumed to be
+// equivalent to a bounding box of the whole domain, so it is still clipped to the parent and
+// enabled afterwards. Use this to ensure that child bounding boxes never exceed their parent's.
+[[nodiscard]] StencilConfig ClipStencil(const StencilConfig& child, const StencilConfig& parent);
 
 // Collection of all properties that are associated with a BatchRenderGroup and that will influence
 // how the group is rendered.
