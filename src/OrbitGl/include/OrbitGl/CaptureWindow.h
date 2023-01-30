@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <QPainter>
+#include <QtGlobal>
 #include <memory>
 #include <string>
 #include <vector>

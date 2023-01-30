@@ -5,9 +5,16 @@
 #ifndef ORBIT_GL_BATCH_RENDER_GROUP_H_
 #define ORBIT_GL_BATCH_RENDER_GROUP_H_
 
+#include <GteVector2.h>
+#include <absl/container/flat_hash_map.h>
+
 #include <QRect>
+#include <algorithm>
 #include <functional>
 #include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
 
 #include "OrbitGl/CoreMath.h"
 #include "absl/container/flat_hash_map.h"

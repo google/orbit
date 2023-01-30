@@ -4,6 +4,8 @@
 
 #include "OrbitGl/BatchRenderGroup.h"
 
+#include <GteVector.h>
+
 namespace orbit_gl {
 StencilConfig ClipStencil(const StencilConfig& child, const StencilConfig& parent) {
   if (!parent.enabled) return child;
