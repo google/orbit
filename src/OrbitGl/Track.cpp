@@ -89,8 +89,8 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
     static const Color kOutlineColor = Color(128, 128, 128, 255);
     constexpr float kOutlineWidth = 2.f;
     Vec2 outline_size = header_->GetSize() - Vec2{layout_->GetSpaceBetweenTracks(), 0};
-    primitive_assembler.AddAabbOutline(GetPos(), outline_size, kOutlineWidth,
-                                       GlCanvas::kZValueMargin, kOutlineColor);
+    primitive_assembler.AddAabbOutline(GetPos(), outline_size, kOutlineWidth, GlCanvas::kZValueUi,
+                                       kOutlineColor);
   }
 }
 
