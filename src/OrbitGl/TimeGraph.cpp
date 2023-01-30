@@ -27,7 +27,6 @@
 #include "OrbitGl/AsyncTrack.h"
 #include "OrbitGl/CGroupAndProcessMemoryTrack.h"
 #include "OrbitGl/FrameTrack.h"
-#include "OrbitGl/Geometry.h"
 #include "OrbitGl/GlCanvas.h"
 #include "OrbitGl/GlUtils.h"
 #include "OrbitGl/GpuTrack.h"

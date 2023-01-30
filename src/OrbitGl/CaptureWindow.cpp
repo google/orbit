@@ -16,7 +16,6 @@
 #include <QString>
 #include <Qt>
 #include <algorithm>
-#include <array>
 #include <iterator>
 #include <limits>
 #include <optional>

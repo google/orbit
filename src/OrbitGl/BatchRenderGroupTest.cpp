@@ -9,6 +9,7 @@
 #include <string>
 
 #include "OrbitGl/BatchRenderGroup.h"
+#include "OrbitGl/CoreMath.h"
 
 namespace orbit_gl {
 

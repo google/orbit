@@ -8,7 +8,10 @@
 #include <absl/strings/str_cat.h>
 
 #include <algorithm>
+#include <atomic>
+#include <string_view>
 #include <tuple>
+#include <utility>
 
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
