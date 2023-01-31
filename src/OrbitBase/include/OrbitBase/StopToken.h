@@ -52,13 +52,16 @@ class StopToken {
 //
 // This function is still useful though to make an uninterruptable task "cancelable".
 template <typename T>
-auto WhenValueOrCanceled(const Future<T>& value, const StopToken& stop_token)
-    -> Future<CanceledOr<T>> {
+Future<CanceledOr<T>> WhenValueOrCanceled(const Future<T>& value, const StopToken& stop_token) {
   orbit_base::ImmediateExecutor executor{};
   return orbit_base::WhenAny(value, stop_token.GetFuture())
       .Then(&executor,
             [](const std::variant<orbit_base::VoidToMonostate_t<T>, std::monostate>& result)
                 -> CanceledOr<T> {
+              // `WhenAny` returns a future to a variant. This variant will hold the first
+              // alternative (index 0) when the future `value` completed or the second alternative
+              // (index 1) when the `stop_token` indicated a cancelation. So we return `Canceled` if
+              // the index is 1:
               if (result.index() == 1) return outcome::failure(Canceled{});
               if constexpr (std::is_same_v<T, void>) {
                 return outcome::success();
