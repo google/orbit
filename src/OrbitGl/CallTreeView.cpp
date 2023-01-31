@@ -104,9 +104,11 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
   return unwind_errors_child_.get();
 }
 
-std::string CallTreeFunction::RetrieveFunctionName(const CallTreeView& call_tree_view) const {
+std::string CallTreeFunction::RetrieveFunctionName(
+    const orbit_client_data::ModuleManager& module_manager,
+    const orbit_client_data::CaptureData& capture_data) const {
   const std::string& function_name = orbit_client_data::GetFunctionNameByAddress(
-      *call_tree_view.module_manager_, *call_tree_view.capture_data_, function_absolute_address_);
+      module_manager, capture_data, function_absolute_address_);
   std::string formatted_function_name;
   if (function_name != orbit_client_data::kUnknownFunctionOrModuleName) {
     formatted_function_name = function_name;
@@ -117,15 +119,19 @@ std::string CallTreeFunction::RetrieveFunctionName(const CallTreeView& call_tree
   return formatted_function_name;
 }
 
-std::string CallTreeFunction::RetrieveModulePath(const CallTreeView& call_tree_view) const {
+std::string CallTreeFunction::RetrieveModulePath(
+    const orbit_client_data::ModuleManager& module_manager,
+    const orbit_client_data::CaptureData& capture_data) const {
   const auto& [module_path, module_build_id] = orbit_client_data::FindModulePathAndBuildIdByAddress(
-      *call_tree_view.module_manager_, *call_tree_view.capture_data_, function_absolute_address_);
+      module_manager, capture_data, function_absolute_address_);
   return module_path;
 }
 
-std::string CallTreeFunction::RetrieveModuleBuildId(const CallTreeView& call_tree_view) const {
+std::string CallTreeFunction::RetrieveModuleBuildId(
+    const orbit_client_data::ModuleManager& module_manager,
+    const orbit_client_data::CaptureData& capture_data) const {
   const auto& [module_path, module_build_id] = orbit_client_data::FindModulePathAndBuildIdByAddress(
-      *call_tree_view.module_manager_, *call_tree_view.capture_data_, function_absolute_address_);
+      module_manager, capture_data, function_absolute_address_);
   return module_build_id.value_or("");
 }
 
@@ -210,6 +216,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   ORBIT_SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
 
   auto top_down_view = std::make_unique<CallTreeView>(module_manager, capture_data);
+  CallTreeNode* top_down_view_root = top_down_view->GetCallTreeRootNode();
   const std::string& process_name = capture_data->process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data->thread_names();
 
@@ -223,11 +230,11 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 
       // Don't count samples from the all-thread case again.
       if (tid != orbit_base::kAllProcessThreadsTid) {
-        top_down_view->IncreaseSampleCount(sample_count);
+        top_down_view_root->IncreaseSampleCount(sample_count);
       }
 
       CallTreeThread* thread_node =
-          GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
+          GetOrCreateThreadNode(top_down_view_root, tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);
 
       const CallstackInfo& resolved_callstack =
@@ -245,7 +252,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 [[nodiscard]] static CallTreeNode* AddReversedCallstackToBottomUpViewAndReturnLastFunction(
     CallTreeView* bottom_up_view, const CallstackInfo& resolved_callstack,
     uint64_t callstack_sample_count) {
-  CallTreeNode* current_node = bottom_up_view;
+  CallTreeNode* current_node = bottom_up_view->GetCallTreeRootNode();
   for (uint64_t frame : resolved_callstack.frames()) {
     CallTreeFunction* function_node = GetOrCreateFunctionNode(current_node, frame);
     function_node->IncreaseSampleCount(callstack_sample_count);
@@ -261,7 +268,8 @@ AddUnwindErrorToBottomUpViewAndReturnUnwindErrorTypeNode(CallTreeView* bottom_up
   ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
   uint64_t frame = resolved_callstack.frames()[0];
-  CallTreeFunction* function_node = GetOrCreateFunctionNode(bottom_up_view, frame);
+  CallTreeFunction* function_node =
+      GetOrCreateFunctionNode(bottom_up_view->GetCallTreeRootNode(), frame);
   function_node->IncreaseSampleCount(callstack_sample_count);
 
   CallTreeUnwindErrors* unwind_errors_node = function_node->GetUnwindErrorsOrNull();
@@ -284,6 +292,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
   ORBIT_SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
 
   auto bottom_up_view = std::make_unique<CallTreeView>(module_manager, capture_data);
+  CallTreeNode* bottom_up_view_root = bottom_up_view->GetCallTreeRootNode();
   const std::string& process_name = capture_data->process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data->thread_names();
 
@@ -297,7 +306,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
     for (const auto& [callstack_id, callstack_events] :
          thread_sample_data->sampled_callstack_id_to_events) {
       uint64_t sample_count = callstack_events.size();
-      bottom_up_view->IncreaseSampleCount(sample_count);
+      bottom_up_view_root->IncreaseSampleCount(sample_count);
 
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
