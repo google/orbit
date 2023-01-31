@@ -55,10 +55,10 @@ class CallTreeViewItemModel : public QAbstractItemModel {
  private:
   [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetEditRoleData(const QModelIndex& index) const;
-  [[nodiscard]] static QVariant GetToolTipRoleData(const QModelIndex& index);
+  [[nodiscard]] QVariant GetToolTipRoleData(const QModelIndex& index) const;
   [[nodiscard]] static QVariant GetForegroundRoleData(const QModelIndex& index);
-  [[nodiscard]] static QVariant GetModulePathRoleData(const QModelIndex& index);
-  [[nodiscard]] static QVariant GetModuleBuildIdRoleData(const QModelIndex& index);
+  [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
+  [[nodiscard]] QVariant GetModuleBuildIdRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetCopyableValueRoleData(const QModelIndex& index) const;
   [[nodiscard]] static QVariant GetExclusiveCallstackEventsRoleData(const QModelIndex& index);
 

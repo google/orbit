@@ -22,6 +22,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "OrbitBase/Logging.h"
@@ -30,6 +31,7 @@ class CallTreeThread;
 class CallTreeFunction;
 class CallTreeUnwindErrors;
 class CallTreeUnwindErrorType;
+class CallTreeView;
 
 class CallTreeNode {
  public:
@@ -54,10 +56,7 @@ class CallTreeNode {
 
   [[nodiscard]] CallTreeFunction* GetFunctionOrNull(uint64_t function_absolute_address);
 
-  [[nodiscard]] CallTreeFunction* AddAndGetFunction(uint64_t function_absolute_address,
-                                                    std::string function_name,
-                                                    std::string module_path,
-                                                    std::string module_build_id);
+  [[nodiscard]] CallTreeFunction* AddAndGetFunction(uint64_t function_absolute_address);
 
   [[nodiscard]] CallTreeUnwindErrorType* GetUnwindErrorTypeOrNull(
       orbit_client_data::CallstackType type);
@@ -127,32 +126,23 @@ class CallTreeNode {
 
 class CallTreeFunction : public CallTreeNode {
  public:
-  explicit CallTreeFunction(uint64_t function_absolute_address, std::string function_name,
-                            std::string module_path, std::string module_build_id,
-                            CallTreeNode* parent)
-      : CallTreeNode{parent},
-        function_absolute_address_{function_absolute_address},
-        function_name_{std::move(function_name)},
-        module_path_{std::move(module_path)},
-        module_build_id_{std::move(module_build_id)} {}
+  explicit CallTreeFunction(uint64_t function_absolute_address, CallTreeNode* parent)
+      : CallTreeNode{parent}, function_absolute_address_{function_absolute_address} {}
 
   [[nodiscard]] uint64_t function_absolute_address() const { return function_absolute_address_; }
 
-  [[nodiscard]] const std::string& function_name() const { return function_name_; }
+  [[nodiscard]] std::string RetrieveFunctionName(const CallTreeView& call_tree_view) const;
 
-  [[nodiscard]] const std::string& module_path() const { return module_path_; }
+  [[nodiscard]] std::string RetrieveModulePath(const CallTreeView& call_tree_view) const;
 
-  [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
+  [[nodiscard]] std::string RetrieveModuleBuildId(const CallTreeView& call_tree_view) const;
 
-  [[nodiscard]] std::string GetModuleName() const {
-    return std::filesystem::path(module_path()).filename().string();
+  [[nodiscard]] std::string RetrieveModuleName(const CallTreeView& call_tree_view) const {
+    return std::filesystem::path(RetrieveModulePath(call_tree_view)).filename().string();
   }
 
  private:
   uint64_t function_absolute_address_;
-  std::string function_name_;
-  std::string module_path_;
-  std::string module_build_id_;
 };
 
 class CallTreeThread : public CallTreeNode {
@@ -192,16 +182,23 @@ class CallTreeView : public CallTreeNode {
  public:
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_data::ModuleManager& module_manager,
-      const orbit_client_data::CaptureData& capture_data);
+      const orbit_client_data::ModuleManager* module_manager,
+      const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] static std::unique_ptr<CallTreeView>
   CreateBottomUpViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_data::ModuleManager& module_manager,
-      const orbit_client_data::CaptureData& capture_data);
+      const orbit_client_data::ModuleManager* module_manager,
+      const orbit_client_data::CaptureData* capture_data);
 
-  CallTreeView() : CallTreeNode{nullptr} {}
+  CallTreeView(const orbit_client_data::ModuleManager* module_manager,
+               const orbit_client_data::CaptureData* capture_data)
+      : CallTreeNode{nullptr}, module_manager_{module_manager}, capture_data_{capture_data} {}
+
+ private:
+  friend CallTreeFunction;
+  const orbit_client_data::ModuleManager* module_manager_;
+  const orbit_client_data::CaptureData* capture_data_;
 };
 
 #endif  // ORBIT_GL_CALL_TREE_VIEW_H_

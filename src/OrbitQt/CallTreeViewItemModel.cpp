@@ -61,7 +61,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        return QString::fromStdString(function_item->function_name());
+        return QString::fromStdString(function_item->RetrieveFunctionName(*call_tree_view_));
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
             "%.2f%% (%llu)", function_item->GetInclusivePercent(call_tree_view_->sample_count()),
@@ -74,7 +74,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
         return QString::fromStdString(
             absl::StrFormat("%.2f%%", function_item->GetPercentOfParent()));
       case kModule:
-        return QString::fromStdString(function_item->GetModuleName());
+        return QString::fromStdString(function_item->RetrieveModuleName(*call_tree_view_));
       case kFunctionAddress:
         return QString::fromStdString(
             absl::StrFormat("%#llx", function_item->function_absolute_address()));
@@ -137,7 +137,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
   } else if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        return QString::fromStdString(function_item->function_name());
+        return QString::fromStdString(function_item->RetrieveFunctionName(*call_tree_view_));
       case kInclusive:
         return function_item->GetInclusivePercent(call_tree_view_->sample_count());
       case kExclusive:
@@ -145,7 +145,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
       case kOfParent:
         return function_item->GetPercentOfParent();
       case kModule:
-        return QString::fromStdString(function_item->GetModuleName());
+        return QString::fromStdString(function_item->RetrieveModuleName(*call_tree_view_));
       case kFunctionAddress:
         return static_cast<qulonglong>(function_item->function_absolute_address());
     }
@@ -171,7 +171,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
   return {};
 }
 
-QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) {
+QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
@@ -179,9 +179,9 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) {
   if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        return QString::fromStdString(function_item->function_name());
+        return QString::fromStdString(function_item->RetrieveFunctionName(*call_tree_view_));
       case kModule:
-        return QString::fromStdString(function_item->module_path());
+        return QString::fromStdString(function_item->RetrieveModulePath(*call_tree_view_));
     }
   } else if (unwind_error_type_item != nullptr) {
     switch (index.column()) {
@@ -214,22 +214,22 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
   return {};
 }
 
-QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) {
+QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
-    return QString::fromStdString(function_item->module_path());
+    return QString::fromStdString(function_item->RetrieveModulePath(*call_tree_view_));
   }
   return {};
 }
 
-QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) {
+QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) const {
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
-    return QString::fromStdString(function_item->module_build_id());
+    return QString::fromStdString(function_item->RetrieveModuleBuildId(*call_tree_view_));
   }
   return {};
 }

@@ -17,7 +17,7 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 
-SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureData& capture_data,
+SelectionData::SelectionData(const ModuleManager* module_manager, const CaptureData* capture_data,
                              PostProcessedSamplingData post_processed_sampling_data,
                              const CallstackData* callstack_data)
     : post_processed_sampling_data_(std::move(post_processed_sampling_data)),
@@ -28,15 +28,15 @@ SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureD
       post_processed_sampling_data_, module_manager, capture_data);
 }
 
-SelectionData::SelectionData(const ModuleManager& module_manager, const CaptureData& capture_data,
+SelectionData::SelectionData(const ModuleManager* module_manager, const CaptureData* capture_data,
                              absl::Span<const CallstackEvent> callstack_events,
                              SelectionType selection_type) {
   for (const CallstackEvent& event : callstack_events) {
     callstack_data_object_.AddCallstackFromKnownCallstackData(event,
-                                                              capture_data.GetCallstackData());
+                                                              capture_data->GetCallstackData());
   }
   post_processed_sampling_data_ = orbit_client_model::CreatePostProcessedSamplingData(
-      callstack_data_object_, capture_data, module_manager);
+      callstack_data_object_, *capture_data, *module_manager);
   top_down_view_ = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
       post_processed_sampling_data_, module_manager, capture_data);
   bottom_up_view_ = CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(

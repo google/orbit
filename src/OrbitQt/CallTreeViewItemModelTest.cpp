@@ -100,7 +100,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 TEST(CallTreeViewItemModel, AbstractItemModelTesterEmptyModel) {
   orbit_qt_utils::AssertNoQtLogWarnings message_handler{};
 
-  CallTreeViewItemModel model{std::make_unique<CallTreeView>()};
+  CallTreeViewItemModel model{std::make_unique<CallTreeView>(nullptr, nullptr)};
 
   QAbstractItemModelTester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
 }
@@ -116,7 +116,7 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
                                                           *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, module_manager, *capture_data);
+      sampling_data, &module_manager, capture_data.get());
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -132,7 +132,7 @@ TEST(CallTreeViewItemModel, RowsWithoutSummaryItem) {
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, module_manager, *capture_data);
+      sampling_data, &module_manager, capture_data.get());
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -150,7 +150,7 @@ TEST(CallTreeViewItemModel, RowsWithSummaryItem) {
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
                                                           *capture_data, module_manager);
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, module_manager, *capture_data);
+      sampling_data, &module_manager, capture_data.get());
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -166,7 +166,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
                                                           *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, module_manager, *capture_data);
+      sampling_data, &module_manager, capture_data.get());
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -336,7 +336,7 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
                                                           *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, module_manager, *capture_data);
+      sampling_data, &module_manager, capture_data.get());
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
