@@ -18,10 +18,12 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/ThreadUtils.h"
 
 using orbit_api::ApiEventVariant;
+using orbit_base::kIntrospectionProcessId;
 using orbit_introspection::IntrospectionEventCallback;
 using orbit_introspection::IntrospectionListener;
 
@@ -102,99 +104,96 @@ void IntrospectionListener::DeferApiEventProcessing(const orbit_api::ApiEventVar
 
 void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_id,
                         uint64_t caller_address) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   if (caller_address == kOrbitCallerAddressAuto) {
     caller_address = ORBIT_GET_CALLER_PC();
   }
-  orbit_api::ApiScopeStart api_scope_start{process_id, thread_id, timestamp_ns,  name,
-                                           color,      group_id,  caller_address};
+  orbit_api::ApiScopeStart api_scope_start{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, color, group_id, caller_address};
   IntrospectionListener::DeferApiEventProcessing(api_scope_start);
 }
 
 void orbit_api_stop() {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiScopeStop api_scope_stop{process_id, thread_id, timestamp_ns};
+  orbit_api::ApiScopeStop api_scope_stop{kIntrospectionProcessId, thread_id, timestamp_ns};
   IntrospectionListener::DeferApiEventProcessing(api_scope_stop);
 }
 
 void orbit_api_start_async_v1(const char* name, uint64_t id, orbit_api_color color,
                               uint64_t caller_address) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   if (caller_address == kOrbitCallerAddressAuto) {
     caller_address = ORBIT_GET_CALLER_PC();
   }
-  orbit_api::ApiScopeStartAsync api_scope_start_async{process_id, thread_id, timestamp_ns,  name,
-                                                      id,         color,     caller_address};
+  orbit_api::ApiScopeStartAsync api_scope_start_async{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, id, color, caller_address};
   IntrospectionListener::DeferApiEventProcessing(api_scope_start_async);
 }
 
 void orbit_api_stop_async(uint64_t id) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiScopeStopAsync api_scope_stop_async{process_id, thread_id, timestamp_ns, id};
+  orbit_api::ApiScopeStopAsync api_scope_stop_async{kIntrospectionProcessId, thread_id,
+                                                    timestamp_ns, id};
   IntrospectionListener::DeferApiEventProcessing(api_scope_stop_async);
 }
 
 void orbit_api_async_string(const char* str, uint64_t id, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiStringEvent api_string_event{process_id, thread_id, timestamp_ns, str, id, color};
+  orbit_api::ApiStringEvent api_string_event{
+      kIntrospectionProcessId, thread_id, timestamp_ns, str, id, color};
   IntrospectionListener::DeferApiEventProcessing(api_string_event);
 }
 
 void orbit_api_track_int(const char* name, int value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackInt api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackInt api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_int64(const char* name, int64_t value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackInt64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackInt64 api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint(const char* name, uint32_t value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackUint api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackUint api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_uint64(const char* name, uint64_t value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackUint64 api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackUint64 api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_float(const char* name, float value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackFloat api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackFloat api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
 void orbit_api_track_double(const char* name, double value, orbit_api_color color) {
-  uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  orbit_api::ApiTrackDouble api_track{process_id, thread_id, timestamp_ns, name, value, color};
+  orbit_api::ApiTrackDouble api_track{
+      kIntrospectionProcessId, thread_id, timestamp_ns, name, value, color};
   IntrospectionListener::DeferApiEventProcessing(api_track);
 }
 
