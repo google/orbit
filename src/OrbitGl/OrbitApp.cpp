@@ -120,6 +120,7 @@
 using orbit_base::CanceledOr;
 using orbit_base::Future;
 using orbit_base::kAllProcessThreadsTid;
+using orbit_base::kIntrospectionProcessId;
 using orbit_base::NotFoundOr;
 
 using orbit_capture_client::CaptureClient;
@@ -131,7 +132,6 @@ using orbit_capture_file::CaptureFile;
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
-using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
@@ -2137,6 +2137,11 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids
 }
 
 bool OrbitApp::IsTimerActive(const TimerInfo& timer) const {
+  // It doesn't make sense to filter introspection timers using data from the main window.
+  if (timer.process_id() == kIntrospectionProcessId) {
+    return true;
+  }
+
   if (absl::GetFlag(FLAGS_time_range_selection)) {
     const std::optional<TimeRange>& time_range = data_manager_->GetSelectionTimeRange();
     if (time_range.has_value() && !time_range.value().IsTimerInRange(timer)) {
