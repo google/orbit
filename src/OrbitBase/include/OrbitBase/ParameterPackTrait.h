@@ -27,7 +27,7 @@ struct DeduplicatedTuple;
 template <typename... OutputTypes, typename FirstInput, typename... OtherInputTypes>
 struct DeduplicatedTuple<std::tuple<OutputTypes...>, std::tuple<FirstInput, OtherInputTypes...>> {
   using type = typename std::conditional_t<
-      orbit_base::ParameterPackTrait<std::tuple, OutputTypes...>::template Contains<FirstInput>(),
+      orbit_base::ParameterPackTrait<std::tuple, OutputTypes...>::template kContains<FirstInput>,
       typename DeduplicatedTuple<std::tuple<OutputTypes...>, std::tuple<OtherInputTypes...>>::type,
       typename DeduplicatedTuple<std::tuple<OutputTypes..., FirstInput>,
                                  std::tuple<OtherInputTypes...>>::type>;
@@ -71,33 +71,35 @@ template <template <typename...> typename VariadicHolder, typename... Types>
 struct ParameterPackTrait {
   // Returns true iff the given type `T` is part of the parameter pack.
   template <typename T>
-  [[nodiscard]] constexpr static bool Contains() {
-    return (std::is_same_v<Types, T> || ...);
-  }
+  constexpr static bool kContains = (std::is_same_v<Types, T> || ...);
 
   // Return true iff the types listed in `Others...` is a subset of the parameter pack.
   template <typename... Others>
   [[nodiscard]] constexpr static bool IsSubset() {
-    return (Contains<Others>() && ...);
+    return (kContains<Others> && ...);
   }
 
   // Return true iff the types listed in `Others...` is a subset of the parameter pack.
   template <typename... Others>
   [[nodiscard]] constexpr static bool IsSubset(
-      const ParameterPackTrait<VariadicHolder, Others...>& /* other*/) {
-    return (Contains<Others>() && ...);
+      const ParameterPackTrait<VariadicHolder, Others...>& /*other*/) {
+    return (kContains<Others> && ...);
   }
 
+  // Constructs a new trait type with a different variadic value type.
+  //
+  // For example that allows you to go from a trait that describes `std::tuple<int, char>` to a
+  // trait that describes `std::variant<int, char>`.
+  template <template <typename...> typename NewVariadicHolder>
+  using VariadicHolderChanged = ParameterPackTrait<NewVariadicHolder, Types...>;
+
   // Returns a `ParameterPackTrait` object where duplicate types in `Types` have been removed. The
-  // order of types is not changed and it is guaranteed that the first appearance of a
-  // distinct type in `Types` remains.
+  // order of the first appearances is preserved.
   // Note that this function is rather heavy on type instantiations and can slow down your build
   // when used with a large parameter pack.
-  [[nodiscard]] constexpr static auto RemoveDuplicateTypes() {
-    return orbit_base_internal::TupleToParameterPackTraits_t<
-               orbit_base_internal::DeduplicatedTuple_t<std::tuple<Types...>>>{}
-        .template ChangeVariadicHolder<VariadicHolder>();
-  }
+  using DuplicateTypesRemoved = typename orbit_base_internal::TupleToParameterPackTraits_t<
+      orbit_base_internal::DeduplicatedTuple_t<std::tuple<Types...>>>::
+      template VariadicHolderChanged<VariadicHolder>;
 
   // Constructs a value of type `VariadicHolder<Types...>` from the given arguments.
   template <typename... Args>
@@ -105,14 +107,10 @@ struct ParameterPackTrait {
     return {std::forward<Args>(args)...};
   }
 
-  // With `decltype(trait.ToType())` you will get access to the type that this trait represents.
+  // With `decltype(trait)::Type` you will get access to the type that this trait represents.
   // If your intention is to construct a new object, then `ConstructValue` from above might be
   // cleaner.
-  [[nodiscard]] constexpr static VariadicHolder<Types...> ToType() {
-    // Note that `std::declval` can only appear in an unevaluated context, so a call of `ToType`
-    // must be wrapped in a `decltype(...)` expression.
-    return std::declval<VariadicHolder<Types...>>();
-  }
+  using Type = VariadicHolder<Types...>;
 
   // Constructs a new trait object that is a copy of the current object, but a list of types is
   // appended to the parameter pack.
@@ -134,25 +132,13 @@ struct ParameterPackTrait {
     return {};
   }
 
-  // Constructs a new trait object with a different variadic value type.
-  //
-  // For example that allows you to go from a trait that describes `std::tuple<int, char>` to a
-  // trait that describes `std::variant<int, char>`.
-  template <template <typename...> typename NewVariadicHolder>
-  [[nodiscard]] constexpr static ParameterPackTrait<NewVariadicHolder, Types...>
-  ChangeVariadicHolder() {
-    return {};
-  }
+  // Is the number of types in the parameter pack.
+  constexpr static size_t kSize = sizeof...(Types);
 
-  // Returns the number of types in the parameter pack.
-  [[nodiscard]] constexpr static size_t Size() { return sizeof...(Types); }
-
-  // Returns true iff there are duplicate types in the parameter pack. Note that this function calls
-  // `RemoveDuplicateTypes` in its implementation and the same warning about extended compile times
-  // applies here as well.
-  [[nodiscard]] constexpr static bool HasDuplicates() {
-    return RemoveDuplicateTypes().Size() < Size();
-  }
+  // Is true iff there are duplicate types in the parameter pack. Note that this constant is based
+  // on `DuplicateTypesRemoved` in its implementation and the same warning about extended compile
+  // times applies here as well.
+  constexpr static bool kHasDuplicates = DuplicateTypesRemoved::kSize < kSize;
 
   // These constexpr comparison operators allow to compare constexpr values instead of types which
   // leads to more idiomatic unit testing code.

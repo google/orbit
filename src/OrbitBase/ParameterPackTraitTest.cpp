@@ -16,21 +16,21 @@ namespace orbit_base {
 
 TEST(ParameterPackTrait, Size) {
   // Empty packs are supported
-  static_assert(ParameterPackTrait<std::variant>::Size() == 0);
+  static_assert(ParameterPackTrait<std::variant>::kSize == 0);
 
-  static_assert(ParameterPackTrait<std::variant, int>::Size() == 1);
-  static_assert(ParameterPackTrait<std::variant, int, float>::Size() == 2);
+  static_assert(ParameterPackTrait<std::variant, int>::kSize == 1);
+  static_assert(ParameterPackTrait<std::variant, int, float>::kSize == 2);
 
   // Duplicate types count as distinct pack elements - it's not a set
-  static_assert(ParameterPackTrait<std::variant, int, int, int>::Size() == 3);
+  static_assert(ParameterPackTrait<std::variant, int, int, int>::kSize == 3);
 }
 
 TEST(ParameterPackTrait, Contains) {
-  static_assert(ParameterPackTrait<std::variant, int, float, double>::Contains<int>());
-  static_assert(!ParameterPackTrait<std::variant, int, float, double>::Contains<char>());
+  static_assert(ParameterPackTrait<std::variant, int, float, double>::kContains<int>);
+  static_assert(!ParameterPackTrait<std::variant, int, float, double>::kContains<char>);
 
   // Contains returns true even if the type is more than once in the pack
-  static_assert(ParameterPackTrait<std::variant, int, float, double, int>::Contains<int>());
+  static_assert(ParameterPackTrait<std::variant, int, float, double, int>::kContains<int>);
 }
 
 TEST(ParameterPackTrait, IsSubset) {
@@ -70,40 +70,38 @@ TEST(ParameterPackTrait, IsSubset) {
 }
 
 TEST(ParameterPackTrait, ToType) {
-  static_assert(
-      std::is_same_v<decltype(ParameterPackTrait<std::tuple, int, float, double>::ToType()),
-                     std::tuple<int, float, double>>);
-  static_assert(
-      std::is_same_v<decltype(ParameterPackTrait<std::variant, int, float, double>::ToType()),
-                     std::variant<int, float, double>>);
+  static_assert(std::is_same_v<ParameterPackTrait<std::tuple, int, float, double>::Type,
+                               std::tuple<int, float, double>>);
+  static_assert(std::is_same_v<ParameterPackTrait<std::variant, int, float, double>::Type,
+                               std::variant<int, float, double>>);
 }
 
 TEST(ParameterPackTrait, RemoveDuplicateTypes) {
-  static_assert(ParameterPackTrait<std::variant, int, int>::RemoveDuplicateTypes() ==
+  static_assert(ParameterPackTrait<std::variant, int, int>::DuplicateTypesRemoved{} ==
                 ParameterPackTrait<std::variant, int>{});
   static_assert(
-      ParameterPackTrait<std::variant, int, float, int, double, int>::RemoveDuplicateTypes() ==
+      ParameterPackTrait<std::variant, int, float, int, double, int>::DuplicateTypesRemoved{} ==
       ParameterPackTrait<std::variant, int, float, double>{});
   static_assert(
-      ParameterPackTrait<std::variant, int, float, int, double, int>::RemoveDuplicateTypes() !=
+      ParameterPackTrait<std::variant, int, float, int, double, int>::DuplicateTypesRemoved{} !=
       ParameterPackTrait<std::variant, float, int, double>{});
 }
 
 TEST(ParameterPackTrait, HasDuplicates) {
   // No duplicates in empty pack
-  static_assert(!ParameterPackTrait<std::variant>::HasDuplicates());
+  static_assert(!ParameterPackTrait<std::variant>::kHasDuplicates);
 
   // No duplicates in single element pack
-  static_assert(!ParameterPackTrait<std::variant, int>::HasDuplicates());
+  static_assert(!ParameterPackTrait<std::variant, int>::kHasDuplicates);
 
   // Duplicates in pack with 2 identical types
-  static_assert(ParameterPackTrait<std::variant, int, int>::HasDuplicates());
+  static_assert(ParameterPackTrait<std::variant, int, int>::kHasDuplicates);
 
   // No duplicates in pack with 2 distinct types
-  static_assert(!ParameterPackTrait<std::variant, int, char>::HasDuplicates());
+  static_assert(!ParameterPackTrait<std::variant, int, char>::kHasDuplicates);
 
   // Order doesn't matter - Duplicates still found
-  static_assert(ParameterPackTrait<std::variant, int, char, int>::HasDuplicates());
+  static_assert(ParameterPackTrait<std::variant, int, char, int>::kHasDuplicates);
 }
 
 TEST(ParameterPackTrait, MakeParameterPackTrait) {
