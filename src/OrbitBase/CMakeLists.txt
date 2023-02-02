@@ -34,6 +34,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/NotFoundOr.h
         include/OrbitBase/GetProcessIds.h
         include/OrbitBase/Overloaded.h
+        include/OrbitBase/ParameterPackTrait.h
         include/OrbitBase/Profiling.h
         include/OrbitBase/Promise.h
         include/OrbitBase/PromiseHelpers.h
@@ -120,6 +121,7 @@ target_sources(OrbitBaseTests PRIVATE
         LoggingUtilsTest.cpp
         NotFoundOrTest.cpp
         OverloadedTest.cpp
+        ParameterPackTraitTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
         PromiseHelpersTest.cpp
