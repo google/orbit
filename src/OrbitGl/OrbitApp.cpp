@@ -48,7 +48,6 @@
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "ClientData/CallstackData.h"
-#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleIdentifier.h"
