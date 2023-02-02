@@ -4,7 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <tuple>
+#include <type_traits>
 #include <variant>
 
 #include "OrbitBase/ParameterPackTrait.h"
