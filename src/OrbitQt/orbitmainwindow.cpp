@@ -347,6 +347,7 @@ void OrbitMainWindow::SetupMainWindow() {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->debugTab));
   }
 
+  // TODO(b/240111699): remove selection tabs.
   if (absl::GetFlag(FLAGS_time_range_selection)) {
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->selectionTopDownTab));
     ui->RightTabWidget->removeTab(ui->RightTabWidget->indexOf(ui->selectionBottomUpTab));
@@ -610,6 +611,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
 void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   auto set_tab_enabled = [this](QWidget* widget, bool enabled) -> void {
     QTabWidget* tab_widget = FindParentTabWidget(widget);
+    // TODO(b/240111699): revert to ORBIT_CHECK(tab_widget != nullptr);
     if (tab_widget != nullptr) {
       tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
     }
@@ -696,6 +698,7 @@ void OrbitMainWindow::UpdateProcessConnectionStateDependentWidgets() {
 void OrbitMainWindow::ClearCaptureFilters() { filter_panel_action_->ClearEdits(); }
 
 void OrbitMainWindow::UpdateActiveTabsAfterSelection(bool selection_has_samples) {
+  // TODO(b/240111699): remove this function.
   if (absl::GetFlag(FLAGS_time_range_selection)) return;
 
   const QTabWidget* capture_parent = FindParentTabWidget(ui->CaptureTab);
