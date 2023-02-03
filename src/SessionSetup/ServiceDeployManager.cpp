@@ -14,6 +14,7 @@
 #include <QMetaObject>
 #include <QNonConstOverload>
 #include <QPointer>
+#include <QThread>
 #include <Qt>
 #include <algorithm>
 #include <chrono>
