@@ -124,7 +124,7 @@ jobs:
         run: |
           py -3 -m pip install aqtinstall
           py -3 -m aqt install-qt  --outputdir C:\Qt windows desktop 5.15 win64_msvc2019_64
-          py -3 -m pip install conan==1.54.0
+          py -3 -m pip install conan==1.58.0
           choco install -y ccache
           echo "C:\ProgramData\chocolatey\lib\ccache\tools\ccache-4.7.3-windows-x86_64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Save CCache Timestamp
