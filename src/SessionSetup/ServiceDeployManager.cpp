@@ -150,8 +150,7 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
   ORBIT_CHECK(deployment_configuration != nullptr);
   ORBIT_CHECK(context != nullptr);
 
-  background_thread_.start();
-  moveToThread(&background_thread_);
+  moveToThread(background_executor_.GetThread());
 
   QObject::connect(
       this, &ServiceDeployManager::statusMessage, this, [](const QString& status_message) {
@@ -159,11 +158,7 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
       });
 }
 
-ServiceDeployManager::~ServiceDeployManager() {
-  Shutdown();
-  background_thread_.quit();
-  background_thread_.wait();
-}
+ServiceDeployManager::~ServiceDeployManager() { Shutdown(); }
 
 void ServiceDeployManager::Cancel() {
   // By transforming this function call into a signal we leverage Qt's automatic thread
