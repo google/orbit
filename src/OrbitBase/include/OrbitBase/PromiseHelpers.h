@@ -141,21 +141,24 @@ struct EnsureWrappedInResult<Result<T, E1>, E2> {
 
 template <typename T, typename... E1s, typename E2>
 struct EnsureWrappedInResult<Result<T, AnyErrorOf<E1s...>>, E2> {
-  using Type = Result<
-      T, decltype(ParameterPackTrait<AnyErrorOf, E1s..., E2>{}.RemoveDuplicateTypes().ToType())>;
+  using Type =
+      Result<T, decltype(
+                    ParameterPackTrait<AnyErrorOf, E1s..., E2>{}.RemoveDuplicateTypes().ToType())>;
 };
 
 template <typename T, typename E1, typename... E2s>
 struct EnsureWrappedInResult<Result<T, E1>, AnyErrorOf<E2s...>> {
-  using Type = Result<
-      T, decltype(ParameterPackTrait<AnyErrorOf, E1, E2s...>{}.RemoveDuplicateTypes().ToType())>;
+  using Type =
+      Result<T, decltype(
+                    ParameterPackTrait<AnyErrorOf, E1, E2s...>{}.RemoveDuplicateTypes().ToType())>;
 };
 
 template <typename T, typename... E1s, typename... E2s>
 struct EnsureWrappedInResult<Result<T, AnyErrorOf<E1s...>>, AnyErrorOf<E2s...>> {
-  using Type = Result<
-      T,
-      decltype(ParameterPackTrait<AnyErrorOf, E1s..., E2s...>{}.RemoveDuplicateTypes().ToType())>;
+  using Type =
+      Result<T,
+             decltype(
+                 ParameterPackTrait<AnyErrorOf, E1s..., E2s...>{}.RemoveDuplicateTypes().ToType())>;
 };
 
 }  // namespace orbit_base
