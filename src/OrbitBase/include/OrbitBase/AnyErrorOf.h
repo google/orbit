@@ -45,7 +45,7 @@ class AnyErrorOf : public std::variant<ErrorTypes...> {
                 "AnyError<ErrorTypes...> must not have duplicate error types.");
 
   template <typename... Types>
-  constexpr static bool CanBeConstructedFromTypesAndIsNotCopy() {
+  constexpr static bool kCanBeConstructedFromTypesAndIsNotCopy = []() {
     constexpr ParameterPackTrait<AnyErrorOf, ErrorTypes...> kThisTrait{};
     constexpr ParameterPackTrait<AnyErrorOf, Types...> kOtherTrait{};
 
@@ -56,12 +56,23 @@ class AnyErrorOf : public std::variant<ErrorTypes...> {
     // We only allow conversion from an instance of `AnyErrorOf<Types...>` with `Types` being a
     // subset of `ErrorTypes`.
     return kThisTrait.IsSubset(kOtherTrait);
-  }
+  }();
+
+  template <typename... Types>
+  using EnableIfCanBeConstructedFromTypesAndIsNotCopy =
+      std::enable_if_t<kCanBeConstructedFromTypesAndIsNotCopy<Types...>, int>;
 
   // Is true iff `Type` is in the `ErrorTypes...` parameter pack.
   template <typename Type>
   constexpr static bool kIsAnErrorType =
       ParameterPackTrait<AnyErrorOf, ErrorTypes...>::template kContains<Type>;
+
+  template <typename T>
+  auto ToBase(T&& other) {
+    return std::visit(
+        [](auto&& alternative) -> Base { return std::forward<decltype(alternative)>(alternative); },
+        std::forward<T>(other));
+  }
 
   // The following converting constructors/assignment operators allow conversion of any AnyErrorOf
   // type into a compatible AnyErrorOf type. An AnyErrorOf type is considered compatible
@@ -72,33 +83,23 @@ class AnyErrorOf : public std::variant<ErrorTypes...> {
   //  - AnyErrorOf<E1> can be converted into AnyErrorOf<E1, E2> but not into AnyErrorOf<E2, E3>.
   //  - AnyErrorOf<E1, E2> can be converted into AnyErrorOf<E1, E3, E2>.
   //  - AnyErrorOf<E1, E2> can be converted into AnyErrorOf<E2, E1>.
-  template <typename... Types,
-            std::enable_if_t<CanBeConstructedFromTypesAndIsNotCopy<Types...>(), int> = 0>
+  template <typename... Types, EnableIfCanBeConstructedFromTypesAndIsNotCopy<Types...> = 0>
   // NOLINTNEXTLINE(google-explicit-constructor)
-  AnyErrorOf(const AnyErrorOf<Types...>& other)
-      : Base{std::visit([](const auto& alternative) -> Base { return alternative; }, other)} {}
+  AnyErrorOf(const AnyErrorOf<Types...>& other) : Base{ToBase(other)} {}
 
-  template <typename... Types,
-            std::enable_if_t<CanBeConstructedFromTypesAndIsNotCopy<Types...>(), int> = 0>
+  template <typename... Types, EnableIfCanBeConstructedFromTypesAndIsNotCopy<Types...> = 0>
   // NOLINTNEXTLINE(google-explicit-constructor)
-  AnyErrorOf(AnyErrorOf<Types...>&& other)
-      : Base{std::visit([](auto&& alternative)
-                            -> Base { return std::forward<decltype(alternative)>(alternative); },
-                        std::move(other))} {}
+  AnyErrorOf(AnyErrorOf<Types...>&& other) : Base{ToBase(std::move(other))} {}
 
-  template <typename... Types,
-            std::enable_if_t<CanBeConstructedFromTypesAndIsNotCopy<Types...>(), int> = 0>
+  template <typename... Types, EnableIfCanBeConstructedFromTypesAndIsNotCopy<Types...> = 0>
   AnyErrorOf& operator=(const AnyErrorOf<Types...>& other) {
-    *this = std::visit([](const auto& alternative) -> Base { return alternative; }, other);
+    *this = ToBase(other);
     return *this;
   }
 
-  template <typename... Types,
-            std::enable_if_t<CanBeConstructedFromTypesAndIsNotCopy<Types...>(), int> = 0>
+  template <typename... Types, EnableIfCanBeConstructedFromTypesAndIsNotCopy<Types...> = 0>
   AnyErrorOf& operator=(AnyErrorOf<Types...>&& other) {
-    *this = std::visit(
-        [](auto&& alternative) -> Base { return std::forward<decltype(alternative)>(alternative); },
-        std::move(other));
+    *this = ToBase(std::move(other));
     return *this;
   }
 
