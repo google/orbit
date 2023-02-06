@@ -45,7 +45,7 @@ class AnyErrorOf : public std::variant<ErrorTypes...> {
                 "AnyError<ErrorTypes...> must not have duplicate error types.");
 
   template <typename... Types>
-  constexpr static bool kCanBeConstructedFromTypesAndIsNotCopy = []() {
+  constexpr static bool kCanBeConstructedFromTypesAndIsNotCopy = [] {
     constexpr ParameterPackTrait<AnyErrorOf, ErrorTypes...> kThisTrait{};
     constexpr ParameterPackTrait<AnyErrorOf, Types...> kOtherTrait{};
 
@@ -67,11 +67,11 @@ class AnyErrorOf : public std::variant<ErrorTypes...> {
   constexpr static bool kIsAnErrorType =
       ParameterPackTrait<AnyErrorOf, ErrorTypes...>::template kContains<Type>;
 
-  template <typename T>
-  auto ToBase(T&& other) {
+  template <typename Variant>
+  auto ToBase(Variant&& other) {
     return std::visit(
         [](auto&& alternative) -> Base { return std::forward<decltype(alternative)>(alternative); },
-        std::forward<T>(other));
+        std::forward<Variant>(other));
   }
 
   // The following converting constructors/assignment operators allow conversion of any AnyErrorOf
