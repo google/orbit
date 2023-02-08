@@ -2,7 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <memory>
+#include <string_view>
+#include <utility>
+#include <variant>
 
 #include "OrbitBase/AnyErrorOf.h"
 #include "OrbitBase/Result.h"
