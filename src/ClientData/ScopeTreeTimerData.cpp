@@ -106,6 +106,7 @@ std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimers
 std::vector<const orbit_client_protos::TimerInfo*> ScopeTreeTimerData::GetTimersAtDepthDiscretized(
     uint32_t depth, uint32_t resolution, uint64_t start_ns, uint64_t end_ns) const {
   ORBIT_SCOPE_WITH_COLOR("GetTimersAtDepthDiscretized", kOrbitColorAmber);
+  if (resolution == 0) return {};
   absl::MutexLock lock(&scope_tree_mutex_);
   // The query is for the interval [start_ns, end_ns], but it's easier to work with the close-open
   // interval [start_ns, end_ns+1). We have to be careful with overflowing.
