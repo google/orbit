@@ -31,12 +31,11 @@ class CallTreeThread;
 class CallTreeFunction;
 class CallTreeUnwindErrors;
 class CallTreeUnwindErrorType;
-class CallTreeView;
 
 class CallTreeNode {
  public:
   explicit CallTreeNode(CallTreeNode* parent) : parent_{parent} {}
-  virtual ~CallTreeNode() = default;
+  virtual ~CallTreeNode() = 0;
 
   // parent(), child_count(), children() are needed by CallTreeViewItemModel.
   [[nodiscard]] const CallTreeNode* parent() const { return parent_; }
@@ -105,12 +104,10 @@ class CallTreeNode {
   }
 
  private:
-  // absl::node_hash_map instead of absl::flat_hash_map as pointer stability is
-  // needed for the CallTreeNode::parent_ field.
-  absl::flat_hash_map<uint32_t, std::unique_ptr<CallTreeThread>> thread_children_;
-  absl::flat_hash_map<uint64_t, std::unique_ptr<CallTreeFunction>> function_children_;
+  absl::flat_hash_map<uint32_t, std::unique_ptr<CallTreeThread>> thread_children_{};
+  absl::flat_hash_map<uint64_t, std::unique_ptr<CallTreeFunction>> function_children_{};
   absl::flat_hash_map<orbit_client_data::CallstackType, std::unique_ptr<CallTreeUnwindErrorType>>
-      unwind_error_type_children_;
+      unwind_error_type_children_{};
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
@@ -118,16 +115,17 @@ class CallTreeNode {
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
   // Note that we are copying the CallstackEvents into the tree.
-  std::vector<orbit_client_data::CallstackEvent> exclusive_callstack_events_;
+  std::vector<orbit_client_data::CallstackEvent> exclusive_callstack_events_{};
 
   // Filled lazily when children() is called, invalidated when children are invalidated.
-  mutable std::optional<std::vector<const CallTreeNode*>> children_cache_;
+  mutable std::optional<std::vector<const CallTreeNode*>> children_cache_{};
 };
 
 class CallTreeFunction : public CallTreeNode {
  public:
   explicit CallTreeFunction(uint64_t function_absolute_address, CallTreeNode* parent)
       : CallTreeNode{parent}, function_absolute_address_{function_absolute_address} {}
+  ~CallTreeFunction() override = default;
 
   [[nodiscard]] uint64_t function_absolute_address() const { return function_absolute_address_; }
 
@@ -159,6 +157,7 @@ class CallTreeThread : public CallTreeNode {
  public:
   explicit CallTreeThread(uint32_t thread_id, std::string thread_name, CallTreeNode* parent)
       : CallTreeNode{parent}, thread_id_{thread_id}, thread_name_{std::move(thread_name)} {}
+  ~CallTreeThread() override = default;
 
   [[nodiscard]] uint32_t thread_id() const { return thread_id_; }
 
@@ -172,6 +171,7 @@ class CallTreeThread : public CallTreeNode {
 class CallTreeUnwindErrors : public CallTreeNode {
  public:
   explicit CallTreeUnwindErrors(CallTreeNode* parent) : CallTreeNode{parent} {}
+  ~CallTreeUnwindErrors() override = default;
 };
 
 class CallTreeUnwindErrorType : public CallTreeNode {
@@ -181,11 +181,18 @@ class CallTreeUnwindErrorType : public CallTreeNode {
       : CallTreeNode{parent}, error_type_{error_type} {
     ORBIT_CHECK(error_type != orbit_client_data::CallstackType::kComplete);
   }
+  ~CallTreeUnwindErrorType() override = default;
 
   [[nodiscard]] orbit_client_data::CallstackType error_type() const { return error_type_; }
 
  private:
   orbit_client_data::CallstackType error_type_;
+};
+
+class CallTreeRoot : public CallTreeNode {
+ public:
+  CallTreeRoot() : CallTreeNode(nullptr) {}
+  ~CallTreeRoot() override = default;
 };
 
 class CallTreeView {
@@ -201,12 +208,16 @@ class CallTreeView {
       const orbit_client_data::ModuleManager* module_manager,
       const orbit_client_data::CaptureData* capture_data);
 
-  CallTreeView(const orbit_client_data::ModuleManager* module_manager,
+  CallTreeView(std::unique_ptr<CallTreeRoot> call_tree_root,
+               const orbit_client_data::ModuleManager* module_manager,
                const orbit_client_data::CaptureData* capture_data)
-      : module_manager_{module_manager}, capture_data_{capture_data} {}
+      : call_tree_root_{std::move(call_tree_root)},
+        module_manager_{module_manager},
+        capture_data_{capture_data} {
+    ORBIT_CHECK(call_tree_root_ != nullptr);
+  }
 
-  [[nodiscard]] CallTreeNode* GetCallTreeRootNode() { return &call_tree_root_; }
-  [[nodiscard]] const CallTreeNode* GetCallTreeRootNode() const { return &call_tree_root_; }
+  [[nodiscard]] const CallTreeRoot* GetRootCallTreeNode() const { return call_tree_root_.get(); }
 
   [[nodiscard]] const orbit_client_data::ModuleManager& GetModuleManager() const {
     ORBIT_CHECK(module_manager_ != nullptr);
@@ -218,10 +229,10 @@ class CallTreeView {
     return *capture_data_;
   }
 
-  [[nodiscard]] uint64_t sample_count() const { return call_tree_root_.sample_count(); }
+  [[nodiscard]] uint64_t sample_count() const { return call_tree_root_->sample_count(); }
 
  private:
-  CallTreeNode call_tree_root_{nullptr};
+  std::unique_ptr<CallTreeRoot> call_tree_root_;
   const orbit_client_data::ModuleManager* module_manager_;
   const orbit_client_data::CaptureData* capture_data_;
 };

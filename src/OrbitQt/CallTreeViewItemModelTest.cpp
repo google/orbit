@@ -100,7 +100,8 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 TEST(CallTreeViewItemModel, AbstractItemModelTesterEmptyModel) {
   orbit_qt_utils::AssertNoQtLogWarnings message_handler{};
 
-  CallTreeViewItemModel model{std::make_unique<CallTreeView>(nullptr, nullptr)};
+  CallTreeViewItemModel model{
+      std::make_unique<CallTreeView>(std::make_unique<CallTreeRoot>(), nullptr, nullptr)};
 
   QAbstractItemModelTester(&model, QAbstractItemModelTester::FailureReportingMode::Warning);
 }
