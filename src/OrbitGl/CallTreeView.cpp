@@ -217,7 +217,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   ORBIT_SCOPE_FUNCTION;
   ORBIT_SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
 
-  std::unique_ptr<CallTreeRoot> top_down_view_root = std::make_unique<CallTreeRoot>();
+  auto top_down_view_root = std::make_unique<CallTreeRoot>();
   const std::string& process_name = capture_data->process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data->thread_names();
 
@@ -247,8 +247,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
       }
     }
   }
-  return std::make_unique<CallTreeView>(std::move(top_down_view_root), module_manager,
-                                        capture_data);
+  return absl::WrapUnique<CallTreeView>(
+      new CallTreeView(std::move(top_down_view_root), module_manager, capture_data));
 }
 
 [[nodiscard]] static CallTreeNode* AddReversedCallstackToBottomUpViewAndReturnLastFunction(
@@ -292,7 +292,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
   ORBIT_SCOPE_FUNCTION;
   ORBIT_SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
 
-  std::unique_ptr<CallTreeRoot> bottom_up_view_root = std::make_unique<CallTreeRoot>();
+  auto bottom_up_view_root = std::make_unique<CallTreeRoot>();
   const std::string& process_name = capture_data->process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data->thread_names();
 
@@ -325,6 +325,6 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
     }
   }
 
-  return std::make_unique<CallTreeView>(std::move(bottom_up_view_root), module_manager,
-                                        capture_data);
+  return absl::WrapUnique<CallTreeView>(
+      new CallTreeView(std::move(bottom_up_view_root), module_manager, capture_data));
 }

@@ -1015,8 +1015,7 @@ void OrbitApp::ClearSelectionReport() {
 }
 
 void OrbitApp::ClearTopDownView() {
-  main_window_->SetTopDownView(
-      std::make_unique<CallTreeView>(std::make_unique<CallTreeRoot>(), nullptr, nullptr));
+  main_window_->SetTopDownView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionTopDownView(
@@ -1029,13 +1028,11 @@ void OrbitApp::SetSelectionTopDownView(
 }
 
 void OrbitApp::ClearSelectionTopDownView() {
-  main_window_->SetSelectionTopDownView(
-      std::make_unique<CallTreeView>(std::make_unique<CallTreeRoot>(), nullptr, nullptr));
+  main_window_->SetSelectionTopDownView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::ClearBottomUpView() {
-  main_window_->SetBottomUpView(
-      std::make_unique<CallTreeView>(std::make_unique<CallTreeRoot>(), nullptr, nullptr));
+  main_window_->SetBottomUpView(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionBottomUpView(
@@ -1048,8 +1045,7 @@ void OrbitApp::SetSelectionBottomUpView(
 }
 
 void OrbitApp::ClearSelectionBottomUpView() {
-  main_window_->SetSelectionBottomUpView(
-      std::make_unique<CallTreeView>(std::make_unique<CallTreeRoot>(), nullptr, nullptr));
+  main_window_->SetSelectionBottomUpView(std::make_unique<CallTreeView>());
 }
 
 absl::Duration OrbitApp::GetCaptureTime() const {

@@ -108,9 +108,7 @@ class CallTreeNode {
   absl::flat_hash_map<uint64_t, std::unique_ptr<CallTreeFunction>> function_children_{};
   absl::flat_hash_map<orbit_client_data::CallstackType, std::unique_ptr<CallTreeUnwindErrorType>>
       unwind_error_type_children_{};
-  // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
-  // needs the copy constructor (even for try_emplace).
-  std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
+  std::unique_ptr<CallTreeUnwindErrors> unwind_errors_child_;
 
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
@@ -197,6 +195,8 @@ class CallTreeRoot : public CallTreeNode {
 
 class CallTreeView {
  public:
+  CallTreeView() : call_tree_root_{std::make_unique<CallTreeRoot>()} {}
+
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
       const orbit_client_data::ModuleManager* module_manager,
@@ -208,16 +208,7 @@ class CallTreeView {
       const orbit_client_data::ModuleManager* module_manager,
       const orbit_client_data::CaptureData* capture_data);
 
-  CallTreeView(std::unique_ptr<CallTreeRoot> call_tree_root,
-               const orbit_client_data::ModuleManager* module_manager,
-               const orbit_client_data::CaptureData* capture_data)
-      : call_tree_root_{std::move(call_tree_root)},
-        module_manager_{module_manager},
-        capture_data_{capture_data} {
-    ORBIT_CHECK(call_tree_root_ != nullptr);
-  }
-
-  [[nodiscard]] const CallTreeRoot* GetRootCallTreeNode() const { return call_tree_root_.get(); }
+  [[nodiscard]] const CallTreeRoot* GetCallTreeRoot() const { return call_tree_root_.get(); }
 
   [[nodiscard]] const orbit_client_data::ModuleManager& GetModuleManager() const {
     ORBIT_CHECK(module_manager_ != nullptr);
@@ -232,9 +223,18 @@ class CallTreeView {
   [[nodiscard]] uint64_t sample_count() const { return call_tree_root_->sample_count(); }
 
  private:
+  CallTreeView(std::unique_ptr<CallTreeRoot> call_tree_root,
+               const orbit_client_data::ModuleManager* module_manager,
+               const orbit_client_data::CaptureData* capture_data)
+      : call_tree_root_{std::move(call_tree_root)},
+        module_manager_{module_manager},
+        capture_data_{capture_data} {
+    ORBIT_CHECK(call_tree_root_ != nullptr);
+  }
+
   std::unique_ptr<CallTreeRoot> call_tree_root_;
-  const orbit_client_data::ModuleManager* module_manager_;
-  const orbit_client_data::CaptureData* capture_data_;
+  const orbit_client_data::ModuleManager* module_manager_{};
+  const orbit_client_data::CaptureData* capture_data_{};
 };
 
 #endif  // ORBIT_GL_CALL_TREE_VIEW_H_

@@ -372,7 +372,7 @@ QModelIndex CallTreeViewItemModel::index(int row, int column, const QModelIndex&
 
   const CallTreeNode* parent_item = nullptr;
   if (!parent.isValid()) {
-    parent_item = call_tree_view_->GetRootCallTreeNode();
+    parent_item = call_tree_view_->GetCallTreeRoot();
   } else {
     parent_item = static_cast<CallTreeNode*>(parent.internalPointer());
   }
@@ -392,7 +392,7 @@ QModelIndex CallTreeViewItemModel::parent(const QModelIndex& index) const {
 
   auto* child_item = static_cast<CallTreeNode*>(index.internalPointer());
   const CallTreeNode* item = child_item->parent();
-  if (item == call_tree_view_->GetRootCallTreeNode()) {
+  if (item == call_tree_view_->GetCallTreeRoot()) {
     return {};
   }
 
@@ -412,7 +412,7 @@ int CallTreeViewItemModel::rowCount(const QModelIndex& parent) const {
     return 0;
   }
   if (!parent.isValid()) {
-    return call_tree_view_->GetRootCallTreeNode()->child_count();
+    return call_tree_view_->GetCallTreeRoot()->child_count();
   }
   auto* item = static_cast<CallTreeNode*>(parent.internalPointer());
   return item->child_count();
