@@ -33,13 +33,13 @@ class SelectionData {
   SelectionData(SelectionData&& other) = delete;
   SelectionData& operator=(SelectionData&& other) = delete;
 
-  SelectionData(const orbit_client_data::ModuleManager& module_manager,
-                const orbit_client_data::CaptureData& capture_data,
+  SelectionData(const orbit_client_data::ModuleManager* module_manager,
+                const orbit_client_data::CaptureData* capture_data,
                 orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
                 const orbit_client_data::CallstackData* callstack_data);
 
-  SelectionData(const orbit_client_data::ModuleManager& module_manager,
-                const orbit_client_data::CaptureData& capture_data,
+  SelectionData(const orbit_client_data::ModuleManager* module_manager,
+                const orbit_client_data::CaptureData* capture_data,
                 absl::Span<const orbit_client_data::CallstackEvent> callstack_events,
                 SelectionType selection_type = SelectionType::kUnknown);
 

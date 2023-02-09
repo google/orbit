@@ -219,14 +219,14 @@ class OrbitApp final : public DataViewFactory,
   void ClearTopDownView();
   void SetSelectionTopDownView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
-      const orbit_client_data::CaptureData& capture_data);
+      const orbit_client_data::CaptureData* capture_data);
   void ClearSelectionTopDownView();
 
   void SetBottomUpView(const orbit_client_data::PostProcessedSamplingData& post_processed_data);
   void ClearBottomUpView();
   void SetSelectionBottomUpView(
       const orbit_client_data::PostProcessedSamplingData& selection_post_processed_data,
-      const orbit_client_data::CaptureData& capture_data);
+      const orbit_client_data::CaptureData* capture_data);
   void ClearSelectionBottomUpView();
 
   // This needs to be called from the main thread.
@@ -277,7 +277,7 @@ class OrbitApp final : public DataViewFactory,
 
   void UpdateAfterSymbolLoading();
   void UpdateAfterSymbolLoadingThrottled();
-  void UpdateAfterCaptureCleared();
+  void ClearSamplingRelatedViews();
 
   // Load the functions and add frame tracks from a particular module of a preset file.
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(

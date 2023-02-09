@@ -38,6 +38,10 @@ class CaptureDataHolder {
     ORBIT_CHECK(HasCaptureData());
     return *capture_data_;
   }
+  [[nodiscard]] const CaptureData* GetCaptureDataPointer() const {
+    ORBIT_CHECK(HasCaptureData());
+    return capture_data_.get();
+  }
 
   [[nodiscard]] std::optional<ScopeId> ProvideScopeId(
       const orbit_client_protos::TimerInfo& timer_info) const {
