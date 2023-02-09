@@ -446,6 +446,9 @@ Future<void> OrbitApp::OnCaptureComplete() {
         ORBIT_CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
+        if (GetCaptureData().GetAllProvidedScopeIds().empty()) {
+          main_window_->SelectTopDownTab();
+        }
         FireRefreshCallbacks();
 
         if (absl::GetFlag(FLAGS_auto_symbol_loading)) {

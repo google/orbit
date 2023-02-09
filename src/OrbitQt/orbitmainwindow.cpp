@@ -2017,3 +2017,4 @@ void OrbitMainWindow::RefreshDataView(DataViewType type) {
 }
 
 void OrbitMainWindow::SelectLiveTab() { ui->RightTabWidget->setCurrentWidget(ui->liveTab); }
+void OrbitMainWindow::SelectTopDownTab() { ui->RightTabWidget->setCurrentWidget(ui->topDownTab); }

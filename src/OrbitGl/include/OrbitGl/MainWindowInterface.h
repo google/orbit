@@ -68,6 +68,7 @@ class MainWindowInterface {
   virtual void OnSetClipboard(std::string_view text) = 0;
   virtual void RefreshDataView(orbit_data_views::DataViewType type) = 0;
   virtual void SelectLiveTab() = 0;
+  virtual void SelectTopDownTab() = 0;
   virtual std::string OnGetSaveFileName(std::string_view extension) = 0;
 
   virtual void SetErrorMessage(std::string_view title, std::string_view text) = 0;

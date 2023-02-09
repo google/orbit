@@ -112,6 +112,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnSetClipboard(std::string_view text) override;
   void RefreshDataView(orbit_data_views::DataViewType type) override;
   void SelectLiveTab() override;
+  void SelectTopDownTab() override;
   std::string OnGetSaveFileName(std::string_view extension) override;
 
   void SetErrorMessage(std::string_view title, std::string_view text) override;
