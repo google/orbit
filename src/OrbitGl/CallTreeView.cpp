@@ -114,9 +114,8 @@ std::string CallTreeFunction::RetrieveFunctionName(
       module_manager, capture_data, function_absolute_address_);
   if (function_name != orbit_client_data::kUnknownFunctionOrModuleName) {
     return function_name;
-  } else {
-    return absl::StrFormat("[unknown@%#llx]", function_absolute_address_);
   }
+  return absl::StrFormat("[unknown@%#llx]", function_absolute_address_);
 }
 
 std::string CallTreeFunction::RetrieveModulePath(

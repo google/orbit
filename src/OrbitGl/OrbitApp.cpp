@@ -1416,10 +1416,11 @@ void OrbitApp::AbortCapture() {
 
 void OrbitApp::ClearCapture() {
   ORBIT_SCOPE_FUNCTION;
+
+  ClearSamplingRelatedViews();
   if (capture_window_ != nullptr) {
     capture_window_->ClearTimeGraph();
   }
-  ClearSamplingRelatedViews();
   ResetCaptureData();
 
   string_manager_.Clear();
