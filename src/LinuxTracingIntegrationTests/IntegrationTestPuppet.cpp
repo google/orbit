@@ -19,7 +19,9 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
+#ifdef VULKAN_ENABLED
 #include "VulkanTutorial/OffscreenRenderingVulkanTutorial.h"
+#endif
 
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
 // perf_event_open events. The behavior is controlled by commands sent on standard input.
@@ -104,10 +106,12 @@ static void LoadSoWithDlopenAndCallFunction() {
   ORBIT_LOG("Function call completed: %f", function());
 }
 
+#ifdef VULKAN_ENABLED
 static void RunVulkanTutorial() {
   orbit_vulkan_tutorial::OffscreenRenderingVulkanTutorial tutorial;
   tutorial.Run(PuppetConstants::kFrameCount);
 }
+#endif
 
 extern "C" __attribute__((noinline)) void UseOrbitApi() {
   for (uint64_t i = 0; i < PuppetConstants::kOrbitApiUsageCount; ++i) {
@@ -194,7 +198,11 @@ int IntegrationTestPuppetMain() {
     } else if (command == PuppetConstants::kDlopenCommand) {
       LoadSoWithDlopenAndCallFunction();
     } else if (command == PuppetConstants::kVulkanTutorialCommand) {
+#ifdef VULKAN_ENABLED
       RunVulkanTutorial();
+#else
+      ORBIT_ERROR("Vulkan isn't enabled. Build with WITH_VULKAN=ON");
+#endif
     } else if (command == PuppetConstants::kOrbitApiCommand) {
       UseOrbitApi();
     } else if (command == PuppetConstants::kIncreaseRssCommand) {
