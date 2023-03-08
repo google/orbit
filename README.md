@@ -56,8 +56,9 @@ Orbit's focus has shifted to the Linux version. Windows local profiling is
 currently only supported partially and major features, such as dynamic
 instrumentation, are not yet implemented. It is possible however to profile
 Linux executables from a Windows UI instance. For Windows local profiling,
-please use the released
-[binaries](https://github.com/google/orbit/releases).
+you can still use the released
+[binaries](https://github.com/google/orbit/releases), but please note that
+they are deprecated and mostly undocumented.
 
 ## Build
 
