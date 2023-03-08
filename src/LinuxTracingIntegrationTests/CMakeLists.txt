@@ -35,13 +35,16 @@ target_link_libraries(IntegrationTestCommons PUBLIC
         ModuleUtils
         ObjectUtils
         OrbitBase
-        OffscreenRenderingVulkanTutorialLib
         GTest::gtest
         absl::base
         absl::time
         absl::flat_hash_set
         absl::strings
         absl::synchronization)
+
+if(WITH_VULKAN)
+  target_link_libraries(IntegrationTestCommons PUBLIC OffscreenRenderingVulkanTutorialLib)
+endif()
 
 
 add_executable(LinuxTracingIntegrationTests)
