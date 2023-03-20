@@ -115,6 +115,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
   options.selected_functions = selected_functions_;
   options.stack_dump_size = options_.stack_dump_size;
+  options.samples_per_second = options_.samples_per_second;
 
   std::filesystem::path file_path = GenerateFilePath();
 
