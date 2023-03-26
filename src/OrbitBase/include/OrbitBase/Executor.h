@@ -172,16 +172,21 @@ class Executor : public std::enable_shared_from_this<Executor> {
 
     auto continuation = [this, function_reference, executor_handle = GetExecutorHandle(),
                          promise = std::move(promise)](const Result<T, E>& argument) mutable {
-      absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
-      if (executor_handle.data_->executor_ == nullptr) return;
-
       // If the future returns a non-success ErrorMessageOr-type, we will short-circuit and won't
       // call the continuation. But we still have to schedule an action, that destroys the
       // continuation in the executor's context (think main thread). The continuation's destructor
       // might do things that need synchronization and can't happen in a different context (like a
       // thread pool), i.e. when the continuation owns a ScopedStatus.
       if (argument.has_error()) {
+        // Here in SetResult other continuations might be called to propogate the result,
+        // and some of these continuations might result in calling of ScheduleAfter() which locks
+        // the same executor mutex. To avoid possible deadlocks, execute SetResult() here
+        // in the non-locked context.
         promise.SetResult(outcome::failure(argument.error()));
+
+        absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
+        if (executor_handle.data_->executor_ == nullptr) return;
+
         executor_handle.data_->executor_->ScheduleImpl(CreateAction(
             [this, function_reference]() { waiting_continuations_.erase(function_reference); }));
         return;
@@ -197,6 +202,10 @@ class Executor : public std::enable_shared_from_this<Executor> {
 
         waiting_continuations_.erase(function_reference);
       };
+
+      absl::ReaderMutexLock lock{&executor_handle.data_->mutex_};
+      if (executor_handle.data_->executor_ == nullptr) return;
+
       executor_handle.data_->executor_->ScheduleImpl(
           CreateAction(std::move(success_function_wrapper)));
     };
