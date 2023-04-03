@@ -386,8 +386,11 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 
     if (!GetCaptureData().GetAllProvidedScopeIds().empty()) {
       main_window_->SelectLiveTab();
-      main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
     }
+    // LiveFunctionsDataView and CaptureData share the same ScopeStatsCollection (shared_ptr),
+    // and since the CaptureData was recreated above we have to update LiveFunctionsDataView
+    // correspondingly.
+    main_window_->SetLiveTabScopeStatsCollection(GetCaptureData().GetAllScopeStatsCollection());
 
     FireRefreshCallbacks();
 
