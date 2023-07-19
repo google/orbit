@@ -1448,25 +1448,13 @@ void OrbitApp::ToggleCapture() {
 }
 
 bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
-  // This function is used to determine if a capture is in a connected state. Lets imagine a user
-  // selects a process and takes a capture. Then the process of the capture is the same as the
-  // selected one and that means they are connected. If the user than selects a different process,
-  // the capture is not connected anymore. Orbit can be in a similar "capture connected" state, when
-  // the user connects to an instance, selects a process and then loads an instance from file that
-  // was taken shortly before of the same process.
-  // TODO(b/163303287): It might be the case in the future that captures loaded from file are always
-  // opened in a new window (compare b/163303287). Then this function is probably not necessary
-  // anymore. Otherwise, this function should probably be more sophisticated and also compare the
-  // build-id of the selected process (main module) and the process of the capture.
-
   const ProcessData* selected_process = GetTargetProcess();
   if (selected_process == nullptr) return false;
 
   const ProcessData* capture_process = capture.process();
   ORBIT_CHECK(capture_process != nullptr);
 
-  return selected_process->pid() == capture_process->pid() &&
-         selected_process->full_path() == capture_process->full_path();
+  return selected_process->pid() == capture_process->pid();
 }
 
 bool OrbitApp::IsDevMode() { return absl::GetFlag(FLAGS_devmode); }
