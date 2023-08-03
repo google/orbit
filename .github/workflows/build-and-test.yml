@@ -74,12 +74,15 @@ jobs:
       CCACHE_COMPRESS: "true"
       CCACHE_COMPRESSLEVEL: "6"
       CCACHE_MAXSIZE: "600M"
+      PR_NUMBER: ${{ github.event.number }}
+      PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
     steps:
       - run: |
            mkdir pr_metadata
-           echo "${{ github.event.number }}" > pr_metadata/pr_number.txt
-           echo "${{ github.event.pull_request.head.repo.full_name }}" > pr_metadata/pr_head_repo.txt
-           echo "${{ github.event.pull_request.head.ref }}" > pr_metadata/pr_head_ref.txt
+           echo "$PR_NUMBER" > pr_metadata/pr_number.txt
+           echo "$PR_HEAD_REPO" > pr_metadata/pr_head_repo.txt
+           echo "$PR_HEAD_REF" > pr_metadata/pr_head_ref.txt
         if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
       - name: 'Upload PR metadata'
         if: github.event_name == 'pull_request' && matrix.config.name == 'Clang Debug'
