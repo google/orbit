@@ -61,7 +61,9 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   }
 
   {
-    ORBIT_SCOPE(absl::StrFormat("DoSort column[%i]", sorting_column_).c_str());
+    ORBIT_SCOPE(
+        absl::StrFormat("DoSort column[%i] %s", sorting_column_, orbit_data_views::ToString(type_))
+            .c_str());
     DoSort();
   }
 }

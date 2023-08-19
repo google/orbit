@@ -16,8 +16,33 @@ enum class DataViewType {
   kSampling,
   kPresets,
   kTracepoints,
-  kAll,
+  kAll,  // kAll needs to be last.
 };
+
+inline const char* ToString(DataViewType type) {
+  switch (type) {
+    case DataViewType::kInvalid:
+      return "kInvalid";
+    case DataViewType::kFunctions:
+      return "kFunctions";
+    case DataViewType::kLiveFunctions:
+      return "kLiveFunctions";
+    case DataViewType::kCallstack:
+      return "kCallstack";
+    case DataViewType::kModules:
+      return "kModules";
+    case DataViewType::kSampling:
+      return "kSampling";
+    case DataViewType::kPresets:
+      return "kPresets";
+    case DataViewType::kTracepoints:
+      return "kTracepoints";
+    case DataViewType::kAll:
+      return "kAll";
+  }
+  ORBIT_UNREACHABLE();
+  return "";
+}
 
 }  // namespace orbit_data_views
 

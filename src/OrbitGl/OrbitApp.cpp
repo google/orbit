@@ -1181,13 +1181,35 @@ Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(const std::filesystem::pa
 
 void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
 
+void OrbitApp::SetRefreshCallbackEnabled(orbit_data_views::DataViewType type, bool enabled) {
+  if (type == orbit_data_views::DataViewType::kAll) {
+    for (std::atomic<bool>& disabled : refresh_callback_disabled_) {
+      disabled = !enabled;
+    }
+  } else {
+    refresh_callback_disabled_[static_cast<size_t>(type)] = !enabled;
+  }
+}
+
+bool OrbitApp::IsRefreshCallbackEnabled(orbit_data_views::DataViewType type) {
+  return !refresh_callback_disabled_[static_cast<size_t>(type)];
+}
+
 void OrbitApp::FireRefreshCallbacks(DataViewType type) {
+  ORBIT_SCOPE_WITH_COLOR(
+      absl::StrFormat("FireRefreshCallback (%s)", orbit_data_views::ToString(type)).c_str(),
+      kOrbitColorPink);
   for (orbit_data_views::DataView* panel : panels_) {
-    if (type == orbit_data_views::DataViewType::kAll || type == panel->GetType()) {
+    DataViewType panel_type = panel->GetType();
+    if ((type == orbit_data_views::DataViewType::kAll || type == panel->GetType()) &&
+        !refresh_callback_disabled_[static_cast<size_t>(panel_type)]) {
+      ORBIT_SCOPE(
+          absl::StrFormat("OnDataChanged (%s)", orbit_data_views::ToString(panel_type)).c_str());
       panel->OnDataChanged();
     }
   }
 
+  ORBIT_SCOPE("Main window RefreshDataView");
   main_window_->RefreshDataView(type);
 }
 
@@ -1551,8 +1573,11 @@ void OrbitApp::AddSymbols(const orbit_client_data::ModulePathAndBuildId& module_
   ModuleData* module_data = GetMutableModuleByModulePathAndBuildId(module_path_and_build_id);
   // In case fallback symbols were previously loaded, remove them. Careful to call this before
   // ModuleData::AddSymbols, as it will clear the fallback symbols from the ModuleData, and
-  // FunctionsDataView contains pointers to them.
-  functions_data_view_->RemoveFunctionsOfModule(module_data->file_path());
+  // FunctionsDataView contains pointers to them. This is not neede on initial loading of all
+  // symbols.
+  if (!is_loading_all_symbols_) {
+    functions_data_view_->RemoveFunctionsOfModule(module_data->file_path());
+  }
   module_data->AddSymbols(module_symbols);
 
   const std::optional<ModuleIdentifier> module_identifier =
@@ -1855,6 +1880,16 @@ Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
 }
 
 Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols() {
+  static const char* async_track_name = "LoadAllSymbols: Disable Refresh Callbacks";
+  uint64_t async_scope_id = absl::bit_cast<uint64_t>(async_track_name);
+  ORBIT_START_ASYNC(async_track_name, async_scope_id);
+  // Disable all refresh callbacks except for the modules Dataview when loading all symbols. This
+  // avoids N^2 redundant sorting operations on functions DataView that could easily block the
+  // entire UI for minutes.
+  SetRefreshCallbackEnabled(DataViewType::kAll, false);
+  SetRefreshCallbackEnabled(DataViewType::kModules, true);
+  is_loading_all_symbols_ = true;
+
   const ProcessData& process = GetConnectedOrLoadedProcess();
 
   std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
@@ -1873,7 +1908,16 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
     AddDefaultFrameTrackOrLogError();
   }
 
-  return orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
+  auto when_all_futures = orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
+
+  // Reset refresh callback enable flags after automatic symbol loading.
+  thread_pool_->Schedule([when_all_futures, async_scope_id, this]() {
+    when_all_futures.Wait();
+    ORBIT_STOP_ASYNC(async_scope_id);
+    is_loading_all_symbols_ = false;
+    SetRefreshCallbackEnabled(DataViewType::kAll, true);
+  });
+  return when_all_futures;
 }
 
 void OrbitApp::AddDefaultFrameTrackOrLogError() {
@@ -1929,6 +1973,7 @@ void OrbitApp::AddDefaultFrameTrackOrLogError() {
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
+  ORBIT_SCOPE_FUNCTION;
   modules_data_view_->UpdateModules(GetTargetProcess());
 
   // TODO(b/247069854): Avoid FunctionsDataView::ClearFunctions: use
@@ -2330,7 +2375,10 @@ void OrbitApp::UpdateAfterSymbolLoading() {
                                       &capture_data.selection_post_processed_sampling_data());
 }
 
-void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
+void OrbitApp::UpdateAfterSymbolLoadingThrottled() {
+  ORBIT_SCOPE_FUNCTION;
+  update_after_symbol_loading_throttle_.Fire();
+}
 
 void OrbitApp::ClearSamplingRelatedViews() {
   ClearSamplingReport();

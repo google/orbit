@@ -116,6 +116,8 @@ struct FunctionsDataViewTest : public testing::Test {
     module_info2.set_load_bias(0x6000);
     module_info2.set_address_start(0x3456);
     module_infos_.emplace_back(std::move(module_info2));
+
+    view_.OnDataChanged();
   }
 
  protected:
@@ -161,12 +163,14 @@ TEST_F(FunctionsDataViewTest, FunctionNameIsDisplayName) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 1), functions_[0].pretty_name());
 }
 
 TEST_F(FunctionsDataViewTest, InvalidColumnAndRowNumbersReturnEmptyString) {
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(1, 0), "");    // Invalid row index
   EXPECT_EQ(view_.GetValue(0, 25), "");   // Invalid column index
@@ -179,6 +183,7 @@ TEST_F(FunctionsDataViewTest, ViewHandlesMultipleElements) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 3);
 
   // We don't expect the view to be in any particular order at this point.
@@ -194,6 +199,7 @@ TEST_F(FunctionsDataViewTest, ClearFunctionsRemovesAllElements) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 3);
 
   view_.ClearFunctions();
@@ -203,9 +209,11 @@ TEST_F(FunctionsDataViewTest, ClearFunctionsRemovesAllElements) {
 TEST_F(FunctionsDataViewTest, RemoveFunctionsOfModule) {
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 5);
 
   view_.RemoveFunctionsOfModule(functions_[2].module_path());
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 4);
   EXPECT_THAT(
       (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1),
@@ -214,6 +222,7 @@ TEST_F(FunctionsDataViewTest, RemoveFunctionsOfModule) {
                                     functions_[3].pretty_name(), functions_[4].pretty_name()));
 
   view_.RemoveFunctionsOfModule(functions_[3].module_path());
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 3);
   EXPECT_THAT(
       (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1)}),
@@ -221,6 +230,7 @@ TEST_F(FunctionsDataViewTest, RemoveFunctionsOfModule) {
                                     functions_[4].pretty_name()));
 
   view_.RemoveFunctionsOfModule(functions_[3].module_path());  // Should do nothing.
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 3);
 }
 
@@ -243,6 +253,7 @@ TEST_F(FunctionsDataViewTest, FunctionSelectionAppearsInFirstColumn) {
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
 
   function_selected = false;
@@ -277,6 +288,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumn) {
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
 
   function_selected = false;
@@ -353,6 +365,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
 
   frame_track_enabled = true;
@@ -368,6 +381,7 @@ TEST_F(FunctionsDataViewTest, FunctionSizeAppearsInThirdColumn) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 2), std::to_string(functions_[0].size()));
 }
@@ -378,6 +392,7 @@ TEST_F(FunctionsDataViewTest, ModuleColumnShowsFilenameOfModule) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 3),
             std::filesystem::path{functions_[0].module_path()}.filename().string());
@@ -385,6 +400,7 @@ TEST_F(FunctionsDataViewTest, ModuleColumnShowsFilenameOfModule) {
 
 TEST_F(FunctionsDataViewTest, AddressColumnShowsAddress) {
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
   ASSERT_EQ(view_.GetNumElements(), 1);
 
   // We expect the address to be in hex - indicated by "0x"
@@ -413,6 +429,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
       });
 
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
+  view_.OnDataChanged();
 
   auto verify_context_menu_action_availability = [&](absl::Span<const int> selected_indices) {
     FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
@@ -477,6 +494,7 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
 
   FlattenContextMenu context_menu =
       FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
@@ -533,6 +551,7 @@ TEST_F(FunctionsDataViewTest, ColumnSorting) {
   std::vector<FunctionInfo> functions = functions_;
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  view_.OnDataChanged();
 
   const auto verify_correct_sorting = [&]() {
     // We won't check all columns because we control the test data and know that checking address
@@ -613,6 +632,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
 
   view_.AddFunctions({&functions_[0]});
+  view_.OnDataChanged();
 
   const auto match_function = [&](const FunctionInfo& function) {
     EXPECT_EQ(function.address(), functions_[0].address());
@@ -678,6 +698,7 @@ TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
 
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  view_.OnDataChanged();
 
   // Filtering by an empty string should result in all functions listed -> No filtering.
   view_.OnFilter("");
@@ -733,6 +754,7 @@ TEST_F(FunctionsDataViewTest, FilteringByModuleName) {
 
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  view_.OnDataChanged();
 
   // Only the filename is considered when filtering, so searching for the full file path results in
   // an empty search result.
@@ -767,6 +789,7 @@ TEST_F(FunctionsDataViewTest, FilteringByFunctionAndModuleName) {
 
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
+  view_.OnDataChanged();
 
   // ffind is the name of the function while CapitalizedModule is the filename of its module.
   view_.OnFilter("ffind CapitalizedModule");

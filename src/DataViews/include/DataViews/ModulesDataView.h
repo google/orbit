@@ -27,6 +27,8 @@ class ModulesDataView : public DataView {
  public:
   explicit ModulesDataView(AppInterface* app);
 
+  void OnDataChanged() override;
+
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
   std::string GetValue(int row, int column) override;

@@ -185,7 +185,7 @@ SymbolHelper::SymbolHelper(std::filesystem::path cache_directory,
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, std::string_view build_id,
     const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) {
-  ORBIT_SCOPE_FUNCTION;
+  ORBIT_SCOPE(absl::StrFormat("FindSymbolsFileLocally [%s]", module_path.string()).c_str());
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
         "Could not find symbols file for module \"%s\", because it does not contain a build id.",

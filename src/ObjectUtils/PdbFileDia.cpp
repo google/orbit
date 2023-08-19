@@ -143,6 +143,7 @@ ErrorMessageOr<void> ForEachSymbolWithSymTag(const enum SymTagEnum& sym_tag,
 }  // namespace
 
 ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() {
+  ORBIT_SCOPE_FUNCTION;
   ModuleSymbols module_symbols;
   absl::flat_hash_set<uint64_t> addresses_from_module_info_stream;
 

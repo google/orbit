@@ -50,6 +50,11 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   return kColumns;
 }
 
+void ModulesDataView::OnDataChanged() {
+  ORBIT_SCOPE_FUNCTION;
+  DoFilter();
+}
+
 std::string ModulesDataView::GetValue(int row, int col) {
   uint64_t start_address = indices_[row];
   const ModuleData* module = start_address_to_module_.at(start_address);
@@ -96,6 +101,7 @@ std::string ModulesDataView::GetToolTip(int row, int column) {
   }
 
 void ModulesDataView::DoSort() {
+  ORBIT_SCOPE_FUNCTION;
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(uint64_t, uint64_t)> sorter = nullptr;
 

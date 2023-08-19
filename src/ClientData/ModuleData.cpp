@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "GrpcProtos/module.pb.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_grpc_protos::ModuleInfo;
@@ -232,6 +233,7 @@ bool ModuleData::AreAtLeastFallbackSymbolsLoaded() const {
 }
 
 void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+  ORBIT_SCOPE_FUNCTION;
   absl::MutexLock lock(&mutex_);
   AddSymbolsInternal(module_symbols, SymbolCompleteness::kDebugSymbols);
 }
@@ -243,6 +245,8 @@ void ModuleData::AddFallbackSymbols(const orbit_grpc_protos::ModuleSymbols& modu
 
 void ModuleData::AddSymbolsInternal(const orbit_grpc_protos::ModuleSymbols& module_symbols,
                                     ModuleData::SymbolCompleteness completeness) {
+  ORBIT_SCOPE(
+      absl::StrFormat("AddSymbolsInternal [%u]", module_symbols.symbol_infos().size()).c_str());
   mutex_.AssertHeld();
   ORBIT_CHECK(loaded_symbols_completeness_ < completeness);
   functions_.clear();
