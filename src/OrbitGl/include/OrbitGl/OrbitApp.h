@@ -12,6 +12,7 @@
 #include <grpc/impl/codegen/connectivity_state.h>
 #include <grpcpp/channel.h>
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -258,6 +259,9 @@ class OrbitApp final : public DataViewFactory,
   void OnModuleListUpdated() override {
     FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   }
+  void SetRefreshCallbackEnabled(orbit_data_views::DataViewType type, bool enabled);
+  bool IsRefreshCallbackEnabled(orbit_data_views::DataViewType type);
+
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(std::string tooltip);
@@ -612,6 +616,9 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<SelectionData> full_capture_selection_;
   std::unique_ptr<SelectionData> time_range_thread_selection_;
   std::unique_ptr<SelectionData> inspection_selection_;
+  std::array<std::atomic<bool>, static_cast<size_t>(orbit_data_views::DataViewType::kAll)>
+      refresh_callback_disabled_;
+  std::atomic<bool> is_loading_all_symbols_ = false;
 };
 
 #endif  // ORBIT_GL_APP_H_
