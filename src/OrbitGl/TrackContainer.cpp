@@ -322,7 +322,8 @@ void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_a
   const float world_height = viewport_->GetWorldHeight();
 
   // Actually draw the ranges.
-  for (const auto& [start_x, end_x] : x_ranges) {
+  for (auto [start_x, end_x] : x_ranges) {
+    start_x = std::max(layout_->GetTrackHeaderWidth(), start_x);
     const Vec2 pos{start_x, world_start_y};
     const Vec2 size{end_x - start_x, world_height};
     float z_value = GlCanvas::kZValueIncompleteDataOverlay;
