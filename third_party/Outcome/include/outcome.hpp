@@ -20,6 +20,7 @@
 #include <boost/outcome/std_result.hpp> // IWYU pragma: export
 #include <boost/outcome/success_failure.hpp> // IWYU pragma: export
 #include <boost/outcome/try.hpp> // IWYU pragma: export
+#include <boost/version.hpp> // IWYU pragma: export
 #include <system_error>
 #include <utility>
 
