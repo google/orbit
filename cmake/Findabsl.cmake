@@ -12,7 +12,11 @@ if(absl_FOUND)
   return()
 endif()
 
-message("Abseil not found via find_package. Probably not a Conan build. Using the copy from third_party/")
+message(WARNING "To ensure Abseil is built with C++17 support,
+                 it will be built from third_party folder. 
+                 If your system already has Abseil installed with C++17 support, 
+                 you can specify the Abseil configuration directory 
+                 by setting the absl_DIR variable as a cmake argument.")
 
 set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/abseil-cpp)
