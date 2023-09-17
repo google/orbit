@@ -4,6 +4,18 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+find_library(LLVM_LIBS LLVM NO_SYSTEM_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH PATHS ${LLVM_LIBRARY_DIR})
+
+if(NOT LLVM_LIBS)
+  set(LLVM_LIBS 
+  LLVMDebugInfoCodeView
+  LLVMDebugInfoDWARF
+  LLVMDebugInfoPDB
+  LLVMHeaders
+  LLVMObject
+  LLVMSymbolize)
+endif()
+
 project(ObjectUtils)
 add_library(ObjectUtils STATIC)
 
@@ -55,12 +67,8 @@ target_link_libraries(
          absl::synchronization
          absl::time
          absl::span
-         LLVMDebugInfoCodeView
-         LLVMDebugInfoDWARF
-         LLVMDebugInfoPDB
-         LLVMHeaders
-         LLVMObject
-         LLVMSymbolize)
+         ${LLVM_LIBS}
+         )
 
 if (WIN32)
 target_link_libraries(ObjectUtils PUBLIC DIASDK::DIASDK)
