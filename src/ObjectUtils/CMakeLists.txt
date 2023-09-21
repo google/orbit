@@ -4,6 +4,14 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+set(REQUIRED_LLVM_LIBS LLVMDebugInfoCodeView
+                        LLVMDebugInfoDWARF
+                        LLVMDebugInfoPDB
+                        LLVMObject
+                        LLVMSymbolize)
+
+find_llvm_libs("${REQUIRED_LLVM_LIBS}")
+
 project(ObjectUtils)
 add_library(ObjectUtils STATIC)
 
@@ -55,12 +63,9 @@ target_link_libraries(
          absl::synchronization
          absl::time
          absl::span
-         LLVMDebugInfoCodeView
-         LLVMDebugInfoDWARF
-         LLVMDebugInfoPDB
          LLVMHeaders
-         LLVMObject
-         LLVMSymbolize)
+         ${LLVM_LIBS}
+         )
 
 if (WIN32)
 target_link_libraries(ObjectUtils PUBLIC DIASDK::DIASDK)
