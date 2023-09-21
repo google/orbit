@@ -11,7 +11,6 @@ if(NOT LLVM_LIBS)
   LLVMDebugInfoCodeView
   LLVMDebugInfoDWARF
   LLVMDebugInfoPDB
-  LLVMHeaders
   LLVMObject
   LLVMSymbolize)
 endif()
@@ -67,6 +66,7 @@ target_link_libraries(
          absl::synchronization
          absl::time
          absl::span
+         LLVMHeaders
          ${LLVM_LIBS}
          )
 
