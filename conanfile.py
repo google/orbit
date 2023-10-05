@@ -154,3 +154,5 @@ class OrbitConan(ConanFile):
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")
+
+# kick build
