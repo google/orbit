@@ -13,9 +13,11 @@ on:
       - 'cmake/**'
       - 'src/**'
       - 'third_party/**'
+      - 'conanfile.*'
   pull_request:
     branches:
       - 'main'
+      - 'experimental'
     paths:
       - 'CMakeLists.txt'
       - '.github/**'
