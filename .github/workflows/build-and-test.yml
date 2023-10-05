@@ -13,7 +13,7 @@ on:
       - 'cmake/**'
       - 'src/**'
       - 'third_party/**'
-      - 'conanfile.*'
+      - 'conanfile.py'
   pull_request:
     branches:
       - 'main'
