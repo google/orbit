@@ -49,8 +49,8 @@ class OrbitConan(ConanFile):
 
     def build_requirements(self):
         if self.options.with_system_deps: return
-        self.build_requires('protobuf/3.21.4')
         self.build_requires('grpc/1.48.0')
+        self.build_requires('protobuf/3.21.4')
         self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
@@ -154,3 +154,5 @@ class OrbitConan(ConanFile):
 
     def deploy(self):
         self.copy("*", src="bin", dst="bin")
+
+# test ci
