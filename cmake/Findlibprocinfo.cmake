@@ -19,5 +19,6 @@ if(NOT MSVC)
   target_compile_options(libprocinfo PRIVATE
     -Wno-error=format=
     -Wno-error=unknown-pragmas
+    -Wno-error=ignored-attributes
   )
 endif()
