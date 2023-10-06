@@ -42,27 +42,6 @@ jobs:
       matrix:
         config:
         - {
-            name: "GCC Release",
-            build_type: 'Release',
-            cc: "gcc",
-            cxx: "g++",
-            os: "ubuntu-22.04"
-        }
-        - {
-            name: "Clang Release",
-            build_type: 'Release',
-            cc: "clang",
-            cxx: "clang++",
-            os: "ubuntu-22.04"
-        }
-        - {
-            name: "Clang Debug",
-            build_type: 'Debug',
-            cc: "clang",
-            cxx: "clang++",
-            os: "ubuntu-22.04"
-        }
-        - {
             name: "MSVC Release",
             build_type: 'Release',
             cc: "msvc",
