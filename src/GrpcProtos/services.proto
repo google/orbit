@@ -33,6 +33,14 @@ message GetProcessListResponse {
   repeated ProcessInfo processes = 1;
 }
 
+message GetTargetProcessRequest {
+  uint32 pid = 1;
+}
+
+message GetTargetProcessResponse {
+  optional ProcessInfo target_process = 1;
+}
+
 message GetModuleListRequest {
   uint32 process_id = 1;
 }
@@ -69,6 +77,8 @@ message GetDebugInfoFileResponse {
 
 service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+
+  rpc GetTargetProcessStatus(GetTargetProcessRequest) returns (GetTargetProcessResponse) {}
 
   rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
 

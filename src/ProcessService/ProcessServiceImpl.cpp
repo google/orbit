@@ -38,6 +38,8 @@ using orbit_grpc_protos::GetModuleListRequest;
 using orbit_grpc_protos::GetModuleListResponse;
 using orbit_grpc_protos::GetProcessListRequest;
 using orbit_grpc_protos::GetProcessListResponse;
+using orbit_grpc_protos::GetTargetProcessRequest;
+using orbit_grpc_protos::GetTargetProcessResponse;
 using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
 using orbit_grpc_protos::ProcessInfo;
@@ -63,6 +65,13 @@ Status ProcessServiceImpl::GetProcessList(ServerContext* /*context*/,
     *(response->add_processes()) = process_info;
   }
 
+  return Status::OK;
+}
+
+Status ProcessServiceImpl::GetTargetProcessStatus(ServerContext* /*context*/,
+                                          const GetTargetProcessRequest* ,
+                                          GetTargetProcessResponse* ) {
+  
   return Status::OK;
 }
 

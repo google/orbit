@@ -24,6 +24,7 @@ namespace orbit_process_service_internal {
 class ProcessList {
  public:
   [[nodiscard]] ErrorMessageOr<void> Refresh();
+  [[nodiscard]] ErrorMessageOr<void> RefreshByPid(uint32_t pid);
   [[nodiscard]] std::vector<orbit_grpc_protos::ProcessInfo> GetProcesses() const {
     std::vector<orbit_grpc_protos::ProcessInfo> processes;
     processes.reserve(processes_.size());
