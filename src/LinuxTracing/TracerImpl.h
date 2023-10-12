@@ -166,7 +166,7 @@ class TracerImpl : public Tracer {
   std::atomic<bool> stop_run_thread_ = true;
   std::thread run_thread_;
 
-  std::vector<int> tracing_fds_;
+  absl::flat_hash_map<std::string,std::vector<int>> tracing_fds_by_type_;
   std::vector<PerfEventRingBuffer> ring_buffers_;
   absl::flat_hash_map<int, uint64_t> fds_to_last_timestamp_ns_;
 
