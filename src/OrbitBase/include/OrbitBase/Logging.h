@@ -41,6 +41,8 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     ORBIT_INTERNAL_PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
 
+#define ORBIT_LOG_VAR(x) ORBIT_LOG("%s = %s", #x, orbit_base::to_string(x))
+
 #define ORBIT_ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
 
 #define ORBIT_LOG_ONCE(format, ...)                                                   \
@@ -162,6 +164,16 @@ ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
 void InitLogFile(const std::filesystem::path& path);
 
 void LogStacktrace();
+
+template <typename T>
+inline std::string to_string(const T& value) {
+  return std::to_string(value);
+}
+
+inline std::string to_string(const std::string& value) { return value; }
+inline std::string to_string(std::string_view value) { return std::string(value); }
+inline std::string to_string(const char* value) { return value; }
+
 }  // namespace orbit_base
 
 namespace orbit_base_internal {
