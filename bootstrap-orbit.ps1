@@ -41,7 +41,7 @@ Please install Python and make it available in the path.
 
   $conan_version = (conan --version).split(" ")[2]
 
-  if (!Check-Conan-Version-Sufficient $conan_version $conan_version_required) {
+  if (!(Check-Conan-Version-Sufficient $conan_version $conan_version_required)) {
     Write-Host "Your conan version $conan_version is too old. Let's try to update it."
     pip3 install --upgrade conan==$conan_version_required
     if ($LastExitCode -ne 0) {
