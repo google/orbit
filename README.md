@@ -37,18 +37,18 @@ video:
 
 ## Features
 
-- Dynamic Instrumentation (no code change required)
-- Callstack Sampling
-- Wine/Proton Mixed-Callstack Profiling
-- Thread Scheduling and Dependency Tracing
-- Memory Tracing
-- GPU Driver Tracepoints (AMD only)
-- Vulkan Debug Label and Command Buffer Tracing (AMD only)
-- Manual Instrumentation
-- Source Code and Disassembly View
-- Remote Profiling
-- Debug Symbol Parsing (ELF, DWARF, PE and PDB)
-- Full Serialization of Captured Data
+- **Dynamic Instrumentation (no code change required)**
+- **Callstack Sampling**
+- **Wine/Proton Mixed-Callstack Profiling**
+- **Thread Scheduling and Dependency Tracing**
+- **Memory Tracing**
+- **GPU Driver Tracepoints (AMD only)**
+- **Vulkan Debug Label and Command Buffer Tracing (AMD only)**
+- **Manual Instrumentation**
+- **Source Code and Disassembly View**
+- **Remote Profiling**
+- **Debug Symbol Parsing (ELF, DWARF, PE and PDB)**
+- **Full Serialization of Captured Data**
 
 ### Note
 
