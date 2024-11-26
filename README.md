@@ -5,6 +5,8 @@
 
 <img alt="ORBIT Logo" src="contrib/logos/orbit_logo_simple.png" align="right" width="520" >
 
+**This project is not maintained by Google engineers anymore at this point.**
+
 Orbit, the **O**pen **R**untime **B**inary **I**nstrumentation **T**ool is a
 standalone **native** application profiler for Windows and Linux. It supports
 native applications written in languages such as C, C++, Rust, or Go. Its main
@@ -104,9 +106,11 @@ Questions and comments are more than welcome: please open an
 
 ## About
 
-Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/), but
-is now developed and maintained by a team of engineers at Google. The current
-maintainers are:
+Orbit was created by [Pierric Gimmig](https://www.linkedin.com/in/pgimmig/). It was 
+further developed and maintained by a team of engineers at Google. As of now, the 
+project is however not being maintained by Google engineers anymore. 
+
+The following people worked on Orbit: 
 * [@akopich](https://github.com/akopich)
 * [@antonrohr](https://github.com/antonrohr)
 * [@beckerhe](https://github.com/beckerhe)
