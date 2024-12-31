@@ -33,6 +33,6 @@ target_link_libraries(
   PresetFileTests
   PRIVATE PresetFile
           TestUtils
-          GTest::Main)
+          GTest_Main)
 
 register_test(PresetFileTests)

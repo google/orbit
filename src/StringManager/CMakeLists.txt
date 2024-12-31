@@ -31,6 +31,6 @@ target_sources(StringManagerTests PRIVATE
 target_link_libraries(
   StringManagerTests
   PRIVATE StringManager
-          GTest::Main)
+          GTest_Main)
 
 register_test(StringManagerTests)

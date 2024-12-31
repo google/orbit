@@ -24,7 +24,9 @@ target_link_libraries(TestUtils PUBLIC
   absl::flat_hash_set
   absl::strings
   absl::str_format
-  GTest::gtest)
+  GTest_Main
+  gtest
+  gmock)
 
 add_executable(TestUtilsTests
   ContainerHelpersTest.cpp
@@ -32,5 +34,5 @@ add_executable(TestUtilsTests
   TemporaryDirectoryTest.cpp
   TemporaryFileTest.cpp
   TestUtilsTest.cpp)
-target_link_libraries(TestUtilsTests PRIVATE TestUtils GTest::Main)
+target_link_libraries(TestUtilsTests PRIVATE TestUtils GTest_Main)
 register_test(TestUtilsTests)

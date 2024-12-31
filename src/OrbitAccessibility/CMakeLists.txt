@@ -40,6 +40,6 @@ target_sources(OrbitAccessibilityTests PRIVATE
 target_link_libraries(
   OrbitAccessibilityTests
   PRIVATE OrbitAccessibility
-          GTest::Main)
+          GTest_Main)
 
 register_test(OrbitAccessibilityTests)

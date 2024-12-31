@@ -10,7 +10,7 @@ set(REQUIRED_LLVM_LIBS LLVMDebugInfoCodeView
                         LLVMObject
                         LLVMSymbolize)
 
-find_llvm_libs("${REQUIRED_LLVM_LIBS}")
+#find_llvm_libs("${REQUIRED_LLVM_LIBS}")
 
 project(ObjectUtils)
 add_library(ObjectUtils STATIC)
@@ -63,8 +63,7 @@ target_link_libraries(
          absl::synchronization
          absl::time
          absl::span
-         LLVMHeaders
-         ${LLVM_LIBS}
+         llvm-core::llvm-core
          )
 
 if (WIN32)
@@ -95,7 +94,7 @@ target_link_libraries(
   ObjectUtilsTests
   PRIVATE ObjectUtils
           TestUtils
-          GTest::Main)
+          GTest_Main)
 
 register_test(ObjectUtilsTests)
 

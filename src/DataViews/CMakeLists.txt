@@ -70,6 +70,6 @@ target_sources(DataViewsTests PRIVATE CallstackDataViewTest.cpp
 target_link_libraries(DataViewsTests PRIVATE
         DataViews
         TestUtils
-        GTest::Main)
+        GTest_Main)
 
 register_test(DataViewsTests)

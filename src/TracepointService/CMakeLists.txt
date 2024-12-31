@@ -31,6 +31,6 @@ target_sources(TracepointServiceTests PRIVATE
 target_link_libraries(TracepointServiceTests PRIVATE
         TestUtils
         TracepointService
-        GTest::Main)
+        GTest_Main)
 
 register_test(TracepointServiceTests)

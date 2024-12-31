@@ -49,6 +49,6 @@ endif()
 target_link_libraries(ModuleUtilsTests PRIVATE
         ModuleUtils
         TestUtils
-        GTest::Main)
+        GTest_Main)
 
 register_test(ModuleUtilsTests)

@@ -28,6 +28,6 @@ target_sources(ClientSymbolsTests PRIVATE
 
 target_link_libraries(ClientSymbolsTests PRIVATE 
         ClientSymbols
-        GTest::QtCoreMain)
+        GTest_QtCoreMain)
 
 register_test(ClientSymbolsTests)

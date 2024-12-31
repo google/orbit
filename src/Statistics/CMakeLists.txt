@@ -38,7 +38,7 @@ target_sources(StatisticsTests PRIVATE
 target_link_libraries(
   StatisticsTests
   PRIVATE Statistics
-          GTest::Main
+          GTest_Main
           TestUtils)
 
 register_test(StatisticsTests)

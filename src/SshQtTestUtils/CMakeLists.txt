@@ -30,5 +30,5 @@ target_sources(SshQtTestUtils PUBLIC
 add_executable(SshQtTestUtilsTests
   ParsePortNumberFromSocatOutputTest.cpp)
 
-target_link_libraries(SshQtTestUtilsTests PRIVATE SshQtTestUtils TestUtils GTest::Main)
+target_link_libraries(SshQtTestUtilsTests PRIVATE SshQtTestUtils TestUtils GTest_Main)
 register_test(SshQtTestUtilsTests)

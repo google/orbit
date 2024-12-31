@@ -23,6 +23,6 @@ target_sources(MizarStatisticsTests PRIVATE
 target_link_libraries(MizarStatisticsTests PRIVATE GrpcProtos
   MizarStatistics
   GTest::gtest
-  GTest::Main)
+  GTest_Main)
 
 register_test(MizarStatisticsTests)

@@ -27,7 +27,9 @@ target_sources(MizarModelsTests PRIVATE
 target_link_libraries(MizarModelsTests PRIVATE
   MizarModels
   TestUtils
-  GTest::Main
+  GTest_Main
+  gtest
+  gmock
   Qt5::Test
 )
 

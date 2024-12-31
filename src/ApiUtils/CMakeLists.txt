@@ -28,6 +28,6 @@ target_sources(ApiUtilsTests PRIVATE
 
 target_link_libraries(ApiUtilsTests PRIVATE
         ApiUtils
-        GTest::Main)
+        GTest_Main)
 
 register_test(ApiUtilsTests)

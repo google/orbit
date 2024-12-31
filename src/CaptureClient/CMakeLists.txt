@@ -55,6 +55,6 @@ target_sources(CaptureClientTests PRIVATE
 target_link_libraries(CaptureClientTests PRIVATE
         CaptureClient
         TestUtils
-        GTest::Main)
+        GTest_Main)
 
 register_test(CaptureClientTests)

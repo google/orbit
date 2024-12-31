@@ -63,6 +63,6 @@ target_sources(OrbitSshTests PRIVATE
 target_link_libraries(OrbitSshTests PRIVATE
   OrbitSsh
   TestUtils
-  GTest::Main)
+  GTest_Main)
 
 register_test(OrbitSshTests PROPERTIES TIMEOUT 10)

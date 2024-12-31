@@ -41,6 +41,6 @@ target_sources(MemoryTracingTests PRIVATE
 target_link_libraries(MemoryTracingTests PRIVATE
         MemoryTracing
         GTest::gtest
-        GTest::Main)
+        GTest_Main)
 
 register_test(MemoryTracingTests)

@@ -38,5 +38,5 @@ target_link_libraries(CodeReportTests PRIVATE
         CodeReport
         ModuleUtils
         SymbolProvider
-        GTest::Main)
+        GTest_Main)
 register_test(CodeReportTests)

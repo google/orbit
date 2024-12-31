@@ -41,7 +41,7 @@ target_sources(ProcessServiceTests PRIVATE
 target_link_libraries(ProcessServiceTests PRIVATE
         TestUtils
         ProcessService
-        GTest::Main)
+        GTest_Main)
 
 register_test(ProcessServiceTests PROPERTIES TIMEOUT 10)
 

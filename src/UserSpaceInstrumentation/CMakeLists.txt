@@ -136,6 +136,6 @@ target_link_libraries(UserSpaceInstrumentationTests PRIVATE
         UserSpaceInstrumentation
         capstone::capstone
         GTest::gtest
-        GTest::Main)
+        GTest_Main)
 
 register_test(UserSpaceInstrumentationTests)

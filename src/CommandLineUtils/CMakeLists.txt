@@ -27,6 +27,6 @@ target_sources(CommandLineUtilsTests PRIVATE
 target_link_libraries(
   CommandLineUtilsTests
   PRIVATE CommandLineUtils
-          GTest::Main)
+          GTest_Main)
 
 register_test(CommandLineUtilsTests)

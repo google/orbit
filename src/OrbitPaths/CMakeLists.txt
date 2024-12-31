@@ -30,6 +30,6 @@ target_sources(OrbitPathsTests PRIVATE
 target_link_libraries(OrbitPathsTests PRIVATE
         OrbitPaths
         TestUtils
-        GTest::Main)
+        GTest_Main)
 
 register_test(OrbitPathsTests)

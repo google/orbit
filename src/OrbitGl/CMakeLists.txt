@@ -246,7 +246,7 @@ target_sources(OrbitGlTests PRIVATE
 target_link_libraries(
   OrbitGlTests
   PRIVATE OrbitGl
-          GTest::Main)
+          GTest_Main)
 
 register_test(OrbitGlTests)
 

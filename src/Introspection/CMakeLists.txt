@@ -30,7 +30,7 @@ target_sources(IntrospectionTests PRIVATE
 target_link_libraries(IntrospectionTests PRIVATE
         Introspection
         OrbitBase
-        GTest::Main
+        GTest_Main
         absl::base
         absl::flat_hash_map
         absl::synchronization)

@@ -30,6 +30,6 @@ target_sources(DisplayFormatsTests PRIVATE
 target_link_libraries(DisplayFormatsTests PRIVATE
         DisplayFormats
         OrbitBase
-        GTest::Main)
+        GTest_Main)
 
 register_test(DisplayFormatsTests)
