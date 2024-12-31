@@ -11,6 +11,21 @@
 
 #include "CommandLineUtils/CommandLineUtils.h"
 
+namespace {
+
+std::vector<std::string> QStringListToStdVector(const QStringList& qlist) {
+  std::vector<std::string> result;
+  result.reserve(qlist.size());
+
+  for (const QString& str : qlist) {
+    result.push_back(str.toStdString());
+  }
+
+  return result;
+}
+
+}  // namespace
+
 namespace orbit_command_line_utils {
 
 TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
@@ -25,7 +40,7 @@ TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
                      "--ssh_key_path=another_path"};
   QStringList expected{"--some_bool", "-b", "--some_flag"};
   QStringList result = RemoveFlagsNotPassedToMainWindow(params);
-  EXPECT_EQ(expected, result);
+  EXPECT_EQ(QStringListToStdVector(expected), QStringListToStdVector(result));
 }
 
 TEST(CommandLineUtils, ExtractCommandLineFlags) {
@@ -38,7 +53,7 @@ TEST(CommandLineUtils, ExtractCommandLineFlags) {
 
   auto result = ExtractCommandLineFlags(command_line_args, positional_args);
   QStringList expected{"-b", "--test_arg", "--another_arg=something"};
-  EXPECT_EQ(expected, result);
+  EXPECT_EQ(QStringListToStdVector(expected), QStringListToStdVector(result));
 }
 
 }  // namespace orbit_command_line_utils
