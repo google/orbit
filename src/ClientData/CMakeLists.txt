@@ -126,8 +126,3 @@ target_link_libraries(ClientDataTests PRIVATE
         GTest_Main)
 
 register_test(ClientDataTests)
-
-add_fuzzer(ModuleLoadSymbolsFuzzer ModuleLoadSymbolsFuzzer.cpp)
-target_link_libraries(
-        ModuleLoadSymbolsFuzzer PRIVATE ClientData
-        FuzzingUtils)

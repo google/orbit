@@ -45,9 +45,3 @@ target_link_libraries(ProcessServiceTests PRIVATE
 
 register_test(ProcessServiceTests PROPERTIES TIMEOUT 10)
 
-add_fuzzer(ProcessServiceUtilsFindSymbolsFilePathFuzzer
-        ProcessServiceUtilsFindSymbolsFilePathFuzzer.cpp)
-
-target_link_libraries(ProcessServiceUtilsFindSymbolsFilePathFuzzer PRIVATE
-        FuzzingUtils
-        ProcessService)

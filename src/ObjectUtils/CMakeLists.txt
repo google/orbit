@@ -98,5 +98,3 @@ target_link_libraries(
 
 register_test(ObjectUtilsTests)
 
-add_fuzzer(ElfFileLoadSymbolsFuzzer ElfFileLoadSymbolsFuzzer.cpp)
-target_link_libraries(ElfFileLoadSymbolsFuzzer FuzzingUtils ObjectUtils)
