@@ -15,7 +15,7 @@
 namespace orbit_base {
 
 std::optional<std::string> ExecuteCommand(std::string_view cmd) {
-  std::unique_ptr<FILE, decltype(&pclose)> pipe{popen(std::string{cmd}.c_str(), "r"), pclose};
+  std::unique_ptr<FILE, int (*)(FILE*)> pipe{popen(std::string{cmd}.c_str(), "r"), pclose};
   if (!pipe) {
     ORBIT_ERROR("Could not open pipe for \"%s\"", cmd);
     return std::optional<std::string>{};
