@@ -161,7 +161,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 To compile on Windows:
-
 conan install . --build="abseil/*" --build="protobuf/*" --build="grpc/*" --build=missing
 cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake ..
@@ -177,8 +176,7 @@ cmake --build . --config Release
 
 with a debug profile:
 
-
-
-
 Debug example:
-conan install . -pr:a third_party/conan/configs/linux/profiles/gcc17_debug --build=missing -of build_gcc_debug
+conan install . -pr:a third_party/conan/configs/linux/profiles/gcc17_debug --build=missing -of build_gcc17_debug
+cmake -B build_gcc17_debug -DCMAKE_TOOLCHAIN_FILE=build_gcc17_debug/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug .
+cmake --build build_gcc17_debug --paralell

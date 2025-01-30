@@ -34,5 +34,5 @@ class OrbitDeps(ConanFile):
         self.tool_requires("gtest/1.15.0")
 
     def layout(self):
-        self.folders.build = "build"
-        self.folders.generators = "build/generators"
+        self.folders.generators = "generators"
+        
