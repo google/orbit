@@ -1,4 +1,0 @@
-include(clang11_common)
-
-[settings]
-build_type=Release

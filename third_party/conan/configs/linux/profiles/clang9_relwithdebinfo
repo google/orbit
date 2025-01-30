@@ -1,4 +1,0 @@
-include(clang9_common)
-
-[settings]
-build_type=RelWithDebInfo

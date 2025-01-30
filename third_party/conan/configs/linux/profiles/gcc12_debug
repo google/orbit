@@ -1,4 +1,0 @@
-include(gcc12_common)
-
-[settings]
-build_type=Debug

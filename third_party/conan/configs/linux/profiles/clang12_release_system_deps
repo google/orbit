@@ -1,7 +1,0 @@
-include(clang12_common)
-
-[settings]
-build_type=Release
-
-[options]
-OrbitProfiler:with_system_deps=True

@@ -1,9 +1,0 @@
-include(gcc_common)
-
-[settings]
-compiler.version=11
-
-[env]
-CC=gcc-11
-CXX=g++-11
-grpc:CXXFLAGS=$CXX_FLAGS -std=c++14

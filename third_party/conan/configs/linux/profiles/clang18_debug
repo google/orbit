@@ -1,4 +1,4 @@
-include(gcc11_common)
+include(clang18_common)
 
 [settings]
 build_type=Debug

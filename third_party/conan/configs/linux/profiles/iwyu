@@ -1,5 +1,0 @@
-include(clang11_release)
-
-[options]
-OrbitProfiler:build_target=iwyu
-OrbitProfiler:run_tests=False

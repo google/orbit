@@ -1,9 +1,0 @@
-[settings]
-cmake:build_type=Release
-cmake:os=Linux
-cmake:os_build=Linux
-cmake:arch=x86_64
-cmake:arch_build=x86_64
-
-[build_requires]
-&: cmake/3.24.1

@@ -1,8 +1,0 @@
-include(gcc_common)
-
-[settings]
-compiler.version=10
-
-[env]
-CC=gcc-10
-CXX=g++-10

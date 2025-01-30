@@ -158,3 +158,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 [orbit_youtube_presentation]: contrib/logos/orbit_presentation_youtube.png
+
+
+To compile on Windows:
+
+conan install . --build="abseil/*" --build="protobuf/*" --build="grpc/*" --build=missing
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake ..
+cmake --build . --config Release
+
+
+To compile on Linux:
+
+conan install . --build=missing
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=build/generators/conan_toolchain.cmake ..
+cmake --build . --config Release
+
+with a debug profile:
+
+
+
+
+Debug example:
+conan install . -pr:a third_party/conan/configs/linux/profiles/gcc17_debug --build=missing -of build_gcc_debug
